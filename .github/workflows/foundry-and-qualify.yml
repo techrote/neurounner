@@ -1,0 +1,116 @@
+name: Foundry and larger-model qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/foundry-and-qualify.yml'
+      - 'config/candidates.json'
+      - 'scripts/foundry.py'
+      - 'scripts/qualify_model.py'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: neurounner-foundry-qualify
+  cancel-in-progress: false
+
+jobs:
+  foundry:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-next]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/neurounner
+          key: ubuntu-neurounner-v1-b11852-edc2ac32-bb741ebb
+      - name: Verify core cache
+        run: bash scripts/bootstrap.sh all
+      - name: Validate foundry harness
+        run: python3 -m py_compile scripts/foundry.py scripts/experiment.py
+      - name: Run 3x Sprocket to LFM foundry
+        run: python3 scripts/foundry.py
+      - name: Show foundry result
+        if: always()
+        run: test ! -f results/foundry.md || cat results/foundry.md
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: neurounner-foundry-a${{ github.run_attempt }}
+          path: |
+            results/foundry.*
+            logs/**
+          if-no-files-found: warn
+          retention-days: 7
+
+  qualify:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-next]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        model:
+          - lfm25-vl-450m
+          - lfm25-1.2b-instruct
+          - lfm25-1.2b-thinking
+          - lfm25-8b-a1b
+          - qwen35-2b
+          - qwen35-4b
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate harness and fetch pinned runtime
+        run: |
+          python3 -m py_compile scripts/qualify_model.py
+          bash scripts/bootstrap.sh runtime
+      - name: Resolve candidate pin
+        id: model
+        env:
+          MODEL_ID: ${{ matrix.model }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          spec = json.load(open("config/candidates.json"))[os.environ["MODEL_ID"]]
+          print("url=" + spec["url"])
+          print("file=" + spec["file"])
+          print("sha256=" + spec["sha256"])
+          PY
+      - name: Download and verify candidate
+        env:
+          MODEL_URL: ${{ steps.model.outputs.url }}
+          MODEL_FILE: ${{ steps.model.outputs.file }}
+          MODEL_SHA256: ${{ steps.model.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          echo "Before download:"
+          df -h .
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 \
+            --output "$RUNNER_TEMP/$MODEL_FILE.part" "$MODEL_URL"
+          echo "$MODEL_SHA256  $RUNNER_TEMP/$MODEL_FILE.part" | sha256sum -c -
+          mv "$RUNNER_TEMP/$MODEL_FILE.part" "$RUNNER_TEMP/$MODEL_FILE"
+          ls -lh "$RUNNER_TEMP/$MODEL_FILE"
+          echo "After download:"
+          df -h .
+      - name: Qualify ${{ matrix.model }}
+        env:
+          MODEL_FILE: ${{ steps.model.outputs.file }}
+        run: python3 scripts/qualify_model.py "${{ matrix.model }}" "$RUNNER_TEMP/$MODEL_FILE"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: neurounner-qualify-${{ matrix.model }}-a${{ github.run_attempt }}
+          path: |
+            results/qualify-${{ matrix.model }}.*
+            logs/${{ matrix.model }}-*
+          if-no-files-found: warn
+          retention-days: 7
