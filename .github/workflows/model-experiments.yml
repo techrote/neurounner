@@ -1,0 +1,73 @@
+name: Model experiments
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/model-experiments.yml'
+      - 'config/**'
+      - 'scripts/**'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: neurounner-model-experiments
+  cancel-in-progress: false
+
+jobs:
+  prime:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-models]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/neurounner
+          key: ubuntu-neurounner-v1-b11852-edc2ac32-bb741ebb
+      - name: Validate harness
+        run: |
+          bash -n scripts/bootstrap.sh
+          python3 -m py_compile scripts/experiment.py
+      - name: Populate and verify pinned cache
+        run: bash scripts/bootstrap.sh all
+
+  experiment:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-models]') }}
+    needs: prime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        experiment: [sprocket3, lfm1, pair, ring]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/neurounner
+          key: ubuntu-neurounner-v1-b11852-edc2ac32-bb741ebb
+      - name: Verify cached runtime and models
+        run: bash scripts/bootstrap.sh all
+      - name: Run ${{ matrix.experiment }}
+        run: python3 scripts/experiment.py "${{ matrix.experiment }}"
+      - name: Show result
+        if: always()
+        run: |
+          test ! -f "results/${{ matrix.experiment }}.md" || cat "results/${{ matrix.experiment }}.md"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: neurounner-${{ matrix.experiment }}-a${{ github.run_attempt }}
+          path: |
+            results/${{ matrix.experiment }}.*
+            logs/**
+          if-no-files-found: warn
+          retention-days: 7
