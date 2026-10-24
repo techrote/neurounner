@@ -7,6 +7,7 @@ This file is the first retrieval/signposting document for agents, RAG systems an
 - **[Dataset filing system](docs/DATASET_FILING_SYSTEM.md)** — mandatory rules for preserving prompts, raw generations, provider responses, lineage, repairs, hashes and Actions-artifact promotion.
 - **[Dataset index](datasets/README.md)** — durable corpora currently committed to the repository.
 - **[BABBLE-001 archive](datasets/babble-001/README.md)** — first fully filed babble/personality dataset: guides, 48 Sprocket histories, NVIDIA compiler history and 12 derived packets.
+- **[BABBLE-002 archive](datasets/babble-002/README.md)** — 1,200 expanded personality-training examples across 12 personas, paired generic negatives, trait lineage and raw NVIDIA expansion history.
 
 Raw records outrank derived summaries. Do not discard failed/malformed generations merely because a later compiler produced cleaner output.
 
