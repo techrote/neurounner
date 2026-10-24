@@ -952,6 +952,140 @@ Durable evidence:
 - `experiments/persona-001/evidence/adapter-release.json`
 - release `persona-001-v1`
 
+---
+
+# 2026-10-24 — PERSONA-002 anti-sanitization preference continuation
+
+**Issue:** #6  
+**Actions run:** `40140179956`  
+**Result commit:** `66cf4771725fa3e4f9e76cea6b7ae7a639c79377`  
+**Release:** `persona-002-v1`
+
+PERSONA-002 continued the four released PERSONA-001 SmolLM2-135M LoRA cartridges using the paired BABBLE-002 positive target vs generic/sanitized negative target.
+
+The fixed PERSONA-001 tournament was reused unchanged.
+
+## Preference objective
+
+Each cartridge started from its SHA-verified `persona-001-v1` parent adapter and trained for 2 epochs / 200 pairwise optimizer steps on 100 paired examples.
+
+The objective was reference-free and length-normalized:
+
+- pairwise logistic preference term on chosen log-prob > rejected log-prob;
+- beta: 2.0;
+- target margin: 0.2 nats/token;
+- chosen-response NLL anchor: 0.15;
+- learning rate: 2e-4.
+
+The anchor was retained to discourage a trivial trade of task relevance for increasingly eccentric output.
+
+## Pairwise training result
+
+| Persona | Mean margin before | Mean margin after | Preference acc before | after |
+|---|---:|---:|---:|---:|
+| G02 | 1.610 | 4.945 | 100% | 100% |
+| G03 | 1.428 | 4.493 | 100% | 100% |
+| G05 | 1.030 | 4.073 | 98% | 100% |
+| G12 | 1.608 | 4.745 | 100% | 100% |
+
+The PERSONA-001 SFT cartridges already preferred their positive targets strongly. PERSONA-002 substantially widened that preference margin rather than merely fixing an absent preference.
+
+Peak RSS remained ~2.1–2.3 GiB, still comfortable on standard GitHub-hosted runners.
+
+## Fixed blind tournament
+
+PERSONA-001 baseline:
+
+- raw identification: **46.9%**
+- style-neutral behavior identification: **41.7%**
+- raw→behavior gap: **5.2 pp**
+
+PERSONA-002:
+
+- raw identification: **71.9%**
+- style-neutral behavior identification: **51.0%**
+- raw→behavior gap: **20.8 pp**
+
+Delta:
+
+- raw: **+25.0 pp**
+- behavior-only: **+9.4 pp**
+- style gap: **+15.6 pp**
+
+The preference continuation therefore improved both behavioral and stylistic separability. The larger style gap is a real caveat: a greater fraction of the raw gain comes from voice/cadence/word choice than in PERSONA-001. However, the behavior-only result still improved materially above the same fixed benchmark.
+
+## Confusion improvement
+
+G03↔G12 was the principal PERSONA-001 ambiguity.
+
+Cross-confusions:
+
+- raw: **10 → 7**
+- behavior-only: **18 → 5**
+
+This is one of the strongest results in the run. Preference training made the two weaker phenotypes substantially easier to distinguish on underlying behavior rather than only prose surface.
+
+## Abstract transfer
+
+PERSONA-001 abstract-unfamiliar accuracy:
+
+- raw: **0%**
+- behavior-only: **25%**
+
+PERSONA-002:
+
+- raw: **62.5%**
+- behavior-only: **81.25%**
+
+The improvement is large enough to be especially interesting because abstract transfer was the weakest PERSONA-001 family.
+
+## Per-persona effects
+
+All four cartridges became less generic in raw and behavior-only scoring.
+
+Raw task relevance also improved for every persona:
+
+- G02: +0.50 /4
+- G03: +0.38
+- G05: +0.54
+- G12: +0.58
+
+Behavior-only task relevance was essentially preserved:
+
+- G02: -0.08
+- G03: 0.00
+- G05: 0.00
+- G12: +0.08
+
+The anti-sanitization preference objective therefore did **not** produce the feared task-relevance collapse.
+
+## Interpretation
+
+**PASS — strongly.**
+
+The paired BABBLE-002 negative targets are useful training signal.
+
+Preference continuation improved:
+
+- raw phenotype identification;
+- behavior-only phenotype identification;
+- G03/G12 separation;
+- abstract-domain transfer;
+- persona fit;
+- anti-genericness;
+- raw task relevance.
+
+The main caveat is increased style leakage: the raw-vs-behavior gap widened considerably. A future experiment should test lower preference strength, fewer pairwise steps, or a stronger behavior-preservation/anti-caricature regularizer to determine whether the 51% behavior score can be retained with less stylistic exaggeration.
+
+Durable evidence:
+
+- `docs/PERSONA_002_REPORT.md`
+- `experiments/persona-002/evidence/summary.json`
+- `experiments/persona-002/evidence/models/`
+- `experiments/persona-002/evidence/judge-raw/`
+- `experiments/persona-002/evidence/adapter-release.json`
+- release `persona-002-v1`
+
 # Journal interpretation notes
 
 ## Throughput is task-shaped
