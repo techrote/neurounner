@@ -4,6 +4,22 @@ This document is the durable longlist for models that look potentially useful fo
 
 The longlist is intentionally broad. Inclusion means **interesting enough to remember**, not endorsed, benchmarked, llama.cpp-compatible, appropriately licensed, or suitable for unattended use. Before moving any entry into `config/candidates.json`, verify the exact revision, runtime support, quantization, license, file hashes, and practical hosted-runner footprint.
 
+## Recently evaluated / promoted — 24 October 2026
+
+These entries have now graduated from speculative longlist status into reproducible local candidates. Detailed metrics and CPU IDs live in `docs/MODEL_JOURNAL.md`.
+
+| Model | Current status | Initial conclusion |
+|---|---|---|
+| Liquid d1-3B Q4_K_M | active, multimodal verified | interesting decision specialization, but weak as raw visual geometry interpreter; pair with a stronger extractor |
+| Qwen3-VL-2B-Instruct Q4_K_M | active, multimodal verified | best cheap visual sidecar in the current simple fixture: 4/6 actions, 72.2% field accuracy, strict JSON compliance |
+| Qwen3-VL-4B-Instruct Q4_K_M | active, multimodal verified | 4/6 actions and 66.7% field accuracy; did not beat 2B on the simple fixture |
+| LFM2.5-VL-450M Q4_K_M | active, multimodal verified | extremely fast but poor spatial/action grounding; keep as cheap filter/extractor candidate |
+| Qwen2.5-Omni-7B Q4_K_M | active, vision+audio verified | correct simple vision, speech transcription and mixed image/audio reasoning; preprocessing is slow on CPU |
+| Nemotron 3.5 Bolt E4B Q4_K_M | active, reasoning modes verified | thinking-off is compact; thinking-on reaches a final answer with larger budget and shows orderly self-checking |
+| K2-Horizon IQ1_M | active only as degradation reference | severe template/reasoning corruption; reject for serious reasoning at this quant unless later evidence reverses it |
+| K2-Horizon Q6_K | active | coherent reasoning; materially better and faster than IQ1_M on the same EPYC 7763 runner |
+| QwenStoryteller Q4_K_M | active specialist | coherent/persona-rich but ignores strict embodied/mechanical constraints; use before a mechanical normalizer, not after it |
+
 ## Active or already tracked
 
 ### Phi-4-mini-instruct
@@ -32,9 +48,11 @@ The longlist is intentionally broad. Inclusion means **interesting enough to rem
 ### d1-3B
 
 - Source: https://huggingface.co/LiquidAI/d1-3B
+- Status: **tested and promoted to the active registry** using the official Q4_K_M GGUF plus Q8 projector.
 - Interest: 3B decision model rather than merely another instruction-tuned chat model.
-- Potential neurounner role: decision-stage selector, behavioural action chooser, policy critic or bridge between language-generated kernels and explicit decisions.
-- Priority: **high**, because its stated purpose maps unusually well onto behaviour research.
+- Observed: multimodal inference works, but the cache-isolated six-scene geometry test produced only 2/6 correct immediate actions and poor strict-schema adherence.
+- Potential neurounner role: decision-stage selector or policy critic **after** scene state has been extracted into a cleaner structured representation.
+- Current priority: high for structured decision tests; lower for raw-image interpretation.
 
 ### Zenyx-V3-Base
 
@@ -53,10 +71,10 @@ The longlist is intentionally broad. Inclusion means **interesting enough to rem
 ### K2-Horizon-3.7B-Claude-Opus-Reasoning-Distilled mashup
 
 - Source: https://huggingface.co/mradermacher/K2-Horizon-3.7B-Claude-Opus-Reasoning-Distilled-i1-GGUF
+- Status: **tested at IQ1_M and Q6_K on the same EPYC 7763 runner; both pinned in the active registry.**
 - Interest: deliberately weird model mashup / reasoning-distillation lineage.
-- Requested test: try both approximately **1-bit-class** and **6-bit-class** quantizations if practical, specifically to see whether the strange character/reasoning properties survive aggressive quantization.
-- Potential neurounner role: deepener, adversarial critic, unusual recombination model, quantization-sensitivity study.
-- Caveat: choose exact quant files only after inspecting the repository and their real sizes/runtime support.
+- Result: IQ1_M (~1.75 bpw) collapsed into malformed reasoning/template fragments and was also slower in the controlled same-host benchmark. Q6_K produced coherent stepwise reasoning.
+- Decision: retain Q6_K as an unusual deepener candidate; retain IQ1_M only as a quantization-degradation reference unless later tests rehabilitate it.
 
 ## Character and persona generators
 
@@ -86,8 +104,10 @@ These models may be more useful for generating actor personalities, social quirk
 ### QwenStoryteller
 
 - Source: https://huggingface.co/mradermacher/QwenStoryteller-GGUF
+- Status: **tested and promoted to the active registry** at Q4_K_M.
 - Interest: story-specialized model may retain consequences, motives and emergent narrative better than general instruction models.
-- Potential neurounner role: turn mechanical kernels into plausible character/world consequences; generate scenario tests and interaction chains.
+- Observed: substantially more coherent and persona-rich than Sprocket, but repeatedly introduced backstory, first-person narration and non-local motives despite explicit constraints.
+- Potential neurounner role: upstream persona/worldbuilding source whose output is later stripped down by LFM/another mechanical compiler; poor choice for authoritative KernelSpec generation.
 
 ### prism-roleplay-1.5-small-fast
 
@@ -132,16 +152,18 @@ They are also good candidates for quantization studies: compare whether smaller 
 ### Qwen3-VL-4B-Instruct
 
 - Source: https://huggingface.co/Qwen/Qwen3-VL-4B-Instruct
-- Interest: likely a better initial balance between multimodal capability and four-core runner practicality.
-- Potential neurounner role: routine visual critic if CPU/quantized throughput is tolerable.
-- Priority: **high among vision candidates**.
+- Status: **tested and promoted to the active registry** with pinned Q4_K_M model + Q8 projector.
+- Result: cache-isolated six-scene fixture gave 66.7% field accuracy, 4/6 correct actions and 100% exact schema compliance.
+- Comparison: did not outperform Qwen3-VL-2B on this simple task despite higher memory cost.
+- Potential neurounner role: visual critic where later, harder tests demonstrate a quality advantage over 2B; otherwise 2B is the better routine sidecar.
 
 ### Qwen3-VL-2B-Instruct
 
 - Source: https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct
-- Interest: smallest of this vision trio and therefore potentially suitable as a cheap image/world interpreter.
-- Potential neurounner role: visual pre-filter, object/state extraction, cheap scene classification, or high-volume visual observation conversion.
-- Priority: **high for first multimodal qualification**.
+- Status: **tested and promoted to the active registry** with pinned Q4_K_M model + Q8 projector.
+- Result: current visual leader on the simple fixture: 72.2% field accuracy, 4/6 correct actions, 100% exact schema compliance.
+- Caveat: it showed a strong RIGHT-direction bias and failed the leftward cases, so it is not yet trustworthy as sole action authority.
+- Potential neurounner role: cheap visual pre-filter, observation extractor and routine visual sidecar.
 
 
 ## NVIDIA Build free-endpoint and specialist candidates
@@ -216,10 +238,11 @@ For ordinary chat/reasoning NIMs, NVIDIA exposes an OpenAI-compatible endpoint a
 ### Nemotron 3.5 Bolt E4B — local/cloud compact reasoner
 
 - Source: https://build.nvidia.com/nvidia/nemotron-3.5-bolt-e4b
+- Status: **local Q4_K_M tested and promoted to the active registry**; hosted NVIDIA endpoint comparison still pending.
 - NVIDIA availability: free hosted endpoint; full-precision weights are available for customization/post-training.
-- Interest: compact reasoning/tool model derived from Gemma-family work, with published results that make it directly comparable to Qwen3.5-4B.
-- Potential neurounner role: **high-priority local fine-tune/quantization candidate**, independent 4B-class critic, long-running incubator, and cloud-vs-local parity experiment.
-- Particularly interesting experiment: quantize to GGUF and compare the same fixed population through hosted BF16 versus local CPU quantizations.
+- Result: thinking-off produced a compact final immediately; thinking-on used a longer explicit self-check chain and successfully reached a final answer when given sufficient budget.
+- Interest: strong constraint tracking, distinct from Qwen/LFM families.
+- Potential neurounner role: high-priority reasoning critic, long-running incubator, and eventual hosted-vs-local parity experiment.
 
 ### Nemotron 3.5 Rerank 8B — multimodal relevance gate
 
