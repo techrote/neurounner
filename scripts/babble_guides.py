@@ -1,0 +1,125 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+import argparse, json, os, platform, subprocess, time, urllib.request
+from pathlib import Path
+
+ROOT=Path(__file__).resolve().parents[1]
+CACHE=Path(os.environ.get("NEURO_CACHE",ROOT/".cache"/"neurounner"))
+RESULTS=ROOT/"results"/"babble001"
+
+def load_env(p):
+    out={}
+    for raw in p.read_text().splitlines():
+        if raw.strip() and not raw.lstrip().startswith("#"):
+            k,v=raw.split("=",1); out[k]=v
+    return out
+
+def cpu_model():
+    for line in Path("/proc/cpuinfo").read_text(errors="replace").splitlines():
+        if line.lower().startswith("model name"):
+            return line.split(":",1)[1].strip()
+    return "unknown"
+
+def call(port, batch):
+    schema={
+      "type":"object",
+      "properties":{
+        "guides":{
+          "type":"array","minItems":4,"maxItems":4,
+          "items":{
+            "type":"object",
+            "properties":{
+              "theme":{"type":"string"},
+              "system_prompt":{"type":"string"},
+              "attitude_guide":{"type":"string"},
+              "content_guide":{"type":"string"},
+              "mechanical_motif":{"type":"string"},
+              "interesting_failure_flavor":{"type":"string"}
+            },
+            "required":["theme","system_prompt","attitude_guide","content_guide","mechanical_motif","interesting_failure_flavor"],
+            "additionalProperties":False
+          }
+        }
+      },
+      "required":["guides"],"additionalProperties":False
+    }
+    prompt=f"""Generate exactly four highly differentiated prompt-guide packets for a tiny chaotic model called Sprocket.
+These guides will make Sprocket babble raw personality/temperament material for later dataset compilation.
+
+Batch {batch}. Favor strange embodied temperaments over generic assistant personas.
+Vary axes aggressively: cautious/reckless, territorial/social, ritualistic/opportunistic, patient/impulsive,
+paranoid/trusting, stubborn/flighty, acquisitive/avoidant, curious/apathetic, submissive/dominant.
+
+For each guide:
+- system_prompt: short role pressure for Sprocket; do not ask for polished JSON.
+- attitude_guide: emotional/temperamental cadence and biases.
+- content_guide: what kinds of embodied habits, local memories, obsessions, failures, motives and physical reactions to babble about.
+- mechanical_motif: one physical/local-state motif to keep returning to.
+- interesting_failure_flavor: the kind of broken/emergent behavior worth preserving.
+Do not imitate named fictional characters or living authors. Do not make them generic helpful assistants."""
+    body={
+      "model":"local",
+      "messages":[{"role":"user","content":prompt}],
+      "max_tokens":1400,
+      "temperature":0.95,
+      "top_p":0.95,
+      "seed":20261024+batch,
+      "response_format":{"type":"json_schema","schema":schema},
+      "stream":False,
+      "chat_template_kwargs":{"enable_thinking":False}
+    }
+    req=urllib.request.Request(f"http://127.0.0.1:{port}/v1/chat/completions",
+      data=json.dumps(body).encode(),headers={"Content-Type":"application/json"},method="POST")
+    t0=time.monotonic()
+    with urllib.request.urlopen(req,timeout=600) as r:
+        payload=json.loads(r.read())
+    elapsed=time.monotonic()-t0
+    text=payload["choices"][0]["message"].get("content") or ""
+    a,b=text.find("{"),text.rfind("}")
+    if a<0 or b<=a: raise RuntimeError(text)
+    parsed=json.loads(text[a:b+1])
+    return parsed["guides"],elapsed,payload.get("usage") or {}
+
+def main():
+    ap=argparse.ArgumentParser(); ap.add_argument("model"); args=ap.parse_args()
+    env=load_env(CACHE/"paths.env"); server=Path(env["LLAMA_SERVER"])
+    port=18800
+    log=(RESULTS/"guide-server.log")
+    RESULTS.mkdir(parents=True,exist_ok=True)
+    fh=log.open("w")
+    proc=subprocess.Popen([str(server),"-m",str(Path(args.model).resolve()),"--host","127.0.0.1","--port",str(port),"-t","4","-c","8192"],
+      stdout=fh,stderr=subprocess.STDOUT,text=True)
+    t0=time.monotonic()
+    try:
+      deadline=time.monotonic()+180
+      while time.monotonic()<deadline:
+        if proc.poll() is not None: raise RuntimeError(log.read_text(errors="replace")[-6000:])
+        try:
+          with urllib.request.urlopen(f"http://127.0.0.1:{port}/health",timeout=1) as r:
+            if r.status==200: break
+        except Exception: pass
+        time.sleep(.25)
+      startup=time.monotonic()-t0
+      all_guides=[]; calls=[]
+      for batch in range(3):
+        guides,elapsed,usage=call(port,batch)
+        calls.append({"batch":batch,"elapsed_seconds":elapsed,"usage":usage})
+        for g in guides:
+          g=dict(g)
+          g["guide_id"]=f"G{len(all_guides)+1:02d}"
+          all_guides.append(g)
+      record={
+        "experiment":"BABBLE-001","stage":"guides",
+        "runner":{"cpu_model":cpu_model(),"cpu_count":os.cpu_count(),"platform":platform.platform()},
+        "startup_seconds":startup,"calls":calls,"guides":all_guides
+      }
+      (RESULTS/"guides.json").write_text(json.dumps(record,indent=2,ensure_ascii=False)+"\n")
+      print(json.dumps(record,indent=2,ensure_ascii=False))
+    finally:
+      if proc.poll() is None:
+        proc.terminate()
+        try: proc.wait(10)
+        except subprocess.TimeoutExpired: proc.kill(); proc.wait(5)
+      fh.close()
+
+if __name__=="__main__": main()
