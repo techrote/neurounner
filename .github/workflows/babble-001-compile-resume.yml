@@ -1,0 +1,84 @@
+name: BABBLE-001 NVIDIA compile resume
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/babble-001-compile-resume.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Recover verified guide artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: babble001-guides
+          path: guide-artifact
+          run-id: 40113280906
+          github-token: ${{ github.token }}
+
+      - name: Recover four successful Sprocket worker artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: babble001-resume-worker-*
+          path: babble-artifacts
+          merge-multiple: true
+          run-id: 40113646404
+          github-token: ${{ github.token }}
+
+      - name: Verify recovered population
+        run: |
+          python3 - <<'PY'
+          import json,glob
+          guides=json.load(open("guide-artifact/guides.json"))["guides"]
+          babbles=[]
+          for p in glob.glob("babble-artifacts/worker-*.json"):
+              babbles += json.load(open(p))["babbles"]
+          assert len(guides)==12, len(guides)
+          assert len(babbles)==48, len(babbles)
+          assert len({b["babble_id"] for b in babbles})==48
+          print("verified guides:",len(guides))
+          print("verified babbles:",len(babbles))
+          PY
+
+      - name: Compile one personality packet per guide with NVIDIA
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+        run: |
+          test -n "$NVIDIA_API_KEY" || { echo "NVKEY repository secret is not configured"; exit 1; }
+          python3 scripts/nvidia_babble_compile.py             --guides guide-artifact/guides.json             --babbles babble-artifacts             --out results/babble001/compiled
+
+      - name: Print compiler manifest
+        if: success()
+        run: |
+          python3 - <<'PY'
+          import json
+          m=json.load(open("results/babble001/compiled/manifest.json"))
+          print("compiler:",m["compiler_model"])
+          print("guides:",m["guide_count"])
+          print("raw babbles:",m["babble_count"])
+          print("compiled packets:",m["packet_count"])
+          print("packet repair calls:",m["repair_count"])
+          print("lineage repairs:",m["lineage_repair_count"])
+          for c in m["calls"]:
+              print(c["guide_id"],"repair",c["repair_used"],"usage",c.get("usage"))
+          PY
+
+      - name: Preserve compiler output and diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: babble001-nvidia-compiled-resume
+          path: results/babble001/compiled
+          if-no-files-found: warn
+          retention-days: 14
