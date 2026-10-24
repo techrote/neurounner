@@ -1,0 +1,120 @@
+name: BABBLE-002 expand personality training corpus
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/babble-002.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: neurounner-babble-002
+  cancel-in-progress: false
+
+jobs:
+  expand:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        persona: [G01,G02,G03,G04,G05,G06,G07,G08,G09,G10,G11,G12]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Expand one archived personality
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+          PERSONA: ${{ matrix.persona }}
+        run: |
+          test -n "$NVIDIA_API_KEY" || { echo "NVKEY repository secret is not configured"; exit 1; }
+          mkdir -p "results/babble002/$PERSONA"
+          python3 scripts/babble_002_expand.py             --config experiments/babble-002/config.json             --persona "$PERSONA"             --out "results/babble002/$PERSONA"
+
+      - name: Verify persona output
+        env:
+          PERSONA: ${{ matrix.persona }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from collections import Counter
+          p=f"results/babble002/{os.environ['PERSONA']}"
+          m=json.load(open(p+"/manifest.json"))
+          rows=[json.loads(x) for x in open(p+"/examples.jsonl") if x.strip()]
+          assert len(rows)==100,len(rows)
+          assert len({x["example_id"] for x in rows})==100
+          assert m["example_count"]==100
+          print("persona:",m["persona"])
+          print("examples:",len(rows))
+          print("surfaces:",dict(Counter(x["surface"] for x in rows)))
+          print("repairs:",sum(1 for c in m["calls"] if c["repair_used"]))
+          print("provider calls:",len(m["calls"]))
+          PY
+
+      - name: Preserve persona expansion
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: babble002-persona-${{ matrix.persona }}
+          path: results/babble002/${{ matrix.persona }}
+          if-no-files-found: warn
+          retention-days: 14
+
+  assemble:
+    if: ${{ always() && needs.expand.result == 'success' }}
+    needs: expand
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: babble002-persona-*
+          path: persona-artifacts
+          merge-multiple: false
+
+      - name: Assemble and validate durable corpus
+        run: |
+          python3 scripts/babble_002_assemble.py             --artifacts persona-artifacts             --config experiments/babble-002/config.json             --out datasets/babble-002
+          (cd datasets/babble-002 && sha256sum -c provenance/hashes.sha256)
+          test "$(find datasets/babble-002/training -name 'G*.jsonl' | wc -l)" -eq 12
+
+      - name: Signpost durable corpus
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          idx=Path("datasets/README.md")
+          s=idx.read_text()
+          row="| [`babble-002`](babble-002/README.md) | 1,200 lineage-preserving personality-training examples derived from all 12 BABBLE-001 packets, with paired generic negatives and raw NVIDIA history | archived |"
+          if "babble-002/README.md" not in s:
+              s=s.rstrip()+"\n"+row+"\n"
+              idx.write_text(s)
+
+          rag=Path("RAG.md")
+          s=rag.read_text()
+          line="- **[BABBLE-002 archive](datasets/babble-002/README.md)** — 1,200 expanded personality-training examples across 12 personas, paired generic negatives, trait lineage and raw NVIDIA expansion history."
+          if "BABBLE-002 archive" not in s:
+              anchor="- **[BABBLE-001 archive](datasets/babble-001/README.md)** — first fully filed babble/personality dataset: guides, 48 Sprocket histories, NVIDIA compiler history and 12 derived packets."
+              s=s.replace(anchor,anchor+"\n"+line)
+              rag.write_text(s)
+          PY
+
+      - name: Commit BABBLE-002 corpus
+        run: |
+          git config user.name "neurounner dataset bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add datasets/babble-002 datasets/README.md RAG.md
+          git commit -m "Archive BABBLE-002 personality training corpus"
+          git pull --rebase origin main
+          git push origin HEAD:main
