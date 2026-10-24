@@ -835,6 +835,123 @@ Durable evidence:
 - `experiments/train-002b/evidence/lanes/`
 - `experiments/train-002b/evidence/semantic-judge/`
 
+---
+
+# 2026-10-24 — PERSONA-001 four 135M personality cartridges
+
+**Issue:** #3  
+**Actions run:** `40135016848`  
+**Result commit:** `8e5638f5582be4cc64dd642b4bc1b95980a01dee`  
+**Release:** `persona-001-v1`
+
+Four SmolLM2-135M-Instruct LoRA cartridges were trained from the same base revision
+`12fd25f77366fa6b3b4b768ec3050bf629380bac`, using the same recipe and seed. The only intended difference was the 100-example BABBLE-002 personality corpus:
+
+- G02 — reckless novelty-seeking mechanic;
+- G03 — ritualistic stubborn proceduralist;
+- G05 — territorial possessive keeper;
+- G12 — apathetic-to-obsessive fixation phenotype.
+
+Each cartridge trained for **2 epochs / 200 optimizer steps** on positive SFT examples only. No persona instruction was supplied during held-out inference.
+
+## Training
+
+| Persona | CPU | Seq tok/s | Loss | Peak RSS | Adapter |
+|---|---|---:|---:|---:|---:|
+| G02 | AMD EPYC 7763 | 114.2 | 3.970→1.959 | ~1.63 GiB | 9.38 MiB |
+| G03 | AMD EPYC 9V74 | 130.0 | 3.251→1.687 | ~1.59 GiB | 9.38 MiB |
+| G05 | AMD EPYC 7763 | 106.0 | 4.412→1.976 | ~1.60 GiB | 9.38 MiB |
+| G12 | AMD EPYC 9V45 | 179.4 | 3.107→1.764 | ~1.66 GiB | 9.38 MiB |
+
+All four adapters have distinct SHA-256 hashes and are published as durable release assets.
+
+## Blind temperament tournament
+
+Twenty-four held-out scenarios were used, spanning:
+
+- embodied decisions;
+- mundane low-stakes behavior;
+- social interactions;
+- conflicting motives;
+- failure/recovery;
+- abstract unfamiliar problems.
+
+For each scenario, the four cartridge responses were anonymized and matched bijectively to the four personality descriptors by an independent MiniMax judge.
+
+A second tournament first converted every response into a style-neutral behavioral summary that removed cadence, metaphor, catchphrases and distinctive wording while retaining actions, priorities, hesitation, persistence, risk appetite, territoriality, ritual and recovery behavior.
+
+Results:
+
+- **raw blind identification: 46.9% (45/96)**;
+- **style-neutral behavioral identification: 41.7% (40/96)**;
+- random-chance baseline: **25%**;
+- raw-minus-behavior gap: **5.2 percentage points**;
+- mean pairwise lexical divergence: **81.4%**.
+
+The small raw/behavior gap is the important result: most separability survived removal of prose style, suggesting the adapters learned **behavioral temperament**, not merely distinctive diction.
+
+## Per-persona behavioral identification
+
+- G02: **50.0%**
+- G03: **33.3%**
+- G05: **50.0%**
+- G12: **33.3%**
+
+G02 and G05 were the clearest behavioral phenotypes. G03 and G12 were more often confused with each other.
+
+## Family transfer
+
+Raw identification:
+
+- mundane: **87.5%**
+- failure/recovery: **75.0%**
+- embodied decision: **56.3%**
+- social: **31.3%**
+- conflicting motives: **31.3%**
+- abstract unfamiliar: **0%**
+
+Behavior-only identification:
+
+- conflicting motives: **56.3%**
+- mundane: **50.0%**
+- social: **50.0%**
+- embodied decision: **37.5%**
+- failure/recovery: **31.3%**
+- abstract unfamiliar: **25.0%**
+
+This indicates that personality transfer is real but uneven. The learned phenotype is strongest on everyday behavior, embodied choices and motivational conflicts; abstract transfer remains weak.
+
+## Generic-assistant regression
+
+On raw responses, trained cartridges were judged far less generic than the untuned base:
+
+- G02: genericness **0.83/4**
+- G03: **0.88/4**
+- G05: **0.46/4**
+- G12: **0.88/4**
+- untuned BASE: **3.83/4**
+
+The untuned base was also less task-relevant on the same held-out prompts (**2.42/4**) than the trained cartridges (~3.1–3.4/4 raw).
+
+## Interpretation
+
+**PASS.**
+
+PERSONA-001 demonstrates that the BABBLE-001 → BABBLE-002 → small-model SFT pipeline can create measurably distinct 135M behavioral phenotypes from one shared base model.
+
+The result is not perfect separation: 41.7% behavior-only accuracy leaves substantial cross-persona confusion, especially G03↔G12. However, it is clearly above the 25% chance baseline and survives style normalization.
+
+The next useful comparison is preference/anti-sanitization training using BABBLE-002's paired generic-negative targets, or a larger/more targeted curriculum for the weaker G03/G12 separation.
+
+Durable evidence:
+
+- `docs/PERSONA_001_REPORT.md`
+- `experiments/persona-001/evidence/summary.json`
+- `experiments/persona-001/evidence/models/`
+- `experiments/persona-001/evidence/judge-raw/`
+- `experiments/persona-001/evidence/adapter-release.json`
+- release `persona-001-v1`
+
 # Journal interpretation notes
 
 ## Throughput is task-shaped
