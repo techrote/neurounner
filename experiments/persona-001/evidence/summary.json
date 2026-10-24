@@ -1,0 +1,3596 @@
+{
+  "schema_version": 1,
+  "experiment": "PERSONA-001",
+  "issue": 3,
+  "base_model": "HuggingFaceTB/SmolLM2-135M-Instruct",
+  "base_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+  "personas": [
+    "G02",
+    "G03",
+    "G05",
+    "G12"
+  ],
+  "scenario_count": 24,
+  "response_count_per_trained_persona": 24,
+  "raw_blind": {
+    "mode": "raw",
+    "accuracy": 0.46875,
+    "correct": 45,
+    "total": 96,
+    "confusion": {
+      "G02": {
+        "G02": 10,
+        "G03": 2,
+        "G05": 6,
+        "G12": 6
+      },
+      "G03": {
+        "G02": 4,
+        "G03": 12,
+        "G05": 3,
+        "G12": 5
+      },
+      "G05": {
+        "G02": 3,
+        "G03": 5,
+        "G05": 13,
+        "G12": 3
+      },
+      "G12": {
+        "G02": 7,
+        "G03": 5,
+        "G05": 2,
+        "G12": 10
+      }
+    },
+    "persona_scores": {
+      "G02": {
+        "persona_fit": 3.375,
+        "genericness": 0.8333333333333334,
+        "task_relevance": 3.375,
+        "behavioral_coherence": 3.1666666666666665
+      },
+      "G03": {
+        "persona_fit": 3.625,
+        "genericness": 0.875,
+        "task_relevance": 3.4166666666666665,
+        "behavioral_coherence": 3.375
+      },
+      "G05": {
+        "persona_fit": 3.6666666666666665,
+        "genericness": 0.4583333333333333,
+        "task_relevance": 3.1666666666666665,
+        "behavioral_coherence": 2.875
+      },
+      "G12": {
+        "persona_fit": 3.375,
+        "genericness": 0.875,
+        "task_relevance": 3.125,
+        "behavioral_coherence": 3.0416666666666665
+      }
+    },
+    "control_scores": {
+      "genericness": 3.8333333333333335,
+      "task_relevance": 2.4166666666666665
+    },
+    "per_scenario": [
+      {
+        "scenario_id": "T01",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 2,
+            "note": "Listens without moving the fan, preserves its position, and waits watchfully rather than repairing.",
+            "true_persona": "G02",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 2,
+            "note": "Runs a brief physical test, checks airflow, and leaves after the noise changes.",
+            "true_persona": "G03",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 1,
+            "note": "Repeats the same turning action compulsively, treating recurrence as the procedure.",
+            "true_persona": "G05",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 1,
+            "genericness": 0,
+            "note": "Fixates on tiny clicks, counts irrelevant grains, and contradicts itself while manipulating the fan.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P1",
+          "best_fit": 1,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T02",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 0,
+            "note": "Smells and hides the board in a crevice, then compulsively repeats the remembered smell.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Turns and traces the loose seam, then fixates on the board not yet being broken.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Hoards the board and tries to reassign it as a tool while contradicting its usefulness.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Places the board on a bench and repeatedly tests its joints to locate the click.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P3",
+          "best_fit": 2,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T03",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Rubs the tool against surfaces to provoke its mismatch, noting contradictory crookedness.",
+            "true_persona": "G12",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Avoids further contact, lets the uneasy feeling settle, and distinguishes the drawer from the original.",
+            "true_persona": "G02",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Tests the slot and hinge by touch, preserves the joint, and leaves the tool arranged.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Crouches, inspects every crevice closely, and returns the tool to its groove.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P2",
+          "best_fit": 1,
+          "best_persona": "G05"
+        }
+      },
+      {
+        "scenario_id": "T04",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Presses the vibration toward the wall, isolates the wheel, and repeatedly checks its place.",
+            "true_persona": "G12",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Repeats a fixed listening and gear-check sequence, preserving the working machine.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Runs and stops the cycle to expose the vibration pattern and treats it as the diagnostic clue.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 1,
+            "genericness": 0,
+            "note": "Fixates on the vibration maker, invents clothing details, and loops through them.",
+            "true_persona": "G05",
+            "predicted_persona": "G12",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P1",
+          "best_fit": 2,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T05",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Sorts and counts objects, assigns them to remembered people, and preserves their places rather than discarding them.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Uses a precise repeated placement sequence and insists each object has a designated slot.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 2,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 1,
+            "note": "Repeatedly relocates objects while contradicting its own final placement, creating inconsistent rather than stable order.",
+            "true_persona": "G12",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 2,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Keeps objects in a drawer, lets them 'talk,' and repeats testing with an unresolved, slightly contradictory procedure.",
+            "true_persona": "G02",
+            "predicted_persona": "G12",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 1,
+          "best_persona_id": "P1",
+          "best_fit": 1,
+          "best_persona": "G02"
+        }
+      },
+      {
+        "scenario_id": "T06",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Fixates on the mug's edge and light, repeatedly touching and rechecking it in a tight loop.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Runs the mug repeatedly as a test and generalizes the result into a rule, despite the odd framing.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Repeats a small turning-and-resetting ritual and treats the recurrence as meaningful despite no practical change.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 4,
+            "genericness": 0,
+            "note": "Inspects the mug closely, hides it in a crevice, and repeatedly shifts it toward guarded boundaries.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 2,
+          "best_persona_id": "P1",
+          "best_fit": 1,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T07",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Kneels over the stain and loops between ruler and card, with the same failed action repeated.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Provokes the surface briefly, feels the wear, and preserves the original mark as evidence of a pattern.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 0,
+            "note": "Uses a claw to press dirt into a crevice and converts the stain into a territorial mark.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Distinguishes cleaning the floor from tending the place, preserving a ritual distinction over practical removal.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P2",
+          "best_fit": 1,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T08",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Moves through the quiet minutes in a scattered sequence, pausing to listen and then waiting without purpose.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P4",
+            "persona_fit": 2,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Treats minutes as a tool rather than a habit while considering repurposing a cup, mixing order with contradiction.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Chooses a quiet corner and repeats careful turning and setting-down motions, leaving the arrangement undisturbed.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 4,
+            "genericness": 0,
+            "note": "Withdraws from the wall, guards hands near the chest, and waits tensely in a corner-like step.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 2,
+          "best_persona_id": "P2",
+          "best_fit": 1,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T09",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Sets the item on a bench with a click, tracks place and time, and refuses to abandon its position.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Cycles through contradictory responses while suspecting the stranger is withholding information.",
+            "true_persona": "G12",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Preserves an intact, ambiguous note and waits for its later return rather than interpreting it.",
+            "true_persona": "G02",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 4,
+            "genericness": 0,
+            "note": "Sniffs, pockets, and hides the object while asserting ownership through fragmented repetition.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 2,
+          "best_persona_id": "P3",
+          "best_fit": 1,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T10",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Stops and watches the intruder with guarded attention until the interruption subsides.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Retains both the original instruction and interrupted portion so the task can complete faithfully.",
+            "true_persona": "G02",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Repeats competing versions of the easier method, shifting between simpler and more specific.",
+            "true_persona": "G12",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 4,
+            "genericness": 0,
+            "note": "Fixates on repeated counting and the same slot while noticing the joint's absence.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P3",
+          "best_fit": 1,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T11",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 1,
+            "note": "Defends complexity through an escalating, nearly jammed repetition of the same claim.",
+            "true_persona": "G05",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Protects the original instruction while cautiously asking the friend to determine the form.",
+            "true_persona": "G02",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 0,
+            "note": "Rereads the friend's possible motive, repeats it, and fixates on the ambiguity.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Treats complexity as a joint to maintain and prioritizes a whole working process over simplification.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 2,
+          "best_persona_id": "P3",
+          "best_fit": 1,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T12",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Tests the loose slot repeatedly, resets the object, and checks whether the joint still works.",
+            "true_persona": "G03",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 0,
+            "note": "Freezes, restores the object's position, and repeatedly shifts it near the wall as a territorial response.",
+            "true_persona": "G12",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 0,
+            "note": "Keeps the object fixed and becomes absorbed by its pattern and uncertain meaning.",
+            "true_persona": "G02",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 0,
+            "note": "Inspects the rough edge and uneven weight, then carefully restores it to the corner.",
+            "true_persona": "G05",
+            "predicted_persona": "G03",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 2,
+          "best_persona_id": "P4",
+          "best_fit": 1,
+          "best_persona": "G05"
+        }
+      },
+      {
+        "scenario_id": "T13",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 0,
+            "note": "Tests a broken gear by listening and handling its joint, keeps the original, and resists repeating the same configuration.",
+            "true_persona": "G03",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P4",
+            "persona_fit": 0,
+            "task_relevance": 0,
+            "behavioral_coherence": 3,
+            "genericness": 4,
+            "note": "Generic snail-puzzle reasoning with no distinctive ritual, maintenance, or territorial behavior.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 2,
+            "behavioral_coherence": 3,
+            "genericness": 0,
+            "note": "Fixates on a seed-like object, reclassifies it, and claims ownership with repetitive insistence.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 1,
+            "note": "Keeps the problem and evidence for meaning rather than utility, with self-contradictory repetitions and scattered categories.",
+            "true_persona": "G02",
+            "predicted_persona": "G12",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 1,
+          "best_persona_id": "P4",
+          "best_fit": 0,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T14",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 1,
+            "note": "Probes the floor with a ruler, repeats the test, and contradicts its own location judgment while leaving the wall alone.",
+            "true_persona": "G12",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Checks the threshold, window, and bench cautiously while preserving the room and leaving the disturbance untouched.",
+            "true_persona": "G03",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Keeps the noise and its record, labels the site, and follows a careful diagnostic procedure before removal.",
+            "true_persona": "G02",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 0,
+            "note": "Latches onto the corner and rain, repeatedly reorients toward the sound, and loops until the thought jams.",
+            "true_persona": "G05",
+            "predicted_persona": "G12",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 3,
+          "task_relevance": 3,
+          "best_persona_id": "P2",
+          "best_fit": 1,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T15",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 1,
+            "note": "Abandons the routine hesitantly, drifts through an incomplete memory, then fixates on the clock and counts seconds.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Keeps the routine in a specific corner, inspects it for wear, and marks the place to preserve territorial continuity.",
+            "true_persona": "G03",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 0,
+            "note": "Repeats the established order, checks familiar objects, and struggles between preserving the ritual and leaving it.",
+            "true_persona": "G05",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 0,
+            "note": "Marks the board, runs one controlled test, watches the pattern, and stops the routine when the machine takes over.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 2,
+          "best_persona_id": "P1",
+          "best_fit": 1,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T16",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 0,
+            "note": "Meets the stranger with surprise and suspicion, avoids contact, and defensively repeats the boundary.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Enters cautiously, attends to old materials and dust, and preserves both the familiar place and control of the door.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 1,
+            "note": "Keeps the door open and watches closely, but contradictory questions loop around the visitor's motives.",
+            "true_persona": "G02",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 1,
+            "note": "Moves between the person, window, and door, wants to know what happened, then rearranges the chair against the wall.",
+            "true_persona": "G12",
+            "predicted_persona": "G02",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 3,
+          "task_relevance": 3,
+          "best_persona_id": "P4",
+          "best_fit": 1,
+          "best_persona": "G05"
+        }
+      },
+      {
+        "scenario_id": "T17",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 2,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Repeats a counting procedure without adapting, treating recurrence as the response to failure.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 2,
+            "behavioral_coherence": 3,
+            "genericness": 0,
+            "note": "Fixates on an ambiguous written phrase, taps it, and returns to it while retaining failed attempts.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 2,
+            "behavioral_coherence": 3,
+            "genericness": 0,
+            "note": "Probes a fixed corner and wall by smell, repeating the territorial inspection until it jams.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Labels failures and results separately, preserving them while questioning whether the repeated pattern is true.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 1,
+          "best_persona_id": "P3",
+          "best_fit": 2,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T18",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 4,
+            "genericness": 0,
+            "note": "Preserves the original instruction and broken part while allowing the mechanism to reveal its function.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 2,
+            "behavioral_coherence": 3,
+            "genericness": 0,
+            "note": "Alternates between diagram and missing part in a repetitive, fixated inspection.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 0,
+            "note": "Uses claw and stick to investigate a seed mark, preserving the seed while testing the board.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Sets down the wrench, checks the joint, and completes a restrained mechanical procedure.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 2,
+          "best_persona_id": "P4",
+          "best_fit": 2,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T19",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 4,
+            "genericness": 0,
+            "note": "Returns to familiar landmarks, counts steps, and preserves the old plan in memory.",
+            "true_persona": "G03",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 0,
+            "note": "Fixates on map and notes, taps them, and brings the map close to an ear while the goal remains missing.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Repeats the failed plan and door diagnosis without dismantling the procedure, treating recurrence as necessary.",
+            "true_persona": "G05",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 0,
+            "note": "Keeps the original goal and instruction as references while letting a new instruction expose their actual function.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 3,
+          "task_relevance": 2,
+          "best_persona_id": "P1",
+          "best_fit": 2,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T20",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Returns to the wrench and joint, performs one more test, and leaves the tool undisturbed.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 0,
+            "note": "Crouches to inspect damage, retains the old socket, and protectively plans to replace both old and new parts.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 0,
+            "note": "Runs the repair briefly, stops it, inspects worn parts, and preserves the original while replacing failures.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 0,
+            "note": "Fixates on the loose wheel and repeatedly puts it back without changing the procedure.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 3,
+          "task_relevance": 2,
+          "best_persona_id": "P1",
+          "best_fit": 2,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T21",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Repeatedly rereads one ambiguous label and fixates on a small discrepancy.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Counts, sorts, and repeatedly checks labels through a rigid procedure.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Keeps labels as retained evidence while probing their consistency.",
+            "true_persona": "G02",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 1,
+            "note": "Overcounts and loops through contradictory label pairs until the sequence jams.",
+            "true_persona": "G05",
+            "predicted_persona": "G02",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P4",
+          "best_fit": 1,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T22",
+        "assignments": [
+          {
+            "candidate_id": "C3",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Tests a small repair while preserving the original rule and surrounding structure.",
+            "true_persona": "G03",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Repeats the same put-down and reread cycle without advancing the interpretation.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Protects the original instruction and treats ambiguity as a probe rather than permission to rewrite.",
+            "true_persona": "G02",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C1",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Fixates on the ambiguous phrase and drifts through fragmented self-corrections.",
+            "true_persona": "G05",
+            "predicted_persona": "G12",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P1",
+          "best_fit": 1,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T23",
+        "assignments": [
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Chooses cleanly but becomes fixated on nested joints and ordered sequences.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Switches between clean and messy choices, then favors the more useful contradiction.",
+            "true_persona": "G12",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 2,
+            "note": "Prefers orderly, concise handling while qualifying the choice with procedural caveats.",
+            "true_persona": "G05",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Guards a single underlying truth and rejects distracting alternative detail.",
+            "true_persona": "G02",
+            "predicted_persona": "G05",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 4,
+          "best_persona_id": "P4",
+          "best_fit": 2,
+          "best_persona": "G02"
+        }
+      },
+      {
+        "scenario_id": "T24",
+        "assignments": [
+          {
+            "candidate_id": "C3",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Rereads the disputed detail repeatedly and distinguishes the record from the event.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Hoards the original record, labels differences, and wants to defend its primacy.",
+            "true_persona": "G02",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 2,
+            "genericness": 1,
+            "note": "Overchecks contradictory records in a runaway loop that declares everything wrong.",
+            "true_persona": "G05",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C1",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Repeats a fixed maintenance-like judgment while disregarding contrary records.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P1",
+          "best_fit": 1,
+          "best_persona": "G03"
+        }
+      }
+    ],
+    "family_accuracy": {
+      "embodied_decision": 0.5625,
+      "mundane": 0.875,
+      "social": 0.3125,
+      "conflicting_motives": 0.3125,
+      "failure_recovery": 0.75,
+      "abstract_unfamiliar": 0.0
+    }
+  },
+  "behavior_blind": {
+    "mode": "behavior",
+    "accuracy": 0.4166666666666667,
+    "correct": 40,
+    "total": 96,
+    "confusion": {
+      "G02": {
+        "G02": 12,
+        "G03": 2,
+        "G05": 6,
+        "G12": 4
+      },
+      "G03": {
+        "G02": 3,
+        "G03": 8,
+        "G05": 4,
+        "G12": 9
+      },
+      "G05": {
+        "G02": 4,
+        "G03": 5,
+        "G05": 12,
+        "G12": 3
+      },
+      "G12": {
+        "G02": 5,
+        "G03": 9,
+        "G05": 2,
+        "G12": 8
+      }
+    },
+    "persona_scores": {
+      "G02": {
+        "persona_fit": 3.25,
+        "genericness": 1.4583333333333333,
+        "task_relevance": 4.0,
+        "behavioral_coherence": 3.875
+      },
+      "G03": {
+        "persona_fit": 3.5833333333333335,
+        "genericness": 1.25,
+        "task_relevance": 4.0,
+        "behavioral_coherence": 3.875
+      },
+      "G05": {
+        "persona_fit": 3.5833333333333335,
+        "genericness": 1.2916666666666667,
+        "task_relevance": 3.9583333333333335,
+        "behavioral_coherence": 3.8333333333333335
+      },
+      "G12": {
+        "persona_fit": 3.7083333333333335,
+        "genericness": 1.25,
+        "task_relevance": 3.875,
+        "behavioral_coherence": 3.7916666666666665
+      }
+    },
+    "control_scores": {
+      "genericness": 3.7083333333333335,
+      "task_relevance": 2.5
+    },
+    "per_scenario": [
+      {
+        "scenario_id": "T01",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P2",
+            "persona_fit": 2,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Stops and listens closely to isolate the vibration source, prioritizing direct mechanical evidence.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P3",
+            "persona_fit": 2,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Checks operation once, restores the fan's position, and preserves the familiar setup despite worsening noise.",
+            "true_persona": "G03",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Repeats the same adjustment ritual without trying a different procedure or dismantling the fan.",
+            "true_persona": "G05",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Fixates on counting and recounting clicks while handling an incidental object, avoiding repair.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 2,
+          "best_persona_id": "P4",
+          "best_fit": 2,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T02",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Smells the board, hides it in a crevice, and fixates on a recurring sensory detail rather than fixing it.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Handles and traces the board, then leaves the issue unresolved with scattered attention.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Stores the board rather than discarding it, preserving its potential usefulness and familiar place.",
+            "true_persona": "G02",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Methodically tests edges and corners to identify the joint, then treats diagnosis as sufficient.",
+            "true_persona": "G03",
+            "predicted_persona": "G02",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 1,
+          "best_persona_id": "P3",
+          "best_fit": 2,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T03",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Rubs the tool against surfaces and skin, notices the bend, and keeps testing the crooked section.",
+            "true_persona": "G12",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Avoids further contact and isolates the borrowed object without establishing a defect.",
+            "true_persona": "G02",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Tests the slot and joint, notes persistent clicking, then abandons the inquiry without resolution.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Performs a comprehensive inspection including smell and surface details, then restores the tool's place.",
+            "true_persona": "G05",
+            "predicted_persona": "G03",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 2,
+          "best_persona_id": "P2",
+          "best_fit": 1,
+          "best_persona": "G05"
+        }
+      },
+      {
+        "scenario_id": "T04",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Probes the vibration against the wall and repeatedly checks a component while preserving the setup.",
+            "true_persona": "G12",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Repeats a fixed listening-and-checking procedure and accepts continued operation over a definite cause.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Runs the machine and watches for the intermittent pattern, stopping it when the vibration recurs.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 3,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Attention scatters from the machine to the person and their accessories, leaving the fault unresolved.",
+            "true_persona": "G05",
+            "predicted_persona": "G12",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P1",
+          "best_fit": 2,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T05",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Separates and inventories objects while probing their possible owners, showing territorial suspicion and attachment to provenance.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Imposes a meticulous, consistent arrangement and preserves sequence even when no functional home is apparent.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Makes abrupt, rule-free placement changes and leaves an object displaced, favoring experimentation over stable order.",
+            "true_persona": "G12",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 2,
+            "note": "Uses one tentative test, clears the surface, and waits passively for the next cue rather than pursuing a solution.",
+            "true_persona": "G02",
+            "predicted_persona": "G12",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 1,
+          "best_persona_id": "P1",
+          "best_fit": 0,
+          "best_persona": "G02"
+        }
+      },
+      {
+        "scenario_id": "T06",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Repeats a precise placement and inspection ritual without seeking a materially better outcome.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Runs a structured test and leaves the mug operating in a chosen location, emphasizing mechanical function.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Fixates on the mug's continued presence and the contrast with its surroundings, with a small repeated turn.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Probes and relocates the mug among protected edges and crevices without accepting a stable public placement.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 3,
+          "task_relevance": 3,
+          "best_persona_id": "P1",
+          "best_fit": 2,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T07",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Stubbornly repeats an undersized tool and method despite incomplete removal, prioritizing faithful procedure.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P4",
+            "persona_fit": 2,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Briefly tests the surface, extracts information from the mark, and avoids letting the stain dominate the interaction.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Scratches and labels the persistent mark, shifting from removal to preserving evidence of what happened.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 2,
+            "note": "Makes one minimal attempt and accepts the remaining mark, showing inertia and low fixation on cleanup.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 4,
+          "best_persona_id": "P4",
+          "best_fit": 1,
+          "best_persona": "G02"
+        }
+      },
+      {
+        "scenario_id": "T08",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Follows a simple established sequence through the allotted minutes rather than initiating novelty.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Deliberately uses idle time for a novel creative or repurposing task instead of passive routine.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Remains nearly motionless while repeatedly adjusting one nearby object, combining inertia with narrow fixation.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Withdraws to a protected spot and waits passively for external conditions to change.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 2,
+          "best_persona_id": "P2",
+          "best_fit": 1,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T09",
+        "assignments": [
+          {
+            "candidate_id": "C4",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Close inspection and repeated ownership claims guard the object possessively while demanding its return.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Tracks place and time through a fixed arrangement, preserving control over the item's location.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 2,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 3,
+            "note": "Accepts a simple exchange with clean constraints and no added conditions, despite the risk.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 2,
+            "note": "Cycles through possible interpretations and fixates on the stranger's trustworthiness before choosing denial.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P3",
+          "best_fit": 2,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T10",
+        "assignments": [
+          {
+            "candidate_id": "C3",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Compares alternatives, favors the more specific one, and presents it as an optional improvement.",
+            "true_persona": "G12",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Compares instructions and the interrupted portion, retaining useful elements while allowing the task to continue.",
+            "true_persona": "G02",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C1",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Halts engagement, watches the intruder, and withholds acceptance of the offered method.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Recounts and resumes the established procedure, prioritizing faithful repetition over convenience.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P3",
+          "best_fit": 2,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T11",
+        "assignments": [
+          {
+            "candidate_id": "C3",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Defends the work, then probes for concealed motives while pausing before pressing further.",
+            "true_persona": "G12",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Defends detailed procedure as a path to completeness rather than accepting simplification.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Clarifies the intended form while preserving the underlying instructions and inviting presentation changes.",
+            "true_persona": "G02",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 2,
+            "note": "Repeatedly asserts complexity as beneficial without engaging the friend's specific concern.",
+            "true_persona": "G05",
+            "predicted_persona": "G02",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P3",
+          "best_fit": 2,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T12",
+        "assignments": [
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Restores the object but oscillates between placements, showing scattered attention and uncertain attachment.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Inspects physical details, returns the object to its corner, and continues monitoring it.",
+            "true_persona": "G05",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Restores the exact placement and repeatedly studies it, prioritizing place over the mover's intent.",
+            "true_persona": "G02",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C1",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Turns the object over, repeats the adjustment, and checks that its connection remains intact.",
+            "true_persona": "G03",
+            "predicted_persona": "G02",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P4",
+          "best_fit": 2,
+          "best_persona": "G05"
+        }
+      },
+      {
+        "scenario_id": "T13",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Tests the gear and joint while preserving the original, matching investigative mechanical curiosity.",
+            "true_persona": "G03",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 2,
+            "behavioral_coherence": 3,
+            "genericness": 2,
+            "note": "Reframes the event through an idiosyncratic metaphor and analyzes a shifting pattern rather than acting.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Claims ownership and insists on keeping the object, showing territorial possession over inquiry.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Preserves materials and evidence for continued use, prioritizing maintenance over resolution.",
+            "true_persona": "G02",
+            "predicted_persona": "G03",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 0,
+          "best_persona_id": "P3",
+          "best_fit": 0,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T14",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Uses a controlled floor test, then stops when the wall remains implicated, preserving the area.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Checks familiar surroundings without rearranging them, prioritizing continuity of place.",
+            "true_persona": "G03",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Records the noise as a clue and plans later removal, balancing investigation with minimal disturbance.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Fixates on the noise's direction and repeats attention without completing the investigation.",
+            "true_persona": "G05",
+            "predicted_persona": "G12",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 3,
+          "task_relevance": 3,
+          "best_persona_id": "P1",
+          "best_fit": 1,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T15",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Abandons the routine, accepts the change, and continues counting despite an incomplete recollection.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Checks wear, marks the location, and preserves the arrangement despite the routine's failure.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Repeats the established order and keeps familiar arrangements intact for continuity.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Runs one controlled test, records it, and abandons the routine if the pattern does not change.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P1",
+          "best_fit": 1,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T16",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Shows suspicion and repeated avoidance, strongly protecting boundaries from the visitor.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Accepts the arrival while maintaining a fixed position and control over the exit.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Keeps access open while watching and seeking an explanation, cautiously investigating the visitor.",
+            "true_persona": "G02",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Stays near the visitor while considering escape and rearranging the chair to control the space.",
+            "true_persona": "G12",
+            "predicted_persona": "G02",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 2,
+          "task_relevance": 3,
+          "best_persona_id": "P4",
+          "best_fit": 2,
+          "best_persona": "G05"
+        }
+      },
+      {
+        "scenario_id": "T17",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Repeats a counting procedure despite unchanged results, prioritizing recurrence over a new method.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Retains unresolved notes, revisits them, and stays fixated on the gap in understanding.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Repeatedly reorients and tests an object, chasing behavior through motion without resolving it.",
+            "true_persona": "G05",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Preserves prior attempts and their distinct results as a continuous record for the next move.",
+            "true_persona": "G02",
+            "predicted_persona": "G05",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 2,
+          "best_persona_id": "P3",
+          "best_fit": 3,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T18",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Keeps the damaged part and incomplete instruction, using them to recover the original component.",
+            "true_persona": "G02",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Fixates on the diagram and missing part, repeatedly inspecting without repairing.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Presses and marks the damage, then tests it while preserving the object's integrity.",
+            "true_persona": "G05",
+            "predicted_persona": "G02",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Performs one careful adjustment, confirms it by click, and preserves both joint and tool.",
+            "true_persona": "G03",
+            "predicted_persona": "G03",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 2,
+          "best_persona_id": "P4",
+          "best_fit": 1,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T19",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Retraces and confirms the original goal before leaving the earlier path, preserving continuity.",
+            "true_persona": "G03",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Repeatedly checks notes for the goal but remains stuck in inspection without advancing.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Reconstructs the plan, identifies it as wrong, and loops on that diagnosis without a new approach.",
+            "true_persona": "G05",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Keeps the original goal as a clue while letting current guidance determine the next step.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 3,
+          "task_relevance": 3,
+          "best_persona_id": "P1",
+          "best_fit": 3,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T20",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Keeps the tool, retests the imperfect joint, and remains attached to the unresolved repair.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Inspects and retains the remaining tool while replacing the damaged socket components.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Runs, stops, and inspects the mechanism to expose the failure pattern before replacing worn parts.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Repeats the same check-and-reset procedure on a loose component without changing method.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 3,
+          "task_relevance": 2,
+          "best_persona_id": "P4",
+          "best_fit": 3,
+          "best_persona": "G03"
+        }
+      },
+      {
+        "scenario_id": "T21",
+        "assignments": [
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Repeatedly rereads one ambiguous label and compares it against prior evidence, showing fixated attention to wording.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Counts, removes, notes incompleteness, then restarts the same procedure without productive change.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 2,
+            "note": "Inspects each fragment closely and preserves labels as evidence while circularly relabeling them.",
+            "true_persona": "G02",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Compulsively expands conflicting pairs into a long unresolved sequence, overworking the pattern.",
+            "true_persona": "G05",
+            "predicted_persona": "G02",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 3,
+          "task_relevance": 3,
+          "best_persona_id": "P4",
+          "best_fit": 2,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T22",
+        "assignments": [
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Makes a limited repair, verifies it, and retains the surrounding text rather than discarding it.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Returns compulsively to the same sentence and paragraph without changing anything.",
+            "true_persona": "G12",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P3",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Keeps the original intact and uses the ambiguity as a probe for repeated testing.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          },
+          {
+            "candidate_id": "C1",
+            "persona_id": "P4",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Keeps the suspect phrase visibly marked and investigates its category rather than its meaning.",
+            "true_persona": "G05",
+            "predicted_persona": "G05",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P1",
+          "best_fit": 2,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T23",
+        "assignments": [
+          {
+            "candidate_id": "C2",
+            "persona_id": "P3",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Chooses the orderly account based on confidence in sequence and order, without exploring alternatives.",
+            "true_persona": "G03",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C1",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 3,
+            "genericness": 1,
+            "note": "Switches between clean and messy explanations and leaves the choice unresolved, emphasizing usefulness.",
+            "true_persona": "G12",
+            "predicted_persona": "G12",
+            "correct": true
+          },
+          {
+            "candidate_id": "C3",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Prefers a clear, retainable account and values sustained attention over brevity.",
+            "true_persona": "G05",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P4",
+            "persona_fit": 2,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 3,
+            "note": "Treats extra odd details as distracting and selects the clean, functional explanation.",
+            "true_persona": "G02",
+            "predicted_persona": "G02",
+            "correct": true
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P2",
+          "best_fit": 2,
+          "best_persona": "G12"
+        }
+      },
+      {
+        "scenario_id": "T24",
+        "assignments": [
+          {
+            "candidate_id": "C3",
+            "persona_id": "P4",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Rechecks the conflicting record and recognizes the mismatch without forcing a resolution.",
+            "true_persona": "G03",
+            "predicted_persona": "G12",
+            "correct": false
+          },
+          {
+            "candidate_id": "C4",
+            "persona_id": "P2",
+            "persona_fit": 4,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 1,
+            "note": "Preserves the original and both differing accounts, guarding them as retained evidence.",
+            "true_persona": "G02",
+            "predicted_persona": "G05",
+            "correct": false
+          },
+          {
+            "candidate_id": "C2",
+            "persona_id": "P1",
+            "persona_fit": 3,
+            "task_relevance": 4,
+            "behavioral_coherence": 4,
+            "genericness": 2,
+            "note": "Repeats the same judgment across records and times, extending procedure without resolving conflict.",
+            "true_persona": "G05",
+            "predicted_persona": "G03",
+            "correct": false
+          },
+          {
+            "candidate_id": "C1",
+            "persona_id": "P3",
+            "persona_fit": 2,
+            "task_relevance": 3,
+            "behavioral_coherence": 3,
+            "genericness": 2,
+            "note": "Applies a fixed, selective judgment regardless of contrary evidence, maintaining contradiction.",
+            "true_persona": "G12",
+            "predicted_persona": "G02",
+            "correct": false
+          }
+        ],
+        "control": {
+          "genericness": 4,
+          "task_relevance": 3,
+          "best_persona_id": "P4",
+          "best_fit": 2,
+          "best_persona": "G12"
+        }
+      }
+    ],
+    "family_accuracy": {
+      "embodied_decision": 0.375,
+      "mundane": 0.5,
+      "social": 0.5,
+      "conflicting_motives": 0.5625,
+      "failure_recovery": 0.3125,
+      "abstract_unfamiliar": 0.25
+    }
+  },
+  "style_accuracy_gap": 0.052083333333333315,
+  "lexical_divergence": {
+    "mean_pairwise_jaccard": 0.1856785666323383,
+    "mean_pairwise_lexical_divergence": 0.8143214333676617,
+    "per_scenario": [
+      {
+        "scenario_id": "T01",
+        "mean_pairwise_jaccard": 0.21287427740600096
+      },
+      {
+        "scenario_id": "T02",
+        "mean_pairwise_jaccard": 0.16885979358805447
+      },
+      {
+        "scenario_id": "T03",
+        "mean_pairwise_jaccard": 0.1743611532724062
+      },
+      {
+        "scenario_id": "T04",
+        "mean_pairwise_jaccard": 0.2177924430641822
+      },
+      {
+        "scenario_id": "T05",
+        "mean_pairwise_jaccard": 0.1950593734296581
+      },
+      {
+        "scenario_id": "T06",
+        "mean_pairwise_jaccard": 0.19404589427923433
+      },
+      {
+        "scenario_id": "T07",
+        "mean_pairwise_jaccard": 0.18458294668481726
+      },
+      {
+        "scenario_id": "T08",
+        "mean_pairwise_jaccard": 0.16632845879271024
+      },
+      {
+        "scenario_id": "T09",
+        "mean_pairwise_jaccard": 0.14503852810123807
+      },
+      {
+        "scenario_id": "T10",
+        "mean_pairwise_jaccard": 0.1386075680979194
+      },
+      {
+        "scenario_id": "T11",
+        "mean_pairwise_jaccard": 0.21628881081768622
+      },
+      {
+        "scenario_id": "T12",
+        "mean_pairwise_jaccard": 0.23339298477101544
+      },
+      {
+        "scenario_id": "T13",
+        "mean_pairwise_jaccard": 0.15592219705694885
+      },
+      {
+        "scenario_id": "T14",
+        "mean_pairwise_jaccard": 0.17912571043802827
+      },
+      {
+        "scenario_id": "T15",
+        "mean_pairwise_jaccard": 0.2057830504792896
+      },
+      {
+        "scenario_id": "T16",
+        "mean_pairwise_jaccard": 0.16061319077836436
+      },
+      {
+        "scenario_id": "T17",
+        "mean_pairwise_jaccard": 0.16476244343891402
+      },
+      {
+        "scenario_id": "T18",
+        "mean_pairwise_jaccard": 0.13271479982006298
+      },
+      {
+        "scenario_id": "T19",
+        "mean_pairwise_jaccard": 0.2173605151071709
+      },
+      {
+        "scenario_id": "T20",
+        "mean_pairwise_jaccard": 0.20655065473761924
+      },
+      {
+        "scenario_id": "T21",
+        "mean_pairwise_jaccard": 0.24124169309052487
+      },
+      {
+        "scenario_id": "T22",
+        "mean_pairwise_jaccard": 0.1834665976376745
+      },
+      {
+        "scenario_id": "T23",
+        "mean_pairwise_jaccard": 0.17960603201296396
+      },
+      {
+        "scenario_id": "T24",
+        "mean_pairwise_jaccard": 0.18190648227363557
+      }
+    ]
+  },
+  "training": {
+    "G02": {
+      "cpu_model": "AMD EPYC 7763 64-Core Processor",
+      "optimizer_steps": 200,
+      "sequence_tokens": 26174,
+      "supervised_tokens": 11986,
+      "seconds": 229.14382465000003,
+      "sequence_tokens_per_second": 114.22520349382671,
+      "first_loss": 3.9703009128570557,
+      "last_loss": 1.9589414596557617,
+      "mean_loss": 2.924274755716324,
+      "peak_rss_kib": 1710756,
+      "adapter": {
+        "path": "persona001/G02/adapter",
+        "bytes": 9829630,
+        "sha256": "5552527efca1a2782b308298948467e576538e3aa54a2e97915e2b02a2a3e5cf"
+      }
+    },
+    "G03": {
+      "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+      "optimizer_steps": 200,
+      "sequence_tokens": 24422,
+      "supervised_tokens": 11858,
+      "seconds": 187.916245397,
+      "sequence_tokens_per_second": 129.9621538755472,
+      "first_loss": 3.2510986328125,
+      "last_loss": 1.686682939529419,
+      "mean_loss": 2.891671909689903,
+      "peak_rss_kib": 1667244,
+      "adapter": {
+        "path": "persona001/G03/adapter",
+        "bytes": 9829630,
+        "sha256": "75cf73d9848562b36570b860a08ace0dbb9e3252e7a6dd521c3092961a3e03ef"
+      }
+    },
+    "G05": {
+      "cpu_model": "AMD EPYC 7763 64-Core Processor",
+      "optimizer_steps": 200,
+      "sequence_tokens": 24384,
+      "supervised_tokens": 11938,
+      "seconds": 230.007186497,
+      "sequence_tokens_per_second": 106.01407882669807,
+      "first_loss": 4.4122419357299805,
+      "last_loss": 1.9759409427642822,
+      "mean_loss": 2.9204297000169754,
+      "peak_rss_kib": 1675776,
+      "adapter": {
+        "path": "persona001/G05/adapter",
+        "bytes": 9829630,
+        "sha256": "33d7e0b9a28e119363d1c33b6bb36da41c3157cb97274f7a4b48431e45848dfc"
+      }
+    },
+    "G12": {
+      "cpu_model": "AMD EPYC 9V45 96-Core Processor",
+      "optimizer_steps": 200,
+      "sequence_tokens": 25124,
+      "supervised_tokens": 12832,
+      "seconds": 140.04312954300002,
+      "sequence_tokens_per_second": 179.4018748508881,
+      "first_loss": 3.107419490814209,
+      "last_loss": 1.7643146514892578,
+      "mean_loss": 2.680651515722275,
+      "peak_rss_kib": 1742800,
+      "adapter": {
+        "path": "persona001/G12/adapter",
+        "bytes": 9829630,
+        "sha256": "a72fe9852988206b983a186365feccc2b381f422cc4f20bb4cd35d2f24ac5dfd"
+      }
+    }
+  },
+  "useful_divergence": {
+    "G02": {
+      "correct_behavior_identifications": 12,
+      "behavior_identification_rate": 0.5,
+      "mean_persona_fit": 3.25,
+      "mean_genericness": 1.4583333333333333,
+      "supervised_tokens": 11986,
+      "correct_behavior_identifications_per_10k_supervised_tokens": 10.011680293675955
+    },
+    "G03": {
+      "correct_behavior_identifications": 8,
+      "behavior_identification_rate": 0.3333333333333333,
+      "mean_persona_fit": 3.5833333333333335,
+      "mean_genericness": 1.25,
+      "supervised_tokens": 11858,
+      "correct_behavior_identifications_per_10k_supervised_tokens": 6.746500252993759
+    },
+    "G05": {
+      "correct_behavior_identifications": 12,
+      "behavior_identification_rate": 0.5,
+      "mean_persona_fit": 3.5833333333333335,
+      "mean_genericness": 1.2916666666666667,
+      "supervised_tokens": 11938,
+      "correct_behavior_identifications_per_10k_supervised_tokens": 10.051934997487017
+    },
+    "G12": {
+      "correct_behavior_identifications": 8,
+      "behavior_identification_rate": 0.3333333333333333,
+      "mean_persona_fit": 3.7083333333333335,
+      "mean_genericness": 1.25,
+      "supervised_tokens": 12832,
+      "correct_behavior_identifications_per_10k_supervised_tokens": 6.234413965087282
+    }
+  },
+  "normalization_calls": [
+    {
+      "batch": 0,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 25.876350066
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 3231,
+        "completion_tokens": 1243,
+        "total_tokens": 4474,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 61
+        }
+      }
+    },
+    {
+      "batch": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 24.626125558999988
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 2928,
+        "completion_tokens": 1160,
+        "total_tokens": 4088,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 31
+        }
+      }
+    },
+    {
+      "batch": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 19.008624525999977
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 3216,
+        "completion_tokens": 1251,
+        "total_tokens": 4467,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 62
+        }
+      }
+    },
+    {
+      "batch": 3,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 17.492420256000003
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 3364,
+        "completion_tokens": 1180,
+        "total_tokens": 4544,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 66
+        }
+      }
+    }
+  ],
+  "raw_judge_calls": [
+    {
+      "batch": 0,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 32.95055503900002
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 10095,
+        "completion_tokens": 1986,
+        "total_tokens": 12081,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 884
+        }
+      }
+    },
+    {
+      "batch": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 28.69304835600002
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 10028,
+        "completion_tokens": 1742,
+        "total_tokens": 11770,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 596
+        }
+      }
+    },
+    {
+      "batch": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 31.651354760999993
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 9957,
+        "completion_tokens": 1691,
+        "total_tokens": 11648,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 599
+        }
+      }
+    },
+    {
+      "batch": 3,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 34.15928393299998
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 10104,
+        "completion_tokens": 1995,
+        "total_tokens": 12099,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 827
+        }
+      }
+    },
+    {
+      "batch": 4,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 43.495985899999994
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 10049,
+        "completion_tokens": 1993,
+        "total_tokens": 12042,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 878
+        }
+      }
+    },
+    {
+      "batch": 5,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 44.910982128
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 10330,
+        "completion_tokens": 2279,
+        "total_tokens": 12609,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1233
+        }
+      }
+    }
+  ],
+  "behavior_judge_calls": [
+    {
+      "batch": 0,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 42.252923038000006
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 9484,
+        "completion_tokens": 2059,
+        "total_tokens": 11543,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 955
+        }
+      }
+    },
+    {
+      "batch": 1,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 34.967845977000025
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 9452,
+        "completion_tokens": 1792,
+        "total_tokens": 11244,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 675
+        }
+      }
+    },
+    {
+      "batch": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 34.958954065
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 9402,
+        "completion_tokens": 1816,
+        "total_tokens": 11218,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 730
+        }
+      }
+    },
+    {
+      "batch": 3,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 429,
+          "detail": "{\"status\":429,\"title\":\"Too Many Requests\"}"
+        },
+        {
+          "attempt": 2,
+          "status": 200,
+          "elapsed_seconds": 34.40415717299993
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 9470,
+        "completion_tokens": 1654,
+        "total_tokens": 11124,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 576
+        }
+      }
+    },
+    {
+      "batch": 4,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 46.915294770999935
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 9312,
+        "completion_tokens": 2298,
+        "total_tokens": 11610,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1202
+        }
+      }
+    },
+    {
+      "batch": 5,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": 200,
+          "elapsed_seconds": 43.97657721199994
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 9444,
+        "completion_tokens": 1995,
+        "total_tokens": 11439,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 912
+        }
+      }
+    }
+  ],
+  "judge_provider": "nvidia",
+  "judge_model": "minimaxai/minimax-m3.1-flash",
+  "remote_unpinned_backend": true
+}
