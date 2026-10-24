@@ -1,0 +1,86 @@
+name: Eight-runner model startup smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/startup8.yml'
+      - 'scripts/startup_smoke.py'
+      - 'config/candidates.json'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: neurounner-startup8
+  cancel-in-progress: false
+
+jobs:
+  startup:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-startup8]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        model:
+          - phi4-mini-instruct
+          - gemma3-4b-it
+          - ministral3-3b-instruct
+          - smollm3-3b
+          - qwen3-4b
+          - qwen25-omni-7b
+          - qwen35-4b
+          - lfm25-8b-a1b
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Fetch pinned llama.cpp runtime
+        run: |
+          python3 -m py_compile scripts/startup_smoke.py
+          bash scripts/bootstrap.sh runtime
+      - name: Resolve pinned model
+        id: model
+        env:
+          MODEL_ID: ${{ matrix.model }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          s=json.load(open("config/candidates.json"))[os.environ["MODEL_ID"]]
+          print("url="+s["url"])
+          print("file="+s["file"])
+          print("sha256="+s["sha256"])
+          PY
+      - name: Download and verify model
+        env:
+          MODEL_URL: ${{ steps.model.outputs.url }}
+          MODEL_FILE: ${{ steps.model.outputs.file }}
+          MODEL_SHA256: ${{ steps.model.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          start=$(date +%s)
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 -o "$RUNNER_TEMP/$MODEL_FILE.part" "$MODEL_URL"
+          echo "$MODEL_SHA256  $RUNNER_TEMP/$MODEL_FILE.part" | sha256sum -c -
+          mv "$RUNNER_TEMP/$MODEL_FILE.part" "$RUNNER_TEMP/$MODEL_FILE"
+          end=$(date +%s)
+          bytes=$(stat -c %s "$RUNNER_TEMP/$MODEL_FILE")
+          echo "download_bytes=$bytes"
+          echo "download_seconds=$((end-start))"
+          df -h .
+      - name: Start server and smoke inference
+        env:
+          MODEL_FILE: ${{ steps.model.outputs.file }}
+        run: python3 scripts/startup_smoke.py "${{ matrix.model }}" "$RUNNER_TEMP/$MODEL_FILE"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: startup8-${{ matrix.model }}-a${{ github.run_attempt }}
+          path: |
+            results/startup8-${{ matrix.model }}.json
+            logs/startup8-${{ matrix.model }}.log
+          if-no-files-found: warn
+          retention-days: 7
