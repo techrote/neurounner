@@ -655,6 +655,108 @@ Qwen3.5/Bolt    -> critique whether character survived the compilation
 
 That is a more defensible use of QwenStoryteller than asking it to obey low-level KernelSpec constraints itself.
 
+---
+
+# 2026-10-24 — TRAIN-001 SmolLM2-135M-Instruct CPU LoRA
+
+**Actions run:** `40110636171`  
+**Source head:** `4a9d183fb5aa85df94e90a77393641edb29083f1`  
+**Base model:** `HuggingFaceTB/SmolLM2-135M-Instruct`  
+**Resolved revision:** `12fd25f77366fa6b3b4b768ec3050bf629380bac`
+
+Task: specialize the model into a narrow behaviour-kernel compiler:
+
+```text
+messy behaviour idea -> exact five-key local KernelSpec JSON
+```
+
+Dataset: 24 synthetic training examples + 6 held-out examples.
+
+LoRA configuration:
+
+- rank 8;
+- alpha 16;
+- dropout 0.05;
+- **2,442,240 trainable parameters**;
+- **1.783%** of model parameters trainable.
+
+## Stage 1
+
+**CPU:** AMD EPYC 7763 64-Core Processor, 4 logical CPUs.
+
+Measured:
+
+- 24 optimizer steps;
+- 3,683 sequence tokens;
+- **31.43 s** training wall time;
+- **117.18 training tok/s**;
+- loss: **4.7135 first -> 3.5182 last**;
+- mean loss: **3.6504**;
+- peak RSS: **~1.67 GiB**;
+- resumable adapter + optimizer/RNG/dataset-cursor checkpoint: **~29.7 MB**.
+
+Held-out representation quality:
+
+- before training: valid JSON **3/6**, exact schema **0/6**;
+- after stage 1: valid JSON **5/6**, exact schema **5/6**.
+
+The baseline frequently emitted explanations, code fences, malformed nested schemas or Python code. Twenty-four optimizer steps were enough to strongly shift it toward compact one-line KernelSpec JSON.
+
+## Stage 2 — fresh-runner resume
+
+A separate Actions job downloaded the stage-1 artifact, reloaded the exact base revision, adapter, optimizer, Python/PyTorch RNG state and dataset cursor, and resumed from global step 24.
+
+**CPU:** AMD EPYC 7763 64-Core Processor, 4 logical CPUs.
+
+Measured:
+
+- 16 additional optimizer steps;
+- global step **40**;
+- 2,463 additional sequence tokens;
+- **21.11 s** training wall time;
+- **116.66 training tok/s**;
+- mean stage-2 loss: **2.2758**;
+- peak RSS: **~1.68 GiB**;
+- checkpoint remained **~29.7 MB**.
+
+Held-out exact schema:
+
+- at resume: **5/6**;
+- after step 40: **6/6**.
+
+The nearly identical throughput across separate jobs is useful evidence that the checkpoint/resume workflow is stable enough for long training split across many hosted runners.
+
+## Behavioural impression after 40 steps
+
+The adaptation is real, but mostly **format + domain vocabulary** rather than high-quality mechanics.
+
+Positive changes:
+
+- reliably emits the requested five fields;
+- frequently uses bounded scalars, unit vectors, decay and local triggers;
+- no longer defaults to prose/code fences/Python;
+- produces compact outputs suitable for deterministic downstream parsing.
+
+Remaining weaknesses:
+
+- state/action semantics are often muddled;
+- invented variables can be awkward or nonsensical;
+- actions sometimes merely restate state updates;
+- failure modes sometimes restate the trigger instead of predicting an emergent failure;
+- examples such as “refuse another jump while shy” can become unrelated actions such as steering away from shyness.
+
+Observed phenotype: **very fast to specialize into a surface contract, but not yet mechanically trustworthy at 40 tiny-data steps**.
+
+Current utility hypothesis: excellent substrate for a trained cheap compiler once the dataset is expanded and semantic/mechanical validators are included.
+
+## Capacity implication
+
+At the observed ~117 training tokens/s, the raw training loop could process roughly **2.1 million sequence tokens in a five-hour window** before allowing for setup/evaluation/checkpoint overhead.
+
+This makes multi-run LoRA fine-tuning of ~135M models on GitHub CPU runners clearly practical. Full-parameter 135M training remains untested, but TRAIN-001's ~1.7 GiB peak RSS leaves ample memory headroom for a short full-parameter feasibility spike.
+
+Detailed record: `docs/TRAIN_001_CPU_LORA.md`.
+
 # Journal interpretation notes
 
 ## Throughput is task-shaped
