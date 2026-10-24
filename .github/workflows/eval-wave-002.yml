@@ -1,0 +1,151 @@
+name: Evaluation wave 002
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/eval-wave-002.yml'
+      - 'experiments/eval-wave-002/**'
+      - 'scripts/eval_wave_002.py'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: neurounner-eval-wave-002
+  cancel-in-progress: false
+
+jobs:
+  evaluate:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-wave002]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 7
+      matrix:
+        include:
+          - id: d1-3b-q4
+            mode: visual
+          - id: qwen3-vl-2b-q4
+            mode: visual
+          - id: qwen3-vl-4b-q4
+            mode: visual
+          - id: lfm25-vl-450m-q4
+            mode: visual
+          - id: qwen25-omni-7b
+            mode: omni
+          - id: nemotron-bolt-e4b-q4
+            mode: bolt
+          - id: qwen-storyteller-q4
+            mode: creative
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        if: matrix.mode == 'creative'
+        with:
+          path: .cache/neurounner
+          key: ubuntu-neurounner-v1-b11852-edc2ac32-bb741ebb
+
+      - name: Prepare runtime
+        run: |
+          python3 -m py_compile scripts/eval_wave_002.py
+          bash scripts/bootstrap.sh runtime
+
+      - name: Prepare Sprocket control
+        if: matrix.mode == 'creative'
+        run: bash scripts/bootstrap.sh sprocket
+
+      - name: Resolve model files
+        id: model
+        env:
+          MODEL_ID: ${{ matrix.id }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          s=json.load(open("experiments/eval-wave-002/models.json"))[os.environ["MODEL_ID"]]
+          for k in ("model_url","model_file","model_sha256","mmproj_url","mmproj_file","mmproj_sha256"):
+              print(k+"="+str(s.get(k,"")))
+          PY
+
+      - name: Download model
+        env:
+          URL: ${{ steps.model.outputs.model_url }}
+          FILE: ${{ steps.model.outputs.model_file }}
+          SHA: ${{ steps.model.outputs.model_sha256 }}
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 -o "$RUNNER_TEMP/$FILE.part" "$URL"
+          if [ -n "$SHA" ]; then
+            echo "$SHA  $RUNNER_TEMP/$FILE.part" | sha256sum -c -
+          else
+            echo "No pre-recorded SHA256; recording downloaded object:"
+            sha256sum "$RUNNER_TEMP/$FILE.part"
+          fi
+          mv "$RUNNER_TEMP/$FILE.part" "$RUNNER_TEMP/$FILE"
+          ls -lh "$RUNNER_TEMP/$FILE"
+
+      - name: Download multimodal projector
+        if: steps.model.outputs.mmproj_url != ''
+        env:
+          URL: ${{ steps.model.outputs.mmproj_url }}
+          FILE: ${{ steps.model.outputs.mmproj_file }}
+          SHA: ${{ steps.model.outputs.mmproj_sha256 }}
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 -o "$RUNNER_TEMP/$FILE.part" "$URL"
+          echo "$SHA  $RUNNER_TEMP/$FILE.part" | sha256sum -c -
+          mv "$RUNNER_TEMP/$FILE.part" "$RUNNER_TEMP/$FILE"
+          ls -lh "$RUNNER_TEMP/$FILE"
+
+      - name: Prepare synthetic speech
+        if: matrix.mode == 'omni'
+        run: |
+          if ! command -v espeak-ng >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq espeak-ng
+          fi
+          espeak-ng -s 135 -w "$RUNNER_TEMP/instruction.wav" "the robot should move right"
+          ls -lh "$RUNNER_TEMP/instruction.wav"
+
+      - name: Run visual suite
+        if: matrix.mode == 'visual'
+        env:
+          MODEL_FILE: ${{ steps.model.outputs.model_file }}
+          MMPROJ_FILE: ${{ steps.model.outputs.mmproj_file }}
+        run: python3 scripts/eval_wave_002.py visual "${{ matrix.id }}" "$RUNNER_TEMP/$MODEL_FILE" "$RUNNER_TEMP/$MMPROJ_FILE"
+
+      - name: Run Omni vision and audio suite
+        if: matrix.mode == 'omni'
+        env:
+          MODEL_FILE: ${{ steps.model.outputs.model_file }}
+          MMPROJ_FILE: ${{ steps.model.outputs.mmproj_file }}
+        run: python3 scripts/eval_wave_002.py omni "${{ matrix.id }}" "$RUNNER_TEMP/$MODEL_FILE" "$RUNNER_TEMP/$MMPROJ_FILE" "$RUNNER_TEMP/instruction.wav"
+
+      - name: Run Bolt thinking A/B
+        if: matrix.mode == 'bolt'
+        env:
+          MODEL_FILE: ${{ steps.model.outputs.model_file }}
+        run: python3 scripts/eval_wave_002.py bolt "${{ matrix.id }}" "$RUNNER_TEMP/$MODEL_FILE"
+
+      - name: Run creative comparison
+        if: matrix.mode == 'creative'
+        env:
+          MODEL_FILE: ${{ steps.model.outputs.model_file }}
+        run: python3 scripts/eval_wave_002.py creative "${{ matrix.id }}" "$RUNNER_TEMP/$MODEL_FILE"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: wave002-${{ matrix.id }}-a${{ github.run_attempt }}
+          path: |
+            results/wave002-${{ matrix.id }}.json
+            logs/wave002-*
+          if-no-files-found: warn
+          retention-days: 7
