@@ -65,5 +65,20 @@ See [the second hosted experiment record](docs/SECOND_EXPERIMENTS.md) for exact 
 - [Initial hosted experiment record](docs/INITIAL_EXPERIMENTS.md)
 - [Second hosted experiment record](docs/SECOND_EXPERIMENTS.md)
 - [Eight-runner startup smoke](docs/STARTUP8_2026-10-24.md)
+- [TRAIN-001 CPU LoRA checkpoint/resume proof](docs/TRAIN_001_CPU_LORA.md)
 
 The current ~4B comparison shortlist is pinned in [config/candidates.json](config/candidates.json): Phi-4-mini-instruct, Gemma 3 4B IT, Ministral 3 3B Instruct, SmolLM3 3B and Qwen3-4B, alongside Qwen3.5-4B.
+
+## CPU fine-tuning proof
+
+TRAIN-001 proved that a 135M instruction model can be specialized with LoRA on standard four-vCPU GitHub-hosted runners and resumed on a fresh runner.
+
+Observed on SmolLM2-135M-Instruct:
+
+- ~117 training tokens/s;
+- ~1.67 GiB peak RSS;
+- 2.44M trainable LoRA parameters;
+- ~29.7 MB complete resumable checkpoint;
+- held-out exact KernelSpec schema improved from 0/6 to 5/6 after 24 steps and 6/6 after a fresh-runner resume to step 40.
+
+The format adaptation was rapid, but semantic/mechanical quality is not yet authoritative. See [TRAIN-001](docs/TRAIN_001_CPU_LORA.md) and the [model journal](docs/MODEL_JOURNAL.md).
