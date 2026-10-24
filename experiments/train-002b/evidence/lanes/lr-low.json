@@ -1,0 +1,652 @@
+{
+  "experiment": "TRAIN-002b",
+  "issue": 1,
+  "lane": {
+    "id": "lr-low",
+    "role": "perturbation",
+    "factor": "learning_rate",
+    "seed": 20261024,
+    "lr": 0.0004,
+    "lora_r": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.05,
+    "material": "baseline"
+  },
+  "base_model": "dotlabs/void.1",
+  "base_revision": "9c2be5087772867d45961abd11f6b35110617563",
+  "dataset": "experiments/train-001/kernel_compiler_dataset.json",
+  "dataset_sha256": "db76aedf89eae32e4514c212b2feb21db7b2b46700ae5aabf6d35861a073cf41",
+  "tokenizer": {
+    "class": "ByteTokenizer",
+    "source_file": "tokenization_byte.py",
+    "source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+    "unit_note": "void.1 tokenizer units are byte-oriented and must not be compared directly with ordinary subword-token throughput."
+  },
+  "runner": {
+    "cpu_model": "AMD EPYC 7763 64-Core Processor",
+    "cpu_count": 4,
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39"
+  },
+  "packages": {
+    "python": "3.12.3",
+    "torch": "2.14.1+cpu",
+    "transformers": "4.57.6",
+    "peft": "0.21.2"
+  },
+  "load_seconds": 1.9186254610000049,
+  "total_parameters": 92132864,
+  "trainable_parameters": 1984512,
+  "trainable_fraction": 0.02153967557114039,
+  "lora_targets": [
+    "down_proj",
+    "gate_proj",
+    "k_proj",
+    "o_proj",
+    "q_proj",
+    "up_proj",
+    "v_proj"
+  ],
+  "training": {
+    "steps": 48,
+    "material_profile": "baseline",
+    "material_item_count": 24,
+    "material_sha256": "6a973a9816f8c76a9051fd53f90f64302981e432ef1b8a24c2232aac908d63ca",
+    "schedule_source_indices": [
+      19,
+      7,
+      12,
+      4,
+      3,
+      17,
+      11,
+      15,
+      23,
+      14,
+      20,
+      13,
+      10,
+      8,
+      22,
+      21,
+      1,
+      16,
+      6,
+      0,
+      9,
+      2,
+      5,
+      18,
+      19,
+      12,
+      0,
+      10,
+      4,
+      21,
+      3,
+      17,
+      8,
+      14,
+      20,
+      7,
+      23,
+      13,
+      5,
+      11,
+      18,
+      2,
+      1,
+      16,
+      22,
+      6,
+      15,
+      9
+    ],
+    "sequence_tokenizer_units": 35074,
+    "supervised_tokenizer_units": 16474,
+    "utf8_bytes": 34834,
+    "characters": 34834,
+    "seconds": 215.72214447300001,
+    "sequence_units_per_second": 162.58877866101454,
+    "supervised_units_per_second": 76.36675428127826,
+    "utf8_bytes_per_second": 161.47623641095342,
+    "characters_per_second": 161.47623641095342,
+    "first_loss": 0.986240804195404,
+    "last_loss": 0.3444337546825409,
+    "mean_loss": 0.5563048611705502,
+    "losses": [
+      0.986240804195404,
+      0.9191253185272217,
+      1.0375185012817383,
+      0.7827253341674805,
+      0.7843002676963806,
+      0.812110424041748,
+      0.733568012714386,
+      0.7761268019676208,
+      0.8325583934783936,
+      0.6624964475631714,
+      0.5285794138908386,
+      0.8242624998092651,
+      0.6382097005844116,
+      0.5607196688652039,
+      0.5982041358947754,
+      0.596622884273529,
+      0.6117550134658813,
+      0.5049577355384827,
+      0.5805769562721252,
+      0.5035784840583801,
+      0.5237144231796265,
+      0.7916815280914307,
+      0.6623731851577759,
+      0.7179281115531921,
+      0.36525920033454895,
+      0.4928760230541229,
+      0.3687543272972107,
+      0.4360024333000183,
+      0.4135522246360779,
+      0.3661634624004364,
+      0.38816413283348083,
+      0.46951165795326233,
+      0.29841771721839905,
+      0.4184424579143524,
+      0.2498626559972763,
+      0.4051973521709442,
+      0.5291181206703186,
+      0.5012812614440918,
+      0.4243733286857605,
+      0.36720651388168335,
+      0.5029798150062561,
+      0.5994583964347839,
+      0.3176732361316681,
+      0.26869362592697144,
+      0.3795231282711029,
+      0.39498624205589294,
+      0.430768221616745,
+      0.3444337546825409
+    ]
+  },
+  "peak_rss_kib": 3070420,
+  "adapter": {
+    "bytes": 7987767,
+    "sha256": "886096c99e8b020e2340269729d7393738754b28ae6da6a23295e9a18cf02277"
+  },
+  "evaluation_before": {
+    "max_new_tokens": 768,
+    "rows": [
+      {
+        "case_id": "E01",
+        "input": "After being pushed from behind, it should remember that direction and keep glancing or drifting back toward it until the memory fades.",
+        "expected": {
+          "trigger": "external push above threshold",
+          "state": "push_dir unit vector; memory scalar 0..1",
+          "update": "store push direction; set memory=1; decay memory",
+          "action": "bias orientation or movement toward push_dir proportional to memory",
+          "failure": "frequent pushes can create obsessive backtracking"
+        },
+        "output": "The trigger is the trigger that causes the motor to move forward or backward.\nThe state is the state of the motor at the moment it is pushed.\nThe update is the update that the motor is moving forward or backward.\nThe failure is the failure that the motor is moving backward or forward.\nThe action is the action that the motor is performing.\nThe failure is the failure that the motor is not performing.\nThe bounded state is the state of the motor at the moment it is pushed.\nThe update is the update that the motor is moving forward or backward.\nThe failure is the failure that the motor is not performing.\nThe action is the action that the motor is performing.\nThe failure is the failure that the motor is not performing.\nThe bounded state is the state of the motor at",
+        "score": {
+          "json": false,
+          "exact_schema": false,
+          "expected_key_count": 0,
+          "field_similarity": {
+            "trigger": 0.0,
+            "state": 0.0,
+            "update": 0.0,
+            "action": 0.0,
+            "failure": 0.0
+          },
+          "mechanical_similarity_proxy": 0.0,
+          "parsed": null
+        },
+        "generated_tokenizer_units": 768,
+        "generated_utf8_bytes": 768,
+        "generated_characters": 768,
+        "elapsed_seconds": 38.34124435999999,
+        "tokenizer_units_per_second": 20.030648791389414,
+        "utf8_bytes_per_second": 20.030648791389414,
+        "characters_per_second": 20.030648791389414,
+        "eos_reached": false,
+        "budget_exhausted": true
+      },
+      {
+        "case_id": "E02",
+        "input": "If it loses traction while turning, I want it to become cautious about turning that same way for a few seconds.",
+        "expected": {
+          "trigger": "traction loss during turn",
+          "state": "bad_turn left|right; caution scalar 0..1",
+          "update": "store turn side; raise caution; decay with stable traction",
+          "action": "reduce turn magnitude toward bad_turn while caution is high",
+          "failure": "slippery alternating corners can make steering excessively timid"
+        },
+        "output": "The trigger is turning the wheel to the left.\nThe state is turning the wheel to the right.\nThe action is turning the wheel to the right.\nThe failure is turning the wheel to the left.\n\nQuestion: What is the purpose of the `trigger` object in the `task` class? Answer: The `trigger` object is used to send a signal to the trigger class to trigger a task or action.\n\nQuestion: What is the purpose of the `state` object in the `task` class? Answer: The `state` object is used to send a signal to the trigger class to trigger a task or action.\n\nQuestion: What is the purpose of the `update` object in the `task` class? Answer: The `update` object is used to update the trigger class with the current state of the trigger class.",
+        "score": {
+          "json": false,
+          "exact_schema": false,
+          "expected_key_count": 0,
+          "field_similarity": {
+            "trigger": 0.0,
+            "state": 0.0,
+            "update": 0.0,
+            "action": 0.0,
+            "failure": 0.0
+          },
+          "mechanical_similarity_proxy": 0.0,
+          "parsed": null
+        },
+        "generated_tokenizer_units": 723,
+        "generated_utf8_bytes": 722,
+        "generated_characters": 722,
+        "elapsed_seconds": 34.55896035800001,
+        "tokenizer_units_per_second": 20.920768232330047,
+        "utf8_bytes_per_second": 20.89183217668367,
+        "characters_per_second": 20.89183217668367,
+        "eos_reached": true,
+        "budget_exhausted": false
+      },
+      {
+        "case_id": "E03",
+        "input": "A creature that keeps checking the last place it was startled from, but only with one fading directional memory.",
+        "expected": {
+          "trigger": "local startle event",
+          "state": "startle_dir unit vector; vigilance scalar 0..1",
+          "update": "store event direction; set vigilance=1; decay vigilance",
+          "action": "periodically bias facing toward startle_dir while vigilance is high",
+          "failure": "repeated harmless startles can keep it distracted from travel"
+        },
+        "output": "{\n\"trigger\": \"startled\",\n\"state\": \"fading\",\n\"update\": \"startled\",\n\"action\": \"startled\",\n\"failure\": \"startled\"\n}",
+        "score": {
+          "json": true,
+          "exact_schema": true,
+          "expected_key_count": 5,
+          "field_similarity": {
+            "trigger": 0.25925925925925924,
+            "state": 0.09615384615384616,
+            "update": 0.07936507936507936,
+            "action": 0.10666666666666667,
+            "failure": 0.11594202898550725
+          },
+          "mechanical_similarity_proxy": 0.13147737608607174,
+          "parsed": {
+            "trigger": "startled",
+            "state": "fading",
+            "update": "startled",
+            "action": "startled",
+            "failure": "startled"
+          }
+        },
+        "generated_tokenizer_units": 768,
+        "generated_utf8_bytes": 111,
+        "generated_characters": 111,
+        "elapsed_seconds": 36.980446051,
+        "tokenizer_units_per_second": 20.767732193950437,
+        "utf8_bytes_per_second": 3.001586293656899,
+        "characters_per_second": 3.001586293656899,
+        "eos_reached": false,
+        "budget_exhausted": true
+      },
+      {
+        "case_id": "E04",
+        "input": "When forward motion gets blocked, it should remember which side had more free space and favor that side for the next two attempts.",
+        "expected": {
+          "trigger": "forward progress stalls near obstacle",
+          "state": "escape_side left|right; attempts integer 0..2",
+          "update": "choose side from local clearance; set attempts=2; decrement after each escape attempt",
+          "action": "turn toward escape_side while attempts>0",
+          "failure": "a moving obstacle can make the remembered side obsolete"
+        },
+        "output": "The forward motion gets blocked and the side with more free space is favored.\n\nQuestion: What is the purpose of the `trigger` key in the `task` context? Answer: The `trigger` key is used to trigger a specific action in the `task` context.\n\nQuestion: What is the purpose of the `state` key in the `task` context? Answer: The `state` key is used to specify the state of the task in the `task` context.\n\nQuestion: What is the purpose of the `update` key in the `task` context? Answer: The `update` key is used to update the task state and the state of the task in the `task` context.",
+        "score": {
+          "json": false,
+          "exact_schema": false,
+          "expected_key_count": 0,
+          "field_similarity": {
+            "trigger": 0.0,
+            "state": 0.0,
+            "update": 0.0,
+            "action": 0.0,
+            "failure": 0.0
+          },
+          "mechanical_similarity_proxy": 0.0,
+          "parsed": null
+        },
+        "generated_tokenizer_units": 581,
+        "generated_utf8_bytes": 580,
+        "generated_characters": 580,
+        "elapsed_seconds": 28.516624964999977,
+        "tokenizer_units_per_second": 20.374080057268113,
+        "utf8_bytes_per_second": 20.339012793830474,
+        "characters_per_second": 20.339012793830474,
+        "eos_reached": true,
+        "budget_exhausted": false
+      },
+      {
+        "case_id": "E05",
+        "input": "A jumper should get briefly shy after a hard landing and refuse another jump until the shyness fades.",
+        "expected": {
+          "trigger": "landing impulse above threshold",
+          "state": "shy scalar 0..1",
+          "update": "set shy=1 on hard landing; decay shy each supported tick",
+          "action": "suppress jump commands while shy is high",
+          "failure": "rough ground can keep jump ability suppressed almost continuously"
+        },
+        "output": "The jumper should get briefly shy after a hard landing and refuse another jump until the shyness fades.\n\nQuestion: What is the purpose of the 'trigger' key in the behaviour idea? Answer: The 'trigger' key is used to initiate a specific action or action completion based on a sensor signal.\n\nQuestion: What is the purpose of the 'state' key in the behaviour idea? Answer: The 'state' key is used to define the state of the jumper and its behaviour.\n\nQuestion: What is the purpose of the 'update' key in the behaviour idea? Answer: The 'update' key is used to update the jumper and its behaviour based on the current state of the jumper.",
+        "score": {
+          "json": false,
+          "exact_schema": false,
+          "expected_key_count": 0,
+          "field_similarity": {
+            "trigger": 0.0,
+            "state": 0.0,
+            "update": 0.0,
+            "action": 0.0,
+            "failure": 0.0
+          },
+          "mechanical_similarity_proxy": 0.0,
+          "parsed": null
+        },
+        "generated_tokenizer_units": 636,
+        "generated_utf8_bytes": 635,
+        "generated_characters": 635,
+        "elapsed_seconds": 31.565840732000026,
+        "tokenizer_units_per_second": 20.148362446600444,
+        "utf8_bytes_per_second": 20.116682631432834,
+        "characters_per_second": 20.116682631432834,
+        "eos_reached": true,
+        "budget_exhausted": false
+      },
+      {
+        "case_id": "E06",
+        "input": "It remembers the last warm direction it sensed and keeps drifting that way after the heat disappears, but only for a bounded time.",
+        "expected": {
+          "trigger": "local heat gradient above threshold",
+          "state": "warm_dir unit vector; warmth_memory scalar 0..1",
+          "update": "store heat-gradient direction; set warmth_memory=1; decay when gradient is absent",
+          "action": "bias movement along warm_dir proportional to warmth_memory",
+          "failure": "it can follow stale heat memory into a colder region"
+        },
+        "output": "The control cell is a state variable that can be used to store the state of the control cell. The state variable is a state variable that can be used to store the state of the control cell. The state variable is a state variable that can be used to store the state of the control cell. The state variable is a state variable that can be used to store the state of the control cell. The state variable is a state variable that can be used to store the state of the control cell. The state variable is a state variable that can be used to store the state of the control cell. The state variable is a state variable that can be used to store the state of the control cell. The state variable is a state variable that can be used to store the state of the control cell. Th",
+        "score": {
+          "json": false,
+          "exact_schema": false,
+          "expected_key_count": 0,
+          "field_similarity": {
+            "trigger": 0.0,
+            "state": 0.0,
+            "update": 0.0,
+            "action": 0.0,
+            "failure": 0.0
+          },
+          "mechanical_similarity_proxy": 0.0,
+          "parsed": null
+        },
+        "generated_tokenizer_units": 768,
+        "generated_utf8_bytes": 768,
+        "generated_characters": 768,
+        "elapsed_seconds": 37.809920815,
+        "tokenizer_units_per_second": 20.312129288970056,
+        "utf8_bytes_per_second": 20.312129288970056,
+        "characters_per_second": 20.312129288970056,
+        "eos_reached": false,
+        "budget_exhausted": true
+      }
+    ],
+    "json_rate": 0.16666666666666666,
+    "exact_schema_rate": 0.16666666666666666,
+    "mean_expected_key_count": 0.8333333333333334,
+    "mean_mechanical_similarity_proxy": 0.02191289601434529,
+    "budget_exhaustion_rate": 0.5,
+    "mean_characters_per_second": 17.448648662660556,
+    "mean_utf8_bytes_per_second": 17.448648662660556
+  },
+  "evaluation_after": {
+    "max_new_tokens": 768,
+    "rows": [
+      {
+        "case_id": "E01",
+        "input": "After being pushed from behind, it should remember that direction and keep glancing or drifting back toward it until the memory fades.",
+        "expected": {
+          "trigger": "external push above threshold",
+          "state": "push_dir unit vector; memory scalar 0..1",
+          "update": "store push direction; set memory=1; decay memory",
+          "action": "bias orientation or movement toward push_dir proportional to memory",
+          "failure": "frequent pushes can create obsessive backtracking"
+        },
+        "output": "{\"trigger\":\"being pushed from behind increases sensor sensitivity\",\"state\":\"dir 0..1; store glance direction; set bounded state=1; decay only when the memory fades\",\"update\":\"store glance direction; set bounded state=1; decay only when the memory fades\",\"action\":\"glance from dir to store glance direction and set bounded state=1\",\"failure\":\"repeated static steps can cause the sensor to stay in one spot for extended periods\"}<eos><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e>",
+        "score": {
+          "json": true,
+          "exact_schema": true,
+          "expected_key_count": 5,
+          "field_similarity": {
+            "trigger": 0.17073170731707318,
+            "state": 0.2083989501312336,
+            "update": 0.6453333333333333,
+            "action": 0.12878787878787878,
+            "failure": 0.15151515151515152
+          },
+          "mechanical_similarity_proxy": 0.2609534042169341,
+          "parsed": {
+            "trigger": "being pushed from behind increases sensor sensitivity",
+            "state": "dir 0..1; store glance direction; set bounded state=1; decay only when the memory fades",
+            "update": "store glance direction; set bounded state=1; decay only when the memory fades",
+            "action": "glance from dir to store glance direction and set bounded state=1",
+            "failure": "repeated static steps can cause the sensor to stay in one spot for extended periods"
+          }
+        },
+        "generated_tokenizer_units": 768,
+        "generated_utf8_bytes": 768,
+        "generated_characters": 768,
+        "elapsed_seconds": 36.63524884399999,
+        "tokenizer_units_per_second": 20.963417043249613,
+        "utf8_bytes_per_second": 20.963417043249613,
+        "characters_per_second": 20.963417043249613,
+        "eos_reached": false,
+        "budget_exhausted": true
+      },
+      {
+        "case_id": "E02",
+        "input": "If it loses traction while turning, I want it to become cautious about turning that same way for a few seconds.",
+        "expected": {
+          "trigger": "traction loss during turn",
+          "state": "bad_turn left|right; caution scalar 0..1",
+          "update": "store turn side; raise caution; decay with stable traction",
+          "action": "reduce turn magnitude toward bad_turn while caution is high",
+          "failure": "slippery alternating corners can make steering excessively timid"
+        },
+        "output": "{\"trigger\":\"lose traction while turning\",\"state\":\"turn_side left|right|turn_right|turn_left|right|turn_left|turn_right|turn_right|turn_left|turn_left|turn_right|turn_left|turn_right|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_left|turn_right|turn_lef",
+        "score": {
+          "json": false,
+          "exact_schema": false,
+          "expected_key_count": 0,
+          "field_similarity": {
+            "trigger": 0.0,
+            "state": 0.0,
+            "update": 0.0,
+            "action": 0.0,
+            "failure": 0.0
+          },
+          "mechanical_similarity_proxy": 0.0,
+          "parsed": null
+        },
+        "generated_tokenizer_units": 768,
+        "generated_utf8_bytes": 768,
+        "generated_characters": 768,
+        "elapsed_seconds": 37.05366126199999,
+        "tokenizer_units_per_second": 20.726696737728712,
+        "utf8_bytes_per_second": 20.726696737728712,
+        "characters_per_second": 20.726696737728712,
+        "eos_reached": false,
+        "budget_exhausted": true
+      },
+      {
+        "case_id": "E03",
+        "input": "A creature that keeps checking the last place it was startled from, but only with one fading directional memory.",
+        "expected": {
+          "trigger": "local startle event",
+          "state": "startle_dir unit vector; vigilance scalar 0..1",
+          "update": "store event direction; set vigilance=1; decay vigilance",
+          "action": "periodically bias facing toward startle_dir while vigilance is high",
+          "failure": "repeated harmless startles can keep it distracted from travel"
+        },
+        "output": "{\"trigger\":\"local sensor state changes sign above threshold\",\"state\":\"start_dir unit vector; set scalar 0..1\",\"update\":\"store state sign; increase on start_dir; decay on set scalar 1; decay on set scalar 0..1\",\"action\":\"bias movement toward start_dir while set is high\",\"failure\":\"repeated starts can cause the creature to repeatedly store a start_dir that is too far away from the threshold\"}<eos><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><",
+        "score": {
+          "json": true,
+          "exact_schema": true,
+          "expected_key_count": 5,
+          "field_similarity": {
+            "trigger": 0.2515151515151515,
+            "state": 0.7285714285714285,
+            "update": 0.44505494505494503,
+            "action": 0.5698996655518395,
+            "failure": 0.2693498452012384
+          },
+          "mechanical_similarity_proxy": 0.45287820717892063,
+          "parsed": {
+            "trigger": "local sensor state changes sign above threshold",
+            "state": "start_dir unit vector; set scalar 0..1",
+            "update": "store state sign; increase on start_dir; decay on set scalar 1; decay on set scalar 0..1",
+            "action": "bias movement toward start_dir while set is high",
+            "failure": "repeated starts can cause the creature to repeatedly store a start_dir that is too far away from the threshold"
+          }
+        },
+        "generated_tokenizer_units": 768,
+        "generated_utf8_bytes": 768,
+        "generated_characters": 768,
+        "elapsed_seconds": 37.34653739200007,
+        "tokenizer_units_per_second": 20.564155437995485,
+        "utf8_bytes_per_second": 20.564155437995485,
+        "characters_per_second": 20.564155437995485,
+        "eos_reached": false,
+        "budget_exhausted": true
+      },
+      {
+        "case_id": "E04",
+        "input": "When forward motion gets blocked, it should remember which side had more free space and favor that side for the next two attempts.",
+        "expected": {
+          "trigger": "forward progress stalls near obstacle",
+          "state": "escape_side left|right; attempts integer 0..2",
+          "update": "choose side from local clearance; set attempts=2; decrement after each escape attempt",
+          "action": "turn toward escape_side while attempts>0",
+          "failure": "a moving obstacle can make the remembered side obsolete"
+        },
+        "output": "{\"trigger\":\"forward motion can cause a side to stay blocked\",\"state\":\"forward_side > 0..2; favored side > 0..2\",\"update\":\"store forward direction; increase favored side; decay when forward is not blocked\",\"action\":\"remember forward side and favor side above threshold\",\"failure\":\"repeated successful attempts can create a stable side with a state of 0..2\"}<eos><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e",
+        "score": {
+          "json": true,
+          "exact_schema": true,
+          "expected_key_count": 5,
+          "field_similarity": {
+            "trigger": 0.3170995670995671,
+            "state": 0.1411764705882353,
+            "update": 0.1731135066582118,
+            "action": 0.21739130434782608,
+            "failure": 0.2319618366129994
+          },
+          "mechanical_similarity_proxy": 0.2161485370613679,
+          "parsed": {
+            "trigger": "forward motion can cause a side to stay blocked",
+            "state": "forward_side > 0..2; favored side > 0..2",
+            "update": "store forward direction; increase favored side; decay when forward is not blocked",
+            "action": "remember forward side and favor side above threshold",
+            "failure": "repeated successful attempts can create a stable side with a state of 0..2"
+          }
+        },
+        "generated_tokenizer_units": 768,
+        "generated_utf8_bytes": 768,
+        "generated_characters": 768,
+        "elapsed_seconds": 36.84240759199997,
+        "tokenizer_units_per_second": 20.845543225757183,
+        "utf8_bytes_per_second": 20.845543225757183,
+        "characters_per_second": 20.845543225757183,
+        "eos_reached": false,
+        "budget_exhausted": true
+      },
+      {
+        "case_id": "E05",
+        "input": "A jumper should get briefly shy after a hard landing and refuse another jump until the shyness fades.",
+        "expected": {
+          "trigger": "landing impulse above threshold",
+          "state": "shy scalar 0..1",
+          "update": "set shy=1 on hard landing; decay shy each supported tick",
+          "action": "suppress jump commands while shy is high",
+          "failure": "rough ground can keep jump ability suppressed almost continuously"
+        },
+        "output": "{\"trigger\":\"hard landing sensor state changes sign after a short time\",\"state\":\"shy_sign unit vector; refuse step\",\"update\":\"store shy_sign; refuse when sign is stable; set refuse=1; decay on integer 0..3; store refuse=3; decay on integer 4..5\",\"action\":\"store shy_sign and refuse when sign is stable; set refuse=1\",\"failure\":\"repeated short jumps can cause the jumper to refuse another jump\"}<eos><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><",
+        "score": {
+          "json": true,
+          "exact_schema": true,
+          "expected_key_count": 5,
+          "field_similarity": {
+            "trigger": 0.2878787878787879,
+            "state": 0.10416666666666667,
+            "update": 0.2686781609195402,
+            "action": 0.1111111111111111,
+            "failure": 0.17102713178294573
+          },
+          "mechanical_similarity_proxy": 0.18857237167181035,
+          "parsed": {
+            "trigger": "hard landing sensor state changes sign after a short time",
+            "state": "shy_sign unit vector; refuse step",
+            "update": "store shy_sign; refuse when sign is stable; set refuse=1; decay on integer 0..3; store refuse=3; decay on integer 4..5",
+            "action": "store shy_sign and refuse when sign is stable; set refuse=1",
+            "failure": "repeated short jumps can cause the jumper to refuse another jump"
+          }
+        },
+        "generated_tokenizer_units": 768,
+        "generated_utf8_bytes": 768,
+        "generated_characters": 768,
+        "elapsed_seconds": 36.65593872399995,
+        "tokenizer_units_per_second": 20.95158456539985,
+        "utf8_bytes_per_second": 20.95158456539985,
+        "characters_per_second": 20.95158456539985,
+        "eos_reached": false,
+        "budget_exhausted": true
+      },
+      {
+        "case_id": "E06",
+        "input": "It remembers the last warm direction it sensed and keeps drifting that way after the heat disappears, but only for a bounded time.",
+        "expected": {
+          "trigger": "local heat gradient above threshold",
+          "state": "warm_dir unit vector; warmth_memory scalar 0..1",
+          "update": "store heat-gradient direction; set warmth_memory=1; decay when gradient is absent",
+          "action": "bias movement along warm_dir proportional to warmth_memory",
+          "failure": "it can follow stale heat memory into a colder region"
+        },
+        "output": "{\"trigger\":\"warm direction sensed after heat rises\",\"state\":\"drift_dir unit vector; set scalar 0..1\",\"update\":\"store current direction; increase set; decay only when heat is low\",\"action\":\"bias movement toward drift_dir while set is high\",\"failure\":\"repeated storms can cause the system to repeatedly set its drift_dir and store its movement\"}<eos><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e><e>",
+        "score": {
+          "json": true,
+          "exact_schema": true,
+          "expected_key_count": 5,
+          "field_similarity": {
+            "trigger": 0.25068493150684934,
+            "state": 0.6764705882352942,
+            "update": 0.6118197278911565,
+            "action": 0.4119496855345912,
+            "failure": 0.15384615384615385
+          },
+          "mechanical_similarity_proxy": 0.42095421740280903,
+          "parsed": {
+            "trigger": "warm direction sensed after heat rises",
+            "state": "drift_dir unit vector; set scalar 0..1",
+            "update": "store current direction; increase set; decay only when heat is low",
+            "action": "bias movement toward drift_dir while set is high",
+            "failure": "repeated storms can cause the system to repeatedly set its drift_dir and store its movement"
+          }
+        },
+        "generated_tokenizer_units": 768,
+        "generated_utf8_bytes": 768,
+        "generated_characters": 768,
+        "elapsed_seconds": 36.778865483000004,
+        "tokenizer_units_per_second": 20.88155765313061,
+        "utf8_bytes_per_second": 20.88155765313061,
+        "characters_per_second": 20.88155765313061,
+        "eos_reached": false,
+        "budget_exhausted": true
+      }
+    ],
+    "json_rate": 0.8333333333333334,
+    "exact_schema_rate": 0.8333333333333334,
+    "mean_expected_key_count": 4.166666666666667,
+    "mean_mechanical_similarity_proxy": 0.256584456255307,
+    "budget_exhaustion_rate": 1.0,
+    "mean_characters_per_second": 20.822159110543577,
+    "mean_utf8_bytes_per_second": 20.822159110543577
+  }
+}

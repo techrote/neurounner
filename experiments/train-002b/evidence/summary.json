@@ -1,0 +1,1050 @@
+{
+  "schema_version": 1,
+  "experiment": "TRAIN-002b",
+  "issue": 1,
+  "base_model": "dotlabs/void.1",
+  "base_revision": "9c2be5087772867d45961abd11f6b35110617563",
+  "evaluation_note": "void.1 uses a custom byte-oriented tokenizer; tokenizer-unit rates are not directly comparable to ordinary subword token/s.",
+  "control_mean": {
+    "exact_schema_rate": 1.0,
+    "judge_overall_mean": 1.9166666666666665,
+    "mechanical_similarity_proxy": 0.34629985555096415
+  },
+  "lanes": [
+    {
+      "lane": "ctrl-a",
+      "role": "control",
+      "factor": "control_seed",
+      "seed": 20261024,
+      "lr": 0.0008,
+      "lora_r": 8,
+      "lora_alpha": 16,
+      "lora_dropout": 0.05,
+      "material": "baseline",
+      "cpu_model": "AMD EPYC 7763 64-Core Processor",
+      "trainable_parameters": 1984512,
+      "peak_rss_kib": 3007208,
+      "training_seconds": 213.975325183,
+      "training_sequence_units_per_second": 163.91609626018027,
+      "training_utf8_bytes_per_second": 162.79447160652106,
+      "first_loss": 0.986240804195404,
+      "last_loss": 0.26729050278663635,
+      "before_json_rate": 0.16666666666666666,
+      "before_exact_schema_rate": 0.16666666666666666,
+      "after_json_rate": 1.0,
+      "after_exact_schema_rate": 1.0,
+      "after_budget_exhaustion_rate": 1.0,
+      "after_mechanical_similarity_proxy": 0.3420716503475176,
+      "after_mean_characters_per_second": 21.604148411249984,
+      "judge_trigger_mean": 2.0,
+      "judge_state_mean": 1.6666666666666667,
+      "judge_update_mean": 1.5,
+      "judge_action_mean": 1.3333333333333333,
+      "judge_failure_mean": 2.1666666666666665,
+      "judge_locality_mean": 2.8333333333333335,
+      "judge_overall_mean": 1.8333333333333333,
+      "adapter": {
+        "bytes": 7987767,
+        "sha256": "4995f582e995f9702e009d39b1de0e6b4e5bbe520cc3113aa37a9b84c7dbd764"
+      },
+      "tokenizer": {
+        "class": "ByteTokenizer",
+        "source_file": "tokenization_byte.py",
+        "source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+        "unit_note": "void.1 tokenizer units are byte-oriented and must not be compared directly with ordinary subword-token throughput."
+      },
+      "delta_vs_control_mean": {
+        "exact_schema_rate": 0.0,
+        "judge_overall_mean": -0.08333333333333326,
+        "mechanical_similarity_proxy": -0.004228205203446578
+      }
+    },
+    {
+      "lane": "ctrl-b",
+      "role": "control",
+      "factor": "control_seed",
+      "seed": 20261117,
+      "lr": 0.0008,
+      "lora_r": 8,
+      "lora_alpha": 16,
+      "lora_dropout": 0.05,
+      "material": "baseline",
+      "cpu_model": "AMD EPYC 9V45 96-Core Processor",
+      "trainable_parameters": 1984512,
+      "peak_rss_kib": 3140228,
+      "training_seconds": 137.03793106199998,
+      "training_sequence_units_per_second": 255.94373563719006,
+      "training_utf8_bytes_per_second": 254.19239571152073,
+      "first_loss": 1.1298651695251465,
+      "last_loss": 0.2727573812007904,
+      "before_json_rate": 0.16666666666666666,
+      "before_exact_schema_rate": 0.16666666666666666,
+      "after_json_rate": 1.0,
+      "after_exact_schema_rate": 1.0,
+      "after_budget_exhaustion_rate": 1.0,
+      "after_mechanical_similarity_proxy": 0.35052806075441073,
+      "after_mean_characters_per_second": 29.560393652683384,
+      "judge_trigger_mean": 2.1666666666666665,
+      "judge_state_mean": 2.5,
+      "judge_update_mean": 1.6666666666666667,
+      "judge_action_mean": 2.0,
+      "judge_failure_mean": 2.1666666666666665,
+      "judge_locality_mean": 2.8333333333333335,
+      "judge_overall_mean": 2.0,
+      "adapter": {
+        "bytes": 7987767,
+        "sha256": "ae2c131348cae2bab3d29c8fc6858b1f54ca65c6d96a9fb8a14d267380101d86"
+      },
+      "tokenizer": {
+        "class": "ByteTokenizer",
+        "source_file": "tokenization_byte.py",
+        "source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+        "unit_note": "void.1 tokenizer units are byte-oriented and must not be compared directly with ordinary subword-token throughput."
+      },
+      "delta_vs_control_mean": {
+        "exact_schema_rate": 0.0,
+        "judge_overall_mean": 0.08333333333333348,
+        "mechanical_similarity_proxy": 0.004228205203446578
+      }
+    },
+    {
+      "lane": "lr-low",
+      "role": "perturbation",
+      "factor": "learning_rate",
+      "seed": 20261024,
+      "lr": 0.0004,
+      "lora_r": 8,
+      "lora_alpha": 16,
+      "lora_dropout": 0.05,
+      "material": "baseline",
+      "cpu_model": "AMD EPYC 7763 64-Core Processor",
+      "trainable_parameters": 1984512,
+      "peak_rss_kib": 3070420,
+      "training_seconds": 215.72214447300001,
+      "training_sequence_units_per_second": 162.58877866101454,
+      "training_utf8_bytes_per_second": 161.47623641095342,
+      "first_loss": 0.986240804195404,
+      "last_loss": 0.3444337546825409,
+      "before_json_rate": 0.16666666666666666,
+      "before_exact_schema_rate": 0.16666666666666666,
+      "after_json_rate": 0.8333333333333334,
+      "after_exact_schema_rate": 0.8333333333333334,
+      "after_budget_exhaustion_rate": 1.0,
+      "after_mechanical_similarity_proxy": 0.256584456255307,
+      "after_mean_characters_per_second": 20.822159110543577,
+      "judge_trigger_mean": 2.5,
+      "judge_state_mean": 2.1666666666666665,
+      "judge_update_mean": 1.6666666666666667,
+      "judge_action_mean": 2.1666666666666665,
+      "judge_failure_mean": 1.3333333333333333,
+      "judge_locality_mean": 2.3333333333333335,
+      "judge_overall_mean": 1.6666666666666667,
+      "adapter": {
+        "bytes": 7987767,
+        "sha256": "886096c99e8b020e2340269729d7393738754b28ae6da6a23295e9a18cf02277"
+      },
+      "tokenizer": {
+        "class": "ByteTokenizer",
+        "source_file": "tokenization_byte.py",
+        "source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+        "unit_note": "void.1 tokenizer units are byte-oriented and must not be compared directly with ordinary subword-token throughput."
+      },
+      "delta_vs_control_mean": {
+        "exact_schema_rate": -0.16666666666666663,
+        "judge_overall_mean": -0.24999999999999978,
+        "mechanical_similarity_proxy": -0.08971539929565714
+      }
+    },
+    {
+      "lane": "lr-high",
+      "role": "perturbation",
+      "factor": "learning_rate",
+      "seed": 20261024,
+      "lr": 0.0012,
+      "lora_r": 8,
+      "lora_alpha": 16,
+      "lora_dropout": 0.05,
+      "material": "baseline",
+      "cpu_model": "AMD EPYC 9V45 96-Core Processor",
+      "trainable_parameters": 1984512,
+      "peak_rss_kib": 3038076,
+      "training_seconds": 137.52305274100001,
+      "training_sequence_units_per_second": 255.0408771542876,
+      "training_utf8_bytes_per_second": 253.29571519622667,
+      "first_loss": 0.986240804195404,
+      "last_loss": 0.2571481764316559,
+      "before_json_rate": 0.16666666666666666,
+      "before_exact_schema_rate": 0.16666666666666666,
+      "after_json_rate": 1.0,
+      "after_exact_schema_rate": 0.8333333333333334,
+      "after_budget_exhaustion_rate": 1.0,
+      "after_mechanical_similarity_proxy": 0.30070818670332733,
+      "after_mean_characters_per_second": 27.656141473718463,
+      "judge_trigger_mean": 2.3333333333333335,
+      "judge_state_mean": 1.8333333333333333,
+      "judge_update_mean": 1.6666666666666667,
+      "judge_action_mean": 1.6666666666666667,
+      "judge_failure_mean": 2.0,
+      "judge_locality_mean": 2.5,
+      "judge_overall_mean": 1.5,
+      "adapter": {
+        "bytes": 7987767,
+        "sha256": "e0c7f14b3aaa1c3c92b0f455dbec2136932a9bcebd66532a349e1eed3842d45d"
+      },
+      "tokenizer": {
+        "class": "ByteTokenizer",
+        "source_file": "tokenization_byte.py",
+        "source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+        "unit_note": "void.1 tokenizer units are byte-oriented and must not be compared directly with ordinary subword-token throughput."
+      },
+      "delta_vs_control_mean": {
+        "exact_schema_rate": -0.16666666666666663,
+        "judge_overall_mean": -0.4166666666666665,
+        "mechanical_similarity_proxy": -0.045591668847636824
+      }
+    },
+    {
+      "lane": "rank4",
+      "role": "perturbation",
+      "factor": "lora_capacity",
+      "seed": 20261024,
+      "lr": 0.0008,
+      "lora_r": 4,
+      "lora_alpha": 8,
+      "lora_dropout": 0.05,
+      "material": "baseline",
+      "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+      "trainable_parameters": 992256,
+      "peak_rss_kib": 3010632,
+      "training_seconds": 174.39161633,
+      "training_sequence_units_per_second": 201.12205356035992,
+      "training_utf8_bytes_per_second": 199.74584061474533,
+      "first_loss": 0.986240804195404,
+      "last_loss": 0.32395708560943604,
+      "before_json_rate": 0.16666666666666666,
+      "before_exact_schema_rate": 0.16666666666666666,
+      "after_json_rate": 1.0,
+      "after_exact_schema_rate": 1.0,
+      "after_budget_exhaustion_rate": 1.0,
+      "after_mechanical_similarity_proxy": 0.3632322627025053,
+      "after_mean_characters_per_second": 23.726817826712985,
+      "judge_trigger_mean": 2.1666666666666665,
+      "judge_state_mean": 2.0,
+      "judge_update_mean": 0.6666666666666666,
+      "judge_action_mean": 0.16666666666666666,
+      "judge_failure_mean": 2.1666666666666665,
+      "judge_locality_mean": 2.5,
+      "judge_overall_mean": 1.1666666666666667,
+      "adapter": {
+        "bytes": 4018654,
+        "sha256": "208cb0c0e9e53eaada09aa5f40af496b1ccc43a2f679efb433e7f37b24244ed0"
+      },
+      "tokenizer": {
+        "class": "ByteTokenizer",
+        "source_file": "tokenization_byte.py",
+        "source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+        "unit_note": "void.1 tokenizer units are byte-oriented and must not be compared directly with ordinary subword-token throughput."
+      },
+      "delta_vs_control_mean": {
+        "exact_schema_rate": 0.0,
+        "judge_overall_mean": -0.7499999999999998,
+        "mechanical_similarity_proxy": 0.01693240715154115
+      }
+    },
+    {
+      "lane": "rank16",
+      "role": "perturbation",
+      "factor": "lora_capacity",
+      "seed": 20261024,
+      "lr": 0.0008,
+      "lora_r": 16,
+      "lora_alpha": 32,
+      "lora_dropout": 0.05,
+      "material": "baseline",
+      "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+      "trainable_parameters": 3969024,
+      "peak_rss_kib": 3090172,
+      "training_seconds": 171.174747217,
+      "training_sequence_units_per_second": 204.90171926783293,
+      "training_utf8_bytes_per_second": 203.4996432963361,
+      "first_loss": 0.986240804195404,
+      "last_loss": 0.30833765864372253,
+      "before_json_rate": 0.16666666666666666,
+      "before_exact_schema_rate": 0.16666666666666666,
+      "after_json_rate": 1.0,
+      "after_exact_schema_rate": 1.0,
+      "after_budget_exhaustion_rate": 1.0,
+      "after_mechanical_similarity_proxy": 0.36187136358236804,
+      "after_mean_characters_per_second": 22.777262015211775,
+      "judge_trigger_mean": 2.8333333333333335,
+      "judge_state_mean": 2.1666666666666665,
+      "judge_update_mean": 1.5,
+      "judge_action_mean": 0.6666666666666666,
+      "judge_failure_mean": 2.1666666666666665,
+      "judge_locality_mean": 2.6666666666666665,
+      "judge_overall_mean": 1.5,
+      "adapter": {
+        "bytes": 15926456,
+        "sha256": "56e6ae60ff7d0f7e05a869df73db2281417602cfcb27f8c638a42f1a21f204d9"
+      },
+      "tokenizer": {
+        "class": "ByteTokenizer",
+        "source_file": "tokenization_byte.py",
+        "source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+        "unit_note": "void.1 tokenizer units are byte-oriented and must not be compared directly with ordinary subword-token throughput."
+      },
+      "delta_vs_control_mean": {
+        "exact_schema_rate": 0.0,
+        "judge_overall_mean": -0.4166666666666665,
+        "mechanical_similarity_proxy": 0.015571508031403891
+      }
+    },
+    {
+      "lane": "dropout0",
+      "role": "perturbation",
+      "factor": "lora_dropout",
+      "seed": 20261024,
+      "lr": 0.0008,
+      "lora_r": 8,
+      "lora_alpha": 16,
+      "lora_dropout": 0.0,
+      "material": "baseline",
+      "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+      "trainable_parameters": 1984512,
+      "peak_rss_kib": 2205388,
+      "training_seconds": 140.57724177,
+      "training_sequence_units_per_second": 249.49984477135328,
+      "training_utf8_bytes_per_second": 247.79259829974683,
+      "first_loss": 0.986240804195404,
+      "last_loss": 0.2719670236110687,
+      "before_json_rate": 0.16666666666666666,
+      "before_exact_schema_rate": 0.16666666666666666,
+      "after_json_rate": 1.0,
+      "after_exact_schema_rate": 1.0,
+      "after_budget_exhaustion_rate": 1.0,
+      "after_mechanical_similarity_proxy": 0.3337243034001822,
+      "after_mean_characters_per_second": 22.90848295952658,
+      "judge_trigger_mean": 2.1666666666666665,
+      "judge_state_mean": 1.8333333333333333,
+      "judge_update_mean": 1.1666666666666667,
+      "judge_action_mean": 1.3333333333333333,
+      "judge_failure_mean": 1.8333333333333333,
+      "judge_locality_mean": 2.8333333333333335,
+      "judge_overall_mean": 1.3333333333333333,
+      "adapter": {
+        "bytes": 7987766,
+        "sha256": "1e42984ce851aed7e4acb6f274cc202d14285dfa06377c8300d8061a19dc3f98"
+      },
+      "tokenizer": {
+        "class": "ByteTokenizer",
+        "source_file": "tokenization_byte.py",
+        "source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+        "unit_note": "void.1 tokenizer units are byte-oriented and must not be compared directly with ordinary subword-token throughput."
+      },
+      "delta_vs_control_mean": {
+        "exact_schema_rate": 0.0,
+        "judge_overall_mean": -0.5833333333333333,
+        "mechanical_similarity_proxy": -0.012575552150781932
+      }
+    },
+    {
+      "lane": "failure-weighted",
+      "role": "perturbation",
+      "factor": "training_material",
+      "seed": 20261024,
+      "lr": 0.0008,
+      "lora_r": 8,
+      "lora_alpha": 16,
+      "lora_dropout": 0.05,
+      "material": "failure_weighted",
+      "cpu_model": "AMD EPYC 7763 64-Core Processor",
+      "trainable_parameters": 1984512,
+      "peak_rss_kib": 3099388,
+      "training_seconds": 213.38886921699998,
+      "training_sequence_units_per_second": 164.51654731953198,
+      "training_utf8_bytes_per_second": 163.39184010832344,
+      "first_loss": 1.0112484693527222,
+      "last_loss": 0.35857412219047546,
+      "before_json_rate": 0.16666666666666666,
+      "before_exact_schema_rate": 0.16666666666666666,
+      "after_json_rate": 1.0,
+      "after_exact_schema_rate": 1.0,
+      "after_budget_exhaustion_rate": 1.0,
+      "after_mechanical_similarity_proxy": 0.3665229298441926,
+      "after_mean_characters_per_second": 21.419064352188045,
+      "judge_trigger_mean": 2.1666666666666665,
+      "judge_state_mean": 2.5,
+      "judge_update_mean": 1.8333333333333333,
+      "judge_action_mean": 1.6666666666666667,
+      "judge_failure_mean": 1.5,
+      "judge_locality_mean": 2.5,
+      "judge_overall_mean": 2.0,
+      "adapter": {
+        "bytes": 7987767,
+        "sha256": "cc6ed0f953a594e209bce4c5523b12aa6e3d1a4f62feeebfd2ba9ae9a5348b3a"
+      },
+      "tokenizer": {
+        "class": "ByteTokenizer",
+        "source_file": "tokenization_byte.py",
+        "source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+        "unit_note": "void.1 tokenizer units are byte-oriented and must not be compared directly with ordinary subword-token throughput."
+      },
+      "delta_vs_control_mean": {
+        "exact_schema_rate": 0.0,
+        "judge_overall_mean": 0.08333333333333348,
+        "mechanical_similarity_proxy": 0.02022307429322845
+      }
+    }
+  ],
+  "ranking": [
+    "failure-weighted",
+    "ctrl-b",
+    "ctrl-a",
+    "lr-low",
+    "rank16",
+    "lr-high",
+    "dropout0",
+    "rank4"
+  ],
+  "semantic_judge": {
+    "provider": "nvidia",
+    "model": "minimaxai/minimax-m3.1-flash",
+    "remote_unpinned_backend": true,
+    "calls": [
+      {
+        "batch": 0,
+        "lanes": [
+          "ctrl-a",
+          "ctrl-b"
+        ],
+        "attempts": [
+          {
+            "attempt": 1,
+            "status": 200,
+            "elapsed_seconds": 45.187520197000005
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 5686,
+          "completion_tokens": 1796,
+          "total_tokens": 7482,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 955
+          }
+        },
+        "finish_reason": "stop"
+      },
+      {
+        "batch": 1,
+        "lanes": [
+          "lr-low",
+          "lr-high"
+        ],
+        "attempts": [
+          {
+            "attempt": 1,
+            "status": 200,
+            "elapsed_seconds": 51.420959822
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 5263,
+          "completion_tokens": 1875,
+          "total_tokens": 7138,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 1006
+          }
+        },
+        "finish_reason": "stop"
+      },
+      {
+        "batch": 2,
+        "lanes": [
+          "rank4",
+          "rank16"
+        ],
+        "attempts": [
+          {
+            "attempt": 1,
+            "status": 200,
+            "elapsed_seconds": 33.691832772
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 4785,
+          "completion_tokens": 1550,
+          "total_tokens": 6335,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 715
+          }
+        },
+        "finish_reason": "stop"
+      },
+      {
+        "batch": 3,
+        "lanes": [
+          "dropout0",
+          "failure-weighted"
+        ],
+        "attempts": [
+          {
+            "attempt": 1,
+            "status": 200,
+            "elapsed_seconds": 48.122778264999994
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 5667,
+          "completion_tokens": 1726,
+          "total_tokens": 7393,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 897
+          }
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "scores": {
+      "ctrl-a:E01": {
+        "case_id": "ctrl-a:E01",
+        "trigger": 2,
+        "state": 2,
+        "update": 1,
+        "action": 1,
+        "failure": 3,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Detects a push-related direction but stores travel direction rather than push direction; decay condition and action are poorly specified."
+      },
+      "ctrl-a:E02": {
+        "case_id": "ctrl-a:E02",
+        "trigger": 2,
+        "state": 1,
+        "update": 0,
+        "action": 0,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 1,
+        "note": "Uses a turn-sign state without a caution scalar, decays under the wrong condition, and increases rather than suppresses the remembered turn."
+      },
+      "ctrl-a:E03": {
+        "case_id": "ctrl-a:E03",
+        "trigger": 1,
+        "state": 3,
+        "update": 3,
+        "action": 3,
+        "failure": 3,
+        "locality_boundedness": 3,
+        "overall": 3,
+        "note": "Has a directional memory and fading scalar with the right broad update and bias, but the startle trigger is vague and checking is not periodic."
+      },
+      "ctrl-a:E04": {
+        "case_id": "ctrl-a:E04",
+        "trigger": 1,
+        "state": 1,
+        "update": 1,
+        "action": 0,
+        "failure": 3,
+        "locality_boundedness": 3,
+        "overall": 1,
+        "note": "Does not detect a stall, lacks the two-attempt counter, and biases against the remembered side rather than favoring it."
+      },
+      "ctrl-a:E05": {
+        "case_id": "ctrl-a:E05",
+        "trigger": 3,
+        "state": 1,
+        "update": 1,
+        "action": 1,
+        "failure": 0,
+        "locality_boundedness": 2,
+        "overall": 1,
+        "note": "Recognizes hard landing but does not define a proper fading shyness scalar or a clear jump-suppression update; the failure is incoherent."
+      },
+      "ctrl-a:E06": {
+        "case_id": "ctrl-a:E06",
+        "trigger": 3,
+        "state": 2,
+        "update": 3,
+        "action": 3,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 3,
+        "note": "Stores and decays a warm direction and biases movement along it, though the memory scalar and stale-heat failure are not clearly specified."
+      },
+      "ctrl-b:E01": {
+        "case_id": "ctrl-b:E01",
+        "trigger": 2,
+        "state": 3,
+        "update": 2,
+        "action": 3,
+        "failure": 0,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Directional memory and fading drift are mostly correct, but the push trigger is indirect, memory reset is missing, and the failure merely restates the prompt."
+      },
+      "ctrl-b:E02": {
+        "case_id": "ctrl-b:E02",
+        "trigger": 4,
+        "state": 3,
+        "update": 3,
+        "action": 1,
+        "failure": 3,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Correctly detects traction loss and decays caution, but the action biases turning instead of reducing turns toward the remembered side."
+      },
+      "ctrl-b:E03": {
+        "case_id": "ctrl-b:E03",
+        "trigger": 2,
+        "state": 3,
+        "update": 1,
+        "action": 2,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Has appropriate directional and scalar state, but the update is contradictory and the action is gated by being startled rather than by fading vigilance."
+      },
+      "ctrl-b:E04": {
+        "case_id": "ctrl-b:E04",
+        "trigger": 2,
+        "state": 1,
+        "update": 1,
+        "action": 2,
+        "failure": 3,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Recognizes blockage and side selection, but lacks the required two-attempt counter and explicit decrement-after-attempt behavior."
+      },
+      "ctrl-b:E05": {
+        "case_id": "ctrl-b:E05",
+        "trigger": 2,
+        "state": 2,
+        "update": 1,
+        "action": 2,
+        "failure": 3,
+        "locality_boundedness": 2,
+        "overall": 2,
+        "note": "Captures hard-landing shyness and refusal in broad terms, but state types and reset/decay semantics are malformed and inconsistent."
+      },
+      "ctrl-b:E06": {
+        "case_id": "ctrl-b:E06",
+        "trigger": 1,
+        "state": 3,
+        "update": 2,
+        "action": 2,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Has a bounded directional memory, but the trigger occurs after heat disappears and the action does not clearly bias movement along the remembered direction."
+      },
+      "lr-low:E01": {
+        "case_id": "lr-low:E01",
+        "trigger": 3,
+        "state": 2,
+        "update": 2,
+        "action": 2,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Recognizes the push and mentions bounded decay, but direction/state encoding and glance action are garbled; failure is only loosely related."
+      },
+      "lr-low:E02": {
+        "case_id": "lr-low:E02",
+        "trigger": 4,
+        "state": 1,
+        "update": 0,
+        "action": 0,
+        "failure": 0,
+        "locality_boundedness": 1,
+        "overall": 1,
+        "note": "Trigger is correct, but the candidate is truncated into repeated turn-side tokens and provides no caution update, action, or failure."
+      },
+      "lr-low:E03": {
+        "case_id": "lr-low:E03",
+        "trigger": 1,
+        "state": 4,
+        "update": 2,
+        "action": 3,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Has the required directional and scalar memory and a directional bias, but the trigger is a generic sensor sign rather than a startle and update wording is incoherent."
+      },
+      "lr-low:E04": {
+        "case_id": "lr-low:E04",
+        "trigger": 1,
+        "state": 1,
+        "update": 1,
+        "action": 2,
+        "failure": 1,
+        "locality_boundedness": 2,
+        "overall": 1,
+        "note": "Mentions a favored side and bounded range, but does not detect a stall, compare local clearance, or implement a two-attempt counter."
+      },
+      "lr-low:E05": {
+        "case_id": "lr-low:E05",
+        "trigger": 3,
+        "state": 1,
+        "update": 1,
+        "action": 2,
+        "failure": 1,
+        "locality_boundedness": 2,
+        "overall": 1,
+        "note": "Detects a hard landing and mentions refusal, but uses the wrong state representation and incoherent decay rules; failure largely restates the behavior."
+      },
+      "lr-low:E06": {
+        "case_id": "lr-low:E06",
+        "trigger": 3,
+        "state": 4,
+        "update": 4,
+        "action": 4,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 3,
+        "note": "Mechanically captures warm-direction storage, bounded decay, and movement bias; the failure is plausible but does not specifically describe following stale heat into cold regions."
+      },
+      "lr-high:E01": {
+        "case_id": "lr-high:E01",
+        "trigger": 4,
+        "state": 2,
+        "update": 1,
+        "action": 3,
+        "failure": 3,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Correctly detects contact and biases movement toward the remembered direction, but lacks a bounded fading scalar and the update is contradictory about glancing away."
+      },
+      "lr-high:E02": {
+        "case_id": "lr-high:E02",
+        "trigger": 3,
+        "state": 2,
+        "update": 1,
+        "action": 1,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 1,
+        "note": "Detects traction loss and stores turn direction, but caution is raised under the wrong condition and the action does not reduce turns toward the bad side."
+      },
+      "lr-high:E03": {
+        "case_id": "lr-high:E03",
+        "trigger": 1,
+        "state": 2,
+        "update": 3,
+        "action": 2,
+        "failure": 2,
+        "locality_boundedness": 2,
+        "overall": 2,
+        "note": "Includes fading directional memory and decay, but the trigger is malformed and the action lacks an explicit vigilance-gated periodic check."
+      },
+      "lr-high:E04": {
+        "case_id": "lr-high:E04",
+        "trigger": 2,
+        "state": 1,
+        "update": 2,
+        "action": 0,
+        "failure": 1,
+        "locality_boundedness": 2,
+        "overall": 1,
+        "note": "Mentions sensing free space and a two-attempt window, but does not choose the clearer side or turn toward it; the action instead stops and resets."
+      },
+      "lr-high:E05": {
+        "case_id": "lr-high:E05",
+        "trigger": 2,
+        "state": 2,
+        "update": 1,
+        "action": 1,
+        "failure": 2,
+        "locality_boundedness": 2,
+        "overall": 1,
+        "note": "Recognizes hard landing and refusal, but the trigger is circular, decay is not implemented, and the action does not suppress jumps while shyness is high."
+      },
+      "lr-high:E06": {
+        "case_id": "lr-high:E06",
+        "trigger": 2,
+        "state": 2,
+        "update": 2,
+        "action": 3,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Stores a warm direction and biases movement toward it, but lacks a clear bounded memory scalar and a reliable heat-triggered decay rule."
+      },
+      "rank4:E01": {
+        "case_id": "rank4:E01",
+        "trigger": 1,
+        "state": 2,
+        "update": 0,
+        "action": 0,
+        "failure": 2,
+        "locality_boundedness": 2,
+        "overall": 1,
+        "note": "Trigger direction is wrong, updates use incoherent thresholds without decay, and no directional glance or drift is implemented."
+      },
+      "rank4:E02": {
+        "case_id": "rank4:E02",
+        "trigger": 4,
+        "state": 2,
+        "update": 1,
+        "action": 1,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Detects traction loss and stores a turn side, but does not properly raise/decay caution or reduce turns toward the bad side."
+      },
+      "rank4:E03": {
+        "case_id": "rank4:E03",
+        "trigger": 3,
+        "state": 1,
+        "update": 0,
+        "action": 0,
+        "failure": 2,
+        "locality_boundedness": 2,
+        "overall": 1,
+        "note": "Startle-like trigger exists, but vigilance is not initialized and decayed correctly, and no periodic facing bias is implemented."
+      },
+      "rank4:E04": {
+        "case_id": "rank4:E04",
+        "trigger": 0,
+        "state": 0,
+        "update": 0,
+        "action": 0,
+        "failure": 2,
+        "locality_boundedness": 2,
+        "overall": 0,
+        "note": "Uses stability rather than blocked progress, lacks clearance-based side selection and attempt count, and never turns toward the remembered side."
+      },
+      "rank4:E05": {
+        "case_id": "rank4:E05",
+        "trigger": 4,
+        "state": 3,
+        "update": 0,
+        "action": 0,
+        "failure": 3,
+        "locality_boundedness": 3,
+        "overall": 1,
+        "note": "Hard-landing trigger and bounded shyness are present, but shyness is not set and decayed causally, and jump refusal is inverted."
+      },
+      "rank4:E06": {
+        "case_id": "rank4:E06",
+        "trigger": 1,
+        "state": 4,
+        "update": 3,
+        "action": 0,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Directional memory and decay are mostly correct, but the trigger is misstated and the action never biases movement along the remembered direction."
+      },
+      "rank16:E01": {
+        "case_id": "rank16:E01",
+        "trigger": 2,
+        "state": 4,
+        "update": 2,
+        "action": 3,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Bounded directional memory and memory-gated steering are present, but it stores travel direction rather than the actual push direction."
+      },
+      "rank16:E02": {
+        "case_id": "rank16:E02",
+        "trigger": 3,
+        "state": 1,
+        "update": 1,
+        "action": 1,
+        "failure": 3,
+        "locality_boundedness": 2,
+        "overall": 2,
+        "note": "Approximate traction-loss trigger and remembered side exist, but caution state/update are malformed and the action biases rather than reduces turning."
+      },
+      "rank16:E03": {
+        "case_id": "rank16:E03",
+        "trigger": 2,
+        "state": 2,
+        "update": 2,
+        "action": 0,
+        "failure": 2,
+        "locality_boundedness": 2,
+        "overall": 1,
+        "note": "Some directional startle memory is stored, but the action stops and resets instead of periodically checking or biasing facing toward the startle location."
+      },
+      "rank16:E04": {
+        "case_id": "rank16:E04",
+        "trigger": 4,
+        "state": 1,
+        "update": 1,
+        "action": 0,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 1,
+        "note": "Blocked-motion trigger is correct, but there is no bounded two-attempt counter and no turn toward the locally freer side."
+      },
+      "rank16:E05": {
+        "case_id": "rank16:E05",
+        "trigger": 4,
+        "state": 3,
+        "update": 2,
+        "action": 0,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Hard landing sets a bounded refusal state, but decay is tied incorrectly and the action biases jumping rather than suppressing it."
+      },
+      "rank16:E06": {
+        "case_id": "rank16:E06",
+        "trigger": 2,
+        "state": 2,
+        "update": 1,
+        "action": 0,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 1,
+        "note": "Has a bounded directional memory and heat-absence decay, but stores travel direction and stops drifting instead of biasing movement along the warm direction."
+      },
+      "dropout0:E01": {
+        "case_id": "dropout0:E01",
+        "trigger": 2,
+        "state": 2,
+        "update": 1,
+        "action": 1,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 1,
+        "note": "Detects a push vaguely, but confuses push direction with travel direction, lacks a clear scalar memory, and gives an incoherent action."
+      },
+      "dropout0:E02": {
+        "case_id": "dropout0:E02",
+        "trigger": 4,
+        "state": 1,
+        "update": 1,
+        "action": 0,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 1,
+        "note": "Correct traction-loss trigger, but no caution scalar or decay, and the action increases turning rather than reducing it."
+      },
+      "dropout0:E03": {
+        "case_id": "dropout0:E03",
+        "trigger": 1,
+        "state": 3,
+        "update": 2,
+        "action": 2,
+        "failure": 3,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Has directional and fading state, but the trigger is not a startle event and the action is not explicitly periodic or memory-proportional."
+      },
+      "dropout0:E04": {
+        "case_id": "dropout0:E04",
+        "trigger": 1,
+        "state": 2,
+        "update": 0,
+        "action": 2,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 1,
+        "note": "Does not detect a stall, chooses no side from clearance, and lacks the required two-attempt counter and decrement."
+      },
+      "dropout0:E05": {
+        "case_id": "dropout0:E05",
+        "trigger": 3,
+        "state": 1,
+        "update": 1,
+        "action": 1,
+        "failure": 1,
+        "locality_boundedness": 2,
+        "overall": 1,
+        "note": "Recognizes hard landing, but the state and update are malformed and the action stops movement rather than suppressing jump commands."
+      },
+      "dropout0:E06": {
+        "case_id": "dropout0:E06",
+        "trigger": 2,
+        "state": 2,
+        "update": 2,
+        "action": 2,
+        "failure": 1,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Stores and decays a warm direction, but lacks a clear bounded memory scalar and proportional action; the failure is vague."
+      },
+      "failure-weighted:E01": {
+        "case_id": "failure-weighted:E01",
+        "trigger": 3,
+        "state": 3,
+        "update": 3,
+        "action": 3,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 3,
+        "note": "Mostly implements push-direction memory with decay and proportional glancing, though direction semantics and the failure prediction are imperfect."
+      },
+      "failure-weighted:E02": {
+        "case_id": "failure-weighted:E02",
+        "trigger": 3,
+        "state": 3,
+        "update": 2,
+        "action": 1,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 2,
+        "note": "Has the correct turn-side and caution state, but decays on the wrong condition and biases turning instead of reducing turn magnitude."
+      },
+      "failure-weighted:E03": {
+        "case_id": "failure-weighted:E03",
+        "trigger": 1,
+        "state": 3,
+        "update": 2,
+        "action": 2,
+        "failure": 1,
+        "locality_boundedness": 2,
+        "overall": 2,
+        "note": "Directional fading memory is present, but stationary sensing is not a startle trigger and the failure invokes a predefined path."
+      },
+      "failure-weighted:E04": {
+        "case_id": "failure-weighted:E04",
+        "trigger": 0,
+        "state": 1,
+        "update": 1,
+        "action": 1,
+        "failure": 1,
+        "locality_boundedness": 2,
+        "overall": 1,
+        "note": "Uses a fixed side rather than local clearance, has no blocked-motion trigger or two-attempt counter, and never decrements attempts."
+      },
+      "failure-weighted:E05": {
+        "case_id": "failure-weighted:E05",
+        "trigger": 3,
+        "state": 2,
+        "update": 0,
+        "action": 0,
+        "failure": 1,
+        "locality_boundedness": 2,
+        "overall": 1,
+        "note": "Detects hard landing but does not set or decay shyness, and biases jumps toward a shy area instead of refusing jumps."
+      },
+      "failure-weighted:E06": {
+        "case_id": "failure-weighted:E06",
+        "trigger": 3,
+        "state": 3,
+        "update": 3,
+        "action": 3,
+        "failure": 2,
+        "locality_boundedness": 3,
+        "overall": 3,
+        "note": "Implements bounded warm-direction memory, decay, and directional drift; the failure prediction is plausible but less specific than the reference."
+      }
+    }
+  }
+}
