@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse, json, os, time, urllib.error, urllib.request
+import argparse, json, os, re, time, urllib.error, urllib.request
 from pathlib import Path
 
 MODEL="minimaxai/minimax-m3.1-flash"
@@ -140,8 +140,48 @@ def validate_packet(packet,gid):
 
 
 def normalize_training_examples(packet,gid,guide):
-    """Deterministically repair training-example shape without rewriting persona content."""
+    """Deterministically repair harmless schema drift without rewriting persona content."""
     repairs=[]
+
+    def clean_string_list(key,lo,hi):
+        value=packet.get(key)
+        if isinstance(value,str):
+            parts=[x.strip() for x in re.split(r'(?<=[.!?])\\s+|[;\\n]+',value) if x.strip()]
+            if not parts and value.strip():
+                parts=[value.strip()]
+            packet[key]=parts[:hi]
+            repairs.append(f"{key}:string_to_list")
+        elif isinstance(value,list):
+            clean=[x.strip() for x in value if isinstance(x,str) and x.strip()]
+            if clean!=value:
+                packet[key]=clean[:hi]
+                repairs.append(f"{key}:cleaned")
+            elif len(clean)>hi:
+                packet[key]=clean[:hi]
+                repairs.append(f"{key}:trimmed")
+
+    for key,lo,hi in [
+        ("embodied_habits",4,8),
+        ("linguistic_habits",2,5),
+        ("motivational_biases",3,6),
+        ("mechanical_seeds",3,6),
+        ("interesting_broken",1,5),
+    ]:
+        clean_string_list(key,lo,hi)
+
+    axes=packet.get("temperament_axes")
+    if isinstance(axes,dict):
+        for k,v in list(axes.items()):
+            if isinstance(v,str):
+                try:
+                    n=int(float(v.strip()))
+                    axes[k]=max(0,min(100,n))
+                    repairs.append(f"temperament_axes:{k}_coerced")
+                except ValueError:
+                    pass
+            elif isinstance(v,float) and v.is_integer():
+                axes[k]=int(v)
+                repairs.append(f"temperament_axes:{k}_coerced")
 
     neg=packet.get("negative_examples")
     if not isinstance(neg,list):
@@ -152,13 +192,15 @@ def normalize_training_examples(packet,gid,guide):
         if not isinstance(item,dict):
             continue
         inp=item.get("input")
-        bad=item.get("bad_target")
-        why=item.get("why_bad",item.get("bad_target_reason"))
+        bad=item.get("bad_target",item.get("bad_response"))
+        why=item.get("why_bad",item.get("bad_target_reason",item.get("bad_target_reasoning")))
         if isinstance(inp,str) and isinstance(bad,str):
             if not isinstance(why,str) or not why.strip():
                 why="This response erases or contradicts the packet's distinctive temperament."
                 repairs.append("negative_examples:why_bad_filled")
             normalized.append({"input":inp,"bad_target":bad,"why_bad":why})
+            if "bad_target" not in item:
+                repairs.append("negative_examples:bad_target_alias")
     defaults=[
       {
         "input":"Respond to an uncertain situation in your usual way.",
@@ -180,8 +222,14 @@ def normalize_training_examples(packet,gid,guide):
     if isinstance(sft,list):
         clean=[]
         for item in sft:
-            if isinstance(item,dict) and isinstance(item.get("input"),str) and isinstance(item.get("target"),str):
-                clean.append({"input":item["input"],"target":item["target"]})
+            if not isinstance(item,dict):
+                continue
+            inp=item.get("input")
+            tgt=item.get("target",item.get("output",item.get("response")))
+            if isinstance(inp,str) and isinstance(tgt,str):
+                clean.append({"input":inp,"target":tgt})
+                if "target" not in item:
+                    repairs.append("sft_examples:target_alias")
         if len(clean)>4:
             clean=clean[:4]
             repairs.append("sft_examples:trimmed")
