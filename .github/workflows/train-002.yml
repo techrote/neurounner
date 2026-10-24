@@ -1,0 +1,54 @@
+name: TRAIN-002 void.1 CPU LoRA comparison
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/train-002.yml'
+      - 'scripts/train_002_void.py'
+      - 'experiments/train-001/kernel_compiler_dataset.json'
+
+permissions:
+  contents: read
+
+jobs:
+  train:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-train002]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install CPU training stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install "transformers>=4.57,<5" "peft>=0.17,<1" "huggingface_hub>=0.36,<2" "psutil>=7,<8" "safetensors>=0.6,<1"
+      - name: Train void.1 LoRA for 48 steps
+        env:
+          OMP_NUM_THREADS: 4
+          MKL_NUM_THREADS: 4
+          TOKENIZERS_PARALLELISM: "false"
+        run: python3 scripts/train_002_void.py
+      - name: Print comparison summary
+        run: |
+          python3 - <<'PY'
+          import json
+          r=json.load(open("results/train002-void.json"))
+          print("CPU:",r["runner"]["cpu_model"])
+          print("params:",r["total_parameters"],"trainable:",r["trainable_parameters"])
+          print("train tok/s:",r["train_tokens_per_second"])
+          print("loss:",r["first_loss"],"->",r["last_loss"])
+          print("exact schema:",r["evaluation_before"]["exact_schema_rate"],"->",r["evaluation_after"]["exact_schema_rate"])
+          print("adapter bytes:",r["adapter_bytes"])
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train002-void
+          path: |
+            results/train002-void.json
+            train002/void-adapter
+          if-no-files-found: error
+          retention-days: 7
