@@ -344,15 +344,18 @@ The remote models should normally **not talk directly to one another**. Give the
 
 These models are being tracked specifically for **fast CPU fine-tuning experiments on standard GitHub-hosted four-vCPU runners**. The priority here is not raw general-model quality; it is how quickly we can observe a measurable behavioural change, checkpoint it, resume it on a fresh runner, and learn what kinds of specialization survive at very small scale.
 
-### SmolLM2-135M-Instruct — first TRAIN-001 target
+### SmolLM2-135M-Instruct — TRAIN-001 passed
 
 - Source: https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct
 - Size: ~135M parameters.
 - License: Apache-2.0.
 - Architecture/runtime: standard decoder-only Transformers model; normal Hugging Face CPU path and chat template.
-- Training fit: **excellent**. Already instruction-tuned, so a tiny SFT/LoRA dataset can teach a narrow transformation task without first teaching the model how to follow instructions.
-- Intended neurounner experiment: train a behaviour-kernel compiler that converts messy personality/mechanism prose into a small canonical JSON KernelSpec while preserving unusual mechanisms.
-- Priority: **TRAIN NOW**.
+- Status: **TRAIN-001 completed successfully across two separate GitHub-hosted CPU jobs.**
+- LoRA result: 2.44M trainable parameters; ~117 training tokens/s; ~1.67 GiB peak RSS; ~29.7 MB resumable adapter+optimizer checkpoint.
+- Behavioural result: held-out exact five-key KernelSpec schema improved from 0/6 before training to 5/6 after 24 steps and 6/6 after a fresh-runner resume to step 40.
+- Caveat: semantic/mechanical quality remained mediocre despite excellent format learning; the next dataset must train causal mechanics and failure modes rather than merely JSON shape.
+- Current role: proven ultra-cheap specialization substrate and checkpoint/resume reference.
+- Detailed evidence: `docs/TRAIN_001_CPU_LORA.md`.
 
 ### void.1 — symbolic 90M control
 
@@ -405,7 +408,7 @@ These models are being tracked specifically for **fast CPU fine-tuning experimen
 ### Immediate training order
 
 1. **SmolLM2-135M-Instruct** — real narrow specialist; standard tooling.
-2. **void.1** — smaller symbolic base-model comparison.
+2. **void.1** — next preferred training comparison: smaller symbolic base model on the same compiler dataset.
 3. **StorySprint-30M** — minimal orchestration/speed control if needed.
 4. **SmolVLM-256M-Instruct** — multimodal specialization after text training is stable.
 5. **AnveshAI-CoderLM-0.1B** — custom-architecture experiment.
