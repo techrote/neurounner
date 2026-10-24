@@ -61,6 +61,7 @@ See [the second hosted experiment record](docs/SECOND_EXPERIMENTS.md) for exact 
 - [Conversation and orchestration topologies](docs/CONVERSATION_TOPOLOGIES.md)
 - [Model storage policy](docs/MODEL_STORAGE.md)
 - [Future model longlist](docs/MODEL_LONGLIST.md)
+- [Model performance and behaviour journal](docs/MODEL_JOURNAL.md)
 - [Initial hosted experiment record](docs/INITIAL_EXPERIMENTS.md)
 - [Second hosted experiment record](docs/SECOND_EXPERIMENTS.md)
 - [Eight-runner startup smoke](docs/STARTUP8_2026-10-24.md)
