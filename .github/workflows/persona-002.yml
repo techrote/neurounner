@@ -1,0 +1,196 @@
+name: PERSONA-002 anti-sanitization preference tournament
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/persona-002.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: neurounner-persona-002
+  cancel-in-progress: false
+
+jobs:
+  train:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        persona: [G02,G03,G05,G12]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Install CPU preference-training stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install "transformers>=4.57,<5" "peft>=0.17,<1" "huggingface_hub>=0.36,<2" "safetensors>=0.6,<1"
+
+      - name: Recover and verify PERSONA-001 parent adapter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PERSONA: ${{ matrix.persona }}
+        run: |
+          python3 - <<'PY' > /tmp/parent.env
+          import json,os
+          cfg=json.load(open("experiments/persona-002/config.json"))
+          x=cfg["parent_assets"][os.environ["PERSONA"]]
+          print("PARENT_FILE="+x["file"])
+          print("PARENT_SHA="+x["sha256"])
+          PY
+          source /tmp/parent.env
+          mkdir -p parent-download parent-adapter
+          gh release download persona-001-v1 --pattern "$PARENT_FILE" --dir parent-download
+          echo "$PARENT_SHA  parent-download/$PARENT_FILE" | sha256sum -c -
+          tar -xzf "parent-download/$PARENT_FILE" -C parent-adapter
+          test -f parent-adapter/adapter_model.safetensors
+          test -f parent-adapter/adapter_config.json
+
+      - name: Continue cartridge with paired preference training
+        env:
+          OMP_NUM_THREADS: 4
+          MKL_NUM_THREADS: 4
+          TOKENIZERS_PARALLELISM: "false"
+          PERSONA: ${{ matrix.persona }}
+        run: |
+          python3 scripts/persona_002_preference.py             --config experiments/persona-002/config.json             --persona "$PERSONA"             --parent-adapter parent-adapter
+
+      - name: Print preference summary
+        env:
+          PERSONA: ${{ matrix.persona }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          p=os.environ["PERSONA"]
+          r=json.load(open(f"results/persona002/{p}.json"))
+          print("persona:",p)
+          print("CPU:",r["runner"]["cpu_model"])
+          print("steps:",r["training"]["optimizer_steps"])
+          print("seq tok/s:",r["training"]["sequence_tokens_per_second"])
+          print("loss:",r["training"]["first_loss"],"->",r["training"]["last_loss"])
+          print("margin:",r["preference_before"]["mean_margin_nats_per_token"],"->",r["preference_after"]["mean_margin_nats_per_token"])
+          print("preference acc:",r["preference_before"]["preference_accuracy"],"->",r["preference_after"]["preference_accuracy"])
+          print("RSS KiB:",r["peak_rss_kib"])
+          print("adapter:",r["adapter"])
+          print("held-out responses:",len(r["evaluation"]["responses"]))
+          PY
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: persona002-result-${{ matrix.persona }}
+          path: results/persona002/${{ matrix.persona }}.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: persona002-adapter-${{ matrix.persona }}
+          path: persona002/${{ matrix.persona }}/adapter
+          if-no-files-found: error
+          retention-days: 30
+
+  tournament:
+    if: ${{ always() && needs.train.result == 'success' }}
+    needs: train
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: persona002-result-*
+          path: persona-results
+          merge-multiple: true
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: persona002-adapter-*
+          path: persona-adapters
+          merge-multiple: false
+
+      - name: Verify four preference continuations
+        run: |
+          python3 - <<'PY'
+          import glob,json
+          rows=[json.load(open(p)) for p in glob.glob("persona-results/*.json")]
+          ids={x["persona"] for x in rows}
+          assert ids=={"G02","G03","G05","G12"},ids
+          for x in rows:
+              assert x["experiment"]=="PERSONA-002"
+              assert x["training"]["optimizer_steps"]==200
+              assert len(x["evaluation"]["responses"])==24
+          print("verified:",sorted(ids))
+          PY
+
+      - name: Run unchanged PERSONA-001 tournament and compare
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+        run: |
+          test -n "$NVIDIA_API_KEY" || { echo "NVKEY repository secret is not configured"; exit 1; }
+          rm -rf experiments/persona-002/evidence
+          mkdir -p experiments/persona-002/evidence
+          python3 scripts/persona_002_tournament.py             --results persona-results             --out experiments/persona-002/evidence
+          cp experiments/persona-002/evidence/PERSONA_002_REPORT.md docs/PERSONA_002_REPORT.md
+
+      - name: Package persistent preference cartridges
+        run: |
+          mkdir -p release-assets
+          python3 - <<'PY'
+          import glob,hashlib,json,os,tarfile
+          assets=[]
+          for gid in ("G02","G03","G05","G12"):
+              hits=glob.glob(f"persona-adapters/persona002-adapter-{gid}/**/adapter_model.safetensors",recursive=True)
+              assert len(hits)==1,(gid,hits)
+              adapter_dir=os.path.dirname(hits[0])
+              archive=f"release-assets/persona-002-{gid}-smollm2-135m-preference-lora.tar.gz"
+              with tarfile.open(archive,"w:gz") as tf:
+                  for name in sorted(os.listdir(adapter_dir)):
+                      tf.add(os.path.join(adapter_dir,name),arcname=name)
+              h=hashlib.sha256(open(archive,"rb").read()).hexdigest()
+              assets.append({"persona":gid,"file":os.path.basename(archive),"sha256":h,"bytes":os.path.getsize(archive)})
+          manifest={
+              "schema_version":1,
+              "experiment":"PERSONA-002",
+              "release_tag":"persona-002-v1",
+              "parent_release":"persona-001-v1",
+              "release_url":"https://github.com/techrote/neurounner/releases/tag/persona-002-v1",
+              "base_model":"HuggingFaceTB/SmolLM2-135M-Instruct",
+              "base_revision":"12fd25f77366fa6b3b4b768ec3050bf629380bac",
+              "assets":assets,
+          }
+          open("experiments/persona-002/evidence/adapter-release.json","w").write(json.dumps(manifest,indent=2)+"\n")
+          print(json.dumps(manifest,indent=2))
+          PY
+
+      - name: Commit durable PERSONA-002 evidence
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add experiments/persona-002/evidence docs/PERSONA_002_REPORT.md
+          git commit -m "Record PERSONA-002 preference tournament"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Publish durable preference cartridges
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="persona-002-v1"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" release-assets/*.tar.gz --clobber
+          else
+            gh release create "$TAG"               --target main               --title "PERSONA-002 anti-sanitization preference cartridges"               --notes-file docs/PERSONA_002_REPORT.md               release-assets/*.tar.gz
+          fi
