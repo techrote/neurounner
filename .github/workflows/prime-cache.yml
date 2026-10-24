@@ -1,0 +1,31 @@
+name: Prime inference cache
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: neurounner-cache-prime
+  cancel-in-progress: false
+
+jobs:
+  prime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/neurounner
+          key: ubuntu-neurounner-v1-b11852-edc2ac32-bb741ebb
+      - name: Validate harness
+        run: |
+          bash -n scripts/bootstrap.sh
+          python3 -m py_compile scripts/experiment.py
+      - name: Populate and verify pinned cache
+        run: bash scripts/bootstrap.sh all
