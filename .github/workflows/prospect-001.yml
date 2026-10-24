@@ -1,0 +1,95 @@
+name: Prospect 001 immediate model tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/prospect-001.yml'
+      - 'experiments/prospect-001/**'
+      - 'scripts/prospect_probe.py'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: neurounner-prospect-001
+  cancel-in-progress: false
+
+jobs:
+  prospect:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-prospect]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        lane: [d1-3b-q4, qwen3-vl-2b-q4, nemotron-bolt-e4b-q4, k2-quant-pair]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Prepare runtime
+        run: |
+          python3 -m py_compile scripts/prospect_probe.py
+          bash scripts/bootstrap.sh runtime
+
+      - name: Download d1 model + projector
+        if: matrix.lane == 'd1-3b-q4'
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/d1.gguf" "https://huggingface.co/LiquidAI/d1-3B-GGUF/resolve/main/d1-3B-Q4_K_M.gguf"
+          echo "16aff27ea2eefdc32b9897f43854a5d3170c1dc8dccb9c756905af30a4e22402  $RUNNER_TEMP/d1.gguf" | sha256sum -c -
+          curl -fL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/d1-mmproj.gguf" "https://huggingface.co/LiquidAI/d1-3B-GGUF/resolve/main/mmproj-d1-3B-Q8_0.gguf"
+          echo "2505920ce464b7c54acd8b7b74a931c0c671f06d0c8833760b2fbceeb253e92a  $RUNNER_TEMP/d1-mmproj.gguf" | sha256sum -c -
+      - name: Probe d1 multimodal decision model
+        if: matrix.lane == 'd1-3b-q4'
+        run: python3 scripts/prospect_probe.py d1-3b-q4 "$RUNNER_TEMP/d1.gguf" "$RUNNER_TEMP/d1-mmproj.gguf"
+
+      - name: Download Qwen3-VL model + projector
+        if: matrix.lane == 'qwen3-vl-2b-q4'
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/qwen3vl.gguf" "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/resolve/main/Qwen3VL-2B-Instruct-Q4_K_M.gguf"
+          echo "089d75c52f4b7ffc56ba998ffc50aae89fcafc755f9e7208aacca281dca6c2ae  $RUNNER_TEMP/qwen3vl.gguf" | sha256sum -c -
+          curl -fL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/qwen3vl-mmproj.gguf" "https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct-GGUF/resolve/main/mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf"
+          echo "f9a68fabba69c3b81e153367b2c7521030b0fa8bb0de400c9599c8e6725f9c82  $RUNNER_TEMP/qwen3vl-mmproj.gguf" | sha256sum -c -
+      - name: Probe Qwen3-VL multimodal
+        if: matrix.lane == 'qwen3-vl-2b-q4'
+        run: python3 scripts/prospect_probe.py qwen3-vl-2b-q4 "$RUNNER_TEMP/qwen3vl.gguf" "$RUNNER_TEMP/qwen3vl-mmproj.gguf"
+
+      - name: Download Nemotron Bolt
+        if: matrix.lane == 'nemotron-bolt-e4b-q4'
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/bolt.gguf" "https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/resolve/main/Nemotron-3.5-Bolt-E4B-Q4_K_M.gguf"
+          sha256sum "$RUNNER_TEMP/bolt.gguf"
+      - name: Probe Nemotron Bolt
+        if: matrix.lane == 'nemotron-bolt-e4b-q4'
+        run: python3 scripts/prospect_probe.py nemotron-bolt-e4b-q4 "$RUNNER_TEMP/bolt.gguf"
+
+      - name: Download K2 IQ1_M and Q6_K
+        if: matrix.lane == 'k2-quant-pair'
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/k2-iq1.gguf" "https://huggingface.co/mradermacher/K2-Horizon-3.7B-i1-GGUF/resolve/main/K2-Horizon-3.7B.i1-IQ1_M.gguf"
+          curl -fL --retry 5 --retry-all-errors -o "$RUNNER_TEMP/k2-q6.gguf" "https://huggingface.co/mradermacher/K2-Horizon-3.7B-i1-GGUF/resolve/main/K2-Horizon-3.7B.i1-Q6_K.gguf"
+          sha256sum "$RUNNER_TEMP/k2-iq1.gguf" "$RUNNER_TEMP/k2-q6.gguf"
+      - name: Probe K2 IQ1_M
+        if: matrix.lane == 'k2-quant-pair'
+        run: python3 scripts/prospect_probe.py k2-horizon-iq1-m "$RUNNER_TEMP/k2-iq1.gguf"
+      - name: Probe K2 Q6_K
+        if: matrix.lane == 'k2-quant-pair'
+        run: python3 scripts/prospect_probe.py k2-horizon-q6-k "$RUNNER_TEMP/k2-q6.gguf"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: prospect-001-${{ matrix.lane }}-a${{ github.run_attempt }}
+          path: |
+            results/prospect-*.json
+            logs/prospect-*
+          if-no-files-found: warn
+          retention-days: 7
