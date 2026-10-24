@@ -357,16 +357,20 @@ These models are being tracked specifically for **fast CPU fine-tuning experimen
 - Current role: proven ultra-cheap specialization substrate and checkpoint/resume reference.
 - Detailed evidence: `docs/TRAIN_001_CPU_LORA.md`.
 
-### void.1 — symbolic 90M control
+### void.1 — symbolic 90M control, TRAIN-002b qualified
 
 - Source: https://huggingface.co/dotlabs/void.1
-- Size: ~90.15M parameters.
+- Size: ~92.1M parameters observed at pinned revision `9c2be5087772867d45961abd11f6b35110617563`.
 - License: Apache-2.0.
-- Architecture/runtime: standard Transformers text-generation model with Qwen3 lineage/tokenization metadata; pretrained from scratch with a symbolic-reasoning emphasis.
-- Training fit: **very good**, and smaller than SmolLM2-135M.
-- Interest: unusually relevant as a tiny symbolic/mechanical reasoning substrate; could eventually be compared against SmolLM2 on the same compiler dataset.
-- Caveat: base model rather than instruction-tuned, so the first specialization may require more examples or a completion-style objective.
-- Priority: **high; likely TRAIN-002** if TRAIN-001 works.
+- Architecture/runtime: standard causal LM with a custom `ByteTokenizer`; tokenizer source SHA-256 `279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03`.
+- Status: **TRAIN-002b completed across eight dedicated runners.**
+- Critical correction: the original TRAIN-002 `max_new_tokens=120` evaluation was misleading because those units are byte-oriented. With a 768-unit evaluation, ordinary control runs reached **6/6 exact schema**.
+- Controls: cloud mechanical-fidelity mean **1.92/4**. Seed variation alone moved the two controls from 1.83 to 2.00/4, so small perturbation effects must exceed that noise floor.
+- Best perturbation: **failure-weighted training material**, 6/6 exact schema, 2.00/4 cloud mechanical score and the strongest deterministic similarity proxy (0.367).
+- Hyperparameter result: lower/higher LR, rank 4/16 and dropout=0 did **not** beat the control distribution on the independent mechanical judge.
+- Throughput caveat: report bytes/s or characters/s for cross-model comparisons; byte-tokenizer unit/s is not comparable to ordinary subword tok/s.
+- Current role: fast tiny specialization/control model; interesting for data-curriculum experiments, but still materially weaker semantically than its format compliance suggests.
+- Detailed evidence: `docs/TRAIN_002B_VOID_EIGHT_LANE.md` and `experiments/train-002b/evidence/`.
 
 ### StorySprint-30M — minimal training-speed control
 
