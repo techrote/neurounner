@@ -20,9 +20,22 @@ The first suite contains four bounded experiments:
 
 1. **sprocket3** — three independent Sprocket processes share one four-vCPU runner.
 2. **lfm1** — one LFM2.5-1.2B process uses the runner.
-3. **pair** — Sprocket and LFM are both resident on one runner and take alternating turns.
+3. **pair** — Sprocket and LFM are both resident on one runner and infer concurrently.
 4. **ring** — Sprocket A → Sprocket B → Sprocket C → LFM, repeated for a short circular conversation.
 
 Runtime and model files are verified before execution and cached by immutable content identifiers. No model or runtime binary is committed to Git.
 
 Use **Actions → Prime inference cache** once after changing pins, then **Actions → Model experiments** to run the suite.
+
+## First hosted result
+
+The complete initial suite passed on GitHub-hosted four-vCPU Linux runners at source head `0e0163856493334421b6eda748f63cf728df72b6`.
+
+| Experiment | Result |
+|---|---:|
+| 3 × concurrent Sprocket | 464 completion tokens in 6.542 s — 70.93 tok/s aggregate |
+| LFM2.5-1.2B alone | 246 tokens in 5.232 s — 47.02 tok/s |
+| Sprocket + LFM concurrent | 278 tokens in 4.540 s — 61.24 tok/s aggregate |
+| 3 × Sprocket + LFM ring | 649 tokens in 21.622 s — 30.02 tok/s across eight turns |
+
+The four-process ring kept all models resident simultaneously with large memory headroom. See [the initial hosted experiment record](docs/INITIAL_EXPERIMENTS.md) for outputs, memory observations, artifact hashes, and next measurements.
