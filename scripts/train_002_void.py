@@ -83,7 +83,7 @@ def main():
     data=json.loads(DATA.read_text()); system=data["system"]
     rev=HfApi().model_info(BASE).sha
     t0=time.monotonic()
-    tok=AutoTokenizer.from_pretrained(BASE,revision=rev)
+    tok=AutoTokenizer.from_pretrained(BASE,revision=rev,trust_remote_code=True)
     if tok.pad_token_id is None:
       tok.pad_token=tok.eos_token
     base=AutoModelForCausalLM.from_pretrained(BASE,revision=rev,torch_dtype=torch.float32)
