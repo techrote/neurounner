@@ -1086,6 +1086,41 @@ Durable evidence:
 - `experiments/persona-002/evidence/adapter-release.json`
 - release `persona-002-v1`
 
+# 2026-10-25 — TRAIN-004 SmolLM2-135M full-parameter CPU feasibility
+
+**Issue:** #5  
+**Actions run:** `40143212748`  
+**Measured source:** `760c5709db158d227a12657e54a6caae3a34346c`  
+**Base:** `HuggingFaceTB/SmolLM2-135M-Instruct` revision `12fd25f77366fa6b3b4b768ec3050bf629380bac`.
+
+TRAIN-004 measured full-parameter float32 AdamW training against the established TRAIN-001 LoRA path on standard four-vCPU GitHub-hosted `ubuntu-24.04` runners.
+
+Primary full lane on **AMD EPYC 7763**:
+
+- 134,515,008 / 134,515,008 parameters trainable;
+- 16 steps, 2,463 sequence tokens in 23.125 s;
+- **106.51 sequence tok/s**;
+- loss **4.7135 → 3.3857**;
+- peak RSS **3,087,556 KiB (~2.945 GiB)**;
+- full resumable checkpoint **1,614,446,024 bytes (1.504 GiB)**.
+
+The authoritative TRAIN-001 LoRA reference ran on the same EPYC 7763 CPU model at **117.18 tok/s**, **1,748,660 KiB** peak RSS and a **29,721,169-byte** checkpoint. Therefore full parameter measured:
+
+- **1.10× training slowdown** on the same CPU model;
+- **1.77× peak-RSS multiplier**;
+- **54.32× checkpoint-size multiplier**;
+- **55.08× trainable-parameter multiplier**.
+
+A simultaneous 16-step LoRA control landed on EPYC 9V74 and measured 134.88 tok/s, 1,748,916 KiB peak RSS and a 29,722,667-byte checkpoint. Its 1.27× apparent throughput advantage is host-confounded; the same-CPU TRAIN-001 comparison is the stronger throughput result.
+
+The full AdamW state allocated mostly on the first optimizer step. Peak RSS rose from 1,188,480 KiB after model load to 2,917,348 KiB after the first step, then only another 170,208 KiB through step 16. There was no evidence of uncontrolled ongoing memory growth.
+
+The 1.504-GiB checkpoint was uploaded to Actions, downloaded on a fresh **Intel Xeon 6973P-C** runner, all five files were SHA-256 verified, and model/optimizer/RNG/cursor state was restored at step 16. Training then continued successfully for another 16 steps to **global step 32**, proving cross-run restartability.
+
+**Interpretation: practical but expensive.** Full tuning is unexpectedly close to LoRA in CPU loop throughput and still very comfortable in runner RAM. Its decisive disadvantage for current neurounner workloads is the ~54× larger resumable checkpoint and loss of small, swappable adapter artifacts. Continue to prefer LoRA for modular persona/narrow specialization work; use full tuning when changing the shared base model is itself valuable or when measured LoRA capacity limits justify the storage cost.
+
+Detailed record: `docs/TRAIN_004_FULL_PARAMETER.md`.
+
 # Journal interpretation notes
 
 ## Throughput is task-shaped
