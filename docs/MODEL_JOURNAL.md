@@ -42,6 +42,12 @@ Do not merge throughput measurements from different CPUs or task shapes into a s
 | Ministral 3 3B Instruct | Q4_K_M | EPYC 7763, Panel-001 | 7.05 tok/s | unusually detailed, nuanced critic; strong local-vs-global reasoning; too verbose for 1800-token schema | potentially excellent analytic critic if output is compressed |
 | Qwen2.5-Omni-7B text-only | Q4_K_M | EPYC 7763, startup smoke | 4.26 tok/s | only a trivial short response observed so far; no useful temperament conclusion yet | multimodal candidate; text judge still unqualified |
 
+| Liquid d1-3B | Q4_K_M + Q8 projector | EPYC 7763, multimodal decision probe | bench tg64 20.63; image response 5.57 tok/s | cautious, decision-oriented; noticed blocked direct path and avoided inventing a path through it | visual/decision sidecar; promising bridge from scene to action |
+| Qwen3-VL-2B-Instruct | Q4_K_M + Q8 projector | EPYC 7763, multimodal decision probe | bench tg64 30.60; image response 12.72 tok/s | good object/layout perception but first action grounding contradicted its own scene description | cheap visual interpreter; needs spatial-action calibration tests |
+| Nemotron 3.5 Bolt E4B | Q4_K_M | EPYC 7763, reasoning probe | bench tg64 10.03; reasoning 8.46 tok/s | orderly, constraint-aware self-critic; spends short budget entirely in reasoning | high-priority reasoning critic/incubator; test thinking-off vs long thinking |
+| K2-Horizon-3.7B | IQ1_M | EPYC 7763, same-host quant A/B | bench tg64 6.24; probe 4.11 tok/s | severe template/reasoning corruption at 1.75 bpw; effectively incoherent in first task | useful quantization-degradation reference, not a serious judge at this quant |
+| K2-Horizon-3.7B | Q6_K | EPYC 7763, same-host quant A/B | bench tg64 9.50; reasoning 8.15 tok/s | coherent stepwise mechanism reasoning; consumed full short thinking budget | unusual reasoning/deepener candidate; substantially better than IQ1_M |
+
 ---
 
 # 2026-10-24 — Precursor Sprocket smoke
@@ -404,6 +410,106 @@ Important: host variation is large enough that the startup-smoke rates are not s
 - Qwen2.5-Omni: generic temperature/shiver response; too little evidence for a personality judgment.
 
 ---
+
+---
+
+# 2026-10-24 — Prospect-001: decision, vision, Bolt and K2 quantization
+
+**Actions run:** `40106026648`  
+**Source:** `ebdffbf098eaea71d8ce1f1d801018737fcae7eb`  
+**Runner class:** GitHub-hosted `ubuntu-24.04`, 4 logical CPUs.
+
+## Liquid d1-3B Q4_K_M + Q8 projector
+
+**CPU:** AMD EPYC 7763 64-Core Processor.
+
+Measured:
+
+- startup: **1.778 s**;
+- RSS: **3.38 GiB**;
+- text-core `pp64`: **39.45 ± 0.44 tok/s**;
+- text-core `tg64`: **20.63 ± 0.06 tok/s**;
+- multimodal probe: 48 tokens / 8.614 s = **5.57 tok/s**.
+
+Synthetic scene: red actor on left, black vertical obstacle in the middle, blue target on right.
+
+Response began with **WAIT**. It correctly identified that the black obstacle blocks the direct path and explicitly noted that moving left would increase distance from the obstacle / create room for a later maneuver.
+
+Observed temperament: cautious and decision-oriented. It appeared more interested in selecting a safe immediate action than narrating the scene. One toy image is far too little to judge decision quality, but the response was internally coherent.
+
+Potential utility: visual decision sidecar, action selector, policy critic, and a bridge between rendered world state and compact local decisions.
+
+## Qwen3-VL-2B-Instruct Q4_K_M + Q8 projector
+
+**CPU:** AMD EPYC 7763 64-Core Processor.
+
+Measured:
+
+- startup: **1.278 s**;
+- RSS: **2.67 GiB**;
+- text-core `pp64`: **69.90 ± 0.28 tok/s**;
+- text-core `tg64`: **30.60 ± 0.22 tok/s**;
+- multimodal probe: 86 tokens / 6.762 s = **12.72 tok/s**.
+
+It correctly perceived the red actor left of the black obstacle and the blue target to the right, but chose **MOVE_LEFT** and then claimed moving left would bring the actor closer to the right-side target. The perception was good; the action grounding contradicted its own description.
+
+Observed temperament: confident visual narrator with a first-trial spatial-action consistency failure.
+
+Potential utility: cheap visual interpreter / observation extractor. Before granting it action authority, test many simple left/right/occlusion scenes with known answers.
+
+## NVIDIA Nemotron 3.5 Bolt E4B Q4_K_M
+
+**CPU:** AMD EPYC 7763 64-Core Processor.
+
+Measured:
+
+- startup: **3.226 s**;
+- RSS: **7.86 GiB**;
+- `pp64`: **23.80 ± 0.34 tok/s**;
+- `tg64`: **10.03 ± 0.19 tok/s**;
+- reasoning probe: 220 tokens / 26.003 s = **8.46 tok/s**.
+
+The 220-token allowance was entirely consumed by reasoning, so there was no final answer. The reasoning itself was notably orderly: it restated the output constraints, decomposed trigger/state/action/failure, drafted a mechanism, and self-checked its constraints.
+
+Observed temperament: deliberate, procedural self-critic with strong constraint tracking; short final-answer budgets are inappropriate in reasoning mode.
+
+Potential utility: high-priority 4B-class reasoning critic / incubator. Next test should compare thinking disabled against a much larger explicit thinking budget.
+
+## K2-Horizon — IQ1_M versus Q6_K on the same runner
+
+**CPU:** AMD EPYC 7763 64-Core Processor for both variants. This same-host pairing removes the largest GitHub placement confounder.
+
+### IQ1_M — 1.75 bpw
+
+Measured:
+
+- model: 1.43 GiB, reported 5.06B params;
+- startup: **1.782 s**;
+- RSS: **2.17 GiB**;
+- `pp64`: **26.23 ± 0.01 tok/s**;
+- `tg64`: **6.24 tok/s**;
+- probe: 42 tokens / 10.224 s = **4.11 tok/s**.
+
+Output degraded into malformed reasoning/template fragments such as `</ifm|think>` and did not produce a usable mechanism.
+
+Observed temperament at this quant: effectively corrupted. The first test does not support using IQ1_M for serious reasoning.
+
+### Q6_K
+
+Measured:
+
+- model: 3.86 GiB, same reported 5.06B params;
+- startup: **1.468 s**;
+- RSS: **4.57 GiB**;
+- `pp64`: **27.99 ± 0.17 tok/s**;
+- `tg64`: **9.50 ± 0.19 tok/s**;
+- reasoning probe: 220 tokens / 26.995 s = **8.15 tok/s**.
+
+Q6_K produced coherent stepwise reasoning around storing a shove vector, bounding/decaying it, turning it into a preferred movement direction, and considering stuck/oscillation failure modes. It exhausted the short thinking budget before final output.
+
+Quantization finding: **Q6_K was both substantially more coherent and faster than IQ1_M in this model/build on the same CPU**. This is a strong warning against assuming extreme quantization automatically buys useful throughput.
+
+Potential utility: Q6_K merits further testing as an unusual reasoning/deepening model; IQ1_M is mainly valuable as a quantization-failure reference unless another prompt/runtime configuration rehabilitates it.
 
 # Journal interpretation notes
 
