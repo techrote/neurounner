@@ -63,5 +63,6 @@ See [the second hosted experiment record](docs/SECOND_EXPERIMENTS.md) for exact 
 - [Future model longlist](docs/MODEL_LONGLIST.md)
 - [Initial hosted experiment record](docs/INITIAL_EXPERIMENTS.md)
 - [Second hosted experiment record](docs/SECOND_EXPERIMENTS.md)
+- [Eight-runner startup smoke](docs/STARTUP8_2026-10-24.md)
 
 The current ~4B comparison shortlist is pinned in [config/candidates.json](config/candidates.json): Phi-4-mini-instruct, Gemma 3 4B IT, Ministral 3 3B Instruct, SmolLM3 3B and Qwen3-4B, alongside Qwen3.5-4B.
