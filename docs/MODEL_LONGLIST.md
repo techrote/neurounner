@@ -340,6 +340,77 @@ GitHub CPU runner
 
 The remote models should normally **not talk directly to one another**. Give them the same immutable packet independently, then aggregate locally. This preserves model-family disagreement and prevents one frontier model from anchoring the others.
 
+## Ultra-small training candidates — 24 October 2026
+
+These models are being tracked specifically for **fast CPU fine-tuning experiments on standard GitHub-hosted four-vCPU runners**. The priority here is not raw general-model quality; it is how quickly we can observe a measurable behavioural change, checkpoint it, resume it on a fresh runner, and learn what kinds of specialization survive at very small scale.
+
+### SmolLM2-135M-Instruct — first TRAIN-001 target
+
+- Source: https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct
+- Size: ~135M parameters.
+- License: Apache-2.0.
+- Architecture/runtime: standard decoder-only Transformers model; normal Hugging Face CPU path and chat template.
+- Training fit: **excellent**. Already instruction-tuned, so a tiny SFT/LoRA dataset can teach a narrow transformation task without first teaching the model how to follow instructions.
+- Intended neurounner experiment: train a behaviour-kernel compiler that converts messy personality/mechanism prose into a small canonical JSON KernelSpec while preserving unusual mechanisms.
+- Priority: **TRAIN NOW**.
+
+### void.1 — symbolic 90M control
+
+- Source: https://huggingface.co/dotlabs/void.1
+- Size: ~90.15M parameters.
+- License: Apache-2.0.
+- Architecture/runtime: standard Transformers text-generation model with Qwen3 lineage/tokenization metadata; pretrained from scratch with a symbolic-reasoning emphasis.
+- Training fit: **very good**, and smaller than SmolLM2-135M.
+- Interest: unusually relevant as a tiny symbolic/mechanical reasoning substrate; could eventually be compared against SmolLM2 on the same compiler dataset.
+- Caveat: base model rather than instruction-tuned, so the first specialization may require more examples or a completion-style objective.
+- Priority: **high; likely TRAIN-002** if TRAIN-001 works.
+
+### StorySprint-30M — minimal training-speed control
+
+- Source: https://huggingface.co/AbdullahKhan10/storysprint-30m
+- Size: ~30M parameters.
+- License: MIT.
+- Architecture: GPT-2-style decoder, 6 layers, 6 heads, hidden size 384, 256-token context.
+- Provenance: trained from scratch on TinyStories; the published baseline reached its target validation loss in under an hour on one NVIDIA T4.
+- Training fit: **excellent as a minimal CPU/checkpoint/resume control**, but its extremely narrow TinyStories prior makes it a weak candidate for the real behaviour-kernel compiler.
+- Potential neurounner role: prove the training orchestration itself, or deliberately generate tiny/simple character motifs.
+- Priority: fallback speed control if 135M CPU throughput is unexpectedly poor.
+
+### AnveshAI-CoderLM-0.1B
+
+- Source: https://huggingface.co/AnveshAI/AnveshAI-CoderLM-0.1B
+- Current published model card/search result: approximately 100.2M parameters, Apache-2.0, compact code model with a custom hybrid ParallelMinGRU + Differential-GQA architecture and ~512-token context.
+- Interest: the recurrent/attention hybrid is architecturally distinct and small enough for CPU experiments.
+- Training fit: **moderate**, not first choice. It relies on custom model code and is specialized for code/FIM rather than instruction following, so PEFT/Trainer compatibility needs a dedicated spike.
+- Potential neurounner role: compact structured-code/kernel emitter if the custom architecture fine-tunes cleanly.
+
+### Zenyx-100M-Base
+
+- Source: https://huggingface.co/Arko007/Zenyx-100M-Base
+- Status: **longlist only pending exact artifact verification**. The exact supplied repository did not resolve cleanly during the 24 October review, while nearby Zenyx nano models use custom JAX/Flax architectures.
+- Interest: potentially useful ultra-small base-model/control if the exact checkpoint and runtime are recoverable.
+- Training fit: unknown until architecture, parameter count, files and license are verified.
+- Do not substitute a similarly named Zenyx model silently; preserve this exact longlist entry until the target repository can be inspected.
+
+### SmolVLM-256M-Instruct
+
+- Source: https://huggingface.co/HuggingFaceTB/SmolVLM-256M-Instruct
+- Size: approximately 0.3B total; based on Idefics3 with a 93M vision encoder and SmolLM2 language component.
+- License: Apache-2.0.
+- Architecture/runtime: standard Transformers multimodal model; Hugging Face publishes an explicit fine-tuning path.
+- Training fit: **high for a later multimodal specialization experiment**, but not appropriate as the first CPU-training proof because vision preprocessing/training adds extra memory and compute variables.
+- Potential neurounner role: tiny screenshot/frame classifier or specialized local physical-state extractor fine-tuned on synthetic Cybersand scenes.
+- Priority: train after the text-only checkpoint/resume pipeline is proven.
+
+### Immediate training order
+
+1. **SmolLM2-135M-Instruct** — real narrow specialist; standard tooling.
+2. **void.1** — smaller symbolic base-model comparison.
+3. **StorySprint-30M** — minimal orchestration/speed control if needed.
+4. **SmolVLM-256M-Instruct** — multimodal specialization after text training is stable.
+5. **AnveshAI-CoderLM-0.1B** — custom-architecture experiment.
+6. **Zenyx-100M-Base** — pending exact artifact verification.
+
 ## Suggested future qualification dimensions
 
 When longlist entries graduate into actual tests, avoid reducing evaluation to chat quality. Depending on model type, useful measurements include:
