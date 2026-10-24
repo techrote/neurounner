@@ -1,0 +1,347 @@
+{
+  "additional_steps_requested": 16,
+  "checkpoint": "full-checkpoint",
+  "checkpoint_metadata": {
+    "base_model": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "base_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "dataset": "experiments/train-001/kernel_compiler_dataset.json",
+    "dataset_sha256": "db76aedf89eae32e4514c212b2feb21db7b2b46700ae5aabf6d35861a073cf41",
+    "dtype": "float32",
+    "experiment": "TRAIN-004",
+    "global_step": 16,
+    "lora": null,
+    "mode": "full",
+    "optimizer": {
+      "betas": [
+        0.9,
+        0.95
+      ],
+      "full_parameter_lr_rationale": "5e-5 is a conservative single-point full-parameter fine-tuning rate for the pinned 135M causal LM; TRAIN-004 intentionally does not sweep it.",
+      "gradient_clip_norm": 1,
+      "learning_rate": 0.00005,
+      "name": "AdamW",
+      "weight_decay": 0.01
+    },
+    "packages": {
+      "huggingface_hub": "0.36.2",
+      "peft": "0.21.2",
+      "psutil": "7.2.2",
+      "python": "3.12.3",
+      "safetensors": "0.8.0",
+      "torch": "2.14.1+cpu",
+      "transformers": "4.57.6"
+    },
+    "sample_cursor": 16,
+    "seed": 20261024,
+    "source_commit": "760c5709db158d227a12657e54a6caae3a34346c"
+  },
+  "experiment": "TRAIN-004",
+  "global_step_after": 32,
+  "global_step_before": 16,
+  "memory_after_model_load": {
+    "peak_rss_kib": 401216,
+    "rss_kib": 401680,
+    "system_available_kib": 14982940,
+    "system_total_kib": 16372440
+  },
+  "memory_after_optimizer_construction": {
+    "peak_rss_kib": 401216,
+    "rss_kib": 401680,
+    "system_available_kib": 14982940,
+    "system_total_kib": 16372440
+  },
+  "memory_after_optimizer_restore": {
+    "peak_rss_kib": 1447240,
+    "rss_kib": 1447568,
+    "system_available_kib": 13947572,
+    "system_total_kib": 16372440
+  },
+  "memory_at_process_entry": {
+    "peak_rss_kib": 354884,
+    "rss_kib": 355336,
+    "system_available_kib": 15007284,
+    "system_total_kib": 16372440
+  },
+  "memory_before_model_load": {
+    "peak_rss_kib": 381924,
+    "rss_kib": 380340,
+    "system_available_kib": 14983724,
+    "system_total_kib": 16372440
+  },
+  "model_load_seconds": 0.03524236000001224,
+  "packages": {
+    "huggingface_hub": "0.36.2",
+    "peft": "0.21.2",
+    "psutil": "7.2.2",
+    "python": "3.12.3",
+    "safetensors": "0.8.0",
+    "torch": "2.14.1+cpu",
+    "transformers": "4.57.6"
+  },
+  "phase": "fresh-runner-resume",
+  "runner": {
+    "cpu_model": "Intel(R) Xeon(R) 6973P-C",
+    "logical_cpu_count": 4,
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "runner_arch": "X64",
+    "runner_name": "GitHub Actions 1000042684",
+    "runner_os": "Linux",
+    "torch_interop_threads": 1,
+    "torch_threads": 4
+  },
+  "sample_cursor_after": 32,
+  "sample_cursor_before": 16,
+  "schema_version": 1,
+  "source_commit": "760c5709db158d227a12657e54a6caae3a34346c",
+  "status": "success",
+  "training": {
+    "final_loss": 2.004481792449951,
+    "first_loss": 2.2597475051879883,
+    "global_step_end": 32,
+    "loss_history": [
+      2.2597475051879883,
+      3.1450321674346924,
+      3.671107769012451,
+      2.325083017349243,
+      2.300103187561035,
+      2.2301108837127686,
+      3.0558440685272217,
+      3.3020236492156982,
+      1.479892611503601,
+      1.7598037719726562,
+      2.2132184505462646,
+      2.11995530128479,
+      1.7971398830413818,
+      2.033526659011841,
+      2.151151180267334,
+      2.004481792449951
+    ],
+    "mean_loss": 2.3655138686299324,
+    "memory_after_first_optimizer_step": {
+      "peak_rss_kib": 2957932,
+      "rss_kib": 2748720,
+      "system_available_kib": 12295140,
+      "system_total_kib": 16372440
+    },
+    "memory_after_training": {
+      "peak_rss_kib": 3017172,
+      "rss_kib": 2786280,
+      "system_available_kib": 12441164,
+      "system_total_kib": 16372440
+    },
+    "peak_growth_after_first_step_kib": 59240,
+    "sample_cursor_end": 32,
+    "seconds_per_step": 0.8674936446875012,
+    "sequence_tokens": 2445,
+    "sequence_tokens_per_second": 176.1540282580951,
+    "step_history": [
+      {
+        "global_step": 17,
+        "local_step": 1,
+        "loss": 2.2597475051879883,
+        "peak_rss_kib": 2957932,
+        "rss_kib": 2748720,
+        "sample_index": 16,
+        "sequence_tokens": 162,
+        "step_seconds": 1.2599666399999876,
+        "supervised_tokens": 76,
+        "system_available_kib": 12295140
+      },
+      {
+        "global_step": 18,
+        "local_step": 2,
+        "loss": 3.1450321674346924,
+        "peak_rss_kib": 2957932,
+        "rss_kib": 2667428,
+        "sample_index": 17,
+        "sequence_tokens": 151,
+        "step_seconds": 0.7997005710000167,
+        "supervised_tokens": 77,
+        "system_available_kib": 12312480
+      },
+      {
+        "global_step": 19,
+        "local_step": 3,
+        "loss": 3.671107769012451,
+        "peak_rss_kib": 2960720,
+        "rss_kib": 2753400,
+        "sample_index": 18,
+        "sequence_tokens": 149,
+        "step_seconds": 0.7947118290000219,
+        "supervised_tokens": 69,
+        "system_available_kib": 12445876
+      },
+      {
+        "global_step": 20,
+        "local_step": 4,
+        "loss": 2.325083017349243,
+        "peak_rss_kib": 2968812,
+        "rss_kib": 2761492,
+        "sample_index": 19,
+        "sequence_tokens": 149,
+        "step_seconds": 0.7972215469999924,
+        "supervised_tokens": 74,
+        "system_available_kib": 12477824
+      },
+      {
+        "global_step": 21,
+        "local_step": 5,
+        "loss": 2.300103187561035,
+        "peak_rss_kib": 2968812,
+        "rss_kib": 2732116,
+        "sample_index": 20,
+        "sequence_tokens": 147,
+        "step_seconds": 0.7964444220000075,
+        "supervised_tokens": 71,
+        "system_available_kib": 12524072
+      },
+      {
+        "global_step": 22,
+        "local_step": 6,
+        "loss": 2.2301108837127686,
+        "peak_rss_kib": 3001932,
+        "rss_kib": 2792452,
+        "sample_index": 21,
+        "sequence_tokens": 156,
+        "step_seconds": 0.8340436830000044,
+        "supervised_tokens": 77,
+        "system_available_kib": 12461040
+      },
+      {
+        "global_step": 23,
+        "local_step": 7,
+        "loss": 3.0558440685272217,
+        "peak_rss_kib": 3001932,
+        "rss_kib": 2707344,
+        "sample_index": 22,
+        "sequence_tokens": 150,
+        "step_seconds": 0.860847739999997,
+        "supervised_tokens": 72,
+        "system_available_kib": 12562536
+      },
+      {
+        "global_step": 24,
+        "local_step": 8,
+        "loss": 3.3020236492156982,
+        "peak_rss_kib": 3007016,
+        "rss_kib": 2798832,
+        "sample_index": 23,
+        "sequence_tokens": 156,
+        "step_seconds": 0.918892172999989,
+        "supervised_tokens": 80,
+        "system_available_kib": 12449856
+      },
+      {
+        "global_step": 25,
+        "local_step": 9,
+        "loss": 1.479892611503601,
+        "peak_rss_kib": 3017172,
+        "rss_kib": 2809852,
+        "sample_index": 0,
+        "sequence_tokens": 157,
+        "step_seconds": 0.9091067280000118,
+        "supervised_tokens": 72,
+        "system_available_kib": 12446688
+      },
+      {
+        "global_step": 26,
+        "local_step": 10,
+        "loss": 1.7598037719726562,
+        "peak_rss_kib": 3017172,
+        "rss_kib": 2719992,
+        "sample_index": 1,
+        "sequence_tokens": 151,
+        "step_seconds": 0.8731179080000118,
+        "supervised_tokens": 72,
+        "system_available_kib": 12565816
+      },
+      {
+        "global_step": 27,
+        "local_step": 11,
+        "loss": 2.2132184505462646,
+        "peak_rss_kib": 3017172,
+        "rss_kib": 2794688,
+        "sample_index": 2,
+        "sequence_tokens": 157,
+        "step_seconds": 0.8566975919999891,
+        "supervised_tokens": 75,
+        "system_available_kib": 12494204
+      },
+      {
+        "global_step": 28,
+        "local_step": 12,
+        "loss": 2.11995530128479,
+        "peak_rss_kib": 3017172,
+        "rss_kib": 2733884,
+        "sample_index": 3,
+        "sequence_tokens": 154,
+        "step_seconds": 0.8932438060000152,
+        "supervised_tokens": 73,
+        "system_available_kib": 12581460
+      },
+      {
+        "global_step": 29,
+        "local_step": 13,
+        "loss": 1.7971398830413818,
+        "peak_rss_kib": 3017172,
+        "rss_kib": 2751500,
+        "sample_index": 4,
+        "sequence_tokens": 139,
+        "step_seconds": 0.8338028900000154,
+        "supervised_tokens": 64,
+        "system_available_kib": 12446496
+      },
+      {
+        "global_step": 30,
+        "local_step": 14,
+        "loss": 2.033526659011841,
+        "peak_rss_kib": 3017172,
+        "rss_kib": 2783048,
+        "sample_index": 5,
+        "sequence_tokens": 148,
+        "step_seconds": 0.7881376850000095,
+        "supervised_tokens": 68,
+        "system_available_kib": 12422732
+      },
+      {
+        "global_step": 31,
+        "local_step": 15,
+        "loss": 2.151151180267334,
+        "peak_rss_kib": 3017172,
+        "rss_kib": 2785788,
+        "sample_index": 6,
+        "sequence_tokens": 156,
+        "step_seconds": 0.8194278989999759,
+        "supervised_tokens": 76,
+        "system_available_kib": 12431052
+      },
+      {
+        "global_step": 32,
+        "local_step": 16,
+        "loss": 2.004481792449951,
+        "peak_rss_kib": 3017172,
+        "rss_kib": 2786280,
+        "sample_index": 7,
+        "sequence_tokens": 163,
+        "step_seconds": 0.8438491489999933,
+        "supervised_tokens": 80,
+        "system_available_kib": 12441164
+      }
+    ],
+    "steps_this_run": 16,
+    "supervised_tokens": 1176,
+    "supervised_tokens_per_second": 84.72684549346414,
+    "train_seconds": 13.87989831500002
+  },
+  "verification": {
+    "file_count": 5,
+    "manifest_sha256": "e6cb22371b8632c5286f5ccb375485e4bf7b8ce2bf46cc03e65ebe77196458b2",
+    "verified_files": [
+      "metadata.json",
+      "model/config.json",
+      "model/generation_config.json",
+      "model/model.safetensors",
+      "train_state.pt"
+    ]
+  }
+}

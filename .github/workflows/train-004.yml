@@ -1,0 +1,274 @@
+name: TRAIN-004 full-parameter CPU feasibility
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/train-004.yml"
+      - "scripts/train_004.py"
+      - "scripts/train_004_compare.py"
+      - "experiments/train-001/kernel_compiler_dataset.json"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: neurounner-train-004-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+env:
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  TOKENIZERS_PARALLELISM: "false"
+  HF_HOME: /tmp/neurounner-hf
+  TRAIN004_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  full:
+    name: Full parameter — 16-step bounded lane
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    outputs:
+      additional_steps: ${{ steps.extension.outputs.additional_steps }}
+      extension_reason: ${{ steps.extension.outputs.extension_reason }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ env.TRAIN004_SOURCE_SHA }}
+
+      - name: Install CPU training stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install "transformers>=4.57,<5" "peft>=0.17,<1" "huggingface_hub>=0.36,<2" "psutil>=7,<8" "safetensors>=0.6,<1"
+          python3 -m py_compile scripts/train_004.py scripts/train_004_compare.py
+          python3 - <<'PY'
+          import torch, transformers, peft, huggingface_hub, psutil, safetensors
+          print("torch", torch.__version__)
+          print("transformers", transformers.__version__)
+          print("peft", peft.__version__)
+          print("huggingface_hub", huggingface_hub.__version__)
+          print("psutil", psutil.__version__)
+          print("safetensors", safetensors.__version__)
+          PY
+          df -h .
+
+      - name: Run full-parameter lane
+        id: train
+        shell: bash
+        run: |
+          set +e
+          mkdir -p train004/evidence train004/full-checkpoint
+          python3 scripts/train_004.py train \
+            --mode full \
+            --steps 16 \
+            --checkpoint-out train004/full-checkpoint \
+            --evidence-out train004/evidence/full.json
+          rc=$?
+          if [[ -f train004/full-checkpoint/manifest.json ]]; then
+            cp train004/full-checkpoint/manifest.json train004/evidence/full-checkpoint-manifest.json
+          fi
+          echo "TRAIN-004 full lane exit code: $rc"
+          if [[ -f train004/evidence/full.json ]]; then
+            cat train004/evidence/full.json
+          fi
+          df -h .
+          exit "$rc"
+
+      - name: Decide bounded continuation
+        id: extension
+        run: |
+          python3 - <<'PY'
+          import json, os
+          r = json.load(open("train004/evidence/full.json"))
+          t = r["training"]
+          m = r["memory"]
+          comfortable = (
+              r["status"] == "success"
+              and t["steps_this_run"] == 16
+              and t["train_seconds"] <= 1200
+              and m["peak_rss_kib"] <= 10 * 1024 * 1024
+              and m["peak_growth_after_first_step_kib"] <= 1024 * 1024
+          )
+          additional = 16 if comfortable else 1
+          reason = (
+              "16-step lane completed within bounded time/memory thresholds; extend fresh-runner continuation to 32 total steps"
+              if comfortable
+              else "retain only the minimal one-step fresh-runner resume proof"
+          )
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"additional_steps={additional}\n")
+              f.write(f"extension_reason={reason}\n")
+          print(reason)
+          PY
+
+      - name: Upload full evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train004-full-evidence-a${{ github.run_attempt }}
+          path: train004/evidence
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload resumable full checkpoint
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train004-full-checkpoint-a${{ github.run_attempt }}
+          path: train004/full-checkpoint
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  lora:
+    name: LoRA control — same 16 examples
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ env.TRAIN004_SOURCE_SHA }}
+
+      - name: Install CPU training stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install "transformers>=4.57,<5" "peft>=0.17,<1" "huggingface_hub>=0.36,<2" "psutil>=7,<8" "safetensors>=0.6,<1"
+          python3 -m py_compile scripts/train_004.py scripts/train_004_compare.py
+
+      - name: Run LoRA control
+        shell: bash
+        run: |
+          set +e
+          mkdir -p train004/evidence train004/lora-checkpoint
+          python3 scripts/train_004.py train \
+            --mode lora \
+            --steps 16 \
+            --checkpoint-out train004/lora-checkpoint \
+            --evidence-out train004/evidence/lora.json
+          rc=$?
+          if [[ -f train004/lora-checkpoint/manifest.json ]]; then
+            cp train004/lora-checkpoint/manifest.json train004/evidence/lora-checkpoint-manifest.json
+          fi
+          echo "TRAIN-004 LoRA lane exit code: $rc"
+          if [[ -f train004/evidence/lora.json ]]; then
+            cat train004/evidence/lora.json
+          fi
+          exit "$rc"
+
+      - name: Upload LoRA evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train004-lora-evidence-a${{ github.run_attempt }}
+          path: train004/evidence
+          if-no-files-found: warn
+          retention-days: 30
+
+  resume:
+    name: Fresh-runner full-checkpoint reload
+    needs: full
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ env.TRAIN004_SOURCE_SHA }}
+
+      - name: Install CPU training stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install "transformers>=4.57,<5" "peft>=0.17,<1" "huggingface_hub>=0.36,<2" "psutil>=7,<8" "safetensors>=0.6,<1"
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: train004-full-checkpoint-a${{ github.run_attempt }}
+          path: full-checkpoint
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: train004-full-evidence-a${{ github.run_attempt }}
+          path: full-evidence
+
+      - name: Verify and continue on fresh runner
+        shell: bash
+        run: |
+          set +e
+          mkdir -p train004/evidence
+          expected_manifest="$(
+            python3 - <<'PY'
+          import json
+          print(json.load(open("full-evidence/full.json"))["checkpoint"]["manifest_sha256"])
+          PY
+          )"
+          echo "Expected checkpoint manifest: $expected_manifest"
+          echo "Continuation decision: ${{ needs.full.outputs.extension_reason }}"
+          python3 scripts/train_004.py resume \
+            --checkpoint-in full-checkpoint \
+            --additional-steps "${{ needs.full.outputs.additional_steps }}" \
+            --expected-manifest-sha256 "$expected_manifest" \
+            --evidence-out train004/evidence/resume.json
+          rc=$?
+          echo "TRAIN-004 resume lane exit code: $rc"
+          if [[ -f train004/evidence/resume.json ]]; then
+            cat train004/evidence/resume.json
+          fi
+          exit "$rc"
+
+      - name: Upload resume evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train004-resume-evidence-a${{ github.run_attempt }}
+          path: train004/evidence
+          if-no-files-found: warn
+          retention-days: 30
+
+  summary:
+    name: Assemble direct comparison
+    needs: [full, lora, resume]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ env.TRAIN004_SOURCE_SHA }}
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: train004-full-evidence-a${{ github.run_attempt }}
+          path: full-evidence
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: train004-lora-evidence-a${{ github.run_attempt }}
+          path: lora-evidence
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: train004-resume-evidence-a${{ github.run_attempt }}
+          path: resume-evidence
+
+      - name: Build comparison
+        run: |
+          mkdir -p train004/summary
+          python3 scripts/train_004_compare.py \
+            --full full-evidence/full.json \
+            --lora lora-evidence/lora.json \
+            --resume resume-evidence/resume.json \
+            --out train004/summary/summary.json
+          cat train004/summary/summary.json
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train004-summary-a${{ github.run_attempt }}
+          path: train004/summary
+          if-no-files-found: error
+          retention-days: 30
