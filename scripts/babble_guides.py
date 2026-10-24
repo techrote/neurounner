@@ -37,68 +37,62 @@ def cpu_model():
             return line.split(":",1)[1].strip()
     return "unknown"
 
-def find_guide(x):
-    if isinstance(x,dict):
-        if REQUIRED.issubset(x):
-            return {k:x[k] for k in REQUIRED}
-        for v in x.values():
-            g=find_guide(v)
-            if g: return g
-    elif isinstance(x,list):
-        for v in x:
-            g=find_guide(v)
-            if g: return g
-    return None
+def parse_tagged(text):
+    mapping={
+      "THEME":"theme",
+      "SYSTEM":"system_prompt",
+      "ATTITUDE":"attitude_guide",
+      "CONTENT":"content_guide",
+      "MOTIF":"mechanical_motif",
+      "FAILURE":"interesting_failure_flavor"
+    }
+    out={}
+    for raw in text.splitlines():
+        line=raw.strip()
+        for tag,key in mapping.items():
+            prefix=tag+":"
+            if line.upper().startswith(prefix):
+                out[key]=line[len(prefix):].strip()
+                break
+    return out if REQUIRED.issubset(out) else None
 
 def call(port,index,pressure):
-    schema={
-      "type":"object",
-      "properties":{
-        "theme":{"type":"string"},
-        "system_prompt":{"type":"string"},
-        "attitude_guide":{"type":"string"},
-        "content_guide":{"type":"string"},
-        "mechanical_motif":{"type":"string"},
-        "interesting_failure_flavor":{"type":"string"}
-      },
-      "required":sorted(REQUIRED),"additionalProperties":False
-    }
     prompt=f"""Create ONE prompt-guide packet for a tiny chaotic model called Sprocket.
 Guide index {index+1}/12. Temperament pressure: {pressure}.
 
 The packet exists to make Sprocket babble raw personality/temperament material for later training-data compilation.
-Do not make a polished assistant persona. Favor embodied habits, local memories, obsessions, irrational biases,
-physical reactions, contradictory urges and interesting failure modes.
+Favor embodied habits, local memories, obsessions, irrational biases, physical reactions, contradictory urges and interesting failure modes.
+Do not make a polished helpful assistant persona.
 
-system_prompt: short role pressure for Sprocket, not JSON instructions.
-attitude_guide: emotional/temperamental cadence and biases.
-content_guide: kinds of physical habits, local memories, motives and reactions it should babble about.
-mechanical_motif: one recurring local-state/physical motif.
-interesting_failure_flavor: broken/emergent behavior worth preserving.
-Do not imitate named fictional characters or living authors. Keep every field concise."""
-    body={
-      "model":"local","messages":[{"role":"user","content":prompt}],
-      "max_tokens":520,"temperature":0.9,"top_p":0.95,"seed":20261024+index,
-      "response_format":{"type":"json_schema","schema":schema},"stream":False,
-      "chat_template_kwargs":{"enable_thinking":False}
-    }
-    req=urllib.request.Request(f"http://127.0.0.1:{port}/v1/chat/completions",
-      data=json.dumps(body).encode(),headers={"Content-Type":"application/json"},method="POST")
-    t0=time.monotonic()
-    with urllib.request.urlopen(req,timeout=420) as r: payload=json.loads(r.read())
-    elapsed=time.monotonic()-t0
-    text=payload["choices"][0]["message"].get("content") or ""
-    RESULTS.mkdir(parents=True,exist_ok=True)
-    (RESULTS/f"guide-{index+1:02d}-raw.txt").write_text(text+"\n")
-    a,b=text.find("{"),text.rfind("}")
-    if a<0 or b<=a: raise RuntimeError(f"guide {index+1}: no JSON object")
-    try:
-        parsed=json.loads(text[a:b+1])
-    except json.JSONDecodeError as e:
-        raise RuntimeError(f"guide {index+1}: invalid JSON: {e}") from e
-    guide=find_guide(parsed)
-    if not guide: raise RuntimeError(f"guide {index+1}: complete six-field guide not found")
-    return guide,elapsed,payload.get("usage") or {}
+Return EXACTLY six single-line fields and nothing else:
+THEME: short thematic label
+SYSTEM: short role pressure for Sprocket
+ATTITUDE: emotional/temperamental cadence and biases
+CONTENT: physical habits, local memories, motives and reactions to babble about
+MOTIF: one recurring local-state/physical motif
+FAILURE: broken/emergent behavior worth preserving
+
+Do not imitate named fictional characters or living authors. Keep each line concise."""
+    for attempt in range(2):
+        body={
+          "model":"local","messages":[{"role":"user","content":prompt}],
+          "max_tokens":320,"temperature":0.85 if attempt==0 else 0.3,"top_p":0.95,
+          "seed":20261024+index+attempt*1000,
+          "stream":False,"chat_template_kwargs":{"enable_thinking":False}
+        }
+        req=urllib.request.Request(f"http://127.0.0.1:{port}/v1/chat/completions",
+          data=json.dumps(body).encode(),headers={"Content-Type":"application/json"},method="POST")
+        t0=time.monotonic()
+        with urllib.request.urlopen(req,timeout=420) as r: payload=json.loads(r.read())
+        elapsed=time.monotonic()-t0
+        text=payload["choices"][0]["message"].get("content") or ""
+        RESULTS.mkdir(parents=True,exist_ok=True)
+        (RESULTS/f"guide-{index+1:02d}-attempt-{attempt+1}-raw.txt").write_text(text+"\n")
+        guide=parse_tagged(text)
+        if guide:
+            return guide,elapsed,payload.get("usage") or {},attempt+1
+        prompt += "\nYour previous response did not contain all six exact tags. Obey the six-line format literally."
+    raise RuntimeError(f"guide {index+1}: failed tagged format after two attempts")
 
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument("model"); args=ap.parse_args()
@@ -120,11 +114,11 @@ def main():
       startup=time.monotonic()-t0
       all_guides=[]; calls=[]
       for index,pressure in enumerate(PRESSURES):
-        g,elapsed,usage=call(port,index,pressure)
+        g,elapsed,usage,attempts=call(port,index,pressure)
         g["guide_id"]=f"G{index+1:02d}"
         g["orchestrator_pressure"]=pressure
         all_guides.append(g)
-        calls.append({"guide_id":g["guide_id"],"elapsed_seconds":elapsed,"usage":usage})
+        calls.append({"guide_id":g["guide_id"],"elapsed_seconds":elapsed,"usage":usage,"attempts":attempts})
       record={"experiment":"BABBLE-001","stage":"guides",
         "runner":{"cpu_model":cpu_model(),"cpu_count":os.cpu_count(),"platform":platform.platform()},
         "startup_seconds":startup,"calls":calls,"guides":all_guides}
