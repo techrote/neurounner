@@ -29,7 +29,7 @@ Output JSON:
 def target(item):
     return json.dumps(item["output"],ensure_ascii=False,separators=(",",":"))
 
-def encode(tok,system,item,maxlen=256):
+def encode(tok,system,item,maxlen=1024):
     p=prompt(system,item)
     pi=tok(p,add_special_tokens=True)["input_ids"]
     fi=tok(p+target(item)+(tok.eos_token or ""),add_special_tokens=True)["input_ids"]
@@ -104,7 +104,7 @@ def main():
     encoded=[encode(tok,system,x) for x in data["train"]]
     losses=[]; train_tokens=0; cursor=0
     model.train(); t1=time.monotonic()
-    for step in range(48):
+    for step in range(24):
       ex=encoded[cursor%len(encoded)];cursor+=1
       opt.zero_grad(set_to_none=True)
       o=model(input_ids=ex["input_ids"],attention_mask=ex["attention_mask"],labels=ex["labels"])
@@ -120,7 +120,7 @@ def main():
       "runner":{"cpu_model":cpu_model(),"cpu_count":os.cpu_count(),"platform":platform.platform()},
       "packages":{"torch":torch.__version__,"transformers":transformers.__version__,"peft":peft.__version__},
       "load_seconds":load_seconds,"total_parameters":total,"trainable_parameters":trainable,
-      "trainable_fraction":trainable/total,"lora_targets":targets,"steps":48,
+      "trainable_fraction":trainable/total,"lora_targets":targets,"steps":24,
       "train_tokens":train_tokens,"train_seconds":train_seconds,
       "train_tokens_per_second":train_tokens/train_seconds,"first_loss":losses[0],"last_loss":losses[-1],
       "mean_loss":sum(losses)/len(losses),"peak_rss_kib":int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss),
