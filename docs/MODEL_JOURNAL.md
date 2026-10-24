@@ -1,0 +1,473 @@
+# Model performance and behaviour journal
+
+This is the chronological lab journal for neurounner model observations.
+
+It complements the experiment-specific evidence documents. The journal intentionally mixes **measured runtime facts** and **qualitative behavioural impressions**, but keeps them clearly separated. "Personality" here means observed response/judging temperament on a specific task, not a claim about an intrinsic or stable model trait.
+
+## Recording rule
+
+For every meaningful hosted-model observation, record:
+
+- date, run ID and source head where available;
+- exact model / quantization;
+- CPU model and logical CPU count;
+- task type and context;
+- prompt/decode throughput when measured;
+- startup time and RSS when measured;
+- output-format success/failure;
+- observed temperament / stylistic tendency;
+- likely neurounner role;
+- important caveats, especially host differences and short-run noise.
+
+Do not merge throughput measurements from different CPUs or task shapes into a single "true speed". Prefer multiple observations.
+
+---
+
+# Current quick-reference ledger
+
+| Model | Quant / build | CPU / task | Measured decode | Initial observed temperament | Current utility hypothesis |
+|---|---|---|---:|---|---|
+| Sprocket-500M chat | Q4_K_M | EPYC 7763, simple smoke | 76.7–82.3 tok/s; bench tg128 94.41 | chaotic, gear/goblin-flavoured, repetitive, associative drift, often answers the instruction rather than the mechanism | high-volume mutation/noise source; needs very tight output schema |
+| LFM2.5-VL-450M text core | Q4_K_M | EPYC 7763, behaviour probe | 103.19 tok/s; bench tg64 129.54 | extremely terse/schematic; echoed labels more than it reasoned | cheap filter/classifier/formatter; later test vision |
+| LFM2.5-1.2B-Instruct | QAD-Q4_0 | EPYC 9V45, behaviour probe | 54.50 tok/s; bench tg64 63.98 | coherent, compliant, but tends to genericize/sanitize strange ideas | routine compiler/normalizer/selector |
+| LFM2.5-1.2B-Thinking | Q4_K_M | Xeon Platinum 8370C, reasoning | 27.37–28.53 tok/s; bench tg64 29.43 | reflective, methodical, spends short budgets entirely in thought | reasoning specialist if given explicit larger budgets |
+| LFM2.5-8B-A1B | Q4_K_M | EPYC 7763, reasoning | 24.69–27.72 tok/s; bench tg64 31.52 | structured deeper reasoning, but also consumes short budgets before final answer | heavyweight periodic reviewer / adjudicator |
+| Qwen3.5-2B | Q4_K_M | EPYC 7763, behaviour/reasoning probes | 18.24–21.45 tok/s; bench tg64 23.95 | structured and analytical, somewhat generic; can violate small schema constraints | medium critic, alternate reasoner |
+| Qwen3.5-4B | Q4_K_M | Xeon 8573C, behaviour probe | 6.15 tok/s; bench tg64 6.59 | mechanically imaginative; concrete failure modes; strongest early free-form kernel | slow incubator / quality-focused critic |
+| Qwen3.5-4B | Q4_K_M | EPYC 9V45, Panel-001 | 11.64 tok/s | constructive mechanic: preserves good mechanisms, repairs specific flaws instead of flattening everything | high-value judge / repairer |
+| Phi-4-mini-instruct | Q4_K_M | EPYC 7763, Panel-001 | 7.04 tok/s | binary/conservative judge; preserved first simple kernels and destroyed many later ones | aggressive pruning judge / independent control |
+| Gemma 3 4B IT | Q4_K_M | EPYC 9V74, Panel-001 | 2.97 tok/s | terse, decisive, produced compact recombination; minimal explanation | compact independent judge; needs more trials |
+| SmolLM3 3B | Q4_K_M | EPYC 7763, Panel-001 | 8.62 tok/s | highly destructive; rejected nearly everything except edge_grudge | adversarial destroyer / novelty stress-test |
+| Qwen3-4B | Q4_K_M | EPYC 7763, Panel-001 | 4.19 tok/s | liked early simple mechanisms, returned incomplete required schema | same-family control; needs output-protocol tuning |
+| Ministral 3 3B Instruct | Q4_K_M | EPYC 7763, Panel-001 | 7.05 tok/s | unusually detailed, nuanced critic; strong local-vs-global reasoning; too verbose for 1800-token schema | potentially excellent analytic critic if output is compressed |
+| Qwen2.5-Omni-7B text-only | Q4_K_M | EPYC 7763, startup smoke | 4.26 tok/s | only a trivial short response observed so far; no useful temperament conclusion yet | multimodal candidate; text judge still unqualified |
+
+---
+
+# 2026-10-24 — Precursor Sprocket smoke
+
+**Repository:** `techrote/HEXADECARUNNER`  
+**Actions run:** `40090987049`  
+**Runner:** 4 logical CPUs, AMD EPYC 7763 64-Core Processor  
+**Model:** Sprocket-500M chat, Q4_K_M, 501.09M params, 294.81 MiB GGUF.
+
+## Measured
+
+- prompt processing: ~195 tok/s;
+- generation seeds: 79.5, 76.7 and 82.3 tok/s;
+- `llama-bench pp64`: 205.06 ± 2.29 tok/s;
+- `llama-bench tg128`: 94.41 ± 1.38 tok/s;
+- individual load+generation invocations: about 3.1–3.3 s.
+
+## Observed temperament
+
+Sprocket strongly exhibited its undertrained/chat-persona character. It repeatedly produced meta-instructions, repetitive pseudo-structure, mechanical/goblin phrasing and semantic drift. It was very fast but unreliable as a complete designer.
+
+## Utility impression
+
+High potential as a **cheap divergent mutation source**, especially if outputs are tiny and machine-constrained. Poor fit for authoritative judging or complete free-prose mechanism generation.
+
+---
+
+# 2026-10-24 — Initial resident ecology
+
+**Repository:** `techrote/neurounner`  
+**Actions run:** `40092737208`  
+**Source:** `0e0163856493334421b6eda748f63cf728df72b6`
+
+## Sprocket ×3
+
+**CPU:** AMD EPYC 7763 64-Core Processor, 4 logical CPUs.
+
+Measured concurrent one-thread servers:
+
+- Sprocket A: 144 tokens / 6.404 s = **22.5 tok/s**;
+- Sprocket B: 160 / 5.306 s = **30.2 tok/s**;
+- Sprocket C: 160 / 6.538 s = **24.5 tok/s**;
+- total: 464 tokens / 6.542 s = **70.93 aggregate tok/s**.
+
+Observed temperament remained erratic and repetitive. Multiple parallel Sprockets provide useful diversity mainly because they fail differently, not because any individual response is reliably good.
+
+**Utility:** parallel mutation swarm.
+
+## LFM2.5-1.2B-Instruct alone
+
+**CPU:** AMD EPYC 9V45 96-Core Processor, 4 logical CPUs.
+
+Three sequential generations:
+
+- 104 tokens / 2.126 s = **48.9 tok/s**;
+- 65 / 1.443 s = **45.1 tok/s**;
+- 77 / 1.662 s = **46.3 tok/s**.
+
+Observed output was substantially more coherent than Sprocket but often generic. It followed requested kernel shape and understood concepts such as persistent state, delayed response and hysteresis.
+
+**Utility:** routine normalizer/compiler.
+
+## Sprocket + LFM pair
+
+**CPU:** AMD EPYC 9V74 80-Core Processor, 4 logical CPUs.
+
+Two threads each, concurrent:
+
+- Sprocket: 162 / 3.746 s = **43.2 tok/s**;
+- LFM1.2: 116 / 4.537 s = **25.6 tok/s**;
+- 278 total tokens / 4.540 s = **61.24 aggregate tok/s**.
+
+This proved mixed resident inference is cheap enough to use as a normal topology.
+
+## Four-model ring
+
+**CPU:** AMD EPYC 9V74 80-Core Processor, 4 logical CPUs.
+
+Resident: three Sprocket servers + one LFM1.2, one thread each.
+
+Observed turn rates:
+
+- Sprocket turns: **35.3–49.2 tok/s**;
+- LFM turns: **9.4–10.0 tok/s**;
+- 649 tokens / 21.622 s overall.
+
+Observed interaction: Sprocket introduced mutation/drift; LFM cleaned it up but often over-sanitized it. Serial conversation also caused contamination/anchoring.
+
+**Utility:** demonstrated feasibility, but independent mutation + later selection is preferable to a free-running ring.
+
+---
+
+# 2026-10-24 — Larger model qualification
+
+**Actions run:** `40093694143`  
+**Source:** `f7d6d08b555498fb9fc1b24ba0bba8ea0d92d7e8`
+
+## LFM2.5-VL-450M — text core only
+
+**CPU:** AMD EPYC 7763 64-Core Processor, 4 logical CPUs.  
+**GGUF:** Q4_K_M.
+
+Measured:
+
+- startup: **0.523 s**;
+- RSS: **0.447 GiB**;
+- `pp64`: **292.98 ± 41.05 tok/s**;
+- `tg64`: **129.54 ± 12.08 tok/s**;
+- behaviour probe: 121 tokens / 1.173 s = **103.19 tok/s**.
+
+Temperament: output was highly schematic and mostly echoed state/action labels. Very little mechanism depth.
+
+Utility: ultra-cheap filtering, classification or formatting. Vision capability remains separately unqualified.
+
+## LFM2.5-1.2B-Instruct
+
+**CPU:** AMD EPYC 9V45 96-Core Processor, 4 logical CPUs.  
+**GGUF:** QAD-Q4_0.
+
+Measured:
+
+- startup: **0.516 s**;
+- RSS: **1.299 GiB**;
+- `pp64`: **317.07 ± 6.23 tok/s**;
+- `tg64`: **63.98 ± 2.48 tok/s**;
+- behaviour probe: 99 / 1.817 s = **54.50 tok/s**.
+
+Temperament: coherent and obedient; good at turning a vague task into a normal-looking state machine, but tends toward generic safe mechanisms.
+
+Utility: current default compiler/normalizer.
+
+## LFM2.5-1.2B-Thinking
+
+**CPU:** Intel Xeon Platinum 8370C @ 2.80 GHz, 4 logical CPUs.  
+**GGUF:** Q4_K_M.
+
+Measured:
+
+- startup: **0.774 s**;
+- RSS: **1.260 GiB**;
+- `pp64`: **118.10 ± 0.28 tok/s**;
+- `tg64`: **29.43 ± 2.47 tok/s**;
+- concise probe: 192 / 7.015 s = **27.37 tok/s**;
+- reasoning probe: 256 / 8.972 s = **28.53 tok/s**.
+
+Temperament: methodical but budget-hungry. Both probes stayed inside explicit thinking and hit token caps before a final answer.
+
+Utility: reasoning specialist only when given explicit long reasoning/final budgets.
+
+## LFM2.5-8B-A1B
+
+**CPU:** AMD EPYC 7763 64-Core Processor, 4 logical CPUs.  
+**GGUF:** Q4_K_M.
+
+Measured:
+
+- startup: **3.966 s**;
+- RSS: **8.611 GiB**;
+- `pp64`: **50.79 ± 0.79 tok/s**;
+- `tg64`: **31.52 ± 0.05 tok/s**;
+- concise reasoning: 192 / 7.776 s = **24.69 tok/s**;
+- reasoning probe: 256 / 9.236 s = **27.72 tok/s**.
+
+Temperament: more structured physical/mechanical reasoning than the smaller LFM, but short prompts again spent their entire allowance reasoning before final answer.
+
+Utility: periodic deep reviewer/adjudicator. Sparse architecture makes it unusually attractive on CPU.
+
+## Qwen3.5-2B
+
+**CPU:** AMD EPYC 7763 64-Core Processor, 4 logical CPUs.  
+**GGUF:** Q4_K_M.
+
+Measured:
+
+- startup: **1.276 s**;
+- RSS: **2.013 GiB**;
+- `pp64`: **66.01 ± 0.04 tok/s**;
+- `tg64`: **23.95 ± 0.31 tok/s**;
+- concise probe: 118 / 6.469 s = **18.24 tok/s**;
+- reasoning probe: 256 / 11.933 s = **21.45 tok/s**.
+
+Temperament: structured, explicit decomposition of constraints, but first kernel was generic and violated the requested state-count limit.
+
+Utility: medium critic / alternate reasoner.
+
+## Qwen3.5-4B
+
+**CPU:** Intel Xeon Platinum 8573C, 4 logical CPUs.  
+**GGUF:** Q4_K_M.
+
+Measured:
+
+- startup: **1.788 s**;
+- RSS: **5.533 GiB**;
+- `pp64`: **64.37 ± 0.32 tok/s**;
+- `tg64`: **6.59 ± 0.01 tok/s**;
+- concise probe: 177 / 28.764 s = **6.15 tok/s**;
+- reasoning probe: 256 / 39.668 s = **6.45 tok/s**.
+
+Temperament: first free-form kernel ("Tilt-Seek") was one of the strongest early outputs: concrete state variables, deterministic update and an interesting slippery-surface failure mode.
+
+Utility: slow incubator / quality-over-throughput designer. Four-hour jobs make its low instantaneous speed acceptable.
+
+---
+
+# 2026-10-24 — Foundry v1
+
+**Actions run:** `40093694143`  
+**CPU:** AMD EPYC 9V45 96-Core Processor, 4 logical CPUs.
+
+Three Sprocket one-thread mutations completed concurrently in **1.531 s**, each capped at 48 tokens. All three still showed substantial instruction/meta contamination.
+
+LFM1.2 successfully normalized them into parseable JSON, but mostly replaced the novel parent material with generic avoidance logic and misidentified lineage.
+
+Temperament interaction:
+
+- Sprocket: divergent but noisy;
+- LFM1.2: strong repair/formatting instinct, weak novelty preservation.
+
+Utility lesson: enforce tiny structured Sprocket fields and let the orchestrator own lineage.
+
+---
+
+# 2026-10-24 — Panel-001 fixed-population judges
+
+**Actions run:** `40102006723`  
+**Source:** `3f41dedd782351af2197026a9cff53fbe4a8ef26`
+
+The same immutable eight-kernel population was shown independently to each model.
+
+## Qwen3.5-4B
+
+**CPU:** AMD EPYC 9V45 96-Core Processor, 4 logical CPUs.
+
+Measured:
+
+- startup: **1.554 s**;
+- RSS: **4.641 GiB**;
+- 1153 completion tokens / 99.082 s = **11.64 tok/s**;
+- JSON parsed successfully.
+
+Temperament: **constructive mechanic**. It preserved K01/K05/K06, repaired several others at the specific update-rule level, and produced detailed physically plausible failure modes. It tended to identify the exact local-state defect instead of flattening the idea into generic prose.
+
+Example: it preserved `wall_scent`, identified indefinite orbiting around convex surfaces, and recombined K01+K06 into `echo_wall_drift`.
+
+Utility: high-value repairer/judge and slow incubator.
+
+## Phi-4-mini-instruct
+
+**CPU:** AMD EPYC 7763 64-Core Processor, 4 logical CPUs.
+
+Measured:
+
+- startup: **2.164 s**;
+- RSS: **4.606 GiB**;
+- 922 / 131.018 s = **7.04 tok/s**;
+- JSON parsed successfully, though it returned only two finalists rather than exactly three.
+
+Temperament: **binary/conservative pruner**. It preserved K01–K03 and destroyed K04–K08 with little nuanced repair. More decisive than exploratory.
+
+Utility: aggressive independent pruning judge; useful counterweight to over-elaborating models.
+
+## Gemma 3 4B IT
+
+**CPU:** AMD EPYC 9V74 80-Core Processor, 4 logical CPUs.
+
+Measured:
+
+- startup: **2.567 s**;
+- RSS: **4.496 GiB**;
+- 157 / 52.905 s = **2.97 tok/s**;
+- JSON parsed successfully.
+
+Temperament: terse and decisive. Selected K01/K02/K03 and produced a compact K01+K02 recombination, `Compulsive Hesitation`. The output was much shorter than other judges, which is potentially useful if the brevity is repeatable.
+
+Utility: compact independent judge; needs more trials before trusting the apparent low verbosity.
+
+## SmolLM3 3B
+
+**CPU:** AMD EPYC 7763 64-Core Processor, 4 logical CPUs.
+
+Measured:
+
+- startup: **2.035 s**;
+- RSS: **3.681 GiB**;
+- 983 / 114.047 s = **8.62 tok/s**;
+- JSON parsed successfully but selected only one finalist.
+
+Temperament: **extremely destructive**. It destroyed K01 and K03–K08, preserving only K02. This makes it interesting even if its absolute judgments are questionable: it acts as a harsh stress-test against a panel of more permissive judges.
+
+Utility: adversarial destroyer / novelty stress-test.
+
+## Qwen3-4B
+
+**CPU:** AMD EPYC 7763 64-Core Processor, 4 logical CPUs.
+
+Measured:
+
+- startup: **2.532 s**;
+- RSS: **5.165 GiB**;
+- 339 / 80.841 s = **4.19 tok/s**;
+- required full JSON schema did **not** parse.
+
+Temperament: preserved K01/K02/K03 and recombined them sensibly, but stopped after reviewing only those first three candidates. This may indicate output-protocol/template interaction rather than judging quality.
+
+Utility: useful same-family control against Qwen3.5, but requires format/termination investigation.
+
+## Ministral 3 3B Instruct
+
+**CPU:** AMD EPYC 7763 64-Core Processor, 4 logical CPUs.
+
+Measured:
+
+- startup: **2.069 s**;
+- RSS: **4.274 GiB**;
+- 1800 / 255.254 s = **7.05 tok/s**;
+- hit the 1800-token cap and therefore produced incomplete/unparseable JSON.
+
+Temperament: **very detailed analytic critic**. It explicitly distinguished local mechanics from hidden/global assumptions, preserved subtle emergent properties, and proposed concrete repairs. It was probably the most nuanced prose critic in Panel-001, but far too verbose for the chosen schema budget.
+
+Utility: promising analytic critic if given a compressed per-candidate protocol or larger output budget.
+
+## Qwen2.5-Omni-7B
+
+Panel lane did not reach inference because the initial model checksum pin was wrong. This is not a model-quality result. The checksum was corrected later.
+
+---
+
+# 2026-10-24 — Eight-runner startup smoke
+
+**Primary run:** `40104487745`  
+**Omni retry:** `40104595370`
+
+All eight intended models ultimately passed model download verification, server startup and short local chat inference.
+
+The short smoke is useful for startup/RSS and a rough decode sanity check, but should not override longer panel/qualification measurements.
+
+| Model | CPU | Startup | RSS | Short response rate |
+|---|---|---:|---:|---:|
+| Gemma 3 4B IT | AMD EPYC 9V45 96-Core | 1.267 s | 4.09 GiB | 14.90 tok/s |
+| SmolLM3 3B | AMD EPYC 7763 64-Core | 2.030 s | 3.26 GiB | 7.79 tok/s |
+| Qwen3-4B | AMD EPYC 9V45 96-Core | 2.077 s | 4.32 GiB | 13.28 tok/s |
+| LFM2.5-8B-A1B | AMD EPYC 7763 64-Core | 4.007 s | 8.58 GiB | 22.21 tok/s |
+| Phi-4-mini-instruct | AMD EPYC 7763 64-Core | 2.156 s | 3.86 GiB | 10.29 tok/s |
+| Ministral 3 3B | Intel Xeon Platinum 8573C | 1.298 s | 4.31 GiB | 3.52 tok/s |
+| Qwen3.5-4B | Intel Xeon 6973P-C | 1.585 s | 5.47 GiB | 6.51 tok/s |
+| Qwen2.5-Omni-7B | AMD EPYC 7763 64-Core | 3.642 s | 7.43 GiB | 4.26 tok/s |
+
+Important: host variation is large enough that the startup-smoke rates are not suitable for fine model ranking.
+
+### Short smoke temperament notes
+
+- Gemma: simple, concrete obstacle-memory reflex.
+- SmolLM3: abstracted a reference-point/velocity rule; somewhat mathematical.
+- Qwen3-4B: concise sensor-counter rule.
+- LFM8B: used its full 64-token allowance in reasoning and emitted no final content.
+- Phi-4-mini: safe/simple light-following reflex.
+- Ministral: concrete startled/freezing reflex with bounded intensity memory.
+- Qwen3.5-4B: explicit counter-based red-object reflex, but introduced a random spin despite the deterministic request.
+- Qwen2.5-Omni: generic temperature/shiver response; too little evidence for a personality judgment.
+
+---
+
+# Journal interpretation notes
+
+## Throughput is task-shaped
+
+The same model can show very different tok/s depending on CPU placement, prompt length, context, thinking mode and output shape. For example:
+
+- Qwen3.5-4B: ~6.15 tok/s on Xeon 8573C free-form qualification, ~11.64 tok/s on EPYC 9V45 Panel-001, ~6.51 tok/s on Xeon 6973P-C startup smoke.
+- Gemma 3 4B: 2.97 tok/s on a long panel task versus 14.90 tok/s on a short smoke.
+- Qwen3-4B: 4.19 tok/s on long Panel-001 versus 13.28 tok/s on short smoke.
+
+Therefore every speed figure in this journal is coupled to its recorded CPU and task.
+
+## "Personality" is an experimental phenotype
+
+The qualitative labels above are shorthand for repeated tendencies on the tested prompt:
+
+- constructive mechanic;
+- conservative pruner;
+- destructive stress-tester;
+- verbose analytic critic;
+- sanitizer/normalizer;
+- chaotic mutator.
+
+Future runs should update or contradict these labels rather than treating them as permanent.
+
+## Long-run utility beats instantaneous tok/s
+
+A slow model can still produce tens of thousands of completion tokens over a conservative four-hour worker. Model value should eventually be ranked by:
+
+- valid useful kernels per runner-hour;
+- novel survivors per 10k generated tokens;
+- judge consistency;
+- novelty retention;
+- interesting failure discovery;
+- frontier improvement over a fixed wall-time budget.
+
+---
+
+# Entry template
+
+~~~text
+## YYYY-MM-DD — MODEL — experiment
+
+Run/source:
+Model/quant:
+CPU:
+Logical CPUs:
+Task:
+Context / thinking mode:
+
+Measured:
+- startup:
+- RSS:
+- prompt tok/s:
+- decode tok/s:
+- completion tokens / elapsed:
+
+Observed temperament:
+- ...
+
+Potential utility:
+- ...
+
+Caveats:
+- ...
+~~~
