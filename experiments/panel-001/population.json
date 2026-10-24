@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "population_id": "panel-001-fixed-kernels",
+  "rule": "Candidate IDs and text are immutable inputs. Judges must not infer provenance or see other judges' responses.",
+  "candidates": [
+    {
+      "id": "K01",
+      "name": "push_echo",
+      "trigger": "unexpected external impulse above threshold",
+      "state": [
+        "push_dir: unit vector",
+        "echo: scalar 0..1"
+      ],
+      "update": "set push_dir from impulse direction; set echo=1; decay echo toward 0 each tick",
+      "action": "bias movement toward push_dir proportional to echo",
+      "interesting_failure": "repeated shoves can make the actor appear compulsively attracted to an aggressor"
+    },
+    {
+      "id": "K02",
+      "name": "edge_grudge",
+      "trigger": "support contacts drop abruptly from nonzero to zero",
+      "state": [
+        "danger_dir: unit vector",
+        "grudge: scalar 0..1"
+      ],
+      "update": "store recent travel direction as danger_dir; increase grudge; decay grudge only while supported",
+      "action": "while grudge is high, bias movement opposite danger_dir and hesitate before matching it",
+      "interesting_failure": "narrow platforms can produce oscillatory indecision"
+    },
+    {
+      "id": "K03",
+      "name": "jam_ritual",
+      "trigger": "commanded movement remains high while displacement stays below threshold",
+      "state": [
+        "jam: scalar 0..1",
+        "phase: integer 0..2"
+      ],
+      "update": "accumulate jam; on threshold advance phase; decay jam after free movement",
+      "action": "phase 0 reverses briefly, phase 1 turns sharply, phase 2 performs one jump then resets",
+      "interesting_failure": "soft obstacles can provoke unnecessary ritualized escape cycles"
+    },
+    {
+      "id": "K04",
+      "name": "borrowed_courage",
+      "trigger": "nearby actor accelerates successfully toward open space",
+      "state": [
+        "courage: scalar 0..1",
+        "borrow_dir: unit vector"
+      ],
+      "update": "copy neighbour acceleration direction locally and raise courage; decay courage without successful self-motion",
+      "action": "bias movement along borrow_dir while courage remains above threshold",
+      "interesting_failure": "groups can stampede together into a newly appearing hazard"
+    },
+    {
+      "id": "K05",
+      "name": "impact_freeze",
+      "trigger": "large collision impulse while current speed exceeds threshold",
+      "state": [
+        "freeze: scalar 0..1"
+      ],
+      "update": "set freeze proportional to impulse; decay only while contact forces remain low",
+      "action": "suppress movement and turning while freeze is high, then recover gradually",
+      "interesting_failure": "persistent jostling can lock an actor into learned-helplessness-looking immobility"
+    },
+    {
+      "id": "K06",
+      "name": "wall_scent",
+      "trigger": "sustained lateral contact with a surface",
+      "state": [
+        "side: left|right|none",
+        "trace: scalar 0..1"
+      ],
+      "update": "remember contact side and increase trace; decay trace away from surfaces",
+      "action": "after losing contact, curve gently toward the remembered side until trace fades",
+      "interesting_failure": "the actor may orbit convex obstacles after only brushing them once"
+    },
+    {
+      "id": "K07",
+      "name": "counterfeit_prediction",
+      "trigger": "velocity direction changes sharply without a matching commanded turn",
+      "state": [
+        "expected_dir: unit vector",
+        "confidence: scalar 0..1"
+      ],
+      "update": "extrapolate expected_dir from recent velocity; lower confidence on mismatch; recover confidence during stable motion",
+      "action": "when confidence is low, reduce speed and alternate small left/right probes",
+      "interesting_failure": "rough terrain can cause endless cautious probing despite no obstacle"
+    },
+    {
+      "id": "K08",
+      "name": "refractory_pounce",
+      "trigger": "target-like local motion crosses the forward sensor arc",
+      "state": [
+        "charge: scalar 0..1",
+        "refractory: scalar 0..1"
+      ],
+      "update": "accumulate charge while motion remains in arc; after jump set refractory=1 and decay it over time",
+      "action": "jump forward when charge crosses threshold and refractory is zero",
+      "interesting_failure": "periodic environmental motion can entrain the actor into repeated mistimed pounces"
+    }
+  ]
+}
