@@ -1,0 +1,75 @@
+name: Archive BABBLE-001 durably
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/archive-babble-001.yml'
+      - 'scripts/archive_babble_001.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: neurounner-archive-babble-001
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Recover guide artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: babble001-guides
+          path: source/guides
+          run-id: 40113280906
+          github-token: ${{ github.token }}
+
+      - name: Recover Sprocket worker artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: babble001-resume-worker-*
+          path: source/workers
+          merge-multiple: true
+          run-id: 40113646404
+          github-token: ${{ github.token }}
+
+      - name: Recover final NVIDIA compiler artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: babble001-nvidia-compiled-resume
+          path: source/compiler
+          run-id: 40116552604
+          github-token: ${{ github.token }}
+
+      - name: Build durable archive
+        run: |
+          python3 scripts/archive_babble_001.py \
+            --guides source/guides \
+            --workers source/workers \
+            --compiler source/compiler \
+            --out datasets/babble-001
+          test "$(find datasets/babble-001/conversations -name 'G*.json' | wc -l)" -eq 12
+          test "$(find datasets/babble-001/compiled/packets -name 'G*.json' | wc -l)" -eq 12
+          (cd datasets/babble-001 && sha256sum -c provenance/hashes.sha256)
+
+      - name: Commit durable corpus
+        run: |
+          git config user.name "neurounner archive bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add datasets/babble-001
+          if git diff --cached --quiet; then
+            echo "Archive already current."
+            exit 0
+          fi
+          git commit -m "Archive BABBLE-001 raw and derived corpus"
+          git push origin HEAD:main

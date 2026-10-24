@@ -4,6 +4,8 @@ CPU-only micro-model inference experiments on standard GitHub-hosted Linux runne
 
 The immediate goal is to characterize small local models as generators, critics, and conversational participants for later behaviour-research work. This repository is deliberately separate from Cybersand and from formal NPC training/evaluation pipelines.
 
+> Start with [RAG.md](RAG.md) for the retrieval/authority map. Generated corpora must follow the [dataset filing system](docs/DATASET_FILING_SYSTEM.md); Actions artifacts are transient staging only.
+
 ## Current pinned stack
 
 - Runner: `ubuntu-24.04`
@@ -40,7 +42,6 @@ The complete initial suite passed on GitHub-hosted four-vCPU Linux runners at so
 
 The four-process ring kept all models resident simultaneously with large memory headroom. See [the initial hosted experiment record](docs/INITIAL_EXPERIMENTS.md) for outputs, memory observations, artifact hashes, and next measurements.
 
-
 ## Larger-model qualification
 
 The second hosted suite passed at source `f7d6d08b555498fb9fc1b24ba0bba8ea0d92d7e8`. It added a three-Sprocket → LFM structured foundry experiment and qualified six CPU GGUF candidates.
@@ -56,8 +57,16 @@ The second hosted suite passed at source `f7d6d08b555498fb9fc1b24ba0bba8ea0d92d7
 
 See [the second hosted experiment record](docs/SECOND_EXPERIMENTS.md) for exact outputs, caveats, model pins and artifact hashes.
 
+## Durable datasets
+
+- [Dataset index](datasets/README.md)
+- [BABBLE-001 durable archive](datasets/babble-001/README.md) — 12 thematic guides, 48 exact Sprocket conversations, all retained MiniMax compile/repair provider history, and 12 final personality/training packets.
+- [Dataset filing system](docs/DATASET_FILING_SYSTEM.md) — mandatory preservation/provenance contract for future generated corpora.
+
 ## Design notes
 
+- [RAG / retrieval authority map](RAG.md)
+- [Dataset filing system](docs/DATASET_FILING_SYSTEM.md)
 - [Conversation and orchestration topologies](docs/CONVERSATION_TOPOLOGIES.md)
 - [Model storage policy](docs/MODEL_STORAGE.md)
 - [Future model longlist](docs/MODEL_LONGLIST.md)
