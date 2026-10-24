@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import time
 import urllib.error
 import urllib.request
@@ -229,9 +230,19 @@ SOURCE:
 {json.dumps(source,ensure_ascii=False)}
 """
 
-def repair_prompt(problems:list[str],original:str,quotas:dict,catalog:dict,previous_inputs:list[str]):
-    return f"""Repair the following malformed BABBLE-002 chunk into exactly 20 valid examples.
-Return JSON only as {{"examples":[...]}}.
+def repair_prompt(problems:list[str],original:str,quotas:dict,catalog:dict,previous_inputs:list[str],gid:str,packet:dict,babbles:list[dict]):
+    source={
+        "guide_id":gid,
+        "packet_id":packet["packet_id"],
+        "name":packet["name"],
+        "persona_summary":packet["persona_summary"],
+        "attitude_guide":packet["attitude_guide"],
+        "content_guide":packet["content_guide"],
+        "trait_catalog":catalog,
+        "raw_babbles":babbles,
+    }
+    return f"""Repair or regenerate this BABBLE-002 chunk into exactly 20 valid examples.
+Return JSON only as {{"examples":[...]}}. If the malformed chunk is empty because the prior model spent its entire budget reasoning, regenerate the chunk from SOURCE.
 
 Detected problems:
 {json.dumps(problems)}
@@ -239,13 +250,15 @@ Detected problems:
 Required surface quotas:
 {json.dumps(quotas,sort_keys=True)}
 
-Valid trait IDs:
-{json.dumps(sorted(catalog))}
-
 Previously used inputs that MUST NOT be repeated:
 {json.dumps(previous_inputs[-80:],ensure_ascii=False)}
 
-Preserve useful content from the malformed chunk, but fix every structural/quota/duplication problem.
+Preserve useful content from the malformed chunk when present, but fix every structural/quota/duplication problem.
+Every row must contain: surface, input, target, generic_bad_target, why_bad, trait_refs, seed_refs.
+trait_refs must use SOURCE trait IDs; seed_refs may contain S* IDs only.
+
+SOURCE:
+{json.dumps(source,ensure_ascii=False)}
 
 MALFORMED CHUNK:
 {original}
@@ -256,6 +269,7 @@ def main():
     ap.add_argument("--config",type=Path,required=True)
     ap.add_argument("--persona",required=True)
     ap.add_argument("--out",type=Path,required=True)
+    ap.add_argument("--resume",type=Path)
     args=ap.parse_args()
     cfg=json.loads(args.config.read_text())
     gid=args.persona
@@ -269,13 +283,40 @@ def main():
     babbles=source_babbles(gid)
     catalog=trait_catalog(packet)
     out=args.out
+    if args.resume and args.resume.exists():
+        if out.exists():
+            shutil.rmtree(out)
+        shutil.copytree(args.resume,out)
+    else:
+        out.mkdir(parents=True,exist_ok=True)
     rawdir=out/"provider"
-    out.mkdir(parents=True,exist_ok=True)
+    rawdir.mkdir(parents=True,exist_ok=True)
+
     accepted=[]
-    seen_inputs=set()
+    if (out/"partial.jsonl").exists():
+        accepted=[json.loads(x) for x in (out/"partial.jsonl").read_text().splitlines() if x.strip()]
+    elif (out/"examples.jsonl").exists():
+        accepted=[json.loads(x) for x in (out/"examples.jsonl").read_text().splitlines() if x.strip()]
+    if any(x.get("source_guide_id")!=gid for x in accepted):
+        raise RuntimeError(f"{gid}: resume artifact contains another persona")
+    if len(accepted)%cfg["examples_per_chunk"]!=0 or len(accepted)>cfg["examples_per_persona"]:
+        raise RuntimeError(f"{gid}: invalid resume row count {len(accepted)}")
+    seen_inputs={normalize_text(x["input"]) for x in accepted}
     calls=[]
+    if (out/"calls.partial.json").exists():
+        calls=json.loads((out/"calls.partial.json").read_text())
+    start_chunk=len(accepted)//cfg["examples_per_chunk"]
     quotas=cfg["surface_quota_per_chunk"]
-    for chunk in range(cfg["chunks_per_persona"]):
+
+    def unique_label(base:str)->str:
+        if not (rawdir/f"{base}-provider.json").exists():
+            return base
+        i=1
+        while (rawdir/f"{base}-retry{i}-provider.json").exists():
+            i+=1
+        return f"{base}-retry{i}"
+
+    for chunk in range(start_chunk,cfg["chunks_per_persona"]):
         payload={
             "model":cfg["model"],
             "messages":[
@@ -288,30 +329,69 @@ def main():
             "stream":False,
             "reasoning_effort":cfg["generation"]["reasoning_effort"],
         }
-        content,obj,attempts=call_api(key,cfg["endpoint"],payload,rawdir,f"{gid}-chunk{chunk+1:02d}-generate")
-        parsed=extract_json(content)
-        rows,problems=validate_examples(parsed,gid,packet,quotas,seen_inputs,cfg["examples_per_chunk"])
+        glabel=unique_label(f"{gid}-chunk{chunk+1:02d}-generate")
+        content,obj,attempts=call_api(key,cfg["endpoint"],payload,rawdir,glabel)
+        generation_parse_failed=False
+        try:
+            parsed=extract_json(content)
+            rows,problems=validate_examples(parsed,gid,packet,quotas,seen_inputs,cfg["examples_per_chunk"])
+        except ValueError:
+            generation_parse_failed=True
+            rows=[]
+            problems=["generation_json_parse_failed"]
         repair_calls=[]
+        repair_usage=None
         repair_used=False
+        fallback_calls=[]
+        fallback_usage=None
+        fallback_used=False
         if problems:
             repair_used=True
             rpayload={
                 "model":cfg["model"],
                 "messages":[
                     {"role":"system","content":"You repair supervised-dataset JSON. Return valid JSON only."},
-                    {"role":"user","content":repair_prompt(problems,content,quotas,catalog,[x["input"] for x in accepted])}
+                    {"role":"user","content":repair_prompt(problems,content,quotas,catalog,[x["input"] for x in accepted],gid,packet,babbles)}
                 ],
-                "max_tokens":cfg["generation"]["max_tokens"],
+                "max_tokens":max(16384,cfg["generation"]["max_tokens"]),
                 "temperature":0.25,
                 "top_p":0.9,
                 "stream":False,
                 "reasoning_effort":"low",
             }
-            rcontent,robj,repair_calls=call_api(key,cfg["endpoint"],rpayload,rawdir,f"{gid}-chunk{chunk+1:02d}-repair")
-            rparsed=extract_json(rcontent)
-            rows,problems=validate_examples(rparsed,gid,packet,quotas,seen_inputs,cfg["examples_per_chunk"])
+            rlabel=unique_label(f"{gid}-chunk{chunk+1:02d}-repair")
+            rcontent,robj,repair_calls=call_api(key,cfg["endpoint"],rpayload,rawdir,rlabel)
+            repair_usage=robj.get("usage")
+            try:
+                rparsed=extract_json(rcontent)
+                rows,problems=validate_examples(rparsed,gid,packet,quotas,seen_inputs,cfg["examples_per_chunk"])
+            except ValueError:
+                rows=[]
+                problems=["repair_json_parse_failed"]
         if problems:
-            raise RuntimeError(f"{gid} chunk {chunk+1}: invalid after repair: {problems}")
+            fallback_used=True
+            fpayload={
+                "model":cfg["model"],
+                "messages":[
+                    {"role":"system","content":"Output the final BABBLE-002 JSON immediately. Keep internal reasoning minimal. Return JSON only."},
+                    {"role":"user","content":repair_prompt(problems,"",quotas,catalog,[x["input"] for x in accepted],gid,packet,babbles)}
+                ],
+                "max_tokens":max(32768,cfg["generation"]["max_tokens"]),
+                "temperature":0.15,
+                "top_p":0.9,
+                "stream":False,
+                "reasoning_effort":"low",
+            }
+            flabel=unique_label(f"{gid}-chunk{chunk+1:02d}-fallback")
+            fcontent,fobj,fallback_calls=call_api(key,cfg["endpoint"],fpayload,rawdir,flabel)
+            fallback_usage=fobj.get("usage")
+            try:
+                fparsed=extract_json(fcontent)
+                rows,problems=validate_examples(fparsed,gid,packet,quotas,seen_inputs,cfg["examples_per_chunk"])
+            except ValueError:
+                problems=["fallback_json_parse_failed"]
+        if problems:
+            raise RuntimeError(f"{gid} chunk {chunk+1}: invalid after repair/fallback: {problems}")
         for row in rows:
             seen_inputs.add(normalize_text(row["input"]))
             row.update({
@@ -328,8 +408,13 @@ def main():
             "chunk":chunk+1,
             "generation_attempts":attempts,
             "generation_usage":obj.get("usage"),
+            "generation_parse_failed":generation_parse_failed,
             "repair_used":repair_used,
             "repair_attempts":repair_calls,
+            "repair_usage":repair_usage,
+            "fallback_used":fallback_used,
+            "fallback_attempts":fallback_calls,
+            "fallback_usage":fallback_usage,
         })
         (out/"calls.partial.json").write_text(json.dumps(calls,indent=2,ensure_ascii=False)+"\n")
 
