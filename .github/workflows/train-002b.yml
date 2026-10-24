@@ -1,0 +1,130 @@
+name: TRAIN-002b eight-lane void.1 evaluation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/train-002b.yml'
+      - 'scripts/train_002b_void.py'
+      - 'scripts/train_002b_aggregate.py'
+      - 'experiments/train-002b/lanes.json'
+      - 'experiments/train-001/kernel_compiler_dataset.json'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: neurounner-train-002b
+  cancel-in-progress: false
+
+jobs:
+  train:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-train002b]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        lane: [ctrl-a, ctrl-b, lr-low, lr-high, rank4, rank16, dropout0, failure-weighted]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Install CPU training stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install "transformers>=4.57,<5" "peft>=0.17,<1" "huggingface_hub>=0.36,<2" "safetensors>=0.6,<1"
+
+      - name: Train and evaluate dedicated void.1 lane
+        env:
+          OMP_NUM_THREADS: 4
+          MKL_NUM_THREADS: 4
+          TOKENIZERS_PARALLELISM: "false"
+        run: |
+          python3 scripts/train_002b_void.py             --config experiments/train-002b/lanes.json             --lane "${{ matrix.lane }}"
+
+      - name: Print lane summary
+        env:
+          LANE: ${{ matrix.lane }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          r=json.load(open(f"results/train002b/{os.environ['LANE']}.json"))
+          print("lane:",r["lane"]["id"])
+          print("CPU:",r["runner"]["cpu_model"])
+          print("tokenizer:",r["tokenizer"])
+          print("train B/s:",r["training"]["utf8_bytes_per_second"])
+          print("train units/s:",r["training"]["sequence_units_per_second"])
+          print("loss:",r["training"]["first_loss"],"->",r["training"]["last_loss"])
+          print("exact schema:",r["evaluation_before"]["exact_schema_rate"],"->",r["evaluation_after"]["exact_schema_rate"])
+          print("budget exhaustion:",r["evaluation_after"]["budget_exhaustion_rate"])
+          print("mechanical proxy:",r["evaluation_after"]["mean_mechanical_similarity_proxy"])
+          print("adapter:",r["adapter"])
+          PY
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train002b-result-${{ matrix.lane }}
+          path: results/train002b/${{ matrix.lane }}.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train002b-adapter-${{ matrix.lane }}
+          path: train002b/${{ matrix.lane }}/adapter
+          if-no-files-found: error
+          retention-days: 14
+
+  aggregate:
+    if: ${{ always() && needs.train.result == 'success' }}
+    needs: train
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: train002b-result-*
+          path: lane-results
+          merge-multiple: true
+
+      - name: Verify eight lane results
+        run: |
+          python3 - <<'PY'
+          import glob,json
+          files=glob.glob("lane-results/*.json")
+          rows=[json.load(open(p)) for p in files]
+          ids={r["lane"]["id"] for r in rows}
+          expected={"ctrl-a","ctrl-b","lr-low","lr-high","rank4","rank16","dropout0","failure-weighted"}
+          assert ids==expected,(ids,expected)
+          print("verified lanes:",sorted(ids))
+          PY
+
+      - name: Aggregate and independently judge mechanics
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+        run: |
+          test -n "$NVIDIA_API_KEY" || { echo "NVKEY repository secret is not configured"; exit 1; }
+          rm -rf experiments/train-002b/evidence
+          mkdir -p experiments/train-002b/evidence
+          python3 scripts/train_002b_aggregate.py             --results lane-results             --out experiments/train-002b/evidence
+          cp experiments/train-002b/evidence/TRAIN_002B_VOID_EIGHT_LANE.md docs/TRAIN_002B_VOID_EIGHT_LANE.md
+
+      - name: Commit durable evidence
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add experiments/train-002b/evidence docs/TRAIN_002B_VOID_EIGHT_LANE.md
+          git commit -m "Record TRAIN-002b eight-lane void.1 results"
+          git pull --rebase origin main
+          git push origin HEAD:main
