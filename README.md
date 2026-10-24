@@ -55,3 +55,12 @@ The second hosted suite passed at source `f7d6d08b555498fb9fc1b24ba0bba8ea0d92d7
 | Qwen3.5-4B | 6.59 t/s | 5.533 GiB | much slower; potentially useful for diversity/quality probes |
 
 See [the second hosted experiment record](docs/SECOND_EXPERIMENTS.md) for exact outputs, caveats, model pins and artifact hashes.
+
+## Design notes
+
+- [Conversation and orchestration topologies](docs/CONVERSATION_TOPOLOGIES.md)
+- [Model storage policy](docs/MODEL_STORAGE.md)
+- [Initial hosted experiment record](docs/INITIAL_EXPERIMENTS.md)
+- [Second hosted experiment record](docs/SECOND_EXPERIMENTS.md)
+
+The current ~4B comparison shortlist is pinned in [config/candidates.json](config/candidates.json): Phi-4-mini-instruct, Gemma 3 4B IT, Ministral 3 3B Instruct, SmolLM3 3B and Qwen3-4B, alongside Qwen3.5-4B.
