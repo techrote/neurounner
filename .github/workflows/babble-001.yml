@@ -84,7 +84,7 @@ jobs:
           path: guide-artifact
       - name: Run Sprocket babble worker
         run: |
-          python3 scripts/babble_worker.py             --worker ${{ matrix.worker }}             --guides guide-artifact/results/babble001/guides.json
+          python3 scripts/babble_worker.py             --worker ${{ matrix.worker }}             --guides guide-artifact/guides.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: babble001-worker-${{ matrix.worker }}
@@ -116,7 +116,7 @@ jobs:
           NVIDIA_API_KEY: ${{ secrets.NVKEY }}
         run: |
           test -n "$NVIDIA_API_KEY" || { echo "NVKEY repository secret is not configured"; exit 1; }
-          python3 scripts/nvidia_babble_compile.py             --guides guide-artifact/results/babble001/guides.json             --babbles babble-artifacts             --out results/babble001/compiled
+          python3 scripts/nvidia_babble_compile.py             --guides guide-artifact/guides.json             --babbles babble-artifacts             --out results/babble001/compiled
       - name: Summarize without exposing source text
         run: |
           python3 - <<'PY'
