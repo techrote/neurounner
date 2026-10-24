@@ -1,0 +1,94 @@
+name: BABBLE-001 resume from verified guides
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/babble-001-resume.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  babble:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        worker: [0,1,2,3]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .cache/neurounner
+          key: ubuntu-neurounner-v1-b11852-edc2ac32-bb741ebb
+      - name: Ensure runtime and Sprocket
+        run: |
+          bash scripts/bootstrap.sh runtime
+          bash scripts/bootstrap.sh sprocket
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: babble001-guides
+          path: guide-artifact
+          run-id: 40113280906
+          github-token: ${{ github.token }}
+      - name: Run Sprocket babble worker
+        run: |
+          python3 scripts/babble_worker.py             --worker ${{ matrix.worker }}             --guides guide-artifact/guides.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: babble001-resume-worker-${{ matrix.worker }}
+          path: |
+            results/babble001/worker-${{ matrix.worker }}.json
+            results/babble001/worker-${{ matrix.worker }}-server.log
+          if-no-files-found: error
+          retention-days: 7
+
+  compile:
+    needs: babble
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: babble001-guides
+          path: guide-artifact
+          run-id: 40113280906
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: babble001-resume-worker-*
+          path: babble-artifacts
+          merge-multiple: true
+      - name: Compile personality packets with NVIDIA
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+        run: |
+          test -n "$NVIDIA_API_KEY" || { echo "NVKEY repository secret is not configured"; exit 1; }
+          python3 scripts/nvidia_babble_compile.py             --guides guide-artifact/guides.json             --babbles babble-artifacts             --out results/babble001/compiled
+      - name: Summarize without exposing source text
+        run: |
+          python3 - <<'PY'
+          import json
+          m=json.load(open("results/babble001/compiled/manifest.json"))
+          print("compiler:",m["compiler_model"])
+          print("guides:",m["guide_count"])
+          print("raw babbles:",m["babble_count"])
+          print("compiled packets:",m["packet_count"])
+          for b in m["batches"]:
+              print("batch",b["batch"],"attempts",len(b["attempts"]),"usage",b.get("usage"))
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: babble001-compiled-dataset
+          path: results/babble001/compiled
+          if-no-files-found: error
+          retention-days: 14
