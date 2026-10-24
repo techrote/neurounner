@@ -1,0 +1,309 @@
+{
+  "schema_version": 1,
+  "task": "messy behaviour idea to canonical local KernelSpec JSON",
+  "system": "Convert the behaviour idea into one compact JSON object with exactly these keys: trigger, state, update, action, failure. Preserve unusual mechanics. Use only local sensing and bounded state. Output JSON only.",
+  "train": [
+    {
+      "input": "When something shoves the bot, it gets weirdly attached to the direction the shove came from for a little while, then gradually gets over it.",
+      "output": {
+        "trigger": "external impulse above threshold",
+        "state": "push_dir unit vector; echo scalar 0..1",
+        "update": "store impulse direction in push_dir; set echo=1; decay echo each tick",
+        "action": "bias movement toward push_dir proportional to echo",
+        "failure": "repeated shoves can create compulsive attraction to an aggressor"
+      }
+    },
+    {
+      "input": "It should remember falling off an edge and become suspicious of travelling that way again, but the fear should fade while safely supported.",
+      "output": {
+        "trigger": "support contacts drop from nonzero to zero",
+        "state": "danger_dir unit vector; fear scalar 0..1",
+        "update": "store recent travel direction; increase fear; decay fear only while supported",
+        "action": "bias movement opposite danger_dir while fear is high",
+        "failure": "narrow platforms can produce oscillatory indecision"
+      }
+    },
+    {
+      "input": "If it keeps trying to move but goes nowhere, I want a little three-part escape ritual: reverse, turn, then jump once.",
+      "output": {
+        "trigger": "commanded motion high while displacement stays low",
+        "state": "jam scalar 0..1; phase integer 0..2",
+        "update": "accumulate jam; on threshold advance phase; reset after free movement",
+        "action": "phase0 reverse briefly; phase1 turn sharply; phase2 jump once then reset",
+        "failure": "soft obstacles can trigger unnecessary ritual loops"
+      }
+    },
+    {
+      "input": "A robot that copies the direction of a nearby successful mover for a moment, like it borrows confidence from seeing someone else escape.",
+      "output": {
+        "trigger": "nearby actor accelerates successfully toward open space",
+        "state": "borrow_dir unit vector; confidence scalar 0..1",
+        "update": "store neighbour acceleration direction; raise confidence; decay without successful self-motion",
+        "action": "bias movement along borrow_dir while confidence is high",
+        "failure": "groups can stampede together into a newly appearing hazard"
+      }
+    },
+    {
+      "input": "Big collisions should make it freeze up, and it only slowly recovers if the world stops hitting it.",
+      "output": {
+        "trigger": "collision impulse above threshold while moving",
+        "state": "freeze scalar 0..1",
+        "update": "set freeze from impulse magnitude; decay only while contact forces stay low",
+        "action": "suppress movement and turning proportional to freeze",
+        "failure": "persistent jostling can lock the actor into immobility"
+      }
+    },
+    {
+      "input": "After brushing a wall it should keep curving back toward the same side for a bit, almost like the wall left a scent.",
+      "output": {
+        "trigger": "sustained lateral surface contact",
+        "state": "contact_side left|right|none; trace scalar 0..1",
+        "update": "remember contact side; increase trace; decay trace away from surfaces",
+        "action": "curve toward remembered side proportional to trace",
+        "failure": "one brush can make the actor orbit a convex obstacle"
+      }
+    },
+    {
+      "input": "If its velocity suddenly changes direction without being commanded, it should lose confidence and probe left-right cautiously until motion becomes predictable again.",
+      "output": {
+        "trigger": "velocity direction changes sharply without matching command",
+        "state": "expected_dir unit vector; confidence scalar 0..1; probe_side bit",
+        "update": "lower confidence on mismatch; toggle probe_side; recover confidence during stable motion",
+        "action": "reduce speed and apply small alternating probe turn while confidence is low",
+        "failure": "rough terrain can cause endless cautious probing"
+      }
+    },
+    {
+      "input": "It watches for motion crossing in front, charges up a pounce, then after jumping has a cooldown so it cannot instantly pounce again.",
+      "output": {
+        "trigger": "target-like local motion crosses forward sensor arc",
+        "state": "charge scalar 0..1; refractory scalar 0..1",
+        "update": "increase charge while motion remains visible; after jump set refractory=1; decay refractory",
+        "action": "jump forward when charge is high and refractory is zero",
+        "failure": "periodic environmental motion can entrain repeated mistimed pounces"
+      }
+    },
+    {
+      "input": "Make a coward that does not know about enemies globally. A sudden nearby loud impact makes it retreat from the impact point, and each quiet second lets it calm down.",
+      "output": {
+        "trigger": "nearby impact sound above threshold",
+        "state": "threat_dir unit vector; panic scalar 0..1",
+        "update": "store direction away from impact; raise panic; decay panic during quiet ticks",
+        "action": "move along threat_dir proportional to panic",
+        "failure": "repeated harmless impacts can drive it indefinitely away from useful areas"
+      }
+    },
+    {
+      "input": "I want a creature that gets impatient at doors. Every time forward progress stalls near the same contact normal, it pushes harder, but this stubbornness should cap.",
+      "output": {
+        "trigger": "forward progress stalls while frontal contact persists",
+        "state": "stubborn scalar 0..1; normal unit vector",
+        "update": "increase stubborn up to cap while same contact persists; decay after free motion",
+        "action": "increase forward force proportional to stubborn",
+        "failure": "it can waste effort shoving an immovable wall"
+      }
+    },
+    {
+      "input": "A nervous hover bot should remember the last vertical wobble and overcorrect a little less each time, so it visibly settles.",
+      "output": {
+        "trigger": "vertical velocity changes sign outside deadband",
+        "state": "last_error scalar; correction scalar bounded",
+        "update": "store vertical error; set correction opposite error with bounded damping",
+        "action": "apply vertical thrust from correction",
+        "failure": "sensor noise can sustain small oscillations forever"
+      }
+    },
+    {
+      "input": "Give a tracked bot a grudge against getting spun. If angular velocity spikes, remember the spin direction and bias torque against that direction for a short time.",
+      "output": {
+        "trigger": "angular velocity magnitude exceeds threshold",
+        "state": "spin_sign -1|1; grudge scalar 0..1",
+        "update": "store angular sign; set grudge=1; decay grudge each tick",
+        "action": "apply bounded counter-torque opposite spin_sign proportional to grudge",
+        "failure": "repeated alternating hits can make it twitch between counter-torques"
+      }
+    },
+    {
+      "input": "A scavenger should linger around places where it recently found useful material, but the memory is only a local direction and fades.",
+      "output": {
+        "trigger": "local resource pickup succeeds",
+        "state": "return_dir unit vector; scent scalar 0..1",
+        "update": "store direction toward pickup location relative to actor; set scent=1; decay scent",
+        "action": "when idle bias movement along return_dir proportional to scent",
+        "failure": "it can revisit an already depleted patch repeatedly"
+      }
+    },
+    {
+      "input": "If one foot loses contact while another stays planted, the walker should remember which side failed and step wider on that side for a few cycles.",
+      "output": {
+        "trigger": "asymmetric support loss",
+        "state": "weak_side left|right; caution integer 0..3",
+        "update": "store failed side; set caution=3; decrement after each stable step",
+        "action": "increase outward step offset on weak_side while caution>0",
+        "failure": "alternating slips can make its gait permanently wide and inefficient"
+      }
+    },
+    {
+      "input": "A creature should become fascinated by repeated flashes. It counts nearby flashes up to four; at four it turns toward the last flash direction, then clears the count.",
+      "output": {
+        "trigger": "local flash event",
+        "state": "flash_count integer 0..4; flash_dir unit vector",
+        "update": "increment flash_count up to 4; store latest flash_dir; clear count after orient action",
+        "action": "when flash_count=4 turn toward flash_dir",
+        "failure": "regular machinery flashes can repeatedly steal its attention"
+      }
+    },
+    {
+      "input": "When the bot squeezes through a narrow gap, remember the compression direction and stay slightly skinny in its posture for a short distance.",
+      "output": {
+        "trigger": "opposed side contacts indicate narrow passage",
+        "state": "squeeze_axis unit vector; memory scalar 0..1",
+        "update": "store compression axis; set memory=1; decay with travelled distance",
+        "action": "reduce lateral posture span along squeeze_axis while memory is high",
+        "failure": "it may stay narrow after exiting into a space where wider stance is safer"
+      }
+    },
+    {
+      "input": "Make it hate sudden darkness. If local light drops quickly, it stops, remembers the direction it was moving, then resumes that way only after light stabilizes.",
+      "output": {
+        "trigger": "local luminance drops faster than threshold",
+        "state": "resume_dir unit vector; hold scalar 0..1",
+        "update": "store current travel direction; set hold=1; decay hold only when luminance is stable",
+        "action": "stop while hold is high; then resume along resume_dir",
+        "failure": "flickering lights can repeatedly freeze it"
+      }
+    },
+    {
+      "input": "A little vehicle should remember the last slope it successfully climbed and lean into similar slopes for a while.",
+      "output": {
+        "trigger": "uphill motion succeeds above minimum speed",
+        "state": "slope_dir unit vector; confidence scalar 0..1",
+        "update": "store local uphill direction; raise confidence; decay on flat terrain",
+        "action": "bias body tilt and drive toward slope_dir when a similar local slope is sensed",
+        "failure": "it can lean the wrong way when terrain orientation changes abruptly"
+      }
+    },
+    {
+      "input": "After landing hard, the actor does one tiny rebound hop if it still has support. Never chain the rebound without a fresh landing.",
+      "output": {
+        "trigger": "landing impulse above threshold after airborne state",
+        "state": "rebound_ready boolean",
+        "update": "set rebound_ready on qualifying landing; clear immediately when used or support is lost",
+        "action": "if rebound_ready and supported perform one bounded hop",
+        "failure": "rapid bumpy contacts can look like nervous stuttering hops"
+      }
+    },
+    {
+      "input": "If a wheel slips, remember the slip side and temporarily steer slightly away from it until traction comes back.",
+      "output": {
+        "trigger": "wheel slip ratio exceeds threshold",
+        "state": "slip_side left|right; avoidance scalar 0..1",
+        "update": "store slipping side; set avoidance from slip magnitude; decay when traction is stable",
+        "action": "steer slightly away from slip_side proportional to avoidance",
+        "failure": "alternating low-traction patches can produce a weaving path"
+      }
+    },
+    {
+      "input": "A blob should remember the direction of the last sharp stretch and resist stretching that way again for a short time.",
+      "output": {
+        "trigger": "local deformation rate exceeds threshold",
+        "state": "stretch_dir unit vector; resistance scalar 0..1",
+        "update": "store stretch direction; set resistance=1; decay over time",
+        "action": "bias internal contraction against stretch_dir proportional to resistance",
+        "failure": "repeated impacts can make the blob temporarily rigid in several alternating poses"
+      }
+    },
+    {
+      "input": "When it hears another actor collide nearby, it should pause for exactly two ticks before continuing whatever local movement it was already doing.",
+      "output": {
+        "trigger": "nearby collision sound",
+        "state": "pause_ticks integer 0..2; saved_dir unit vector",
+        "update": "store current move direction; set pause_ticks=2; decrement each tick",
+        "action": "wait while pause_ticks>0 then resume saved_dir",
+        "failure": "dense collisions can keep resetting the pause and immobilize the actor"
+      }
+    },
+    {
+      "input": "It should get excited by going fast downhill, remember that downhill direction briefly, and try to seek the same descent again.",
+      "output": {
+        "trigger": "speed rises while local slope is downhill",
+        "state": "descent_dir unit vector; excitement scalar 0..1",
+        "update": "store downhill direction; increase excitement; decay when not descending",
+        "action": "bias steering toward locally sensed slope matching descent_dir",
+        "failure": "it can repeatedly choose a dangerous drop because the remembered descent was fast"
+      }
+    },
+    {
+      "input": "If the actor bumps the same side three times close together, it should rotate away once and reset the count.",
+      "output": {
+        "trigger": "lateral contact impulse",
+        "state": "side left|right; bump_count integer 0..3; timer bounded",
+        "update": "increment count for repeated same-side bumps within timer; otherwise reset side/count; clear after action",
+        "action": "at count=3 perform one bounded turn away from side",
+        "failure": "vibration against a wall can trigger periodic unnecessary turns"
+      }
+    }
+  ],
+  "eval": [
+    {
+      "input": "After being pushed from behind, it should remember that direction and keep glancing or drifting back toward it until the memory fades.",
+      "output": {
+        "trigger": "external push above threshold",
+        "state": "push_dir unit vector; memory scalar 0..1",
+        "update": "store push direction; set memory=1; decay memory",
+        "action": "bias orientation or movement toward push_dir proportional to memory",
+        "failure": "frequent pushes can create obsessive backtracking"
+      }
+    },
+    {
+      "input": "If it loses traction while turning, I want it to become cautious about turning that same way for a few seconds.",
+      "output": {
+        "trigger": "traction loss during turn",
+        "state": "bad_turn left|right; caution scalar 0..1",
+        "update": "store turn side; raise caution; decay with stable traction",
+        "action": "reduce turn magnitude toward bad_turn while caution is high",
+        "failure": "slippery alternating corners can make steering excessively timid"
+      }
+    },
+    {
+      "input": "A creature that keeps checking the last place it was startled from, but only with one fading directional memory.",
+      "output": {
+        "trigger": "local startle event",
+        "state": "startle_dir unit vector; vigilance scalar 0..1",
+        "update": "store event direction; set vigilance=1; decay vigilance",
+        "action": "periodically bias facing toward startle_dir while vigilance is high",
+        "failure": "repeated harmless startles can keep it distracted from travel"
+      }
+    },
+    {
+      "input": "When forward motion gets blocked, it should remember which side had more free space and favor that side for the next two attempts.",
+      "output": {
+        "trigger": "forward progress stalls near obstacle",
+        "state": "escape_side left|right; attempts integer 0..2",
+        "update": "choose side from local clearance; set attempts=2; decrement after each escape attempt",
+        "action": "turn toward escape_side while attempts>0",
+        "failure": "a moving obstacle can make the remembered side obsolete"
+      }
+    },
+    {
+      "input": "A jumper should get briefly shy after a hard landing and refuse another jump until the shyness fades.",
+      "output": {
+        "trigger": "landing impulse above threshold",
+        "state": "shy scalar 0..1",
+        "update": "set shy=1 on hard landing; decay shy each supported tick",
+        "action": "suppress jump commands while shy is high",
+        "failure": "rough ground can keep jump ability suppressed almost continuously"
+      }
+    },
+    {
+      "input": "It remembers the last warm direction it sensed and keeps drifting that way after the heat disappears, but only for a bounded time.",
+      "output": {
+        "trigger": "local heat gradient above threshold",
+        "state": "warm_dir unit vector; warmth_memory scalar 0..1",
+        "update": "store heat-gradient direction; set warmth_memory=1; decay when gradient is absent",
+        "action": "bias movement along warm_dir proportional to warmth_memory",
+        "failure": "it can follow stale heat memory into a colder region"
+      }
+    }
+  ]
+}
