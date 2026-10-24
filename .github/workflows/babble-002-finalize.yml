@@ -1,0 +1,108 @@
+name: BABBLE-002 recover and archive
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/babble-002-finalize.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: neurounner-babble-002
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Recover all persona artifacts from original run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: babble002-persona-*
+          path: source-original
+          merge-multiple: false
+          run-id: 40125437991
+          github-token: ${{ github.token }}
+
+      - name: Resume failed or partial personas only
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+        run: |
+          test -n "$NVIDIA_API_KEY" || { echo "NVKEY repository secret is not configured"; exit 1; }
+          mkdir -p source-recovered
+          for gid in G01 G02 G03 G04 G05 G06 G07 G08 G09 G10 G11 G12; do
+            manifest="$(find source-original -type f -path "*/babble002-persona-$gid/manifest.json" -print -quit)"
+            if [ -n "$manifest" ]; then
+              echo "$gid already complete; preserving original artifact."
+              continue
+            fi
+
+            resume="$(find source-original -type d -name "babble002-persona-$gid" -print -quit)"
+            out="source-recovered/$gid"
+            echo "$gid incomplete; recovering from: ${resume:-fresh source}"
+            if [ -n "$resume" ]; then
+              python3 scripts/babble_002_expand.py                 --config experiments/babble-002/config.json                 --persona "$gid"                 --resume "$resume"                 --out "$out"
+            else
+              python3 scripts/babble_002_expand.py                 --config experiments/babble-002/config.json                 --persona "$gid"                 --out "$out"
+            fi
+          done
+
+      - name: Preserve recovery work
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: babble002-recovered-personas
+          path: source-recovered
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Combine and validate all 12 personas
+        run: |
+          mkdir -p combined-artifacts
+          cp -a source-original/. combined-artifacts/
+          if [ -d source-recovered ]; then
+            mkdir -p combined-artifacts/recovered
+            cp -a source-recovered/. combined-artifacts/recovered/
+          fi
+          python3 scripts/babble_002_assemble.py             --artifacts combined-artifacts             --config experiments/babble-002/config.json             --out datasets/babble-002
+          (cd datasets/babble-002 && sha256sum -c provenance/hashes.sha256)
+          test "$(find datasets/babble-002/training -name 'G*.jsonl' | wc -l)" -eq 12
+
+      - name: Signpost durable corpus
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          idx=Path("datasets/README.md")
+          s=idx.read_text()
+          row="| [`babble-002`](babble-002/README.md) | 1,200 lineage-preserving personality-training examples derived from all 12 BABBLE-001 packets, with paired generic negatives and raw NVIDIA history | archived |"
+          if "babble-002/README.md" not in s:
+              s=s.rstrip()+"\n"+row+"\n"
+              idx.write_text(s)
+
+          rag=Path("RAG.md")
+          s=rag.read_text()
+          line="- **[BABBLE-002 archive](datasets/babble-002/README.md)** — 1,200 expanded personality-training examples across 12 personas, paired generic negatives, trait lineage and raw NVIDIA expansion history."
+          if "BABBLE-002 archive" not in s:
+              anchor="- **[BABBLE-001 archive](datasets/babble-001/README.md)** — first fully filed babble/personality dataset: guides, 48 Sprocket histories, NVIDIA compiler history and 12 derived packets."
+              s=s.replace(anchor,anchor+"\n"+line)
+              rag.write_text(s)
+          PY
+
+      - name: Commit BABBLE-002 corpus
+        run: |
+          git config user.name "neurounner dataset bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add datasets/babble-002 datasets/README.md RAG.md
+          git commit -m "Archive BABBLE-002 personality training corpus"
+          git pull --rebase origin main
+          git push origin HEAD:main
