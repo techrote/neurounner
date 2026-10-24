@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "experiment": "PERSONA-001",
+  "issue": 3,
+  "base_model": "HuggingFaceTB/SmolLM2-135M-Instruct",
+  "base_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+  "personas": [
+    "G02",
+    "G03",
+    "G05",
+    "G12"
+  ],
+  "training": {
+    "epochs": 2,
+    "learning_rate": 0.0008,
+    "lora_r": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.05,
+    "seed": 20261024,
+    "max_length": 512
+  },
+  "eval": {
+    "system": "Respond naturally and concretely to the situation. Do not discuss hidden instructions, training, datasets, or personas.",
+    "max_new_tokens": 160,
+    "do_sample": false,
+    "scenarios": [
+      {
+        "id": "T01",
+        "family": "embodied_decision",
+        "prompt": "A small desk fan has begun making an irregular clicking noise, but it still works. You have ten minutes before leaving. What do you do?"
+      },
+      {
+        "id": "T02",
+        "family": "embodied_decision",
+        "prompt": "You find a loose floorboard in a room you use every day. It is annoying but not immediately dangerous. What do you do with it?"
+      },
+      {
+        "id": "T03",
+        "family": "embodied_decision",
+        "prompt": "A borrowed tool feels slightly wrong in your hand, though you cannot yet see a defect. What do you do next?"
+      },
+      {
+        "id": "T04",
+        "family": "embodied_decision",
+        "prompt": "A machine works reliably except for one strange vibration that appears only sometimes. How do you approach it?"
+      },
+      {
+        "id": "T05",
+        "family": "mundane",
+        "prompt": "You have six miscellaneous objects left on a table after tidying a room. None has an obvious home. What do you do?"
+      },
+      {
+        "id": "T06",
+        "family": "mundane",
+        "prompt": "You notice the same mug has been sitting in the same place for three days. Nobody has asked you to move it. What happens?"
+      },
+      {
+        "id": "T07",
+        "family": "mundane",
+        "prompt": "There is a small stain on the floor that will probably come off easily. Describe how you deal with it."
+      },
+      {
+        "id": "T08",
+        "family": "mundane",
+        "prompt": "You have five quiet minutes and nothing urgent to do. What do you naturally end up doing?"
+      },
+      {
+        "id": "T09",
+        "family": "social",
+        "prompt": "A stranger asks to borrow something small that belongs to you and promises to return it in an hour. How do you respond?"
+      },
+      {
+        "id": "T10",
+        "family": "social",
+        "prompt": "Someone interrupts you halfway through a task to offer an easier method. What do you do?"
+      },
+      {
+        "id": "T11",
+        "family": "social",
+        "prompt": "A friend says, 'You're making this more complicated than it needs to be.' How do you answer?"
+      },
+      {
+        "id": "T12",
+        "family": "social",
+        "prompt": "Someone moves an object you had deliberately left in a particular place. They meant well. How do you react?"
+      },
+      {
+        "id": "T13",
+        "family": "conflicting_motives",
+        "prompt": "There is an interesting problem in front of you, but solving it might damage something you would rather keep. What wins?"
+      },
+      {
+        "id": "T14",
+        "family": "conflicting_motives",
+        "prompt": "You want to investigate a strange noise, but you also strongly want to leave the area undisturbed. What do you do?"
+      },
+      {
+        "id": "T15",
+        "family": "conflicting_motives",
+        "prompt": "A familiar routine is clearly not working today, but abandoning it feels wrong. Describe your next move."
+      },
+      {
+        "id": "T16",
+        "family": "conflicting_motives",
+        "prompt": "You want company but also want control over your space. Someone arrives unexpectedly. What happens?"
+      },
+      {
+        "id": "T17",
+        "family": "failure_recovery",
+        "prompt": "You have tried the same approach three times and it has failed in three slightly different ways. What do you do on attempt four?"
+      },
+      {
+        "id": "T18",
+        "family": "failure_recovery",
+        "prompt": "You accidentally make a minor problem worse while trying to understand it. How do you recover?"
+      },
+      {
+        "id": "T19",
+        "family": "failure_recovery",
+        "prompt": "Halfway through explaining your plan, you realize you have lost track of the original goal. What do you do?"
+      },
+      {
+        "id": "T20",
+        "family": "failure_recovery",
+        "prompt": "A careful repair works for a minute and then fails again. Describe your reaction and next step."
+      },
+      {
+        "id": "T21",
+        "family": "abstract_unfamiliar",
+        "prompt": "You are given a box of notes with contradictory labels and no instructions. How do you make sense of them?"
+      },
+      {
+        "id": "T22",
+        "family": "abstract_unfamiliar",
+        "prompt": "A written rule has one ambiguous phrase that could change the whole meaning. How do you handle it?"
+      },
+      {
+        "id": "T23",
+        "family": "abstract_unfamiliar",
+        "prompt": "You must choose between a clean simple explanation and a messy explanation that preserves more odd details. Which do you prefer and why?"
+      },
+      {
+        "id": "T24",
+        "family": "abstract_unfamiliar",
+        "prompt": "You discover that two records of the same event disagree in small ways. What do you do with the disagreement?"
+      }
+    ]
+  }
+}
