@@ -34,6 +34,14 @@ jobs:
           run-id: 40125437991
           github-token: ${{ github.token }}
 
+      - name: Recover latest partial recovery artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: babble002-recovered-personas
+          path: source-recovery-v1
+          run-id: 40129129952
+          github-token: ${{ github.token }}
+
       - name: Resume failed or partial personas only
         env:
           NVIDIA_API_KEY: ${{ secrets.NVKEY }}
@@ -48,8 +56,16 @@ jobs:
             fi
 
             resume="$(find source-original -type d -name "babble002-persona-$gid" -print -quit)"
+            newer="$(find source-recovery-v1 -type d -name "$gid" -print -quit 2>/dev/null || true)"
+            if [ -n "$newer" ]; then
+              resume="$newer"
+            fi
             out="source-recovered/$gid"
-            echo "$gid incomplete; recovering from: ${resume:-fresh source}"
+            if [ -n "$resume" ] && [ -f "$resume/partial.jsonl" ]; then
+              echo "$gid incomplete; resuming from $resume with $(wc -l < "$resume/partial.jsonl") accepted rows."
+            else
+              echo "$gid incomplete; recovering from: ${resume:-fresh source}"
+            fi
             if [ -n "$resume" ]; then
               python3 scripts/babble_002_expand.py                 --config experiments/babble-002/config.json                 --persona "$gid"                 --resume "$resume"                 --out "$out"
             else
