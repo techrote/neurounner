@@ -60,7 +60,7 @@ Do not imitate named fictional characters or living authors. Do not make them ge
     body={
       "model":"local",
       "messages":[{"role":"user","content":prompt}],
-      "max_tokens":1400,
+      "max_tokens":1100,
       "temperature":0.95,
       "top_p":0.95,
       "seed":20261024+batch,
@@ -77,8 +77,31 @@ Do not imitate named fictional characters or living authors. Do not make them ge
     text=payload["choices"][0]["message"].get("content") or ""
     a,b=text.find("{"),text.rfind("}")
     if a<0 or b<=a: raise RuntimeError(text)
+    raw_path=RESULTS/f"guide-batch-{batch}-raw.txt"
+    raw_path.write_text(text+"\n")
     parsed=json.loads(text[a:b+1])
-    return parsed["guides"],elapsed,payload.get("usage") or {}
+    required={"theme","system_prompt","attitude_guide","content_guide","mechanical_motif","interesting_failure_flavor"}
+    found=[]
+    def walk(x):
+        if isinstance(x,dict):
+            if required.issubset(x.keys()):
+                found.append({k:x[k] for k in required})
+            for v in x.values():
+                walk(v)
+        elif isinstance(x,list):
+            for v in x:
+                walk(v)
+    walk(parsed)
+    # De-duplicate exact guide objects while preserving order.
+    unique=[]
+    seen=set()
+    for g in found:
+        key=json.dumps(g,sort_keys=True,ensure_ascii=False)
+        if key not in seen:
+            seen.add(key); unique.append(g)
+    if len(unique) < 4:
+        raise RuntimeError(f"batch {batch}: found only {len(unique)} complete guide objects; raw saved to {raw_path}")
+    return unique[:4],elapsed,payload.get("usage") or {}
 
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument("model"); args=ap.parse_args()
