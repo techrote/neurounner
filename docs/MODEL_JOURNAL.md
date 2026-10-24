@@ -757,6 +757,84 @@ This makes multi-run LoRA fine-tuning of ~135M models on GitHub CPU runners clea
 
 Detailed record: `docs/TRAIN_001_CPU_LORA.md`.
 
+---
+
+# 2026-10-24 — TRAIN-002b void.1 eight-lane byte-aware training study
+
+**Issue:** #1  
+**Actions run:** `40123236802`  
+**Result commit:** `f466b00130c8f8a14d08b37880205d1652f6e1fd`  
+**Base:** `dotlabs/void.1` revision `9c2be5087772867d45961abd11f6b35110617563`.
+
+The earlier TRAIN-002 conclusion was confounded by `void.1`'s custom byte-oriented tokenizer. Its 120-token generation cap frequently cut output before a complete JSON object existed. TRAIN-002b reran the experiment with a **768 tokenizer-unit generation budget**, eight dedicated runners, two seed controls and six controlled perturbations.
+
+Tokenizer provenance:
+
+- class: `ByteTokenizer`;
+- source: `tokenization_byte.py`;
+- source SHA-256: `279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03`.
+
+Do not compare this model's tokenizer-unit/s directly with ordinary BPE/subword tok/s. TRAIN-002b records UTF-8 bytes/s and characters/s separately.
+
+## Eight lanes
+
+| Lane | Change | CPU | train B/s | Loss | Exact schema | Deterministic proxy | MiniMax mechanical /4 |
+|---|---|---|---:|---:|---:|---:|---:|
+| ctrl-a | seed 20261024 | EPYC 7763 | 162.8 | 0.986→0.267 | 6/6 | 0.342 | 1.83 |
+| ctrl-b | seed 20261117 | EPYC 9V45 | 254.2 | 1.130→0.273 | 6/6 | 0.351 | **2.00** |
+| lr-low | LR 4e-4 | EPYC 7763 | 161.5 | 0.986→0.344 | 5/6 | 0.257 | 1.67 |
+| lr-high | LR 1.2e-3 | EPYC 9V45 | 253.3 | 0.986→0.257 | 5/6 | 0.301 | 1.50 |
+| rank4 | LoRA r4 / alpha8 | EPYC 9V74 | 199.7 | 0.986→0.324 | 6/6 | 0.363 | 1.17 |
+| rank16 | LoRA r16 / alpha32 | EPYC 9V74 | 203.5 | 0.986→0.308 | 6/6 | 0.362 | 1.50 |
+| dropout0 | LoRA dropout 0 | EPYC 9V74 | 247.8 | 0.986→0.272 | 6/6 | 0.334 | 1.33 |
+| failure-weighted | repeat 8 failure-rich training examples | EPYC 7763 | 163.4 | 1.011→0.359 | 6/6 | **0.367** | **2.00** |
+
+All eight lanes completed independently. Every post-training lane still exhausted the 768-unit generation allowance, indicating that `void.1` commonly continues beyond the first complete JSON object instead of cleanly emitting EOS. Scoring therefore extracts the first complete JSON object and separately records budget exhaustion.
+
+## Control spread
+
+The two otherwise-identical controls scored **1.83 and 2.00/4** on the independent MiniMax mechanical judge.
+
+Control mean:
+
+- exact schema: **100%**;
+- mechanical judge: **1.92/4**;
+- deterministic mechanical-similarity proxy: **0.346**.
+
+This control spread is the empirical seed/noise floor. Small changes below it should not be interpreted as meaningful improvements.
+
+## Perturbation result
+
+**Failure-weighted training material is the only perturbation that matched the better control on the independent mechanical judge while improving the deterministic similarity proxy.**
+
+It achieved:
+
+- exact schema: **6/6**;
+- MiniMax mechanical score: **2.00/4**;
+- deterministic proxy: **0.367**, best of all eight lanes.
+
+The other changes did not outperform ordinary seed variation:
+
+- lowering LR degraded both schema and mechanics;
+- raising LR reduced the judged mechanical score despite lower final loss;
+- rank 4 and rank 16 improved lexical/deterministic similarity but were worse on semantic mechanical fidelity;
+- removing LoRA dropout remained perfectly parseable but judged worse mechanically.
+
+The key result is therefore **curriculum/data weighting mattered more than these modest LoRA hyperparameter changes** on this tiny corpus.
+
+## Corrected interpretation of TRAIN-002
+
+The original post-training outputs were already beginning to emit JSON but were commonly truncated around 120 byte tokens. TRAIN-002b demonstrates that `void.1` can learn the five-field format reliably.
+
+However, **format reliability substantially exceeds mechanical understanding**. A 6/6 schema score can coexist with only ~2/4 mechanical fidelity. This makes `void.1` useful as a tiny specialization/control substrate, but not yet an authoritative kernel compiler.
+
+Durable evidence:
+
+- `docs/TRAIN_002B_VOID_EIGHT_LANE.md`
+- `experiments/train-002b/evidence/summary.json`
+- `experiments/train-002b/evidence/lanes/`
+- `experiments/train-002b/evidence/semantic-judge/`
+
 # Journal interpretation notes
 
 ## Throughput is task-shaped
