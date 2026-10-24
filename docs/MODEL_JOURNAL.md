@@ -28,7 +28,7 @@ Do not merge throughput measurements from different CPUs or task shapes into a s
 | Model | Quant / build | CPU / task | Measured decode | Initial observed temperament | Current utility hypothesis |
 |---|---|---|---:|---|---|
 | Sprocket-500M chat | Q4_K_M | EPYC 7763, simple smoke | 76.7–82.3 tok/s; bench tg128 94.41 | chaotic, gear/goblin-flavoured, repetitive, associative drift, often answers the instruction rather than the mechanism | high-volume mutation/noise source; needs very tight output schema |
-| LFM2.5-VL-450M text core | Q4_K_M | EPYC 7763, behaviour probe | 103.19 tok/s; bench tg64 129.54 | extremely terse/schematic; echoed labels more than it reasoned | cheap filter/classifier/formatter; later test vision |
+| LFM2.5-VL-450M | Q4_K_M + Q8 projector | EPYC 9V45, Visual-002b | bench tg64 167.08; image replies ~44–49 tok/s | extremely fast but weak at left/right/action grounding; ignores strict field semantics | cheap visual filter/extractor only; not action authority |
 | LFM2.5-1.2B-Instruct | QAD-Q4_0 | EPYC 9V45, behaviour probe | 54.50 tok/s; bench tg64 63.98 | coherent, compliant, but tends to genericize/sanitize strange ideas | routine compiler/normalizer/selector |
 | LFM2.5-1.2B-Thinking | Q4_K_M | Xeon Platinum 8370C, reasoning | 27.37–28.53 tok/s; bench tg64 29.43 | reflective, methodical, spends short budgets entirely in thought | reasoning specialist if given explicit larger budgets |
 | LFM2.5-8B-A1B | Q4_K_M | EPYC 7763, reasoning | 24.69–27.72 tok/s; bench tg64 31.52 | structured deeper reasoning, but also consumes short budgets before final answer | heavyweight periodic reviewer / adjudicator |
@@ -40,13 +40,15 @@ Do not merge throughput measurements from different CPUs or task shapes into a s
 | SmolLM3 3B | Q4_K_M | EPYC 7763, Panel-001 | 8.62 tok/s | highly destructive; rejected nearly everything except edge_grudge | adversarial destroyer / novelty stress-test |
 | Qwen3-4B | Q4_K_M | EPYC 7763, Panel-001 | 4.19 tok/s | liked early simple mechanisms, returned incomplete required schema | same-family control; needs output-protocol tuning |
 | Ministral 3 3B Instruct | Q4_K_M | EPYC 7763, Panel-001 | 7.05 tok/s | unusually detailed, nuanced critic; strong local-vs-global reasoning; too verbose for 1800-token schema | potentially excellent analytic critic if output is compressed |
-| Qwen2.5-Omni-7B text-only | Q4_K_M | EPYC 7763, startup smoke | 4.26 tok/s | only a trivial short response observed so far; no useful temperament conclusion yet | multimodal candidate; text judge still unqualified |
+| Qwen2.5-Omni-7B | Q4_K_M + Q8 projector | EPYC 9V74, vision/audio/mixed | bench tg64 8.37; preprocessing dominates wall time | correctly handled image direction, exact WAV transcription and mixed agreement; expensive CPU multimodal preprocessing | occasional multimodal sensor/reviewer, not high-frequency loop |
 
-| Liquid d1-3B | Q4_K_M + Q8 projector | EPYC 7763, multimodal decision probe | bench tg64 20.63; image response 5.57 tok/s | cautious, decision-oriented; noticed blocked direct path and avoided inventing a path through it | visual/decision sidecar; promising bridge from scene to action |
-| Qwen3-VL-2B-Instruct | Q4_K_M + Q8 projector | EPYC 7763, multimodal decision probe | bench tg64 30.60; image response 12.72 tok/s | good object/layout perception but first action grounding contradicted its own scene description | cheap visual interpreter; needs spatial-action calibration tests |
-| Nemotron 3.5 Bolt E4B | Q4_K_M | EPYC 7763, reasoning probe | bench tg64 10.03; reasoning 8.46 tok/s | orderly, constraint-aware self-critic; spends short budget entirely in reasoning | high-priority reasoning critic/incubator; test thinking-off vs long thinking |
+| Liquid d1-3B | Q4_K_M + Q8 projector | EPYC 7763, Visual-002b | bench tg64 20.21; image replies ~2.6 tok/s | decision-oriented but raw visual grounding collapsed to the same rightward answer across the simple fixture | use after a stronger visual extractor; promising structured decision specialist, weak raw vision authority |
+| Qwen3-VL-2B-Instruct | Q4_K_M + Q8 projector | EPYC 7763, Visual-002b | bench tg64 29.57; 4/6 actions correct | best tested cheap VLM on current fixture; strict JSON compliant but showed strong RIGHT-direction bias | preferred routine visual sidecar pending broader calibration |
+| Qwen3-VL-4B-Instruct | Q4_K_M + Q8 projector | EPYC 9V45, Visual-002b | bench tg64 16.89; 4/6 actions correct | strict JSON compliant but no better than 2B on the simple spatial fixture; same rightward bias | retain for harder visual tasks, not routine default yet |
+| Nemotron 3.5 Bolt E4B | Q4_K_M | EPYC 7763, thinking A/B | bench tg64 10.15; 7.49 off / 8.89 on tok/s | orderly self-checking; thinking mode now proven to reach a final answer with sufficient budget | high-priority reasoning critic/incubator |
 | K2-Horizon-3.7B | IQ1_M | EPYC 7763, same-host quant A/B | bench tg64 6.24; probe 4.11 tok/s | severe template/reasoning corruption at 1.75 bpw; effectively incoherent in first task | useful quantization-degradation reference, not a serious judge at this quant |
 | K2-Horizon-3.7B | Q6_K | EPYC 7763, same-host quant A/B | bench tg64 9.50; reasoning 8.15 tok/s | coherent stepwise mechanism reasoning; consumed full short thinking budget | unusual reasoning/deepener candidate; substantially better than IQ1_M |
+| QwenStoryteller | Q4_K_M | EPYC 9V45, creative comparison | bench tg64 8.64; ~7.4–7.9 tok/s | coherent, persona-rich, strongly narrative; ignores no-backstory/no-dialogue/local-mechanics constraints | upstream character/worldbuilding source only; normalize mechanically afterward |
 
 ---
 
@@ -510,6 +512,148 @@ Q6_K produced coherent stepwise reasoning around storing a shove vector, boundin
 Quantization finding: **Q6_K was both substantially more coherent and faster than IQ1_M in this model/build on the same CPU**. This is a strong warning against assuming extreme quantization automatically buys useful throughput.
 
 Potential utility: Q6_K merits further testing as an unusual reasoning/deepening model; IQ1_M is mainly valuable as a quantization-failure reference unless another prompt/runtime configuration rehabilitates it.
+
+---
+
+# 2026-10-24 — Evaluation Wave 002 and Visual-002b
+
+**Primary evaluation run:** `40108203192`  
+**Cache-isolated visual retest:** `40108429718`
+
+The first six-scene visual pass exposed a multimodal prompt-cache confound: later trials could reuse features from the first image. Those raw visual scores are retained in artifacts but are **superseded for interpretation** by Visual-002b, which disabled prompt caching, added a unique nonce to every trial, and separately measured semantic correctness and exact schema compliance.
+
+## Cache-isolated visual comparison
+
+Fixture: six synthetic 256×256 scenes containing a red actor, blue target, and optional black obstacle. Tasks were target direction, whether an obstacle lies between actor and target, and immediate action.
+
+| Model | CPU | Startup | RSS | pp64 | tg64 | Field accuracy | Action accuracy | Exact schema |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Qwen3-VL-2B Q4_K_M + Q8 projector | AMD EPYC 7763 | 1.277 s | 3.11 GiB | 69.98 | 29.57 | **72.2%** | **4/6** | **100%** |
+| Qwen3-VL-4B Q4_K_M + Q8 projector | AMD EPYC 9V45 | 1.616 s | 5.60 GiB | 81.73 | 16.89 | 66.7% | **4/6** | **100%** |
+| LFM2.5-VL-450M Q4_K_M + Q8 projector | AMD EPYC 9V45 | 0.266 s | 0.60 GiB | **945.39** | **167.08** | 33.3% | 1/6 | 0% |
+| Liquid d1-3B Q4_K_M + Q8 projector | AMD EPYC 7763 | 1.783 s | 3.44 GiB | 40.97 | 20.21 | 27.8% recorded* | 2/6 | 0% |
+
+* d1 returned string values such as `"blocked":"no"` instead of booleans, so the strict semantic normalizer penalized some otherwise interpretable fields. Its robust conclusions are the 2/6 action score, repeated rightward-answer collapse, and 0% exact-schema compliance.
+
+### Qwen3-VL-2B
+
+Observed phenotype: concise, highly schema-compliant, able to detect obstacle presence reasonably well, but strongly biased toward `RIGHT`. In leftward scenes it frequently described the target as right and chose the corresponding action.
+
+Current interpretation: **best routine local visual sidecar of this tested group**, primarily because it matches or beats the 4B sibling at lower memory cost. Do not yet give it sole control authority; use it for observation extraction and validate directional outputs.
+
+### Qwen3-VL-4B
+
+Observed phenotype: also perfectly schema-compliant, but it did not improve on 2B in this deliberately simple fixture and showed the same rightward bias. Its higher parameter count therefore has not yet bought useful accuracy here.
+
+Current interpretation: retain for harder images, richer scenes, screenshots, or later video/physics reasoning tests where scale may matter. **Do not make it the default over 2B yet.**
+
+### LFM2.5-VL-450M
+
+Observed phenotype: extraordinarily fast and tiny, but weak at this spatial task. It often used `"target":"BLUE"` rather than the requested relative direction and only chose the correct action once.
+
+Current interpretation: remains attractive as a **cheap visual pre-filter, classifier, or coarse extractor**, not as an action selector.
+
+### Liquid d1-3B
+
+Observed phenotype: cache isolation did not fix its tendency to output the same `RIGHT / no obstacle / MOVE_RIGHT` decision across scenes. This is substantially weaker raw perception grounding than its first anecdotal image suggested.
+
+Current interpretation: its value should be tested on **structured decision problems**, where another VLM or deterministic parser supplies the scene state. Do not spend it on raw pixel geometry by default.
+
+## Qwen2.5-Omni-7B — real vision, audio, and mixed input
+
+**CPU:** AMD EPYC 9V74 80-Core Processor, 4 logical CPUs.  
+**Model:** Q4_K_M + Q8 multimodal projector.
+
+Measured:
+
+- startup: **3.268 s**;
+- RSS with projector: **9.22 GiB**;
+- text-core `pp64`: **25.53 ± 0.25 tok/s**;
+- text-core `tg64`: **8.37 ± 0.01 tok/s**.
+
+Capability tests:
+
+- image direction: correctly returned **Right**; 8.99 s wall time for a 2-token answer;
+- synthetic WAV transcription: exactly returned **“The robot should move right.”**; 45.40 s wall time;
+- combined image + audio: correctly returned **AGREE** and matched the movement instruction; 54.08 s wall time.
+
+Observed phenotype: accurate on all three tiny tests and capable of actually combining audio and vision locally.
+
+Current interpretation: **fully functional multimodal specialist**, but CPU encoder/preprocessing cost dominates. Excellent occasional sensor/reviewer; unsuitable for a high-frequency control loop on standard runners.
+
+## Nemotron 3.5 Bolt E4B — thinking off versus on
+
+**CPU:** AMD EPYC 7763 64-Core Processor, 4 logical CPUs.
+
+Measured:
+
+- startup: **3.196 s**;
+- RSS: **7.92 GiB**;
+- `pp64`: **23.72 ± 0.61 tok/s**;
+- `tg64`: **10.15 ± 0.01 tok/s**.
+
+Thinking disabled:
+
+- 87 completion tokens / 11.62 s = **7.49 tok/s**;
+- immediately returned compact JSON;
+- mechanism was deterministic but somewhat arbitrary: increment one vector component and move on odd parity.
+
+Thinking enabled:
+
+- 386 completion tokens / 43.41 s = **8.89 tok/s**;
+- emitted a clear internal planning/self-check sequence and then a final JSON answer;
+- therefore the earlier “reasoning never reaches final answer” concern was a budget/protocol issue rather than a fundamental incompatibility.
+
+Observed temperament: methodical, explicit constraint tracker. It can still reinterpret the requested bounded vector too abstractly and drift toward lights/tones rather than physical motion.
+
+Current interpretation: **high-priority critic/incubator**, especially for long unattended jobs. Use thinking-off for cheap structured passes and thinking-on for deeper review.
+
+## QwenStoryteller versus Sprocket — character-generation comparison
+
+**CPU for both:** AMD EPYC 9V45 96-Core Processor, 4 logical CPUs.
+
+### QwenStoryteller Q4_K_M
+
+- SHA-256: `ddad9dd5b41138f3dc7e1209dda9778949291eeefa5f5537f6f5b72c3ed042a1`;
+- startup: **2.295 s**;
+- RSS: **7.54 GiB**;
+- `pp64`: **45.22 ± 0.24 tok/s**;
+- `tg64`: **8.64 ± 0.14 tok/s**;
+- observed generation: **~7.4–7.9 tok/s**.
+
+It produced recognizable personalities and motives, but repeatedly violated the requested implementation boundary:
+
+- invented named characters and treasure-map backstory;
+- introduced remembered whispers and libraries;
+- switched into first-person narration;
+- proposed shelter-building and identity narratives rather than bounded local state/action mechanics.
+
+This is not useless failure. It indicates the model is genuinely specialized toward **narrative/persona coherence**, just in the wrong representation for KernelSpec.
+
+### Sprocket control on the same host
+
+- startup: **0.252 s**;
+- RSS: **0.64 GiB**;
+- `pp64`: **585.31 ± 4.63 tok/s**;
+- `tg64`: **109.39 ± 0.56 tok/s**;
+- observed generation: **~95.9–100.2 tok/s**.
+
+Sprocket remained much stranger and less coherent: goblin/dialect framing, meta-instructions, abrupt semantic drift, and poor obedience to the embodied-mechanics prompt.
+
+### Comparison
+
+QwenStoryteller supplies **coherent character pressure**; Sprocket supplies **cheap chaotic mutation pressure**. Neither should write final mechanics directly.
+
+A promising order is:
+
+```text
+QwenStoryteller -> motive/persona fragment
+Sprocket        -> strange mutation / corruption
+LFM1.2          -> strip narrative and compile to bounded mechanics
+Qwen3.5/Bolt    -> critique whether character survived the compilation
+```
+
+That is a more defensible use of QwenStoryteller than asking it to obey low-level KernelSpec constraints itself.
 
 # Journal interpretation notes
 
