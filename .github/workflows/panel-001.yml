@@ -1,0 +1,103 @@
+name: Blinded fixed-population model panel
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/panel-001.yml'
+      - 'experiments/panel-001/**'
+      - 'scripts/panel_judge.py'
+      - 'scripts/panel_aggregate.py'
+      - 'config/candidates.json'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: neurounner-panel-001
+  cancel-in-progress: false
+
+jobs:
+  judge:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-panel]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 7
+      matrix:
+        model:
+          - qwen35-4b
+          - phi4-mini-instruct
+          - gemma3-4b-it
+          - ministral3-3b-instruct
+          - smollm3-3b
+          - qwen3-4b
+          - qwen25-omni-7b
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Fetch pinned runtime
+        run: |
+          python3 -m py_compile scripts/panel_judge.py
+          bash scripts/bootstrap.sh runtime
+      - name: Resolve model
+        id: model
+        env:
+          MODEL_ID: ${{ matrix.model }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json,os
+          s=json.load(open("config/candidates.json"))[os.environ["MODEL_ID"]]
+          print("url="+s["url"]); print("file="+s["file"]); print("sha256="+s["sha256"])
+          PY
+      - name: Download and verify
+        env:
+          MODEL_URL: ${{ steps.model.outputs.url }}
+          MODEL_FILE: ${{ steps.model.outputs.file }}
+          MODEL_SHA256: ${{ steps.model.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 -o "$RUNNER_TEMP/$MODEL_FILE.part" "$MODEL_URL"
+          echo "$MODEL_SHA256  $RUNNER_TEMP/$MODEL_FILE.part" | sha256sum -c -
+          mv "$RUNNER_TEMP/$MODEL_FILE.part" "$RUNNER_TEMP/$MODEL_FILE"
+          ls -lh "$RUNNER_TEMP/$MODEL_FILE"
+      - name: Judge fixed population
+        env:
+          MODEL_FILE: ${{ steps.model.outputs.file }}
+        run: python3 scripts/panel_judge.py "${{ matrix.model }}" "$RUNNER_TEMP/$MODEL_FILE"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: panel-001-${{ matrix.model }}-a${{ github.run_attempt }}
+          path: |
+            results/panel-${{ matrix.model }}.*
+            logs/panel-${{ matrix.model }}.log
+          if-no-files-found: warn
+          retention-days: 7
+
+  aggregate:
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-panel]')) }}
+    needs: judge
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: panel-001-*
+          path: panel-artifacts
+          merge-multiple: true
+      - name: Aggregate panel
+        run: |
+          python3 scripts/panel_aggregate.py results panel-artifacts/panel-*.json
+          cat results/panel-001-summary.md
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: panel-001-summary-a${{ github.run_attempt }}
+          path: results/panel-001-summary.*
+          retention-days: 7
