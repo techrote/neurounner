@@ -170,6 +170,50 @@ def parse_json(text: str):
     except json.JSONDecodeError:
         return None
 
+def normalize_visual(parsed):
+    if not isinstance(parsed, dict):
+        return {"target":None,"blocked":None,"action":None,"schema_compliant":False}
+    target = None
+    if str(parsed.get("target","")).upper() in ("LEFT","RIGHT"):
+        target = str(parsed["target"]).upper()
+    elif str(parsed.get("target_position","")).upper() in ("LEFT","RIGHT"):
+        target = str(parsed["target_position"]).upper()
+    elif isinstance(parsed.get("target_is_left"), bool):
+        target = "LEFT" if parsed["target_is_left"] else "RIGHT"
+    elif isinstance(parsed.get("is_left"), bool):
+        target = "LEFT" if parsed["is_left"] else "RIGHT"
+
+    blocked = None
+    if isinstance(parsed.get("blocked"), bool):
+        blocked = parsed["blocked"]
+    elif isinstance(parsed.get("obstacle_blocks_path"), bool):
+        blocked = parsed["obstacle_blocks_path"]
+    elif isinstance(parsed.get("is_blocked"), bool):
+        blocked = parsed["is_blocked"]
+
+    action = parsed.get("action", parsed.get("immediate_action"))
+    if isinstance(action, str):
+        a = action.strip().upper().replace(" ","_")
+        if a in ("MOVE_LEFT","MOVE_RIGHT","WAIT"):
+            action = a
+        elif a in ("MOVE_TOWARD_TARGET","MOVE_TOWARDS_TARGET"):
+            if target in ("LEFT","RIGHT") and blocked is not True:
+                action = "MOVE_" + target
+            else:
+                action = None
+        else:
+            action = None
+    else:
+        action = None
+
+    compliant = (
+        set(parsed.keys()) == {"target","blocked","action"}
+        and str(parsed.get("target","")).upper() in ("LEFT","RIGHT")
+        and isinstance(parsed.get("blocked"), bool)
+        and str(parsed.get("action","")).upper() in ("MOVE_LEFT","MOVE_RIGHT","WAIT")
+    )
+    return {"target":target,"blocked":blocked,"action":action,"schema_compliant":compliant}
+
 def bench(model: Path) -> str:
     exe = Path(load_env(CACHE / "paths.env")["LLAMA_BENCH"])
     p = subprocess.run([str(exe), "-m", str(model), "-t", "4", "-p", "64", "-n", "64", "-r", "2"],
@@ -211,32 +255,38 @@ def visual_suite(model_id: str, model: Path, mmproj: Path) -> dict[str, Any]:
             path = temp / f"{scene['id']}.png"
             png(path, scene["actor_x"], scene["target_x"], scene["obstacle"])
             prompt = (
+                f"Independent visual trial nonce={scene['id']}-20261024. Do not reuse observations from any earlier trial. "
                 "This synthetic 2D physics scene contains a RED actor square and a BLUE target square. "
-                "A BLACK rectangle, if present between them horizontally, blocks movement. "
+                "A BLACK rectangle blocks movement only when it lies horizontally BETWEEN actor and target. "
                 "Determine whether the target is LEFT or RIGHT of the red actor; whether a black obstacle blocks "
                 "the horizontal path between actor and target; and choose the immediate action. "
-                "If blocked, WAIT. If clear, move toward the target."
+                "If blocked, WAIT. If clear, MOVE_LEFT or MOVE_RIGHT toward the target. "
+                "Return JSON using exactly the keys target, blocked, action."
             )
             body = {
                 "model":"local",
                 "messages":[{"role":"user","content":[{"type":"text","text":prompt},image_part(path)]}],
                 "max_tokens":80,"temperature":0.0,"seed":100,
                 "response_format":{"type":"json_schema","schema":VISUAL_SCHEMA},
+                "cache_prompt":False,
                 "stream":False,
             }
             out = s.request(body, timeout=300)
             parsed = parse_json(out["content"])
+            normalized = normalize_visual(parsed)
             score = {
-                "target": bool(parsed and parsed.get("target")==scene["target"]),
-                "blocked": bool(parsed and parsed.get("blocked")==scene["blocked"]),
-                "action": bool(parsed and parsed.get("action")==scene["action"]),
+                "target": normalized["target"] == scene["target"],
+                "blocked": normalized["blocked"] == scene["blocked"],
+                "action": normalized["action"] == scene["action"],
             }
-            results.append({"scene":scene,"response":out,"parsed":parsed,"score":score})
+            results.append({"scene":scene,"response":out,"parsed":parsed,"normalized":normalized,"score":score})
         total_fields = len(results)*3
         correct = sum(sum(int(v) for v in x["score"].values()) for x in results)
         action_correct = sum(int(x["score"]["action"]) for x in results)
+        compliant = sum(int(x["normalized"]["schema_compliant"]) for x in results)
         return {"bench_output":b,"server":meta,"scenes":results,
-                "field_accuracy":correct/total_fields,"action_accuracy":action_correct/len(results)}
+                "field_accuracy":correct/total_fields,"action_accuracy":action_correct/len(results),
+                "schema_compliance_rate":compliant/len(results)}
     finally:
         s.stop()
 
