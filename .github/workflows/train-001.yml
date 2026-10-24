@@ -1,0 +1,120 @@
+name: TRAIN-001 CPU LoRA resume proof
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/train-001.yml'
+      - 'scripts/train_001.py'
+      - 'experiments/train-001/**'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: neurounner-train-001
+  cancel-in-progress: false
+
+jobs:
+  stage1:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-train001]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Install CPU training stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install "transformers>=4.57,<5" "peft>=0.17,<1" "huggingface_hub>=0.36,<2" "psutil>=7,<8" "safetensors>=0.6,<1"
+          python3 - <<'PY'
+          import torch, transformers, peft, huggingface_hub, psutil
+          print("torch", torch.__version__)
+          print("transformers", transformers.__version__)
+          print("peft", peft.__version__)
+          print("huggingface_hub", huggingface_hub.__version__)
+          print("psutil", psutil.__version__)
+          PY
+
+      - name: Train first 24 optimizer steps
+        env:
+          OMP_NUM_THREADS: 4
+          MKL_NUM_THREADS: 4
+          TOKENIZERS_PARALLELISM: "false"
+        run: |
+          mkdir -p train001/checkpoint-stage1 results
+          python3 scripts/train_001.py             --stage 1             --steps 24             --checkpoint-out train001/checkpoint-stage1
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train001-stage1-a${{ github.run_attempt }}
+          path: |
+            train001/checkpoint-stage1
+            results/train001-stage1.json
+          if-no-files-found: error
+          retention-days: 7
+
+  stage2:
+    if: ${{ always() && needs.stage1.result == 'success' }}
+    needs: stage1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Install CPU training stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install "transformers>=4.57,<5" "peft>=0.17,<1" "huggingface_hub>=0.36,<2" "psutil>=7,<8" "safetensors>=0.6,<1"
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: train001-stage1-a${{ github.run_attempt }}
+          path: stage1-artifact
+
+      - name: Inspect resumed checkpoint
+        run: |
+          find stage1-artifact -maxdepth 4 -type f -printf '%p %s bytes\n' | sort
+          cat stage1-artifact/train001/checkpoint-stage1/metadata.json
+
+      - name: Resume for 16 optimizer steps on fresh runner
+        env:
+          OMP_NUM_THREADS: 4
+          MKL_NUM_THREADS: 4
+          TOKENIZERS_PARALLELISM: "false"
+        run: |
+          mkdir -p train001/checkpoint-stage2 results
+          python3 scripts/train_001.py             --stage 2             --steps 16             --checkpoint-in stage1-artifact/train001/checkpoint-stage1             --checkpoint-out train001/checkpoint-stage2
+
+      - name: Print comparison
+        run: |
+          python3 - <<'PY'
+          import json
+          r=json.load(open("results/train001-stage2.json"))
+          b=r["evaluation_before_stage"]
+          a=r["evaluation_after_stage"]
+          print("CPU:", r["runner"]["cpu_model"])
+          print("global_step:", r["global_step"])
+          print("train tok/s:", r["train_tokens_per_second"])
+          print("loss first -> last:", r["first_loss"], "->", r["last_loss"])
+          print("resume-before exact schema:", b["exact_schema_rate"])
+          print("resume-after exact schema:", a["exact_schema_rate"])
+          print("checkpoint bytes:", r["checkpoint_bytes"])
+          PY
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train001-stage2-a${{ github.run_attempt }}
+          path: |
+            train001/checkpoint-stage2
+            results/train001-stage2.json
+          if-no-files-found: error
+          retention-days: 7
