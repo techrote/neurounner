@@ -7,6 +7,23 @@ ROOT=Path(__file__).resolve().parents[1]
 CACHE=Path(os.environ.get("NEURO_CACHE",ROOT/".cache"/"neurounner"))
 RESULTS=ROOT/"results"/"babble001"
 
+PRESSURES=[
+ "paranoid scavenger; cautious, acquisitive, suspicious of repeated local patterns",
+ "reckless thrill-seeker; impulsive, novelty-hungry, attracted to motion and near-misses",
+ "ritualistic stubborn machine; orderly, persevering, repeats procedures long after they stop helping",
+ "timid social mimic; submissive, observant, copies nearby successes but startles easily",
+ "territorial miser; possessive, defensive, remembers places and resents intrusion",
+ "curious self-saboteur; investigates anomalies even when prior investigation went badly",
+ "patient ambusher; low sociability, high persistence, waits too long then commits abruptly",
+ "compulsive helper; social, over-attentive, interferes with nearby actors whether wanted or not",
+ "resentful memory-keeper; slow to forgive pushes, blocks and failed interactions",
+ "chaotic opportunist; flighty, fast-switching, exploits temporary openings without planning",
+ "orderly anxious caretaker; cautious, tidies local disorder and panics when routines are broken",
+ "dreamy inertia-prone obsessive; apathetic until one stimulus captures attention, then fixates excessively"
+]
+
+REQUIRED={"theme","system_prompt","attitude_guide","content_guide","mechanical_motif","interesting_failure_flavor"}
+
 def load_env(p):
     out={}
     for raw in p.read_text().splitlines():
@@ -20,97 +37,75 @@ def cpu_model():
             return line.split(":",1)[1].strip()
     return "unknown"
 
-def call(port, batch):
+def find_guide(x):
+    if isinstance(x,dict):
+        if REQUIRED.issubset(x):
+            return {k:x[k] for k in REQUIRED}
+        for v in x.values():
+            g=find_guide(v)
+            if g: return g
+    elif isinstance(x,list):
+        for v in x:
+            g=find_guide(v)
+            if g: return g
+    return None
+
+def call(port,index,pressure):
     schema={
       "type":"object",
       "properties":{
-        "guides":{
-          "type":"array","minItems":4,"maxItems":4,
-          "items":{
-            "type":"object",
-            "properties":{
-              "theme":{"type":"string"},
-              "system_prompt":{"type":"string"},
-              "attitude_guide":{"type":"string"},
-              "content_guide":{"type":"string"},
-              "mechanical_motif":{"type":"string"},
-              "interesting_failure_flavor":{"type":"string"}
-            },
-            "required":["theme","system_prompt","attitude_guide","content_guide","mechanical_motif","interesting_failure_flavor"],
-            "additionalProperties":False
-          }
-        }
+        "theme":{"type":"string"},
+        "system_prompt":{"type":"string"},
+        "attitude_guide":{"type":"string"},
+        "content_guide":{"type":"string"},
+        "mechanical_motif":{"type":"string"},
+        "interesting_failure_flavor":{"type":"string"}
       },
-      "required":["guides"],"additionalProperties":False
+      "required":sorted(REQUIRED),"additionalProperties":False
     }
-    prompt=f"""Generate exactly four highly differentiated prompt-guide packets for a tiny chaotic model called Sprocket.
-These guides will make Sprocket babble raw personality/temperament material for later dataset compilation.
+    prompt=f"""Create ONE prompt-guide packet for a tiny chaotic model called Sprocket.
+Guide index {index+1}/12. Temperament pressure: {pressure}.
 
-Batch {batch}. Favor strange embodied temperaments over generic assistant personas.
-Vary axes aggressively: cautious/reckless, territorial/social, ritualistic/opportunistic, patient/impulsive,
-paranoid/trusting, stubborn/flighty, acquisitive/avoidant, curious/apathetic, submissive/dominant.
+The packet exists to make Sprocket babble raw personality/temperament material for later training-data compilation.
+Do not make a polished assistant persona. Favor embodied habits, local memories, obsessions, irrational biases,
+physical reactions, contradictory urges and interesting failure modes.
 
-For each guide:
-- system_prompt: short role pressure for Sprocket; do not ask for polished JSON.
-- attitude_guide: emotional/temperamental cadence and biases.
-- content_guide: what kinds of embodied habits, local memories, obsessions, failures, motives and physical reactions to babble about.
-- mechanical_motif: one physical/local-state motif to keep returning to.
-- interesting_failure_flavor: the kind of broken/emergent behavior worth preserving.
-Do not imitate named fictional characters or living authors. Do not make them generic helpful assistants."""
+system_prompt: short role pressure for Sprocket, not JSON instructions.
+attitude_guide: emotional/temperamental cadence and biases.
+content_guide: kinds of physical habits, local memories, motives and reactions it should babble about.
+mechanical_motif: one recurring local-state/physical motif.
+interesting_failure_flavor: broken/emergent behavior worth preserving.
+Do not imitate named fictional characters or living authors. Keep every field concise."""
     body={
-      "model":"local",
-      "messages":[{"role":"user","content":prompt}],
-      "max_tokens":1100,
-      "temperature":0.95,
-      "top_p":0.95,
-      "seed":20261024+batch,
-      "response_format":{"type":"json_schema","schema":schema},
-      "stream":False,
+      "model":"local","messages":[{"role":"user","content":prompt}],
+      "max_tokens":520,"temperature":0.9,"top_p":0.95,"seed":20261024+index,
+      "response_format":{"type":"json_schema","schema":schema},"stream":False,
       "chat_template_kwargs":{"enable_thinking":False}
     }
     req=urllib.request.Request(f"http://127.0.0.1:{port}/v1/chat/completions",
       data=json.dumps(body).encode(),headers={"Content-Type":"application/json"},method="POST")
     t0=time.monotonic()
-    with urllib.request.urlopen(req,timeout=600) as r:
-        payload=json.loads(r.read())
+    with urllib.request.urlopen(req,timeout=420) as r: payload=json.loads(r.read())
     elapsed=time.monotonic()-t0
     text=payload["choices"][0]["message"].get("content") or ""
+    RESULTS.mkdir(parents=True,exist_ok=True)
+    (RESULTS/f"guide-{index+1:02d}-raw.txt").write_text(text+"\n")
     a,b=text.find("{"),text.rfind("}")
-    if a<0 or b<=a: raise RuntimeError(text)
-    raw_path=RESULTS/f"guide-batch-{batch}-raw.txt"
-    raw_path.write_text(text+"\n")
-    parsed=json.loads(text[a:b+1])
-    required={"theme","system_prompt","attitude_guide","content_guide","mechanical_motif","interesting_failure_flavor"}
-    found=[]
-    def walk(x):
-        if isinstance(x,dict):
-            if required.issubset(x.keys()):
-                found.append({k:x[k] for k in required})
-            for v in x.values():
-                walk(v)
-        elif isinstance(x,list):
-            for v in x:
-                walk(v)
-    walk(parsed)
-    # De-duplicate exact guide objects while preserving order.
-    unique=[]
-    seen=set()
-    for g in found:
-        key=json.dumps(g,sort_keys=True,ensure_ascii=False)
-        if key not in seen:
-            seen.add(key); unique.append(g)
-    if len(unique) < 4:
-        raise RuntimeError(f"batch {batch}: found only {len(unique)} complete guide objects; raw saved to {raw_path}")
-    return unique[:4],elapsed,payload.get("usage") or {}
+    if a<0 or b<=a: raise RuntimeError(f"guide {index+1}: no JSON object")
+    try:
+        parsed=json.loads(text[a:b+1])
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"guide {index+1}: invalid JSON: {e}") from e
+    guide=find_guide(parsed)
+    if not guide: raise RuntimeError(f"guide {index+1}: complete six-field guide not found")
+    return guide,elapsed,payload.get("usage") or {}
 
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument("model"); args=ap.parse_args()
     env=load_env(CACHE/"paths.env"); server=Path(env["LLAMA_SERVER"])
-    port=18800
-    log=(RESULTS/"guide-server.log")
-    RESULTS.mkdir(parents=True,exist_ok=True)
-    fh=log.open("w")
-    proc=subprocess.Popen([str(server),"-m",str(Path(args.model).resolve()),"--host","127.0.0.1","--port",str(port),"-t","4","-c","8192"],
+    port=18800; RESULTS.mkdir(parents=True,exist_ok=True)
+    log=RESULTS/"guide-server.log"; fh=log.open("w")
+    proc=subprocess.Popen([str(server),"-m",str(Path(args.model).resolve()),"--host","127.0.0.1","--port",str(port),"-t","4","-c","4096"],
       stdout=fh,stderr=subprocess.STDOUT,text=True)
     t0=time.monotonic()
     try:
@@ -124,18 +119,15 @@ def main():
         time.sleep(.25)
       startup=time.monotonic()-t0
       all_guides=[]; calls=[]
-      for batch in range(3):
-        guides,elapsed,usage=call(port,batch)
-        calls.append({"batch":batch,"elapsed_seconds":elapsed,"usage":usage})
-        for g in guides:
-          g=dict(g)
-          g["guide_id"]=f"G{len(all_guides)+1:02d}"
-          all_guides.append(g)
-      record={
-        "experiment":"BABBLE-001","stage":"guides",
+      for index,pressure in enumerate(PRESSURES):
+        g,elapsed,usage=call(port,index,pressure)
+        g["guide_id"]=f"G{index+1:02d}"
+        g["orchestrator_pressure"]=pressure
+        all_guides.append(g)
+        calls.append({"guide_id":g["guide_id"],"elapsed_seconds":elapsed,"usage":usage})
+      record={"experiment":"BABBLE-001","stage":"guides",
         "runner":{"cpu_model":cpu_model(),"cpu_count":os.cpu_count(),"platform":platform.platform()},
-        "startup_seconds":startup,"calls":calls,"guides":all_guides
-      }
+        "startup_seconds":startup,"calls":calls,"guides":all_guides}
       (RESULTS/"guides.json").write_text(json.dumps(record,indent=2,ensure_ascii=False)+"\n")
       print(json.dumps(record,indent=2,ensure_ascii=False))
     finally:
