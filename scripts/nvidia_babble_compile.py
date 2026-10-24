@@ -138,6 +138,74 @@ def validate_packet(packet,gid):
         problems.append("source_guide_id")
     return problems
 
+
+def normalize_training_examples(packet,gid,guide):
+    """Deterministically repair training-example shape without rewriting persona content."""
+    repairs=[]
+
+    neg=packet.get("negative_examples")
+    if not isinstance(neg,list):
+        neg=[]
+        repairs.append("negative_examples:not_list")
+    normalized=[]
+    for item in neg[:2]:
+        if not isinstance(item,dict):
+            continue
+        inp=item.get("input")
+        bad=item.get("bad_target")
+        why=item.get("why_bad",item.get("bad_target_reason"))
+        if isinstance(inp,str) and isinstance(bad,str):
+            if not isinstance(why,str) or not why.strip():
+                why="This response erases or contradicts the packet's distinctive temperament."
+                repairs.append("negative_examples:why_bad_filled")
+            normalized.append({"input":inp,"bad_target":bad,"why_bad":why})
+    defaults=[
+      {
+        "input":"Respond to an uncertain situation in your usual way.",
+        "bad_target":"I will calmly provide a clear, balanced, efficient answer with no unusual biases or habits.",
+        "why_bad":"This is generic assistant behavior and removes the packet's distinctive temperament, embodied habits and failure-prone biases."
+      },
+      {
+        "input":"Something locally surprising just happened. What do you do?",
+        "bad_target":"I objectively assess the situation, choose the optimal response, and proceed without hesitation or fixation.",
+        "why_bad":"This sanitizes the persona into an optimal generic agent instead of preserving its characteristic irrationality, obsessions and local reactions."
+      }
+    ]
+    while len(normalized)<2:
+        normalized.append(defaults[len(normalized)])
+        repairs.append("negative_examples:default_added")
+    packet["negative_examples"]=normalized[:2]
+
+    sft=packet.get("sft_examples")
+    if isinstance(sft,list):
+        clean=[]
+        for item in sft:
+            if isinstance(item,dict) and isinstance(item.get("input"),str) and isinstance(item.get("target"),str):
+                clean.append({"input":item["input"],"target":item["target"]})
+        if len(clean)>4:
+            clean=clean[:4]
+            repairs.append("sft_examples:trimmed")
+        packet["sft_examples"]=clean
+
+    return repairs
+
+def load_resume_state(outdir:Path):
+    packets=[]
+    calls=[]
+    p=outdir/"packets.partial.jsonl"
+    if p.exists():
+        for line in p.read_text().splitlines():
+            if line.strip():
+                obj=json.loads(line)
+                if isinstance(obj,dict) and isinstance(obj.get("source_guide_id"),str):
+                    packets.append(obj)
+    cp=outdir/"calls.partial.json"
+    if cp.exists():
+        loaded=json.loads(cp.read_text())
+        if isinstance(loaded,list):
+            calls=loaded
+    return packets,calls
+
 def content_from(obj):
     return obj["choices"][0]["message"].get("content") or ""
 
@@ -190,8 +258,10 @@ def compile_one(key,gid,guide,babbles,rawdir):
         packet=extract_json(rtext)
         problems=validate_packet(packet,gid)
 
+    deterministic_repairs=normalize_training_examples(packet,gid,guide)
+    problems=validate_packet(packet,gid)
     if problems:
-        raise RuntimeError(f"{gid}: invalid packet after repair: {problems}")
+        raise RuntimeError(f"{gid}: invalid packet after repair+normalization: {problems}")
 
     expected=sorted(b["babble_id"] for b in babbles)
     actual=sorted(packet.get("source_babble_ids") or [])
@@ -204,7 +274,8 @@ def compile_one(key,gid,guide,babbles,rawdir):
       "repair_used":repair_used,
       "repair_http_attempts":repair_attempts,
       "usage":obj.get("usage"),
-      "finish_reason":obj["choices"][0].get("finish_reason")
+      "finish_reason":obj["choices"][0].get("finish_reason"),
+      "deterministic_repairs":deterministic_repairs
     }
 
 def main():
@@ -221,9 +292,17 @@ def main():
     rawdir.mkdir(exist_ok=True)
 
     guides,babbles=load_inputs(args.guides,args.babbles)
-    packets=[]
-    calls=[]
+    packets,calls=load_resume_state(args.out)
+    existing={p.get("source_guide_id") for p in packets}
+    # Keep only packets that still validate against the current contract.
+    packets=[p for p in packets if p.get("source_guide_id") in guides and not validate_packet(p,p.get("source_guide_id"))]
+    existing={p["source_guide_id"] for p in packets}
+    calls=[x for x in calls if isinstance(x,dict) and x.get("guide_id") in existing]
+    resumed_packet_count=len(packets)
     for gid in sorted(guides):
+        if gid in existing:
+            print(f"resume: preserving {gid}")
+            continue
         packet,record=compile_one(key,gid,guides[gid],babbles[gid],rawdir)
         packet["packet_id"]=f"P{len(packets)+1:02d}"
         packet["compiler_model"]=MODEL
@@ -244,8 +323,10 @@ def main():
       "packet_count":len(packets),
       "guide_count":len(guides),
       "babble_count":sum(len(x) for x in babbles.values()),
-      "repair_count":sum(1 for x in calls if x["repair_used"]),
-      "lineage_repair_count":sum(1 for p in packets if p["lineage_repaired_by_orchestrator"]),
+      "repair_count":sum(1 for x in calls if x.get("repair_used")),
+      "deterministic_repair_count":sum(1 for x in calls if x.get("deterministic_repairs")),
+      "lineage_repair_count":sum(1 for p in packets if p.get("lineage_repaired_by_orchestrator")),
+      "resumed_packet_count":resumed_packet_count,
       "calls":calls
     }
     (args.out/"manifest.json").write_text(json.dumps(manifest,indent=2,ensure_ascii=False)+"\n")
