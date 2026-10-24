@@ -39,3 +39,19 @@ The complete initial suite passed on GitHub-hosted four-vCPU Linux runners at so
 | 3 × Sprocket + LFM ring | 649 tokens in 21.622 s — 30.02 tok/s across eight turns |
 
 The four-process ring kept all models resident simultaneously with large memory headroom. See [the initial hosted experiment record](docs/INITIAL_EXPERIMENTS.md) for outputs, memory observations, artifact hashes, and next measurements.
+
+
+## Larger-model qualification
+
+The second hosted suite passed at source `f7d6d08b555498fb9fc1b24ba0bba8ea0d92d7e8`. It added a three-Sprocket → LFM structured foundry experiment and qualified six CPU GGUF candidates.
+
+| Model | llama-bench tg64 | Server RSS | First assessment |
+|---|---:|---:|---|
+| LFM2.5-VL-450M | 129.54 t/s | 0.447 GiB | extremely cheap text worker; weak first kernel |
+| LFM2.5-1.2B-Instruct | 63.98 t/s | 1.299 GiB | current routine selector/compiler |
+| LFM2.5-1.2B-Thinking | 29.43 t/s | 1.260 GiB | viable but reasoning-budget limited |
+| LFM2.5-8B-A1B | 31.52 t/s | 8.611 GiB | strong candidate for periodic deeper review |
+| Qwen3.5-2B | 23.95 t/s | 2.013 GiB | viable alternate critic |
+| Qwen3.5-4B | 6.59 t/s | 5.533 GiB | much slower; potentially useful for diversity/quality probes |
+
+See [the second hosted experiment record](docs/SECOND_EXPERIMENTS.md) for exact outputs, caveats, model pins and artifact hashes.
