@@ -36,6 +36,14 @@ jobs:
           run-id: 40113646404
           github-token: ${{ github.token }}
 
+      - name: Recover six successful compiled packets
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: babble001-nvidia-compiled-resume
+          path: results/babble001/compiled
+          run-id: 40114211376
+          github-token: ${{ github.token }}
+
       - name: Verify recovered population
         run: |
           python3 - <<'PY'
@@ -49,6 +57,11 @@ jobs:
           assert len({b["babble_id"] for b in babbles})==48
           print("verified guides:",len(guides))
           print("verified babbles:",len(babbles))
+          partial="results/babble001/compiled/packets.partial.jsonl"
+          packets=[json.loads(x) for x in open(partial) if x.strip()]
+          assert len(packets)==6, len(packets)
+          assert {p["source_guide_id"] for p in packets}=={f"G{i:02d}" for i in range(1,7)}
+          print("verified resumable compiled packets:",len(packets))
           PY
 
       - name: Compile one personality packet per guide with NVIDIA
@@ -69,6 +82,8 @@ jobs:
           print("raw babbles:",m["babble_count"])
           print("compiled packets:",m["packet_count"])
           print("packet repair calls:",m["repair_count"])
+          print("deterministic repairs:",m["deterministic_repair_count"])
+          print("resumed packets:",m["resumed_packet_count"])
           print("lineage repairs:",m["lineage_repair_count"])
           for c in m["calls"]:
               print(c["guide_id"],"repair",c["repair_used"],"usage",c.get("usage"))
