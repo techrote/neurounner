@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "experiment": "TRAIN-002b",
+  "base_model": "dotlabs/void.1",
+  "base_revision": "9c2be5087772867d45961abd11f6b35110617563",
+  "dataset": "experiments/train-001/kernel_compiler_dataset.json",
+  "steps": 48,
+  "eval_max_new_tokens": 768,
+  "lanes": [
+    {"id":"ctrl-a","role":"control","seed":20261024,"lr":0.0008,"lora_r":8,"lora_alpha":16,"lora_dropout":0.05,"material":"baseline"},
+    {"id":"ctrl-b","role":"control","seed":20261117,"lr":0.0008,"lora_r":8,"lora_alpha":16,"lora_dropout":0.05,"material":"baseline"},
+    {"id":"lr-low","role":"perturbation","factor":"learning_rate","seed":20261024,"lr":0.0004,"lora_r":8,"lora_alpha":16,"lora_dropout":0.05,"material":"baseline"},
+    {"id":"lr-high","role":"perturbation","factor":"learning_rate","seed":20261024,"lr":0.0012,"lora_r":8,"lora_alpha":16,"lora_dropout":0.05,"material":"baseline"},
+    {"id":"rank4","role":"perturbation","factor":"lora_capacity","seed":20261024,"lr":0.0008,"lora_r":4,"lora_alpha":8,"lora_dropout":0.05,"material":"baseline"},
+    {"id":"rank16","role":"perturbation","factor":"lora_capacity","seed":20261024,"lr":0.0008,"lora_r":16,"lora_alpha":32,"lora_dropout":0.05,"material":"baseline"},
+    {"id":"dropout0","role":"perturbation","factor":"lora_dropout","seed":20261024,"lr":0.0008,"lora_r":8,"lora_alpha":16,"lora_dropout":0.0,"material":"baseline"},
+    {"id":"failure-weighted","role":"perturbation","factor":"training_material","seed":20261024,"lr":0.0008,"lora_r":8,"lora_alpha":16,"lora_dropout":0.05,"material":"failure_weighted","material_repeat_indices":[2,3,5,6,7,8,11,18]}
+  ]
+}
