@@ -1459,6 +1459,7 @@ def provider(args: argparse.Namespace) -> None:
         )
         plan_path = out / "derived" / "edit-plans" / f"part-{part_id}.json"
         stage_id = f"m5-render-{part_id}-focused"
+        existing_guard_raw = out / "raw" / f"{stage_id}-guard-repair.json"
         existing_retry_raw = out / "raw" / f"{stage_id}-retry.json"
         existing_render_raw = out / "raw" / f"{stage_id}.json"
 
@@ -1535,7 +1536,9 @@ def provider(args: argparse.Namespace) -> None:
             },
         ]
 
-        recovered_render = existing_retry_raw if existing_retry_raw.exists() else (
+        recovered_render = (
+            existing_guard_raw if existing_guard_raw.exists() else
+            existing_retry_raw if existing_retry_raw.exists() else
             existing_render_raw if existing_render_raw.exists() else None
         )
         if recovered_render is not None:
@@ -1614,11 +1617,56 @@ def provider(args: argparse.Namespace) -> None:
             "data stream",
             "reactor core",
             "hologram",
+            "optical sensor",
+            "logic gate",
         )
-        if any(term in lowered for term in forbidden):
-            raise RuntimeError(
-                f"M5 focused part {part_id} retained forbidden generic/lore phrase"
+        matched_forbidden = [term for term in forbidden if term in lowered]
+        if matched_forbidden:
+            guard_messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "Repair one STORY-001 section without changing its scene boundary. Remove the "
+                        "listed forbidden generic/lore concepts and replace any explanatory machine "
+                        "internals with directly observable sound, motion, heat, objects and consequences. "
+                        "Return first-person story prose only; do not add new proper nouns or backstory."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"PART {part_id}/08 — {part_title}. Aim for {target_lo}-{min(430, target_hi + 40)} words.\n"
+                        f"Forbidden concepts present: {', '.join(matched_forbidden)}.\n\n"
+                        "SECTION-SPECIFIC REPAIR:\n" + repair_brief
+                        + "\n\nGLOBAL CONTRACT:\n" + global_edit_contract
+                        + "\n\nCURRENT RENDER:\n" + edited
+                    ),
+                },
+            ]
+            edited, _ = provider_call(
+                cfg=cfg,
+                key=key,
+                stage_id=f"{stage_id}-guard-repair",
+                model=models["editor"],
+                messages=guard_messages,
+                max_tokens=800,
+                temperature=0.18,
+                out=out,
             )
+            count = word_count(edited)
+            if not soft_min <= count <= soft_max:
+                raise RuntimeError(
+                    f"M5 guard-repaired part {part_id} length {count} outside sanity range "
+                    f"{soft_min}-{soft_max}"
+                )
+            lowered = edited.lower()
+            remaining_forbidden = [term for term in forbidden if term in lowered]
+            if remaining_forbidden:
+                raise RuntimeError(
+                    f"M5 focused part {part_id} retained forbidden concepts after guard repair: "
+                    + ", ".join(remaining_forbidden)
+                )
+
         edited_parts.append(edited)
 
     edited_parts = rebalance(
