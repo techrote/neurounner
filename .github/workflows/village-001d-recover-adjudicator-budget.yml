@@ -1,0 +1,81 @@
+name: Recover VILLAGE-001D after adjudicator budget fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/village-001d-recover-adjudicator-budget.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: neurounner-village-001d-adjudicator-budget-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      SOURCE_RUN_ID: '40230016547'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Require terminal source run and full artifact custody
+        run: |
+          status=$(gh run view "$SOURCE_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json status \
+            --jq '.status')
+          echo "source status: $status"
+          test "$status" = "completed"
+
+          feedback_count=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" \
+            --jq '[.artifacts[].name | select(startswith("village001d-feedback-"))] | length')
+          pair_count=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" \
+            --jq '[.artifacts[].name | select(startswith("village001d-pairs-"))] | length')
+
+          echo "feedback artifacts: $feedback_count"
+          echo "pair artifacts: $pair_count"
+          test "$feedback_count" -eq 36
+          test "$pair_count" -eq 36
+
+      - name: Verify current hardening on main
+        env:
+          PYTHONPATH: scripts
+        run: |
+          python3 - <<'PY'
+          from village_001d_compile_pairs import adjudicator_token_budget
+          from village_001d_compare import parse_reviews_partial
+
+          pref={"pair_generation":{"adjudicator_max_tokens":6144}}
+          assert adjudicator_token_budget(pref,1)==2048
+          assert adjudicator_token_budget(pref,4)==3072
+          assert callable(parse_reviews_partial)
+          print("adjudicator budget + compare salvage present")
+          PY
+
+      - name: Verify redundant automatic D trigger is terminal
+        run: |
+          status=$(gh run view 40230237679 \
+            --repo "$GITHUB_REPOSITORY" \
+            --json status,conclusion \
+            --jq '[.status, (.conclusion // "")] | @tsv')
+          echo "redundant trigger: $status"
+          test "$status" = $'completed\tcancelled'
+
+      - name: Dispatch recovered D campaign
+        run: |
+          gh workflow run village-001d-preference.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main \
+            -f resume_run_id="$SOURCE_RUN_ID"
+          echo "Dispatched D recovery from run $SOURCE_RUN_ID."
