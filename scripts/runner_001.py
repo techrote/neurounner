@@ -11,8 +11,6 @@ import statistics
 import subprocess
 import sys
 import time
-import urllib.error
-import urllib.request
 import zlib
 from pathlib import Path
 from typing import Any
@@ -21,8 +19,6 @@ ROOT = Path(__file__).resolve().parents[1]
 DATASET = ROOT / "experiments" / "train-001" / "kernel_compiler_dataset.json"
 DEFAULT_LOCAL_MODEL = "HuggingFaceTB/SmolLM2-135M-Instruct"
 DEFAULT_LOCAL_REVISION = "12fd25f77366fa6b3b4b768ec3050bf629380bac"
-DEFAULT_GITHUB_MODEL = "openai/gpt-4.1-mini"
-GITHUB_MODELS_ENDPOINT = "https://models.github.ai/inference/chat/completions"
 SEED = 20261025
 
 
@@ -57,6 +53,15 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: f.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def canonical_json_bytes(obj: Any) -> bytes:
+    return json.dumps(
+        obj,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
 
 
 def machine_metadata() -> dict[str, Any]:
@@ -260,7 +265,7 @@ def local_model_bench(
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         revision=revision,
-        torch_dtype=torch.float32,
+        dtype=torch.float32,
     )
     model.eval()
     load_seconds = time.perf_counter() - t0
@@ -275,10 +280,12 @@ def local_model_bench(
     ids = tokenizer.apply_chat_template(
         messages, tokenize=True, add_generation_prompt=True, return_tensors="pt"
     )
+    attention_mask = torch.ones_like(ids)
 
     with torch.inference_mode():
         _ = model.generate(
             ids,
+            attention_mask=attention_mask,
             max_new_tokens=8,
             do_sample=False,
             pad_token_id=tokenizer.eos_token_id,
@@ -292,6 +299,7 @@ def local_model_bench(
             t1 = time.perf_counter()
             out = model.generate(
                 ids,
+                attention_mask=attention_mask,
                 max_new_tokens=48,
                 do_sample=False,
                 pad_token_id=tokenizer.eos_token_id,
@@ -384,102 +392,30 @@ def local_model_bench(
     }
 
 
-def github_models_bench(token: str | None, model_id: str) -> dict[str, Any]:
-    if not token:
-        return {"status": "skipped", "reason": "GITHUB_MODELS_TOKEN not present", "model": model_id}
-
-    prompt = (
-        "You are a terse Neurounner critic. Return exactly one JSON object with keys "
-        "risk, useful_signal, next_test. Assess whether an SLM benchmark that changes "
-        "both operating system and CPU architecture can prove an OS-only causal effect."
-    )
-    rows = []
-    for i in range(3):
-        payload = {
-            "model": model_id,
-            "messages": [
-                {"role": "system", "content": "Answer compactly and deterministically."},
-                {"role": "user", "content": prompt},
-            ],
-            "temperature": 0,
-            "max_tokens": 64,
-        }
-        req = urllib.request.Request(
-            GITHUB_MODELS_ENDPOINT,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-            method="POST",
-        )
-        t0 = time.perf_counter()
-        try:
-            with urllib.request.urlopen(req, timeout=120) as response:
-                raw = response.read()
-                status_code = response.status
-            elapsed = time.perf_counter() - t0
-            obj = json.loads(raw)
-            usage = obj.get("usage") or {}
-            rows.append(
-                {
-                    "attempt": i + 1,
-                    "status_code": status_code,
-                    "seconds": elapsed,
-                    "prompt_tokens": usage.get("prompt_tokens"),
-                    "completion_tokens": usage.get("completion_tokens"),
-                    "total_tokens": usage.get("total_tokens"),
-                    "response_id": obj.get("id"),
-                }
-            )
-        except urllib.error.HTTPError as exc:
-            elapsed = time.perf_counter() - t0
-            body = exc.read().decode("utf-8", errors="replace")[:2000]
-            return {
-                "status": "unavailable",
-                "model": model_id,
-                "endpoint": GITHUB_MODELS_ENDPOINT,
-                "attempts_completed": len(rows),
-                "error": f"HTTP {exc.code}: {body}",
-                "failed_attempt_seconds": elapsed,
-            }
-        except Exception as exc:
-            elapsed = time.perf_counter() - t0
-            return {
-                "status": "unavailable",
-                "model": model_id,
-                "endpoint": GITHUB_MODELS_ENDPOINT,
-                "attempts_completed": len(rows),
-                "error": f"{type(exc).__name__}: {exc}",
-                "failed_attempt_seconds": elapsed,
-            }
-
-    latencies = [r["seconds"] for r in rows]
+def github_models_status() -> dict[str, Any]:
     return {
-        "status": "success",
-        "model": model_id,
-        "endpoint": GITHUB_MODELS_ENDPOINT,
-        "runs": rows,
-        "mean_seconds": statistics.fmean(latencies),
-        "median_seconds": statistics.median(latencies),
-        "min_seconds": min(latencies),
-        "max_seconds": max(latencies),
+        "status": "retired",
+        "retired_date": "2026-07-30",
+        "reason": (
+            "GitHub Models playground, catalog, inference API, and BYOK were "
+            "fully retired by GitHub on 2026-07-30. No remote throughput number "
+            "is fabricated from the retired endpoint."
+        ),
+        "docs": "https://docs.github.com/en/github-models",
     }
-
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--lane", required=True)
     ap.add_argument("--local-model", default=DEFAULT_LOCAL_MODEL)
     ap.add_argument("--local-revision", default=DEFAULT_LOCAL_REVISION)
-    ap.add_argument("--github-model", default=DEFAULT_GITHUB_MODEL)
     ap.add_argument("--output", type=Path, required=True)
     args = ap.parse_args()
 
     os.environ["RUNNER001_LANE"] = args.lane
-    dataset_bytes = DATASET.read_bytes()
-    dataset = json.loads(dataset_bytes)
+    dataset_raw_bytes = DATASET.read_bytes()
+    dataset = json.loads(dataset_raw_bytes)
+    dataset_bytes = canonical_json_bytes(dataset)
 
     import psutil
     import torch
@@ -492,10 +428,11 @@ def main() -> int:
         "source": {
             "issue": 51,
             "dataset": str(DATASET.relative_to(ROOT)).replace("\\", "/"),
-            "dataset_sha256": sha256_file(DATASET),
+            "dataset_raw_sha256": sha256_file(DATASET),
+            "dataset_canonical_sha256": hashlib.sha256(dataset_bytes).hexdigest(),
+            "dataset_canonical_bytes": len(dataset_bytes),
             "local_model": args.local_model,
             "local_revision": args.local_revision,
-            "github_model": args.github_model,
         },
         "machine": machine_metadata(),
         "benchmarks": {},
@@ -508,9 +445,7 @@ def main() -> int:
     result["benchmarks"]["local_model"] = local_model_bench(
         dataset, args.local_model, args.local_revision, threads
     )
-    result["benchmarks"]["github_models"] = github_models_bench(
-        os.environ.get("GITHUB_MODELS_TOKEN"), args.github_model
-    )
+    result["benchmarks"]["github_models"] = github_models_status()
     result["finished_unix"] = time.time()
     result["wall_seconds"] = result["finished_unix"] - started
 
