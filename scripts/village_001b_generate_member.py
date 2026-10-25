@@ -283,8 +283,8 @@ Return exactly:
 
 Rules:
 - exactly 20 rows and exactly the requested surface quotas;
-- trait_refs: 1-5 IDs from SOURCE.trait_catalog;
-- seed_refs: 0-3 valid S* IDs only;
+- trait_refs: 1-5 UNIQUE IDs from SOURCE.trait_catalog;
+- seed_refs: 0-3 UNIQUE valid S* IDs only;
 - inputs must be self-contained, varied and not duplicate ancestral/prior inputs;
 - targets should usually be 1-5 sentences and under about 120 words;
 - behavior must remain identifiable if wording/style is summarized away;
@@ -363,8 +363,8 @@ Required surface counts:
 
 Return JSON only as {{"examples":[...]}}.
 Every row requires: surface, input, target, generic_bad_target, why_bad, trait_refs, seed_refs.
-- trait_refs: 1-5 IDs from SOURCE.trait_catalog;
-- seed_refs: 0-3 valid S* IDs only;
+- trait_refs: 1-5 UNIQUE IDs from SOURCE.trait_catalog;
+- seed_refs: 0-3 UNIQUE valid S* IDs only;
 - every input must be fresh and distinct from all forbidden inputs below;
 - targets should usually be 1-5 sentences and under about 120 words;
 - preserve behavior that survives style-neutral summarization;
@@ -1055,12 +1055,14 @@ ROWS:
         if (
             not isinstance(traits, list)
             or not 1 <= len(traits) <= 5
+            or len(traits) != len(set(traits))
             or any(x not in catalog_ids for x in traits)
         ):
             raise ValueError(f"{row['example_id']}:trait_refs")
         if (
             not isinstance(seeds, list)
             or len(seeds) > 3
+            or len(seeds) != len(set(seeds))
             or any(x not in seed_ids for x in seeds)
         ):
             raise ValueError(f"{row['example_id']}:seed_refs")
