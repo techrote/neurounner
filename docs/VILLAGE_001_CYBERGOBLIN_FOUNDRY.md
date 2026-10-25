@@ -170,9 +170,25 @@ For each member, combine:
 - three raw Sprocket feedback records;
 - deterministic scenario/member lineage.
 
-Produce approximately **60 chosen/rejected preference pairs per member**.
+Produce exactly **60 chosen/rejected preference pairs per member**:
 
-The chosen target must improve the behavior while retaining odd lineage-specific details. The rejected target may be the provisional answer, a genericized repair, or a deterministic negative selected by the compiler. The compiler must explain which Sprocket feedback was accepted or rejected.
+- 36 common-suite pairs: T01–T12 ×2 plus T13–T24 ×1;
+- 24 member-probe pairs: P01–P08 ×3.
+
+The chosen target must improve the behavior while retaining odd lineage-specific details. V1 compares the mutated chosen response against the **exact authoritative SFT parent response**. The cloud compiler emits only a `__PARENT__` marker for that rejected side; the orchestrator injects the parent response byte-for-byte after parsing. V2 uses a sanitized/generic rejected answer and V3 uses an over-stylized rejected answer. V2/V3 may not collapse onto the parent response.
+
+Production recovery is fail-closed but salvage-oriented:
+
+- raw provider requests/responses, including malformed and duplicate extras, remain evidence;
+- the orchestrator keeps the canonical required-ID subset and regenerates only missing, invalid, or normalized-duplicate pairs;
+- compiler and curation repair calls are bounded to at most 10 pairs per request;
+- valid rows survive malformed/truncated sibling output and are not regenerated unnecessarily;
+- critic scoring is explicitly anchored: 4 is strong for preference validity, lineage behavior and task relevance; 0 is strong for behavioral (rather than lexical) distinction on style dependence;
+- incomplete critic JSON keeps every valid review and re-scores only missing IDs in bounded batches;
+- retryable HTTP and dropped-connection failures are recorded and retried without changing provider/model identity;
+- partial pair artifacts are reusable only at validated 20-row chunk boundaries and remain bound to the member contract, parent adapter and feedback-dataset hashes.
+
+The compiler/critic/adjudicator may request repair, but quality thresholds are not relaxed during recovery.
 
 ### Stage E — 36-way preference continuation
 
