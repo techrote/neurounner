@@ -847,13 +847,58 @@ def main() -> None:
 
     complete = out / "pairs.jsonl"
     if args.resume and complete.is_file() and (out / "manifest.json").is_file():
-        validate_file(complete, member["member_id"], 60)
+        manifest = json.loads((out / "manifest.json").read_text())
+        checks = {
+            "experiment": "VILLAGE-001D",
+            "stage": "preference-pairs",
+            "member_id": member["member_id"],
+            "lineage": member["lineage"],
+            "sibling": member["sibling"],
+            "member_contract_sha256": population["member_contract_sha256"],
+            "parent_adapter_sha256": parent_sha,
+            "pair_count": int(pref["pair_generation"]["pair_count"]),
+            "compiler_model": campaign["nvidia"]["models"]["compiler"]["id"],
+            "critic_model": campaign["nvidia"]["models"]["critic"]["id"],
+            "adjudicator_model": campaign["nvidia"]["models"]["adjudicator"]["id"],
+        }
+        for key, expected in checks.items():
+            if manifest.get(key) != expected:
+                raise RuntimeError(
+                    f"resume pair manifest {key} {manifest.get(key)!r} "
+                    f"!= {expected!r}"
+                )
+        validate_file(
+            complete,
+            member["member_id"],
+            int(pref["pair_generation"]["pair_count"]),
+        )
+        complete_rows = [
+            json.loads(line)
+            for line in complete.read_text().splitlines()
+            if line.strip()
+        ]
+        for row in complete_rows:
+            provenance = row.get("provenance") or {}
+            if provenance.get("member_contract_sha256") != population[
+                "member_contract_sha256"
+            ]:
+                raise RuntimeError("resume pair member contract mismatch")
+            if provenance.get("parent_adapter_sha256") != parent_sha:
+                raise RuntimeError("resume pair parent adapter mismatch")
+            expected_feedback_ids = {
+                item["feedback_id"]
+                for item in feedback[row["scenario_id"]]
+            }
+            if set(row.get("source_feedback_ids") or []) != expected_feedback_ids:
+                raise RuntimeError(
+                    f"{row['pair_id']}: resume pair feedback lineage mismatch"
+                )
         print(
             json.dumps(
                 {
                     "member": member["member_id"],
                     "resume": "complete_artifact_reused",
-                    "pairs": 60,
+                    "pairs": len(complete_rows),
                 },
                 indent=2,
             )
@@ -877,6 +922,21 @@ def main() -> None:
         ]
         for row in accepted:
             validate_pair(row)
+            provenance = row.get("provenance") or {}
+            if provenance.get("member_contract_sha256") != population[
+                "member_contract_sha256"
+            ]:
+                raise RuntimeError("partial pair member contract mismatch")
+            if provenance.get("parent_adapter_sha256") != parent_sha:
+                raise RuntimeError("partial pair parent adapter mismatch")
+            expected_feedback_ids = {
+                item["feedback_id"]
+                for item in feedback[row["scenario_id"]]
+            }
+            if set(row.get("source_feedback_ids") or []) != expected_feedback_ids:
+                raise RuntimeError(
+                    f"{row['pair_id']}: partial pair feedback lineage mismatch"
+                )
         if len(accepted) % 20:
             raise RuntimeError("partial pair count must end at a 20-row chunk boundary")
         if (quality / "critic.partial.json").is_file():

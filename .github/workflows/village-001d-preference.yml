@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       resume_run_id:
-        description: 'Optional prior VILLAGE-001D run ID for reusable pair/training artifacts'
+        description: 'Optional prior VILLAGE-001D run ID for reusable feedback/pair/training artifacts'
         required: false
         type: string
   pull_request:
@@ -170,13 +170,33 @@ jobs:
           bash scripts/bootstrap.sh runtime
           bash scripts/bootstrap.sh sprocket
 
-      - name: Collect 96 fresh Sprocket reactions
+      - name: Recover prior feedback artifact when requested
+        if: ${{ inputs.resume_run_id != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESUME_RUN_ID: ${{ inputs.resume_run_id }}
+        run: |
+          mkdir -p "resume/${{ matrix.member }}"
+          if ! gh run download "$RESUME_RUN_ID" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --name "village001d-feedback-${{ matrix.member }}" \
+            --dir "resume/${{ matrix.member }}"; then
+            echo "No reusable feedback artifact for ${{ matrix.member }}."
+            rm -rf "resume/${{ matrix.member }}"
+          fi
+
+      - name: Collect or reuse 96 Sprocket reactions
         run: |
           mkdir -p "out/${{ matrix.member }}"
+          resume_args=()
+          if [ -d "resume/${{ matrix.member }}" ]; then
+            resume_args=(--resume "resume/${{ matrix.member }}")
+          fi
           python3 scripts/village_001d_sprocket_feedback.py \
             --config experiments/village-001/preference-config.json \
             --member "${{ matrix.member }}" \
-            --out "out/${{ matrix.member }}"
+            --out "out/${{ matrix.member }}" \
+            "${resume_args[@]}"
 
       - name: Validate feedback cardinality and parent binding
         env:
