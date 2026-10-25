@@ -619,7 +619,8 @@ def provider_call(
                 content = _strip_reasoning_wrapper(raw_content)
                 if not content:
                     raise RuntimeError(f"{stage_id}: no prose after reasoning wrapper")
-                if finish_reason == "length":
+                length_capped = finish_reason == "length"
+                if length_capped and model != cfg["local_models"]["models"]["drafter"]:
                     raise RuntimeError(f"{stage_id}: response hit max_tokens")
                 usage = obj.get("usage")
                 call = {
@@ -630,6 +631,7 @@ def provider_call(
                     "model_sha256": spec["sha256"],
                     "elapsed_seconds": elapsed,
                     "finish_reason": finish_reason,
+                    "length_capped_source": length_capped,
                     "usage": usage,
                     "raw_word_count": word_count(raw_content),
                     "derived_word_count": word_count(content),
@@ -870,81 +872,134 @@ def provider(args: argparse.Namespace) -> None:
 
     draft_parts: list[str] = []
     previous_tail = ""
+    normalizer_tokens = int(budgets.get("normalizer_segment_max_tokens", 1000))
+    incident_contract = (
+        "The complete incident remains one continuous memory: a brownout near the childhood "
+        "city-zone boundary; entry into the adjacent industrial/autofactory district; accidental "
+        "reactivation of an obsolete machine loop; a companion endangered by that loop; a failed "
+        "first rescue; an improvised scrap/signal intervention; a physical rescue-versus-line-stop "
+        "tradeoff; escape; and one unresolved sensory detail. Do not invent named institutions, "
+        "historic events, missions, prophecies, or grand backstory."
+    )
     for part_id, part_title, part_brief in part_specs:
         messages = [
             {
                 "role": "system",
                 "content": (
-                    "You are drafting exactly one contiguous section of STORY-001. The narrator is "
-                    "Sprocket. Return story prose only, no planning or commentary. Preserve tactile "
-                    "mechanical specificity, awkwardness and deliberate memory uncertainty without "
-                    "generic cyberpunk filler. Do not write later sections."
+                    "You are an upstream creative prose source for exactly one contiguous section "
+                    "of STORY-001. The narrator is Sprocket. Return first-person story prose only: "
+                    "no planning, headings, tables, scene labels, timeline, continuity map, or "
+                    "commentary. Do not restate the prompt. Stay inside this one scene and stop."
                 ),
             },
             {
                 "role": "user",
                 "content": (
-                    f"Write PART {part_id}/08, '{part_title}', at roughly 350-430 words. {part_brief}\n"
-                    "A natural scene may be shorter or longer; do not pad or truncate mechanically.\n\n"
-                    "AUTHORITATIVE STORYBOARD:\n"
-                    + storyboard
+                    f"Write PART {part_id}/08, '{part_title}', around 350-430 words. {part_brief}\n\n"
+                    "GLOBAL INCIDENT CONTRACT:\n"
+                    + incident_contract
                     + "\n\nSPROCKET SOURCE FRAGMENTS:\n"
                     + fragments
                     + (
-                        "\n\nPREVIOUS PART TAIL FOR CONTINUITY ONLY:\n" + previous_tail
+                        "\n\nPREVIOUS NORMALIZED PART TAIL FOR CONTINUITY ONLY:\n" + previous_tail
                         if previous_tail
                         else ""
                     )
                 ),
             },
         ]
-        part, _ = provider_call(
+        raw_part, raw_call = provider_call(
             cfg=cfg,
             key=key,
-            stage_id=f"m3-draft-{part_id}",
+            stage_id=f"m3-source-{part_id}",
             model=models["drafter"],
             messages=messages,
             max_tokens=segment_tokens,
             temperature=0.68,
             out=out,
         )
+
+        normalize_messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are the constraint normalizer for STORY-001. Convert noisy upstream "
+                    "creative material into one finished first-person Sprocket story section. "
+                    "Return prose only, 350-430 words. Remove headings, tables, planning language, "
+                    "storyboard/timeline recitation, generic cyberpunk filler and invented grand "
+                    "backstory. Preserve useful tactile/mechanical details and deliberate memory "
+                    "uncertainty. Keep exactly the requested event boundary and do not write later "
+                    "scenes."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Normalize PART {part_id}/08, '{part_title}'. Required beat: {part_brief}\n\n"
+                    "GLOBAL INCIDENT CONTRACT:\n"
+                    + incident_contract
+                    + "\n\nSPROCKET SOURCE FRAGMENTS:\n"
+                    + fragments
+                    + (
+                        "\n\nPREVIOUS FINISHED PART TAIL FOR CONTINUITY ONLY:\n" + previous_tail
+                        if previous_tail
+                        else ""
+                    )
+                    + "\n\nUPSTREAM STORYTELLER MATERIAL"
+                    + (" (TOKEN-CAPPED; salvage selectively)" if raw_call.get("length_capped_source") else "")
+                    + ":\n"
+                    + raw_part
+                ),
+            },
+        ]
+        part, _ = provider_call(
+            cfg=cfg,
+            key=key,
+            stage_id=f"m3-normalize-{part_id}",
+            model=models["editor"],
+            messages=normalize_messages,
+            max_tokens=normalizer_tokens,
+            temperature=0.38,
+            out=out,
+        )
         count = word_count(part)
         if not soft_min <= count <= soft_max:
             direction = (
-                "Tighten repeated reflection and description while preserving every event."
+                "Tighten repeated reflection and description while preserving every physical event."
                 if count > soft_max
-                else "Expand with concrete physical action and causal connective tissue already implied."
+                else "Expand only with concrete physical action, sensory continuity and causal connective tissue."
             )
             repair_messages = [
                 {
                     "role": "system",
                     "content": (
-                        "Repair one STORY-001 section that is implausibly short or long. Return the "
-                        "complete section only; preserve its event boundary and do not add a new scene."
+                        "Repair one finished STORY-001 section. Return first-person story prose only, "
+                        "350-430 words. Preserve its event boundary, remove meta/structural language, "
+                        "and do not add a new scene."
                     ),
                 },
                 {
                     "role": "user",
                     "content": (
-                        f"The section is {count} words. {direction} Aim for 350-430 words.\n\nSECTION:\n"
-                        + part
+                        f"The section is {count} words. {direction}\n\n"
+                        f"REQUIRED BEAT: {part_brief}\n\nSECTION:\n" + part
                     ),
                 },
             ]
             part, _ = provider_call(
                 cfg=cfg,
                 key=key,
-                stage_id=f"m3-draft-{part_id}-safety-repair",
-                model=models["drafter"],
+                stage_id=f"m3-normalize-{part_id}-safety-repair",
+                model=models["editor"],
                 messages=repair_messages,
-                max_tokens=segment_tokens,
-                temperature=0.35,
+                max_tokens=normalizer_tokens,
+                temperature=0.25,
                 out=out,
             )
             count = word_count(part)
         if not soft_min <= count <= soft_max:
             raise RuntimeError(
-                f"m3 part {part_id} safety length {count} outside {soft_min}-{soft_max}"
+                f"m3 part {part_id} normalized length {count} outside {soft_min}-{soft_max}"
             )
         draft_parts.append(part)
         previous_tail = " ".join(part.split()[-100:])
@@ -952,10 +1007,13 @@ def provider(args: argparse.Namespace) -> None:
     draft_parts = rebalance(
         draft_parts,
         stage_prefix="m3",
-        model=models["drafter"],
-        temperature=0.3,
-        context="Preserve the original drafting brief and Sprocket source voice.",
-        token_budget=segment_tokens,
+        model=models["editor"],
+        temperature=0.25,
+        context=(
+            "Preserve the normalized first-person Sprocket voice, physical causality and the "
+            "requested scene boundary; do not reintroduce storyboard/meta language."
+        ),
+        token_budget=normalizer_tokens,
     )
     draft_sections = derived / "draft-sections"
     draft_sections.mkdir(parents=True, exist_ok=True)
