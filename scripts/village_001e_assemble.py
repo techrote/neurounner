@@ -894,6 +894,7 @@ def main() -> None:
             "super_convergence_concerns": ecology_concerns,
         },
         "final_adapter_release": cfg["final_release_tag"],
+        "qualification_evidence_release": cfg["qualification_release_tag"],
     }
     write_json(out / "summary.json", summary)
     write_json(
@@ -932,6 +933,7 @@ def main() -> None:
             for key, value in population_gates.items()
         },
         "ecology_used_as_hard_population_gate": False,
+        "qualification_evidence_release": cfg["qualification_release_tag"],
     }
     write_json(out / "provenance.json", provenance)
 
@@ -1125,6 +1127,7 @@ def main() -> None:
             else out.as_posix()
         ),
         "preference_release_tag": preference_release["release_tag"],
+        "qualification_evidence_release": cfg["qualification_release_tag"],
         "members": 36,
         "scenarios": 24,
         "ecology_sessions": ecology_summary["sessions"],
