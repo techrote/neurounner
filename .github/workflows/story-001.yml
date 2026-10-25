@@ -1,0 +1,174 @@
+name: STORY-001 Sprocket autofactory memory
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - story-001-autofactory-kickoff
+    paths:
+      - '.github/workflows/story-001.yml'
+      - 'scripts/story_001.py'
+      - 'experiments/story-001/**'
+      - 'datasets/README.md'
+      - 'RAG.md'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: neurounner-story-001-\${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    if: \${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[story001-evidence]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      NVIDIA_API_KEY: \${{ secrets.NVKEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Offline contract checks
+        run: |
+          python3 -m py_compile scripts/story_001.py
+          python3 scripts/story_001.py --config experiments/story-001/config.json self-test
+      - name: Record fail-closed M0 preflight
+        run: |
+          python3 scripts/story_001.py \
+            --config experiments/story-001/config.json \
+            preflight --out results/story001
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: story001-preflight
+          path: results/story001
+          if-no-files-found: error
+          retention-days: 14
+
+  sprocket:
+    needs: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .cache/neurounner
+          key: ubuntu-neurounner-v1-b11852-edc2ac32-story001
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: story001-preflight
+          path: results/story001
+      - name: Fetch and verify pinned Sprocket runtime/model
+        run: bash scripts/bootstrap.sh sprocket
+      - name: Generate three independent Sprocket memory fragments
+        run: |
+          python3 scripts/story_001.py \
+            --config experiments/story-001/config.json \
+            sprocket --out results/story001
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: story001-sprocket
+          path: results/story001
+          if-no-files-found: error
+          retention-days: 14
+
+  nemotron:
+    needs: sprocket
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      NVIDIA_API_KEY: \${{ secrets.NVKEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: story001-sprocket
+          path: results/story001
+      - name: Live Nemotron preflight, storyboard, draft, review and edit
+        run: |
+          test -n "$NVIDIA_API_KEY" || {
+            echo "NVKEY repository secret is not configured."
+            exit 1
+          }
+          python3 scripts/story_001.py \
+            --config experiments/story-001/config.json \
+            provider --out results/story001
+      - name: Show bounded qualification metadata
+        run: |
+          python3 - <<'PY'
+          import json
+          q=json.load(open("results/story001/provider/qualification.json"))
+          print("run:",q["github_run_id"])
+          print("final stage:",q["final_stage"])
+          print("words:",q["final_word_count"])
+          print("word gate:",q["word_gate"])
+          print("models:",q["models"])
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: story001-complete-evidence
+          path: results/story001
+          if-no-files-found: error
+          retention-days: 14
+
+  promote:
+    needs: nemotron
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: \${{ github.ref_name }}
+          persist-credentials: true
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: story001-complete-evidence
+          path: results/story001
+      - name: Promote durable archive and independently read back hashes
+        run: |
+          python3 scripts/story_001.py \
+            --config experiments/story-001/config.json \
+            promote --source results/story001 --dest datasets/story-001
+          python3 - <<'PY'
+          import json, pathlib
+          m=json.load(open("datasets/story-001/manifest.json"))
+          assert 2700 <= m["word_count"] <= 3300
+          assert all(v.startswith("qualified") for v in m["milestones"].values())
+          story=pathlib.Path("datasets/story-001/compiled/story.md")
+          assert story.stat().st_size > 1000
+          print("archive readback:",m["word_count"],m["final_story_sha256"])
+          PY
+      - name: Commit durable STORY-001 evidence
+        env:
+          GITHUB_TOKEN: \${{ github.token }}
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add datasets/story-001
+          git diff --cached --exit-code && {
+            echo "No new STORY-001 evidence to commit."
+            exit 0
+          }
+          git commit -m "Archive STORY-001 Sprocket/Nemotron evidence [story001-evidence]"
+          git push origin "HEAD:\${GITHUB_REF_NAME}"
+      - name: Record workflow summary
+        run: |
+          {
+            echo "## STORY-001"
+            echo
+            echo "Durable Sprocket/Nemotron evidence promoted to datasets/story-001."
+            python3 - <<'PY'
+          import json
+          m=json.load(open("datasets/story-001/manifest.json"))
+          print(f"- final words: {m['word_count']}")
+          print(f"- final sha256: {m['final_story_sha256']}")
+          print(f"- milestones: {m['milestones']}")
+          PY
+          } >> "$GITHUB_STEP_SUMMARY"
