@@ -425,6 +425,9 @@ def self_test() -> None:
         (live / "preference-manifest.json").write_text(
             json.dumps({"member_contract_sha256": contract})
         )
+        (live / "final-manifest.json").write_text(
+            json.dumps({"member_contract_sha256": contract})
+        )
         (live / "README.md").write_text("downstream README\n")
 
         # Simulate already-trained SFT evidence that binds downstream models to
@@ -460,6 +463,10 @@ def self_test() -> None:
         assert (
             live / "member-corpora" / "V-G01-A.jsonl"
         ).read_text() == "candidate\n"
+        assert (live / "preference-hashes.sha256").is_file()
+        assert (live / "final-hashes.sha256").is_file()
+        verify_inventory(live, live / "preference-hashes.sha256")
+        verify_inventory(live, live / "final-hashes.sha256")
 
         bad = root / "bad-live"
         shutil.copytree(live, bad)
