@@ -334,6 +334,38 @@ def compiler_repair_prompt(
     )
 
 
+def compiler_targeted_repair_prompt(
+    *,
+    member: dict,
+    packet: dict,
+    specs: list[dict],
+    scenarios: dict[str, dict],
+    feedback: dict[str, list[dict]],
+    seen_pairs: list[tuple[str, str]],
+    problems: list[str],
+    accepted_ids: list[str],
+) -> str:
+    return (
+        compiler_prompt(
+            member=member,
+            packet=packet,
+            specs=specs,
+            scenarios=scenarios,
+            feedback=feedback,
+            seen_pairs=seen_pairs,
+        )
+        + "\n\nThe previous larger batch had validation failures."
+        + "\nRegenerate ONLY the supplied pair_ids above; do not repeat any already "
+          "accepted IDs."
+        + "\nAlready accepted IDs:\n"
+        + json.dumps(accepted_ids)
+        + "\nPrior validation problems (context only):\n"
+        + json.dumps(problems)
+        + "\nThe malformed provider text is preserved separately as raw evidence and "
+          "is intentionally not echoed into this repair request."
+    )
+
+
 def critic_prompt(member: dict, packet: dict, rows: list[dict]) -> str:
     payload = [
         {
@@ -1058,57 +1090,106 @@ def main() -> None:
             role="preference-compiler",
         )
         compiled, problems = parse_compiler(raw, chunk_specs, scenarios)
-        compiler_labels = [label]
+        compiler_call_refs = {
+            pair_id: [label]
+            for pair_id in compiled
+        }
 
-        if problems:
-            repair_label = label + "-repair"
-            repair_payload = {
-                "model": compiler["id"],
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": (
-                            "Repair the preference-data JSON. Return the complete "
-                            "requested batch as JSON only."
-                        ),
-                    },
-                    {
-                        "role": "user",
-                        "content": compiler_repair_prompt(
-                            member=member,
-                            packet=packet,
-                            specs=chunk_specs,
-                            scenarios=scenarios,
-                            feedback=feedback,
-                            seen_pairs=seen_pairs,
-                            malformed=raw,
-                            problems=problems,
-                        ),
-                    },
-                ],
-                "max_tokens": int(
-                    pref["pair_generation"]["compiler_repair_max_tokens"]
-                ),
-                "temperature": 0.2,
-                "top_p": 0.9,
-                "stream": False,
-            }
-            if "reasoning_effort" in compiler:
-                repair_payload["reasoning_effort"] = "low"
-            repaired_raw, _, _ = call_api(
-                key=key,
-                endpoint=campaign["nvidia"]["endpoint"],
-                payload=repair_payload,
-                outdir=rawdir,
-                label=repair_label,
-                attempts_limit=int(pref["pair_generation"]["attempts"]),
-                role="preference-compiler-json-repair",
-            )
-            compiled, problems = parse_compiler(
-                repaired_raw, chunk_specs, scenarios
-            )
-            compiler_labels.append(repair_label)
-        if problems:
+        # Preserve valid rows from the original compiler call. Repair only missing
+        # or invalid IDs, in batches of at most 10, so one malformed V1 response
+        # cannot force a 20-row / ~70 KiB whole-batch regeneration. This keeps the
+        # original provider text as evidence while reducing timeout exposure.
+        max_targeted_rounds = 3
+        for repair_round in range(1, max_targeted_rounds + 1):
+            if not problems:
+                break
+            missing_specs = [
+                spec for spec in chunk_specs
+                if spec["pair_id"] not in compiled
+            ]
+            if not missing_specs:
+                break
+
+            round_problems: list[str] = []
+            for batch_index in range(0, len(missing_specs), 10):
+                repair_specs = missing_specs[batch_index : batch_index + 10]
+                repair_label = (
+                    f"{label}-targeted-repair{repair_round}-"
+                    f"b{batch_index // 10 + 1:02d}"
+                )
+                repair_payload = {
+                    "model": compiler["id"],
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": (
+                                "Regenerate only the invalid preference-pair IDs. "
+                                "Return the complete requested subset as JSON only."
+                            ),
+                        },
+                        {
+                            "role": "user",
+                            "content": compiler_targeted_repair_prompt(
+                                member=member,
+                                packet=packet,
+                                specs=repair_specs,
+                                scenarios=scenarios,
+                                feedback=feedback,
+                                seen_pairs=(
+                                    seen_pairs
+                                    + [
+                                        (
+                                            normalize_text(row["chosen"]),
+                                            normalize_text(row["rejected"]),
+                                        )
+                                        for row in compiled.values()
+                                    ]
+                                ),
+                                problems=problems,
+                                accepted_ids=sorted(compiled),
+                            ),
+                        },
+                    ],
+                    "max_tokens": min(
+                        int(pref["pair_generation"]["compiler_repair_max_tokens"]),
+                        max(4096, 768 * len(repair_specs)),
+                    ),
+                    "temperature": 0.2,
+                    "top_p": 0.9,
+                    "stream": False,
+                }
+                if "reasoning_effort" in compiler:
+                    repair_payload["reasoning_effort"] = "low"
+                repaired_raw, _, _ = call_api(
+                    key=key,
+                    endpoint=campaign["nvidia"]["endpoint"],
+                    payload=repair_payload,
+                    outdir=rawdir,
+                    label=repair_label,
+                    attempts_limit=int(pref["pair_generation"]["attempts"]),
+                    role="preference-compiler-targeted-repair",
+                )
+                repaired, repair_problems = parse_compiler(
+                    repaired_raw, repair_specs, scenarios
+                )
+                for pair_id, generated in repaired.items():
+                    compiled[pair_id] = generated
+                    compiler_call_refs[pair_id] = [label, repair_label]
+                round_problems.extend(repair_problems)
+
+            remaining = [
+                spec["pair_id"] for spec in chunk_specs
+                if spec["pair_id"] not in compiled
+            ]
+            if not remaining and not round_problems:
+                problems = []
+                break
+            problems = [
+                *round_problems,
+                *([f"remaining:{','.join(remaining)}"] if remaining else []),
+            ]
+
+        if problems or len(compiled) != len(chunk_specs):
             raise RuntimeError(
                 f"{member['member_id']} chunk {chunk_index}: compiler invalid: {problems}"
             )
@@ -1141,12 +1222,12 @@ def main() -> None:
                     ],
                     "parent_adapter_sha256": parent_sha,
                     "feedback_dataset_sha256": feedback_sha,
-                    "provider_call_ids": list(compiler_labels),
+                    "provider_call_ids": list(compiler_call_refs[spec["pair_id"]]),
                 },
             }
             validate_pair(row)
             provisional.append(row)
-            call_refs[row["pair_id"]] = list(compiler_labels)
+            call_refs[row["pair_id"]] = list(compiler_call_refs[row["pair_id"]])
 
         curated, critic_rows, adjudicator_rows = curate(
             key=key,
