@@ -1,0 +1,94 @@
+name: Recover VILLAGE-001D after provider/curation hardening
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/village-001d-recover-curation-hardening.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: neurounner-village-001d-curation-recovery-operator
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      SOURCE_RUN_ID: '40217862390'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Verify source artifact custody
+        run: |
+          feedback=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" \
+            --jq '[.artifacts[].name | select(startswith("village001d-feedback-"))] | length')
+          pairs=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" \
+            --jq '[.artifacts[].name | select(startswith("village001d-pairs-"))] | length')
+          test "$feedback" -eq 36
+          test "$pairs" -ge 14
+          echo "source artifacts: feedback=$feedback pairs=$pairs"
+
+      - name: Cancel superseded D run
+        run: |
+          status=$(gh run view "$SOURCE_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json status \
+            --jq '.status')
+          if [ "$status" != "completed" ]; then
+            gh run cancel "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY"
+          fi
+
+      - name: Wait for source run to stop
+        run: |
+          for attempt in $(seq 1 60); do
+            status=$(gh run view "$SOURCE_RUN_ID" \
+              --repo "$GITHUB_REPOSITORY" \
+              --json status \
+              --jq '.status')
+            echo "source status: $status"
+            if [ "$status" = "completed" ]; then
+              break
+            fi
+            sleep 5
+          done
+          test "$(gh run view "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --json status --jq '.status')" = "completed"
+
+      - name: Verify hardened D implementation on main
+        run: |
+          grep -q 'http.client.RemoteDisconnected' scripts/village_001b_generate_member.py
+          grep -q 'parse_reviews_partial' scripts/village_001d_compile_pairs.py
+          grep -q 'Do not use 1 as a boolean true value' scripts/village_001d_compile_pairs.py
+          grep -q 'remove_duplicate_compiled' scripts/village_001d_compile_pairs.py
+          grep -q 'curation repair batch exceeds 10 pairs' scripts/village_001d_compile_pairs.py
+          grep -q 'repair pairs incomplete after targeted retry' scripts/village_001d_compile_pairs.py
+          echo "provider/critic/compiler/curation hardening present."
+
+      - name: Verify artifacts survived cancellation
+        run: |
+          feedback=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" \
+            --jq '[.artifacts[].name | select(startswith("village001d-feedback-"))] | length')
+          pairs=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" \
+            --jq '[.artifacts[].name | select(startswith("village001d-pairs-"))] | length')
+          test "$feedback" -eq 36
+          test "$pairs" -ge 14
+          echo "preserved artifacts: feedback=$feedback pairs=$pairs"
+
+      - name: Dispatch hardened D recovery
+        run: |
+          gh workflow run village-001d-preference.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main \
+            -f resume_run_id="$SOURCE_RUN_ID"
