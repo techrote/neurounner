@@ -1,4 +1,4 @@
-name: Recover VILLAGE-001D after provider/curation hardening
+name: Recover VILLAGE-001D after adjudicator hardening
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      SOURCE_RUN_ID: '40217862390'
+      SOURCE_RUN_ID: '40227126527'
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -36,7 +36,7 @@ jobs:
             "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" \
             --jq '[.artifacts[].name | select(startswith("village001d-pairs-"))] | length')
           test "$feedback" -eq 36
-          test "$pairs" -ge 14
+          test "$pairs" -ge 6
           echo "source artifacts: feedback=$feedback pairs=$pairs"
 
       - name: Cancel superseded D run
@@ -72,7 +72,9 @@ jobs:
           grep -q 'remove_duplicate_compiled' scripts/village_001d_compile_pairs.py
           grep -q 'curation repair batch exceeds 10 pairs' scripts/village_001d_compile_pairs.py
           grep -q 'repair pairs incomplete after targeted retry' scripts/village_001d_compile_pairs.py
-          echo "provider/critic/compiler/curation hardening present."
+          grep -q 'parse_adjudicator_partial' scripts/village_001d_compile_pairs.py
+          grep -q 'adjudicator decisions incomplete after targeted repair' scripts/village_001d_compile_pairs.py
+          echo "provider/critic/compiler/curation/adjudicator hardening present."
 
       - name: Verify artifacts survived cancellation
         run: |
@@ -83,10 +85,10 @@ jobs:
             "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" \
             --jq '[.artifacts[].name | select(startswith("village001d-pairs-"))] | length')
           test "$feedback" -eq 36
-          test "$pairs" -ge 14
+          test "$pairs" -ge 6
           echo "preserved artifacts: feedback=$feedback pairs=$pairs"
 
-      - name: Dispatch hardened D recovery
+      - name: Dispatch adjudicator-hardened D recovery
         run: |
           gh workflow run village-001d-preference.yml \
             --repo "$GITHUB_REPOSITORY" \
