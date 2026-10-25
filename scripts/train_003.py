@@ -172,7 +172,7 @@ def run_train(a):
     losses=[]; tokens=0; started=time.monotonic(); model.train()
     for i in range(a.steps):
         ex=enc[i%len(enc)]; opt.zero_grad(set_to_none=True)
-        loss=model(**ex).loss; loss.backward(); torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad],1.0); opt.step()
+        loss=model(input_ids=ex["input_ids"],attention_mask=ex["attention_mask"],labels=ex["labels"]).loss; loss.backward(); torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad],1.0); opt.step()
         losses.append(float(loss.detach())); tokens+=ex["tokens"]
         if (i+1)%96==0: print(f"trained {i+1}/{a.steps} loss={losses[-1]:.4f}",flush=True)
     seconds=time.monotonic()-started; a.adapter_out.mkdir(parents=True,exist_ok=True); model.save_pretrained(a.adapter_out,safe_serialization=True)
