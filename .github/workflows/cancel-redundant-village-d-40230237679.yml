@@ -1,0 +1,52 @@
+name: Cancel redundant VILLAGE-001D trigger 40230237679
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cancel-redundant-village-d-40230237679.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cancel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_RUN_ID: '40230237679'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Cancel only the redundant automatic D trigger
+        run: |
+          state=$(gh run view "$TARGET_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json status,conclusion,event,headSha \
+            --jq '[.status, (.conclusion // ""), .event, .headSha] | @tsv')
+          printf 'target state: %s\n' "$state"
+
+          status=$(printf '%s' "$state" | cut -f1)
+          event=$(printf '%s' "$state" | cut -f3)
+          head=$(printf '%s' "$state" | cut -f4)
+
+          test "$event" = "workflow_run"
+          test "$head" = "e05ed4d0ce5da77610a135510cf6d481ee7d1780"
+
+          if [ "$status" != "completed" ]; then
+            gh run cancel "$TARGET_RUN_ID" --repo "$GITHUB_REPOSITORY"
+          fi
+
+      - name: Verify cancellation request did not target active recovery
+        run: |
+          source_state=$(gh run view 40230016547 \
+            --repo "$GITHUB_REPOSITORY" \
+            --json databaseId,event \
+            --jq '[.databaseId,.event] | @tsv')
+          test "$source_state" = $'40230016547\tworkflow_dispatch'
+          echo "authoritative explicit recovery left untouched"
