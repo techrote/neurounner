@@ -1127,6 +1127,7 @@ def main() -> None:
             else out.as_posix()
         ),
         "preference_release_tag": preference_release["release_tag"],
+        "qualification_evidence_release": cfg["qualification_release_tag"],
         "members": 36,
         "scenarios": 24,
         "ecology_sessions": ecology_summary["sessions"],
