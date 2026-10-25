@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
-      STORY001_RESUME_RUN_ID: '40225378737'
+      STORY001_RESUME_RUN_ID: '40228097488'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -95,16 +95,19 @@ jobs:
           name: story001-preflight
           path: results/story001
 
-      - name: Recover failed M3 evidence from run 40225378737
+      - name: Recover failed M3 evidence from run 40228097488
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p results/resume
-          gh run download 40225378737             --repo "${GITHUB_REPOSITORY}"             --name story001-complete-evidence             --dir results/resume
+          gh run download 40228097488             --repo "${GITHUB_REPOSITORY}"             --name story001-complete-evidence             --dir results/resume
           test -f results/resume/local-models/derived/storyboard.md
           test -f results/resume/sprocket/summary.json
           test -f results/resume/local-models/raw/m3-normalize-01.json
           test -f results/resume/local-models/raw/m3-balance-3-part-08.json
+          test -f results/resume/local-models/derived/draft.md
+          test -f results/resume/local-models/derived/review.md
+          test -f results/resume/local-models/derived/draft-sections/part-08.md
 
       - name: Fetch pinned llama.cpp runtime
         run: bash scripts/bootstrap.sh runtime
