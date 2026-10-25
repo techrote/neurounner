@@ -1,0 +1,83 @@
+name: Start clean VILLAGE-001D against refreshed C
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/village-001d-clean-restart-refreshed-c.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: neurounner-village-001d-clean-restart-refreshed-c
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_C_RUN_ID: '40227472424'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Verify refreshed C is current durable authority
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          provenance=json.loads(
+              Path("experiments/village-001/sft-evidence/provenance.json").read_text()
+          )
+          summary=json.loads(
+              Path("experiments/village-001/sft-evidence/summary.json").read_text()
+          )
+          assert provenance["workflow_run_id"]==40227472424,provenance
+          assert summary["members"]==36
+          assert summary["successful_terminal_lanes"]==36
+          print("refreshed C authority: PASS")
+          PY
+
+      - name: Require no active D run
+        run: |
+          active=$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "village-001d-preference.yml" \
+            --branch main \
+            --limit 20 \
+            --json databaseId,status \
+            --jq '[.[] | select(.status != "completed")] | length')
+          echo "active D runs: $active"
+          test "$active" -eq 0
+
+      - name: Verify incompatible resume handling is present
+        env:
+          PYTHONPATH: scripts
+        run: |
+          python3 - <<'PY'
+          from village_001d_sprocket_feedback import assess_feedback_resume
+          from village_001d_compile_pairs import adjudicator_token_budget
+          from village_001d_compare import parse_reviews_partial
+
+          assert callable(assess_feedback_resume)
+          assert adjudicator_token_budget(
+              {"pair_generation":{"adjudicator_max_tokens":6144}},
+              1,
+          )==2048
+          assert callable(parse_reviews_partial)
+          print("D hardening stack present")
+          PY
+
+      - name: Dispatch clean D campaign
+        run: |
+          gh workflow run village-001d-preference.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main
+          echo "Dispatched clean VILLAGE-001D with no resume_run_id."
