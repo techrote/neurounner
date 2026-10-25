@@ -174,26 +174,56 @@ def validate_side(side: dict, scenario_id: str, label: str) -> dict:
     return out
 
 
-def validate_reviews(raw: str, cases: list[dict]) -> list[dict]:
-    obj = extract_json(raw)
-    reviews = obj.get("reviews") if isinstance(obj, dict) else None
+def parse_reviews_partial(
+    raw: str,
+    cases: list[dict],
+) -> tuple[dict[str, dict], list[str]]:
     expected = [case["scenario_id"] for case in cases]
-    if not isinstance(reviews, list) or len(reviews) != len(expected):
-        raise ValueError("review count mismatch")
-    out = {}
+    expected_set = set(expected)
+    problems: list[str] = []
+    try:
+        obj = extract_json(raw)
+    except ValueError:
+        return {}, ["review_json_parse_failed"]
+    reviews = obj.get("reviews") if isinstance(obj, dict) else None
+    if not isinstance(reviews, list):
+        return {}, ["reviews_not_list"]
+
+    out: dict[str, dict] = {}
     for row in reviews:
         if not isinstance(row, dict):
-            raise ValueError("review not object")
+            problems.append("review_not_object")
+            continue
         scenario_id = row.get("scenario_id")
-        if scenario_id not in expected or scenario_id in out:
-            raise ValueError("scenario ID mismatch")
-        out[scenario_id] = {
-            "scenario_id": scenario_id,
-            "X": validate_side(row.get("X"), scenario_id, "X"),
-            "Y": validate_side(row.get("Y"), scenario_id, "Y"),
-        }
-    if set(out) != set(expected):
-        raise ValueError("review scenario IDs incomplete")
+        if scenario_id not in expected_set or scenario_id in out:
+            continue
+        try:
+            parsed = {
+                "scenario_id": scenario_id,
+                "X": validate_side(row.get("X"), scenario_id, "X"),
+                "Y": validate_side(row.get("Y"), scenario_id, "Y"),
+            }
+        except ValueError as exc:
+            problems.append(str(exc))
+            continue
+        out[scenario_id] = parsed
+
+    missing = [scenario_id for scenario_id in expected if scenario_id not in out]
+    if missing:
+        problems.append("review_missing:" + ",".join(missing))
+    return out, problems
+
+
+def validate_reviews(raw: str, cases: list[dict]) -> list[dict]:
+    expected = [case["scenario_id"] for case in cases]
+    out, problems = parse_reviews_partial(raw, cases)
+    missing = [scenario_id for scenario_id in expected if scenario_id not in out]
+    if missing:
+        raise ValueError(
+            "review scenarios incomplete: "
+            + ",".join(missing)
+            + (f" problems={problems}" if problems else "")
+        )
     return [out[scenario_id] for scenario_id in expected]
 
 
@@ -303,30 +333,35 @@ def main() -> None:
             attempts_limit=int(pref["pair_generation"]["attempts"]),
             role="before-after-critic",
         )
-        try:
-            reviews = validate_reviews(raw, chunk)
-        except ValueError as exc:
-            repair_label = label + "-json-repair"
+
+        expected = [case["scenario_id"] for case in chunk]
+        by_id = {case["scenario_id"]: case for case in chunk}
+        parsed, _ = parse_reviews_partial(raw, chunk)
+
+        # Preserve every valid blind review. Re-request only missing/invalid
+        # scenario IDs rather than regenerating the whole six-case batch.
+        for repair_round in range(1, 4):
+            missing = [scenario_id for scenario_id in expected if scenario_id not in parsed]
+            if not missing:
+                break
+            repair_cases = [by_id[scenario_id] for scenario_id in missing]
+            repair_label = f"{label}-targeted-repair{repair_round}"
             repair_payload = {
                 "model": model["id"],
                 "messages": [
                     {
                         "role": "system",
                         "content": (
-                            "Repair the blind evaluator JSON only. Return complete JSON."
+                            "Score only the supplied missing blind-review scenarios. "
+                            "Return final JSON only, one review per scenario."
                         ),
                     },
                     {
                         "role": "user",
-                        "content": (
-                            judge_prompt(member, packet, chunk)
-                            + "\n\nMALFORMED OUTPUT:\n"
-                            + raw
-                            + f"\n\nPARSER PROBLEM: {exc}"
-                        ),
+                        "content": judge_prompt(member, packet, repair_cases),
                     },
                 ],
-                "max_tokens": 6144,
+                "max_tokens": min(6144, max(2048, 768 * len(repair_cases))),
                 "temperature": 0.1,
                 "top_p": 0.9,
                 "stream": False,
@@ -338,10 +373,18 @@ def main() -> None:
                 outdir=rawdir,
                 label=repair_label,
                 attempts_limit=int(pref["pair_generation"]["attempts"]),
-                role="before-after-critic-repair",
+                role="before-after-critic-targeted-repair",
             )
-            reviews = validate_reviews(repaired, chunk)
-        all_reviews.extend(reviews)
+            recovered, _ = parse_reviews_partial(repaired, repair_cases)
+            parsed.update(recovered)
+
+        missing = [scenario_id for scenario_id in expected if scenario_id not in parsed]
+        if missing:
+            raise ValueError(
+                "before/after reviews incomplete after targeted repair: "
+                + ",".join(missing)
+            )
+        all_reviews.extend(parsed[scenario_id] for scenario_id in expected)
 
     if len(all_reviews) != 24:
         raise RuntimeError("before/after review count mismatch")
