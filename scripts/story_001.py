@@ -1020,6 +1020,10 @@ def inventory(root: Path) -> list[tuple[str, str]]:
 
 def promote(args: argparse.Namespace) -> None:
     cfg = load_json(args.config)
+    if cfg.get("pipeline_backend") == "local_actions":
+        raise RuntimeError(
+            "legacy NVIDIA/provider promotion is superseded by STORY-001 local Actions pipeline"
+        )
     source = args.source
     dest = args.dest
     qualification = load_json(source / "provider" / "qualification.json")
