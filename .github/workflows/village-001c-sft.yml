@@ -337,6 +337,11 @@ jobs:
           assert summary["successful_terminal_lanes"]==36
           assert len(summary["members_table"])==36
           assert len(release["assets"])==36
+          results=sorted(Path("experiments/village-001/sft-evidence/results").glob("V-G??-[ABC].json"))
+          assert len(results)==36,len(results)
+          assert {json.loads(p.read_text())["member_id"] for p in results}=={
+              row["member_id"] for row in summary["members_table"]
+          }
           assert len(list(Path("release-assets").glob("*.tar.gz")))==36
           print("VILLAGE-001C population evidence: PASS")
           PY
@@ -378,6 +383,11 @@ jobs:
           git config user.name "neurounner experiment bot"
           git config user.email "261801702+techrote@users.noreply.github.com"
           git add experiments/village-001/sft-evidence
+          test "$(git diff --cached --name-only -- 'experiments/village-001/sft-evidence/results/*.json' | wc -l)" -eq 36
+          if git check-ignore -q experiments/village-001/sft-evidence/results/V-G01-A.json; then
+            echo "nested SFT evidence results are still ignored"
+            exit 1
+          fi
           git commit -m "Record VILLAGE-001C 36-member SFT evidence ${GITHUB_RUN_ID}"
           git pull --rebase origin main
           git push origin HEAD:main
