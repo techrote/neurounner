@@ -202,6 +202,20 @@ def main() -> None:
     args = parser.parse_args()
 
     pref = json.loads(args.config.read_text())
+    feedback_per_member = (
+        int(pref["feedback"]["scenario_count"])
+        + int(pref["feedback"]["member_probe_count"])
+    ) * int(pref["feedback"]["workers_per_scenario"])
+    feedback_scenario_ids = [
+        *[
+            f"T{i:02d}"
+            for i in range(1, int(pref["feedback"]["scenario_count"]) + 1)
+        ],
+        *[
+            f"P{i:02d}"
+            for i in range(1, int(pref["feedback"]["member_probe_count"]) + 1)
+        ],
+    ]
     campaign_path = ROOT / pref["campaign_config"]
     campaign = json.loads(campaign_path.read_text())
     population = build_manifest(campaign)
@@ -313,8 +327,11 @@ def main() -> None:
             (feedback_root / "manifest.json").read_text()
         )
         feedback_rows = read_jsonl(feedback_root / "feedback.jsonl")
-        if len(feedback_rows) != 72:
-            raise RuntimeError(f"{member_id}: feedback count != 72")
+        if len(feedback_rows) != feedback_per_member:
+            raise RuntimeError(
+                f"{member_id}: feedback count {len(feedback_rows)} "
+                f"!= {feedback_per_member}"
+            )
         feedback_ids = set()
         per_scenario = Counter()
         for row in feedback_rows:
@@ -325,7 +342,13 @@ def main() -> None:
                 raise RuntimeError(f"{member_id}: duplicate feedback ID")
             feedback_ids.add(row["feedback_id"])
             per_scenario[row["scenario_id"]] += 1
-        if any(per_scenario[f"T{i:02d}"] != 3 for i in range(1, 25)):
+        if set(per_scenario) != set(feedback_scenario_ids):
+            raise RuntimeError(f"{member_id}: feedback scenario ID set mismatch")
+        if any(
+            per_scenario[scenario_id]
+            != int(pref["feedback"]["workers_per_scenario"])
+            for scenario_id in feedback_scenario_ids
+        ):
             raise RuntimeError(f"{member_id}: feedback scenario coverage mismatch")
         valid_feedback = sum(1 for row in feedback_rows if row["valid"])
         invalid_feedback = len(feedback_rows) - valid_feedback
@@ -512,6 +535,7 @@ def main() -> None:
                 "sibling": meta["sibling"],
                 "valid_feedback": valid_feedback,
                 "invalid_feedback": invalid_feedback,
+                "feedback_total": feedback_per_member,
                 "preference_margin_before": before[
                     "mean_margin_nats_per_token"
                 ],
@@ -550,7 +574,7 @@ def main() -> None:
         "experiment": "VILLAGE-001D",
         "issue": 13,
         "member_contract_sha256": population["member_contract_sha256"],
-        "feedback_records": 36 * 72,
+        "feedback_records": 36 * feedback_per_member,
         "valid_feedback_records": valid_feedback_total,
         "invalid_feedback_records": invalid_feedback_total,
         "preference_pairs": 36 * 60,
@@ -605,7 +629,7 @@ def main() -> None:
         "experiment": "VILLAGE-001D",
         "issue": 13,
         "members": 36,
-        "feedback_records": 36 * 72,
+        "feedback_records": 36 * feedback_per_member,
         "valid_feedback_records": valid_feedback_total,
         "invalid_feedback_records": invalid_feedback_total,
         "preference_pairs": 36 * 60,
@@ -668,7 +692,7 @@ def main() -> None:
         "## Population",
         "",
         "- members: 36",
-        f"- Sprocket feedback records: {36 * 72}",
+        f"- Sprocket feedback records: {36 * feedback_per_member}",
         f"- valid parsed Sprocket feedback: {valid_feedback_total}",
         f"- malformed-but-preserved Sprocket feedback: {invalid_feedback_total}",
         f"- preference pairs: {36 * 60}",
@@ -729,7 +753,7 @@ def main() -> None:
             {
                 "experiment": "VILLAGE-001D",
                 "members": 36,
-                "feedback_records": 36 * 72,
+                "feedback_records": 36 * feedback_per_member,
                 "preference_pairs": 36 * 60,
                 "qualified": len(qualified),
                 "regressed": len(regressed),
