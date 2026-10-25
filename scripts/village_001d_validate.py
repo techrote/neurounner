@@ -9,7 +9,8 @@ from pathlib import Path
 
 MEMBER_RE = re.compile(r"^V-(G(?:0[1-9]|1[0-2]))-([ABC])$")
 PAIR_RE = re.compile(
-    r"^P-(V-G(?:0[1-9]|1[0-2])-[ABC])-(T(?:0[1-9]|1[0-9]|2[0-4]))-V([123])$"
+    r"^P-(V-G(?:0[1-9]|1[0-2])-[ABC])-"
+    r"((?:T(?:0[1-9]|1[0-9]|2[0-4]))|(?:P0[1-8]))-V([123])$"
 )
 SHA_RE = re.compile(r"^[0-9a-f]{64}$")
 
@@ -122,8 +123,9 @@ def validate_file(path: Path, member: str, expect_count: int = 60) -> dict:
         errors.append(f"count {len(rows)} != {expect_count}")
 
     expected = {
-        f"T{i:02d}": 3 if i <= 12 else 2
-        for i in range(1, 25)
+        **{f"T{i:02d}": 2 for i in range(1, 13)},
+        **{f"T{i:02d}": 1 for i in range(13, 25)},
+        **{f"P{i:02d}": 3 for i in range(1, 9)},
     }
     if dict(scenario_counts) != expected:
         errors.append(
@@ -166,6 +168,17 @@ def self_test() -> None:
         }
     }
     validate_pair(row)
+
+    probe = dict(row)
+    probe.update({
+        "pair_id": "P-V-G01-A-P03-V3",
+        "scenario_id": "P03",
+        "variant": 3,
+        "rejected": "Over-stylized catchphrase-heavy rejected behavior.",
+        "chosen": "I test the awkward physical clue once, keep the useful scrap, and stop before polishing it into a generic answer.",
+    })
+    validate_pair(probe)
+
     bad = dict(row)
     bad["chosen"] = row["rejected"]
     try:
