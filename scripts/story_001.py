@@ -1175,10 +1175,6 @@ def inventory(root: Path) -> list[tuple[str, str]]:
 
 def promote(args: argparse.Namespace) -> None:
     cfg = load_json(args.config)
-    if cfg.get("pipeline_backend") == "local_actions":
-        raise RuntimeError(
-            "legacy NVIDIA/provider promotion is superseded by STORY-001 local Actions pipeline"
-        )
     source = args.source
     dest = args.dest
     qualification = load_json(source / "local-models" / "qualification.json")
@@ -1275,12 +1271,12 @@ The incident is creative fiction. Repository Sprocket outputs were used as voice
 
 ## Pipeline
 
-1. M0 — exact runner/model/provider preflight and fail-closed credential gate.
+1. M0 — exact runner/runtime/model pin preflight with no cloud credential dependency.
 2. M1 — three independent pinned Sprocket-500M memory-fragment generations on 'ubuntu-24.04'.
-3. M2 — Nemotron 3.5 Bolt E4B structural storyboard.
-4. M3 — Nemotron 3.5 Super VL 120B-A12B long-form draft.
-5. M4 — independent Bolt E4B critique against the exact draft hash.
-6. M5 — Super VL revision, with bounded length repair only if required.
+3. M2 — Qwen3.5-4B structural storyboard.
+4. M3 — QwenStoryteller Q4_K_M eight-section long-form draft.
+5. M4 — independent Qwen3.5-4B critique against the exact draft hash.
+6. M5 — Qwen3.5-4B section-wise revision with aggregate length rebalancing only if required.
 7. M6 — independent local qualification, durable promotion and SHA-256 inventory.
 
 ## Authority
