@@ -63,3 +63,29 @@ Issue #12 turns the 36 promoted VILLAGE-001B member corpora into independent Smo
 - Adapter bytes are published under release tag `village-001-sft-v1`; hashes/results/aggregate evidence are committed under `experiments/village-001/sft-evidence/`.
 
 The workflow auto-starts only when the durable VILLAGE-001B dataset manifest/member shards are promoted, not merely when this training implementation is merged.
+
+
+## VILLAGE-001D Sprocket-feedback maturation
+
+Issue #13 feeds each provisional SFT villager back through Sprocket and then applies the proven PERSONA-002 preference continuation objective.
+
+Resource flow:
+
+1. **36 local feedback lanes, max 12 parallel.** Each pinned Sprocket instance reacts three times to the member's 24 common held-out responses plus eight held-out cross-sibling member probes: 96 raw reactions/member, 3,456 total.
+2. **36 NVIDIA pair-compilation lanes, cloud concurrency 1.** MiniMax compiles 60 chosen/rejected pairs/member; Bolt independently audits behavioral validity; only borderline pairs go to Nemotron Super; rejected pairs are repaired and re-audited.
+3. **36 CPU preference-training lanes, max 12 parallel.** Each member runs 120 deterministic pairwise optimizer steps with the PERSONA-002 beta/margin/NLL-anchor recipe and 30-step restart checkpoints.
+4. **36 blind before/after evaluations, cloud concurrency 1.** Parent and matured responses are shuffled under X/Y labels. Bolt scores task relevance, genericness, raw lineage fit, style dependence, behavior-only fit and A/B/C sibling prediction.
+5. **Durable assembly/release.** All feedback, pair lineage, provider calls, before/after evidence and cartridge hashes are retained. Regressed members are not silently replaced.
+
+The eight member probes are genuinely held out from the target cartridge: four deterministic cloud-expansion situations are selected from each of the two same-lineage sibling corpora after excluding every normalized input seen by the target member.
+
+A VILLAGE-001D member passes the maturation gate only if blind task relevance does not regress by more than 0.5/4 and an apparent raw-lineage gain is not merely a style-only gain accompanied by worse behavior-only fit. Full 12-way lineage and 3-way sibling confusion matrices remain the responsibility of VILLAGE-001E (#14).
+
+Durable outputs:
+
+- feedback: `datasets/village-001/sprocket-feedback/`
+- preference pairs: `datasets/village-001/preference/`
+- raw NVIDIA pair evidence: `datasets/village-001/provider/preference/`
+- curation records: `datasets/village-001/preference-quality/`
+- population evidence: `experiments/village-001/preference-evidence/`
+- matured adapter release: `village-001-preference-v1`
