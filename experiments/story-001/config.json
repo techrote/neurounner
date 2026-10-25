@@ -45,5 +45,24 @@
     "dataset_root": "datasets/story-001",
     "raw_before_derived": true,
     "actions_artifacts_are_staging_only": true
-  }
+  },
+  "pipeline_backend": "local_actions",
+  "local_models": {
+    "storyboard": "lfm25-8b-a1b",
+    "drafter": "qwen-storyteller-q4",
+    "reviewer": "lfm25-8b-a1b",
+    "editor": "qwen35-4b"
+  },
+  "local_budgets": {
+    "storyboard_max_tokens": 2200,
+    "draft_segment_max_tokens": 1100,
+    "review_max_tokens": 2200,
+    "edit_segment_max_tokens": 1100
+  },
+  "local_server": {
+    "threads": 4,
+    "context": 16384,
+    "startup_timeout_seconds": 180
+  },
+  "supersedes_remote_nvidia_pipeline": true
 }
