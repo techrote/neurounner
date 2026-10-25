@@ -885,6 +885,12 @@ def main() -> None:
         "ecology": {
             "sessions": ecology_summary["sessions"],
             "metrics": ecology_summary["metrics"],
+            "lineage_audit_metrics": ecology_summary[
+                "lineage_audit_metrics"
+            ],
+            "cross_lineage_contamination": ecology_summary[
+                "cross_lineage_contamination"
+            ],
             "super_convergence_concerns": ecology_concerns,
         },
         "final_adapter_release": cfg["final_release_tag"],
@@ -1067,8 +1073,8 @@ def main() -> None:
             "",
             "## Per-member participant behavior",
             "",
-            "| Member | appearances | distinctiveness | generic tendency | dominance | deference |",
-            "|---|---:|---:|---:|---:|---:|",
+            "| Member | appearances | distinctiveness | generic tendency | dominance | deference | lineage fit | contamination | lineage distinction |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
         ]
     )
     for member_id in expected_members:
@@ -1076,12 +1082,22 @@ def main() -> None:
         if not values:
             raise RuntimeError(f"{member_id}: missing ecology participant metrics")
         appearances = len(ecology_agent[member_id]["distinctiveness"])
+        lineage_values = ecology_summary[
+            "member_lineage_audit_metrics"
+        ].get(member_id)
+        if not lineage_values:
+            raise RuntimeError(
+                f"{member_id}: missing cross-lineage audit metrics"
+            )
         ecology_report.append(
             f"| {member_id} | {appearances} | "
             f"{values['distinctiveness']['mean']:.2f} | "
             f"{values['generic_assistant_tendency']['mean']:.2f} | "
             f"{values['dominance']['mean']:.2f} | "
-            f"{values['deference']['mean']:.2f} |"
+            f"{values['deference']['mean']:.2f} | "
+            f"{lineage_values['expected_lineage_fit']['mean']:.2f} | "
+            f"{lineage_values['cross_lineage_contamination']['mean']:.2f} | "
+            f"{lineage_values['distinction_survival']['mean']:.2f} |"
         )
     ecology_report.append("")
     (out / "ECOLOGY_REPORT.md").write_text("\n".join(ecology_report) + "\n")
