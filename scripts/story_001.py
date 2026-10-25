@@ -197,7 +197,6 @@ def preflight(args: argparse.Namespace) -> None:
 
 
 def wait_server(port: int, proc: subprocess.Popen, log: Path) -> float:
-def wait_server(port: int, proc: subprocess.Popen, log: Path) -> float:
     started = time.monotonic()
     deadline = started + 120
     while time.monotonic() < deadline:
@@ -655,7 +654,6 @@ def provider_call(
     raise RuntimeError(f"{stage_id}: unreachable local retry state")
 
 
-def provider(args: argparse.Namespace) -> None:
 def provider(args: argparse.Namespace) -> None:
     cfg = load_json(args.config)
     validate_config(cfg)
