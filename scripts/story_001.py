@@ -668,6 +668,63 @@ def provider_call(
     raise RuntimeError(f"{stage_id}: unreachable local retry state")
 
 
+def reasoning_plan_call(
+    *,
+    cfg: dict,
+    key: str,
+    stage_id: str,
+    model: str,
+    messages: list[dict],
+    max_tokens: int,
+    temperature: float,
+    out: Path,
+) -> tuple[str, dict]:
+    """Use a reasoning model as a planner even when it never emits final content."""
+    try:
+        return provider_call(
+            cfg=cfg,
+            key=key,
+            stage_id=stage_id,
+            model=model,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            out=out,
+        )
+    except RuntimeError as exc:
+        if (
+            "local response has no final content" not in str(exc)
+            and "response hit max_tokens" not in str(exc)
+        ):
+            raise
+
+    raw_path = out / "raw" / f"{stage_id}.json"
+    if not raw_path.exists():
+        raise RuntimeError(f"{stage_id}: planner raw response missing")
+    obj = load_json(raw_path)
+    choices = obj.get("choices")
+    if not isinstance(choices, list) or not choices:
+        raise RuntimeError(f"{stage_id}: planner raw response has no choices")
+    message = choices[0].get("message") or {}
+    plan = (message.get("reasoning_content") or message.get("content") or "").strip()
+    if len(plan) < 120:
+        raise RuntimeError(f"{stage_id}: planner reasoning is too short to use")
+    spec = load_json(ROOT / "config" / "candidates.json")[model]
+    call = {
+        "schema_version": 1,
+        "stage_id": stage_id,
+        "provider": "local-llama.cpp",
+        "candidate_id": model,
+        "model_sha256": spec["sha256"],
+        "finish_reason": choices[0].get("finish_reason"),
+        "usage": obj.get("usage"),
+        "reasoning_plan_chars": len(plan),
+        "used_reasoning_as_plan": True,
+    }
+    write_json(out / "calls" / f"{stage_id}-reasoning-plan.json", call)
+    return plan, call
+
+
 def provider(args: argparse.Namespace) -> None:
     cfg = load_json(args.config)
     validate_config(cfg)
