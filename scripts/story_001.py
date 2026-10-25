@@ -1157,7 +1157,8 @@ def provider(args: argparse.Namespace) -> None:
         raise RuntimeError(
             f"STORY-001 final story length {count} outside {minimum}-{maximum}"
         )
-    stop_active_local()\n    print(f"STORY-001 M2-M5 local-model pipeline: PASS ({count} words)")
+    stop_active_local()
+    print(f"STORY-001 M2-M5 local-model pipeline: PASS ({count} words)")
 
 
 def inventory(root: Path) -> list[tuple[str, str]]:
