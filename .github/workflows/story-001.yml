@@ -77,9 +77,11 @@ jobs:
           retention-days: 14
 
   local_models:
-    needs: sprocket
+    needs: preflight
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 45
+    env:
+      STORY001_RESUME_RUN_ID: '40219258883'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -90,66 +92,58 @@ jobs:
           key: ubuntu-neurounner-runtime-v1-b11852
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: story001-sprocket
+          name: story001-preflight
           path: results/story001
+
+      - name: Recover failed M3 evidence from run 40219258883
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p results/resume
+          gh run download 40219258883             --repo "${GITHUB_REPOSITORY}"             --name story001-complete-evidence             --dir results/resume
+          test -f results/resume/local-models/derived/storyboard.md
+          test -f results/resume/sprocket/summary.json
+          test -f results/resume/local-models/raw/m3-normalize-01.json
+          test -f results/resume/local-models/raw/m3-balance-3-part-08.json
 
       - name: Fetch pinned llama.cpp runtime
         run: bash scripts/bootstrap.sh runtime
 
-      - name: Resolve local story model pins
+      - name: Resolve Qwen3.5-4B pin
         run: |
           python3 - <<'PY' >> "$GITHUB_ENV"
           import json
-          c=json.load(open("config/candidates.json"))
-          mapping={
-              "qwen35-4b":"QWEN35",
-              "qwen-storyteller-q4":"STORYTELLER",
-          }
-          for cid,prefix in mapping.items():
-              spec=c[cid]
-              print(f"STORY001_{prefix}_URL={spec['url']}")
-              print(f"STORY001_{prefix}_FILE={spec['file']}")
-              print(f"STORY001_{prefix}_SHA={spec['sha256']}")
+          spec=json.load(open("config/candidates.json"))["qwen35-4b"]
+          print(f"STORY001_QWEN35_URL={spec['url']}")
+          print(f"STORY001_QWEN35_FILE={spec['file']}")
+          print(f"STORY001_QWEN35_SHA={spec['sha256']}")
           PY
 
       - name: Download and SHA-verify Qwen3.5-4B
         run: |
           mkdir -p "$RUNNER_TEMP/story001-models"
           dest="$RUNNER_TEMP/story001-models/$STORY001_QWEN35_FILE"
-          curl -fL --retry 5 --retry-all-errors --connect-timeout 30 \
-            -o "$dest.part" "$STORY001_QWEN35_URL"
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 30             -o "$dest.part" "$STORY001_QWEN35_URL"
           echo "$STORY001_QWEN35_SHA  $dest.part" | sha256sum -c -
           mv "$dest.part" "$dest"
           echo "STORY001_QWEN35_4B=$dest" >> "$GITHUB_ENV"
 
-      - name: Download and SHA-verify QwenStoryteller 8B
+      - name: Resume exact M3 draft, compress, review and edit
         run: |
-          mkdir -p "$RUNNER_TEMP/story001-models"
-          dest="$RUNNER_TEMP/story001-models/$STORY001_STORYTELLER_FILE"
-          curl -fL --retry 5 --retry-all-errors --connect-timeout 30 \
-            -o "$dest.part" "$STORY001_STORYTELLER_URL"
-          echo "$STORY001_STORYTELLER_SHA  $dest.part" | sha256sum -c -
-          mv "$dest.part" "$dest"
-          echo "STORY001_QWEN_STORYTELLER=$dest" >> "$GITHUB_ENV"
+          python3 scripts/story_001.py             --config experiments/story-001/config.json             provider --out results/story001 --resume-root results/resume
 
-      - name: Storyboard, draft, independent review and revision on local GGUFs
-        run: |
-          python3 scripts/story_001.py \
-            --config experiments/story-001/config.json \
-            provider --out results/story001
-
-      - name: Show bounded qualification metadata
+      - name: Show qualification metadata
         if: success()
         run: |
           python3 - <<'PY'
           import json
           q=json.load(open("results/story001/local-models/qualification.json"))
           print("run:",q["github_run_id"])
+          print("recovered from:",q.get("recovered_from_run_id"))
           print("final stage:",q["final_stage"])
           print("words:",q["final_word_count"])
           print("word gate:",q["word_gate"])
           print("models:",q["models"])
-          print("remote provider:",q.get("remote_unpinned_backend"))
           PY
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
