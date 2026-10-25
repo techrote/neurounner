@@ -8,6 +8,7 @@ This file is the first retrieval/signposting document for agents, RAG systems an
 - **[Dataset index](datasets/README.md)** — durable corpora currently committed to the repository.
 - **[BABBLE-001 archive](datasets/babble-001/README.md)** — first fully filed babble/personality dataset: guides, 48 Sprocket histories, NVIDIA compiler history and 12 derived packets.
 - **[BABBLE-002 archive](datasets/babble-002/README.md)** — 1,200 expanded personality-training examples across 12 personas, paired generic negatives, trait lineage and raw NVIDIA expansion history.
+- **[TRAIN-003 corpus](datasets/train-003/README.md)** — 896 reviewed semantic mechanical-compiler examples with balanced four-way decisions and family-disjoint held-out cases.
 
 Raw records outrank derived summaries. Do not discard failed/malformed generations merely because a later compiler produced cleaner output.
 
@@ -28,6 +29,7 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 ## Training
 
 - **[TRAIN-001 CPU LoRA proof](docs/TRAIN_001_CPU_LORA.md)** — 135M CPU LoRA, cross-run checkpoint/resume and measured throughput.
+- **[TRAIN-003 semantic mechanical compiler](docs/TRAIN_003_SEMANTIC_COMPILER.md)** — 896-example four-decision corpus, family-disjoint held-out semantic scoring, direct TRAIN-001 comparison, and durable raw evidence.
 - **[TRAIN-004 full-parameter CPU feasibility](docs/TRAIN_004_FULL_PARAMETER.md)** — measured 135M full-AdamW vs LoRA throughput/RSS/checkpoint ratios plus fresh-runner full-checkpoint resume proof.
 - **[TRAIN-002b void.1 eight-lane study](docs/TRAIN_002B_VOID_EIGHT_LANE.md)** — byte-tokenizer-aware evaluation, two seed controls, six controlled training perturbations, and durable raw held-out evidence.
 - **[PERSONA-001 four-cartridge tournament](docs/PERSONA_001_REPORT.md)** — four SmolLM2-135M personality LoRAs, blind raw vs style-neutral behavioural identification, base-control comparison, and durable release assets.
