@@ -582,41 +582,53 @@ def provider(args: argparse.Namespace) -> None:
     part_specs = [
         (
             "01",
-            "Trigger and boundary",
-            "Present-day smell/noise trigger, then the childhood city-zone edge and the decision to cross toward the autofactory district during the brownout. Establish motive, tactile voice and route.",
+            "The remembered noise",
+            "Open on the present-day sensory trigger and the unreliable memory frame. Establish one precise smell/noise and Sprocket's bodily reaction before moving into childhood.",
         ),
         (
             "02",
-            "Entry and accidental reactivation",
-            "Maintenance shortcut/hatch, knock-code or local habit, dead-looking service corridor, the small physical mistake that restores the wrong sorting/production loop, and the first unmistakable movement.",
+            "City-zone edge",
+            "Move through the childhood city-zone boundary toward the industrial/autofactory district during the brownout. Establish the practical reason for going, barriers, local shortcuts and the companion without unnecessary proper-noun lore.",
         ),
         (
             "03",
-            "The line remembers wrongly",
-            "Sprocket works out what the line is doing, notices a repeated dangerous misclassification or manufacturing mistake, and tries a first practical intervention that fails. Keep causality mechanical and spatially legible.",
+            "The maintenance hatch",
+            "Enter through the maintenance route/hatch using the knock-code or local habit. Show the dead-looking service corridor and the small physical action that accidentally restores the wrong machine loop.",
         ),
         (
             "04",
-            "Companion trapped",
-            "The companion becomes physically endangered by the reactivated machinery. Show the failed first rescue, timing pressure, Sprocket's fear and imperfect competence without heroic polish.",
+            "The line remembers wrongly",
+            "The machinery starts moving. Sprocket works out what the sorting/production line is doing and recognizes the dangerous repeated misclassification or manufacturing error. Keep spatial and mechanical causality explicit.",
         ),
         (
             "05",
-            "Improvised signal and tradeoff",
-            "Sprocket uses scrap/conductor/signal knowledge to alter the control path and must choose between the immediate rescue and stopping the repeating line before it cascades. Resolve the physical tradeoff through action.",
+            "Wrong side of the machinery",
+            "The companion becomes physically endangered or trapped. Show the immediate failed attempt to reach or stop them, timing pressure and Sprocket's imperfect competence.",
         ),
         (
             "06",
-            "Escape and missing noise",
-            "Immediate aftermath, escape back toward the city-zone, lasting physical trace, and present-day memory frame. Resolve the incident but preserve one precise unresolved sensory uncertainty about what stopped or kept turning.",
+            "The failed rescue",
+            "Deepen the rescue problem: one practical intervention fails, the machine's repeat cycle closes options, and Sprocket identifies a scrap/conductor/signal trick that might change the control path.",
+        ),
+        (
+            "07",
+            "The substitute signal",
+            "Execute the improvised signal/control intervention and force the central tradeoff between the companion's immediate rescue and stopping the repeating line before it cascades. Resolve the physical choice through action, not explanation.",
+        ),
+        (
+            "08",
+            "The missing noise",
+            "Immediate aftermath and escape back toward the city-zone, lasting physical trace, then return to the present-day memory frame. Resolve the incident while preserving one precise unresolved sensory uncertainty about what stopped or kept turning.",
         ),
     ]
 
     draft_parts: list[str] = []
     previous_tail = ""
-    segment_min, segment_max = 450, 550
-    segment_preferred = "480-520"
-    segment_tokens = int(budgets.get("draft_segment_max_tokens", 1600))
+    # Eight independently bounded sections make the full story length a structural
+    # property: 8 * 340..410 = 2720..3280 words.
+    segment_min, segment_max = 340, 410
+    segment_preferred = "360-395"
+    segment_tokens = int(budgets.get("draft_segment_max_tokens", 1200))
     for part_id, part_title, part_brief in part_specs:
         messages = [
             {
@@ -631,8 +643,8 @@ def provider(args: argparse.Namespace) -> None:
             {
                 "role": "user",
                 "content": (
-                    f"Write PART {part_id}/06, '{part_title}', in 470-540 words. The hard accepted "
-                    f"range after repair is {segment_min}-{segment_max} words. {part_brief}\n\n"
+                    f"Write PART {part_id}/08, '{part_title}', in {segment_preferred} words. The hard "
+                    f"accepted range is {segment_min}-{segment_max} words. {part_brief}\n\n"
                     "AUTHORITATIVE STORYBOARD:\n"
                     + storyboard
                     + "\n\nSPROCKET SOURCE FRAGMENTS:\n"
@@ -652,27 +664,31 @@ def provider(args: argparse.Namespace) -> None:
             model=models["drafter"],
             messages=messages,
             max_tokens=segment_tokens,
-            temperature=0.72,
+            temperature=0.68,
             out=out,
         )
         count = word_count(part)
         if not segment_min <= count <= segment_max:
+            direction = (
+                "tighten by removing repeated reflection while preserving every event"
+                if count > segment_max
+                else "expand with concrete physical action, sensory detail and causal transition only"
+            )
             repair_messages = [
                 {
                     "role": "system",
                     "content": (
-                        "You are repairing the length of one story section. Return that complete "
-                        "section only. Preserve its events, voice, causal links and transition; do "
+                        "You are repairing one story section's length. Return that complete section "
+                        "only. Preserve its events, voice, causal links and boundary transition; do "
                         "not introduce events from other sections."
                     ),
                 },
                 {
                     "role": "user",
                     "content": (
-                        f"This section is {count} words. Rewrite it to {segment_preferred} words, "
-                        f"with hard acceptance {segment_min}-{segment_max}. Keep every material event "
-                        "and concrete mechanical detail, changing only local pacing/detail density.\n\n"
-                        "SECTION:\n"
+                        f"This section is {count} words. {direction}. Rewrite it to {segment_preferred} "
+                        f"words, with hard acceptance {segment_min}-{segment_max}. Do not summarize "
+                        "or add a new scene.\n\nSECTION:\n"
                         + part
                     ),
                 },
@@ -684,7 +700,7 @@ def provider(args: argparse.Namespace) -> None:
                 model=models["drafter"],
                 messages=repair_messages,
                 max_tokens=segment_tokens,
-                temperature=0.45,
+                temperature=0.35,
                 out=out,
             )
             count = word_count(part)
@@ -696,7 +712,7 @@ def provider(args: argparse.Namespace) -> None:
         part_path.parent.mkdir(parents=True, exist_ok=True)
         part_path.write_text(part + "\n")
         draft_parts.append(part)
-        previous_tail = " ".join(part.split()[-120:])
+        previous_tail = " ".join(part.split()[-100:])
 
     draft = "\n\n---\n\n".join(draft_parts)
     (derived / "draft.md").write_text(draft + "\n")
@@ -746,15 +762,15 @@ def provider(args: argparse.Namespace) -> None:
     (derived / "review.md").write_text(review + "\n")
 
     edited_parts: list[str] = []
-    edit_tokens = int(budgets.get("edit_segment_max_tokens", 1600))
+    edit_tokens = int(budgets.get("edit_segment_max_tokens", 1200))
     for idx, ((part_id, part_title, _), original) in enumerate(
         zip(part_specs, draft_parts)
     ):
         previous_tail = (
-            " ".join(edited_parts[-1].split()[-100:]) if edited_parts else ""
+            " ".join(edited_parts[-1].split()[-90:]) if edited_parts else ""
         )
         next_head = (
-            " ".join(draft_parts[idx + 1].split()[:100])
+            " ".join(draft_parts[idx + 1].split()[:90])
             if idx + 1 < len(draft_parts)
             else ""
         )
@@ -771,9 +787,10 @@ def provider(args: argparse.Namespace) -> None:
             {
                 "role": "user",
                 "content": (
-                    f"Edit PART {part_id}/06, '{part_title}', to 470-540 words; hard acceptance "
-                    f"is {segment_min}-{segment_max}. Address every material reviewer finding that "
-                    "touches this section without adding new proper-noun lore.\n\nFULL REVIEW:\n"
+                    f"Edit PART {part_id}/08, '{part_title}', to {segment_preferred} words; hard "
+                    f"acceptance is {segment_min}-{segment_max}. Address every material reviewer "
+                    "finding that touches this section without adding new proper-noun lore.\n\n"
+                    "FULL REVIEW:\n"
                     + review
                     + "\n\nCURRENT SECTION:\n"
                     + original
@@ -797,11 +814,16 @@ def provider(args: argparse.Namespace) -> None:
             model=models["editor"],
             messages=edit_messages,
             max_tokens=edit_tokens,
-            temperature=0.58,
+            temperature=0.52,
             out=out,
         )
         count = word_count(edited)
         if not segment_min <= count <= segment_max:
+            direction = (
+                "tighten repeated phrasing while retaining every accepted review fix"
+                if count > segment_max
+                else "expand only with concrete action, sensory continuity and causal connective tissue"
+            )
             repair_messages = [
                 {
                     "role": "system",
@@ -813,8 +835,9 @@ def provider(args: argparse.Namespace) -> None:
                 {
                     "role": "user",
                     "content": (
-                        f"The edited section is {count} words. Rewrite to {segment_preferred} words "
-                        f"with hard acceptance {segment_min}-{segment_max}.\n\nSECTION:\n"
+                        f"The edited section is {count} words. {direction}. Rewrite to "
+                        f"{segment_preferred} words with hard acceptance {segment_min}-{segment_max}."
+                        "\n\nSECTION:\n"
                         + edited
                     ),
                 },
@@ -826,7 +849,7 @@ def provider(args: argparse.Namespace) -> None:
                 model=models["editor"],
                 messages=repair_messages,
                 max_tokens=edit_tokens,
-                temperature=0.4,
+                temperature=0.3,
                 out=out,
             )
             count = word_count(edited)
