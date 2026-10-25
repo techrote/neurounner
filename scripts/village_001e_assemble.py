@@ -953,7 +953,11 @@ def main() -> None:
         "issue": 14,
         "member_contract_sha256": population["member_contract_sha256"],
         "evaluation_root": "evaluation",
-        "final_evidence_root": str(out.relative_to(ROOT)),
+        "final_evidence_root": (
+            out.relative_to(ROOT).as_posix()
+            if out.is_absolute()
+            else out.as_posix()
+        ),
         "preference_release_tag": preference_release["release_tag"],
         "members": 36,
         "scenarios": 24,
