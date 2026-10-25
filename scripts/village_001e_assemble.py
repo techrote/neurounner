@@ -113,6 +113,7 @@ def top_five_confusions(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--response-artifacts", type=Path, required=True)
     parser.add_argument("--tournament-artifacts", type=Path, required=True)
     parser.add_argument("--ecology-artifacts", type=Path, required=True)
     parser.add_argument("--ecology-judgment-artifacts", type=Path, required=True)
@@ -139,10 +140,24 @@ def main() -> None:
     expected_members = list(member_meta)
     lineages = [f"G{i:02d}" for i in range(1, 13)]
     siblings = ["A", "B", "C"]
-    scenarios = [
-        f"T{i:02d}"
-        for i in range(1, int(cfg["tournament"]["scenario_count"]) + 1)
-    ]
+    final_eval_path = ROOT / cfg["final_eval_config"]
+    final_eval = json.loads(final_eval_path.read_text())
+    final_eval_sha = sha256_file(final_eval_path)
+    final_scenarios = final_eval.get("scenarios")
+    if (
+        final_eval.get("experiment") != "VILLAGE-001E"
+        or final_eval.get("stage") != "fresh-final-heldout"
+        or not isinstance(final_scenarios, list)
+        or len(final_scenarios) != int(cfg["tournament"]["scenario_count"])
+    ):
+        raise RuntimeError("fresh final heldout config is invalid")
+    scenarios = [row["id"] for row in final_scenarios]
+    if scenarios != [f"F{i:02d}" for i in range(1, 25)]:
+        raise RuntimeError("fresh final heldout IDs must be F01..F24")
+    final_scenario_by_id = {
+        row["id"]: row
+        for row in final_scenarios
+    }
 
     preference_root = ROOT / cfg["preference_evidence_root"]
     preference_summary_path = preference_root / "summary.json"
@@ -155,6 +170,99 @@ def main() -> None:
         raise RuntimeError("preference summary member count mismatch")
     if len(preference_release.get("assets", [])) != 36:
         raise RuntimeError("preference release manifest is incomplete")
+    release_assets = {
+        row["member_id"]: row
+        for row in preference_release["assets"]
+    }
+    if set(release_assets) != set(expected_members):
+        raise RuntimeError("preference release member set mismatch")
+
+    final_responses = find_unique(
+        args.response_artifacts,
+        "result.json",
+        experiment="VILLAGE-001E",
+        stage="fresh-final-heldout-responses",
+        id_key="member_id",
+    )
+    expected_response_ids = set(expected_members) | {"BASE"}
+    if set(final_responses) != expected_response_ids:
+        raise RuntimeError(
+            "fresh final response set mismatch "
+            f"missing={sorted(expected_response_ids-set(final_responses))} "
+            f"extra={sorted(set(final_responses)-expected_response_ids)}"
+        )
+
+    for response_id in sorted(expected_response_ids):
+        doc = json.loads(final_responses[response_id].read_text())
+        common_checks = {
+            "member_contract_sha256": population["member_contract_sha256"],
+            "base_model": campaign["base_model"]["id"],
+            "base_revision": campaign["base_model"]["revision"],
+            "preference_release_tag": preference_release["release_tag"],
+            "final_eval_config_sha256": final_eval_sha,
+            "fresh_after_preference_training": True,
+            "exact_training_input_collision_count": 0,
+            "hidden_member_prompt_used": False,
+        }
+        for key, expected in common_checks.items():
+            if doc.get(key) != expected:
+                raise RuntimeError(
+                    f"{response_id}: final response {key} "
+                    f"{doc.get(key)!r} != {expected!r}"
+                )
+        if response_id == "BASE":
+            base_checks = {
+                "base_control": True,
+                "lineage": None,
+                "sibling": None,
+                "preference_adapter_sha256": None,
+            }
+            for key, expected in base_checks.items():
+                if doc.get(key) != expected:
+                    raise RuntimeError(
+                        f"BASE: final response {key} mismatch"
+                    )
+        else:
+            meta = member_meta[response_id]
+            member_checks = {
+                "base_control": False,
+                "lineage": meta["lineage"],
+                "sibling": meta["sibling"],
+                "preference_adapter_sha256": release_assets[
+                    response_id
+                ]["adapter_directory_sha256"],
+            }
+            for key, expected in member_checks.items():
+                if doc.get(key) != expected:
+                    raise RuntimeError(
+                        f"{response_id}: final response {key} mismatch"
+                    )
+
+        response_rows = doc.get("responses")
+        if not isinstance(response_rows, list) or len(response_rows) != 24:
+            raise RuntimeError(
+                f"{response_id}: final response cardinality mismatch"
+            )
+        if [row.get("scenario_id") for row in response_rows] != scenarios:
+            raise RuntimeError(
+                f"{response_id}: final response scenario order mismatch"
+            )
+        for row in response_rows:
+            expected = final_scenario_by_id[row["scenario_id"]]
+            if (
+                row.get("prompt") != expected["prompt"]
+                or row.get("family") != expected["family"]
+            ):
+                raise RuntimeError(
+                    f"{response_id}/{row['scenario_id']}: "
+                    "final prompt/family drift"
+                )
+
+    base_final_result = json.loads(final_responses["BASE"].read_text())
+    base_final_by_id = {
+        row["scenario_id"]: row
+        for row in base_final_result["responses"]
+    }
 
     base_summary_path = ROOT / "experiments/persona-001/evidence/summary.json"
     if not base_summary_path.is_file():
@@ -180,7 +288,7 @@ def main() -> None:
         "scenario.json",
         experiment="VILLAGE-001E",
         stage="hierarchical-blind-tournament-scenario",
-        id_key="scenario",
+        id_key="scenario_id",
     )
     missing_scenarios = sorted(set(scenarios) - set(tournament))
     extra_scenarios = sorted(set(tournament) - set(scenarios))
@@ -224,10 +332,27 @@ def main() -> None:
         }
         for member_id in expected_members
     }
+    base_raw_task_relevance = []
+    base_behavior_task_relevance = []
+    base_raw_genericness = []
+    base_behavior_genericness = []
     super_audit_count = 0
 
     for scenario_id in scenarios:
         doc = json.loads(tournament[scenario_id].read_text())
+        expected_scenario = final_scenario_by_id[scenario_id]
+        if (
+            doc.get("scenario_id") != scenario_id
+            or doc.get("fresh_after_preference_training") is not True
+            or doc.get("final_eval_config_sha256") != final_eval_sha
+            or doc.get("scenario", {}).get("prompt")
+            != expected_scenario["prompt"]
+            or doc.get("scenario", {}).get("family")
+            != expected_scenario["family"]
+        ):
+            raise RuntimeError(
+                f"{scenario_id}: tournament final-heldout identity mismatch"
+            )
         if doc["providers_saw_member_ids"] is not False:
             raise RuntimeError(f"{scenario_id}: tournament provider identity leak flag")
         records = doc.get("records")
@@ -346,6 +471,51 @@ def main() -> None:
             if row.get("super_audit") is not None:
                 super_audit_count += 1
             total_records += 1
+
+        control = doc.get("untuned_base_control")
+        if not isinstance(control, dict):
+            raise RuntimeError(
+                f"{scenario_id}: untuned BASE control is missing"
+            )
+        if control.get("response") != base_final_by_id[scenario_id]["response"]:
+            raise RuntimeError(
+                f"{scenario_id}: BASE control response drift"
+            )
+        if not isinstance(control.get("behavior_summary"), str) or len(
+            control["behavior_summary"].strip()
+        ) < 8:
+            raise RuntimeError(
+                f"{scenario_id}: BASE behavior summary missing"
+            )
+        for mode, task_bucket, generic_bucket in (
+            (
+                "raw",
+                base_raw_task_relevance,
+                base_raw_genericness,
+            ),
+            (
+                "behavior",
+                base_behavior_task_relevance,
+                base_behavior_genericness,
+            ),
+        ):
+            score = control.get(mode)
+            if not isinstance(score, dict):
+                raise RuntimeError(
+                    f"{scenario_id}: BASE {mode} score missing"
+                )
+            for key in ("task_relevance", "genericness"):
+                value = score.get(key)
+                if (
+                    not isinstance(value, int)
+                    or isinstance(value, bool)
+                    or not 0 <= value <= 4
+                ):
+                    raise RuntimeError(
+                        f"{scenario_id}: BASE {mode} {key} invalid"
+                    )
+            task_bucket.append(float(score["task_relevance"]))
+            generic_bucket.append(float(score["genericness"]))
 
         if seen_members != set(expected_members):
             raise RuntimeError(f"{scenario_id}: incomplete member set")
@@ -518,6 +688,18 @@ def main() -> None:
     mean_behavior_task_relevance = statistics.mean(
         final_behavior_task_relevance_values
     )
+    fresh_base_raw_task_relevance = statistics.mean(
+        base_raw_task_relevance
+    )
+    fresh_base_behavior_task_relevance = statistics.mean(
+        base_behavior_task_relevance
+    )
+    fresh_base_raw_genericness = statistics.mean(
+        base_raw_genericness
+    )
+    fresh_base_behavior_genericness = statistics.mean(
+        base_behavior_genericness
+    )
     population_gates = {
         "behavior_lineage_accuracy": {
             "value": behavior_lineage_accuracy,
@@ -535,11 +717,12 @@ def main() -> None:
         },
         "mean_genericness_below_base": {
             "value": mean_genericness,
-            "threshold": float(
+            "threshold": fresh_base_raw_genericness,
+            "comparison": "same fresh F-suite untuned BASE control",
+            "historical_persona001_reference": float(
                 cfg["tournament"]["base_genericness_reference"]
             ),
-            "pass": mean_genericness
-            < float(cfg["tournament"]["base_genericness_reference"]),
+            "pass": mean_genericness < fresh_base_raw_genericness,
         },
         "individual_quality_members": {
             "value": len(individual_pass),
@@ -741,8 +924,14 @@ def main() -> None:
         shutil.rmtree(out)
     out.mkdir(parents=True)
 
+    final_responses_dest = out / "final-responses"
     tournament_dest = out / "tournament-scenarios"
     ecology_dest = out / "ecology"
+    for response_id, path in final_responses.items():
+        shutil.copytree(
+            path.parent,
+            final_responses_dest / response_id,
+        )
     for scenario_id, path in tournament.items():
         shutil.copytree(path.parent, tournament_dest / scenario_id)
     for session_id in expected_sessions:
@@ -830,6 +1019,15 @@ def main() -> None:
         "members": 36,
         "scenarios": 24,
         "blind_response_records": total_records,
+        "fresh_final_heldout": {
+            "config": cfg["final_eval_config"],
+            "config_sha256": final_eval_sha,
+            "scenario_ids": scenarios,
+            "fresh_after_preference_training": True,
+            "trained_members": 36,
+            "untuned_base_control": True,
+            "exact_training_input_collision_count": 0,
+        },
         "providers_saw_member_ids": False,
         "primary_tournament_model": campaign["nvidia"]["models"]["critic"]["id"],
         "behavior_normalizer_model": campaign["nvidia"]["models"]["compiler"]["id"],
@@ -859,14 +1057,26 @@ def main() -> None:
             "behavior_mean_task_relevance": mean_behavior_task_relevance,
             "raw_mean_genericness": mean_genericness,
             "behavior_mean_genericness": mean_behavior_genericness,
-            "base_genericness_reference": float(
+            "fresh_base_raw_task_relevance": (
+                fresh_base_raw_task_relevance
+            ),
+            "fresh_base_behavior_task_relevance": (
+                fresh_base_behavior_task_relevance
+            ),
+            "fresh_base_raw_genericness": fresh_base_raw_genericness,
+            "fresh_base_behavior_genericness": (
+                fresh_base_behavior_genericness
+            ),
+            "historical_persona001_base_genericness_reference": float(
                 cfg["tournament"]["base_genericness_reference"]
             ),
-            "base_genericness_measured": measured_base_genericness,
-            "base_behavior_genericness_measured": (
+            "historical_persona001_base_genericness_measured": (
+                measured_base_genericness
+            ),
+            "historical_persona001_base_behavior_genericness_measured": (
                 measured_base_behavior_genericness
             ),
-            "base_genericness_source": cfg["tournament"][
+            "historical_base_genericness_source": cfg["tournament"][
                 "base_genericness_source"
             ],
             "preference_stage_mean_task_relevance": statistics.mean(
@@ -895,6 +1105,11 @@ def main() -> None:
         },
         "final_adapter_release": cfg["final_release_tag"],
         "qualification_evidence_release": cfg["qualification_release_tag"],
+        "fresh_final_response_artifacts": len(final_responses),
+        "fresh_final_response_ids": sorted(final_responses),
+        "fresh_final_heldout_config": cfg["final_eval_config"],
+        "fresh_final_heldout_config_sha256": final_eval_sha,
+        "untuned_base_control_on_same_suite": True,
     }
     write_json(out / "summary.json", summary)
     write_json(
@@ -920,6 +1135,7 @@ def main() -> None:
         ),
         "source_commit": __import__("os").environ.get("GITHUB_SHA"),
         "tournament_config_sha256": sha256_file(args.config),
+        "final_eval_config_sha256": final_eval_sha,
         "campaign_config_sha256": sha256_file(campaign_path),
         "preference_config_sha256": sha256_file(preference_cfg_path),
         "preference_summary_sha256": sha256_file(preference_summary_path),
@@ -928,10 +1144,21 @@ def main() -> None:
         "dataset_provenance_sha256": sha256_file(out / "dataset-provenance.json"),
         "model_registry_sha256": sha256_file(out / "model-registry.json"),
         "member_contract_sha256": population["member_contract_sha256"],
-        "qualification_thresholds_predeclared": {
-            key: value["threshold"]
-            for key, value in population_gates.items()
+        "qualification_contract_predeclared": {
+            "behavior_lineage_accuracy_min": float(
+                cfg["tournament"]["lineage_gate"]
+            ),
+            "behavior_sibling_accuracy_given_correct_lineage_min": float(
+                cfg["tournament"]["sibling_gate_given_correct_lineage"]
+            ),
+            "genericness_rule": (
+                "population raw mean < same fresh F-suite untuned BASE raw mean"
+            ),
+            "individual_quality_members_min": int(
+                cfg["tournament"]["individual_quality_required"]
+            ),
         },
+        "qualification_gate_results": population_gates,
         "ecology_used_as_hard_population_gate": False,
         "qualification_evidence_release": cfg["qualification_release_tag"],
     }
@@ -940,9 +1167,10 @@ def main() -> None:
     report = [
         "# VILLAGE-001E — final village qualification",
         "",
-        "The final preference-matured cartridges were evaluated without prompt-time "
-        "member/persona descriptions. Tournament providers received opaque response IDs; "
-        "ecology models/judges received opaque participant handles.",
+        "The final preference-matured cartridges were evaluated on a fresh F01-F24 "
+        "suite generated only after preference training, without prompt-time member/persona "
+        "descriptions. Tournament providers received opaque response IDs; ecology "
+        "models/judges received opaque participant handles.",
         "",
         "## Population gate",
         "",
@@ -954,13 +1182,14 @@ def main() -> None:
         f"(gate {float(cfg['tournament']['sibling_gate_given_correct_lineage']):.3f})",
         f"- exact behavior-only 36-member accuracy: {behavior_member_accuracy:.3f}",
         f"- mean final raw-tournament genericness: {mean_genericness:.3f} "
-        f"(must remain below untuned raw reference "
-        f"{float(cfg['tournament']['base_genericness_reference']):.2f})",
+        f"(same F-suite untuned BASE {fresh_base_raw_genericness:.3f})",
         f"- mean style-neutral genericness: {mean_behavior_genericness:.3f} "
-        f"(untuned behavior reference {measured_base_behavior_genericness:.3f})",
-        f"- mean final raw task relevance: {mean_task_relevance:.3f}/4",
+        f"(same F-suite untuned BASE {fresh_base_behavior_genericness:.3f})",
+        f"- mean final raw task relevance: {mean_task_relevance:.3f}/4 "
+        f"(BASE {fresh_base_raw_task_relevance:.3f})",
         f"- mean final style-neutral task relevance: "
-        f"{mean_behavior_task_relevance:.3f}/4",
+        f"{mean_behavior_task_relevance:.3f}/4 "
+        f"(BASE {fresh_base_behavior_task_relevance:.3f})",
         f"- individual quality checks: {len(individual_pass)}/36 "
         f"(gate {int(cfg['tournament']['individual_quality_required'])})",
         "",
@@ -1130,6 +1359,12 @@ def main() -> None:
         "qualification_evidence_release": cfg["qualification_release_tag"],
         "members": 36,
         "scenarios": 24,
+        "final_eval_config": cfg["final_eval_config"],
+        "final_eval_config_sha256": final_eval_sha,
+        "fresh_after_preference_training": True,
+        "fresh_final_response_artifacts": len(final_responses),
+        "untuned_base_control": "BASE" in final_responses,
+        "exact_training_input_collision_count": 0,
         "ecology_sessions": ecology_summary["sessions"],
         "usable_village": usable_village,
         "individual_quality_pass_count": len(individual_pass),

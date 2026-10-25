@@ -6,6 +6,8 @@ on:
     paths:
       - '.github/workflows/village-001e-final.yml'
       - 'experiments/village-001/tournament-config.json'
+      - 'experiments/village-001/final-eval.json'
+      - 'scripts/village_001e_generate_final_responses.py'
       - 'scripts/village_001e_tournament_scenario.py'
       - 'scripts/village_001e_ecology_plan.py'
       - 'scripts/village_001e_ecology_run.py'
@@ -30,6 +32,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:
+      members: ${{ steps.matrix.outputs.members }}
       scenarios: ${{ steps.matrix.outputs.scenarios }}
       ecology: ${{ steps.matrix.outputs.ecology }}
       preference_ready: ${{ steps.preference.outputs.ready }}
@@ -41,6 +44,7 @@ jobs:
       - name: Compile VILLAGE-001E helpers
         run: |
           python3 -m py_compile \
+            scripts/village_001e_generate_final_responses.py \
             scripts/village_001e_tournament_scenario.py \
             scripts/village_001e_ecology_plan.py \
             scripts/village_001e_ecology_run.py \
@@ -52,6 +56,8 @@ jobs:
           python3 scripts/village_001_gate.py
           python3 - <<'PY'
           import json
+          import re
+          from collections import Counter
           from pathlib import Path
           from scripts.village_001e_ecology_plan import build_sessions
 
@@ -69,6 +75,35 @@ jobs:
           assert t["individual_min_behavior_sibling_hits"]==8
           assert "base_genericness_source" in t
           assert cfg["qualification_release_tag"]=="village-001-final-v1"
+          assert cfg["final_eval_config"]=="experiments/village-001/final-eval.json"
+
+          final_eval=json.loads(Path(cfg["final_eval_config"]).read_text())
+          assert final_eval["experiment"]=="VILLAGE-001E"
+          assert final_eval["stage"]=="fresh-final-heldout"
+          assert final_eval["issue"]==14
+          assert final_eval["do_sample"] is False
+          assert final_eval["max_new_tokens"]==160
+          assert [x["id"] for x in final_eval["scenarios"]]==[
+              f"F{i:02d}" for i in range(1,25)
+          ]
+          assert Counter(x["family"] for x in final_eval["scenarios"])=={
+              "embodied_decision":4,
+              "mundane":4,
+              "social":4,
+              "conflicting_motives":4,
+              "failure_recovery":4,
+              "abstract_unfamiliar":4,
+          }
+
+          # The final suite must not reuse the common T01-T24 prompts that #13
+          # turns into preference-training material.
+          common=json.loads(Path("experiments/persona-001/config.json").read_text())["eval"]
+          norm=lambda s:re.sub(r"\s+"," ",s.strip().lower())
+          common_prompts={norm(x["prompt"]) for x in common["scenarios"]}
+          final_prompts=[norm(x["prompt"]) for x in final_eval["scenarios"]]
+          assert len(final_prompts)==len(set(final_prompts))==24
+          assert not (set(final_prompts) & common_prompts)
+
           sessions=build_sessions(cfg)
           assert len(sessions)==24
           assert len({x["session_id"] for x in sessions})==24
@@ -86,9 +121,16 @@ jobs:
           import json
           from pathlib import Path
           from scripts.village_001e_ecology_plan import build_sessions
+          from scripts.village_001_manifest import build_manifest
 
           cfg=json.loads(Path("experiments/village-001/tournament-config.json").read_text())
-          scenarios=[f"T{i:02d}" for i in range(1,cfg["tournament"]["scenario_count"]+1)]
+          campaign=json.loads(Path(cfg["campaign_config"]).read_text())
+          population=build_manifest(campaign)
+          members=[row["member_id"] for row in population["members"]]
+          assert len(members)==36 and len(set(members))==36
+          final_eval=json.loads(Path(cfg["final_eval_config"]).read_text())
+          scenarios=[row["id"] for row in final_eval["scenarios"]]
+          assert len(scenarios)==24 and len(set(scenarios))==24
           sessions=build_sessions(cfg)
           ecology={
               "include":[
@@ -101,6 +143,7 @@ jobs:
                   for row in sessions
               ]
           }
+          print("members="+json.dumps(members,separators=(",",":")))
           print("scenarios="+json.dumps(scenarios,separators=(",",":")))
           print("ecology="+json.dumps(ecology,separators=(",",":")))
           PY
@@ -136,9 +179,171 @@ jobs:
           PY
           echo "ready=true" >> "$GITHUB_OUTPUT"
 
-  tournament:
+  final_responses:
     if: ${{ github.event_name != 'pull_request' && needs.plan.outputs.preference_ready == 'true' }}
     needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        member: ${{ fromJSON(needs.plan.outputs.members) }}
+    env:
+      OMP_NUM_THREADS: 4
+      MKL_NUM_THREADS: 4
+      TOKENIZERS_PARALLELISM: 'false'
+      MEMBER: ${{ matrix.member }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ~/.cache/huggingface/hub
+          key: smollm2-135m-12fd25f7-cpu-v1
+
+      - name: Install CPU final-inference stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install \
+            "transformers>=4.57,<5" \
+            "peft>=0.17,<1" \
+            "huggingface_hub>=0.36,<2" \
+            "safetensors>=0.6,<1"
+
+      - name: Recover and SHA-verify matured cartridge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY' > /tmp/final-asset.env
+          import json,os
+          cfg=json.load(open("experiments/village-001/tournament-config.json"))
+          release=json.load(open("experiments/village-001/preference-evidence/adapter-release.json"))
+          member=os.environ["MEMBER"]
+          matches=[x for x in release["assets"] if x["member_id"]==member]
+          assert len(matches)==1,(member,matches)
+          x=matches[0]
+          print("RELEASE_TAG="+release["release_tag"])
+          print("ASSET_FILE="+x["file"])
+          print("ASSET_SHA="+x["sha256"])
+          PY
+          set -a
+          source /tmp/final-asset.env
+          set +a
+          mkdir -p download adapter
+          gh release download "$RELEASE_TAG" \
+            --pattern "$ASSET_FILE" \
+            --dir download
+          echo "$ASSET_SHA  download/$ASSET_FILE" | sha256sum -c -
+          tar -xzf "download/$ASSET_FILE" -C adapter
+
+      - name: Generate fresh post-preference heldout responses
+        run: |
+          mkdir -p "out/${{ matrix.member }}"
+          python3 scripts/village_001e_generate_final_responses.py \
+            --config experiments/village-001/tournament-config.json \
+            --member "${{ matrix.member }}" \
+            --adapter adapter \
+            --out "out/${{ matrix.member }}"
+
+      - name: Verify terminal fresh-response artifact
+        env:
+          MEMBER: ${{ matrix.member }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          member=os.environ["MEMBER"]
+          r=json.loads((Path("out")/member/"result.json").read_text())
+          assert r["experiment"]=="VILLAGE-001E"
+          assert r["stage"]=="fresh-final-heldout-responses"
+          assert r["member_id"]==member
+          assert r["fresh_after_preference_training"] is True
+          assert r["exact_training_input_collision_count"]==0
+          assert r["hidden_member_prompt_used"] is False
+          assert [x["scenario_id"] for x in r["responses"]]==[
+              f"F{i:02d}" for i in range(1,25)
+          ]
+          print(member,"fresh final responses",len(r["responses"]))
+          PY
+
+      - name: Preserve fresh final responses
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001e-final-responses-${{ matrix.member }}
+          path: out/${{ matrix.member }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  final_base_response:
+    if: ${{ github.event_name != 'pull_request' && needs.plan.outputs.preference_ready == 'true' }}
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      OMP_NUM_THREADS: 4
+      MKL_NUM_THREADS: 4
+      TOKENIZERS_PARALLELISM: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ~/.cache/huggingface/hub
+          key: smollm2-135m-12fd25f7-cpu-v1
+
+      - name: Install CPU final-control inference stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install \
+            "transformers>=4.57,<5" \
+            "peft>=0.17,<1" \
+            "huggingface_hub>=0.36,<2" \
+            "safetensors>=0.6,<1"
+
+      - name: Generate fresh untuned BASE control responses
+        run: |
+          mkdir -p out/BASE
+          python3 scripts/village_001e_generate_final_responses.py \
+            --config experiments/village-001/tournament-config.json \
+            --base-only \
+            --out out/BASE
+
+      - name: Verify fresh BASE control artifact
+        run: |
+          python3 - <<'PY'
+          import json
+          r=json.load(open("out/BASE/result.json"))
+          assert r["member_id"]=="BASE"
+          assert r["base_control"] is True
+          assert r["preference_adapter_sha256"] is None
+          assert r["fresh_after_preference_training"] is True
+          assert r["exact_training_input_collision_count"]==0
+          assert r["hidden_member_prompt_used"] is False
+          assert [x["scenario_id"] for x in r["responses"]]==[
+              f"F{i:02d}" for i in range(1,25)
+          ]
+          print("BASE fresh final responses",len(r["responses"]))
+          PY
+
+      - name: Preserve untuned BASE final responses
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001e-final-responses-BASE
+          path: out/BASE
+          if-no-files-found: error
+          retention-days: 30
+
+  tournament:
+    if: ${{ github.event_name != 'pull_request' && needs.plan.outputs.preference_ready == 'true' }}
+    needs: [plan, final_responses, final_base_response]
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     strategy:
@@ -161,12 +366,18 @@ jobs:
           }
           python3 scripts/village_001_gate.py
 
-      - name: Run blind 36-member scenario tournament
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: village001e-final-responses-*
+          path: responses
+
+      - name: Run blind 36-member fresh-heldout scenario tournament
         run: |
           mkdir -p "out/${{ matrix.scenario }}"
           python3 scripts/village_001e_tournament_scenario.py \
             --config experiments/village-001/tournament-config.json \
             --scenario "${{ matrix.scenario }}" \
+            --responses-root responses \
             --out "out/${{ matrix.scenario }}"
 
       - name: Preserve tournament scenario evidence
@@ -239,7 +450,7 @@ jobs:
             tar -xzf "downloads/$file" -C "adapters/$member"
           done < /tmp/assets.tsv
 
-      - name: Run prompt-neutral three-agent ecology session
+      - name: Run prompt-neutral pair/small-group ecology session
         run: |
           mkdir -p "out/${{ matrix.session_id }}"
           python3 scripts/village_001e_ecology_run.py \
@@ -305,7 +516,7 @@ jobs:
 
   assemble:
     if: ${{ github.event_name != 'pull_request' }}
-    needs: [plan, tournament, ecology_run, ecology_judge]
+    needs: [plan, final_responses, final_base_response, tournament, ecology_run, ecology_judge]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -316,7 +527,12 @@ jobs:
 
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          pattern: village001e-tournament-T*
+          pattern: village001e-final-responses-*
+          path: artifacts/final-responses
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: village001e-tournament-F*
           path: artifacts/tournament
 
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
@@ -332,6 +548,7 @@ jobs:
       - name: Independently assemble final village qualification
         run: |
           python3 scripts/village_001e_assemble.py \
+            --response-artifacts artifacts/final-responses \
             --tournament-artifacts artifacts/tournament \
             --ecology-artifacts artifacts/ecology \
             --ecology-judgment-artifacts artifacts/ecology-judgments \
@@ -366,6 +583,20 @@ jobs:
           assert Path("datasets/village-001/evaluation/summary.json").is_file()
           assert Path("datasets/village-001/evaluation/ecology-summary.json").is_file()
           assert Path("datasets/village-001/evaluation/model-registry.json").is_file()
+          response_results=list(
+              Path("experiments/village-001/final-evidence/final-responses").glob("*/result.json")
+          )
+          assert len(response_results)==37
+          assert Path("experiments/village-001/final-evidence/final-responses/BASE/result.json").is_file()
+          assert Path("datasets/village-001/evaluation/final-responses/BASE/result.json").is_file()
+          assert s["fresh_final_heldout"]["scenario_ids"]==[
+              f"F{i:02d}" for i in range(1,25)
+          ]
+          assert s["fresh_final_heldout"]["trained_members"]==36
+          assert s["fresh_final_heldout"]["untuned_base_control"] is True
+          assert s["fresh_final_heldout"]["exact_training_input_collision_count"]==0
+          assert fm["fresh_final_response_artifacts"]==37
+          assert fm["untuned_base_control"] is True
           print(
               "VILLAGE-001E:",
               "usable",s["usable_village"],

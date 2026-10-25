@@ -242,6 +242,8 @@ At PERSONA-001/002 scale, 135M LoRA training used roughly 1.6–2.3 GiB peak RSS
 
 A 36-way flat identity tournament alone is not informative enough. VILLAGE-001 uses hierarchical blind evaluation.
 
+**Final-holdout custody:** the common T01–T24 suite may be used during SFT diagnosis and post-SFT preference maturation, so it is not authoritative final held-out evidence after Stage E. VILLAGE-001E therefore generates responses from every final released cartridge plus the untuned base on a separate fixed F01–F24 suite that is checked against the durable SFT and preference training inputs before inference. The raw and style-neutral final tournament uses only those fresh F-suite responses.
+
 ### Level 1 — lineage identification
 
 Blindly predict G01–G12 from responses.
