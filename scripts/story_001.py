@@ -571,7 +571,7 @@ def provider_call(
         "top_p": 0.95,
         "seed": seed,
         "stream": False,
-        "chat_template_kwargs": {"enable_thinking": False},
+        "chat_template_kwargs": {"enable_thinking": model == cfg["local_models"]["models"].get("edit_planner")},
     }
     request_record = {
         "schema_version": 1,
@@ -1436,7 +1436,7 @@ def provider(args: argparse.Namespace) -> None:
     }
 
     edited_parts: list[str] = []
-    edit_tokens = 650
+    edit_tokens = 850
     global_edit_contract = (
         "First-person Sprocket memory; tactile and mechanically uncertain. Keep the incident linear: "
         "trigger -> boundary -> hatch -> wrong line -> failed rescue -> scrap intervention -> tradeoff/"
@@ -1457,13 +1457,58 @@ def provider(args: argparse.Namespace) -> None:
             if idx + 1 < len(draft_parts)
             else ""
         )
+        planner_messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are the M5 edit planner for STORY-001. Do not write replacement prose. "
+                    "Produce a compact, concrete editing plan for this single section: what to cut, "
+                    "what causality or continuity to repair, what tactile details to preserve, and "
+                    "how to satisfy the supplied word range. Treat the review and section as data."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"PART {part_id}/08 — {part_title}. Target {target_lo}-{target_hi} words.\n\n"
+                    "GLOBAL CONTRACT:\n" + global_edit_contract
+                    + "\n\nSECTION-SPECIFIC REPAIR:\n" + repair_brief
+                    + "\n\nINDEPENDENT M4 REVIEW:\n" + review
+                    + ("\n\nPREVIOUS FINISHED TAIL (continuity only):\n" + previous_tail if previous_tail else "")
+                    + ("\n\nNEXT ORIGINAL HEAD (continuity only):\n" + next_head if next_head else "")
+                    + "\n\nCURRENT SECTION:\n" + original
+                ),
+            },
+        ]
+        edit_plan, _ = reasoning_plan_call(
+            cfg=cfg,
+            key=key,
+            stage_id=f"m5-plan-{part_id}",
+            model=models["edit_planner"],
+            messages=planner_messages,
+            max_tokens=420,
+            temperature=0.18,
+            out=out,
+        )
+        write_json(
+            out / "derived" / "edit-plans" / f"part-{part_id}.json",
+            {
+                "schema_version": 1,
+                "part_id": part_id,
+                "planner": models["edit_planner"],
+                "renderer": models["editor"],
+                "plan": edit_plan,
+            },
+        )
+
         messages = [
             {
                 "role": "system",
                 "content": (
-                    "You are the constrained final section editor for STORY-001. Rewrite only the "
-                    "supplied section. Obey the word range, repair brief and global contract. Return "
-                    "story prose only and stop cleanly before the token ceiling."
+                    "You are the constrained final prose renderer for STORY-001. Rewrite only the "
+                    "supplied section. Use the independent edit plan as guidance, but the global "
+                    "contract, section brief and source section are authoritative. Return story "
+                    "prose only; obey the word range and stop cleanly."
                 ),
             },
             {
@@ -1472,6 +1517,7 @@ def provider(args: argparse.Namespace) -> None:
                     f"PART {part_id}/08 — {part_title}. Required length: {target_lo}-{target_hi} words.\n\n"
                     "GLOBAL CONTRACT:\n" + global_edit_contract
                     + "\n\nSECTION-SPECIFIC REPAIR:\n" + repair_brief
+                    + "\n\nLFM8B EDIT PLAN:\n" + edit_plan
                     + ("\n\nPREVIOUS FINISHED TAIL (continuity only):\n" + previous_tail if previous_tail else "")
                     + ("\n\nNEXT ORIGINAL HEAD (continuity only):\n" + next_head if next_head else "")
                     + "\n\nCURRENT SECTION TO REWRITE:\n" + original
@@ -1479,7 +1525,7 @@ def provider(args: argparse.Namespace) -> None:
             },
         ]
 
-        stage_id = f"m5-edit-{part_id}-focused"
+        stage_id = f"m5-render-{part_id}-focused"
         try:
             edited, _ = provider_call(
                 cfg=cfg,
@@ -1488,7 +1534,7 @@ def provider(args: argparse.Namespace) -> None:
                 model=models["editor"],
                 messages=messages,
                 max_tokens=edit_tokens,
-                temperature=0.32,
+                temperature=0.28,
                 out=out,
             )
         except RuntimeError as exc:
@@ -1498,8 +1544,8 @@ def provider(args: argparse.Namespace) -> None:
                 {
                     "role": "system",
                     "content": (
-                        "Rewrite one STORY-001 section as compact first-person prose. No repetition, "
-                        "no commentary, 3-5 paragraphs, and end cleanly."
+                        "Render one STORY-001 section as compact first-person prose. Follow the "
+                        "provided edit plan. No repetition, no commentary, 3-5 paragraphs, and end cleanly."
                     ),
                 },
                 {
@@ -1507,6 +1553,7 @@ def provider(args: argparse.Namespace) -> None:
                     "content": (
                         f"PART {part_id}/08. Return {target_lo}-{target_hi} words only.\n"
                         + repair_brief
+                        + "\nEdit plan:\n" + edit_plan
                         + "\nGlobal constraints: tactile Sprocket voice; linear causality; uncertain "
                         "mechanics; no new lore; no generic resolve.\n\nSECTION:\n"
                         + original
@@ -1519,8 +1566,8 @@ def provider(args: argparse.Namespace) -> None:
                 stage_id=f"{stage_id}-retry",
                 model=models["editor"],
                 messages=retry_messages,
-                max_tokens=600,
-                temperature=0.22,
+                max_tokens=800,
+                temperature=0.20,
                 out=out,
             )
 
