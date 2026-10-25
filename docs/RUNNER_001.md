@@ -4,33 +4,38 @@ Issue: #51
 
 ## Purpose
 
-Neurounner has useful Linux-only measurements for llama.cpp inference and SmolLM2 CPU training. RUNNER-001 measures what changes when comparable work is executed on standard GitHub-hosted Linux, Windows, and macOS runners.
+Neurounner already has useful Linux-only measurements for llama.cpp inference and SmolLM2 CPU training. RUNNER-001 measures the real hosted-runner choices for comparable Neurounner work on standard GitHub-hosted Linux, Windows, and Apple Silicon macOS runners.
 
-The experiment deliberately separates:
+This is a runner-choice benchmark, not a pure operating-system causal experiment: the standard hosted runner hardware differs.
 
-1. **runner-local work**, where CPU/OS/ISA differences can materially affect Neurounner throughput; and
-2. **GitHub Models API calls**, where model inference is remote and runner differences mostly represent client/network/service variance.
+## Comparable lanes
 
-## Lanes
-
-| Lane | GitHub label | Role |
+| Lane | GitHub label | Observed hosted shape |
 |---|---|---|
-| Linux x64 | `ubuntu-24.04` | current Neurounner baseline |
-| Windows x64 | `windows-2025` | x64 OS comparison |
-| macOS Apple Silicon | `macos-15` | normal Apple-hosted arm64 lane |
-| macOS Intel | `macos-15-intel` | partial x64 control |
+| Linux x64 | `ubuntu-24.04` | 4 logical CPUs, x64 |
+| Windows x64 | `windows-2025` | 4 logical CPUs, x64 |
+| macOS Apple Silicon | `macos-15` | 3 CPUs, Apple M1 virtual / arm64 |
 
-Do not describe the Linux/Windows/Apple-Silicon comparison as an OS-only causal experiment. Standard hosted runner hardware is not identical. The workflow records the concrete CPU, architecture, CPU count, memory and image metadata for every run.
+The workflow records concrete CPU identity, architecture, CPU count, memory, Python version, package versions, and runner image revision on every invocation.
+
+### Intel macOS compatibility probe
+
+An initial `macos-15-intel` control was attempted in run 40219158113. Python 3.12 was available, but the Intel macOS package index exposed only PyTorch 2.2.x while the three comparable lanes supported the same PyTorch 2.14.1 stack. The Intel lane is therefore retained as a compatibility finding rather than mixed into the performance table with a different ML runtime.
 
 ## Fixed identities
 
 - local model: `HuggingFaceTB/SmolLM2-135M-Instruct`
 - local revision: `12fd25f77366fa6b3b4b768ec3050bf629380bac`
-- corpus: `experiments/train-001/kernel_compiler_dataset.json` (SHA-256 recorded per run)
-- GitHub Models endpoint: `https://models.github.ai/inference/chat/completions`
-- default remote model: `openai/gpt-4.1-mini`
+- corpus: `experiments/train-001/kernel_compiler_dataset.json`
+- Python: 3.12
+- PyTorch: 2.14.1 / 2.14.1+cpu
+- Transformers: 4.57.6
+- PEFT: 0.21.2
+- huggingface_hub: 0.36.2
+- psutil: 7.2.2
+- safetensors: 0.8.0
 
-The remote model can be overridden on manual dispatch. Unavailable GitHub Models access is recorded as `unavailable`; it is never substituted with another provider or model.
+The benchmark canonicalizes the JSON corpus before hashing and before byte-oriented microbenchmarks. This prevents Windows checkout line-ending conversion from masquerading as a different corpus or workload. The raw checkout hash is also retained for audit.
 
 ## Measurements
 
@@ -40,19 +45,29 @@ Each lane records:
 - SHA-256 throughput for checkpoint-like bytes;
 - zlib throughput for artifact/checkpoint-like compression;
 - bounded PyTorch CPU matrix multiplication throughput;
-- cold pinned-model load time;
+- pinned SmolLM2 model load time and RSS growth;
 - deterministic SmolLM2 CPU generation throughput;
 - four bounded LoRA optimizer steps over existing TRAIN-001 examples;
-- three GitHub Models API round-trip measurements and token usage when available.
+- total inner benchmark wall time.
 
-The aggregate summary reports raw metrics and ratios against `ubuntu-24.04-x64`.
+The aggregate step fails unless all three expected lanes are present and the canonical corpus SHA-256 is identical across them.
+
+## GitHub Models finding
+
+The originally planned remote GitHub Models latency control cannot be run. GitHub fully retired GitHub Models on 2026-07-30, including the playground, model catalog, inference API, and BYOK.
+
+The pre-fix pilot deliberately attempted the former Actions inference endpoint and received unusable responses on the Linux and Apple lanes. The final benchmark records the service as retired and does not fabricate a remote-model latency figure.
+
+Current GitHub-hosted AI model access is part of GitHub Copilot rather than the former GitHub Models inference API; it is not interchangeable with runner-local model compute.
+
+Reference: https://docs.github.com/en/github-models
 
 ## Interpretation
 
-The most decision-relevant numbers for Neurounner are local model generation, LoRA step throughput, cold setup/load time, memory headroom and total job wall time.
+The most decision-relevant numbers for Neurounner are local model generation, LoRA step throughput, memory headroom, setup/load behavior, and total job wall time. Generic JSON/hash/compression/matmul microbenchmarks are supporting diagnostics, not substitutes for the actual model workload.
 
-GitHub Models latency is useful for orchestration planning, but it is not evidence that one runner executes the hosted model faster: the inference happens remotely.
+In particular, the Apple runner has fewer CPUs than the x64 runners and a different ISA/microarchitecture. Its result answers “which standard GitHub-hosted runner is faster for this Neurounner workload?” rather than “which OS is intrinsically faster?”
 
 ## Reproduction
 
-Run **Actions → RUNNER-001 cross-platform benchmark** or push this benchmark branch. Per-lane JSON and aggregate JSON/Markdown evidence are retained as Actions artifacts for 30 days.
+Run **Actions → RUNNER-001 cross-platform benchmark** or push the benchmark branch. Per-lane JSON and aggregate JSON/Markdown evidence are retained as Actions artifacts for 30 days.
