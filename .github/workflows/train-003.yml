@@ -1,0 +1,205 @@
+name: TRAIN-003 semantic compiler qualification
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/train-003.yml"
+      - "scripts/train_003.py"
+      - "scripts/train_003_compare.py"
+      - "scripts/train_003_dataset.py"
+      - "datasets/train-003/**"
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: neurounner-train-003-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+env:
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  TOKENIZERS_PARALLELISM: "false"
+  HF_HOME: /tmp/neurounner-hf
+  TRAIN003_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  corpus:
+    name: Materialize and validate corpus
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ env.TRAIN003_SOURCE_SHA }}
+      - name: Deterministic validation
+        run: |
+          python3 -m py_compile scripts/train_003_dataset.py scripts/train_003.py scripts/train_003_compare.py
+          rm -rf datasets/train-003
+          python3 scripts/train_003_dataset.py materialize --out-root datasets/train-003
+          python3 scripts/train_003_dataset.py check
+          python3 - <<'PY'
+          import json
+          m=json.load(open("datasets/train-003/manifest.json"))
+          assert (m["train_examples"],m["heldout_examples"],m["total_examples"]) == (768,128,896)
+          assert m["train_family_count"] == 24 and m["heldout_family_count"] == 4
+          assert not m["family_overlap"]
+          assert set(m["label_counts"]["train"].values()) == {192}
+          assert set(m["label_counts"]["heldout"].values()) == {32}
+          print(json.dumps(m["label_counts"],indent=2))
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train003-corpus-a${{ github.run_attempt }}
+          path: datasets/train-003
+          if-no-files-found: error
+          retention-days: 30
+
+  train001:
+    name: Score authoritative TRAIN-001
+    needs: corpus
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ env.TRAIN003_SOURCE_SHA }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: train003-corpus-a${{ github.run_attempt }}
+          path: datasets/train-003
+      - name: Install CPU stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install "transformers>=4.57,<5" "peft>=0.17,<1" "huggingface_hub>=0.36,<2" "psutil>=7,<8" "safetensors>=0.6,<1"
+      - name: Recover authoritative TRAIN-001 stage-2 adapter
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          repository: techrote/neurounner
+          run-id: 40110636171
+          name: train001-stage2-a1
+          path: train001-authoritative
+      - name: Verify provenance and score held-out set
+        run: |
+          python3 - <<'PY'
+          import json
+          p="train001-authoritative/train001/checkpoint-stage2/metadata.json"
+          m=json.load(open(p))
+          assert m["base_model"]=="HuggingFaceTB/SmolLM2-135M-Instruct"
+          assert m["base_revision"]=="12fd25f77366fa6b3b4b768ec3050bf629380bac"
+          assert m["global_step"]==40
+          print("authoritative TRAIN-001 checkpoint verified")
+          PY
+          mkdir -p train003/baseline
+          python3 scripts/train_003.py evaluate \
+            --adapter-checkpoint train001-authoritative/train001/checkpoint-stage2 \
+            --identity TRAIN-001-stage2 \
+            --evidence-out train003/baseline/train001-heldout.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train003-train001-evidence-a${{ github.run_attempt }}
+          path: train003/baseline
+          if-no-files-found: error
+          retention-days: 30
+
+  candidate:
+    name: Train semantic LoRA and score held-out
+    needs: corpus
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ env.TRAIN003_SOURCE_SHA }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: train003-corpus-a${{ github.run_attempt }}
+          path: datasets/train-003
+      - name: Install CPU stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install "transformers>=4.57,<5" "peft>=0.17,<1" "huggingface_hub>=0.36,<2" "psutil>=7,<8" "safetensors>=0.6,<1"
+      - name: One deterministic corpus pass
+        run: |
+          mkdir -p train003/candidate/adapter
+          python3 scripts/train_003.py train \
+            --steps 768 \
+            --adapter-out train003/candidate/adapter \
+            --evidence-out train003/candidate/train003-heldout.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train003-candidate-evidence-a${{ github.run_attempt }}
+          path: train003/candidate
+          if-no-files-found: error
+          retention-days: 30
+
+  compare:
+    name: Direct TRAIN-001 comparison
+    needs: [train001, candidate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ env.TRAIN003_SOURCE_SHA }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: train003-train001-evidence-a${{ github.run_attempt }}
+          path: baseline
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: train003-candidate-evidence-a${{ github.run_attempt }}
+          path: candidate
+      - name: Assemble comparison
+        run: |
+          mkdir -p train003/summary
+          python3 scripts/train_003_compare.py \
+            --baseline baseline/train001-heldout.json \
+            --candidate candidate/train003-heldout.json \
+            --out train003/summary/comparison.json
+          cat train003/summary/comparison.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: train003-comparison-a${{ github.run_attempt }}
+          path: train003/summary
+          if-no-files-found: error
+          retention-days: 30
+
+  publish-corpus:
+    name: Publish qualified corpus to PR branch
+    if: ${{ github.event_name == 'pull_request' }}
+    needs: compare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: true
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: train003-corpus-a${{ github.run_attempt }}
+          path: datasets/train-003
+      - name: Commit deterministic archive
+        env:
+          TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          git add datasets/train-003
+          if git diff --cached --quiet; then
+            echo "corpus already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Materialize TRAIN-003 semantic corpus"
+          git push origin "HEAD:${TARGET_BRANCH}"
