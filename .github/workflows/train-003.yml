@@ -27,7 +27,66 @@ env:
   TRAIN003_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
 jobs:
+  plan:
+    name: Plan qualification
+    runs-on: ubuntu-24.04
+    outputs:
+      qualify: ${{ steps.plan.outputs.qualify }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ env.TRAIN003_SOURCE_SHA }}
+      - id: plan
+        name: Detect durable qualification evidence
+        run: |
+          if [ -f experiments/train-003/evidence/comparison.json ]; then
+            echo "qualify=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "qualify=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  verify-existing:
+    name: Verify durable TRAIN-003 evidence
+    needs: plan
+    if: ${{ needs.plan.outputs.qualify == 'false' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ env.TRAIN003_SOURCE_SHA }}
+      - name: Revalidate corpus and promoted evidence
+        run: |
+          python3 -m py_compile scripts/train_003_dataset.py scripts/train_003.py scripts/train_003_compare.py
+          python3 scripts/train_003_dataset.py check
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root=Path("experiments/train-003/evidence")
+          baseline=json.loads((root/"train001-heldout.json").read_text())
+          candidate=json.loads((root/"train003-heldout.json").read_text())
+          comparison=json.loads((root/"comparison.json").read_text())
+          provenance=json.loads((root/"provenance.json").read_text())
+          manifest_sha=hashlib.sha256(Path("datasets/train-003/manifest.json").read_bytes()).hexdigest()
+          assert baseline["status"] == candidate["status"] == comparison["status"] == "success"
+          assert len(baseline["evaluation"]["rows"]) == 128
+          assert len(candidate["evaluation"]["rows"]) == 128
+          assert comparison["comparison_contract_identical"] is True
+          assert comparison["dataset"]["manifest_sha256"] == manifest_sha
+          assert comparison["semantic_improvement_observed"] is True
+          assert provenance["qualification_run_id"] == 40145401600
+          print(json.dumps({
+            "baseline": comparison["baseline"]["metrics"],
+            "candidate": comparison["candidate"]["metrics"],
+            "delta": comparison["delta_candidate_minus_train001"]
+          }, indent=2))
+          PY
+
   corpus:
+    needs: plan
+    if: ${{ needs.plan.outputs.qualify == 'true' }}
     name: Materialize and validate corpus
     runs-on: ubuntu-24.04
     timeout-minutes: 10
