@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/techrote/neurounner/experiments/village-001/member-corpus-row.schema.json",
+  "title": "VILLAGE-001 member corpus row",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "example_id",
+    "member_id",
+    "lineage",
+    "sibling",
+    "specialization",
+    "source_kind",
+    "surface",
+    "input",
+    "target",
+    "generic_bad_target",
+    "why_bad",
+    "source_guide_id",
+    "source_packet_id",
+    "source_babble_ids",
+    "trait_refs",
+    "seed_refs",
+    "provenance"
+  ],
+  "properties": {
+    "example_id": {"type": "string", "minLength": 1},
+    "member_id": {
+      "type": "string",
+      "pattern": "^V-G(?:0[1-9]|1[0-2])-[ABC]$"
+    },
+    "lineage": {
+      "type": "string",
+      "pattern": "^G(?:0[1-9]|1[0-2])$"
+    },
+    "sibling": {"type": "string", "enum": ["A", "B", "C"]},
+    "specialization": {
+      "type": "string",
+      "enum": ["failure_hardened", "local_tinkerer", "social_scavenger"]
+    },
+    "source_kind": {
+      "type": "string",
+      "enum": ["ancestral_copy", "cloud_expansion"]
+    },
+    "surface": {
+      "type": "string",
+      "enum": [
+        "physical_reaction",
+        "embodied_decision",
+        "local_memory",
+        "conflicting_motives",
+        "failure_and_recovery",
+        "mundane_low_stakes",
+        "conversation_social"
+      ]
+    },
+    "input": {"type": "string", "minLength": 12},
+    "target": {"type": "string", "minLength": 20},
+    "generic_bad_target": {"type": "string", "minLength": 15},
+    "why_bad": {"type": "string", "minLength": 12},
+    "source_guide_id": {
+      "type": "string",
+      "pattern": "^G(?:0[1-9]|1[0-2])$"
+    },
+    "source_packet_id": {"type": "string", "minLength": 1},
+    "source_babble_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "trait_refs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "seed_refs": {
+      "type": "array",
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source_dataset", "member_contract_sha256"],
+      "properties": {
+        "source_dataset": {"type": "string", "minLength": 1},
+        "member_contract_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "provider_call_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
