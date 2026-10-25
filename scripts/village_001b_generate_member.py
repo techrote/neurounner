@@ -18,6 +18,7 @@ from babble_002_expand import (
     extract_json,
     normalize_text,
     packet_for,
+    salvage_from_candidates,
     source_babbles,
     trait_catalog,
     validate_examples,
@@ -339,6 +340,45 @@ MALFORMED OUTPUT:
 """
 
 
+def compiler_fill_prompt(
+    *,
+    member: dict,
+    packet: dict,
+    babbles: list[dict],
+    catalog: dict,
+    missing: dict[str, int],
+    previous_inputs: list[str],
+) -> str:
+    total = sum(missing.values())
+    return f"""Generate exactly {total} FRESH replacement VILLAGE-001B examples for member {member['member_id']}.
+
+Ancestral lineage: {member['lineage']}
+Sibling specialization: {member['specialization']}
+Specialization pressure:
+{SPECIALIZATION_GUIDANCE[member['sibling']]}
+
+These rows fill only missing slots from a partially salvaged chunk.
+Required surface counts:
+{json.dumps(missing, sort_keys=True)}
+
+Return JSON only as {{"examples":[...]}}.
+Every row requires: surface, input, target, generic_bad_target, why_bad, trait_refs, seed_refs.
+- trait_refs: 1-5 IDs from SOURCE.trait_catalog;
+- seed_refs: 0-3 valid S* IDs only;
+- every input must be fresh and distinct from all forbidden inputs below;
+- targets should usually be 1-5 sentences and under about 120 words;
+- preserve behavior that survives style-neutral summarization;
+- generic_bad_target must answer the SAME input in sanitized/default-assistant form;
+- do not mention Sprocket, datasets, training, repair, or compilation in targets.
+
+Forbidden previous inputs:
+{json.dumps(previous_inputs[-220:], ensure_ascii=False)}
+
+SOURCE:
+{json.dumps(source_payload(member['lineage'], packet, babbles, catalog), ensure_ascii=False)}
+"""
+
+
 def generate_chunk(
     *,
     key: str,
@@ -422,6 +462,7 @@ def generate_chunk(
         rows = []
         problems = ["compiler_json_parse_failed"]
 
+    candidate_contents = [content]
     malformed = content
     for repair_round in range(1, 3):
         if not problems:
@@ -466,6 +507,7 @@ def generate_chunk(
             attempts_limit=generation["attempts"],
             role="compiler-repair",
         )
+        candidate_contents.append(malformed)
         used_labels.append(repair_label)
         call_records.append(
             {
@@ -491,9 +533,97 @@ def generate_chunk(
             problems = [f"compiler_repair{repair_round}_json_parse_failed"]
 
     if problems:
+        # Preserve every valid row produced by the original/repair calls, then ask the
+        # compiler only for the missing surface slots. This keeps duplicate validation
+        # fail-closed without discarding an otherwise useful 20-row chunk.
+        rows, missing = salvage_from_candidates(
+            candidate_contents,
+            packet,
+            quotas,
+            seen_inputs,
+        )
+        for fill_round in range(1, 5):
+            if not missing:
+                break
+            fill_label = (
+                f"{member['member_id']}-chunk{chunk_index:02d}-compiler-fill{fill_round}"
+            )
+            fill_payload = {
+                "model": compiler["id"],
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "Output fresh supervised-dataset JSON immediately. "
+                            "Keep internal reasoning minimal. Return JSON only."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": compiler_fill_prompt(
+                            member=member,
+                            packet=packet,
+                            babbles=babbles,
+                            catalog=catalog,
+                            missing=missing,
+                            previous_inputs=(
+                                previous_inputs + [row["input"] for row in rows]
+                            ),
+                        ),
+                    },
+                ],
+                "max_tokens": generation["compiler_repair_max_tokens"],
+                "temperature": 0.65,
+                "top_p": 0.92,
+                "stream": False,
+            }
+            if "reasoning_effort" in compiler:
+                fill_payload["reasoning_effort"] = "low"
+            fill_content, fobj, fattempts = call_api(
+                key=key,
+                endpoint=nv["endpoint"],
+                payload=fill_payload,
+                outdir=rawdir,
+                label=fill_label,
+                attempts_limit=generation["attempts"],
+                role="compiler-fill",
+            )
+            used_labels.append(fill_label)
+            call_records.append(
+                {
+                    "label": fill_label,
+                    "role": "compiler-fill",
+                    "usage": fobj.get("usage"),
+                    "finish_reason": fobj.get("choices", [{}])[0].get("finish_reason"),
+                    "attempts": fattempts,
+                }
+            )
+            fill_seen = set(seen_inputs) | {
+                normalize_text(row["input"]) for row in rows
+            }
+            new_rows, missing = salvage_from_candidates(
+                [fill_content],
+                packet,
+                missing,
+                fill_seen,
+            )
+            rows.extend(new_rows)
+
+        rows_check, problems = validate_examples(
+            {"examples": rows},
+            member["lineage"],
+            packet,
+            quotas,
+            seen_inputs,
+            20,
+        )
+        if not problems:
+            rows = rows_check
+
+    if problems:
         raise RuntimeError(
-            f"{member['member_id']} chunk {chunk_index}: compiler invalid after repairs: "
-            f"{problems}"
+            f"{member['member_id']} chunk {chunk_index}: "
+            f"compiler invalid after repair/salvage-fill: {problems}"
         )
     return rows, used_labels, call_records
 
