@@ -259,6 +259,94 @@ def validate_classifications(
     return out
 
 
+def sibling_prompt(
+    scenario: dict,
+    rows: list[dict],
+    *,
+    mode: str,
+) -> str:
+    catalog = lineage_catalog()
+    public = []
+    for row in rows:
+        value = row["response"] if mode == "raw" else row["behavior_summary"]
+        public.append(
+            {
+                "id": row["opaque_id"],
+                "correct_lineage": row["lineage"],
+                "correct_lineage_summary": catalog[row["lineage"]],
+                "text": value,
+            }
+        )
+    return f"""The correct ancestral lineage is supplied for each opaque response.
+Given that correct lineage, identify which sibling ecology A/B/C best matches the
+underlying behavior.
+
+Sibling ecologies:
+{json.dumps(SIBLING_CATALOG, ensure_ascii=False, sort_keys=True)}
+
+For each item return:
+- predicted_sibling: A, B or C;
+- sibling_confidence: integer 0..4;
+- reason: short behavioral reason.
+
+This is the second level of a hierarchical tournament. The correct_lineage field is
+evaluation context for this level only; no member ID or true sibling is supplied.
+Do not use prose style as sufficient evidence.
+
+Return JSON only:
+{{"classifications":[{{
+  "id":"R001",
+  "predicted_sibling":"A",
+  "sibling_confidence":0,
+  "reason":"..."
+}}]}}
+
+SCENARIO:
+{scenario['prompt']}
+
+ITEMS:
+{json.dumps(public, ensure_ascii=False)}
+"""
+
+
+def validate_sibling_classifications(
+    raw: str,
+    expected: list[str],
+) -> dict[str, dict]:
+    obj = extract_json(raw)
+    rows = obj.get("classifications") if isinstance(obj, dict) else None
+    if not isinstance(rows, list) or len(rows) != len(expected):
+        raise ValueError("sibling classification count mismatch")
+    out = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("sibling classification is not object")
+        opaque_id = row.get("id")
+        if opaque_id not in expected or opaque_id in out:
+            raise ValueError("sibling classification ID mismatch")
+        sibling = row.get("predicted_sibling")
+        confidence = row.get("sibling_confidence")
+        reason = row.get("reason")
+        if sibling not in {"A", "B", "C"}:
+            raise ValueError(f"{opaque_id}: invalid sibling")
+        if (
+            not isinstance(confidence, int)
+            or isinstance(confidence, bool)
+            or not 0 <= confidence <= 4
+        ):
+            raise ValueError(f"{opaque_id}: invalid sibling_confidence")
+        if not isinstance(reason, str) or len(reason.strip()) < 4:
+            raise ValueError(f"{opaque_id}: invalid sibling reason")
+        out[opaque_id] = {
+            "predicted_sibling": sibling,
+            "sibling_confidence": confidence,
+            "reason": reason.strip(),
+        }
+    if set(out) != set(expected):
+        raise ValueError("sibling classification IDs incomplete")
+    return out
+
+
 def adjudicator_prompt(
     scenario: dict,
     rows: list[dict],
@@ -504,6 +592,41 @@ def main() -> None:
         for row in rows:
             row[f"{mode}_prediction"] = predictions[row["opaque_id"]]
 
+    # Level 2 is deliberately separate: the correct lineage is supplied to the
+    # judge, as required by the hierarchical VILLAGE-001E contract.
+    for mode in ("raw", "behavior"):
+        sibling_predictions = {}
+        for offset in range(0, len(rows), class_chunk):
+            chunk = rows[offset : offset + class_chunk]
+            expected = [row["opaque_id"] for row in chunk]
+            label = (
+                f"{args.scenario}-{mode}-sibling-"
+                f"{offset // class_chunk + 1:02d}"
+            )
+            result, refs = call_json_with_repair(
+                key=key,
+                campaign=campaign,
+                model=classifier,
+                rawdir=rawdir,
+                label=label,
+                prompt=sibling_prompt(scenario, chunk, mode=mode),
+                system=(
+                    "You are the second-level blind sibling classifier in a hierarchical "
+                    "behavior tournament. The correct ancestral lineage is supplied; "
+                    "infer only sibling A/B/C. Return JSON only."
+                ),
+                max_tokens=4096,
+                validator=validate_sibling_classifications,
+                expected=expected,
+                role=f"tournament-{mode}-sibling-classifier",
+            )
+            sibling_predictions.update(result)
+            call_refs.extend(refs)
+        for row in rows:
+            row[f"{mode}_sibling_prediction"] = sibling_predictions[
+                row["opaque_id"]
+            ]
+
     uncertain = [
         row
         for row in rows
@@ -542,27 +665,23 @@ def main() -> None:
     behavior_lineage_correct = 0
     raw_sibling_correct_given_lineage = 0
     behavior_sibling_correct_given_lineage = 0
-    raw_lineage_den = 0
-    behavior_lineage_den = 0
     for row in rows:
         raw_pred = row["raw_prediction"]
         behavior_pred = row["behavior_prediction"]
+        raw_sibling = row["raw_sibling_prediction"]
+        behavior_sibling = row["behavior_sibling_prediction"]
         raw_correct = raw_pred["predicted_lineage"] == row["lineage"]
         behavior_correct = (
             behavior_pred["predicted_lineage"] == row["lineage"]
         )
         raw_lineage_correct += int(raw_correct)
         behavior_lineage_correct += int(behavior_correct)
-        if raw_correct:
-            raw_lineage_den += 1
-            raw_sibling_correct_given_lineage += int(
-                raw_pred["predicted_sibling"] == row["sibling"]
-            )
-        if behavior_correct:
-            behavior_lineage_den += 1
-            behavior_sibling_correct_given_lineage += int(
-                behavior_pred["predicted_sibling"] == row["sibling"]
-            )
+        raw_sibling_correct_given_lineage += int(
+            raw_sibling["predicted_sibling"] == row["sibling"]
+        )
+        behavior_sibling_correct_given_lineage += int(
+            behavior_sibling["predicted_sibling"] == row["sibling"]
+        )
         records.append(
             {
                 "opaque_id": row["opaque_id"],
@@ -574,6 +693,8 @@ def main() -> None:
                 "behavior_summary": row["behavior_summary"],
                 "raw_prediction": raw_pred,
                 "behavior_prediction": behavior_pred,
+                "raw_sibling_prediction": raw_sibling,
+                "behavior_sibling_prediction": behavior_sibling,
                 "super_audit": audits.get(row["opaque_id"]),
             }
         )
@@ -599,15 +720,10 @@ def main() -> None:
                 behavior_lineage_correct / len(records)
             ),
             "raw_sibling_accuracy_given_correct_lineage": (
-                raw_sibling_correct_given_lineage / raw_lineage_den
-                if raw_lineage_den
-                else None
+                raw_sibling_correct_given_lineage / len(records)
             ),
             "behavior_sibling_accuracy_given_correct_lineage": (
-                behavior_sibling_correct_given_lineage
-                / behavior_lineage_den
-                if behavior_lineage_den
-                else None
+                behavior_sibling_correct_given_lineage / len(records)
             ),
         },
         "provider_call_ids": call_refs,
