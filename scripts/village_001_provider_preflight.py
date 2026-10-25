@@ -116,8 +116,15 @@ def call_one(
 
                 content = message.get("content")
                 reasoning = message.get("reasoning_content")
-                if not isinstance(content, str) and not isinstance(reasoning, str):
-                    raise RuntimeError("message has neither content nor reasoning_content")
+                finish_reason = choices[0].get("finish_reason")
+                if not isinstance(content, str) or not content.strip():
+                    raise RuntimeError(
+                        "message has no non-empty final content; reasoning-only output is insufficient"
+                    )
+                if finish_reason == "length":
+                    raise RuntimeError(
+                        "provider exhausted max_tokens before a completed answer"
+                    )
 
                 return {
                     "role": role,
@@ -125,8 +132,9 @@ def call_one(
                     "ok": True,
                     "http_status": response.status,
                     "elapsed_seconds": elapsed,
-                    "finish_reason": choices[0].get("finish_reason"),
-                    "content_chars": len(content) if isinstance(content, str) else 0,
+                    "finish_reason": finish_reason,
+                    "max_tokens": max_tokens,
+                    "content_chars": len(content),
                     "reasoning_chars": len(reasoning) if isinstance(reasoning, str) else 0,
                     "usage": obj.get("usage"),
                     "attempts": attempts,
@@ -204,13 +212,18 @@ def main() -> None:
 
     try:
         for role in ("compiler", "critic", "adjudicator"):
+            role_max_tokens = int(
+                nv.get("preflight", {})
+                .get("max_tokens_by_role", {})
+                .get(role, args.max_tokens)
+            )
             result = call_one(
                 endpoint=endpoint,
                 role=role,
                 model=models[role],
                 key=key,
                 outdir=args.out,
-                max_tokens=args.max_tokens,
+                max_tokens=role_max_tokens,
                 attempts_limit=args.attempts,
             )
             summary["results"].append(result)
