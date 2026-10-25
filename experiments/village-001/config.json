@@ -81,7 +81,37 @@
     "preference_pairs_per_member": 60,
     "sprocket_feedback_workers_per_member": 3,
     "common_heldout_config": "experiments/persona-001/config.json",
-    "member_probe_count": 8
+    "member_probe_count": 8,
+    "expansion_chunks": 3,
+    "expansion_surface_counts": {
+      "A": {
+        "failure_and_recovery": 18,
+        "conflicting_motives": 12,
+        "physical_reaction": 12,
+        "embodied_decision": 6,
+        "local_memory": 4,
+        "mundane_low_stakes": 4,
+        "conversation_social": 4
+      },
+      "B": {
+        "local_memory": 18,
+        "mundane_low_stakes": 12,
+        "physical_reaction": 12,
+        "embodied_decision": 6,
+        "conflicting_motives": 4,
+        "failure_and_recovery": 4,
+        "conversation_social": 4
+      },
+      "C": {
+        "conversation_social": 18,
+        "embodied_decision": 12,
+        "conflicting_motives": 12,
+        "physical_reaction": 6,
+        "local_memory": 4,
+        "failure_and_recovery": 4,
+        "mundane_low_stakes": 4
+      }
+    }
   },
   "sft_training": {
     "epochs": 2,
@@ -159,6 +189,14 @@
         "critic": 128,
         "adjudicator": 768
       }
+    },
+    "generation": {
+      "attempts": 6,
+      "compiler_max_tokens": 8192,
+      "compiler_repair_max_tokens": 16384,
+      "critic_max_tokens": 4096,
+      "adjudicator_max_tokens": 4096,
+      "max_curation_repair_rounds": 2
     }
   },
   "evaluation": {
