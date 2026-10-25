@@ -281,6 +281,41 @@ jobs:
           print("adjudicator output budget: PASS")
           PY
 
+      - name: Verify partial before-after review salvage
+        env:
+          PYTHONPATH: scripts
+        run: |
+          python3 - <<'PY'
+          import json
+          from village_001d_compare import parse_reviews_partial
+
+          side={
+              "task_relevance":4,
+              "genericness":1,
+              "lineage_fit":4,
+              "style_dependence":1,
+              "behavior_fit":4,
+              "behavior_summary":"Concrete local action with wording removed.",
+              "sibling_prediction":"A",
+              "reason":"Behavior stays specific and task relevant.",
+          }
+          cases=[
+              {"scenario_id":"T01"},
+              {"scenario_id":"T02"},
+          ]
+          raw=json.dumps({
+              "reviews":[
+                  {"scenario_id":"T01","X":side,"Y":side},
+                  {"scenario_id":"T02","X":{"bad":1},"Y":side},
+              ]
+          })
+          parsed,problems=parse_reviews_partial(raw,cases)
+          assert set(parsed)=={"T01"},(parsed,problems)
+          assert any("T02:X" in x for x in problems),problems
+          assert any(x.startswith("review_missing:") and "T02" in x for x in problems),problems
+          print("partial before-after review salvage: PASS")
+          PY
+
       - name: Validate preference campaign contract
         env:
           PYTHONPATH: scripts
