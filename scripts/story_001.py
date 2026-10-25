@@ -115,7 +115,6 @@ def validate_config(cfg: dict) -> None:
 
 
 def self_test() -> None:
-def self_test() -> None:
     assert word_count("one two three") == 3
     assert word_count("fault-memory can't stop") == 3
     secret = "DO-NOT-ARCHIVE"
