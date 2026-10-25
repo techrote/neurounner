@@ -72,7 +72,7 @@ Issue #13 feeds each provisional SFT villager back through Sprocket and then app
 Resource flow:
 
 1. **36 local feedback lanes, max 12 parallel.** Each pinned Sprocket instance reacts three times to the member's 24 common held-out responses plus eight held-out cross-sibling member probes: 96 raw reactions/member, 3,456 total.
-2. **36 NVIDIA pair-compilation lanes, cloud concurrency 1.** MiniMax compiles 60 chosen/rejected pairs/member; Bolt independently audits behavioral validity; only borderline pairs go to Nemotron Super; rejected pairs are repaired and re-audited.
+2. **36 NVIDIA pair-compilation lanes, cloud concurrency 1.** MiniMax compiles 60 chosen/rejected pairs/member from both the common T-suite feedback and all eight member-specific P probes (24/60 pairs are P-probe-derived); Bolt independently audits behavioral validity; only borderline pairs go to Nemotron Super; rejected pairs are repaired and re-audited.
 3. **36 CPU preference-training lanes, max 12 parallel.** Each member runs 120 deterministic pairwise optimizer steps with the PERSONA-002 beta/margin/NLL-anchor recipe and 30-step restart checkpoints.
 4. **36 blind before/after evaluations, cloud concurrency 1.** Parent and matured responses are shuffled under X/Y labels. Bolt scores task relevance, genericness, raw lineage fit, style dependence, behavior-only fit and A/B/C sibling prediction.
 5. **Durable assembly/release.** All feedback, pair lineage, provider calls, before/after evidence and cartridge hashes are retained. Regressed members are not silently replaced.
