@@ -63,14 +63,18 @@ jobs:
           assert t["base_genericness_reference"]==3.83
           assert t["individual_quality_required"]==30
           assert t["provider_max_parallel"]==1
-          assert cfg["ecology"]["same_lineage_sessions"]==12
-          assert cfg["ecology"]["cross_lineage_sessions"]==12
+          assert cfg["ecology"]["pair_sessions"]==12
+          assert cfg["ecology"]["small_group_sessions"]==12
           assert cfg["ecology"]["rounds"]==3
+          assert t["individual_min_behavior_sibling_hits"]==8
+          assert "base_genericness_source" in t
           sessions=build_sessions(cfg)
           assert len(sessions)==24
           assert len({x["session_id"] for x in sessions})==24
-          assert all(len(x["members"])==3 for x in sessions)
-          assert all(len(set(x["members"]))==3 for x in sessions)
+          assert sum(x["kind"]=="same_lineage_pair" for x in sessions)==12
+          assert sum(x["kind"]=="cross_lineage_group" for x in sessions)==12
+          assert all(len(x["members"]) in {2,3} for x in sessions)
+          assert all(len(set(x["members"]))==len(x["members"]) for x in sessions)
           print("VILLAGE-001E fixed qualification contract: PASS")
           PY
 
@@ -91,7 +95,7 @@ jobs:
                       "session_id":row["session_id"],
                       "m1":row["members"][0],
                       "m2":row["members"][1],
-                      "m3":row["members"][2],
+                      "m3":row["members"][2] if len(row["members"])>2 else "",
                   }
                   for row in sessions
               ]
@@ -209,7 +213,7 @@ jobs:
             "huggingface_hub>=0.36,<2" \
             "safetensors>=0.6,<1"
 
-      - name: Recover and verify three matured cartridges
+      - name: Recover and verify ecology participant cartridges
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -219,6 +223,8 @@ jobs:
           release=json.load(open("experiments/village-001/preference-evidence/adapter-release.json"))
           by_member={x["member_id"]:x for x in release["assets"]}
           for member in (os.environ["M1"],os.environ["M2"],os.environ["M3"]):
+              if not member:
+                  continue
               x=by_member[member]
               print("\t".join([member,x["file"],x["sha256"]]))
           PY
@@ -343,7 +349,14 @@ jobs:
           assert len(s["members_table"])==36
           assert len(c["lineage_labels"])==12
           assert len(c["sibling_labels"])==3
+          assert len(c["member_labels"])==36
+          assert len(c["raw_member"])==36
+          assert len(c["behavior_member"])==36
           assert e["sessions"]==24
+          assert e["pair_sessions"]==12
+          assert e["small_group_sessions"]==12
+          assert len(json.loads(Path("experiments/village-001/final-evidence/model-registry.json").read_text())["models"])==36
+          assert len(json.loads(Path("experiments/village-001/final-evidence/per-member-verdicts.json").read_text())["members"])==36
           print(
               "VILLAGE-001E:",
               "usable",s["usable_village"],
@@ -384,5 +397,8 @@ jobs:
               --notes-file experiments/village-001/final-evidence/REPORT.md \
               experiments/village-001/final-evidence/summary.json \
               experiments/village-001/final-evidence/confusion-matrices.json \
-              experiments/village-001/final-evidence/ecology-summary.json
+              experiments/village-001/final-evidence/ecology-summary.json \
+              experiments/village-001/final-evidence/model-registry.json \
+              experiments/village-001/final-evidence/dataset-provenance.json \
+              experiments/village-001/final-evidence/per-member-verdicts.json
           fi
