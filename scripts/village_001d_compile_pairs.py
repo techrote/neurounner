@@ -59,11 +59,25 @@ def member_contract(campaign: dict, member_id: str) -> tuple[dict, dict]:
 
 
 def pair_specs(member_id: str) -> list[dict]:
+    # Keep the 60-pair budget fixed, but ensure the eight member-specific probes
+    # collected in Stage 1 actually influence preference continuation.
+    schedule = [
+        *[
+            (f"T{i:02d}", (1, 2))
+            for i in range(1, 13)
+        ],
+        *[
+            (f"T{i:02d}", (1,))
+            for i in range(13, 25)
+        ],
+        *[
+            (f"P{i:02d}", (1, 2, 3))
+            for i in range(1, 9)
+        ],
+    ]
     out = []
-    for index in range(1, 25):
-        scenario = f"T{index:02d}"
-        variants = 3 if index <= 12 else 2
-        for variant in range(1, variants + 1):
+    for scenario, variants in schedule:
+        for variant in variants:
             goal = {
                 1: (
                     "Use the actual SFT parent response as the rejected answer. "
@@ -91,6 +105,13 @@ def pair_specs(member_id: str) -> list[dict]:
             )
     if len(out) != 60:
         raise AssertionError(len(out))
+    counts = Counter(row["scenario_id"] for row in out)
+    if any(counts[f"T{i:02d}"] != 2 for i in range(1, 13)):
+        raise AssertionError("T01-T12 pair schedule mismatch")
+    if any(counts[f"T{i:02d}"] != 1 for i in range(13, 25)):
+        raise AssertionError("T13-T24 pair schedule mismatch")
+    if any(counts[f"P{i:02d}"] != 3 for i in range(1, 9)):
+        raise AssertionError("P01-P08 pair schedule mismatch")
     return out
 
 
@@ -819,12 +840,40 @@ def main() -> None:
     if sft.get("member_contract_sha256") != population["member_contract_sha256"]:
         raise RuntimeError("SFT/member population contract mismatch")
     parent_sha = sft["adapter"]["sha256"]
-    scenarios = {
+    common_rows = sft["evaluation"]["responses"]
+    common = {
         row["scenario_id"]: row
-        for row in sft["evaluation"]["responses"]
+        for row in common_rows
     }
-    if set(scenarios) != {f"T{i:02d}" for i in range(1, 25)}:
-        raise RuntimeError("SFT scenario set mismatch")
+    if set(common) != {f"T{i:02d}" for i in range(1, 25)}:
+        raise RuntimeError("SFT common scenario set mismatch")
+
+    probe_eval = sft.get("member_probe_evaluation") or {}
+    probe_rows = probe_eval.get("responses")
+    if not isinstance(probe_rows, list) or len(probe_rows) != int(
+        pref["feedback"]["member_probe_count"]
+    ):
+        raise RuntimeError("SFT member-probe responses are incomplete")
+    probes = {
+        row["scenario_id"]: row
+        for row in probe_rows
+    }
+    expected_probes = {
+        f"P{i:02d}"
+        for i in range(1, int(pref["feedback"]["member_probe_count"]) + 1)
+    }
+    if set(probes) != expected_probes:
+        raise RuntimeError("SFT member-probe scenario set mismatch")
+    if probe_eval.get("held_out_from_member_training") is not True:
+        raise RuntimeError("SFT member probes are not marked held-out")
+
+    scenarios = {**common, **probes}
+    expected_scenarios = {
+        *common,
+        *probes,
+    }
+    if set(scenarios) != expected_scenarios or len(scenarios) != 32:
+        raise RuntimeError("combined preference scenario set mismatch")
 
     feedback_path = args.feedback
     if feedback_path.is_dir():
@@ -1182,6 +1231,12 @@ def main() -> None:
         "parent_adapter_sha256": parent_sha,
         "feedback_dataset_sha256": feedback_sha,
         "pair_count": len(accepted),
+        "pair_scenario_counts": dict(
+            sorted(Counter(row["scenario_id"] for row in accepted).items())
+        ),
+        "member_probe_pairs": sum(
+            1 for row in accepted if row["scenario_id"].startswith("P")
+        ),
         "feedback_count": sum(len(x) for x in feedback.values()),
         "compiler_model": campaign["nvidia"]["models"]["compiler"]["id"],
         "critic_model": campaign["nvidia"]["models"]["critic"]["id"],

@@ -305,6 +305,8 @@ def main() -> None:
     invalid_feedback_total = 0
     valid_feedback_total = 0
     terminal_counts = Counter()
+    member_probe_pair_total = 0
+    common_pair_total = 0
     pref_margin_before = []
     pref_margin_after = []
     pref_accuracy_before = []
@@ -358,6 +360,7 @@ def main() -> None:
         pair_path = pair_root / "pairs.jsonl"
         validate_pair_file(pair_path, member_id, 60)
         pair_rows = read_jsonl(pair_path)
+        pair_manifest = json.loads((pair_root / "manifest.json").read_text())
         feedback_dataset_sha = sha256_file(
             feedback_root / "feedback.jsonl"
         )
@@ -369,7 +372,6 @@ def main() -> None:
             raise RuntimeError(
                 f"{member_id}: preference pair feedback dataset hash mismatch"
             )
-        pair_manifest = json.loads((pair_root / "manifest.json").read_text())
         if pair_manifest.get("feedback_dataset_sha256") != feedback_dataset_sha:
             raise RuntimeError(
                 f"{member_id}: pair manifest feedback dataset hash mismatch"
@@ -377,6 +379,43 @@ def main() -> None:
         pair_ids = {row["pair_id"] for row in pair_rows}
         if len(pair_ids) != 60:
             raise RuntimeError(f"{member_id}: pair IDs not unique")
+        scenario_counts = Counter(row["scenario_id"] for row in pair_rows)
+        expected_scenario_counts = {
+            **{f"T{i:02d}": 2 for i in range(1, 13)},
+            **{f"T{i:02d}": 1 for i in range(13, 25)},
+            **{f"P{i:02d}": 3 for i in range(1, 9)},
+        }
+        if dict(scenario_counts) != expected_scenario_counts:
+            raise RuntimeError(
+                f"{member_id}: preference scenario distribution mismatch "
+                f"{dict(scenario_counts)} != {expected_scenario_counts}"
+            )
+        member_probe_pairs = sum(
+            count
+            for scenario_id, count in scenario_counts.items()
+            if scenario_id.startswith("P")
+        )
+        common_pairs = sum(
+            count
+            for scenario_id, count in scenario_counts.items()
+            if scenario_id.startswith("T")
+        )
+        if member_probe_pairs != 24 or common_pairs != 36:
+            raise RuntimeError(
+                f"{member_id}: preference source split "
+                f"T={common_pairs} P={member_probe_pairs}"
+            )
+        member_probe_pair_total += member_probe_pairs
+        common_pair_total += common_pairs
+
+        if pair_manifest.get("pair_scenario_counts") != expected_scenario_counts:
+            raise RuntimeError(
+                f"{member_id}: pair manifest scenario counts mismatch"
+            )
+        if pair_manifest.get("member_probe_pairs") != 24:
+            raise RuntimeError(
+                f"{member_id}: pair manifest member-probe count mismatch"
+            )
         if any(
             set(row["source_feedback_ids"]) != set(
                 item["feedback_id"]
@@ -594,6 +633,12 @@ def main() -> None:
         "valid_feedback_records": valid_feedback_total,
         "invalid_feedback_records": invalid_feedback_total,
         "preference_pairs": 36 * 60,
+        "common_scenario_pairs": common_pair_total,
+        "member_probe_pairs": member_probe_pair_total,
+        "pair_source_split_per_member": {
+            "common_T": 36,
+            "member_probe_P": 24,
+        },
         "terminal_pair_curation": dict(terminal_counts),
         "member_feedback": [
             f"sprocket-feedback/{member_id}.jsonl"
@@ -673,6 +718,12 @@ GitHub Actions artifacts are staging only; this tree is durable authority.
         "valid_feedback_records": valid_feedback_total,
         "invalid_feedback_records": invalid_feedback_total,
         "preference_pairs": 36 * 60,
+        "common_scenario_pairs": common_pair_total,
+        "member_probe_pairs": member_probe_pair_total,
+        "pair_source_split_per_member": {
+            "common_T": 36,
+            "member_probe_P": 24,
+        },
         "preference_lanes": 36,
         "qualified_for_population_tournament": qualified,
         "regressed_or_gate_failed": regressed,
@@ -736,6 +787,9 @@ GitHub Actions artifacts are staging only; this tree is durable authority.
         f"- valid parsed Sprocket feedback: {valid_feedback_total}",
         f"- malformed-but-preserved Sprocket feedback: {invalid_feedback_total}",
         f"- preference pairs: {36 * 60}",
+        f"- common-scenario preference pairs: {common_pair_total}",
+        f"- member-specific probe preference pairs: {member_probe_pair_total}",
+        "- per member: 36 common-scenario pairs + 24 member-probe pairs",
         f"- qualified for final population tournament: {len(qualified)}/36",
         f"- preserved as regressed/gate-failed evidence: {len(regressed)}/36",
         "",
