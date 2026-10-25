@@ -62,6 +62,45 @@ jobs:
             scripts/village_001d_compare.py \
             scripts/village_001d_assemble.py
 
+      - name: Verify pair compiler salvages valid rows before repair
+        env:
+          PYTHONPATH: scripts
+        run: |
+          python3 - <<'PY'
+          import json
+          from village_001d_compile_pairs import parse_compiler
+
+          specs=[
+              {"pair_id":"PAIR-V1","scenario_id":"T01","variant":1},
+              {"pair_id":"PAIR-V2","scenario_id":"T02","variant":2},
+          ]
+          scenarios={
+              "T01":{"response":"This exact parent response must be preserved."},
+              "T02":{"response":"Another parent response."},
+          }
+          raw=json.dumps({
+              "pairs":[
+                  {
+                      "pair_id":"PAIR-V1",
+                      "chosen":"A sufficiently concrete chosen response.",
+                      "rejected":"Wrong replacement instead of the exact parent.",
+                      "why_chosen":"Behaviorally distinct and still relevant.",
+                  },
+                  {
+                      "pair_id":"PAIR-V2",
+                      "chosen":"A second sufficiently concrete chosen response.",
+                      "rejected":"A sanitized but plausible generic response.",
+                      "why_chosen":"Keeps useful behavioral distinction.",
+                  },
+              ]
+          })
+          compiled,problems=parse_compiler(raw,specs,scenarios)
+          assert set(compiled)=={"PAIR-V2"},(compiled,problems)
+          assert any("PAIR-V1:variant1_rejected_not_parent" in x for x in problems),problems
+          assert any(x.startswith("missing:") and "PAIR-V1" in x for x in problems),problems
+          print("targeted pair-repair salvage contract: PASS")
+          PY
+
       - name: Validate preference campaign contract
         env:
           PYTHONPATH: scripts
