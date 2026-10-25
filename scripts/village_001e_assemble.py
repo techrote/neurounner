@@ -582,6 +582,10 @@ def main() -> None:
         lambda: defaultdict(list)
     )
     ecology_agent_population: dict[str, list[float]] = defaultdict(list)
+    ecology_lineage_metric_values: dict[str, list[float]] = defaultdict(list)
+    ecology_lineage_agent: dict[str, dict[str, list[float]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
     ecology_super_audits = 0
     ecology_concerns = []
     ecology_rows = []
@@ -633,6 +637,44 @@ def main() -> None:
             ):
                 ecology_agent_population[key].append(float(agent[key]))
 
+        lineage_audit = judgment.get("lineage_audit")
+        if session["kind"] == "cross_lineage_group":
+            if not isinstance(lineage_audit, dict):
+                raise RuntimeError(
+                    f"{session_id}: missing cross-lineage audit"
+                )
+            audit_agents = lineage_audit.get("agents")
+            if not isinstance(audit_agents, list) or len(audit_agents) != len(
+                session["members"]
+            ):
+                raise RuntimeError(
+                    f"{session_id}: lineage audit agent cardinality mismatch"
+                )
+            audit_members = set()
+            for agent in audit_agents:
+                member_id = agent.get("member_id")
+                if member_id not in member_meta or member_id in audit_members:
+                    raise RuntimeError(
+                        f"{session_id}: invalid lineage-audit member"
+                    )
+                audit_members.add(member_id)
+                for key in (
+                    "expected_lineage_fit",
+                    "cross_lineage_contamination",
+                    "distinction_survival",
+                ):
+                    value = float(agent[key])
+                    ecology_lineage_metric_values[key].append(value)
+                    ecology_lineage_agent[member_id][key].append(value)
+            if audit_members != set(session["members"]):
+                raise RuntimeError(
+                    f"{session_id}: lineage audit member set mismatch"
+                )
+        elif lineage_audit is not None:
+            raise RuntimeError(
+                f"{session_id}: same-lineage pair unexpectedly has lineage audit"
+            )
+
         ecology_rows.append(
             {
                 "session_id": session_id,
@@ -640,6 +682,7 @@ def main() -> None:
                 "scenario_id": session["scenario"]["id"],
                 "members": session["members"],
                 "metrics": judgment["metrics"],
+                "lineage_audit": judgment.get("lineage_audit"),
                 "super_audit": judgment.get("super_audit"),
             }
         )
@@ -665,9 +708,20 @@ def main() -> None:
         },
         "super_audit_sessions": ecology_super_audits,
         "super_convergence_concerns": ecology_concerns,
+        "lineage_audit_metrics": {
+            key: metric(values)
+            for key, values in ecology_lineage_metric_values.items()
+        },
         "cross_lineage_contamination": metric(
-            ecology_by_kind["cross_lineage_group"]["cross_agent_contamination"]
+            ecology_lineage_metric_values["cross_lineage_contamination"]
         ),
+        "member_lineage_audit_metrics": {
+            member_id: {
+                key: metric(values)
+                for key, values in metrics.items()
+            }
+            for member_id, metrics in ecology_lineage_agent.items()
+        },
         "agent_metrics": {
             key: metric(values)
             for key, values in ecology_agent_population.items()
@@ -936,6 +990,10 @@ def main() -> None:
         [
             f"- cross-lineage contamination: mean "
             f"{ecology_summary['cross_lineage_contamination']['mean']:.3f}/4",
+            f"- cross-lineage expected-lineage fit: mean "
+            f"{ecology_summary['lineage_audit_metrics']['expected_lineage_fit']['mean']:.3f}/4",
+            f"- cross-lineage distinction survival: mean "
+            f"{ecology_summary['lineage_audit_metrics']['distinction_survival']['mean']:.3f}/4",
             f"- participant dominance: mean "
             f"{ecology_summary['agent_metrics']['dominance']['mean']:.3f}/4",
             f"- participant deference: mean "
