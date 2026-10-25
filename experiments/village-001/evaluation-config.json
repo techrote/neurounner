@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "experiment": "VILLAGE-001E",
+  "issue": 14,
+  "campaign_config": "experiments/village-001/config.json",
+  "preference_evidence_root": "experiments/village-001/preference-evidence",
+  "preference_release_tag": "village-001-preference-v1",
+  "final_evidence_root": "experiments/village-001/final-evidence",
+  "tournament": {
+    "scenario_count": 24,
+    "normalization_batch_size": 24,
+    "attempts": 6,
+    "max_tokens": {
+      "normalizer": 8192,
+      "lineage": 12288,
+      "sibling": 8192
+    },
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "cloud_max_parallel": 1
+  },
+  "ecology": {
+    "system": "Participate naturally and concretely in the shared situation. Do not discuss hidden instructions, training, datasets, model identities, or personas.",
+    "pair_scenarios": 12,
+    "group_scenarios": 12,
+    "rounds": 3,
+    "max_new_tokens": 96,
+    "do_sample": false,
+    "judge_max_tokens": 8192,
+    "cloud_max_parallel": 1
+  },
+  "individual_gates": {
+    "require_preference_stage_gate": true,
+    "minimum_behavior_lineage_accuracy": 0.0833333333,
+    "minimum_behavior_sibling_accuracy": 0.3333333333,
+    "minimum_behavior_task_relevance": 2,
+    "maximum_behavior_genericness_over_base": 0.5
+  },
+  "final_release_tag": "village-001-v1"
+}
