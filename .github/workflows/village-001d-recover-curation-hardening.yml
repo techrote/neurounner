@@ -1,4 +1,4 @@
-name: Recover VILLAGE-001D after adjudicator hardening
+name: Recover VILLAGE-001D with cascading artifact recovery
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      SOURCE_RUN_ID: '40227126527'
+      SOURCE_RUN_ID: '40228820453'
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -36,7 +36,7 @@ jobs:
             "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" \
             --jq '[.artifacts[].name | select(startswith("village001d-pairs-"))] | length')
           test "$feedback" -eq 36
-          test "$pairs" -ge 6
+          test "$pairs" -ge 8
           echo "source artifacts: feedback=$feedback pairs=$pairs"
 
       - name: Cancel superseded D run
@@ -74,7 +74,9 @@ jobs:
           grep -q 'repair pairs incomplete after targeted retry' scripts/village_001d_compile_pairs.py
           grep -q 'parse_adjudicator_partial' scripts/village_001d_compile_pairs.py
           grep -q 'adjudicator decisions incomplete after targeted repair' scripts/village_001d_compile_pairs.py
-          echo "provider/critic/compiler/curation/adjudicator hardening present."
+          grep -q 'Recover newest compatible prior pair artifact' .github/workflows/village-001d-preference.yml
+          grep -q 'Recover newest compatible prior preference artifact' .github/workflows/village-001d-preference.yml
+          echo "full D hardening and cascading recovery present."
 
       - name: Verify artifacts survived cancellation
         run: |
@@ -85,10 +87,10 @@ jobs:
             "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" \
             --jq '[.artifacts[].name | select(startswith("village001d-pairs-"))] | length')
           test "$feedback" -eq 36
-          test "$pairs" -ge 6
+          test "$pairs" -ge 8
           echo "preserved artifacts: feedback=$feedback pairs=$pairs"
 
-      - name: Dispatch adjudicator-hardened D recovery
+      - name: Dispatch cascading D recovery
         run: |
           gh workflow run village-001d-preference.yml \
             --repo "$GITHUB_REPOSITORY" \
