@@ -6,6 +6,7 @@ import json
 import os
 import platform
 import re
+import shutil
 import subprocess
 import time
 import urllib.request
@@ -137,6 +138,115 @@ def parse_feedback(raw: str) -> dict | None:
     }
 
 
+def copy_resume(resume: Path, out: Path) -> None:
+    if not resume.is_dir():
+        raise FileNotFoundError(resume)
+    if out.exists():
+        shutil.rmtree(out)
+    shutil.copytree(resume, out)
+
+
+def validate_complete_feedback(
+    out: Path,
+    member: dict,
+    population: dict,
+    parent_adapter_sha: str,
+    campaign: dict,
+    feedback_cfg: dict,
+) -> bool:
+    manifest_path = out / "manifest.json"
+    feedback_path = out / "feedback.jsonl"
+    if not manifest_path.is_file() or not feedback_path.is_file():
+        return False
+
+    manifest = json.loads(manifest_path.read_text())
+    expected_count = (
+        int(feedback_cfg["scenario_count"])
+        + int(feedback_cfg["member_probe_count"])
+    ) * int(feedback_cfg["workers_per_scenario"])
+    checks = {
+        "experiment": "VILLAGE-001D",
+        "stage": "sprocket-feedback",
+        "member_id": member["member_id"],
+        "lineage": member["lineage"],
+        "sibling": member["sibling"],
+        "member_contract_sha256": population["member_contract_sha256"],
+        "parent_adapter_sha256": parent_adapter_sha,
+        "sprocket_revision": campaign["sprocket"]["source_revision"],
+        "sprocket_sha256": campaign["sprocket"]["source_sha256"],
+        "feedback_count": expected_count,
+        "common_scenario_count": int(feedback_cfg["scenario_count"]),
+        "member_probe_count": int(feedback_cfg["member_probe_count"]),
+        "workers_per_scenario": int(feedback_cfg["workers_per_scenario"]),
+    }
+    for key, expected in checks.items():
+        if manifest.get(key) != expected:
+            raise RuntimeError(
+                f"resume feedback {key} {manifest.get(key)!r} != {expected!r}"
+            )
+
+    rows = [
+        json.loads(line)
+        for line in feedback_path.read_text().splitlines()
+        if line.strip()
+    ]
+    if len(rows) != expected_count:
+        raise RuntimeError(
+            f"resume feedback row count {len(rows)} != {expected_count}"
+        )
+    ids = set()
+    per_scenario = Counter()
+    per_worker: dict[str, set[int]] = {}
+    for row in rows:
+        validate_feedback_row(row)
+        if row.get("member_id") != member["member_id"]:
+            raise RuntimeError("resume feedback member mismatch")
+        if row.get("parent_adapter_sha256") != parent_adapter_sha:
+            raise RuntimeError("resume feedback parent adapter mismatch")
+        provenance = row.get("provenance") or {}
+        if provenance.get("member_contract_sha256") != population[
+            "member_contract_sha256"
+        ]:
+            raise RuntimeError("resume feedback member contract mismatch")
+        if provenance.get("sprocket_revision") != campaign["sprocket"][
+            "source_revision"
+        ]:
+            raise RuntimeError("resume feedback Sprocket revision mismatch")
+        if provenance.get("sprocket_sha256") != campaign["sprocket"][
+            "source_sha256"
+        ]:
+            raise RuntimeError("resume feedback Sprocket hash mismatch")
+        fid = row.get("feedback_id")
+        if fid in ids:
+            raise RuntimeError("resume feedback duplicate ID")
+        ids.add(fid)
+        sid = row["scenario_id"]
+        per_scenario[sid] += 1
+        per_worker.setdefault(sid, set()).add(int(row["sprocket_worker"]))
+
+    expected_scenarios = [
+        *[
+            f"T{i:02d}"
+            for i in range(1, int(feedback_cfg["scenario_count"]) + 1)
+        ],
+        *[
+            f"P{i:02d}"
+            for i in range(1, int(feedback_cfg["member_probe_count"]) + 1)
+        ],
+    ]
+    expected_workers = set(
+        range(1, int(feedback_cfg["workers_per_scenario"]) + 1)
+    )
+    if set(per_scenario) != set(expected_scenarios):
+        raise RuntimeError("resume feedback scenario set mismatch")
+    for sid in expected_scenarios:
+        if per_scenario[sid] != len(expected_workers):
+            raise RuntimeError(f"resume feedback {sid} count mismatch")
+        if per_worker.get(sid) != expected_workers:
+            raise RuntimeError(f"resume feedback {sid} worker set mismatch")
+    return True
+
+
 def request_feedback(
     *,
     port: int,
@@ -192,6 +302,7 @@ def main() -> None:
     )
     parser.add_argument("--member", required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--resume", type=Path)
     args = parser.parse_args()
 
     pref = json.loads(args.config.read_text())
@@ -245,17 +356,46 @@ def main() -> None:
 
     scenarios = common_scenarios + probe_scenarios
 
+    out = args.out
+    if args.resume:
+        copy_resume(args.resume, out)
+        if validate_complete_feedback(
+            out,
+            member,
+            population,
+            parent_adapter_sha,
+            campaign,
+            feedback_cfg,
+        ):
+            print(
+                json.dumps(
+                    {
+                        "member": member["member_id"],
+                        "resume": "complete_feedback_reused",
+                        "feedback_count": (
+                            int(feedback_cfg["scenario_count"])
+                            + int(feedback_cfg["member_probe_count"])
+                        )
+                        * int(feedback_cfg["workers_per_scenario"]),
+                    },
+                    indent=2,
+                )
+            )
+            return
+        # Feedback generation is not chunk-checkpointed. Preserve the previous
+        # incomplete artifact in its source Actions run and restart this lane cleanly.
+        shutil.rmtree(out)
+        out.mkdir(parents=True)
+    else:
+        if out.exists():
+            shutil.rmtree(out)
+        out.mkdir(parents=True)
+
     env = load_env(CACHE / "paths.env")
     server = Path(env["LLAMA_SERVER"])
     model = Path(env["SPROCKET_MODEL"])
     if not server.is_file() or not model.is_file():
         raise RuntimeError("pinned Sprocket runtime/model is unavailable")
-
-    out = args.out
-    if out.exists():
-        import shutil
-        shutil.rmtree(out)
-    out.mkdir(parents=True)
     log_path = out / "sprocket-server.log"
     log_handle = log_path.open("w")
 
