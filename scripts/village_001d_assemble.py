@@ -360,6 +360,7 @@ def main() -> None:
         pair_path = pair_root / "pairs.jsonl"
         validate_pair_file(pair_path, member_id, 60)
         pair_rows = read_jsonl(pair_path)
+        pair_manifest = json.loads((pair_root / "manifest.json").read_text())
         feedback_dataset_sha = sha256_file(
             feedback_root / "feedback.jsonl"
         )
@@ -407,7 +408,6 @@ def main() -> None:
         member_probe_pair_total += member_probe_pairs
         common_pair_total += common_pairs
 
-        pair_manifest = json.loads((pair_root / "manifest.json").read_text())
         if pair_manifest.get("pair_scenario_counts") != expected_scenario_counts:
             raise RuntimeError(
                 f"{member_id}: pair manifest scenario counts mismatch"
