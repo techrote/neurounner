@@ -94,11 +94,11 @@ Durable outputs:
 
 Issue #14 is the terminal qualification stage. It consumes the immutable 36-member `village-001-preference-v1` population and does not retrain or replace failed members.
 
-- Twenty-four common held-out scenarios are evaluated twice: raw output and compiler-neutralized behavior summaries.
+- After preference maturation, all 36 released cartridges plus the untuned BASE answer a fresh `F01`–`F24` suite that was not used for SFT or preference training. Those responses are evaluated twice: raw output and compiler-neutralized behavior summaries.
 - Level 1 is blind 12-way ancestral-lineage identification.
 - Level 2 is a separate blind A/B/C sibling classification with the correct ancestral lineage supplied explicitly; member IDs and true siblings remain hidden.
 - The assembler emits full 12×12 lineage, 3×3 sibling and 36×36 member confusion matrices plus exactly five nearest member confusions for every villager.
-- Population gates are predeclared: behavior-only lineage >= 1/6, sibling-with-correct-lineage >= 5/12, mean genericness below the measured untuned-base control, and at least 30/36 individual quality passes.
+- Population gates are predeclared: behavior-only lineage >= 1/6, sibling-with-correct-lineage >= 5/12, mean raw genericness below the untuned BASE measured on the same fresh `F01`–`F24` suite, and at least 30/36 individual quality passes.
 - Ecology uses 12 deterministic same-lineage pairs and 12 cross-lineage three-agent groups for three rounds, with opaque handles and no prompt-time member/persona descriptions.
 - Ecology records differentiation, generic convergence, sharing/hoarding, conflict persistence/repair, cross-lineage contamination, dominance/deference and outcome progress.
 - Failed or ambiguous villagers remain in evidence and in the final model registry.
