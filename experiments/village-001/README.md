@@ -15,3 +15,18 @@ The initial bootstrap intentionally does **not** launch the full cloud-generatio
 Expected member IDs are `V-G01-A` through `V-G12-C`.
 
 The final durable data archive will live at `datasets/village-001/`. Generated adapters remain outside normal Git history and are represented by hashes/retrieval metadata in the repository.
+
+## VILLAGE-001A contract gate
+
+Issue #10 adds two explicit row contracts:
+
+- [`member-corpus-row.schema.json`](member-corpus-row.schema.json) — member identity, ancestral lineage, positive/negative target and provider provenance;
+- [`sprocket-feedback.schema.json`](sprocket-feedback.schema.json) — post-SFT raw Sprocket feedback with immutable parent/member identity.
+
+`scripts/village_001_validate.py` is the deterministic semantic validator. It checks constraints JSON Schema alone cannot express, including member-ID ↔ lineage/sibling consistency, duplicate normalized inputs, source-guide mismatch and the rule that parsed feedback is required when a feedback record is marked valid.
+
+`scripts/village_001_provider_preflight.py` performs sequential protocol checks against the configured NVIDIA compiler, critic and adjudicator. Authorization is never written to disk; all archived request/response/error records are scrubbed against the live secret before serialization. The provider gate fails closed if the secret is absent, a configured model is unavailable, transport fails, or the provider response shape is incompatible.
+
+Provider preflight evidence is written under `experiments/village-001/provider-preflight/run-<github-run-id>/` by the VILLAGE-001A workflow.
+
+`scripts/village_001_gate.py` is the reusable fail-closed launch gate for #11 onward. It requires a durable successful provider preflight and verifies that its endpoint, roles and exact configured model IDs still match the current campaign configuration. Any later change to a provider model therefore invalidates the old gate until a new preflight is archived.

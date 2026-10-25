@@ -1,0 +1,170 @@
+name: VILLAGE-001A contract and NVIDIA provider gate
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/village-001a-contract.yml'
+      - 'experiments/village-001/config.json'
+      - 'experiments/village-001/member-corpus-row.schema.json'
+      - 'experiments/village-001/sprocket-feedback.schema.json'
+      - 'scripts/village_001_manifest.py'
+      - 'scripts/village_001_validate.py'
+      - 'scripts/village_001_provider_preflight.py'
+      - 'scripts/village_001_gate.py'
+      - 'datasets/village-001/README.md'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/village-001a-contract.yml'
+      - 'experiments/village-001/config.json'
+      - 'experiments/village-001/member-corpus-row.schema.json'
+      - 'experiments/village-001/sprocket-feedback.schema.json'
+      - 'scripts/village_001_manifest.py'
+      - 'scripts/village_001_validate.py'
+      - 'scripts/village_001_provider_preflight.py'
+      - 'scripts/village_001_gate.py'
+      - 'datasets/village-001/README.md'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: neurounner-village-001a-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  offline-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Compile contract helpers
+        run: |
+          python3 -m py_compile \
+            scripts/village_001_manifest.py \
+            scripts/village_001_validate.py \
+            scripts/village_001_provider_preflight.py \
+            scripts/village_001_gate.py
+
+      - name: Parse configuration and schemas
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          for path in (
+              "experiments/village-001/config.json",
+              "experiments/village-001/member-corpus-row.schema.json",
+              "experiments/village-001/sprocket-feedback.schema.json",
+          ):
+              obj=json.loads(Path(path).read_text())
+              assert isinstance(obj,dict),path
+              print(path,"OK")
+          PY
+
+      - name: Validate canonical population and ancestry
+        run: |
+          mkdir -p results/village001a
+          python3 scripts/village_001_manifest.py \
+            --config experiments/village-001/config.json \
+            --out results/village001a/members.json \
+            --check-sources
+
+      - name: Exercise deterministic row validators
+        run: python3 scripts/village_001_validate.py --self-test
+
+      - name: Recheck member cardinality and unique seeds
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest=json.loads(Path("results/village001a/members.json").read_text())
+          members=manifest["members"]
+          ids=[x["member_id"] for x in members]
+          seeds=[x["seed"] for x in members]
+          assert len(members)==36
+          assert len(set(ids))==36
+          assert len(set(seeds))==36
+          assert {x["lineage"] for x in members}=={f"G{i:02d}" for i in range(1,13)}
+          for gid in (f"G{i:02d}" for i in range(1,13)):
+              assert {x["sibling"] for x in members if x["lineage"]==gid}=={"A","B","C"}
+          print("contract:",manifest["member_contract_sha256"])
+          PY
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001a-offline-contract
+          path: results/village001a
+          if-no-files-found: error
+          retention-days: 14
+
+  provider-preflight:
+    if: ${{ github.event_name != 'pull_request' }}
+    needs: offline-contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Run sequential NVIDIA protocol preflight
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+        run: |
+          test -n "$NVIDIA_API_KEY" || {
+            echo "NVKEY repository secret is not configured; fail closed."
+            exit 1
+          }
+          OUT="experiments/village-001/provider-preflight/run-${GITHUB_RUN_ID}"
+          python3 scripts/village_001_provider_preflight.py \
+            --config experiments/village-001/config.json \
+            --out "$OUT" \
+            --max-tokens 128 \
+            --attempts 4
+          test -f "$OUT/summary.json"
+          python3 scripts/village_001_gate.py
+
+      - name: Verify no live provider secret entered archived records
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          key=os.environ["NVIDIA_API_KEY"]
+          root=Path("experiments/village-001/provider-preflight")/f"run-{os.environ['GITHUB_RUN_ID']}"
+          files=[p for p in root.rglob("*") if p.is_file()]
+          assert files
+          for path in files:
+              data=path.read_text(errors="replace")
+              if key in data:
+                  raise SystemExit(f"secret leaked into {path}")
+          print("secret archive scan: PASS",len(files),"files")
+          PY
+
+      - name: Preserve provider preflight as workflow artifact
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001a-provider-preflight-${{ github.run_id }}
+          path: experiments/village-001/provider-preflight/run-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Commit successful provider evidence
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add "experiments/village-001/provider-preflight/run-${GITHUB_RUN_ID}"
+          git commit -m "Record VILLAGE-001A provider preflight ${GITHUB_RUN_ID}"
+          git pull --rebase origin main
+          git push origin HEAD:main

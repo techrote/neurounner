@@ -1,15 +1,31 @@
 {
   "schema_version": 1,
   "experiment": "VILLAGE-001",
-  "source_issues": [1, 2, 3, 5, 6],
+  "source_issues": [
+    1,
+    2,
+    3,
+    5,
+    6
+  ],
   "source_datasets": [
     "datasets/babble-001",
     "datasets/babble-002"
   ],
   "population": {
     "lineages": [
-      "G01", "G02", "G03", "G04", "G05", "G06",
-      "G07", "G08", "G09", "G10", "G11", "G12"
+      "G01",
+      "G02",
+      "G03",
+      "G04",
+      "G05",
+      "G06",
+      "G07",
+      "G08",
+      "G09",
+      "G10",
+      "G11",
+      "G12"
     ],
     "siblings": {
       "A": {
@@ -74,17 +90,17 @@
     "lora_alpha": 16,
     "lora_dropout": 0.05,
     "max_length": 512,
-    "gradient_clip": 1.0,
+    "gradient_clip": 1,
     "max_parallel": 12
   },
   "preference_training": {
     "epochs": 2,
     "learning_rate": 0.0002,
-    "beta": 2.0,
+    "beta": 2,
     "target_margin_nats": 0.2,
     "chosen_nll_weight": 0.15,
     "max_length": 512,
-    "gradient_clip": 1.0,
+    "gradient_clip": 1,
     "max_parallel": 12
   },
   "sprocket": {
@@ -92,8 +108,17 @@
     "source_revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
     "source_sha256": "edc2ac323a2513fa6f8e3e54adf120243de0f7a6b8cc11b349b3e6ad61494a09",
     "feedback_schema": {
-      "required_keys": ["keep", "mutate", "failure_guess", "genericness"],
-      "genericness_values": ["low", "medium", "high"]
+      "required_keys": [
+        "keep",
+        "mutate",
+        "failure_guess",
+        "genericness"
+      ],
+      "genericness_values": [
+        "low",
+        "medium",
+        "high"
+      ]
     }
   },
   "nvidia": {
@@ -118,6 +143,17 @@
         "top_p": 0.95,
         "disagreement_only": true
       }
+    },
+    "preflight": {
+      "max_tokens": 128,
+      "attempts": 4,
+      "roles": [
+        "compiler",
+        "critic",
+        "adjudicator"
+      ],
+      "fail_closed": true,
+      "archive_root": "experiments/village-001/provider-preflight"
     }
   },
   "evaluation": {
@@ -135,6 +171,11 @@
     "dataset_root": "datasets/village-001",
     "release_tag": "village-001-v1",
     "raw_before_derived": true,
-    "actions_artifacts_are_staging_only": true
+    "actions_artifacts_are_staging_only": true,
+    "provider_gate_script": "scripts/village_001_gate.py"
+  },
+  "schemas": {
+    "member_corpus_row": "experiments/village-001/member-corpus-row.schema.json",
+    "sprocket_feedback": "experiments/village-001/sprocket-feedback.schema.json"
   }
 }
