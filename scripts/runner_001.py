@@ -286,7 +286,7 @@ def local_model_bench(
         _ = model.generate(
             ids,
             attention_mask=attention_mask,
-            max_new_tokens=8,
+            max_new_tokens=48,
             do_sample=False,
             pad_token_id=tokenizer.eos_token_id,
         )
@@ -295,7 +295,7 @@ def local_model_bench(
     generated_total = 0
     generation_seconds = 0.0
     with torch.inference_mode():
-        for _ in range(3):
+        for _ in range(5):
             t1 = time.perf_counter()
             out = model.generate(
                 ids,
@@ -357,6 +357,8 @@ def local_model_bench(
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     total_params = sum(p.numel() for p in model.parameters())
 
+    generation_tps = [row["tokens_per_second"] for row in generation_rows]
+
     return {
         "model": model_id,
         "revision": revision,
@@ -374,6 +376,10 @@ def local_model_bench(
             "generated_tokens": generated_total,
             "seconds": generation_seconds,
             "tokens_per_second": generated_total / generation_seconds,
+            "mean_tokens_per_second": statistics.fmean(generation_tps),
+            "median_tokens_per_second": statistics.median(generation_tps),
+            "min_tokens_per_second": min(generation_tps),
+            "max_tokens_per_second": max(generation_tps),
         },
         "lora_training": {
             "steps": len(batches),
@@ -458,7 +464,7 @@ def main() -> int:
         "lane": args.lane,
         "cpu": result["machine"]["cpu_model"],
         "runner_arch": result["machine"]["runner_arch"],
-        "local_generation_tok_s": local["generation"]["tokens_per_second"],
+        "local_generation_tok_s": local["generation"]["median_tokens_per_second"],
         "lora_sequence_tok_s": local["lora_training"]["sequence_tokens_per_second"],
         "torch_gflops": result["benchmarks"]["torch_matmul"]["estimated_gflops"],
         "github_models_status": remote["status"],
