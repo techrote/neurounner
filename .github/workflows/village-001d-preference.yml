@@ -1,0 +1,601 @@
+name: VILLAGE-001D Sprocket-feedback preference maturation
+
+on:
+  workflow_dispatch:
+    inputs:
+      resume_run_id:
+        description: 'Optional prior VILLAGE-001D run ID for reusable pair/training artifacts'
+        required: false
+        type: string
+  pull_request:
+    paths:
+      - '.github/workflows/village-001d-preference.yml'
+      - 'experiments/village-001/preference-config.json'
+      - 'experiments/village-001/preference-pair.schema.json'
+      - 'scripts/village_001d_validate.py'
+      - 'scripts/village_001d_sprocket_feedback.py'
+      - 'scripts/village_001d_compile_pairs.py'
+      - 'scripts/village_001d_preference_train.py'
+      - 'scripts/village_001d_compare.py'
+      - 'scripts/village_001d_assemble.py'
+  push:
+    branches: [main]
+    paths:
+      - 'experiments/village-001/sft-evidence/summary.json'
+      - 'experiments/village-001/sft-evidence/adapter-release.json'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: neurounner-village-001d-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      members: ${{ steps.population.outputs.members }}
+      sft_ready: ${{ steps.sft.outputs.ready }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Compile VILLAGE-001D helpers
+        run: |
+          python3 -m py_compile \
+            scripts/village_001d_validate.py \
+            scripts/village_001d_sprocket_feedback.py \
+            scripts/village_001d_compile_pairs.py \
+            scripts/village_001d_preference_train.py \
+            scripts/village_001d_compare.py \
+            scripts/village_001d_assemble.py
+
+      - name: Validate preference campaign contract
+        run: |
+          python3 scripts/village_001d_validate.py --self-test
+          python3 scripts/village_001_gate.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.village_001d_compile_pairs import pair_specs
+
+          p=json.loads(Path("experiments/village-001/preference-config.json").read_text())
+          assert p["feedback"]["scenario_count"]==24
+          assert p["feedback"]["workers_per_scenario"]==3
+          assert p["pair_generation"]["pair_count"]==60
+          assert p["pair_generation"]["chunks"]==3
+          assert p["pair_generation"]["cloud_max_parallel"]==1
+          assert p["preference_training"]["epochs"]==2
+          assert p["preference_training"]["max_parallel"]==12
+          assert p["preference_training"]["checkpoint_interval_steps"]==30
+
+          for member in ("V-G01-A","V-G06-B","V-G12-C"):
+              specs=pair_specs(member)
+              assert len(specs)==60
+              counts={}
+              for row in specs:
+                  counts[row["scenario_id"]]=counts.get(row["scenario_id"],0)+1
+              assert all(counts[f"T{i:02d}"]==3 for i in range(1,13))
+              assert all(counts[f"T{i:02d}"]==2 for i in range(13,25))
+          print("VILLAGE-001D preference contract: PASS")
+          PY
+
+      - name: Compile canonical 36-member matrix
+        id: population
+        run: |
+          mkdir -p results/village001d
+          python3 scripts/village_001_manifest.py \
+            --config experiments/village-001/config.json \
+            --out results/village001d/members.json \
+            --check-sources
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          m=json.loads(Path("results/village001d/members.json").read_text())
+          members=[row["member_id"] for row in m["members"]]
+          assert len(members)==36 and len(set(members))==36
+          with open(os.environ["GITHUB_OUTPUT"],"a") as fh:
+              fh.write("members="+json.dumps(members,separators=(",",":"))+"\n")
+          PY
+
+      - name: Validate SFT parent population when present
+        id: sft
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ ! -f experiments/village-001/sft-evidence/summary.json ] || \
+             [ ! -f experiments/village-001/sft-evidence/adapter-release.json ]; then
+            if [ "$EVENT_NAME" = "pull_request" ]; then
+              echo "VILLAGE-001C evidence not promoted yet; PR static checks continue."
+              echo "ready=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "VILLAGE-001C evidence/release manifest is required."
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          summary=json.loads(Path("experiments/village-001/sft-evidence/summary.json").read_text())
+          release=json.loads(Path("experiments/village-001/sft-evidence/adapter-release.json").read_text())
+          assert summary["experiment"]=="VILLAGE-001C"
+          assert summary["members"]==36
+          assert summary["successful_terminal_lanes"]==36
+          assert len(release["assets"])==36
+          assert {x["member_id"] for x in release["assets"]}=={
+              f"V-G{i:02d}-{s}" for i in range(1,13) for s in "ABC"
+          }
+          print("VILLAGE-001C parent population: PASS")
+          PY
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001d-plan
+          path: results/village001d
+          if-no-files-found: error
+          retention-days: 14
+
+  feedback:
+    if: ${{ github.event_name != 'pull_request' && needs.plan.outputs.sft_ready == 'true' }}
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        member: ${{ fromJSON(needs.plan.outputs.members) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .cache/neurounner
+          key: ubuntu-neurounner-v1-b11852-edc2ac32-bb741ebb
+
+      - name: Verify pinned Sprocket runtime/model
+        run: |
+          bash scripts/bootstrap.sh runtime
+          bash scripts/bootstrap.sh sprocket
+
+      - name: Collect 72 fresh Sprocket reactions
+        run: |
+          mkdir -p "out/${{ matrix.member }}"
+          python3 scripts/village_001d_sprocket_feedback.py \
+            --config experiments/village-001/preference-config.json \
+            --member "${{ matrix.member }}" \
+            --out "out/${{ matrix.member }}"
+
+      - name: Validate feedback cardinality and parent binding
+        env:
+          MEMBER: ${{ matrix.member }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          from scripts.village_001_validate import validate_feedback_row
+
+          member=os.environ["MEMBER"]
+          root=Path("out")/member
+          rows=[json.loads(x) for x in (root/"feedback.jsonl").read_text().splitlines() if x.strip()]
+          assert len(rows)==72
+          ids=set()
+          scenarios={}
+          for row in rows:
+              validate_feedback_row(row)
+              assert row["member_id"]==member
+              assert row["feedback_id"] not in ids
+              ids.add(row["feedback_id"])
+              scenarios[row["scenario_id"]]=scenarios.get(row["scenario_id"],0)+1
+          assert all(scenarios[f"T{i:02d}"]==3 for i in range(1,25))
+          print(member,"feedback records",len(rows),"valid",sum(x["valid"] for x in rows))
+          PY
+
+      - name: Preserve feedback evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001d-feedback-${{ matrix.member }}
+          path: out/${{ matrix.member }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  compile_pairs:
+    if: ${{ github.event_name != 'pull_request' }}
+    needs: [plan, feedback]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        member: ${{ fromJSON(needs.plan.outputs.members) }}
+    env:
+      NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Fail closed on provider authority
+        run: |
+          test -n "$NVIDIA_API_KEY" || {
+            echo "NVKEY repository secret is not configured."
+            exit 1
+          }
+          python3 scripts/village_001_gate.py
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: village001d-feedback-${{ matrix.member }}
+          path: feedback/${{ matrix.member }}
+
+      - name: Recover prior pair artifact when requested
+        if: ${{ inputs.resume_run_id != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESUME_RUN_ID: ${{ inputs.resume_run_id }}
+        run: |
+          mkdir -p "resume/${{ matrix.member }}"
+          if ! gh run download "$RESUME_RUN_ID" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --name "village001d-pairs-${{ matrix.member }}" \
+            --dir "resume/${{ matrix.member }}"; then
+            echo "No reusable pair artifact for ${{ matrix.member }}."
+            rm -rf "resume/${{ matrix.member }}"
+          fi
+
+      - name: Compile and independently curate 60 preference pairs
+        run: |
+          mkdir -p "out/${{ matrix.member }}"
+          resume_args=()
+          if [ -d "resume/${{ matrix.member }}" ]; then
+            resume_args=(--resume "resume/${{ matrix.member }}")
+          fi
+          python3 scripts/village_001d_compile_pairs.py \
+            --config experiments/village-001/preference-config.json \
+            --member "${{ matrix.member }}" \
+            --feedback "feedback/${{ matrix.member }}" \
+            --out "out/${{ matrix.member }}" \
+            "${resume_args[@]}"
+
+      - name: Validate terminal 60-pair artifact
+        run: |
+          python3 scripts/village_001d_validate.py \
+            --file "out/${{ matrix.member }}/pairs.jsonl" \
+            --member "${{ matrix.member }}" \
+            --expect-count 60
+          test -f "out/${{ matrix.member }}/quality/critic.json"
+          test -f "out/${{ matrix.member }}/quality/adjudicator.json"
+          test -d "out/${{ matrix.member }}/provider"
+
+      - name: Preserve pair evidence, including partial failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001d-pairs-${{ matrix.member }}
+          path: out/${{ matrix.member }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  preference_train:
+    if: ${{ github.event_name != 'pull_request' }}
+    needs: [plan, compile_pairs]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        member: ${{ fromJSON(needs.plan.outputs.members) }}
+    env:
+      OMP_NUM_THREADS: 4
+      MKL_NUM_THREADS: 4
+      TOKENIZERS_PARALLELISM: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Install CPU preference-training stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install \
+            "transformers>=4.57,<5" \
+            "peft>=0.17,<1" \
+            "huggingface_hub>=0.36,<2" \
+            "safetensors>=0.6,<1"
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: village001d-pairs-${{ matrix.member }}
+          path: pairs/${{ matrix.member }}
+
+      - name: Recover and verify VILLAGE-001C parent cartridge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MEMBER: ${{ matrix.member }}
+        run: |
+          python3 - <<'PY' > /tmp/parent.env
+          import json,os
+          release=json.load(open("experiments/village-001/sft-evidence/adapter-release.json"))
+          member=os.environ["MEMBER"]
+          matches=[x for x in release["assets"] if x["member_id"]==member]
+          assert len(matches)==1,(member,matches)
+          x=matches[0]
+          print("PARENT_FILE="+x["file"])
+          print("PARENT_ARCHIVE_SHA="+x["sha256"])
+          print("PARENT_DIR_SHA="+x["adapter_directory_sha256"])
+          PY
+          source /tmp/parent.env
+          mkdir -p parent-download parent-adapter
+          gh release download village-001-sft-v1 \
+            --pattern "$PARENT_FILE" \
+            --dir parent-download
+          echo "$PARENT_ARCHIVE_SHA  parent-download/$PARENT_FILE" | sha256sum -c -
+          tar -xzf "parent-download/$PARENT_FILE" -C parent-adapter
+          test -f parent-adapter/adapter_model.safetensors
+          test -f parent-adapter/adapter_config.json
+          python3 - <<'PY'
+          import hashlib,os
+          from pathlib import Path
+
+          def fhash(path):
+              h=hashlib.sha256()
+              with path.open("rb") as fh:
+                  for chunk in iter(lambda:fh.read(1024*1024),b""):
+                      h.update(chunk)
+              return h.hexdigest()
+
+          root=Path("parent-adapter")
+          h=hashlib.sha256()
+          for p in sorted(x for x in root.rglob("*") if x.is_file()):
+              rel=p.relative_to(root).as_posix().encode()
+              h.update(len(rel).to_bytes(4,"big"))
+              h.update(rel)
+              h.update(bytes.fromhex(fhash(p)))
+          actual=h.hexdigest()
+          expected=os.environ.get("PARENT_DIR_SHA")
+          # PARENT_DIR_SHA came from /tmp/parent.env; export it for this shell step.
+          print("parent directory SHA:",actual)
+          PY
+
+      - name: Recover prior preference artifact when requested
+        if: ${{ inputs.resume_run_id != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESUME_RUN_ID: ${{ inputs.resume_run_id }}
+        run: |
+          mkdir -p "resume/${{ matrix.member }}"
+          if ! gh run download "$RESUME_RUN_ID" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --name "village001d-preference-${{ matrix.member }}" \
+            --dir "resume/${{ matrix.member }}"; then
+            echo "No reusable preference artifact for ${{ matrix.member }}."
+            rm -rf "resume/${{ matrix.member }}"
+          fi
+
+      - name: Run restart-safe preference continuation
+        run: |
+          mkdir -p "out/${{ matrix.member }}"
+          resume_args=()
+          if [ -d "resume/${{ matrix.member }}" ]; then
+            resume_args=(--resume "resume/${{ matrix.member }}")
+          fi
+          python3 scripts/village_001d_preference_train.py \
+            --config experiments/village-001/preference-config.json \
+            --member "${{ matrix.member }}" \
+            --pairs "pairs/${{ matrix.member }}" \
+            --parent-adapter parent-adapter \
+            --out "out/${{ matrix.member }}" \
+            "${resume_args[@]}"
+
+      - name: Verify terminal preference lane
+        env:
+          MEMBER: ${{ matrix.member }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          member=os.environ["MEMBER"]
+          root=Path("out")/member
+          r=json.loads((root/"result.json").read_text())
+          assert r["experiment"]=="VILLAGE-001D"
+          assert r["stage"]=="preference-continuation"
+          assert r["member_id"]==member
+          assert r["training"]["optimizer_steps"]==120
+          assert len(r["training"]["losses"])==120
+          assert len(r["preference_pair_ids"])==60
+          assert len(r["evaluation"]["responses"])==24
+          assert r["evaluation"]["hidden_member_prompt_used"] is False
+          assert (root/"adapter"/"adapter_model.safetensors").is_file()
+          print(
+              member,
+              "margin",r["preference_before"]["mean_margin_nats_per_token"],
+              "->",r["preference_after"]["mean_margin_nats_per_token"],
+              "pref acc",r["preference_before"]["preference_accuracy"],
+              "->",r["preference_after"]["preference_accuracy"],
+              "adapter",r["adapter"]["sha256"],
+          )
+          PY
+
+      - name: Preserve complete or resumable preference evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001d-preference-${{ matrix.member }}
+          path: out/${{ matrix.member }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  compare:
+    if: ${{ github.event_name != 'pull_request' }}
+    needs: [plan, preference_train]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        member: ${{ fromJSON(needs.plan.outputs.members) }}
+    env:
+      NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Verify provider gate
+        run: |
+          test -n "$NVIDIA_API_KEY" || {
+            echo "NVKEY repository secret is not configured."
+            exit 1
+          }
+          python3 scripts/village_001_gate.py
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: village001d-preference-${{ matrix.member }}
+          path: preference/${{ matrix.member }}
+
+      - name: Blindly score parent versus matured behavior
+        run: |
+          mkdir -p "out/${{ matrix.member }}"
+          python3 scripts/village_001d_compare.py \
+            --config experiments/village-001/preference-config.json \
+            --member "${{ matrix.member }}" \
+            --preference-result "preference/${{ matrix.member }}/result.json" \
+            --out "out/${{ matrix.member }}"
+
+      - name: Preserve before-after judge evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001d-compare-${{ matrix.member }}
+          path: out/${{ matrix.member }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  assemble:
+    if: ${{ github.event_name != 'pull_request' }}
+    needs: [plan, feedback, compile_pairs, preference_train, compare]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: village001d-feedback-V-*
+          path: artifacts/feedback
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: village001d-pairs-V-*
+          path: artifacts/pairs
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: village001d-preference-V-*
+          path: artifacts/preference
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: village001d-compare-V-*
+          path: artifacts/comparison
+
+      - name: Assemble durable feedback, preference evidence and cartridges
+        run: |
+          rm -rf release-assets
+          python3 scripts/village_001d_assemble.py \
+            --feedback-artifacts artifacts/feedback \
+            --pair-artifacts artifacts/pairs \
+            --preference-artifacts artifacts/preference \
+            --comparison-artifacts artifacts/comparison \
+            --config experiments/village-001/preference-config.json \
+            --evidence-out experiments/village-001/preference-evidence \
+            --release-out release-assets
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path("experiments/village-001/preference-evidence/summary.json").read_text())
+          r=json.loads(Path("experiments/village-001/preference-evidence/adapter-release.json").read_text())
+          d=json.loads(Path("datasets/village-001/preference-manifest.json").read_text())
+          assert s["members"]==36
+          assert s["feedback_records"]==2592
+          assert s["preference_pairs"]==2160
+          assert s["preference_lanes"]==36
+          assert len(s["members_table"])==36
+          assert len(r["assets"])==36
+          assert d["feedback_records"]==2592
+          assert d["preference_pairs"]==2160
+          assert len(list(Path("release-assets").glob("*.tar.gz")))==36
+          print(
+              "VILLAGE-001D assembly: PASS",
+              "qualified",s["qualified_count"],
+              "regressed",s["regressed_count"],
+          )
+          PY
+
+      - name: Preserve assembled campaign as workflow artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001d-complete-${{ github.run_id }}
+          path: |
+            experiments/village-001/preference-evidence
+            datasets/village-001/sprocket-feedback
+            datasets/village-001/sprocket-feedback-evidence
+            datasets/village-001/preference
+            datasets/village-001/provider/preference
+            datasets/village-001/preference-quality
+            datasets/village-001/preference-manifest.json
+            datasets/village-001/preference-hashes.sha256
+            release-assets
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit durable VILLAGE-001D evidence
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add \
+            experiments/village-001/preference-evidence \
+            datasets/village-001/sprocket-feedback \
+            datasets/village-001/sprocket-feedback-evidence \
+            datasets/village-001/preference \
+            datasets/village-001/provider/preference \
+            datasets/village-001/preference-quality \
+            datasets/village-001/preference-manifest.json \
+            datasets/village-001/preference-hashes.sha256
+          git commit -m "Record VILLAGE-001D preference maturation ${GITHUB_RUN_ID}"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Publish durable matured cartridges
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="village-001-preference-v1"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" release-assets/*.tar.gz --clobber
+          else
+            gh release create "$TAG" \
+              --target main \
+              --title "VILLAGE-001D Sprocket-feedback matured SLM village" \
+              --notes-file experiments/village-001/preference-evidence/REPORT.md \
+              release-assets/*.tar.gz
+          fi
