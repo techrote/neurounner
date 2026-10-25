@@ -586,6 +586,11 @@ jobs:
           }
           assert s["preference_lanes"]==36
           assert len(s["members_table"])==36
+          results=sorted(Path("experiments/village-001/preference-evidence/results").glob("V-G??-[ABC].json"))
+          assert len(results)==36,len(results)
+          assert {json.loads(p.read_text())["member_id"] for p in results}=={
+              row["member_id"] for row in s["members_table"]
+          }
           assert len(r["assets"])==36
           assert d["feedback_records"]==3456
           assert d["preference_pairs"]==2160
@@ -654,6 +659,11 @@ jobs:
             datasets/village-001/preference-manifest.json \
             datasets/village-001/preference-hashes.sha256 \
             datasets/village-001/README.md
+          test "$(git diff --cached --name-only -- 'experiments/village-001/preference-evidence/results/*.json' | wc -l)" -eq 36
+          if git check-ignore -q experiments/village-001/preference-evidence/results/V-G01-A.json; then
+            echo "nested preference evidence results are still ignored"
+            exit 1
+          fi
           git commit -m "Record VILLAGE-001D preference maturation ${GITHUB_RUN_ID}"
           git pull --rebase origin main
           git push origin HEAD:main
