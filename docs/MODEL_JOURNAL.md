@@ -1187,3 +1187,25 @@ Potential utility:
 Caveats:
 - ...
 ~~~
+
+---
+
+# 2026-10-25 — VILLAGE-001E final-qualification authority
+
+**Issue:** #14  
+**Status:** protocol implemented; measured results are authoritative only after the VILLAGE-001D matured population exists and the final workflow commits evidence.
+
+The fixed final protocol is `experiments/village-001/tournament-config.json`. It performs a raw/style-neutral 12-way lineage tournament, a separately conditioned A/B/C sibling level, exact 36-member confusion analysis, and prompt-neutral pair/small-group ecology.
+
+When execution completes, use these records rather than inferring quality from implementation or training loss:
+
+- `experiments/village-001/final-evidence/REPORT.md`
+- `experiments/village-001/final-evidence/ECOLOGY_REPORT.md`
+- `experiments/village-001/final-evidence/summary.json`
+- `experiments/village-001/final-evidence/confusion-matrices.json`
+- `experiments/village-001/final-evidence/per-member-verdicts.json`
+- `experiments/village-001/final-evidence/model-registry.json`
+- `experiments/village-001/final-evidence/dataset-provenance.json`
+
+A failed usable-village gate is still a completed experiment: failed phenotypes remain registered and are not silently regenerated.
+
