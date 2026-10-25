@@ -570,11 +570,19 @@ jobs:
           assert s["members"]==36
           assert s["feedback_records"]==3456
           assert s["preference_pairs"]==2160
+          assert s["common_scenario_pairs"]==1296
+          assert s["member_probe_pairs"]==864
+          assert s["pair_source_split_per_member"]=={
+              "common_T":36,
+              "member_probe_P":24,
+          }
           assert s["preference_lanes"]==36
           assert len(s["members_table"])==36
           assert len(r["assets"])==36
           assert d["feedback_records"]==3456
           assert d["preference_pairs"]==2160
+          assert d["common_scenario_pairs"]==1296
+          assert d["member_probe_pairs"]==864
           assert len(list(Path("release-assets").glob("*.tar.gz")))==36
           readme=Path("datasets/village-001/README.md").read_text()
           assert "VILLAGE-001D preference-matured population" in readme
