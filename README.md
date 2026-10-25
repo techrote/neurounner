@@ -75,6 +75,7 @@ See [the second hosted experiment record](docs/SECOND_EXPERIMENTS.md) for exact 
 - [Second hosted experiment record](docs/SECOND_EXPERIMENTS.md)
 - [Eight-runner startup smoke](docs/STARTUP8_2026-10-24.md)
 - [TRAIN-001 CPU LoRA checkpoint/resume proof](docs/TRAIN_001_CPU_LORA.md)
+- [VILLAGE-001 cybernetic goblin foundry](docs/VILLAGE_001_CYBERGOBLIN_FOUNDRY.md) — 36-member Sprocket-derived SLM population, 72 planned CPU training lanes, NVIDIA compiler/critic panel and hierarchical blind qualification.
 
 The current ~4B comparison shortlist is pinned in [config/candidates.json](config/candidates.json): Phi-4-mini-instruct, Gemma 3 4B IT, Ministral 3 3B Instruct, SmolLM3 3B and Qwen3-4B, alongside Qwen3.5-4B.
 
