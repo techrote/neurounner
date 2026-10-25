@@ -631,6 +631,73 @@ def run_critic(
     return [parsed[pair_id] for pair_id in expected], labels
 
 
+def adjudicator_prompt(
+    member: dict,
+    packet: dict,
+    cases: list[dict],
+) -> str:
+    return f"""Adjudicate only these borderline preference pairs for {member['member_id']}.
+
+Ancestral summary:
+{packet['persona_summary']}
+
+Choose:
+- accept: chosen is behaviorally preferable, relevant, and not merely more stylized;
+- repair: pair is too generic, too style-dependent, behaviorally wrong, or weakly separated.
+
+Return JSON only:
+{{"decisions":[{{"pair_id":"...","decision":"accept|repair","reason":"short reason"}}]}}
+
+Give exactly one decision per supplied pair_id. Keep reason under 24 words and avoid
+quotation marks inside the reason string.
+
+CASES:
+{json.dumps(cases, ensure_ascii=False)}
+"""
+
+
+def parse_adjudicator_partial(
+    raw: str,
+    expected: list[str],
+) -> tuple[dict[str, dict], list[str]]:
+    problems: list[str] = []
+    try:
+        obj = extract_json(raw)
+    except ValueError:
+        return {}, ["adjudicator_json_parse_failed"]
+    decisions = obj.get("decisions") if isinstance(obj, dict) else None
+    if not isinstance(decisions, list):
+        return {}, ["adjudicator_decisions_not_list"]
+
+    expected_set = set(expected)
+    out: dict[str, dict] = {}
+    for row in decisions:
+        if not isinstance(row, dict):
+            problems.append("adjudicator_decision_not_object")
+            continue
+        pair_id = row.get("pair_id")
+        if pair_id not in expected_set or pair_id in out:
+            continue
+        decision = row.get("decision")
+        reason = row.get("reason")
+        if decision not in {"accept", "repair"}:
+            problems.append(f"{pair_id}:decision")
+            continue
+        if not isinstance(reason, str) or len(reason.strip()) < 4:
+            problems.append(f"{pair_id}:reason")
+            continue
+        out[pair_id] = {
+            "pair_id": pair_id,
+            "decision": decision,
+            "reason": reason.strip(),
+        }
+
+    missing = [pair_id for pair_id in expected if pair_id not in out]
+    if missing:
+        problems.append("adjudicator_missing:" + ",".join(missing))
+    return out, problems
+
+
 def run_adjudicator(
     *,
     key: str,
@@ -642,80 +709,89 @@ def run_adjudicator(
     reviews: list[dict],
     rawdir: Path,
     label: str,
-) -> tuple[dict[str, dict], str]:
+) -> tuple[dict[str, dict], dict[str, str]]:
     model = campaign["nvidia"]["models"]["adjudicator"]
     by_id = {row["pair_id"]: row for row in rows}
-    cases = [
-        {"pair": by_id[review["pair_id"]], "critic": review}
-        for review in reviews
-    ]
-    prompt = f"""Adjudicate only these borderline preference pairs for {member['member_id']}.
-
-Ancestral summary:
-{packet['persona_summary']}
-
-Choose:
-- accept: chosen is behaviorally preferable, relevant, and not merely more stylized;
-- repair: pair is too generic, too style-dependent, behaviorally wrong, or weakly separated.
-
-Return JSON only:
-{{"decisions":[{{"pair_id":"...","decision":"accept|repair","reason":"..."}}]}}
-
-CASES:
-{json.dumps(cases, ensure_ascii=False)}
-"""
-    payload = {
-        "model": model["id"],
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "You are the sparse final adjudicator for disputed preference data. "
-                    "Return JSON only."
-                ),
-            },
-            {"role": "user", "content": prompt},
-        ],
-        "max_tokens": int(pref["pair_generation"]["adjudicator_max_tokens"]),
-        "temperature": 0.2,
-        "top_p": 0.9,
-        "stream": False,
-    }
-    content, _, _ = call_api(
-        key=key,
-        endpoint=campaign["nvidia"]["endpoint"],
-        payload=payload,
-        outdir=rawdir,
-        label=label,
-        attempts_limit=int(pref["pair_generation"]["attempts"]),
-        role="preference-adjudicator",
-    )
-    obj = extract_json(content)
-    decisions = obj.get("decisions") if isinstance(obj, dict) else None
-    expected = {review["pair_id"] for review in reviews}
-    if not isinstance(decisions, list) or len(decisions) != len(expected):
-        raise ValueError("adjudicator decision count mismatch")
-    out = {}
-    for row in decisions:
-        if not isinstance(row, dict):
-            raise ValueError("adjudicator decision not object")
-        pair_id = row.get("pair_id")
-        decision = row.get("decision")
-        reason = row.get("reason")
-        if pair_id not in expected or pair_id in out:
-            raise ValueError("adjudicator pair ID mismatch")
-        if decision not in {"accept", "repair"}:
-            raise ValueError("invalid adjudicator decision")
-        if not isinstance(reason, str) or len(reason.strip()) < 4:
-            raise ValueError("invalid adjudicator reason")
-        out[pair_id] = {
-            "pair_id": pair_id,
-            "decision": decision,
-            "reason": reason.strip(),
+    review_by_id = {review["pair_id"]: review for review in reviews}
+    expected = [review["pair_id"] for review in reviews]
+    cases_by_id = {
+        pair_id: {
+            "pair": by_id[pair_id],
+            "critic": review_by_id[pair_id],
         }
-    if set(out) != expected:
-        raise ValueError("adjudicator IDs incomplete")
-    return out, label
+        for pair_id in expected
+    }
+
+    def request(case_ids: list[str], call_label: str) -> str:
+        cases = [cases_by_id[pair_id] for pair_id in case_ids]
+        payload = {
+            "model": model["id"],
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are the sparse final adjudicator for disputed "
+                        "preference data. Return JSON only."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": adjudicator_prompt(member, packet, cases),
+                },
+            ],
+            "max_tokens": min(
+                int(pref["pair_generation"]["adjudicator_max_tokens"]),
+                max(1024, 320 * len(cases)),
+            ),
+            "temperature": 0.2,
+            "top_p": 0.9,
+            "stream": False,
+        }
+        content, _, _ = call_api(
+            key=key,
+            endpoint=campaign["nvidia"]["endpoint"],
+            payload=payload,
+            outdir=rawdir,
+            label=call_label,
+            attempts_limit=int(pref["pair_generation"]["attempts"]),
+            role="preference-adjudicator",
+        )
+        return content
+
+    parsed: dict[str, dict] = {}
+    call_by_id: dict[str, str] = {}
+
+    initial = request(expected, label)
+    recovered, _ = parse_adjudicator_partial(initial, expected)
+    for pair_id, decision in recovered.items():
+        parsed[pair_id] = decision
+        call_by_id[pair_id] = label
+
+    # Malformed or truncated JSON must not discard already valid decisions.
+    # Re-adjudicate only missing IDs in bounded batches.
+    for repair_round in range(1, 4):
+        missing = [pair_id for pair_id in expected if pair_id not in parsed]
+        if not missing:
+            break
+        for batch_index in range(0, len(missing), 10):
+            batch_ids = missing[batch_index : batch_index + 10]
+            repair_label = (
+                f"{label}-targeted-repair{repair_round}-"
+                f"b{batch_index // 10 + 1:02d}"
+            )
+            content = request(batch_ids, repair_label)
+            batch, _ = parse_adjudicator_partial(content, batch_ids)
+            for pair_id, decision in batch.items():
+                parsed[pair_id] = decision
+                call_by_id[pair_id] = repair_label
+
+    missing = [pair_id for pair_id in expected if pair_id not in parsed]
+    if missing:
+        raise ValueError(
+            "adjudicator decisions incomplete after targeted repair: "
+            + ",".join(missing)
+        )
+    return parsed, call_by_id
 
 
 def repair_pairs(
@@ -930,7 +1006,7 @@ def curate(
                 f"adjudicator-r{round_index}"
             )
             borderline_rows = [current[x["pair_id"]] for x in borderline]
-            decisions, used_label = run_adjudicator(
+            decisions, decision_calls = run_adjudicator(
                 key=key,
                 campaign=campaign,
                 pref=pref,
@@ -942,6 +1018,7 @@ def curate(
                 label=adjudicator_label,
             )
             for pair_id, decision in decisions.items():
+                used_label = decision_calls[pair_id]
                 call_refs[pair_id].append(used_label)
                 adjudicator_history.append(
                     {
