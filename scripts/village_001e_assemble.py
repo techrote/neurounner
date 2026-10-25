@@ -688,6 +688,18 @@ def main() -> None:
     mean_behavior_task_relevance = statistics.mean(
         final_behavior_task_relevance_values
     )
+    fresh_base_raw_task_relevance = statistics.mean(
+        base_raw_task_relevance
+    )
+    fresh_base_behavior_task_relevance = statistics.mean(
+        base_behavior_task_relevance
+    )
+    fresh_base_raw_genericness = statistics.mean(
+        base_raw_genericness
+    )
+    fresh_base_behavior_genericness = statistics.mean(
+        base_behavior_genericness
+    )
     population_gates = {
         "behavior_lineage_accuracy": {
             "value": behavior_lineage_accuracy,
@@ -705,11 +717,12 @@ def main() -> None:
         },
         "mean_genericness_below_base": {
             "value": mean_genericness,
-            "threshold": float(
+            "threshold": fresh_base_raw_genericness,
+            "comparison": "same fresh F-suite untuned BASE control",
+            "historical_persona001_reference": float(
                 cfg["tournament"]["base_genericness_reference"]
             ),
-            "pass": mean_genericness
-            < float(cfg["tournament"]["base_genericness_reference"]),
+            "pass": mean_genericness < fresh_base_raw_genericness,
         },
         "individual_quality_members": {
             "value": len(individual_pass),
