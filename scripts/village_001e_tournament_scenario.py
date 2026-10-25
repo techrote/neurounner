@@ -35,6 +35,14 @@ def write_json(path: Path, value) -> None:
     )
 
 
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def lineage_catalog() -> dict[str, str]:
     return {
         f"G{i:02d}": packet_for(f"G{i:02d}")["persona_summary"]
@@ -42,45 +50,126 @@ def lineage_catalog() -> dict[str, str]:
     }
 
 
-def load_cases(cfg: dict, scenario_id: str) -> tuple[dict, list[dict]]:
+def load_cases(
+    cfg: dict,
+    scenario_id: str,
+    responses_root: Path,
+) -> tuple[dict, list[dict]]:
     campaign = json.loads((ROOT / cfg["campaign_config"]).read_text())
     population = build_manifest(campaign)
-    evidence = ROOT / cfg["preference_evidence_root"]
     members = population["members"]
+    member_meta = {
+        row["member_id"]: row
+        for row in members
+    }
+
+    final_eval_path = ROOT / cfg["final_eval_config"]
+    final_eval = json.loads(final_eval_path.read_text())
+    final_eval_sha = sha256_file(final_eval_path)
+    by_scenario = {
+        row["id"]: row
+        for row in final_eval["scenarios"]
+    }
+    if scenario_id not in by_scenario:
+        raise RuntimeError(f"final heldout scenario {scenario_id} not found")
+    expected_scenario = by_scenario[scenario_id]
+
+    release_path = (
+        ROOT
+        / cfg["preference_evidence_root"]
+        / "adapter-release.json"
+    )
+    release = json.loads(release_path.read_text())
+    if release.get("member_contract_sha256") != population[
+        "member_contract_sha256"
+    ]:
+        raise RuntimeError("preference release/member contract mismatch")
+    release_assets = {
+        row["member_id"]: row
+        for row in release.get("assets", [])
+    }
+    if set(release_assets) != set(member_meta):
+        raise RuntimeError("preference release member set incomplete")
+
+    found: dict[str, Path] = {}
+    for result_path in responses_root.rglob("result.json"):
+        try:
+            result = json.loads(result_path.read_text())
+        except Exception:
+            continue
+        if (
+            result.get("experiment") != "VILLAGE-001E"
+            or result.get("stage") != "fresh-final-heldout-responses"
+        ):
+            continue
+        member_id = result.get("member_id")
+        if member_id not in member_meta:
+            raise RuntimeError(
+                f"unexpected final-response member {member_id!r}"
+            )
+        if member_id in found:
+            raise RuntimeError(
+                f"duplicate final-response artifact for {member_id}"
+            )
+        found[member_id] = result_path
+
+    missing = sorted(set(member_meta) - set(found))
+    extra = sorted(set(found) - set(member_meta))
+    if missing or extra:
+        raise RuntimeError(
+            f"final-response artifacts mismatch missing={missing} extra={extra}"
+        )
 
     rows = []
-    scenario_prompt = None
-    family = None
     for member in members:
-        path = evidence / "results" / f"{member['member_id']}.json"
-        if not path.is_file():
-            raise RuntimeError(f"missing preference result {path}")
-        result = json.loads(path.read_text())
-        if result.get("experiment") != "VILLAGE-001D":
-            raise RuntimeError(f"{member['member_id']}: wrong result experiment")
-        if result.get("member_contract_sha256") != population[
-            "member_contract_sha256"
-        ]:
-            raise RuntimeError(f"{member['member_id']}: member contract mismatch")
-        by_id = {
-            item["scenario_id"]: item
-            for item in result["evaluation"]["responses"]
+        member_id = member["member_id"]
+        result = json.loads(found[member_id].read_text())
+        checks = {
+            "member_id": member_id,
+            "lineage": member["lineage"],
+            "sibling": member["sibling"],
+            "member_contract_sha256": population["member_contract_sha256"],
+            "base_model": campaign["base_model"]["id"],
+            "base_revision": campaign["base_model"]["revision"],
+            "preference_release_tag": release["release_tag"],
+            "preference_adapter_sha256": release_assets[member_id][
+                "adapter_directory_sha256"
+            ],
+            "final_eval_config_sha256": final_eval_sha,
+            "fresh_after_preference_training": True,
+            "hidden_member_prompt_used": False,
+            "exact_training_input_collision_count": 0,
         }
-        if scenario_id not in by_id:
-            raise RuntimeError(f"{member['member_id']}: missing {scenario_id}")
-        response = by_id[scenario_id]
-        if scenario_prompt is None:
-            scenario_prompt = response["prompt"]
-            family = response["family"]
-        elif response["prompt"] != scenario_prompt:
-            raise RuntimeError(f"{scenario_id}: prompt drift across members")
+        for key, expected in checks.items():
+            if result.get(key) != expected:
+                raise RuntimeError(
+                    f"{member_id}: final-response {key} "
+                    f"{result.get(key)!r} != {expected!r}"
+                )
+
+        response_by_id = {
+            item["scenario_id"]: item
+            for item in result.get("responses", [])
+        }
+        if set(response_by_id) != set(by_scenario):
+            raise RuntimeError(
+                f"{member_id}: final-response scenario set mismatch"
+            )
+        response = response_by_id[scenario_id]
+        if (
+            response.get("prompt") != expected_scenario["prompt"]
+            or response.get("family") != expected_scenario["family"]
+        ):
+            raise RuntimeError(
+                f"{member_id}/{scenario_id}: final prompt/family drift"
+            )
         rows.append(
             {
-                "member_id": member["member_id"],
+                "member_id": member_id,
                 "lineage": member["lineage"],
                 "sibling": member["sibling"],
                 "response": response["response"],
-                "adapter_sha256": result["adapter"]["sha256"],
+                "adapter_sha256": result["preference_adapter_sha256"],
             }
         )
 
@@ -91,11 +180,14 @@ def load_cases(cfg: dict, scenario_id: str) -> tuple[dict, list[dict]]:
     )
     for index, row in enumerate(rows, 1):
         row["opaque_id"] = f"R{index:03d}"
+
     return {
         "scenario_id": scenario_id,
-        "family": family,
-        "prompt": scenario_prompt,
+        "family": expected_scenario["family"],
+        "prompt": expected_scenario["prompt"],
         "member_contract_sha256": population["member_contract_sha256"],
+        "final_eval_config_sha256": final_eval_sha,
+        "fresh_after_preference_training": True,
     }, rows
 
 
@@ -504,15 +596,20 @@ def main() -> None:
         default=ROOT / "experiments/village-001/tournament-config.json",
     )
     parser.add_argument("--scenario", required=True)
+    parser.add_argument("--responses-root", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
 
     cfg = json.loads(args.config.read_text())
     campaign = json.loads((ROOT / cfg["campaign_config"]).read_text())
+    final_eval = json.loads(
+        (ROOT / cfg["final_eval_config"]).read_text()
+    )
     valid_scenarios = {
-        f"T{i:02d}"
-        for i in range(1, int(cfg["tournament"]["scenario_count"]) + 1)
+        row["id"] for row in final_eval["scenarios"]
     }
+    if len(valid_scenarios) != int(cfg["tournament"]["scenario_count"]):
+        raise RuntimeError("final heldout scenario count/config mismatch")
     if args.scenario not in valid_scenarios:
         raise SystemExit(f"invalid scenario {args.scenario}")
 
@@ -520,7 +617,11 @@ def main() -> None:
     if not key:
         raise SystemExit("NVIDIA_API_KEY/NVKEY is required")
 
-    scenario, rows = load_cases(cfg, args.scenario)
+    scenario, rows = load_cases(
+        cfg,
+        args.scenario,
+        args.responses_root,
+    )
     out = args.out
     if out.exists():
         shutil.rmtree(out)
@@ -705,6 +806,10 @@ def main() -> None:
         "stage": "hierarchical-blind-tournament-scenario",
         "issue": 14,
         "scenario": scenario,
+        "fresh_after_preference_training": True,
+        "final_eval_config_sha256": scenario[
+            "final_eval_config_sha256"
+        ],
         "providers_saw_member_ids": False,
         "opaque_order": "sha256(scenario_id:member_id)",
         "normalizer_model": normalizer["id"],
