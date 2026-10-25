@@ -622,13 +622,99 @@ def provider(args: argparse.Namespace) -> None:
         ),
     ]
 
+    minimum = int(cfg["target_words"]["minimum"])
+    maximum = int(cfg["target_words"]["maximum"])
+    soft_min, soft_max = 250, 550
+    segment_tokens = int(budgets.get("draft_segment_max_tokens", 1400))
+
+    def joined(parts: list[str]) -> str:
+        return "\n\n---\n\n".join(parts)
+
+    def rebalance(
+        parts: list[str],
+        *,
+        stage_prefix: str,
+        model: str,
+        temperature: float,
+        context: str,
+        token_budget: int,
+    ) -> list[str]:
+        """Adjust one local section at a time only when the aggregate misses the story gate."""
+        parts = list(parts)
+        for attempt in range(1, 4):
+            total = word_count(joined(parts))
+            if minimum <= total <= maximum:
+                return parts
+            counts = [word_count(x) for x in parts]
+            if total < minimum:
+                idx = min(range(len(parts)), key=lambda i: counts[i])
+                deficit = minimum - total
+                target = min(520, counts[idx] + deficit + 30)
+                lo = max(300, target - 20)
+                hi = min(540, target + 20)
+                instruction = (
+                    f"Expand this section from {counts[idx]} words to {lo}-{hi} words. "
+                    "Add only concrete physical action, sensory specificity or causal connective "
+                    "tissue already implied by the storyboard; add no subplot or new named lore."
+                )
+            else:
+                idx = max(range(len(parts)), key=lambda i: counts[i])
+                excess = total - maximum
+                target = max(300, counts[idx] - excess - 30)
+                lo = max(280, target - 20)
+                hi = min(520, target + 20)
+                instruction = (
+                    f"Tighten this section from {counts[idx]} words to {lo}-{hi} words. "
+                    "Remove repeated reflection or redundant description only; preserve every event, "
+                    "causal link and transition."
+                )
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are doing a narrowly scoped length rebalance on one STORY-001 section. "
+                        "Return the complete revised section only. Do not write adjacent sections."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        instruction
+                        + f"\n\nCurrent assembled story length: {total} words; accepted aggregate "
+                        f"range: {minimum}-{maximum}.\n\n"
+                        + context
+                        + "\n\nSECTION:\n"
+                        + parts[idx]
+                    ),
+                },
+            ]
+            replacement, _ = provider_call(
+                cfg=cfg,
+                key=key,
+                stage_id=f"{stage_prefix}-balance-{attempt}-part-{idx + 1:02d}",
+                model=model,
+                messages=messages,
+                max_tokens=token_budget,
+                temperature=temperature,
+                out=out,
+            )
+            replacement_count = word_count(replacement)
+            if not soft_min <= replacement_count <= soft_max:
+                raise RuntimeError(
+                    f"{stage_prefix} rebalance produced implausible section length "
+                    f"{replacement_count} outside {soft_min}-{soft_max}"
+                )
+            parts[idx] = replacement
+        total = word_count(joined(parts))
+        if not minimum <= total <= maximum:
+            raise RuntimeError(
+                f"{stage_prefix} aggregate length {total} outside {minimum}-{maximum} "
+                "after three local rebalances"
+            )
+        return parts
+
     draft_parts: list[str] = []
     previous_tail = ""
-    # Eight independently bounded sections make the full story length a structural
-    # property: 8 * 340..410 = 2720..3280 words.
-    segment_min, segment_max = 340, 410
-    segment_preferred = "360-395"
-    segment_tokens = int(budgets.get("draft_segment_max_tokens", 1200))
     for part_id, part_title, part_brief in part_specs:
         messages = [
             {
@@ -643,8 +729,8 @@ def provider(args: argparse.Namespace) -> None:
             {
                 "role": "user",
                 "content": (
-                    f"Write PART {part_id}/08, '{part_title}', in {segment_preferred} words. The hard "
-                    f"accepted range is {segment_min}-{segment_max} words. {part_brief}\n\n"
+                    f"Write PART {part_id}/08, '{part_title}', at roughly 350-430 words. {part_brief}\n"
+                    "A natural scene may be shorter or longer; do not pad or truncate mechanically.\n\n"
                     "AUTHORITATIVE STORYBOARD:\n"
                     + storyboard
                     + "\n\nSPROCKET SOURCE FRAGMENTS:\n"
@@ -668,27 +754,24 @@ def provider(args: argparse.Namespace) -> None:
             out=out,
         )
         count = word_count(part)
-        if not segment_min <= count <= segment_max:
+        if not soft_min <= count <= soft_max:
             direction = (
-                "tighten by removing repeated reflection while preserving every event"
-                if count > segment_max
-                else "expand with concrete physical action, sensory detail and causal transition only"
+                "Tighten repeated reflection and description while preserving every event."
+                if count > soft_max
+                else "Expand with concrete physical action and causal connective tissue already implied."
             )
             repair_messages = [
                 {
                     "role": "system",
                     "content": (
-                        "You are repairing one story section's length. Return that complete section "
-                        "only. Preserve its events, voice, causal links and boundary transition; do "
-                        "not introduce events from other sections."
+                        "Repair one STORY-001 section that is implausibly short or long. Return the "
+                        "complete section only; preserve its event boundary and do not add a new scene."
                     ),
                 },
                 {
                     "role": "user",
                     "content": (
-                        f"This section is {count} words. {direction}. Rewrite it to {segment_preferred} "
-                        f"words, with hard acceptance {segment_min}-{segment_max}. Do not summarize "
-                        "or add a new scene.\n\nSECTION:\n"
+                        f"The section is {count} words. {direction} Aim for 350-430 words.\n\nSECTION:\n"
                         + part
                     ),
                 },
@@ -696,7 +779,7 @@ def provider(args: argparse.Namespace) -> None:
             part, _ = provider_call(
                 cfg=cfg,
                 key=key,
-                stage_id=f"m3-draft-{part_id}-length-repair",
+                stage_id=f"m3-draft-{part_id}-safety-repair",
                 model=models["drafter"],
                 messages=repair_messages,
                 max_tokens=segment_tokens,
@@ -704,21 +787,28 @@ def provider(args: argparse.Namespace) -> None:
                 out=out,
             )
             count = word_count(part)
-        if not segment_min <= count <= segment_max:
+        if not soft_min <= count <= soft_max:
             raise RuntimeError(
-                f"m3 part {part_id} length {count} outside {segment_min}-{segment_max}"
+                f"m3 part {part_id} safety length {count} outside {soft_min}-{soft_max}"
             )
-        part_path = derived / "draft-sections" / f"part-{part_id}.md"
-        part_path.parent.mkdir(parents=True, exist_ok=True)
-        part_path.write_text(part + "\n")
         draft_parts.append(part)
         previous_tail = " ".join(part.split()[-100:])
 
-    draft = "\n\n---\n\n".join(draft_parts)
+    draft_parts = rebalance(
+        draft_parts,
+        stage_prefix="m3",
+        model=models["drafter"],
+        temperature=0.3,
+        context="Preserve the original drafting brief and Sprocket source voice.",
+        token_budget=segment_tokens,
+    )
+    draft_sections = derived / "draft-sections"
+    draft_sections.mkdir(parents=True, exist_ok=True)
+    for (part_id, _, _), part in zip(part_specs, draft_parts):
+        (draft_sections / f"part-{part_id}.md").write_text(part + "\n")
+    draft = joined(draft_parts)
     (derived / "draft.md").write_text(draft + "\n")
     draft_count = word_count(draft)
-    minimum = int(cfg["target_words"]["minimum"])
-    maximum = int(cfg["target_words"]["maximum"])
     if not minimum <= draft_count <= maximum:
         raise RuntimeError(
             f"M3 assembled draft length {draft_count} outside {minimum}-{maximum}"
@@ -762,10 +852,11 @@ def provider(args: argparse.Namespace) -> None:
     (derived / "review.md").write_text(review + "\n")
 
     edited_parts: list[str] = []
-    edit_tokens = int(budgets.get("edit_segment_max_tokens", 1200))
+    edit_tokens = int(budgets.get("edit_segment_max_tokens", 1400))
     for idx, ((part_id, part_title, _), original) in enumerate(
         zip(part_specs, draft_parts)
     ):
+        original_count = word_count(original)
         previous_tail = (
             " ".join(edited_parts[-1].split()[-90:]) if edited_parts else ""
         )
@@ -774,6 +865,8 @@ def provider(args: argparse.Namespace) -> None:
             if idx + 1 < len(draft_parts)
             else ""
         )
+        target_lo = max(300, original_count - 45)
+        target_hi = min(530, original_count + 45)
         edit_messages = [
             {
                 "role": "system",
@@ -787,9 +880,9 @@ def provider(args: argparse.Namespace) -> None:
             {
                 "role": "user",
                 "content": (
-                    f"Edit PART {part_id}/08, '{part_title}', to {segment_preferred} words; hard "
-                    f"acceptance is {segment_min}-{segment_max}. Address every material reviewer "
-                    "finding that touches this section without adding new proper-noun lore.\n\n"
+                    f"Edit PART {part_id}/08, '{part_title}'. Keep its scale close to the current "
+                    f"{original_count} words (roughly {target_lo}-{target_hi}). Address every material "
+                    "reviewer finding that touches this section without adding new proper-noun lore.\n\n"
                     "FULL REVIEW:\n"
                     + review
                     + "\n\nCURRENT SECTION:\n"
@@ -818,26 +911,25 @@ def provider(args: argparse.Namespace) -> None:
             out=out,
         )
         count = word_count(edited)
-        if not segment_min <= count <= segment_max:
+        if not soft_min <= count <= soft_max:
             direction = (
-                "tighten repeated phrasing while retaining every accepted review fix"
-                if count > segment_max
-                else "expand only with concrete action, sensory continuity and causal connective tissue"
+                "Tighten repeated phrasing while retaining every accepted review fix."
+                if count > soft_max
+                else "Expand only with concrete action, sensory continuity and causal connective tissue."
             )
             repair_messages = [
                 {
                     "role": "system",
                     "content": (
-                        "Repair only this edited story section's length. Return the complete section "
-                        "only; preserve all review fixes, events, voice and boundary transitions."
+                        "Repair one edited STORY-001 section that is implausibly short or long. "
+                        "Return the complete section only and preserve all accepted review fixes."
                     ),
                 },
                 {
                     "role": "user",
                     "content": (
-                        f"The edited section is {count} words. {direction}. Rewrite to "
-                        f"{segment_preferred} words with hard acceptance {segment_min}-{segment_max}."
-                        "\n\nSECTION:\n"
+                        f"The edited section is {count} words. {direction} Aim near "
+                        f"{original_count} words.\n\nSECTION:\n"
                         + edited
                     ),
                 },
@@ -845,7 +937,7 @@ def provider(args: argparse.Namespace) -> None:
             edited, _ = provider_call(
                 cfg=cfg,
                 key=key,
-                stage_id=f"m5-edit-{part_id}-length-repair",
+                stage_id=f"m5-edit-{part_id}-safety-repair",
                 model=models["editor"],
                 messages=repair_messages,
                 max_tokens=edit_tokens,
@@ -853,16 +945,28 @@ def provider(args: argparse.Namespace) -> None:
                 out=out,
             )
             count = word_count(edited)
-        if not segment_min <= count <= segment_max:
+        if not soft_min <= count <= soft_max:
             raise RuntimeError(
-                f"m5 part {part_id} length {count} outside {segment_min}-{segment_max}"
+                f"m5 part {part_id} safety length {count} outside {soft_min}-{soft_max}"
             )
-        edit_path = derived / "edit-sections" / f"part-{part_id}.md"
-        edit_path.parent.mkdir(parents=True, exist_ok=True)
-        edit_path.write_text(edited + "\n")
         edited_parts.append(edited)
 
-    final = "\n\n---\n\n".join(edited_parts)
+    edited_parts = rebalance(
+        edited_parts,
+        stage_prefix="m5",
+        model=models["editor"],
+        temperature=0.25,
+        context=(
+            "Preserve the independent review fixes already applied to this section and its "
+            "boundary transitions."
+        ),
+        token_budget=edit_tokens,
+    )
+    edit_sections = derived / "edit-sections"
+    edit_sections.mkdir(parents=True, exist_ok=True)
+    for (part_id, _, _), part in zip(part_specs, edited_parts):
+        (edit_sections / f"part-{part_id}.md").write_text(part + "\n")
+    final = joined(edited_parts)
     (derived / "revision-1.md").write_text(final + "\n")
     count = word_count(final)
     final_stage = "m5-section-edit"
