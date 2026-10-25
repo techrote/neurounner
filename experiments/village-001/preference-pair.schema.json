@@ -32,29 +32,58 @@
       "type": "string",
       "pattern": "^G(?:0[1-9]|1[0-2])$"
     },
-    "sibling": {"type": "string", "enum": ["A", "B", "C"]},
+    "sibling": {
+      "type": "string",
+      "enum": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
     "scenario_id": {
       "type": "string",
       "pattern": "^T(?:0[1-9]|1[0-9]|2[0-4])$"
     },
-    "variant": {"type": "integer", "minimum": 1, "maximum": 3},
-    "input": {"type": "string", "minLength": 8},
-    "chosen": {"type": "string", "minLength": 12},
-    "rejected": {"type": "string", "minLength": 8},
-    "source_parent_response": {"type": "string"},
+    "variant": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "input": {
+      "type": "string",
+      "minLength": 8
+    },
+    "chosen": {
+      "type": "string",
+      "minLength": 12
+    },
+    "rejected": {
+      "type": "string",
+      "minLength": 8
+    },
+    "source_parent_response": {
+      "type": "string"
+    },
     "source_feedback_ids": {
       "type": "array",
       "minItems": 3,
       "maxItems": 3,
       "uniqueItems": true,
-      "items": {"type": "string", "minLength": 1}
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
-    "why_chosen": {"type": "string", "minLength": 8},
+    "why_chosen": {
+      "type": "string",
+      "minLength": 8
+    },
     "provenance": {
       "type": "object",
       "required": [
         "member_contract_sha256",
         "parent_adapter_sha256",
+        "feedback_dataset_sha256",
         "provider_call_ids"
       ],
       "properties": {
@@ -70,7 +99,14 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 1}
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "feedback_dataset_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
         }
       },
       "additionalProperties": true
