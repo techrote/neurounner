@@ -3,14 +3,27 @@ from __future__ import annotations
 
 import argparse
 import json
+import statistics
 from pathlib import Path
 from typing import Any
 
-EXPECTED_LANES = {
+LANE_ORDER = [
     "ubuntu-24.04-x64",
     "windows-2025-x64",
     "macos-15-arm64",
-}
+]
+EXPECTED_LANES = set(LANE_ORDER)
+EXPECTED_REPLICATES = {1, 2, 3}
+METRICS = [
+    "generation_tok_s",
+    "lora_tok_s",
+    "torch_gflops",
+    "json_mib_s",
+    "sha_mib_s",
+    "zlib_mib_s",
+    "model_load_s",
+    "wall_s",
+]
 
 
 def get(d: dict[str, Any], path: str):
@@ -34,6 +47,23 @@ def fmt(value, digits=2):
     return f"{value:.{digits}f}"
 
 
+def metric_stats(values):
+    values = [float(v) for v in values if v is not None]
+    if not values:
+        return {"median": None, "min": None, "max": None}
+    return {
+        "median": statistics.median(values),
+        "min": min(values),
+        "max": max(values),
+    }
+
+
+def fmt_range(stats):
+    if stats["median"] is None:
+        return "n/a"
+    return f"{stats['median']:.2f} [{stats['min']:.2f}–{stats['max']:.2f}]"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--input-dir", type=Path, required=True)
@@ -44,14 +74,17 @@ def main() -> int:
     files = sorted(args.input_dir.rglob("runner001-*.json"))
     rows = []
     canonical_hashes = set()
+
     for path in files:
         if path.name == "runner001-summary.json":
             continue
         data = json.loads(path.read_text(encoding="utf-8"))
         lane = data["machine"]["lane"]
+        replicate = int(data["machine"]["replicate"])
         canonical_hashes.add(data["source"]["dataset_canonical_sha256"])
         rows.append({
             "lane": lane,
+            "replicate": replicate,
             "runner_os": data["machine"].get("runner_os"),
             "runner_arch": data["machine"].get("runner_arch"),
             "cpu": data["machine"].get("cpu_model"),
@@ -85,22 +118,54 @@ def main() -> int:
             f"RUNNER-001 corpus semantic identity mismatch: {sorted(canonical_hashes)}"
         )
 
-    baseline = next(r for r in rows if r["lane"] == "ubuntu-24.04-x64")
-    for row in rows:
-        row["relative_to_ubuntu"] = {
-            "generation": ratio(row["generation_tok_s"], baseline["generation_tok_s"]),
-            "lora": ratio(row["lora_tok_s"], baseline["lora_tok_s"]),
-            "torch": ratio(row["torch_gflops"], baseline["torch_gflops"]),
-            "json": ratio(row["json_mib_s"], baseline["json_mib_s"]),
-            "sha": ratio(row["sha_mib_s"], baseline["sha_mib_s"]),
-            "zlib": ratio(row["zlib_mib_s"], baseline["zlib_mib_s"]),
+    aggregates = []
+    for lane in LANE_ORDER:
+        lane_rows = [r for r in rows if r["lane"] == lane]
+        reps = {r["replicate"] for r in lane_rows}
+        if reps != EXPECTED_REPLICATES or len(lane_rows) != len(EXPECTED_REPLICATES):
+            raise SystemExit(
+                f"RUNNER-001 {lane} expected replicas {sorted(EXPECTED_REPLICATES)}, "
+                f"got {sorted(reps)} across {len(lane_rows)} rows"
+            )
+
+        aggregate = {
+            "lane": lane,
+            "replicates": len(lane_rows),
+            "runner_arches": sorted({str(r["runner_arch"]) for r in lane_rows}),
+            "logical_cpus": sorted({int(r["logical_cpus"]) for r in lane_rows}),
+            "cpu_models": sorted({str(r["cpu"]) for r in lane_rows}),
+            "memory_gib": metric_stats([r["memory_gib"] for r in lane_rows]),
+            "metrics": {
+                metric: metric_stats([r[metric] for r in lane_rows])
+                for metric in METRICS
+            },
+        }
+        aggregates.append(aggregate)
+
+    baseline = next(a for a in aggregates if a["lane"] == "ubuntu-24.04-x64")
+    for aggregate in aggregates:
+        aggregate["relative_to_ubuntu"] = {
+            "generation": ratio(
+                aggregate["metrics"]["generation_tok_s"]["median"],
+                baseline["metrics"]["generation_tok_s"]["median"],
+            ),
+            "lora": ratio(
+                aggregate["metrics"]["lora_tok_s"]["median"],
+                baseline["metrics"]["lora_tok_s"]["median"],
+            ),
+            "torch": ratio(
+                aggregate["metrics"]["torch_gflops"]["median"],
+                baseline["metrics"]["torch_gflops"]["median"],
+            ),
         }
 
-    rows.sort(key=lambda r: ["ubuntu-24.04-x64", "windows-2025-x64", "macos-15-arm64"].index(r["lane"]))
+    rows.sort(key=lambda r: (LANE_ORDER.index(r["lane"]), r["replicate"]))
     out = {
-        "schema": "neurounner.runner001.summary.v2",
+        "schema": "neurounner.runner001.summary.v3",
         "baseline_lane": baseline["lane"],
         "dataset_canonical_sha256": next(iter(canonical_hashes)),
+        "replicates_per_lane": len(EXPECTED_REPLICATES),
+        "aggregates": aggregates,
         "rows": rows,
         "github_models": {
             "status": "retired",
@@ -108,10 +173,12 @@ def main() -> int:
             "docs": "https://docs.github.com/en/github-models",
         },
         "interpretation": [
+            "Three fresh hosted VMs are measured per runner family; medians are primary and min/max show host-allocation variance.",
+            "Within each VM, generation uses a full-shape warmup and the median of five deterministic 48-token generations.",
             "Generation and LoRA measurements are local CPU work and are the primary Neurounner platform comparisons.",
+            "Model-load and total-wall measurements include network/package/cache effects and should not be treated as pure CPU metrics.",
             "GitHub Models cannot supply a current remote-control benchmark because GitHub fully retired the service on 2026-07-30.",
-            "macos-15 is Apple Silicon arm64 with three CPUs versus four x64 CPUs on the Linux and Windows standard public-repository runners, so this is not an OS-only causal comparison.",
-            "A macos-15-intel pilot was excluded from the comparable matrix because the image did not provide the same modern PyTorch wheel as the other lanes.",
+            "macos-15 is Apple Silicon arm64 with three CPUs versus four x64 CPUs on Linux and Windows, so this measures the real runner-family choice rather than an OS-only causal effect.",
         ],
     }
 
@@ -121,40 +188,58 @@ def main() -> int:
     lines = [
         "# RUNNER-001 cross-platform results",
         "",
-        f"Ubuntu baseline: `{baseline['lane']}`. Canonical corpus SHA-256: `{next(iter(canonical_hashes))}`.",
+        f"Three fresh VMs per platform. Ubuntu is the ratio baseline. Canonical corpus SHA-256: `{next(iter(canonical_hashes))}`.",
         "",
-        "| Lane | Arch | CPUs | Local gen tok/s | vs Ubuntu | LoRA seq tok/s | vs Ubuntu | Torch GFLOPS |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|",
+        "| Lane | Gen tok/s median [range] | vs Ubuntu | LoRA seq tok/s median [range] | vs Ubuntu | Torch GFLOPS median [range] |",
+        "|---|---:|---:|---:|---:|---:|",
     ]
-    for r in rows:
-        rel = r["relative_to_ubuntu"]
+    for a in aggregates:
+        rel = a["relative_to_ubuntu"]
         lines.append(
-            f"| {r['lane']} | {r['runner_arch']} | {r['logical_cpus']} | "
-            f"{fmt(r['generation_tok_s'])} | {fmt(rel['generation'])}× | "
-            f"{fmt(r['lora_tok_s'])} | {fmt(rel['lora'])}× | "
-            f"{fmt(r['torch_gflops'])} |"
+            f"| {a['lane']} | {fmt_range(a['metrics']['generation_tok_s'])} | "
+            f"{fmt(rel['generation'])}× | {fmt_range(a['metrics']['lora_tok_s'])} | "
+            f"{fmt(rel['lora'])}× | {fmt_range(a['metrics']['torch_gflops'])} |"
         )
+
     lines += [
         "",
-        "## CPU / runner identity",
+        "## Supporting medians",
         "",
-        "| Lane | CPU | RAM GiB | JSON MiB/s | SHA-256 MiB/s | zlib MiB/s | Model load s | Benchmark wall s |",
-        "|---|---|---:|---:|---:|---:|---:|---:|",
+        "| Lane | JSON MiB/s | SHA-256 MiB/s | zlib MiB/s | Model load s | Benchmark wall s |",
+        "|---|---:|---:|---:|---:|---:|",
+    ]
+    for a in aggregates:
+        m = a["metrics"]
+        lines.append(
+            f"| {a['lane']} | {fmt(m['json_mib_s']['median'])} | "
+            f"{fmt(m['sha_mib_s']['median'])} | {fmt(m['zlib_mib_s']['median'])} | "
+            f"{fmt(m['model_load_s']['median'])} | {fmt(m['wall_s']['median'])} |"
+        )
+
+    lines += [
+        "",
+        "## Fresh-VM evidence",
+        "",
+        "| Lane | Rep | CPU | Gen tok/s | LoRA tok/s | Torch GFLOPS | Load s | Wall s |",
+        "|---|---:|---|---:|---:|---:|---:|---:|",
     ]
     for r in rows:
         lines.append(
-            f"| {r['lane']} | {r['cpu']} | {fmt(r['memory_gib'])} | "
-            f"{fmt(r['json_mib_s'])} | {fmt(r['sha_mib_s'])} | {fmt(r['zlib_mib_s'])} | "
-            f"{fmt(r['model_load_s'])} | {fmt(r['wall_s'])} |"
+            f"| {r['lane']} | {r['replicate']} | {r['cpu']} | "
+            f"{fmt(r['generation_tok_s'])} | {fmt(r['lora_tok_s'])} | "
+            f"{fmt(r['torch_gflops'])} | {fmt(r['model_load_s'])} | {fmt(r['wall_s'])} |"
         )
+
     lines += [
         "",
         "## Interpretation guardrails",
         "",
-        "- Local generation and LoRA timings are the primary platform-sensitive Neurounner measurements.",
+        "- Primary conclusions use three fresh-VM medians, not a single lucky or unlucky host allocation.",
+        "- Within-VM generation uses a same-shape warmup and five timed deterministic generations; the per-VM median is aggregated again across VMs.",
+        "- Local generation and LoRA timings are the main Neurounner metrics; generic JSON/hash/compression/matmul numbers are diagnostic.",
         "- GitHub Models is not benchmarked: GitHub fully retired the playground, catalog and inference API on 2026-07-30.",
-        "- `macos-15` uses Apple Silicon and fewer CPUs than the x64 Linux/Windows lanes, so the result measures the real hosted-runner choice rather than a pure OS causal effect.",
-        "- The Intel macOS pilot exposed a separate compatibility cost: a source-identical modern PyTorch stack was unavailable there, so it is not mixed into the performance table.",
+        "- `macos-15` uses Apple Silicon and fewer CPUs than the x64 Linux/Windows lanes, so this is a practical runner-family comparison rather than a pure OS causal experiment.",
+        "- The Intel macOS pilot exposed a separate compatibility cost: the same current PyTorch stack was unavailable there, so it is not mixed into the performance table.",
         "",
     ]
     args.md_out.write_text("\n".join(lines), encoding="utf-8")

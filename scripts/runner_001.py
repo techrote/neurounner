@@ -71,6 +71,7 @@ def machine_metadata() -> dict[str, Any]:
     disk = shutil.disk_usage(ROOT)
     return {
         "lane": os.environ.get("RUNNER001_LANE"),
+        "replicate": int(os.environ.get("RUNNER001_REPLICATE", "0")),
         "runner_os": os.environ.get("RUNNER_OS"),
         "runner_arch": os.environ.get("RUNNER_ARCH"),
         "image_os": os.environ.get("ImageOS"),
@@ -413,12 +414,14 @@ def github_models_status() -> dict[str, Any]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--lane", required=True)
+    ap.add_argument("--replicate", type=int, required=True)
     ap.add_argument("--local-model", default=DEFAULT_LOCAL_MODEL)
     ap.add_argument("--local-revision", default=DEFAULT_LOCAL_REVISION)
     ap.add_argument("--output", type=Path, required=True)
     args = ap.parse_args()
 
     os.environ["RUNNER001_LANE"] = args.lane
+    os.environ["RUNNER001_REPLICATE"] = str(args.replicate)
     dataset_raw_bytes = DATASET.read_bytes()
     dataset = json.loads(dataset_raw_bytes)
     dataset_bytes = canonical_json_bytes(dataset)
@@ -429,7 +432,7 @@ def main() -> int:
     threads = min(4, psutil.cpu_count(logical=True) or 1)
     started = time.time()
     result: dict[str, Any] = {
-        "schema": "neurounner.runner001.v1",
+        "schema": "neurounner.runner001.v2",
         "started_unix": started,
         "source": {
             "issue": 51,
@@ -462,6 +465,7 @@ def main() -> int:
     remote = result["benchmarks"]["github_models"]
     print(json.dumps({
         "lane": args.lane,
+        "replicate": args.replicate,
         "cpu": result["machine"]["cpu_model"],
         "runner_arch": result["machine"]["runner_arch"],
         "local_generation_tok_s": local["generation"]["median_tokens_per_second"],

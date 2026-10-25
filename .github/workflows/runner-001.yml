@@ -37,18 +37,19 @@ env:
 
 jobs:
   benchmark:
-    name: ${{ matrix.lane }}
+    name: ${{ matrix.runner.lane }} r${{ matrix.replicate }}
     strategy:
       fail-fast: false
       matrix:
-        include:
+        runner:
           - lane: ubuntu-24.04-x64
             image: ubuntu-24.04
           - lane: windows-2025-x64
             image: windows-2025
           - lane: macos-15-arm64
             image: macos-15
-    runs-on: ${{ matrix.image }}
+        replicate: [1, 2, 3]
+    runs-on: ${{ matrix.runner.image }}
     timeout-minutes: 45
 
     steps:
@@ -70,7 +71,12 @@ jobs:
           else
             python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
           fi
-          python -m pip install             "transformers==4.57.6"             "peft==0.21.2"             "huggingface_hub==0.36.2"             "psutil==7.2.2"             "safetensors==0.8.0"
+          python -m pip install \
+            "transformers==4.57.6" \
+            "peft==0.21.2" \
+            "huggingface_hub==0.36.2" \
+            "psutil==7.2.2" \
+            "safetensors==0.8.0"
           python -m py_compile scripts/runner_001.py scripts/runner_001_summary.py
 
       - name: Run source-identical benchmark
@@ -78,14 +84,19 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p results
-          python scripts/runner_001.py             --lane "${{ matrix.lane }}"             --local-model "$RUNNER001_LOCAL_MODEL"             --local-revision "$RUNNER001_LOCAL_REVISION"             --output "results/runner001-${{ matrix.lane }}.json"
-          cat "results/runner001-${{ matrix.lane }}.json"
+          python scripts/runner_001.py \
+            --lane "${{ matrix.runner.lane }}" \
+            --replicate "${{ matrix.replicate }}" \
+            --local-model "$RUNNER001_LOCAL_MODEL" \
+            --local-revision "$RUNNER001_LOCAL_REVISION" \
+            --output "results/runner001-${{ matrix.runner.lane }}-r${{ matrix.replicate }}.json"
+          cat "results/runner001-${{ matrix.runner.lane }}-r${{ matrix.replicate }}.json"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: runner001-${{ matrix.lane }}-a${{ github.run_attempt }}
-          path: results/runner001-${{ matrix.lane }}.json
+          name: runner001-${{ matrix.runner.lane }}-r${{ matrix.replicate }}-a${{ github.run_attempt }}
+          path: results/runner001-${{ matrix.runner.lane }}-r${{ matrix.replicate }}.json
           if-no-files-found: error
           retention-days: 30
 
@@ -103,14 +114,17 @@ jobs:
 
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          pattern: runner001-*-a${{ github.run_attempt }}
+          pattern: runner001-*-r*-a${{ github.run_attempt }}
           path: collected
           merge-multiple: true
 
       - name: Build comparison
         run: |
           mkdir -p results
-          python scripts/runner_001_summary.py             --input-dir collected             --json-out results/runner001-summary.json             --md-out results/runner001-summary.md
+          python scripts/runner_001_summary.py \
+            --input-dir collected \
+            --json-out results/runner001-summary.json \
+            --md-out results/runner001-summary.md
           cat results/runner001-summary.md >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
