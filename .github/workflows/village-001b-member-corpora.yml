@@ -18,6 +18,7 @@ on:
       - 'scripts/babble_002_expand.py'
       - 'scripts/village_001b_generate_member.py'
       - 'scripts/village_001b_assemble.py'
+      - 'scripts/village_001b_promote.py'
   push:
     branches: [main]
     paths:
@@ -30,6 +31,7 @@ on:
       - 'scripts/babble_002_expand.py'
       - 'scripts/village_001b_generate_member.py'
       - 'scripts/village_001b_assemble.py'
+      - 'scripts/village_001b_promote.py'
 
 permissions:
   contents: write
@@ -62,7 +64,8 @@ jobs:
             scripts/village_001_validate.py \
             scripts/village_001_gate.py \
             scripts/village_001b_generate_member.py \
-            scripts/village_001b_assemble.py
+            scripts/village_001b_assemble.py \
+            scripts/village_001b_promote.py
 
       - name: Verify compiler ref uniqueness is fail-closed
         run: |
@@ -102,6 +105,9 @@ jobs:
           assert missing=={"mundane_low_stakes":1},missing
           print("duplicate trait/seed refs: correctly rejected before terminal validation")
           PY
+
+      - name: Verify non-destructive B repromotion contract
+        run: python3 scripts/village_001b_promote.py --self-test
 
       - name: Parse campaign configuration
         run: |
@@ -330,25 +336,48 @@ jobs:
           pattern: village001b-V-*
           path: artifacts
 
-      - name: Assemble and independently validate durable dataset
+      - name: Assemble and independently validate B candidate
         run: |
+          rm -rf staging/village-001b
           python3 scripts/village_001b_assemble.py \
             --artifacts artifacts \
             --config experiments/village-001/config.json \
-            --out datasets/village-001
+            --out staging/village-001b
 
           python3 - <<'PY'
           import json
           from pathlib import Path
 
-          m=json.loads(Path("datasets/village-001/manifest.json").read_text())
-          q=json.loads(Path("datasets/village-001/quality/validation.json").read_text())
+          root=Path("staging/village-001b")
+          m=json.loads((root/"manifest.json").read_text())
+          q=json.loads((root/"quality/validation.json").read_text())
           assert m["counts"]["members"]==36
           assert m["counts"]["rows"]==5760
           assert q["unique_example_ids"]==5760
           assert q["cloud_expansion_rows"]==2160
           assert q["critic_review_records"]>=2160
-          print("VILLAGE-001B assembled dataset: PASS")
+          print("VILLAGE-001B candidate: PASS")
+          PY
+
+      - name: Promote B layer transactionally without deleting downstream stages
+        run: |
+          python3 scripts/village_001b_promote.py \
+            --candidate staging/village-001b \
+            --live datasets/village-001
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          root=Path("datasets/village-001")
+          m=json.loads((root/"manifest.json").read_text())
+          q=json.loads((root/"quality/validation.json").read_text())
+          assert m["counts"]["members"]==36
+          assert m["counts"]["rows"]==5760
+          assert q["unique_example_ids"]==5760
+          assert q["cloud_expansion_rows"]==2160
+          assert q["critic_review_records"]>=2160
+          print("VILLAGE-001B promoted dataset: PASS")
           PY
 
       - name: Preserve complete assembled dataset as workflow artifact
