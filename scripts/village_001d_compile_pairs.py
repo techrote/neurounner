@@ -422,11 +422,15 @@ Ancestral summary:
 Sibling pressure:
 {SPECIALIZATION_GUIDANCE[member['sibling']]}
 
-For each pair score integer 0..4:
-- preference_validity: chosen is actually preferable to rejected for the intended behavioral objective;
-- lineage_behavior: chosen carries concrete ancestral/sibling behavior beyond wording;
-- style_dependence: 0 behavioral, 4 mostly lexical/catchphrase distinction;
-- task_relevance: chosen still addresses the situation rather than performing persona theatre.
+Score every field as an integer 0..4. IMPORTANT: higher is better for
+preference_validity, lineage_behavior and task_relevance. Lower is better for
+style_dependence. Do not use 1 as a boolean true value.
+
+Anchors:
+- preference_validity: 0 = chosen is worse/invalid; 4 = chosen is clearly preferable;
+- lineage_behavior: 0 = no concrete lineage/sibling behavior; 4 = strong concrete behavior;
+- style_dependence: 0 = distinction is behavioral; 4 = distinction is mostly lexical/catchphrase;
+- task_relevance: 0 = irrelevant/persona theatre; 4 = directly addresses the situation.
 
 Return JSON only:
 {{"reviews":[{{
@@ -438,26 +442,38 @@ Return JSON only:
   "reason":"short concrete reason"
 }}]}}
 
-One review per pair_id, no extras.
+One review per supplied pair_id, no extras.
 
 PAIRS:
 {json.dumps(payload, ensure_ascii=False)}
 """
 
 
-def validate_reviews(raw: str, expected: list[str]) -> list[dict]:
-    obj = extract_json(raw)
+def parse_reviews_partial(
+    raw: str,
+    expected: list[str],
+) -> tuple[dict[str, dict], list[str]]:
+    problems: list[str] = []
+    try:
+        obj = extract_json(raw)
+    except ValueError:
+        return {}, ["critic_json_parse_failed"]
     reviews = obj.get("reviews") if isinstance(obj, dict) else None
-    if not isinstance(reviews, list) or len(reviews) != len(expected):
-        raise ValueError("critic review count mismatch")
-    out = {}
+    if not isinstance(reviews, list):
+        return {}, ["critic_reviews_not_list"]
+
+    expected_set = set(expected)
+    out: dict[str, dict] = {}
     for row in reviews:
         if not isinstance(row, dict):
-            raise ValueError("critic review not object")
+            problems.append("critic_review_not_object")
+            continue
         pair_id = row.get("pair_id")
-        if pair_id not in expected or pair_id in out:
-            raise ValueError("critic pair ID mismatch")
+        if pair_id not in expected_set or pair_id in out:
+            # Preserve the raw provider response, but ignore extras/duplicates.
+            continue
         scores = {}
+        valid = True
         for key in (
             "preference_validity",
             "lineage_behavior",
@@ -466,11 +482,16 @@ def validate_reviews(raw: str, expected: list[str]) -> list[dict]:
         ):
             value = row.get(key)
             if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 4:
-                raise ValueError(f"{pair_id}:{key}")
+                problems.append(f"{pair_id}:{key}")
+                valid = False
+                break
             scores[key] = value
         reason = row.get("reason")
         if not isinstance(reason, str) or len(reason.strip()) < 4:
-            raise ValueError(f"{pair_id}:reason")
+            problems.append(f"{pair_id}:reason")
+            valid = False
+        if not valid:
+            continue
         verdict = (
             "pass"
             if scores["preference_validity"] >= 3
@@ -489,8 +510,22 @@ def validate_reviews(raw: str, expected: list[str]) -> list[dict]:
             "reason": reason.strip(),
             "derived_verdict": verdict,
         }
-    if set(out) != set(expected):
-        raise ValueError("critic IDs incomplete")
+
+    missing = [pair_id for pair_id in expected if pair_id not in out]
+    if missing:
+        problems.append("critic_missing:" + ",".join(missing))
+    return out, problems
+
+
+def validate_reviews(raw: str, expected: list[str]) -> list[dict]:
+    out, problems = parse_reviews_partial(raw, expected)
+    missing = [pair_id for pair_id in expected if pair_id not in out]
+    if missing:
+        raise ValueError(
+            "critic reviews incomplete: "
+            + ",".join(missing)
+            + (f" problems={problems}" if problems else "")
+        )
     return [out[pair_id] for pair_id in expected]
 
 
@@ -532,43 +567,68 @@ def run_critic(
         attempts_limit=int(pref["pair_generation"]["attempts"]),
         role="preference-critic",
     )
+
     expected = [row["pair_id"] for row in rows]
-    try:
-        return validate_reviews(content, expected), [label]
-    except ValueError as exc:
-        repair_label = label + "-json-repair"
-        repair_payload = {
-            "model": model["id"],
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "Repair the critic JSON only. Return complete JSON.",
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        critic_prompt(member, packet, rows)
-                        + "\n\nMALFORMED OUTPUT:\n"
-                        + content
-                        + f"\n\nPARSER PROBLEM: {exc}"
-                    ),
-                },
-            ],
-            "max_tokens": int(pref["pair_generation"]["critic_max_tokens"]),
-            "temperature": 0.1,
-            "top_p": 0.9,
-            "stream": False,
-        }
-        repaired, _, _ = call_api(
-            key=key,
-            endpoint=campaign["nvidia"]["endpoint"],
-            payload=repair_payload,
-            outdir=rawdir,
-            label=repair_label,
-            attempts_limit=int(pref["pair_generation"]["attempts"]),
-            role="preference-critic-repair",
+    by_id = {row["pair_id"]: row for row in rows}
+    parsed, _ = parse_reviews_partial(content, expected)
+    labels = [label]
+
+    # Provider outputs often truncate near the end of a 20-review JSON object.
+    # Keep every valid review and request only the missing IDs in <=10-row batches.
+    for repair_round in range(1, 4):
+        missing = [pair_id for pair_id in expected if pair_id not in parsed]
+        if not missing:
+            break
+        for batch_index in range(0, len(missing), 10):
+            batch_ids = missing[batch_index : batch_index + 10]
+            batch_rows = [by_id[pair_id] for pair_id in batch_ids]
+            repair_label = (
+                f"{label}-targeted-repair{repair_round}-"
+                f"b{batch_index // 10 + 1:02d}"
+            )
+            repair_payload = {
+                "model": model["id"],
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "Score only the supplied missing preference-pair IDs. "
+                            "Use the explicit 0..4 anchors. Return JSON only."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": critic_prompt(member, packet, batch_rows),
+                    },
+                ],
+                "max_tokens": min(
+                    int(pref["pair_generation"]["critic_max_tokens"]),
+                    max(2048, 384 * len(batch_rows)),
+                ),
+                "temperature": 0.1,
+                "top_p": 0.9,
+                "stream": False,
+            }
+            repaired, _, _ = call_api(
+                key=key,
+                endpoint=campaign["nvidia"]["endpoint"],
+                payload=repair_payload,
+                outdir=rawdir,
+                label=repair_label,
+                attempts_limit=int(pref["pair_generation"]["attempts"]),
+                role="preference-critic-targeted-repair",
+            )
+            recovered, _ = parse_reviews_partial(repaired, batch_ids)
+            parsed.update(recovered)
+            labels.append(repair_label)
+
+    missing = [pair_id for pair_id in expected if pair_id not in parsed]
+    if missing:
+        raise ValueError(
+            "critic reviews incomplete after targeted repair: "
+            + ",".join(missing)
         )
-        return validate_reviews(repaired, expected), [label, repair_label]
+    return [parsed[pair_id] for pair_id in expected], labels
 
 
 def run_adjudicator(
