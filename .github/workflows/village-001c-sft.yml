@@ -28,7 +28,9 @@ permissions:
 
 concurrency:
   group: neurounner-village-001c-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
-  cancel-in-progress: false
+  # A new authoritative dataset push supersedes an older SFT wave. Recovered
+  # artifacts are identity-bound by the trainer before reuse.
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
   plan:
@@ -187,19 +189,52 @@ jobs:
             "huggingface_hub>=0.36,<2" \
             "safetensors>=0.6,<1"
 
-      - name: Recover prior member artifact when requested
-        if: ${{ inputs.resume_run_id != '' }}
+      - name: Recover compatible prior member artifact
         env:
           GH_TOKEN: ${{ github.token }}
-          RESUME_RUN_ID: ${{ inputs.resume_run_id }}
+          EXPLICIT_RESUME_RUN_ID: ${{ inputs.resume_run_id }}
         run: |
-          mkdir -p "resume/${{ matrix.member }}"
-          if ! gh run download "$RESUME_RUN_ID" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --name "village001c-${{ matrix.member }}" \
-            --dir "resume/${{ matrix.member }}"; then
-            echo "No reusable artifact for ${{ matrix.member }} in run $RESUME_RUN_ID; starting fresh."
-            rm -rf "resume/${{ matrix.member }}"
+          set -u
+          member="${{ matrix.member }}"
+          target="resume/$member"
+          rm -rf "$target"
+
+          candidates=()
+          if [ -n "${EXPLICIT_RESUME_RUN_ID:-}" ]; then
+            candidates+=("$EXPLICIT_RESUME_RUN_ID")
+          elif [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            while IFS= read -r run_id; do
+              [ -n "$run_id" ] || continue
+              [ "$run_id" = "$GITHUB_RUN_ID" ] && continue
+              candidates+=("$run_id")
+            done < <(
+              gh run list \
+                --repo "$GITHUB_REPOSITORY" \
+                --workflow "village-001c-sft.yml" \
+                --branch main \
+                --limit 20 \
+                --json databaseId,event \
+                --jq '.[] | select(.event == "push") | .databaseId'
+            )
+          fi
+
+          recovered=""
+          for run_id in "${candidates[@]}"; do
+            rm -rf "$target"
+            mkdir -p "$target"
+            if gh run download "$run_id" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name "village001c-$member" \
+              --dir "$target" >/dev/null 2>&1; then
+              recovered="$run_id"
+              echo "Recovered candidate $member artifact from VILLAGE-001C run $run_id."
+              break
+            fi
+          done
+
+          if [ -z "$recovered" ]; then
+            echo "No prior artifact found for $member; training from clean state."
+            rm -rf "$target"
           fi
 
       - name: Train member cartridge and common held-out suite
