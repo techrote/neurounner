@@ -68,6 +68,7 @@ jobs:
           assert cfg["ecology"]["rounds"]==3
           assert t["individual_min_behavior_sibling_hits"]==8
           assert "base_genericness_source" in t
+          assert cfg["qualification_release_tag"]=="village-001-final-v1"
           sessions=build_sessions(cfg)
           assert len(sessions)==24
           assert len({x["session_id"] for x in sessions})==24
@@ -399,17 +400,23 @@ jobs:
           git pull --rebase origin main
           git push origin HEAD:main
 
-      - name: Publish final qualification release
+      - name: Publish final qualification evidence release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="village-001-qualified-v1"
+          TAG=$(python3 - <<'PY'
+          import json
+          print(json.load(open("experiments/village-001/tournament-config.json"))["qualification_release_tag"])
+          PY
+          )
+          # The tag is deliberately neutral. A failed usable-village gate is still
+          # authoritative final evidence and must not be mislabeled "qualified".
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "$TAG already exists; final evidence remains authoritative in-repo."
           else
             gh release create "$TAG" \
               --target main \
-              --title "VILLAGE-001E final cyber-goblin village qualification" \
+              --title "VILLAGE-001E final cyber-goblin village evidence" \
               --notes-file experiments/village-001/final-evidence/REPORT.md \
               experiments/village-001/final-evidence/summary.json \
               experiments/village-001/final-evidence/confusion-matrices.json \
