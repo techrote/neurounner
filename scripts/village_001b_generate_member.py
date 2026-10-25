@@ -23,7 +23,7 @@ from babble_002_expand import (
     validate_examples,
 )
 from village_001_manifest import build_manifest
-from village_001_validate import validate_corpus_row
+from village_001_validate import validate_corpus_row, validate_file
 
 ROOT = Path(__file__).resolve().parents[1]
 SURFACES = [
@@ -1158,6 +1158,32 @@ def main() -> None:
         if out.exists():
             shutil.rmtree(out)
         out.mkdir(parents=True)
+    completed_path = out / "examples.jsonl"
+    completed_manifest = out / "manifest.json"
+    if args.resume and completed_path.is_file() and completed_manifest.is_file():
+        completed = json.loads(completed_manifest.read_text())
+        if completed.get("experiment") != "VILLAGE-001B":
+            raise RuntimeError("resume artifact is not VILLAGE-001B")
+        if completed.get("member_id") != member["member_id"]:
+            raise RuntimeError("resume artifact member mismatch")
+        validate_file(
+            completed_path,
+            "corpus",
+            member["member_id"],
+            int(cfg["corpus"]["target_sft_examples_per_member"]),
+        )
+        print(
+            json.dumps(
+                {
+                    "member": member["member_id"],
+                    "resume": "complete_artifact_reused",
+                    "rows": int(cfg["corpus"]["target_sft_examples_per_member"]),
+                },
+                indent=2,
+            )
+        )
+        return
+
     rawdir = out / "provider"
     rawdir.mkdir(parents=True, exist_ok=True)
     quality_dir = out / "quality"
