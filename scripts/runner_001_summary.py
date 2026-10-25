@@ -66,7 +66,7 @@ def main() -> int:
             "zlib_mib_s": get(data, "benchmarks.zlib.mib_per_second"),
             "torch_gflops": get(data, "benchmarks.torch_matmul.estimated_gflops"),
             "model_load_s": get(data, "benchmarks.local_model.load.seconds"),
-            "generation_tok_s": get(data, "benchmarks.local_model.generation.tokens_per_second"),
+            "generation_tok_s": get(data, "benchmarks.local_model.generation.median_tokens_per_second"),
             "lora_tok_s": get(data, "benchmarks.local_model.lora_training.sequence_tokens_per_second"),
             "wall_s": data.get("wall_seconds"),
             "source_file": str(path),
