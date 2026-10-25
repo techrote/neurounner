@@ -13,33 +13,35 @@ def build_sessions(cfg: dict) -> list[dict]:
     scenarios = cfg["ecology"]["scenarios"]
     sessions = []
 
+    # One deterministic same-lineage pair per lineage. A/B are paired here;
+    # all C siblings participate in the cross-lineage small-group matrix below.
     for i in range(1, 13):
         lineage = f"G{i:02d}"
-        members = [f"V-{lineage}-{s}" for s in "ABC"]
         sessions.append(
             {
-                "session_id": f"E-L-{lineage}",
-                "kind": "same_lineage",
+                "session_id": f"E-P-{lineage}",
+                "kind": "same_lineage_pair",
                 "scenario": scenarios[(i - 1) % len(scenarios)],
-                "members": members,
+                "members": [f"V-{lineage}-A", f"V-{lineage}-B"],
             }
         )
 
+    # Twelve cross-lineage three-agent groups. The modular offsets ensure every
+    # A, B and C member appears exactly once in this group matrix.
     for i in range(1, 13):
         ga = i
         gb = ((i + 3 - 1) % 12) + 1
         gc = ((i + 7 - 1) % 12) + 1
-        members = [
-            f"V-G{ga:02d}-A",
-            f"V-G{gb:02d}-B",
-            f"V-G{gc:02d}-C",
-        ]
         sessions.append(
             {
-                "session_id": f"E-X-{i:02d}",
-                "kind": "cross_lineage",
+                "session_id": f"E-G-{i:02d}",
+                "kind": "cross_lineage_group",
                 "scenario": scenarios[(i + 1) % len(scenarios)],
-                "members": members,
+                "members": [
+                    f"V-G{ga:02d}-A",
+                    f"V-G{gb:02d}-B",
+                    f"V-G{gc:02d}-C",
+                ],
             }
         )
 
@@ -47,6 +49,19 @@ def build_sessions(cfg: dict) -> list[dict]:
         raise AssertionError(len(sessions))
     if len({row["session_id"] for row in sessions}) != 24:
         raise AssertionError("duplicate ecology session ID")
+    if sum(row["kind"] == "same_lineage_pair" for row in sessions) != 12:
+        raise AssertionError("pair ecology cardinality mismatch")
+    if sum(row["kind"] == "cross_lineage_group" for row in sessions) != 12:
+        raise AssertionError("small-group ecology cardinality mismatch")
+
+    expected = {
+        f"V-G{i:02d}-{sibling}"
+        for i in range(1, 13)
+        for sibling in "ABC"
+    }
+    covered = {member for row in sessions for member in row["members"]}
+    if covered != expected:
+        raise AssertionError("ecology matrix does not cover all 36 members")
 
     for session in sessions:
         ordered = sorted(
