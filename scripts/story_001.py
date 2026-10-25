@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import json
 import os
 import platform
@@ -480,7 +481,7 @@ def provider_call(
                 else min(30.0, 2.0**attempt)
             )
             time.sleep(wait)
-        except (urllib.error.URLError, TimeoutError) as exc:
+        except (urllib.error.URLError, TimeoutError, ConnectionResetError, BrokenPipeError, http.client.RemoteDisconnected) as exc:
             elapsed = time.monotonic() - started
             attempts.append(
                 {
