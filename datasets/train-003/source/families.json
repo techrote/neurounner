@@ -1,0 +1,257 @@
+{
+  "schema_version": 1,
+  "families": [
+    {
+      "id": "push_echo",
+      "split": "train",
+      "trigger": "local external impulse exceeds threshold",
+      "state": "push_dir unit vector; echo 0..1",
+      "update": "store impulse direction; set echo=1; decay echo",
+      "action": "bias movement toward push_dir by echo",
+      "failure": "repeated shoves can cause compulsive backtracking"
+    },
+    {
+      "id": "edge_fear",
+      "split": "train",
+      "trigger": "local support drops from nonzero to zero",
+      "state": "danger_dir unit vector; fear 0..1",
+      "update": "store travel direction; set fear=1; decay while supported",
+      "action": "bias movement opposite danger_dir by fear",
+      "failure": "narrow ledges can cause oscillatory indecision"
+    },
+    {
+      "id": "jam_ritual",
+      "split": "train",
+      "trigger": "commanded motion is high but local displacement stays low",
+      "state": "jam 0..1; phase 0..2",
+      "update": "accumulate jam; advance phase; reset after free motion",
+      "action": "reverse then turn then jump once by phase",
+      "failure": "soft obstacles can retrigger the ritual"
+    },
+    {
+      "id": "collision_freeze",
+      "split": "train",
+      "trigger": "local collision impulse exceeds threshold",
+      "state": "freeze 0..1",
+      "update": "set freeze from impulse; decay during quiet contact",
+      "action": "suppress movement and turning by freeze",
+      "failure": "persistent jostling can lock the actor"
+    },
+    {
+      "id": "slip_avoid",
+      "split": "train",
+      "trigger": "local wheel slip exceeds threshold",
+      "state": "slip_side left/right; avoidance 0..1",
+      "update": "store slip side; set avoidance; decay with traction",
+      "action": "steer away from slip_side by avoidance",
+      "failure": "alternating slip can create weaving"
+    },
+    {
+      "id": "pounce_charge",
+      "split": "train",
+      "trigger": "local crossing motion enters forward sensor arc",
+      "state": "charge 0..1; refractory 0..1",
+      "update": "increase charge; set refractory after jump; decay refractory",
+      "action": "jump when charged and refractory is zero",
+      "failure": "periodic machinery can entrain pounces"
+    },
+    {
+      "id": "impact_coward",
+      "split": "train",
+      "trigger": "nearby impact sound exceeds threshold",
+      "state": "threat_dir unit vector; panic 0..1",
+      "update": "store direction away; raise panic; decay in quiet",
+      "action": "move along threat_dir by panic",
+      "failure": "harmless impacts can herd the actor"
+    },
+    {
+      "id": "door_stubborn",
+      "split": "train",
+      "trigger": "local forward progress stalls at same frontal contact",
+      "state": "stubborn 0..1; normal unit vector",
+      "update": "increase stubborn to cap; decay after free motion",
+      "action": "increase bounded forward force by stubborn",
+      "failure": "immovable walls can waste effort"
+    },
+    {
+      "id": "hover_wobble",
+      "split": "train",
+      "trigger": "local vertical velocity changes sign outside deadband",
+      "state": "last_error scalar; correction bounded",
+      "update": "store error; set damped opposite correction",
+      "action": "apply vertical thrust from correction",
+      "failure": "sensor noise can sustain oscillation"
+    },
+    {
+      "id": "spin_grudge",
+      "split": "train",
+      "trigger": "local angular speed exceeds threshold",
+      "state": "spin_sign -1/+1; grudge 0..1",
+      "update": "store spin sign; set grudge=1; decay grudge",
+      "action": "apply counter-torque opposite spin_sign",
+      "failure": "alternating hits can cause twitching"
+    },
+    {
+      "id": "resource_linger",
+      "split": "train",
+      "trigger": "local resource pickup succeeds",
+      "state": "return_dir unit vector; scent 0..1",
+      "update": "store pickup direction; set scent=1; decay scent",
+      "action": "when idle bias movement along return_dir",
+      "failure": "depleted patches can attract revisits"
+    },
+    {
+      "id": "squeeze_posture",
+      "split": "train",
+      "trigger": "opposed local side contacts indicate narrow passage",
+      "state": "squeeze_axis unit vector; memory 0..1",
+      "update": "store compression axis; set memory=1; decay by distance",
+      "action": "reduce lateral posture along squeeze_axis",
+      "failure": "stale memory can keep posture too narrow"
+    },
+    {
+      "id": "hard_land_rebound",
+      "split": "train",
+      "trigger": "hard local landing follows airborne state",
+      "state": "rebound_ready boolean",
+      "update": "set ready on landing; clear on use or support loss",
+      "action": "perform one bounded rebound hop when ready",
+      "failure": "bumpy contacts can look like stuttering"
+    },
+    {
+      "id": "slope_confidence",
+      "split": "train",
+      "trigger": "local uphill motion succeeds above speed threshold",
+      "state": "slope_dir unit vector; confidence 0..1",
+      "update": "store uphill direction; raise confidence; decay on flat",
+      "action": "bias tilt and drive toward similar local slope",
+      "failure": "abrupt terrain changes can cause wrong lean"
+    },
+    {
+      "id": "velocity_probe",
+      "split": "train",
+      "trigger": "local velocity direction changes without matching command",
+      "state": "expected_dir unit vector; confidence 0..1; probe_side bit",
+      "update": "lower confidence; toggle probe_side; recover on stable motion",
+      "action": "slow and alternate small probe turns",
+      "failure": "rough terrain can sustain cautious probing"
+    },
+    {
+      "id": "bump_triplet",
+      "split": "train",
+      "trigger": "local lateral contact impulse occurs",
+      "state": "side left/right; bump_count 0..3; timer bounded",
+      "update": "count repeated same-side bumps; reset on timeout or action",
+      "action": "turn away once when bump_count reaches three",
+      "failure": "wall vibration can cause periodic turns"
+    },
+    {
+      "id": "pause_echo",
+      "split": "train",
+      "trigger": "nearby local collision sound occurs",
+      "state": "pause_ticks 0..2; saved_dir unit vector",
+      "update": "store move direction; set pause_ticks=2; decrement",
+      "action": "wait while paused then resume saved_dir",
+      "failure": "dense collisions can keep resetting pause"
+    },
+    {
+      "id": "descent_excitement",
+      "split": "train",
+      "trigger": "speed rises on a locally sensed downhill slope",
+      "state": "descent_dir unit vector; excitement 0..1",
+      "update": "store downhill direction; raise excitement; decay off descent",
+      "action": "bias steering toward matching local descent",
+      "failure": "fast drops can become overpreferred"
+    },
+    {
+      "id": "stretch_resistance",
+      "split": "train",
+      "trigger": "local deformation rate exceeds threshold",
+      "state": "stretch_dir unit vector; resistance 0..1",
+      "update": "store stretch direction; set resistance=1; decay",
+      "action": "bias contraction against stretch_dir",
+      "failure": "repeated impacts can make the blob temporarily rigid"
+    },
+    {
+      "id": "warm_memory",
+      "split": "train",
+      "trigger": "local heat gradient exceeds threshold",
+      "state": "warm_dir unit vector; memory 0..1",
+      "update": "store heat direction; set memory=1; decay without gradient",
+      "action": "bias movement along warm_dir by memory",
+      "failure": "stale heat memory can lead into cold space"
+    },
+    {
+      "id": "traction_shyness",
+      "split": "train",
+      "trigger": "local traction is lost during a turn",
+      "state": "bad_turn left/right; caution 0..1",
+      "update": "store turn side; raise caution; decay with stable traction",
+      "action": "reduce turning toward bad_turn by caution",
+      "failure": "slippery corners can make steering timid"
+    },
+    {
+      "id": "landing_shyness",
+      "split": "train",
+      "trigger": "local landing impulse exceeds threshold",
+      "state": "shy 0..1",
+      "update": "set shy=1; decay during supported ticks",
+      "action": "suppress jump while shy is high",
+      "failure": "rough ground can suppress jumping repeatedly"
+    },
+    {
+      "id": "clearance_memory",
+      "split": "train",
+      "trigger": "forward progress stalls at a local obstacle",
+      "state": "escape_side left/right; attempts 0..2",
+      "update": "choose side from local clearance; set attempts=2; decrement",
+      "action": "turn toward escape_side while attempts remain",
+      "failure": "moving obstacles can stale the remembered side"
+    },
+    {
+      "id": "startle_vigilance",
+      "split": "train",
+      "trigger": "local startle event occurs",
+      "state": "startle_dir unit vector; vigilance 0..1",
+      "update": "store event direction; set vigilance=1; decay",
+      "action": "periodically face startle_dir while vigilant",
+      "failure": "harmless startles can distract travel"
+    },
+    {
+      "id": "wall_trace",
+      "split": "eval",
+      "trigger": "sustained local lateral surface contact",
+      "state": "contact_side left/right; trace 0..1",
+      "update": "store contact side; increase trace; decay off surface",
+      "action": "curve toward remembered contact_side by trace",
+      "failure": "one brush can cause obstacle orbiting"
+    },
+    {
+      "id": "asymmetric_step",
+      "split": "eval",
+      "trigger": "one local foot loses support while another remains planted",
+      "state": "weak_side left/right; caution 0..3",
+      "update": "store failed side; set caution=3; decrement after stable step",
+      "action": "widen the step on weak_side while cautious",
+      "failure": "alternating slips can keep gait inefficiently wide"
+    },
+    {
+      "id": "flash_fascination",
+      "split": "eval",
+      "trigger": "local flash event occurs",
+      "state": "flash_count 0..4; flash_dir unit vector",
+      "update": "increment count; store flash_dir; clear after action",
+      "action": "on count four turn toward flash_dir once",
+      "failure": "regular machinery can repeatedly steal attention"
+    },
+    {
+      "id": "darkness_hold",
+      "split": "eval",
+      "trigger": "local luminance drops faster than threshold",
+      "state": "resume_dir unit vector; hold 0..1",
+      "update": "store travel direction; set hold=1; decay when light stabilizes",
+      "action": "stop while held then resume along resume_dir",
+      "failure": "flickering lights can repeatedly freeze motion"
+    }
+  ]
+}
