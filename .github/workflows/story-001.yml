@@ -112,17 +112,22 @@ jobs:
       - name: Fetch pinned llama.cpp runtime
         run: bash scripts/bootstrap.sh runtime
 
-      - name: Resolve LFM2.5-8B-A1B pin
+      - name: Resolve M5 planner and renderer pins
         run: |
           python3 - <<'PY' >> "$GITHUB_ENV"
           import json
-          spec=json.load(open("config/candidates.json"))["lfm25-8b-a1b"]
-          print(f"STORY001_LFM8B_URL={spec['url']}")
-          print(f"STORY001_LFM8B_FILE={spec['file']}")
-          print(f"STORY001_LFM8B_SHA={spec['sha256']}")
+          c=json.load(open("config/candidates.json"))
+          for cid,prefix in (
+              ("lfm25-8b-a1b","LFM8B"),
+              ("qwen35-4b","QWEN35"),
+          ):
+              spec=c[cid]
+              print(f"STORY001_{prefix}_URL={spec['url']}")
+              print(f"STORY001_{prefix}_FILE={spec['file']}")
+              print(f"STORY001_{prefix}_SHA={spec['sha256']}")
           PY
 
-      - name: Download and SHA-verify LFM2.5-8B-A1B
+      - name: Download and SHA-verify LFM2.5-8B-A1B planner
         run: |
           mkdir -p "$RUNNER_TEMP/story001-models"
           dest="$RUNNER_TEMP/story001-models/$STORY001_LFM8B_FILE"
@@ -131,7 +136,16 @@ jobs:
           mv "$dest.part" "$dest"
           echo "STORY001_LFM8B=$dest" >> "$GITHUB_ENV"
 
-      - name: Reuse qualified M3/M4 and perform focused LFM8B final edits
+      - name: Download and SHA-verify Qwen3.5-4B renderer
+        run: |
+          mkdir -p "$RUNNER_TEMP/story001-models"
+          dest="$RUNNER_TEMP/story001-models/$STORY001_QWEN35_FILE"
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 30             -o "$dest.part" "$STORY001_QWEN35_URL"
+          echo "$STORY001_QWEN35_SHA  $dest.part" | sha256sum -c -
+          mv "$dest.part" "$dest"
+          echo "STORY001_QWEN35_4B=$dest" >> "$GITHUB_ENV"
+
+      - name: Reuse qualified M3/M4 and perform planned bounded M5 edits
         run: |
           python3 scripts/story_001.py             --config experiments/story-001/config.json             provider --out results/story001 --resume-root results/resume
 
