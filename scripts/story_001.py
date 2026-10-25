@@ -1448,8 +1448,7 @@ def provider(args: argparse.Namespace) -> None:
         ),
         "03": (
             "grabbed a nearby piece of scrap", "time was running out",
-            "companion was counting", "couldn't fail", "ready to face",
-            "only one who", "save my companion", "extraordinary scene",
+            "couldn't fail", "only one who", "save my companion", "extraordinary scene",
             "machine loop was still running",
         ),
         "04": (
