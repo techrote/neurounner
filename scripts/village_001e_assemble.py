@@ -166,6 +166,31 @@ def main() -> None:
         raise RuntimeError("VILLAGE-001D preference evidence is missing")
     preference_summary = json.loads(preference_summary_path.read_text())
     preference_release = json.loads(preference_release_path.read_text())
+
+    sft_root = ROOT / preference_cfg["sft_evidence_root"]
+    sft_summary_path = sft_root / "summary.json"
+    sft_release_path = sft_root / "adapter-release.json"
+    if not sft_summary_path.is_file() or not sft_release_path.is_file():
+        raise RuntimeError("VILLAGE-001C SFT evidence is missing")
+    sft_summary = json.loads(sft_summary_path.read_text())
+    sft_release = json.loads(sft_release_path.read_text())
+    if (
+        sft_summary.get("experiment") != "VILLAGE-001C"
+        or sft_summary.get("members") != 36
+        or sft_summary.get("successful_terminal_lanes") != 36
+    ):
+        raise RuntimeError("VILLAGE-001C SFT summary is incomplete")
+    if sft_release.get("member_contract_sha256") != population[
+        "member_contract_sha256"
+    ]:
+        raise RuntimeError("SFT release/member contract mismatch")
+    sft_assets = {
+        row["member_id"]: row
+        for row in sft_release.get("assets", [])
+    }
+    if set(sft_assets) != set(expected_members):
+        raise RuntimeError("SFT release member set mismatch")
+
     if preference_summary.get("members") != 36:
         raise RuntimeError("preference summary member count mismatch")
     if len(preference_release.get("assets", [])) != 36:
@@ -964,32 +989,266 @@ def main() -> None:
         row["member_id"]: row["individual_quality_pass"]
         for row in member_table
     }
+
+    dataset_root = ROOT / campaign["archive"]["dataset_root"]
+    registry_models = []
+    for member_id in expected_members:
+        meta = member_meta[member_id]
+
+        b_manifest_path = (
+            dataset_root
+            / "provenance"
+            / "member-manifests"
+            / f"{member_id}.json"
+        )
+        b_corpus_path = dataset_root / "member-corpora" / f"{member_id}.jsonl"
+        c_result_path = sft_root / "results" / f"{member_id}.json"
+        d_result_path = preference_root / "results" / f"{member_id}.json"
+        feedback_path = dataset_root / "sprocket-feedback" / f"{member_id}.jsonl"
+        preference_path = dataset_root / "preference" / f"{member_id}.jsonl"
+
+        for required in (
+            b_manifest_path,
+            b_corpus_path,
+            c_result_path,
+            d_result_path,
+            feedback_path,
+            preference_path,
+        ):
+            if not required.is_file():
+                raise RuntimeError(
+                    f"{member_id}: registry source missing {required}"
+                )
+
+        b_manifest = json.loads(b_manifest_path.read_text())
+        c_result = json.loads(c_result_path.read_text())
+        d_result = json.loads(d_result_path.read_text())
+        sft_asset = sft_assets[member_id]
+        final_asset = release_assets[member_id]
+
+        b_corpus_sha = sha256_file(b_corpus_path)
+        feedback_sha = sha256_file(feedback_path)
+        preference_sha = sha256_file(preference_path)
+
+        b_checks = {
+            "experiment": "VILLAGE-001B",
+            "member_id": member_id,
+            "lineage": meta["lineage"],
+            "sibling": meta["sibling"],
+            "specialization": meta["specialization"],
+            "member_seed": meta["seed"],
+            "member_contract_sha256": population["member_contract_sha256"],
+        }
+        for key, expected in b_checks.items():
+            if b_manifest.get(key) != expected:
+                raise RuntimeError(
+                    f"{member_id}: B manifest {key} "
+                    f"{b_manifest.get(key)!r} != {expected!r}"
+                )
+
+        c_checks = {
+            "experiment": "VILLAGE-001C",
+            "member_id": member_id,
+            "lineage": meta["lineage"],
+            "sibling": meta["sibling"],
+            "specialization": meta["specialization"],
+            "member_seed": meta["seed"],
+            "member_contract_sha256": population["member_contract_sha256"],
+            "base_model": campaign["base_model"]["id"],
+            "base_revision": campaign["base_model"]["revision"],
+            "training_config": campaign["sft_training"],
+            "training_dataset_sha256": b_corpus_sha,
+        }
+        for key, expected in c_checks.items():
+            if c_result.get(key) != expected:
+                raise RuntimeError(
+                    f"{member_id}: C result {key} "
+                    f"{c_result.get(key)!r} != {expected!r}"
+                )
+        if c_result["adapter"]["sha256"] != sft_asset[
+            "adapter_directory_sha256"
+        ]:
+            raise RuntimeError(
+                f"{member_id}: SFT result/release adapter hash mismatch"
+            )
+
+        d_checks = {
+            "experiment": "VILLAGE-001D",
+            "stage": "preference-continuation",
+            "member_id": member_id,
+            "lineage": meta["lineage"],
+            "sibling": meta["sibling"],
+            "specialization": meta["specialization"],
+            "member_seed": meta["seed"],
+            "member_contract_sha256": population["member_contract_sha256"],
+            "base_model": campaign["base_model"]["id"],
+            "base_revision": campaign["base_model"]["revision"],
+            "parent_release": preference_cfg["parent_release_tag"],
+            "parent_adapter_sha256": sft_asset[
+                "adapter_directory_sha256"
+            ],
+            "preference_dataset_sha256": preference_sha,
+            "training_config": preference_cfg["preference_training"],
+        }
+        for key, expected in d_checks.items():
+            if d_result.get(key) != expected:
+                raise RuntimeError(
+                    f"{member_id}: D result {key} "
+                    f"{d_result.get(key)!r} != {expected!r}"
+                )
+        if d_result["adapter"]["sha256"] != final_asset[
+            "adapter_directory_sha256"
+        ]:
+            raise RuntimeError(
+                f"{member_id}: preference result/release adapter hash mismatch"
+            )
+
+        feedback_rows = [
+            json.loads(line)
+            for line in feedback_path.read_text().splitlines()
+            if line.strip()
+        ]
+        if len(feedback_rows) != 96:
+            raise RuntimeError(
+                f"{member_id}: registry feedback count {len(feedback_rows)} != 96"
+            )
+        feedback_parent_shas = {
+            row.get("parent_adapter_sha256")
+            for row in feedback_rows
+        }
+        if feedback_parent_shas != {
+            sft_asset["adapter_directory_sha256"]
+        }:
+            raise RuntimeError(
+                f"{member_id}: feedback parent adapter lineage mismatch"
+            )
+
+        source_hashes = b_manifest.get("source_hashes") or {}
+        required_source_hashes = (
+            "babble_001_packet_sha256",
+            "babble_001_conversation_sha256",
+            "babble_002_training_sha256",
+        )
+        for key in required_source_hashes:
+            value = source_hashes.get(key)
+            if (
+                not isinstance(value, str)
+                or len(value) != 64
+                or any(ch not in "0123456789abcdef" for ch in value)
+            ):
+                raise RuntimeError(
+                    f"{member_id}: invalid source hash {key}"
+                )
+
+        registry_models.append(
+            {
+                "member_id": member_id,
+                "lineage": meta["lineage"],
+                "sibling": meta["sibling"],
+                "specialization": meta["specialization"],
+                "member_seed": meta["seed"],
+                "member_contract_sha256": population[
+                    "member_contract_sha256"
+                ],
+                "source": {
+                    "guide_id": b_manifest["source_guide_id"]
+                    if "source_guide_id" in b_manifest
+                    else meta["lineage"],
+                    "packet_id": b_manifest["source_packet_id"],
+                    "babble_ids": b_manifest["source_babble_ids"],
+                    **{
+                        key: source_hashes[key]
+                        for key in required_source_hashes
+                    },
+                    "member_corpus_file": b_corpus_path.relative_to(
+                        ROOT
+                    ).as_posix(),
+                    "member_corpus_sha256": b_corpus_sha,
+                },
+                "base": {
+                    "model": campaign["base_model"]["id"],
+                    "revision": campaign["base_model"]["revision"],
+                },
+                "sft": {
+                    "training_config": c_result["training_config"],
+                    "training_dataset": c_result["training_dataset"],
+                    "training_dataset_sha256": c_result[
+                        "training_dataset_sha256"
+                    ],
+                    "release_tag": sft_release["release_tag"],
+                    "release_url": sft_release["release_url"],
+                    "asset_file": sft_asset["file"],
+                    "asset_sha256": sft_asset["sha256"],
+                    "adapter_directory_sha256": sft_asset[
+                        "adapter_directory_sha256"
+                    ],
+                    "resumed": bool(
+                        (c_result.get("recovery") or {}).get("resumed")
+                    ),
+                },
+                "sprocket_feedback": {
+                    "file": feedback_path.relative_to(ROOT).as_posix(),
+                    "sha256": feedback_sha,
+                    "records": len(feedback_rows),
+                    "sprocket_revision": campaign["sprocket"][
+                        "source_revision"
+                    ],
+                    "sprocket_sha256": campaign["sprocket"][
+                        "source_sha256"
+                    ],
+                    "parent_adapter_sha256": sft_asset[
+                        "adapter_directory_sha256"
+                    ],
+                },
+                "preference": {
+                    "training_config": d_result["training_config"],
+                    "dataset_file": preference_path.relative_to(
+                        ROOT
+                    ).as_posix(),
+                    "dataset_sha256": preference_sha,
+                    "parent_release": d_result["parent_release"],
+                    "parent_adapter_sha256": d_result[
+                        "parent_adapter_sha256"
+                    ],
+                    "release_tag": preference_release["release_tag"],
+                    "release_url": preference_release["release_url"],
+                    "asset_file": final_asset["file"],
+                    "asset_sha256": final_asset["sha256"],
+                    "adapter_directory_sha256": final_asset[
+                        "adapter_directory_sha256"
+                    ],
+                    "resumed": bool(
+                        (d_result.get("recovery") or {}).get("resumed")
+                    ),
+                },
+                "qualification": {
+                    "stage": "VILLAGE-001E",
+                    "individual_quality_pass": verdict_by_member[
+                        member_id
+                    ],
+                },
+            }
+        )
+
+    if len(registry_models) != 36:
+        raise RuntimeError("final model registry cardinality mismatch")
+
     model_registry = {
-        "schema_version": 1,
+        "schema_version": 2,
         "experiment": "VILLAGE-001",
         "qualification_stage": "VILLAGE-001E",
         "issue": 14,
         "release_tag": preference_release["release_tag"],
         "release_url": preference_release["release_url"],
         "member_contract_sha256": population["member_contract_sha256"],
-        "models": [
-            {
-                "member_id": member_id,
-                "lineage": member_meta[member_id]["lineage"],
-                "sibling": member_meta[member_id]["sibling"],
-                "individual_quality_pass": verdict_by_member[member_id],
-                "asset_file": release_assets[member_id]["file"],
-                "asset_sha256": release_assets[member_id]["sha256"],
-                "adapter_directory_sha256": release_assets[member_id][
-                    "adapter_directory_sha256"
-                ],
-            }
-            for member_id in expected_members
-        ],
+        "base_model": campaign["base_model"]["id"],
+        "base_revision": campaign["base_model"]["revision"],
+        "sft_release_tag": sft_release["release_tag"],
+        "preference_release_tag": preference_release["release_tag"],
+        "models": registry_models,
     }
     write_json(out / "model-registry.json", model_registry)
 
-    dataset_root = ROOT / campaign["archive"]["dataset_root"]
     dataset_lineage = {
         "schema_version": 1,
         "experiment": "VILLAGE-001E",
