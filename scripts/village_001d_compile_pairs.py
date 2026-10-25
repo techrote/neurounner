@@ -230,7 +230,8 @@ Rules:
   conflicting motives, local habits and embodied behavior;
 - do not turn every chosen answer into a more competent/polite assistant;
 - avoid identity labels, training talk, catchphrase-only distinction or invented lore;
-- variant 1 MUST copy the supplied parent_response verbatim into rejected;
+- variant 1 MUST put the literal marker __PARENT__ in rejected; the orchestrator
+  will inject the authoritative parent_response exactly after parsing;
 - variant 2 uses a plausible sanitized/generic rejected answer;
 - variant 3 uses an over-stylized/catchphrase-heavy rejected answer;
 - why_chosen briefly names the behavioral preference;
@@ -277,25 +278,36 @@ def parse_compiler(
         if not isinstance(chosen, str) or len(chosen.strip()) < 12:
             problems.append(f"{pair_id}:chosen")
             continue
-        if not isinstance(rejected, str) or len(rejected.strip()) < 8:
-            problems.append(f"{pair_id}:rejected")
-            continue
         if not isinstance(why, str) or len(why.strip()) < 8:
             problems.append(f"{pair_id}:why_chosen")
             continue
         spec = expected[pair_id]
+        provider_rejected = rejected.strip() if isinstance(rejected, str) else None
         if spec["variant"] == 1:
-            parent = scenarios[spec["scenario_id"]]["response"].strip()
-            if rejected.strip() != parent:
-                problems.append(f"{pair_id}:variant1_rejected_not_parent")
+            # V1's rejected side is definitionally the exact SFT parent response.
+            # Provider text is not authoritative for that field; injecting it here
+            # avoids forcing the cloud compiler to echo pathological/long parent
+            # responses while preserving the raw provider response separately.
+            canonical_rejected = scenarios[spec["scenario_id"]]["response"].strip()
+            rejected = canonical_rejected
+            rejected_source = "authoritative_parent_response"
+            provider_rejected_ignored = provider_rejected != canonical_rejected
+        else:
+            if not isinstance(rejected, str) or len(rejected.strip()) < 8:
+                problems.append(f"{pair_id}:rejected")
                 continue
+            rejected = rejected.strip()
+            rejected_source = "provider"
+            provider_rejected_ignored = False
         if normalize_text(chosen) == normalize_text(rejected):
             problems.append(f"{pair_id}:identical")
             continue
         out[pair_id] = {
             "chosen": chosen.strip(),
-            "rejected": rejected.strip(),
+            "rejected": rejected,
             "why_chosen": why.strip(),
+            "rejected_source": rejected_source,
+            "provider_rejected_ignored": provider_rejected_ignored,
         }
 
     missing = sorted(set(expected) - set(out))
@@ -1223,6 +1235,10 @@ def main() -> None:
                     "parent_adapter_sha256": parent_sha,
                     "feedback_dataset_sha256": feedback_sha,
                     "provider_call_ids": list(compiler_call_refs[spec["pair_id"]]),
+                    "rejected_source": generated["rejected_source"],
+                    "provider_rejected_ignored": generated[
+                        "provider_rejected_ignored"
+                    ],
                 },
             }
             validate_pair(row)
