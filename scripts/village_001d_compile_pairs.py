@@ -263,7 +263,7 @@ def parse_compiler(
     out = {}
     for item in pairs:
         if not isinstance(item, dict):
-            problems.append("pair_not_object")
+            # Non-object extras cannot contribute to the canonical required-ID set.
             continue
         pair_id = item.get("pair_id")
         if pair_id not in expected:
@@ -1187,6 +1187,9 @@ def main() -> None:
             role="preference-compiler",
         )
         compiled, problems = parse_compiler(raw, chunk_specs, scenarios)
+        problems.extend(
+            remove_duplicate_compiled(compiled, chunk_specs, seen_pairs)
+        )
         compiler_call_refs = {
             pair_id: [label]
             for pair_id in compiled
@@ -1274,6 +1277,9 @@ def main() -> None:
                     compiler_call_refs[pair_id] = [label, repair_label]
                 round_problems.extend(repair_problems)
 
+            round_problems.extend(
+                remove_duplicate_compiled(compiled, chunk_specs, seen_pairs)
+            )
             remaining = [
                 spec["pair_id"] for spec in chunk_specs
                 if spec["pair_id"] not in compiled
