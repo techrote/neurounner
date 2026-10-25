@@ -316,6 +316,54 @@ jobs:
           print("partial before-after review salvage: PASS")
           PY
 
+      - name: Verify incompatible feedback resume is rejected cleanly
+        env:
+          PYTHONPATH: scripts
+        run: |
+          python3 - <<'PY'
+          import json
+          import tempfile
+          from pathlib import Path
+          from village_001d_sprocket_feedback import assess_feedback_resume
+
+          member={"member_id":"V-G01-A","lineage":"G01","sibling":"A"}
+          population={"member_contract_sha256":"1"*64}
+          campaign={
+              "sprocket":{
+                  "source_revision":"test-rev",
+                  "source_sha256":"2"*64,
+              }
+          }
+          feedback_cfg={
+              "scenario_count":24,
+              "member_probe_count":8,
+              "workers_per_scenario":3,
+          }
+          with tempfile.TemporaryDirectory() as tmp:
+              root=Path(tmp)
+              (root/"manifest.json").write_text(json.dumps({
+                  "experiment":"VILLAGE-001D",
+                  "stage":"sprocket-feedback",
+                  "member_id":"V-G01-A",
+                  "lineage":"G01",
+                  "sibling":"A",
+                  "member_contract_sha256":"1"*64,
+                  "parent_adapter_sha256":"a"*64,
+              }))
+              (root/"feedback.jsonl").write_text("")
+              complete,reason=assess_feedback_resume(
+                  root,
+                  member,
+                  population,
+                  "b"*64,
+                  campaign,
+                  feedback_cfg,
+              )
+              assert complete is False
+              assert "parent_adapter_sha256" in reason,(complete,reason)
+          print("incompatible feedback resume rejection: PASS")
+          PY
+
       - name: Validate preference campaign contract
         env:
           PYTHONPATH: scripts
