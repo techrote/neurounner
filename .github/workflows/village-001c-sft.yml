@@ -233,6 +233,13 @@ jobs:
           assert len(result["training"]["losses"])==320
           assert len(result["evaluation"]["responses"])==24
           assert result["evaluation"]["hidden_member_prompt_used"] is False
+          probes=result["member_probe_evaluation"]
+          assert probes["held_out_from_member_training"] is True
+          assert probes["hidden_member_prompt_used"] is False
+          assert len(probes["responses"])==8
+          assert [x["scenario_id"] for x in probes["responses"]]==[
+              f"P{i:02d}" for i in range(1,9)
+          ]
           assert (root/"adapter"/"adapter_model.safetensors").is_file()
           print(
               member,
