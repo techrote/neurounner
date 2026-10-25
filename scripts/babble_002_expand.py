@@ -144,9 +144,19 @@ def validate_examples(raw,expected_gid:str,packet:dict,quotas:dict,seen_inputs:s
             problems.append(rp+":generic_bad_target")
         if not isinstance(why,str) or len(why.strip())<12:
             problems.append(rp+":why_bad")
-        if not isinstance(traits,list) or not 1<=len(traits)<=5 or any(t not in valid_trait_ids for t in traits):
+        if (
+            not isinstance(traits,list)
+            or not 1<=len(traits)<=5
+            or len(traits)!=len(set(traits))
+            or any(t not in valid_trait_ids for t in traits)
+        ):
             problems.append(rp+":trait_refs")
-        if not isinstance(seeds,list) or len(seeds)>3 or any(s not in valid_seed_ids for s in seeds):
+        if (
+            not isinstance(seeds,list)
+            or len(seeds)>3
+            or len(seeds)!=len(set(seeds))
+            or any(s not in valid_seed_ids for s in seeds)
+        ):
             problems.append(rp+":seed_refs")
         if isinstance(inp,str):
             norm=normalize_text(inp)
@@ -207,9 +217,19 @@ def salvage_from_candidates(contents:list[str],packet:dict,quotas:dict,seen_inpu
                 continue
             if not isinstance(why,str) or len(why.strip())<12:
                 continue
-            if not isinstance(traits,list) or not 1<=len(traits)<=5 or any(t not in valid_trait_ids for t in traits):
+            if (
+                not isinstance(traits,list)
+                or not 1<=len(traits)<=5
+                or len(traits)!=len(set(traits))
+                or any(t not in valid_trait_ids for t in traits)
+            ):
                 continue
-            if not isinstance(seeds,list) or len(seeds)>3 or any(s not in valid_seed_ids for s in seeds):
+            if (
+                not isinstance(seeds,list)
+                or len(seeds)>3
+                or len(seeds)!=len(set(seeds))
+                or any(s not in valid_seed_ids for s in seeds)
+            ):
                 continue
             norm=normalize_text(inp)
             if norm in seen_inputs or norm in local_seen:
@@ -250,8 +270,8 @@ Required surface counts:
 
 Return JSON only as {{"examples":[...]}}.
 Every row must contain: surface, input, target, generic_bad_target, why_bad, trait_refs, seed_refs.
-trait_refs: 1-5 valid SOURCE trait IDs.
-seed_refs: 0-3 valid S* IDs.
+trait_refs: 1-5 unique valid SOURCE trait IDs.
+seed_refs: 0-3 unique valid S* IDs.
 Use self-contained scenarios; target should usually be 1-5 sentences.
 Do not mention Sprocket, datasets, training, or this repair operation.
 
@@ -306,8 +326,8 @@ For every example return exactly:
 surface, input, target, generic_bad_target, why_bad, trait_refs, seed_refs.
 
 Rules:
-- trait_refs: 1-5 valid IDs from trait_catalog.
-- seed_refs: 0-3 valid S* IDs only.
+- trait_refs: 1-5 unique valid IDs from trait_catalog.
+- seed_refs: 0-3 unique valid S* IDs only.
 - inputs must be varied and self-contained.
 - target should usually be 1-5 sentences and under ~120 words.
 - do not merely paraphrase the source packet.
@@ -348,7 +368,7 @@ Previously used inputs that MUST NOT be repeated:
 
 Preserve useful content from the malformed chunk when present, but fix every structural/quota/duplication problem.
 Every row must contain: surface, input, target, generic_bad_target, why_bad, trait_refs, seed_refs.
-trait_refs must use SOURCE trait IDs; seed_refs may contain S* IDs only.
+trait_refs must use unique SOURCE trait IDs; seed_refs may contain unique S* IDs only.
 
 SOURCE:
 {json.dumps(source,ensure_ascii=False)}
