@@ -773,7 +773,6 @@ def provider(args: argparse.Namespace) -> None:
         (derived / "storyboard.md").write_text(storyboard + "\n")
 
     part_specs = [
-    part_specs = [
         (
             "01",
             "The remembered noise",
