@@ -112,26 +112,26 @@ jobs:
       - name: Fetch pinned llama.cpp runtime
         run: bash scripts/bootstrap.sh runtime
 
-      - name: Resolve Qwen3.5-4B pin
+      - name: Resolve LFM2.5-8B-A1B pin
         run: |
           python3 - <<'PY' >> "$GITHUB_ENV"
           import json
-          spec=json.load(open("config/candidates.json"))["qwen35-4b"]
-          print(f"STORY001_QWEN35_URL={spec['url']}")
-          print(f"STORY001_QWEN35_FILE={spec['file']}")
-          print(f"STORY001_QWEN35_SHA={spec['sha256']}")
+          spec=json.load(open("config/candidates.json"))["lfm25-8b-a1b"]
+          print(f"STORY001_LFM8B_URL={spec['url']}")
+          print(f"STORY001_LFM8B_FILE={spec['file']}")
+          print(f"STORY001_LFM8B_SHA={spec['sha256']}")
           PY
 
-      - name: Download and SHA-verify Qwen3.5-4B
+      - name: Download and SHA-verify LFM2.5-8B-A1B
         run: |
           mkdir -p "$RUNNER_TEMP/story001-models"
-          dest="$RUNNER_TEMP/story001-models/$STORY001_QWEN35_FILE"
-          curl -fL --retry 5 --retry-all-errors --connect-timeout 30             -o "$dest.part" "$STORY001_QWEN35_URL"
-          echo "$STORY001_QWEN35_SHA  $dest.part" | sha256sum -c -
+          dest="$RUNNER_TEMP/story001-models/$STORY001_LFM8B_FILE"
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 30             -o "$dest.part" "$STORY001_LFM8B_URL"
+          echo "$STORY001_LFM8B_SHA  $dest.part" | sha256sum -c -
           mv "$dest.part" "$dest"
-          echo "STORY001_QWEN35_4B=$dest" >> "$GITHUB_ENV"
+          echo "STORY001_LFM8B=$dest" >> "$GITHUB_ENV"
 
-      - name: Resume exact M3 draft, compress, review and edit
+      - name: Reuse qualified M3/M4 and perform focused LFM8B final edits
         run: |
           python3 scripts/story_001.py             --config experiments/story-001/config.json             provider --out results/story001 --resume-root results/resume
 
