@@ -21,7 +21,7 @@ from peft import LoraConfig, PeftModel, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from village_001_manifest import build_manifest
-from village_001_validate import validate_file
+from village_001_validate import normalize_text, validate_file
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -124,6 +124,67 @@ def load_rows(cfg: dict, member: dict, contract_sha: str) -> tuple[Path, list[di
     if any(row["sibling"] != member["sibling"] for row in rows):
         raise RuntimeError(f"{member['member_id']}: corpus sibling mismatch")
     return path, rows
+
+
+def member_probe_scenarios(cfg: dict, member: dict, target_rows: list[dict]) -> list[dict]:
+    """Select eight deterministic held-out probes from the two sibling corpora.
+
+    The target member never trained on these exact inputs. Four cloud-expansion
+    situations come from each same-lineage sibling, giving Sprocket later feedback
+    a lineage-relevant but member-unseen surface.
+    """
+    dataset_root = ROOT / cfg["archive"]["dataset_root"]
+    target_inputs = {normalize_text(row["input"]) for row in target_rows}
+    candidates_by_sibling: dict[str, list[dict]] = {}
+    for sibling in ("A", "B", "C"):
+        if sibling == member["sibling"]:
+            continue
+        sibling_id = f"V-{member['lineage']}-{sibling}"
+        path = dataset_root / "member-corpora" / f"{sibling_id}.jsonl"
+        if not path.is_file():
+            raise RuntimeError(f"member probe sibling corpus missing: {path}")
+        rows = [
+            json.loads(line)
+            for line in path.read_text().splitlines()
+            if line.strip()
+        ]
+        candidates = [
+            row
+            for row in rows
+            if row.get("source_kind") == "cloud_expansion"
+            and normalize_text(row["input"]) not in target_inputs
+        ]
+        candidates.sort(
+            key=lambda row: hashlib.sha256(
+                f"{member['seed']}:{sibling_id}:{row['example_id']}".encode()
+            ).hexdigest()
+        )
+        if len(candidates) < 4:
+            raise RuntimeError(
+                f"{member['member_id']}: only {len(candidates)} held-out "
+                f"probe candidates from {sibling_id}"
+            )
+        candidates_by_sibling[sibling] = candidates[:4]
+
+    probes = []
+    index = 1
+    for sibling in sorted(candidates_by_sibling):
+        sibling_id = f"V-{member['lineage']}-{sibling}"
+        for row in candidates_by_sibling[sibling]:
+            probes.append(
+                {
+                    "id": f"P{index:02d}",
+                    "family": "member_probe",
+                    "prompt": row["input"],
+                    "source_member_id": sibling_id,
+                    "source_example_id": row["example_id"],
+                    "source_surface": row["surface"],
+                }
+            )
+            index += 1
+    if len(probes) != 8:
+        raise AssertionError(len(probes))
+    return probes
 
 
 def encode_example(tok, system: str, row: dict, max_length: int) -> dict:
@@ -514,6 +575,25 @@ def main() -> None:
     if len(responses) != len(eval_cfg["scenarios"]):
         raise RuntimeError("held-out response count mismatch")
 
+    probe_specs = member_probe_scenarios(cfg, member, train_rows)
+    probe_responses = evaluate(
+        model,
+        tok,
+        system,
+        probe_specs,
+        int(eval_cfg["max_new_tokens"]),
+    )
+    if len(probe_responses) != 8:
+        raise RuntimeError("member-probe response count mismatch")
+    for response, spec in zip(probe_responses, probe_specs):
+        response.update(
+            {
+                "source_member_id": spec["source_member_id"],
+                "source_example_id": spec["source_example_id"],
+                "source_surface": spec["source_surface"],
+            }
+        )
+
     result = {
         "schema_version": 1,
         "experiment": "VILLAGE-001C",
@@ -586,6 +666,16 @@ def main() -> None:
             "max_new_tokens": int(eval_cfg["max_new_tokens"]),
             "responses": responses,
         },
+        "member_probe_evaluation": {
+            "system": system,
+            "hidden_member_prompt_used": False,
+            "held_out_from_member_training": True,
+            "selection_method": (
+                "four deterministic cloud-expansion inputs from each same-lineage "
+                "sibling corpus, excluding any normalized target-member training input"
+            ),
+            "responses": probe_responses,
+        },
     }
     write_json(out / "result.json", result)
 
@@ -610,6 +700,7 @@ def main() -> None:
                 ],
                 "adapter": adapter_info,
                 "held_out_responses": len(responses),
+                "member_probe_responses": len(probe_responses),
                 "resumed": result["recovery"]["resumed"],
             },
             indent=2,
