@@ -82,8 +82,10 @@ jobs:
               counts={}
               for row in specs:
                   counts[row["scenario_id"]]=counts.get(row["scenario_id"],0)+1
-              assert all(counts[f"T{i:02d}"]==3 for i in range(1,13))
-              assert all(counts[f"T{i:02d}"]==2 for i in range(13,25))
+              assert all(counts[f"T{i:02d}"]==2 for i in range(1,13))
+              assert all(counts[f"T{i:02d}"]==1 for i in range(13,25))
+              assert all(counts[f"P{i:02d}"]==3 for i in range(1,9))
+              assert sum(counts[f"P{i:02d}"] for i in range(1,9))==24
           print("VILLAGE-001D preference contract: PASS")
           PY
 
