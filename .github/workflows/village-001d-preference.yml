@@ -475,19 +475,51 @@ jobs:
           name: village001d-feedback-${{ matrix.member }}
           path: feedback/${{ matrix.member }}
 
-      - name: Recover prior pair artifact when requested
+      - name: Recover newest compatible prior pair artifact
         if: ${{ inputs.resume_run_id != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
           RESUME_RUN_ID: ${{ inputs.resume_run_id }}
         run: |
-          mkdir -p "resume/${{ matrix.member }}"
-          if ! gh run download "$RESUME_RUN_ID" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --name "village001d-pairs-${{ matrix.member }}" \
-            --dir "resume/${{ matrix.member }}"; then
-            echo "No reusable pair artifact for ${{ matrix.member }}."
-            rm -rf "resume/${{ matrix.member }}"
+          set -u
+          member="${{ matrix.member }}"
+          target="resume/$member"
+          rm -rf "$target"
+
+          candidates=("$RESUME_RUN_ID")
+          while IFS= read -r run_id; do
+            [ -n "$run_id" ] || continue
+            [ "$run_id" = "$GITHUB_RUN_ID" ] && continue
+            [ "$run_id" = "$RESUME_RUN_ID" ] && continue
+            candidates+=("$run_id")
+          done < <(
+            gh run list \
+              --repo "$GITHUB_REPOSITORY" \
+              --workflow "village-001d-preference.yml" \
+              --branch main \
+              --status completed \
+              --limit 30 \
+              --json databaseId \
+              --jq '.[].databaseId'
+          )
+
+          recovered=""
+          for run_id in "${candidates[@]}"; do
+            rm -rf "$target"
+            mkdir -p "$target"
+            if gh run download "$run_id" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name "village001d-pairs-$member" \
+              --dir "$target" >/dev/null 2>&1; then
+              recovered="$run_id"
+              echo "Recovered candidate pair artifact for $member from D run $run_id."
+              break
+            fi
+          done
+
+          if [ -z "$recovered" ]; then
+            echo "No prior pair artifact found for $member."
+            rm -rf "$target"
           fi
 
       - name: Compile and independently curate 60 preference pairs
@@ -608,19 +640,51 @@ jobs:
           print("parent directory SHA:",actual)
           PY
 
-      - name: Recover prior preference artifact when requested
+      - name: Recover newest compatible prior preference artifact
         if: ${{ inputs.resume_run_id != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
           RESUME_RUN_ID: ${{ inputs.resume_run_id }}
         run: |
-          mkdir -p "resume/${{ matrix.member }}"
-          if ! gh run download "$RESUME_RUN_ID" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --name "village001d-preference-${{ matrix.member }}" \
-            --dir "resume/${{ matrix.member }}"; then
-            echo "No reusable preference artifact for ${{ matrix.member }}."
-            rm -rf "resume/${{ matrix.member }}"
+          set -u
+          member="${{ matrix.member }}"
+          target="resume/$member"
+          rm -rf "$target"
+
+          candidates=("$RESUME_RUN_ID")
+          while IFS= read -r run_id; do
+            [ -n "$run_id" ] || continue
+            [ "$run_id" = "$GITHUB_RUN_ID" ] && continue
+            [ "$run_id" = "$RESUME_RUN_ID" ] && continue
+            candidates+=("$run_id")
+          done < <(
+            gh run list \
+              --repo "$GITHUB_REPOSITORY" \
+              --workflow "village-001d-preference.yml" \
+              --branch main \
+              --status completed \
+              --limit 30 \
+              --json databaseId \
+              --jq '.[].databaseId'
+          )
+
+          recovered=""
+          for run_id in "${candidates[@]}"; do
+            rm -rf "$target"
+            mkdir -p "$target"
+            if gh run download "$run_id" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name "village001d-preference-$member" \
+              --dir "$target" >/dev/null 2>&1; then
+              recovered="$run_id"
+              echo "Recovered candidate preference artifact for $member from D run $run_id."
+              break
+            fi
+          done
+
+          if [ -z "$recovered" ]; then
+            echo "No prior preference artifact found for $member."
+            rm -rf "$target"
           fi
 
       - name: Run restart-safe preference continuation
