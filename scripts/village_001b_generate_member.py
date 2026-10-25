@@ -18,6 +18,7 @@ from babble_002_expand import (
     extract_json,
     normalize_text,
     packet_for,
+    salvage_from_candidates,
     source_babbles,
     trait_catalog,
     validate_examples,
