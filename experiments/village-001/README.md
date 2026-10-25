@@ -46,3 +46,20 @@ Issue #11 expands each immutable member from its 100-row BABBLE-002 ancestral sh
 - Publication is all-or-nothing: the assembler requires 36 canonical 160-row shards before replacing the durable `datasets/village-001/` stage.
 
 The corresponding implementation is `scripts/village_001b_generate_member.py`, `scripts/village_001b_assemble.py`, and `.github/workflows/village-001b-member-corpora.yml`.
+
+
+## VILLAGE-001C CPU SFT village
+
+Issue #12 turns the 36 promoted VILLAGE-001B member corpora into independent SmolLM2-135M LoRA cartridges.
+
+- Body/revision remain exactly the qualified PERSONA baseline.
+- Training is 2 epochs, LoRA r8/alpha16/dropout0.05, assistant-only loss, 320 optimizer steps/member.
+- Each member uses the immutable seed derived by `village_001_manifest.py`; there is no hyperparameter sweep.
+- The common 24-scenario PERSONA-001 held-out suite is reused with the same neutral system prompt. No lineage/member description is supplied during evaluation.
+- Matrix concurrency is 12 GitHub-hosted `ubuntu-24.04` CPU runners.
+- Every 40 steps, the lane checkpoints adapter weights, optimizer state, Torch RNG state, next schedule step and cumulative telemetry. Failed lanes can resume from prior workflow artifacts.
+- Completed lanes retain their full loss trace, source corpus hash/IDs, CPU/package identity, peak RSS, throughput, 24 raw held-out responses and adapter directory hash.
+- The population assembler independently verifies all 36 lanes and packages deterministic adapter archives.
+- Adapter bytes are published under release tag `village-001-sft-v1`; hashes/results/aggregate evidence are committed under `experiments/village-001/sft-evidence/`.
+
+The workflow auto-starts only when the durable VILLAGE-001B dataset manifest/member shards are promoted, not merely when this training implementation is merged.

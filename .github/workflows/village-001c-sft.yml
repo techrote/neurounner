@@ -1,0 +1,326 @@
+name: VILLAGE-001C 36-member CPU SFT training
+
+on:
+  workflow_dispatch:
+    inputs:
+      resume_run_id:
+        description: 'Optional prior VILLAGE-001C run ID whose per-member artifacts should be reused/resumed'
+        required: false
+        type: string
+  pull_request:
+    paths:
+      - '.github/workflows/village-001c-sft.yml'
+      - 'experiments/village-001/config.json'
+      - 'scripts/village_001_manifest.py'
+      - 'scripts/village_001_validate.py'
+      - 'scripts/village_001_gate.py'
+      - 'scripts/village_001c_train_member.py'
+      - 'scripts/village_001c_assemble.py'
+  push:
+    branches: [main]
+    paths:
+      - 'datasets/village-001/manifest.json'
+      - 'datasets/village-001/member-corpora/**'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: neurounner-village-001c-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      members: ${{ steps.population.outputs.members }}
+      contract_sha256: ${{ steps.population.outputs.contract_sha256 }}
+      dataset_ready: ${{ steps.dataset.outputs.ready }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Compile VILLAGE-001C helpers
+        run: |
+          python3 -m py_compile \
+            scripts/village_001_manifest.py \
+            scripts/village_001_validate.py \
+            scripts/village_001_gate.py \
+            scripts/village_001c_train_member.py \
+            scripts/village_001c_assemble.py
+
+      - name: Verify campaign configuration and provider authority
+        run: |
+          python3 scripts/village_001_gate.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          cfg=json.loads(Path("experiments/village-001/config.json").read_text())
+          assert cfg["population"]["expected_members"]==36
+          assert cfg["corpus"]["target_sft_examples_per_member"]==160
+          assert cfg["sft_training"]=={
+              "epochs":2,
+              "learning_rate":0.0008,
+              "lora_r":8,
+              "lora_alpha":16,
+              "lora_dropout":0.05,
+              "max_length":512,
+              "gradient_clip":1.0,
+              "max_parallel":12,
+          }
+          assert cfg["base_model"]["id"]=="HuggingFaceTB/SmolLM2-135M-Instruct"
+          assert cfg["base_model"]["revision"]=="12fd25f77366fa6b3b4b768ec3050bf629380bac"
+          print("VILLAGE-001C config: PASS")
+          PY
+
+      - name: Compile canonical training matrix
+        id: population
+        run: |
+          mkdir -p results/village001c
+          python3 scripts/village_001_manifest.py \
+            --config experiments/village-001/config.json \
+            --out results/village001c/members.json \
+            --check-sources
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          m=json.loads(Path("results/village001c/members.json").read_text())
+          members=[row["member_id"] for row in m["members"]]
+          assert len(members)==36 and len(set(members))==36
+          with open(os.environ["GITHUB_OUTPUT"],"a") as fh:
+              fh.write("members="+json.dumps(members,separators=(",",":"))+"\n")
+              fh.write("contract_sha256="+m["member_contract_sha256"]+"\n")
+          print("training members:",",".join(members))
+          PY
+
+      - name: Validate promoted VILLAGE-001B dataset when present
+        id: dataset
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ ! -f datasets/village-001/manifest.json ]; then
+            if [ "$EVENT_NAME" = "pull_request" ]; then
+              echo "VILLAGE-001B dataset not promoted yet; PR static checks continue."
+              echo "ready=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "VILLAGE-001B dataset manifest is required for training."
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest=json.loads(Path("datasets/village-001/manifest.json").read_text())
+          members=json.loads(Path("results/village001c/members.json").read_text())
+          assert manifest["stage"]=="VILLAGE-001B-member-corpora"
+          assert manifest["counts"]["members"]==36
+          assert manifest["counts"]["rows"]==5760
+          assert manifest["member_contract_sha256"]==members["member_contract_sha256"]
+          PY
+
+          python3 - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+
+          m=json.loads(Path("results/village001c/members.json").read_text())
+          for row in m["members"]:
+              member=row["member_id"]
+              subprocess.run(
+                  [
+                      "python3","scripts/village_001_validate.py",
+                      "--kind","corpus",
+                      "--file",f"datasets/village-001/member-corpora/{member}.jsonl",
+                      "--expect-member",member,
+                      "--expect-count","160",
+                  ],
+                  check=True,
+              )
+          print("36 promoted member corpora: PASS")
+          PY
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001c-plan
+          path: results/village001c
+          if-no-files-found: error
+          retention-days: 14
+
+  train:
+    if: ${{ github.event_name != 'pull_request' && needs.plan.outputs.dataset_ready == 'true' }}
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        member: ${{ fromJSON(needs.plan.outputs.members) }}
+    env:
+      OMP_NUM_THREADS: 4
+      MKL_NUM_THREADS: 4
+      TOKENIZERS_PARALLELISM: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Verify durable campaign gate
+        run: python3 scripts/village_001_gate.py
+
+      - name: Install CPU training stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install \
+            "transformers>=4.57,<5" \
+            "peft>=0.17,<1" \
+            "huggingface_hub>=0.36,<2" \
+            "safetensors>=0.6,<1"
+
+      - name: Recover prior member artifact when requested
+        if: ${{ inputs.resume_run_id != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESUME_RUN_ID: ${{ inputs.resume_run_id }}
+        run: |
+          mkdir -p "resume/${{ matrix.member }}"
+          if ! gh run download "$RESUME_RUN_ID" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --name "village001c-${{ matrix.member }}" \
+            --dir "resume/${{ matrix.member }}"; then
+            echo "No reusable artifact for ${{ matrix.member }} in run $RESUME_RUN_ID; starting fresh."
+            rm -rf "resume/${{ matrix.member }}"
+          fi
+
+      - name: Train member cartridge and common held-out suite
+        run: |
+          mkdir -p "out/${{ matrix.member }}"
+          resume_args=()
+          if [ -d "resume/${{ matrix.member }}" ]; then
+            resume_args=(--resume "resume/${{ matrix.member }}")
+          fi
+          python3 scripts/village_001c_train_member.py \
+            --config experiments/village-001/config.json \
+            --member "${{ matrix.member }}" \
+            --out "out/${{ matrix.member }}" \
+            --checkpoint-interval 40 \
+            "${resume_args[@]}"
+
+      - name: Verify terminal lane evidence
+        env:
+          MEMBER: ${{ matrix.member }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+
+          member=os.environ["MEMBER"]
+          root=Path("out")/member
+          result=json.loads((root/"result.json").read_text())
+          assert result["experiment"]=="VILLAGE-001C"
+          assert result["member_id"]==member
+          assert result["training"]["optimizer_steps"]==320
+          assert len(result["training"]["losses"])==320
+          assert len(result["evaluation"]["responses"])==24
+          assert result["evaluation"]["hidden_member_prompt_used"] is False
+          assert (root/"adapter"/"adapter_model.safetensors").is_file()
+          print(
+              member,
+              "loss",result["training"]["first_loss"],"->",result["training"]["last_loss"],
+              "seq tok/s",result["training"]["sequence_tokens_per_second"],
+              "RSS KiB",result["peak_rss_kib"],
+              "adapter",result["adapter"]["sha256"],
+          )
+          PY
+
+      - name: Preserve complete or resumable member evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001c-${{ matrix.member }}
+          path: out/${{ matrix.member }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  assemble:
+    if: ${{ github.event_name != 'pull_request' }}
+    needs: [plan, train]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: village001c-V-*
+          path: artifacts
+
+      - name: Assemble independent SFT population evidence and release assets
+        run: |
+          rm -rf release-assets
+          python3 scripts/village_001c_assemble.py \
+            --artifacts artifacts \
+            --config experiments/village-001/config.json \
+            --evidence-out experiments/village-001/sft-evidence \
+            --release-out release-assets
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          summary=json.loads(Path("experiments/village-001/sft-evidence/summary.json").read_text())
+          release=json.loads(Path("experiments/village-001/sft-evidence/adapter-release.json").read_text())
+          assert summary["members"]==36
+          assert summary["successful_terminal_lanes"]==36
+          assert len(summary["members_table"])==36
+          assert len(release["assets"])==36
+          assert len(list(Path("release-assets").glob("*.tar.gz")))==36
+          print("VILLAGE-001C population evidence: PASS")
+          PY
+
+      - name: Preserve assembled evidence and cartridges as workflow artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001c-complete-${{ github.run_id }}
+          path: |
+            experiments/village-001/sft-evidence
+            release-assets
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit durable SFT population evidence
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add experiments/village-001/sft-evidence
+          git commit -m "Record VILLAGE-001C 36-member SFT evidence ${GITHUB_RUN_ID}"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Publish durable LoRA cartridges
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="village-001-sft-v1"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" release-assets/*.tar.gz --clobber
+          else
+            gh release create "$TAG" \
+              --target main \
+              --title "VILLAGE-001C 36-member SmolLM2-135M SFT village" \
+              --notes-file experiments/village-001/sft-evidence/REPORT.md \
+              release-assets/*.tar.gz
+          fi
