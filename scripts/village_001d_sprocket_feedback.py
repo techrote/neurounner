@@ -247,6 +247,30 @@ def validate_complete_feedback(
     return True
 
 
+def assess_feedback_resume(
+    out: Path,
+    member: dict,
+    population: dict,
+    parent_adapter_sha: str,
+    campaign: dict,
+    feedback_cfg: dict,
+) -> tuple[bool, str | None]:
+    try:
+        return (
+            validate_complete_feedback(
+                out,
+                member,
+                population,
+                parent_adapter_sha,
+                campaign,
+                feedback_cfg,
+            ),
+            None,
+        )
+    except RuntimeError as exc:
+        return False, str(exc)
+
+
 def request_feedback(
     *,
     port: int,
@@ -360,21 +384,14 @@ def main() -> None:
     resume_rejection = None
     if args.resume:
         copy_resume(args.resume, out)
-        try:
-            complete_resume = validate_complete_feedback(
-                out,
-                member,
-                population,
-                parent_adapter_sha,
-                campaign,
-                feedback_cfg,
-            )
-        except RuntimeError as exc:
-            # Identity-bound recovery is fail-closed for reuse, but an incompatible
-            # artifact must not abort the lane. Its original bytes remain preserved
-            # in the source Actions run; regenerate this member from clean authority.
-            complete_resume = False
-            resume_rejection = str(exc)
+        complete_resume, resume_rejection = assess_feedback_resume(
+            out,
+            member,
+            population,
+            parent_adapter_sha,
+            campaign,
+            feedback_cfg,
+        )
 
         if complete_resume:
             print(
