@@ -1,0 +1,227 @@
+name: VILLAGE-001B member-specific SFT corpus foundry
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/village-001b-member-corpora.yml'
+      - 'experiments/village-001/config.json'
+      - 'experiments/village-001/member-corpus-row.schema.json'
+      - 'scripts/village_001_manifest.py'
+      - 'scripts/village_001_validate.py'
+      - 'scripts/village_001_gate.py'
+      - 'scripts/village_001b_generate_member.py'
+      - 'scripts/village_001b_assemble.py'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/village-001b-member-corpora.yml'
+      - 'experiments/village-001/config.json'
+      - 'experiments/village-001/member-corpus-row.schema.json'
+      - 'scripts/village_001_manifest.py'
+      - 'scripts/village_001_validate.py'
+      - 'scripts/village_001_gate.py'
+      - 'scripts/village_001b_generate_member.py'
+      - 'scripts/village_001b_assemble.py'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: neurounner-village-001b-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      members: ${{ steps.population.outputs.members }}
+      contract_sha256: ${{ steps.population.outputs.contract_sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Compile VILLAGE-001B helpers
+        run: |
+          python3 -m py_compile \
+            scripts/babble_002_expand.py \
+            scripts/village_001_manifest.py \
+            scripts/village_001_validate.py \
+            scripts/village_001_gate.py \
+            scripts/village_001b_generate_member.py \
+            scripts/village_001b_assemble.py
+
+      - name: Parse campaign configuration
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          cfg=json.loads(Path("experiments/village-001/config.json").read_text())
+          assert cfg["experiment"]=="VILLAGE-001"
+          assert cfg["population"]["expected_members"]==36
+          assert cfg["corpus"]["target_sft_examples_per_member"]==160
+          assert cfg["corpus"]["new_sft_examples_per_member"]==60
+          assert cfg["nvidia"]["cloud_max_parallel"]==1
+
+          for sibling in ("A","B","C"):
+              counts=cfg["corpus"]["expansion_surface_counts"][sibling]
+              assert sum(counts.values())==60,(sibling,counts)
+          print("VILLAGE-001B config: PASS")
+          PY
+
+      - name: Verify durable NVIDIA launch gate
+        run: python3 scripts/village_001_gate.py
+
+      - name: Compile canonical 36-member execution matrix
+        id: population
+        run: |
+          mkdir -p results/village001b
+          python3 scripts/village_001_manifest.py \
+            --config experiments/village-001/config.json \
+            --out results/village001b/members.json \
+            --check-sources
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          manifest=json.loads(Path("results/village001b/members.json").read_text())
+          members=[row["member_id"] for row in manifest["members"]]
+          assert len(members)==36
+          assert len(set(members))==36
+
+          output=Path(os.environ["GITHUB_OUTPUT"])
+          with output.open("a") as fh:
+              fh.write("members="+json.dumps(members,separators=(",",":"))+"\n")
+              fh.write("contract_sha256="+manifest["member_contract_sha256"]+"\n")
+          print("members:",",".join(members))
+          print("contract:",manifest["member_contract_sha256"])
+          PY
+
+      - name: Exercise corpus-row validator
+        run: python3 scripts/village_001_validate.py --self-test
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001b-plan
+          path: results/village001b
+          if-no-files-found: error
+          retention-days: 14
+
+  generate:
+    if: ${{ github.event_name != 'pull_request' }}
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        member: ${{ fromJSON(needs.plan.outputs.members) }}
+    env:
+      NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+      TOKENIZERS_PARALLELISM: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Fail closed without NVIDIA credential
+        run: |
+          test -n "$NVIDIA_API_KEY" || {
+            echo "NVKEY repository secret is not configured."
+            exit 1
+          }
+
+      - name: Verify provider gate immediately before spend
+        run: python3 scripts/village_001_gate.py
+
+      - name: Generate and independently curate member corpus
+        run: |
+          mkdir -p "out/${{ matrix.member }}"
+          python3 scripts/village_001b_generate_member.py \
+            --config experiments/village-001/config.json \
+            --member "${{ matrix.member }}" \
+            --out "out/${{ matrix.member }}"
+
+      - name: Independently validate finished 160-row member shard
+        run: |
+          python3 scripts/village_001_validate.py \
+            --kind corpus \
+            --file "out/${{ matrix.member }}/examples.jsonl" \
+            --expect-member "${{ matrix.member }}" \
+            --expect-count 160
+          test -f "out/${{ matrix.member }}/manifest.json"
+          test -f "out/${{ matrix.member }}/quality/critic.json"
+          test -d "out/${{ matrix.member }}/provider"
+
+      - name: Preserve member evidence, including partial failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001b-${{ matrix.member }}
+          path: out/${{ matrix.member }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  assemble:
+    if: ${{ github.event_name != 'pull_request' }}
+    needs: [plan, generate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Verify provider gate before promotion
+        run: python3 scripts/village_001_gate.py
+
+      - name: Download all 36 independent member artifacts
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e
+        with:
+          pattern: village001b-V-*
+          path: artifacts
+
+      - name: Assemble and independently validate durable dataset
+        run: |
+          python3 scripts/village_001b_assemble.py \
+            --artifacts artifacts \
+            --config experiments/village-001/config.json \
+            --out datasets/village-001
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          m=json.loads(Path("datasets/village-001/manifest.json").read_text())
+          q=json.loads(Path("datasets/village-001/quality/validation.json").read_text())
+          assert m["counts"]["members"]==36
+          assert m["counts"]["rows"]==5760
+          assert q["unique_example_ids"]==5760
+          assert q["cloud_expansion_rows"]==2160
+          assert q["critic_review_records"]>=2160
+          print("VILLAGE-001B assembled dataset: PASS")
+          PY
+
+      - name: Preserve complete assembled dataset as workflow artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001b-complete-${{ github.run_id }}
+          path: datasets/village-001
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit authoritative VILLAGE-001B archive
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add datasets/village-001
+          git commit -m "Archive VILLAGE-001B member corpora ${GITHUB_RUN_ID}"
+          git pull --rebase origin main
+          git push origin HEAD:main
