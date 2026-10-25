@@ -1284,41 +1284,44 @@ def provider(args: argparse.Namespace) -> None:
         )
     draft_sha = sha256_bytes(draft.encode("utf-8"))
 
-    review_messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are the independent STORY-001 fiction reviewer. Be specific and adversarial. "
-                "Assess continuity, causality, spatial logic, pacing, Sprocket voice drift, generic "
-                "prose, chronology, emotional coherence, accidental lore claims, section seams, and "
-                "whether unreliable memory is deliberate rather than merely inconsistent. Return "
-                "markdown review only."
-            ),
-        },
-        {
-            "role": "user",
-            "content": (
-                f"Review draft SHA-256 {draft_sha}, measured locally at {draft_count} words. Start "
-                "with PASS/REVISE and a 0-10 score. Then give a prioritized finding list with quoted "
-                "short anchors, concrete repair instructions, and a final checklist. Do not rewrite "
-                "the story.\n\nSTORYBOARD:\n"
-                + storyboard
-                + "\n\nDRAFT:\n"
-                + draft
-            ),
-        },
-    ]
-    review, _ = provider_call(
-        cfg=cfg,
-        key=key,
-        stage_id="m4-review",
-        model=models["reviewer"],
-        messages=review_messages,
-        max_tokens=int(budgets["review_max_tokens"]),
-        temperature=0.35,
-        out=out,
-    )
-    (derived / "review.md").write_text(review + "\n")
+    if resume_has_m3_m4:
+        review = (derived / "review.md").read_text().strip()
+    else:
+        review_messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are the independent STORY-001 fiction reviewer. Be specific and adversarial. "
+                    "Assess continuity, causality, spatial logic, pacing, Sprocket voice drift, generic "
+                    "prose, chronology, emotional coherence, accidental lore claims, section seams, and "
+                    "whether unreliable memory is deliberate rather than merely inconsistent. Return "
+                    "markdown review only."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Review draft SHA-256 {draft_sha}, measured locally at {draft_count} words. Start "
+                    "with PASS/REVISE and a 0-10 score. Then give a prioritized finding list with quoted "
+                    "short anchors, concrete repair instructions, and a final checklist. Do not rewrite "
+                    "the story.\n\nSTORYBOARD:\n"
+                    + storyboard
+                    + "\n\nDRAFT:\n"
+                    + draft
+                ),
+            },
+        ]
+        review, _ = provider_call(
+            cfg=cfg,
+            key=key,
+            stage_id="m4-review",
+            model=models["reviewer"],
+            messages=review_messages,
+            max_tokens=int(budgets["review_max_tokens"]),
+            temperature=0.35,
+            out=out,
+        )
+        (derived / "review.md").write_text(review + "\n")
 
     edited_parts: list[str] = []
     edit_tokens = int(budgets.get("edit_segment_max_tokens", 1400))
