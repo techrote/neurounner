@@ -805,6 +805,7 @@ def main() -> None:
         "experiment": "VILLAGE-001E",
         "stage": "hierarchical-blind-tournament-scenario",
         "issue": 14,
+        "scenario_id": scenario["scenario_id"],
         "scenario": scenario,
         "fresh_after_preference_training": True,
         "final_eval_config_sha256": scenario[
