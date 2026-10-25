@@ -218,14 +218,32 @@ def main() -> None:
     ):
         raise RuntimeError("SFT result has no valid adapter directory SHA-256")
 
-    scenarios = (sft.get("evaluation") or {}).get("responses")
-    if not isinstance(scenarios, list) or len(scenarios) != int(
+    common_scenarios = (sft.get("evaluation") or {}).get("responses")
+    if not isinstance(common_scenarios, list) or len(common_scenarios) != int(
         feedback_cfg["scenario_count"]
     ):
-        raise RuntimeError("SFT held-out scenarios are incomplete")
-    expected_ids = [f"T{i:02d}" for i in range(1, 25)]
-    if [row.get("scenario_id") for row in scenarios] != expected_ids:
-        raise RuntimeError("SFT held-out scenario sequence mismatch")
+        raise RuntimeError("SFT common held-out scenarios are incomplete")
+    expected_common = [
+        f"T{i:02d}" for i in range(1, int(feedback_cfg["scenario_count"]) + 1)
+    ]
+    if [row.get("scenario_id") for row in common_scenarios] != expected_common:
+        raise RuntimeError("SFT common held-out scenario sequence mismatch")
+
+    probe_eval = sft.get("member_probe_evaluation") or {}
+    probe_scenarios = probe_eval.get("responses")
+    if not isinstance(probe_scenarios, list) or len(probe_scenarios) != int(
+        feedback_cfg["member_probe_count"]
+    ):
+        raise RuntimeError("SFT member-probe responses are incomplete")
+    expected_probes = [
+        f"P{i:02d}" for i in range(1, int(feedback_cfg["member_probe_count"]) + 1)
+    ]
+    if [row.get("scenario_id") for row in probe_scenarios] != expected_probes:
+        raise RuntimeError("SFT member-probe scenario sequence mismatch")
+    if probe_eval.get("held_out_from_member_training") is not True:
+        raise RuntimeError("SFT member probes are not marked held-out")
+
+    scenarios = common_scenarios + probe_scenarios
 
     env = load_env(CACHE / "paths.env")
     server = Path(env["LLAMA_SERVER"])
@@ -352,18 +370,30 @@ def main() -> None:
                 proc.wait(5)
         log_handle.close()
 
-    expected_count = int(feedback_cfg["scenario_count"]) * int(
-        feedback_cfg["workers_per_scenario"]
-    )
+    expected_count = (
+        int(feedback_cfg["scenario_count"])
+        + int(feedback_cfg["member_probe_count"])
+    ) * int(feedback_cfg["workers_per_scenario"])
     if len(records) != expected_count:
         raise RuntimeError(f"feedback count {len(records)} != {expected_count}")
     ids = [row["feedback_id"] for row in records]
     if len(ids) != len(set(ids)):
         raise RuntimeError("duplicate feedback IDs")
     per_scenario = Counter(row["scenario_id"] for row in records)
+    expected_scenario_ids = [
+        *[
+            f"T{i:02d}"
+            for i in range(1, int(feedback_cfg["scenario_count"]) + 1)
+        ],
+        *[
+            f"P{i:02d}"
+            for i in range(1, int(feedback_cfg["member_probe_count"]) + 1)
+        ],
+    ]
     if any(
-        per_scenario[f"T{i:02d}"] != int(feedback_cfg["workers_per_scenario"])
-        for i in range(1, 25)
+        per_scenario[scenario_id]
+        != int(feedback_cfg["workers_per_scenario"])
+        for scenario_id in expected_scenario_ids
     ):
         raise RuntimeError("feedback scenario coverage mismatch")
 
@@ -382,6 +412,9 @@ def main() -> None:
         "sprocket_revision": campaign["sprocket"]["source_revision"],
         "sprocket_sha256": campaign["sprocket"]["source_sha256"],
         "feedback_count": len(records),
+        "common_scenario_count": int(feedback_cfg["scenario_count"]),
+        "member_probe_count": int(feedback_cfg["member_probe_count"]),
+        "workers_per_scenario": int(feedback_cfg["workers_per_scenario"]),
         "valid_feedback_count": sum(1 for row in records if row["valid"]),
         "invalid_feedback_count": sum(1 for row in records if not row["valid"]),
         "valid_rate": (
