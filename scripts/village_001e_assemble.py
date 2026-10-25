@@ -924,8 +924,14 @@ def main() -> None:
         shutil.rmtree(out)
     out.mkdir(parents=True)
 
+    final_responses_dest = out / "final-responses"
     tournament_dest = out / "tournament-scenarios"
     ecology_dest = out / "ecology"
+    for response_id, path in final_responses.items():
+        shutil.copytree(
+            path.parent,
+            final_responses_dest / response_id,
+        )
     for scenario_id, path in tournament.items():
         shutil.copytree(path.parent, tournament_dest / scenario_id)
     for session_id in expected_sessions:
@@ -1013,6 +1019,15 @@ def main() -> None:
         "members": 36,
         "scenarios": 24,
         "blind_response_records": total_records,
+        "fresh_final_heldout": {
+            "config": cfg["final_eval_config"],
+            "config_sha256": final_eval_sha,
+            "scenario_ids": scenarios,
+            "fresh_after_preference_training": True,
+            "trained_members": 36,
+            "untuned_base_control": True,
+            "exact_training_input_collision_count": 0,
+        },
         "providers_saw_member_ids": False,
         "primary_tournament_model": campaign["nvidia"]["models"]["critic"]["id"],
         "behavior_normalizer_model": campaign["nvidia"]["models"]["compiler"]["id"],
@@ -1042,14 +1057,26 @@ def main() -> None:
             "behavior_mean_task_relevance": mean_behavior_task_relevance,
             "raw_mean_genericness": mean_genericness,
             "behavior_mean_genericness": mean_behavior_genericness,
-            "base_genericness_reference": float(
+            "fresh_base_raw_task_relevance": (
+                fresh_base_raw_task_relevance
+            ),
+            "fresh_base_behavior_task_relevance": (
+                fresh_base_behavior_task_relevance
+            ),
+            "fresh_base_raw_genericness": fresh_base_raw_genericness,
+            "fresh_base_behavior_genericness": (
+                fresh_base_behavior_genericness
+            ),
+            "historical_persona001_base_genericness_reference": float(
                 cfg["tournament"]["base_genericness_reference"]
             ),
-            "base_genericness_measured": measured_base_genericness,
-            "base_behavior_genericness_measured": (
+            "historical_persona001_base_genericness_measured": (
+                measured_base_genericness
+            ),
+            "historical_persona001_base_behavior_genericness_measured": (
                 measured_base_behavior_genericness
             ),
-            "base_genericness_source": cfg["tournament"][
+            "historical_base_genericness_source": cfg["tournament"][
                 "base_genericness_source"
             ],
             "preference_stage_mean_task_relevance": statistics.mean(
@@ -1103,6 +1130,7 @@ def main() -> None:
         ),
         "source_commit": __import__("os").environ.get("GITHUB_SHA"),
         "tournament_config_sha256": sha256_file(args.config),
+        "final_eval_config_sha256": final_eval_sha,
         "campaign_config_sha256": sha256_file(campaign_path),
         "preference_config_sha256": sha256_file(preference_cfg_path),
         "preference_summary_sha256": sha256_file(preference_summary_path),
@@ -1111,10 +1139,21 @@ def main() -> None:
         "dataset_provenance_sha256": sha256_file(out / "dataset-provenance.json"),
         "model_registry_sha256": sha256_file(out / "model-registry.json"),
         "member_contract_sha256": population["member_contract_sha256"],
-        "qualification_thresholds_predeclared": {
-            key: value["threshold"]
-            for key, value in population_gates.items()
+        "qualification_contract_predeclared": {
+            "behavior_lineage_accuracy_min": float(
+                cfg["tournament"]["lineage_gate"]
+            ),
+            "behavior_sibling_accuracy_given_correct_lineage_min": float(
+                cfg["tournament"]["sibling_gate_given_correct_lineage"]
+            ),
+            "genericness_rule": (
+                "population raw mean < same fresh F-suite untuned BASE raw mean"
+            ),
+            "individual_quality_members_min": int(
+                cfg["tournament"]["individual_quality_required"]
+            ),
         },
+        "qualification_gate_results": population_gates,
         "ecology_used_as_hard_population_gate": False,
         "qualification_evidence_release": cfg["qualification_release_tag"],
     }
@@ -1123,9 +1162,10 @@ def main() -> None:
     report = [
         "# VILLAGE-001E — final village qualification",
         "",
-        "The final preference-matured cartridges were evaluated without prompt-time "
-        "member/persona descriptions. Tournament providers received opaque response IDs; "
-        "ecology models/judges received opaque participant handles.",
+        "The final preference-matured cartridges were evaluated on a fresh F01-F24 "
+        "suite generated only after preference training, without prompt-time member/persona "
+        "descriptions. Tournament providers received opaque response IDs; ecology "
+        "models/judges received opaque participant handles.",
         "",
         "## Population gate",
         "",
@@ -1137,13 +1177,14 @@ def main() -> None:
         f"(gate {float(cfg['tournament']['sibling_gate_given_correct_lineage']):.3f})",
         f"- exact behavior-only 36-member accuracy: {behavior_member_accuracy:.3f}",
         f"- mean final raw-tournament genericness: {mean_genericness:.3f} "
-        f"(must remain below untuned raw reference "
-        f"{float(cfg['tournament']['base_genericness_reference']):.2f})",
+        f"(same F-suite untuned BASE {fresh_base_raw_genericness:.3f})",
         f"- mean style-neutral genericness: {mean_behavior_genericness:.3f} "
-        f"(untuned behavior reference {measured_base_behavior_genericness:.3f})",
-        f"- mean final raw task relevance: {mean_task_relevance:.3f}/4",
+        f"(same F-suite untuned BASE {fresh_base_behavior_genericness:.3f})",
+        f"- mean final raw task relevance: {mean_task_relevance:.3f}/4 "
+        f"(BASE {fresh_base_raw_task_relevance:.3f})",
         f"- mean final style-neutral task relevance: "
-        f"{mean_behavior_task_relevance:.3f}/4",
+        f"{mean_behavior_task_relevance:.3f}/4 "
+        f"(BASE {fresh_base_behavior_task_relevance:.3f})",
         f"- individual quality checks: {len(individual_pass)}/36 "
         f"(gate {int(cfg['tournament']['individual_quality_required'])})",
         "",
