@@ -103,7 +103,7 @@ def validate_config(cfg: dict) -> None:
     models = local["models"]
     assert models["storyboard"] == "qwen35-4b"
     assert models["reviewer"] == "qwen35-4b"
-    assert models["editor"] == "qwen35-4b"
+    assert models["editor"] == "lfm25-8b-a1b"
     assert models["drafter"] == "qwen-storyteller-q4"
     registry = load_json(ROOT / "config" / "candidates.json")
     for candidate_id in sorted(set(models.values())):
