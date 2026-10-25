@@ -66,6 +66,7 @@ jobs:
           p=json.loads(Path("experiments/village-001/preference-config.json").read_text())
           assert p["feedback"]["scenario_count"]==24
           assert p["feedback"]["workers_per_scenario"]==3
+          assert p["feedback"]["member_probe_count"]==8
           assert p["pair_generation"]["pair_count"]==60
           assert p["pair_generation"]["chunks"]==3
           assert p["pair_generation"]["cloud_max_parallel"]==1
@@ -167,7 +168,7 @@ jobs:
           bash scripts/bootstrap.sh runtime
           bash scripts/bootstrap.sh sprocket
 
-      - name: Collect 72 fresh Sprocket reactions
+      - name: Collect 96 fresh Sprocket reactions
         run: |
           mkdir -p "out/${{ matrix.member }}"
           python3 scripts/village_001d_sprocket_feedback.py \
@@ -187,7 +188,7 @@ jobs:
           member=os.environ["MEMBER"]
           root=Path("out")/member
           rows=[json.loads(x) for x in (root/"feedback.jsonl").read_text().splitlines() if x.strip()]
-          assert len(rows)==72
+          assert len(rows)==96
           ids=set()
           scenarios={}
           for row in rows:
@@ -196,7 +197,12 @@ jobs:
               assert row["feedback_id"] not in ids
               ids.add(row["feedback_id"])
               scenarios[row["scenario_id"]]=scenarios.get(row["scenario_id"],0)+1
-          assert all(scenarios[f"T{i:02d}"]==3 for i in range(1,25))
+          expected=[
+              *[f"T{i:02d}" for i in range(1,25)],
+              *[f"P{i:02d}" for i in range(1,9)],
+          ]
+          assert set(scenarios)==set(expected)
+          assert all(scenarios[x]==3 for x in expected)
           print(member,"feedback records",len(rows),"valid",sum(x["valid"] for x in rows))
           PY
 
@@ -337,7 +343,9 @@ jobs:
           print("PARENT_ARCHIVE_SHA="+x["sha256"])
           print("PARENT_DIR_SHA="+x["adapter_directory_sha256"])
           PY
+          set -a
           source /tmp/parent.env
+          set +a
           mkdir -p parent-download parent-adapter
           gh release download village-001-sft-v1 \
             --pattern "$PARENT_FILE" \
@@ -365,8 +373,8 @@ jobs:
               h.update(rel)
               h.update(bytes.fromhex(fhash(p)))
           actual=h.hexdigest()
-          expected=os.environ.get("PARENT_DIR_SHA")
-          # PARENT_DIR_SHA came from /tmp/parent.env; export it for this shell step.
+          expected=os.environ["PARENT_DIR_SHA"]
+          assert actual==expected,(actual,expected)
           print("parent directory SHA:",actual)
           PY
 
@@ -536,12 +544,12 @@ jobs:
           r=json.loads(Path("experiments/village-001/preference-evidence/adapter-release.json").read_text())
           d=json.loads(Path("datasets/village-001/preference-manifest.json").read_text())
           assert s["members"]==36
-          assert s["feedback_records"]==2592
+          assert s["feedback_records"]==3456
           assert s["preference_pairs"]==2160
           assert s["preference_lanes"]==36
           assert len(s["members_table"])==36
           assert len(r["assets"])==36
-          assert d["feedback_records"]==2592
+          assert d["feedback_records"]==3456
           assert d["preference_pairs"]==2160
           assert len(list(Path("release-assets").glob("*.tar.gz")))==36
           print(
