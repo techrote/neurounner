@@ -982,7 +982,7 @@ def provider(args: argparse.Namespace) -> None:
                         decoder = json.JSONDecoder()
                         pos = array_start + 1
                         while pos < len(selection):
-                            while pos < len(selection) and selection[pos] in " \\t\\r\\n,":
+                            while pos < len(selection) and (selection[pos].isspace() or selection[pos] == ","):
                                 pos += 1
                             if pos >= len(selection) or selection[pos] != '"':
                                 break
