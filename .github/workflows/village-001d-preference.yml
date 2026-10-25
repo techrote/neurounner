@@ -578,7 +578,29 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Commit durable VILLAGE-001D evidence
+      - name: Publish durable matured cartridges
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # VILLAGE-001E downloads these exact cartridges. Publish and verify them
+          # before pushing the preference-evidence commit that triggers the final
+          # qualification workflow.
+          TAG="village-001-preference-v1"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" release-assets/*.tar.gz --clobber
+          else
+            gh release create "$TAG" \
+              --target main \
+              --title "VILLAGE-001D Sprocket-feedback matured SLM village" \
+              --notes-file experiments/village-001/preference-evidence/REPORT.md \
+              release-assets/*.tar.gz
+          fi
+
+          expected=$(find release-assets -maxdepth 1 -name '*.tar.gz' -type f | wc -l)
+          test "$expected" -eq 36
+          gh release view "$TAG" --json assets --jq '.assets | length' | grep -x '36'
+
+      - name: Commit durable VILLAGE-001D evidence and trigger VILLAGE-001E
         run: |
           git config user.name "neurounner experiment bot"
           git config user.email "261801702+techrote@users.noreply.github.com"
@@ -594,18 +616,3 @@ jobs:
           git commit -m "Record VILLAGE-001D preference maturation ${GITHUB_RUN_ID}"
           git pull --rebase origin main
           git push origin HEAD:main
-
-      - name: Publish durable matured cartridges
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          TAG="village-001-preference-v1"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" release-assets/*.tar.gz --clobber
-          else
-            gh release create "$TAG" \
-              --target main \
-              --title "VILLAGE-001D Sprocket-feedback matured SLM village" \
-              --notes-file experiments/village-001/preference-evidence/REPORT.md \
-              release-assets/*.tar.gz
-          fi

@@ -308,19 +308,13 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Commit durable SFT population evidence
-        run: |
-          git config user.name "neurounner experiment bot"
-          git config user.email "261801702+techrote@users.noreply.github.com"
-          git add experiments/village-001/sft-evidence
-          git commit -m "Record VILLAGE-001C 36-member SFT evidence ${GITHUB_RUN_ID}"
-          git pull --rebase origin main
-          git push origin HEAD:main
-
       - name: Publish durable LoRA cartridges
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Publish every immutable adapter before pushing the evidence commit that
+          # triggers VILLAGE-001D. A downstream run must never observe the manifest
+          # before its referenced release assets are actually retrievable.
           TAG="village-001-sft-v1"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" release-assets/*.tar.gz --clobber
@@ -331,3 +325,16 @@ jobs:
               --notes-file experiments/village-001/sft-evidence/REPORT.md \
               release-assets/*.tar.gz
           fi
+
+          expected=$(find release-assets -maxdepth 1 -name '*.tar.gz' -type f | wc -l)
+          test "$expected" -eq 36
+          gh release view "$TAG" --json assets --jq '.assets | length' | grep -x '36'
+
+      - name: Commit durable SFT population evidence and trigger VILLAGE-001D
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add experiments/village-001/sft-evidence
+          git commit -m "Record VILLAGE-001C 36-member SFT evidence ${GITHUB_RUN_ID}"
+          git pull --rebase origin main
+          git push origin HEAD:main
