@@ -1323,128 +1323,180 @@ def provider(args: argparse.Namespace) -> None:
         )
         (derived / "review.md").write_text(review + "\n")
 
+    edit_briefs = {
+        "01": (
+            340, 390,
+            "Keep only the present-day sensory trigger and the first slide into childhood memory. "
+            "Remove century-old streetlight lore, parents-death certainty, explosion backstory, "
+            "reactor-district names, travel-diary language and sole-witness claims. Use smell, heat, "
+            "wire, light and bodily reaction. End with the memory pulling toward the city-zone boundary."
+        ),
+        "02": (
+            320, 370,
+            "Make this the actual boundary crossing during the brownout. Give a practical reason to "
+            "go with the unnamed companion, one barrier and one shortcut/long-way uncertainty. Remove "
+            "reactor lore, heroic resolve and generic exploration language. End at the maintenance route."
+        ),
+        "03": (
+            350, 405,
+            "Keep the hatch, knock-code/local habit, dead-looking service corridor and accidental "
+            "reactivation. Sprocket may know what they touch, not the factory's internal logic. Remove "
+            "grand explanations and generic hero language. End when wrong machine movement is unmistakable."
+        ),
+        "04": (
+            345, 400,
+            "Show the sorting/production line behaving wrongly only through visible movement, sound, "
+            "objects and consequences. Remove optical-sensor, reactor-core, data-system and mind-reading "
+            "explanations. Keep spatial causality clear and end with the companion on the dangerous side."
+        ),
+        "05": (
+            335, 390,
+            "Show one concrete failed rescue attempt and timing pressure around the trapped companion. "
+            "Do not declare the companion dead or saved here. Remove data/failure-code language, "
+            "machine-as-monster abstractions and repeated resolve. End when direct rescue will not work."
+        ),
+        "06": (
+            335, 390,
+            "Move from failed rescue to the scrap conductor/signal trick. Keep it improvised and only "
+            "partly understood: wire, contact, heat, rhythm and observed response, not logic gates or "
+            "geometry exposition. Do not resolve the rescue yet. End with the risky intervention ready."
+        ),
+        "07": (
+            330, 380,
+            "Execute the physical rescue-versus-line-stop tradeoff. The wire burns Sprocket's hand and "
+            "the line stops. Do not state both survival and death for the companion; leave the companion's "
+            "ultimate state unstated after one immediate sensory contact. Remove repeated danger, hope and "
+            "save-the-day phrases. End when the machinery loses its repeating rhythm."
+        ),
+        "08": (
+            340, 390,
+            "Aftermath and escape only: physical cost, route back toward the city-zone, then return to "
+            "the present memory frame. Do not repeat the opening explosion, parents or reactor material. "
+            "Do not promise a new mission. Preserve exactly one unresolved sensory uncertainty about "
+            "the missing noise and stop there."
+        ),
+    }
+
     edited_parts: list[str] = []
-    edit_tokens = int(budgets.get("edit_segment_max_tokens", 1400))
+    edit_tokens = 650
+    global_edit_contract = (
+        "First-person Sprocket memory; tactile and mechanically uncertain. Keep the incident linear: "
+        "trigger -> boundary -> hatch -> wrong line -> failed rescue -> scrap intervention -> tradeoff/"
+        "line-stop -> escape/missing-noise frame. No new proper nouns, institutions, grand backstory, "
+        "holograms, data streams, reactors, destiny language or generic cyberpunk decoration. Never "
+        "repeat a sentence or paragraph. Do not explain the machine's internal logic. The companion "
+        "remains unnamed and their final fate may remain genuinely unresolved, but never state both "
+        "alive and dead. Return only story prose with 3-6 paragraphs."
+    )
+
     for idx, ((part_id, part_title, _), original) in enumerate(
         zip(part_specs, draft_parts)
     ):
-        original_count = word_count(original)
-        previous_tail = (
-            " ".join(edited_parts[-1].split()[-90:]) if edited_parts else ""
-        )
+        target_lo, target_hi, repair_brief = edit_briefs[part_id]
+        previous_tail = " ".join(edited_parts[-1].split()[-35:]) if edited_parts else ""
         next_head = (
-            " ".join(draft_parts[idx + 1].split()[:90])
+            " ".join(draft_parts[idx + 1].split()[:35])
             if idx + 1 < len(draft_parts)
             else ""
         )
-        target_lo = max(300, original_count - 45)
-        target_hi = min(530, original_count + 45)
-        edit_messages = [
+        messages = [
             {
                 "role": "system",
                 "content": (
-                    "You are the final STORY-001 section editor. Return only the complete revised "
-                    "section. Apply review findings relevant to this section, preserve plot/causality "
-                    "and Sprocket's tactile awkwardness, and keep transitions compatible with adjacent "
-                    "sections. Do not write or summarize other sections."
+                    "You are the constrained final section editor for STORY-001. Rewrite only the "
+                    "supplied section. Obey the word range, repair brief and global contract. Return "
+                    "story prose only and stop cleanly before the token ceiling."
                 ),
             },
             {
                 "role": "user",
                 "content": (
-                    f"Edit PART {part_id}/08, '{part_title}'. Keep its scale close to the current "
-                    f"{original_count} words (roughly {target_lo}-{target_hi}). Address every material "
-                    "reviewer finding that touches this section without adding new proper-noun lore.\n\n"
-                    "FULL REVIEW:\n"
-                    + review
-                    + "\n\nCURRENT SECTION:\n"
-                    + original
-                    + (
-                        "\n\nPREVIOUS EDITED TAIL:\n" + previous_tail
-                        if previous_tail
-                        else ""
-                    )
-                    + (
-                        "\n\nNEXT ORIGINAL HEAD:\n" + next_head
-                        if next_head
-                        else ""
-                    )
+                    f"PART {part_id}/08 — {part_title}. Required length: {target_lo}-{target_hi} words.\n\n"
+                    "GLOBAL CONTRACT:\n" + global_edit_contract
+                    + "\n\nSECTION-SPECIFIC REPAIR:\n" + repair_brief
+                    + ("\n\nPREVIOUS FINISHED TAIL (continuity only):\n" + previous_tail if previous_tail else "")
+                    + ("\n\nNEXT ORIGINAL HEAD (continuity only):\n" + next_head if next_head else "")
+                    + "\n\nCURRENT SECTION TO REWRITE:\n" + original
                 ),
             },
         ]
-        edited, _ = provider_call(
-            cfg=cfg,
-            key=key,
-            stage_id=f"m5-edit-{part_id}",
-            model=models["editor"],
-            messages=edit_messages,
-            max_tokens=edit_tokens,
-            temperature=0.52,
-            out=out,
-        )
-        count = word_count(edited)
-        if not soft_min <= count <= soft_max:
-            direction = (
-                "Tighten repeated phrasing while retaining every accepted review fix."
-                if count > soft_max
-                else "Expand only with concrete action, sensory continuity and causal connective tissue."
+
+        stage_id = f"m5-edit-{part_id}-focused"
+        try:
+            edited, _ = provider_call(
+                cfg=cfg,
+                key=key,
+                stage_id=stage_id,
+                model=models["editor"],
+                messages=messages,
+                max_tokens=edit_tokens,
+                temperature=0.32,
+                out=out,
             )
-            repair_messages = [
+        except RuntimeError as exc:
+            if "response hit max_tokens" not in str(exc):
+                raise
+            retry_messages = [
                 {
                     "role": "system",
                     "content": (
-                        "Repair one edited STORY-001 section that is implausibly short or long. "
-                        "Return the complete section only and preserve all accepted review fixes."
+                        "Rewrite one STORY-001 section as compact first-person prose. No repetition, "
+                        "no commentary, 3-5 paragraphs, and end cleanly."
                     ),
                 },
                 {
                     "role": "user",
                     "content": (
-                        f"The edited section is {count} words. {direction} Aim near "
-                        f"{original_count} words.\n\nSECTION:\n"
-                        + edited
+                        f"PART {part_id}/08. Return {target_lo}-{target_hi} words only.\n"
+                        + repair_brief
+                        + "\nGlobal constraints: tactile Sprocket voice; linear causality; uncertain "
+                        "mechanics; no new lore; no generic resolve.\n\nSECTION:\n"
+                        + original
                     ),
                 },
             ]
             edited, _ = provider_call(
                 cfg=cfg,
                 key=key,
-                stage_id=f"m5-edit-{part_id}-safety-repair",
+                stage_id=f"{stage_id}-retry",
                 model=models["editor"],
-                messages=repair_messages,
-                max_tokens=edit_tokens,
-                temperature=0.3,
+                messages=retry_messages,
+                max_tokens=600,
+                temperature=0.22,
                 out=out,
             )
-            count = word_count(edited)
-        if not soft_min <= count <= soft_max:
+
+        count = word_count(edited)
+        if not target_lo <= count <= target_hi:
             raise RuntimeError(
-                f"m5 part {part_id} safety length {count} outside {soft_min}-{soft_max}"
+                f"M5 focused part {part_id} length {count} outside {target_lo}-{target_hi}"
+            )
+        lowered = edited.lower()
+        forbidden = (
+            "save the day",
+            "my resolve unwavering",
+            "data stream",
+            "reactor core",
+            "hologram",
+        )
+        if any(term in lowered for term in forbidden):
+            raise RuntimeError(
+                f"M5 focused part {part_id} retained forbidden generic/lore phrase"
             )
         edited_parts.append(edited)
 
-    edited_parts = rebalance(
-        edited_parts,
-        stage_prefix="m5",
-        model=models["editor"],
-        temperature=0.25,
-        context=(
-            "Preserve the independent review fixes already applied to this section and its "
-            "boundary transitions."
-        ),
-        token_budget=edit_tokens,
-    )
+    final = joined(edited_parts)
+    (derived / "revision-1.md").write_text(final + "\n")
     edit_sections = derived / "edit-sections"
     edit_sections.mkdir(parents=True, exist_ok=True)
     for (part_id, _, _), part in zip(part_specs, edited_parts):
         (edit_sections / f"part-{part_id}.md").write_text(part + "\n")
-    final = joined(edited_parts)
-    (derived / "revision-1.md").write_text(final + "\n")
+
     count = word_count(final)
-    final_stage = "m5-section-edit"
+    final_stage = "m5-focused-section-edit"
     if not minimum <= count <= maximum:
         raise RuntimeError(
-            f"STORY-001 section-edited final length {count} outside {minimum}-{maximum}"
+            f"STORY-001 focused final length {count} outside {minimum}-{maximum}"
         )
 
     final_path = derived / "final-story.md"
