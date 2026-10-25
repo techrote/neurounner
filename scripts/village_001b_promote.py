@@ -127,66 +127,6 @@ def validate_candidate(candidate: Path) -> dict:
     return manifest
 
 
-def _sft_evidence_compatibility(
-    candidate: Path,
-    repo_root: Path,
-) -> None:
-    sft_root = repo_root / "experiments" / "village-001" / "sft-evidence"
-    if not sft_root.exists():
-        return
-
-    summary_path = sft_root / "summary.json"
-    results_root = sft_root / "results"
-    if not summary_path.is_file() or not results_root.is_dir():
-        raise RuntimeError(
-            "SFT evidence exists but lacks summary/results; refuse B repromotion"
-        )
-
-    summary = load_json(summary_path)
-    if summary.get("members") != 36:
-        raise RuntimeError("SFT evidence member count is not 36")
-
-    for shard in sorted((candidate / "member-corpora").glob("V-G??-[ABC].jsonl")):
-        member = shard.stem
-        result_path = results_root / f"{member}.json"
-        if not result_path.is_file():
-            raise RuntimeError(
-                f"SFT evidence missing result for candidate member {member}"
-            )
-        result = load_json(result_path)
-        expected = result.get("training_dataset_sha256")
-        actual = sha256_file(shard)
-        if expected != actual:
-            raise RuntimeError(
-                f"{member}: candidate B shard hash {actual} != "
-                f"SFT training dataset hash {expected}; downstream ancestry differs"
-            )
-
-
-def _downstream_manifest_compatibility(
-    candidate_manifest: dict,
-    live: Path,
-    repo_root: Path,
-) -> None:
-    contract = candidate_manifest["member_contract_sha256"]
-
-    for name in DOWNSTREAM_DATASET_MANIFESTS:
-        path = live / name
-        if not path.is_file():
-            continue
-        doc = load_json(path)
-        if doc.get("member_contract_sha256") != contract:
-            raise RuntimeError(
-                f"{name}: member contract {doc.get('member_contract_sha256')!r} "
-                f"!= candidate {contract!r}"
-            )
-
-    # Once downstream trained cartridges exist, same member IDs are not enough:
-    # the exact B shard bytes must remain the same. Otherwise repromotion would
-    # rewrite the source corpus beneath already-qualified models.
-    _sft_evidence_compatibility(live.parent / "__candidate_placeholder__", repo_root)
-
-
 def check_downstream_compatibility(
     candidate: Path,
     candidate_manifest: dict,
