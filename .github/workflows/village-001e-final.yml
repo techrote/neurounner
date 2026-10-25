@@ -2,6 +2,13 @@ name: VILLAGE-001E final tournament and ecology qualification
 
 on:
   workflow_dispatch:
+  # Workflow-authored commits use GITHUB_TOKEN and do not recursively
+  # trigger downstream push workflows. Chain stages explicitly on successful
+  # completion of the authoritative upstream workflow instead.
+  workflow_run:
+    workflows: ["VILLAGE-001D Sprocket-feedback preference maturation"]
+    types: [completed]
+    branches: [main]
   pull_request:
     paths:
       - '.github/workflows/village-001e-final.yml'
@@ -29,6 +36,7 @@ concurrency:
 
 jobs:
   plan:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:
