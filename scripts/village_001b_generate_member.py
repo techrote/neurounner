@@ -595,7 +595,7 @@ def review_rows(
     rows: list[dict],
     rawdir: Path,
     label: str,
-) -> tuple[list[dict], str, dict]:
+) -> tuple[list[dict], list[str], list[dict]]:
     nv = cfg["nvidia"]
     critic = nv["models"]["critic"]
     payload = {
@@ -670,19 +670,29 @@ def review_rows(
         reviews = validate_review_payload(
             parsed, [row["example_id"] for row in rows]
         )
-        return reviews, repair_label, {
-            "label": repair_label,
-            "role": "critic-repair",
-            "usage": robj.get("usage"),
-            "attempts": rattempts,
-        }
+        return reviews, [label, repair_label], [
+            {
+                "label": label,
+                "role": "critic",
+                "usage": obj.get("usage"),
+                "attempts": attempts,
+            },
+            {
+                "label": repair_label,
+                "role": "critic-repair",
+                "usage": robj.get("usage"),
+                "attempts": rattempts,
+            },
+        ]
 
-    return reviews, label, {
-        "label": label,
-        "role": "critic",
-        "usage": obj.get("usage"),
-        "attempts": attempts,
-    }
+    return reviews, [label], [
+        {
+            "label": label,
+            "role": "critic",
+            "usage": obj.get("usage"),
+            "attempts": attempts,
+        }
+    ]
 
 
 def adjudicate_borderline(
@@ -967,7 +977,7 @@ def curate_chunk(
         critic_label = (
             f"{member['member_id']}-chunk{chunk_index:02d}-critic-r{round_index}"
         )
-        reviews, actual_label, critic_call = review_rows(
+        reviews, critic_labels, critic_calls = review_rows(
             key=key,
             cfg=cfg,
             member=member,
@@ -977,9 +987,17 @@ def curate_chunk(
             label=critic_label,
         )
         for row in pending:
-            call_refs[row["example_id"]].append(actual_label)
+            call_refs[row["example_id"]].extend(critic_labels)
         critic_history.extend(
-            [{**review, "round": round_index, "call_id": actual_label} for review in reviews]
+            [
+                {
+                    **review,
+                    "round": round_index,
+                    "call_ids": list(critic_labels),
+                    "final_call_id": critic_labels[-1],
+                }
+                for review in reviews
+            ]
         )
 
         by_id = {review["example_id"]: review for review in reviews}
