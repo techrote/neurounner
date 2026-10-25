@@ -83,6 +83,22 @@ def metric(values: list[float]) -> dict:
     }
 
 
+def top_five_confusions(
+    counts: Counter,
+    labels: list[str],
+    true_label: str,
+) -> list[list]:
+    ranked = sorted(
+        (
+            (label, int(counts.get(label, 0)))
+            for label in labels
+            if label != true_label
+        ),
+        key=lambda item: (-item[1], item[0]),
+    )
+    return [[label, count] for label, count in ranked[:5]]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--tournament-artifacts", type=Path, required=True)
@@ -406,9 +422,11 @@ def main() -> None:
                 "top_behavior_lineage_confusions": (
                     wrong_behavior_lineage.most_common(5)
                 ),
-                "nearest_raw_member_confusions": wrong_raw_member.most_common(5),
-                "nearest_behavior_member_confusions": (
-                    wrong_behavior_member.most_common(5)
+                "nearest_raw_member_confusions": top_five_confusions(
+                    wrong_raw_member, expected_members, member_id
+                ),
+                "nearest_behavior_member_confusions": top_five_confusions(
+                    wrong_behavior_member, expected_members, member_id
                 ),
             }
         )
@@ -542,11 +560,11 @@ def main() -> None:
 
     ecology_summary = {
         "sessions": len(ecology_rows),
-        "same_lineage_sessions": sum(
-            1 for row in ecology_rows if row["kind"] == "same_lineage"
+        "pair_sessions": sum(
+            1 for row in ecology_rows if row["kind"] == "same_lineage_pair"
         ),
-        "cross_lineage_sessions": sum(
-            1 for row in ecology_rows if row["kind"] == "cross_lineage"
+        "small_group_sessions": sum(
+            1 for row in ecology_rows if row["kind"] == "cross_lineage_group"
         ),
         "metrics": {
             key: metric(values)
@@ -562,7 +580,7 @@ def main() -> None:
         "super_audit_sessions": ecology_super_audits,
         "super_convergence_concerns": ecology_concerns,
         "cross_lineage_contamination": metric(
-            ecology_by_kind["cross_lineage"]["cross_agent_contamination"]
+            ecology_by_kind["cross_lineage_group"]["cross_agent_contamination"]
         ),
         "agent_metrics": {
             key: metric(values)
@@ -719,6 +737,15 @@ def main() -> None:
         "final_adapter_release": cfg["final_release_tag"],
     }
     write_json(out / "summary.json", summary)
+    write_json(
+        out / "per-member-verdicts.json",
+        {
+            "schema_version": 1,
+            "experiment": "VILLAGE-001E",
+            "issue": 14,
+            "members": member_table,
+        },
+    )
 
     run_id = __import__("os").environ.get("GITHUB_RUN_ID")
     provenance = {
@@ -784,7 +811,7 @@ def main() -> None:
         "## Ecology",
         "",
         f"- sessions: {ecology_summary['sessions']} "
-        "(12 same-lineage, 12 cross-lineage)",
+        "(12 same-lineage pairs, 12 cross-lineage small groups)",
     ]
     for key in (
         "differentiation",
@@ -848,7 +875,54 @@ def main() -> None:
             "",
         ]
     )
-    (out / "REPORT.md").write_text("\n".join(report))
+    population_report = "\n".join(report) + "\n"
+    (out / "REPORT.md").write_text(population_report)
+    (out / "POPULATION_REPORT.md").write_text(population_report)
+
+    ecology_report = [
+        "# VILLAGE-001E — ecology report",
+        "",
+        "Fixed prompt-neutral interactions used 12 same-lineage pairs and 12 "
+        "cross-lineage three-agent groups. Models and provider judges saw only "
+        "opaque handles, never member IDs.",
+        "",
+        "## Population ecology metrics",
+        "",
+    ]
+    for key, values in sorted(ecology_summary["metrics"].items()):
+        ecology_report.append(
+            f"- {key}: mean {values['mean']:.3f}/4 "
+            f"(min {values['min']:.1f}, max {values['max']:.1f})"
+        )
+    ecology_report.extend(
+        [
+            f"- cross-lineage contamination: mean "
+            f"{ecology_summary['cross_lineage_contamination']['mean']:.3f}/4",
+            f"- participant dominance: mean "
+            f"{ecology_summary['agent_metrics']['dominance']['mean']:.3f}/4",
+            f"- participant deference: mean "
+            f"{ecology_summary['agent_metrics']['deference']['mean']:.3f}/4",
+            "",
+            "## Per-member participant behavior",
+            "",
+            "| Member | appearances | distinctiveness | generic tendency | dominance | deference |",
+            "|---|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for member_id in expected_members:
+        values = ecology_summary["member_agent_metrics"].get(member_id, {})
+        if not values:
+            raise RuntimeError(f"{member_id}: missing ecology participant metrics")
+        appearances = len(ecology_agent[member_id]["distinctiveness"])
+        ecology_report.append(
+            f"| {member_id} | {appearances} | "
+            f"{values['distinctiveness']['mean']:.2f} | "
+            f"{values['generic_assistant_tendency']['mean']:.2f} | "
+            f"{values['dominance']['mean']:.2f} | "
+            f"{values['deference']['mean']:.2f} |"
+        )
+    ecology_report.append("")
+    (out / "ECOLOGY_REPORT.md").write_text("\n".join(ecology_report) + "\n")
     (out / "hashes.sha256").write_text(hash_inventory(out))
 
     print(
