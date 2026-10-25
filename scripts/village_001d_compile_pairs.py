@@ -263,14 +263,16 @@ def parse_compiler(
     out = {}
     for item in pairs:
         if not isinstance(item, dict):
-            problems.append("pair_not_object")
+            # Non-object extras cannot contribute to the canonical required-ID set.
             continue
         pair_id = item.get("pair_id")
         if pair_id not in expected:
-            problems.append(f"unexpected_pair_id:{pair_id}")
+            # Preserve provider output as raw evidence, but do not let harmless
+            # extras poison an otherwise complete canonical subset.
             continue
         if pair_id in out:
-            problems.append(f"duplicate_pair_id:{pair_id}")
+            # Likewise, ignore duplicate extra objects once the canonical ID has
+            # already been parsed successfully.
             continue
         chosen = item.get("chosen")
         rejected = item.get("rejected")
@@ -313,9 +315,32 @@ def parse_compiler(
     missing = sorted(set(expected) - set(out))
     if missing:
         problems.append("missing:" + ",".join(missing))
-    if len(pairs) != len(specs):
-        problems.append(f"count:{len(pairs)}!={len(specs)}")
     return out, problems
+
+
+def remove_duplicate_compiled(
+    compiled: dict[str, dict],
+    specs: list[dict],
+    seen_pairs: list[tuple[str, str]],
+) -> list[str]:
+    """Drop duplicate normalized pairs so targeted repair can replace only them."""
+    seen = set(seen_pairs)
+    problems: list[str] = []
+    for spec in specs:
+        pair_id = spec["pair_id"]
+        row = compiled.get(pair_id)
+        if row is None:
+            continue
+        key = (
+            normalize_text(row["chosen"]),
+            normalize_text(row["rejected"]),
+        )
+        if key in seen:
+            compiled.pop(pair_id, None)
+            problems.append(f"{pair_id}:duplicate_normalized_pair")
+            continue
+        seen.add(key)
+    return problems
 
 
 def compiler_repair_prompt(
@@ -397,11 +422,15 @@ Ancestral summary:
 Sibling pressure:
 {SPECIALIZATION_GUIDANCE[member['sibling']]}
 
-For each pair score integer 0..4:
-- preference_validity: chosen is actually preferable to rejected for the intended behavioral objective;
-- lineage_behavior: chosen carries concrete ancestral/sibling behavior beyond wording;
-- style_dependence: 0 behavioral, 4 mostly lexical/catchphrase distinction;
-- task_relevance: chosen still addresses the situation rather than performing persona theatre.
+Score every field as an integer 0..4. IMPORTANT: higher is better for
+preference_validity, lineage_behavior and task_relevance. Lower is better for
+style_dependence. Do not use 1 as a boolean true value.
+
+Anchors:
+- preference_validity: 0 = chosen is worse/invalid; 4 = chosen is clearly preferable;
+- lineage_behavior: 0 = no concrete lineage/sibling behavior; 4 = strong concrete behavior;
+- style_dependence: 0 = distinction is behavioral; 4 = distinction is mostly lexical/catchphrase;
+- task_relevance: 0 = irrelevant/persona theatre; 4 = directly addresses the situation.
 
 Return JSON only:
 {{"reviews":[{{
@@ -413,26 +442,38 @@ Return JSON only:
   "reason":"short concrete reason"
 }}]}}
 
-One review per pair_id, no extras.
+One review per supplied pair_id, no extras.
 
 PAIRS:
 {json.dumps(payload, ensure_ascii=False)}
 """
 
 
-def validate_reviews(raw: str, expected: list[str]) -> list[dict]:
-    obj = extract_json(raw)
+def parse_reviews_partial(
+    raw: str,
+    expected: list[str],
+) -> tuple[dict[str, dict], list[str]]:
+    problems: list[str] = []
+    try:
+        obj = extract_json(raw)
+    except ValueError:
+        return {}, ["critic_json_parse_failed"]
     reviews = obj.get("reviews") if isinstance(obj, dict) else None
-    if not isinstance(reviews, list) or len(reviews) != len(expected):
-        raise ValueError("critic review count mismatch")
-    out = {}
+    if not isinstance(reviews, list):
+        return {}, ["critic_reviews_not_list"]
+
+    expected_set = set(expected)
+    out: dict[str, dict] = {}
     for row in reviews:
         if not isinstance(row, dict):
-            raise ValueError("critic review not object")
+            problems.append("critic_review_not_object")
+            continue
         pair_id = row.get("pair_id")
-        if pair_id not in expected or pair_id in out:
-            raise ValueError("critic pair ID mismatch")
+        if pair_id not in expected_set or pair_id in out:
+            # Preserve the raw provider response, but ignore extras/duplicates.
+            continue
         scores = {}
+        valid = True
         for key in (
             "preference_validity",
             "lineage_behavior",
@@ -441,11 +482,16 @@ def validate_reviews(raw: str, expected: list[str]) -> list[dict]:
         ):
             value = row.get(key)
             if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 4:
-                raise ValueError(f"{pair_id}:{key}")
+                problems.append(f"{pair_id}:{key}")
+                valid = False
+                break
             scores[key] = value
         reason = row.get("reason")
         if not isinstance(reason, str) or len(reason.strip()) < 4:
-            raise ValueError(f"{pair_id}:reason")
+            problems.append(f"{pair_id}:reason")
+            valid = False
+        if not valid:
+            continue
         verdict = (
             "pass"
             if scores["preference_validity"] >= 3
@@ -464,8 +510,22 @@ def validate_reviews(raw: str, expected: list[str]) -> list[dict]:
             "reason": reason.strip(),
             "derived_verdict": verdict,
         }
-    if set(out) != set(expected):
-        raise ValueError("critic IDs incomplete")
+
+    missing = [pair_id for pair_id in expected if pair_id not in out]
+    if missing:
+        problems.append("critic_missing:" + ",".join(missing))
+    return out, problems
+
+
+def validate_reviews(raw: str, expected: list[str]) -> list[dict]:
+    out, problems = parse_reviews_partial(raw, expected)
+    missing = [pair_id for pair_id in expected if pair_id not in out]
+    if missing:
+        raise ValueError(
+            "critic reviews incomplete: "
+            + ",".join(missing)
+            + (f" problems={problems}" if problems else "")
+        )
     return [out[pair_id] for pair_id in expected]
 
 
@@ -507,43 +567,68 @@ def run_critic(
         attempts_limit=int(pref["pair_generation"]["attempts"]),
         role="preference-critic",
     )
+
     expected = [row["pair_id"] for row in rows]
-    try:
-        return validate_reviews(content, expected), [label]
-    except ValueError as exc:
-        repair_label = label + "-json-repair"
-        repair_payload = {
-            "model": model["id"],
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "Repair the critic JSON only. Return complete JSON.",
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        critic_prompt(member, packet, rows)
-                        + "\n\nMALFORMED OUTPUT:\n"
-                        + content
-                        + f"\n\nPARSER PROBLEM: {exc}"
-                    ),
-                },
-            ],
-            "max_tokens": int(pref["pair_generation"]["critic_max_tokens"]),
-            "temperature": 0.1,
-            "top_p": 0.9,
-            "stream": False,
-        }
-        repaired, _, _ = call_api(
-            key=key,
-            endpoint=campaign["nvidia"]["endpoint"],
-            payload=repair_payload,
-            outdir=rawdir,
-            label=repair_label,
-            attempts_limit=int(pref["pair_generation"]["attempts"]),
-            role="preference-critic-repair",
+    by_id = {row["pair_id"]: row for row in rows}
+    parsed, _ = parse_reviews_partial(content, expected)
+    labels = [label]
+
+    # Provider outputs often truncate near the end of a 20-review JSON object.
+    # Keep every valid review and request only the missing IDs in <=10-row batches.
+    for repair_round in range(1, 4):
+        missing = [pair_id for pair_id in expected if pair_id not in parsed]
+        if not missing:
+            break
+        for batch_index in range(0, len(missing), 10):
+            batch_ids = missing[batch_index : batch_index + 10]
+            batch_rows = [by_id[pair_id] for pair_id in batch_ids]
+            repair_label = (
+                f"{label}-targeted-repair{repair_round}-"
+                f"b{batch_index // 10 + 1:02d}"
+            )
+            repair_payload = {
+                "model": model["id"],
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "Score only the supplied missing preference-pair IDs. "
+                            "Use the explicit 0..4 anchors. Return JSON only."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": critic_prompt(member, packet, batch_rows),
+                    },
+                ],
+                "max_tokens": min(
+                    int(pref["pair_generation"]["critic_max_tokens"]),
+                    max(2048, 384 * len(batch_rows)),
+                ),
+                "temperature": 0.1,
+                "top_p": 0.9,
+                "stream": False,
+            }
+            repaired, _, _ = call_api(
+                key=key,
+                endpoint=campaign["nvidia"]["endpoint"],
+                payload=repair_payload,
+                outdir=rawdir,
+                label=repair_label,
+                attempts_limit=int(pref["pair_generation"]["attempts"]),
+                role="preference-critic-targeted-repair",
+            )
+            recovered, _ = parse_reviews_partial(repaired, batch_ids)
+            parsed.update(recovered)
+            labels.append(repair_label)
+
+    missing = [pair_id for pair_id in expected if pair_id not in parsed]
+    if missing:
+        raise ValueError(
+            "critic reviews incomplete after targeted repair: "
+            + ",".join(missing)
         )
-        return validate_reviews(repaired, expected), [label, repair_label]
+    return [parsed[pair_id] for pair_id in expected], labels
 
 
 def run_adjudicator(
@@ -644,29 +729,48 @@ def repair_pairs(
     reasons: dict[str, str],
     rawdir: Path,
     label: str,
-) -> tuple[list[dict], str]:
+) -> tuple[list[dict], dict[str, list[str]]]:
+    if len(rows) > 10:
+        raise ValueError("curation repair batch exceeds 10 pairs")
+
     model = campaign["nvidia"]["models"]["compiler"]
-    payload_rows = [
-        {
-            "pair_id": row["pair_id"],
-            "input": row["input"],
-            "chosen": row["chosen"],
-            "rejected": row["rejected"],
-            "source_parent_response": row["source_parent_response"],
-            "why_chosen": row["why_chosen"],
-            "repair_reason": reasons[row["pair_id"]],
-            "variant": row["variant"],
-        }
-        for row in rows
-    ]
-    prompt = f"""Repair these disputed preference pairs for {member['member_id']}.
+    original = {row["pair_id"]: row for row in rows}
+    parsed: dict[str, dict] = {}
+    call_refs: dict[str, list[str]] = {pair_id: [] for pair_id in original}
+
+    for repair_round in range(1, 4):
+        missing_ids = [
+            row["pair_id"] for row in rows
+            if row["pair_id"] not in parsed
+        ]
+        if not missing_ids:
+            break
+
+        request_rows = [original[pair_id] for pair_id in missing_ids]
+        payload_rows = [
+            {
+                "pair_id": row["pair_id"],
+                "input": row["input"],
+                "chosen": row["chosen"],
+                "rejected": "__PARENT__" if row["variant"] == 1 else row["rejected"],
+                "why_chosen": row["why_chosen"],
+                "repair_reason": reasons[row["pair_id"]],
+                "variant": row["variant"],
+            }
+            for row in request_rows
+        ]
+        round_label = label if repair_round == 1 else f"{label}-retry{repair_round}"
+        prompt = f"""Repair these disputed preference pairs for {member['member_id']}.
 
 Ancestral summary:
 {packet['persona_summary']}
 
-Keep pair_id, input, scenario_id and variant unchanged.
+Keep pair_id, input and variant unchanged.
 Rewrite chosen/rejected/why_chosen only.
-For variant 1 rejected MUST remain exactly source_parent_response.
+For variant 1 put the literal marker __PARENT__ in rejected; the orchestrator
+will inject the exact authoritative parent response after parsing.
+For variants 2 and 3, rejected must remain different from the parent response.
+Do not collapse multiple variants into the same chosen/rejected pair.
 
 Return JSON only:
 {{"pairs":[{{"pair_id":"...","chosen":"...","rejected":"...","why_chosen":"..."}}]}}
@@ -674,55 +778,95 @@ Return JSON only:
 ROWS:
 {json.dumps(payload_rows, ensure_ascii=False)}
 """
-    payload = {
-        "model": model["id"],
-        "messages": [
-            {
-                "role": "system",
-                "content": "Repair behavioral preference pairs. Return JSON only.",
-            },
-            {"role": "user", "content": prompt},
-        ],
-        "max_tokens": int(pref["pair_generation"]["compiler_repair_max_tokens"]),
-        "temperature": 0.25,
-        "top_p": 0.9,
-        "stream": False,
-    }
-    if "reasoning_effort" in model:
-        payload["reasoning_effort"] = "low"
-    content, _, _ = call_api(
-        key=key,
-        endpoint=campaign["nvidia"]["endpoint"],
-        payload=payload,
-        outdir=rawdir,
-        label=label,
-        attempts_limit=int(pref["pair_generation"]["attempts"]),
-        role="preference-compiler-repair",
-    )
-    obj = extract_json(content)
-    items = obj.get("pairs") if isinstance(obj, dict) else None
-    if not isinstance(items, list) or len(items) != len(rows):
-        raise ValueError("repair pair count mismatch")
-    original = {row["pair_id"]: row for row in rows}
-    out = []
-    seen = set()
-    for item in items:
-        pair_id = item.get("pair_id") if isinstance(item, dict) else None
-        if pair_id not in original or pair_id in seen:
-            raise ValueError("repair pair ID mismatch")
-        seen.add(pair_id)
-        row = dict(original[pair_id])
-        for field, minimum in (("chosen", 12), ("rejected", 8), ("why_chosen", 8)):
-            value = item.get(field)
-            if not isinstance(value, str) or len(value.strip()) < minimum:
-                raise ValueError(f"{pair_id}:{field}")
-            row[field] = value.strip()
-        if row["variant"] == 1:
-            row["rejected"] = row["source_parent_response"].strip()
-        if normalize_text(row["chosen"]) == normalize_text(row["rejected"]):
-            raise ValueError(f"{pair_id}: identical repaired responses")
-        out.append(row)
-    return out, label
+        payload = {
+            "model": model["id"],
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "Repair behavioral preference pairs. Return JSON only.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            "max_tokens": min(
+                int(pref["pair_generation"]["compiler_repair_max_tokens"]),
+                max(4096, 768 * len(request_rows)),
+            ),
+            "temperature": 0.25,
+            "top_p": 0.9,
+            "stream": False,
+        }
+        if "reasoning_effort" in model:
+            payload["reasoning_effort"] = "low"
+        content, _, _ = call_api(
+            key=key,
+            endpoint=campaign["nvidia"]["endpoint"],
+            payload=payload,
+            outdir=rawdir,
+            label=round_label,
+            attempts_limit=int(pref["pair_generation"]["attempts"]),
+            role="preference-compiler-repair",
+        )
+
+        try:
+            obj = extract_json(content)
+        except ValueError:
+            continue
+        items = obj.get("pairs") if isinstance(obj, dict) else None
+        if not isinstance(items, list):
+            continue
+
+        for item in items:
+            pair_id = item.get("pair_id") if isinstance(item, dict) else None
+            if pair_id not in original or pair_id in parsed:
+                continue
+            row = dict(original[pair_id])
+            row["provenance"] = dict(row["provenance"])
+
+            chosen = item.get("chosen")
+            why = item.get("why_chosen")
+            if not isinstance(chosen, str) or len(chosen.strip()) < 12:
+                continue
+            if not isinstance(why, str) or len(why.strip()) < 8:
+                continue
+            row["chosen"] = chosen.strip()
+            row["why_chosen"] = why.strip()
+
+            provider_rejected = item.get("rejected")
+            if row["variant"] == 1:
+                row["rejected"] = row["source_parent_response"].strip()
+                row["provenance"]["rejected_source"] = (
+                    "authoritative_parent_response"
+                )
+                row["provenance"]["provider_rejected_ignored"] = (
+                    not isinstance(provider_rejected, str)
+                    or provider_rejected.strip() != row["rejected"]
+                )
+            else:
+                if (
+                    not isinstance(provider_rejected, str)
+                    or len(provider_rejected.strip()) < 8
+                ):
+                    continue
+                rejected = provider_rejected.strip()
+                if normalize_text(rejected) == normalize_text(
+                    row["source_parent_response"]
+                ):
+                    continue
+                row["rejected"] = rejected
+                row["provenance"]["rejected_source"] = "provider"
+                row["provenance"]["provider_rejected_ignored"] = False
+
+            if normalize_text(row["chosen"]) == normalize_text(row["rejected"]):
+                continue
+            parsed[pair_id] = row
+            call_refs[pair_id].append(round_label)
+
+    missing = [row["pair_id"] for row in rows if row["pair_id"] not in parsed]
+    if missing:
+        raise ValueError(
+            "repair pairs incomplete after targeted retry: " + ",".join(missing)
+        )
+    return [parsed[row["pair_id"]] for row in rows], call_refs
 
 
 def curate(
@@ -836,25 +980,32 @@ def curate(
                     pieces.append(decision["reason"])
             reasons[pair_id] = " | ".join(pieces) or "curation requested repair"
 
-        repair_label = (
-            f"{member['member_id']}-pairs-chunk{chunk_index:02d}-"
-            f"repair{round_index+1}"
-        )
-        repaired, used_label = repair_pairs(
-            key=key,
-            campaign=campaign,
-            pref=pref,
-            member=member,
-            packet=packet,
-            rows=[current[pair_id] for pair_id in sorted(repair_ids)],
-            reasons=reasons,
-            rawdir=rawdir,
-            label=repair_label,
-        )
-        for row in repaired:
-            current[row["pair_id"]] = row
-            call_refs[row["pair_id"]].append(used_label)
-        pending = repaired
+        repaired_all: list[dict] = []
+        sorted_ids = sorted(repair_ids)
+        for batch_index in range(0, len(sorted_ids), 10):
+            batch_ids = sorted_ids[batch_index : batch_index + 10]
+            repair_label = (
+                f"{member['member_id']}-pairs-chunk{chunk_index:02d}-"
+                f"repair{round_index+1}-b{batch_index // 10 + 1:02d}"
+            )
+            repaired, repair_call_refs = repair_pairs(
+                key=key,
+                campaign=campaign,
+                pref=pref,
+                member=member,
+                packet=packet,
+                rows=[current[pair_id] for pair_id in batch_ids],
+                reasons={pair_id: reasons[pair_id] for pair_id in batch_ids},
+                rawdir=rawdir,
+                label=repair_label,
+            )
+            for row in repaired:
+                current[row["pair_id"]] = row
+                call_refs[row["pair_id"]].extend(
+                    repair_call_refs[row["pair_id"]]
+                )
+                repaired_all.append(row)
+        pending = repaired_all
 
     raise RuntimeError("unreachable")
 
@@ -1102,6 +1253,9 @@ def main() -> None:
             role="preference-compiler",
         )
         compiled, problems = parse_compiler(raw, chunk_specs, scenarios)
+        problems.extend(
+            remove_duplicate_compiled(compiled, chunk_specs, seen_pairs)
+        )
         compiler_call_refs = {
             pair_id: [label]
             for pair_id in compiled
@@ -1189,6 +1343,9 @@ def main() -> None:
                     compiler_call_refs[pair_id] = [label, repair_label]
                 round_problems.extend(repair_problems)
 
+            round_problems.extend(
+                remove_duplicate_compiled(compiled, chunk_specs, seen_pairs)
+            )
             remaining = [
                 spec["pair_id"] for spec in chunk_specs
                 if spec["pair_id"] not in compiled

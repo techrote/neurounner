@@ -105,6 +105,140 @@ jobs:
           print("V1 canonicalization + targeted salvage contract: PASS")
           PY
 
+      - name: Verify provider and curation recovery regressions
+        env:
+          PYTHONPATH: scripts
+        run: |
+          python3 - <<'PY'
+          import http.client
+          import json
+          import tempfile
+          from pathlib import Path
+
+          import village_001b_generate_member as provider
+          from village_001d_compile_pairs import (
+              critic_prompt,
+              parse_compiler,
+              parse_reviews_partial,
+              remove_duplicate_compiled,
+          )
+
+          # A dropped HTTPS connection is transport-retryable rather than terminal.
+          calls={"n":0}
+          original_urlopen=provider.urllib.request.urlopen
+          original_sleep=provider.time.sleep
+
+          class Response:
+              status=200
+              def __enter__(self):
+                  return self
+              def __exit__(self, *args):
+                  return False
+              def read(self):
+                  return json.dumps({
+                      "choices":[{"message":{"content":"ok"}}]
+                  }).encode()
+
+          def flaky(*args, **kwargs):
+              calls["n"]+=1
+              if calls["n"]==1:
+                  raise http.client.RemoteDisconnected("synthetic drop")
+              return Response()
+
+          try:
+              provider.urllib.request.urlopen=flaky
+              provider.time.sleep=lambda _: None
+              with tempfile.TemporaryDirectory() as tmp:
+                  content,_,attempts=provider.call_api(
+                      key="secret",
+                      endpoint="https://example.invalid/v1",
+                      payload={"model":"synthetic","messages":[]},
+                      outdir=Path(tmp),
+                      label="transport",
+                      attempts_limit=2,
+                      role="synthetic",
+                  )
+              assert content=="ok"
+              assert calls["n"]==2
+              assert attempts[0]["status"]=="transport_error"
+          finally:
+              provider.urllib.request.urlopen=original_urlopen
+              provider.time.sleep=original_sleep
+
+          specs=[
+              {"pair_id":"A","scenario_id":"T01","variant":2},
+              {"pair_id":"B","scenario_id":"T02","variant":2},
+          ]
+          scenarios={
+              "T01":{"response":"parent one"},
+              "T02":{"response":"parent two"},
+          }
+          raw=json.dumps({"pairs":[
+              {
+                  "pair_id":"A",
+                  "chosen":"A concrete chosen response long enough.",
+                  "rejected":"A generic rejected response long enough.",
+                  "why_chosen":"Concrete behavior wins here.",
+              },
+              {
+                  "pair_id":"A",
+                  "chosen":"duplicate provider object should be ignored.",
+                  "rejected":"duplicate rejected content is ignored.",
+                  "why_chosen":"duplicate extra object",
+              },
+              {
+                  "pair_id":"B",
+                  "chosen":"Another concrete chosen response long enough.",
+                  "rejected":"Another generic rejected response long enough.",
+                  "why_chosen":"Another behavioral distinction.",
+              },
+              {
+                  "pair_id":"EXTRA",
+                  "chosen":"extra object",
+                  "rejected":"extra object",
+                  "why_chosen":"extra object",
+              },
+          ]})
+          compiled,problems=parse_compiler(raw,specs,scenarios)
+          assert set(compiled)=={"A","B"},(compiled,problems)
+          assert not problems,problems
+
+          duplicate=dict(compiled["B"])
+          duplicate["chosen"]=compiled["A"]["chosen"]
+          duplicate["rejected"]=compiled["A"]["rejected"]
+          compiled["B"]=duplicate
+          duplicate_problems=remove_duplicate_compiled(
+              compiled,
+              specs,
+              [],
+          )
+          assert set(compiled)=={"A"}
+          assert duplicate_problems==["B:duplicate_normalized_pair"]
+
+          critic_raw=json.dumps({"reviews":[{
+              "pair_id":"A",
+              "preference_validity":4,
+              "lineage_behavior":4,
+              "style_dependence":0,
+              "task_relevance":4,
+              "reason":"clear behavioral preference",
+          }]})
+          partial,critic_problems=parse_reviews_partial(
+              critic_raw,["A","B"]
+          )
+          assert set(partial)=={"A"}
+          assert any(x.startswith("critic_missing:B") for x in critic_problems)
+
+          prompt=critic_prompt(
+              {"member_id":"V-G01-A","sibling":"A"},
+              {"persona_summary":"synthetic"},
+              [],
+          )
+          assert "higher is better" in prompt
+          assert "Do not use 1 as a boolean true value" in prompt
+          print("VILLAGE-001D recovery regressions: PASS")
+          PY
+
       - name: Validate preference campaign contract
         env:
           PYTHONPATH: scripts

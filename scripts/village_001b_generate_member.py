@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import json
 import os
 import re
@@ -164,7 +165,14 @@ def call_api(
             else:
                 wait = min(90.0, 5.0 * (2 ** (attempt - 1)))
             time.sleep(wait)
-        except (urllib.error.URLError, TimeoutError) as exc:
+        except (
+            urllib.error.URLError,
+            TimeoutError,
+            http.client.RemoteDisconnected,
+            ConnectionResetError,
+            ConnectionAbortedError,
+            BrokenPipeError,
+        ) as exc:
             elapsed = time.monotonic() - started
             attempts.append(
                 {
