@@ -14,6 +14,7 @@ on:
       - '.github/workflows/village-001e-final.yml'
       - 'experiments/village-001/tournament-config.json'
       - 'experiments/village-001/final-eval.json'
+      - 'scripts/village_001e_build_final_suite.py'
       - 'scripts/village_001e_generate_final_responses.py'
       - 'scripts/village_001e_tournament_scenario.py'
       - 'scripts/village_001e_ecology_plan.py'
@@ -52,6 +53,7 @@ jobs:
       - name: Compile VILLAGE-001E helpers
         run: |
           python3 -m py_compile \
+            scripts/village_001e_build_final_suite.py \
             scripts/village_001e_generate_final_responses.py \
             scripts/village_001e_tournament_scenario.py \
             scripts/village_001e_ecology_plan.py \
@@ -59,13 +61,12 @@ jobs:
             scripts/village_001e_ecology_judge.py \
             scripts/village_001e_assemble.py
 
-      - name: Verify fixed final qualification contract
+      - name: Verify fixed final qualification contract and suite recipe
         run: |
           python3 scripts/village_001_gate.py
+          python3 scripts/village_001e_build_final_suite.py --self-test
           python3 - <<'PY'
           import json
-          import re
-          from collections import Counter
           from pathlib import Path
           from scripts.village_001e_ecology_plan import build_sessions
 
@@ -83,34 +84,18 @@ jobs:
           assert t["individual_min_behavior_sibling_hits"]==8
           assert "base_genericness_source" in t
           assert cfg["qualification_release_tag"]=="village-001-final-v1"
-          assert cfg["final_eval_config"]=="experiments/village-001/final-eval.json"
+          assert cfg["final_eval_recipe"]=="experiments/village-001/final-eval.json"
+          assert cfg["final_eval_config"]=="runtime/village-001e/final-eval.json"
 
-          final_eval=json.loads(Path(cfg["final_eval_config"]).read_text())
-          assert final_eval["experiment"]=="VILLAGE-001E"
-          assert final_eval["stage"]=="fresh-final-heldout"
-          assert final_eval["issue"]==14
-          assert final_eval["do_sample"] is False
-          assert final_eval["max_new_tokens"]==160
-          assert [x["id"] for x in final_eval["scenarios"]]==[
-              f"F{i:02d}" for i in range(1,25)
-          ]
-          assert Counter(x["family"] for x in final_eval["scenarios"])=={
-              "embodied_decision":4,
-              "mundane":4,
-              "social":4,
-              "conflicting_motives":4,
-              "failure_recovery":4,
-              "abstract_unfamiliar":4,
-          }
-
-          # The final suite must not reuse the common T01-T24 prompts that #13
-          # turns into preference-training material.
-          common=json.loads(Path("experiments/persona-001/config.json").read_text())["eval"]
-          norm=lambda s:re.sub(r"\s+"," ",s.strip().lower())
-          common_prompts={norm(x["prompt"]) for x in common["scenarios"]}
-          final_prompts=[norm(x["prompt"]) for x in final_eval["scenarios"]]
-          assert len(final_prompts)==len(set(final_prompts))==24
-          assert not (set(final_prompts) & common_prompts)
+          recipe=json.loads(Path(cfg["final_eval_recipe"]).read_text())
+          assert recipe["experiment"]=="VILLAGE-001E"
+          assert recipe["stage"]=="fresh-final-heldout-recipe"
+          assert recipe["issue"]==14
+          assert recipe["do_sample"] is False
+          assert recipe["max_new_tokens"]==160
+          assert "scenarios" not in recipe
+          assert recipe["generator"]["strategy"]=="sha256-durable-preference-evidence-v1"
+          assert recipe["generator"]["scenarios_per_family"]==4
 
           sessions=build_sessions(cfg)
           assert len(sessions)==24
@@ -119,9 +104,8 @@ jobs:
           assert sum(x["kind"]=="cross_lineage_group" for x in sessions)==12
           assert all(len(x["members"]) in {2,3} for x in sessions)
           assert all(len(set(x["members"]))==len(x["members"]) for x in sessions)
-          print("VILLAGE-001E fixed qualification contract: PASS")
+          print("VILLAGE-001E fixed qualification recipe: PASS")
           PY
-
       - name: Build tournament/ecology matrices
         id: matrix
         run: |
@@ -136,8 +120,7 @@ jobs:
           population=build_manifest(campaign)
           members=[row["member_id"] for row in population["members"]]
           assert len(members)==36 and len(set(members))==36
-          final_eval=json.loads(Path(cfg["final_eval_config"]).read_text())
-          scenarios=[row["id"] for row in final_eval["scenarios"]]
+          scenarios=[f"F{i:02d}" for i in range(1,25)]
           assert len(scenarios)==24 and len(set(scenarios))==24
           sessions=build_sessions(cfg)
           ecology={
