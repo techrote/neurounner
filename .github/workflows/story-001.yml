@@ -8,7 +8,10 @@ on:
     paths:
       - '.github/workflows/story-001.yml'
       - 'scripts/story_001.py'
+      - 'scripts/story_001_local.py'
       - 'experiments/story-001/**'
+      - 'config/candidates.json'
+      - 'config/pins.env'
       - 'datasets/README.md'
       - 'RAG.md'
 
@@ -17,27 +20,25 @@ permissions:
   actions: read
 
 concurrency:
-  group: neurounner-story-001-${{ github.ref }}
-  cancel-in-progress: false
+  group: neurounner-story-001-\${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   preflight:
-    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[story001-evidence]') }}
+    if: \${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[story001-evidence]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    env:
-      NVIDIA_API_KEY: ${{ secrets.NVKEY }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
       - name: Offline contract checks
         run: |
-          python3 -m py_compile scripts/story_001.py
-          python3 scripts/story_001.py --config experiments/story-001/config.json self-test
-      - name: Record fail-closed M0 preflight
+          python3 -m py_compile scripts/story_001.py scripts/story_001_local.py
+          python3 scripts/story_001_local.py --config experiments/story-001/config.json self-test
+      - name: Record local M0 preflight
         run: |
-          python3 scripts/story_001.py \
+          python3 scripts/story_001_local.py \
             --config experiments/story-001/config.json \
             preflight --out results/story001
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
@@ -77,40 +78,216 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  nemotron:
+  storyboard:
     needs: sprocket
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 35
     env:
-      NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+      CANDIDATE_ID: lfm25-8b-a1b
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .cache/neurounner
+          key: ubuntu-neurounner-runtime-v1-b11852
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: story001-sprocket
           path: results/story001
-      - name: Live Nemotron preflight, storyboard, draft, review and edit
+      - name: Fetch pinned llama.cpp runtime
+        run: bash scripts/bootstrap.sh runtime
+      - name: Resolve candidate
+        id: candidate
         run: |
-          test -n "$NVIDIA_API_KEY" || {
-            echo "NVKEY repository secret is not configured."
-            exit 1
-          }
-          python3 scripts/story_001.py \
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          s=json.load(open("config/candidates.json"))[os.environ["CANDIDATE_ID"]]
+          print("url="+s["url"])
+          print("sha256="+s["sha256"])
+          print("file="+s["file"])
+          PY
+      - name: Download and hash-verify LFM2.5-8B-A1B
+        env:
+          URL: \${{ steps.candidate.outputs.url }}
+          SHA: \${{ steps.candidate.outputs.sha256 }}
+          FILE: \${{ steps.candidate.outputs.file }}
+        run: |
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 -o "$RUNNER_TEMP/$FILE" "$URL"
+          echo "$SHA  $RUNNER_TEMP/$FILE" | sha256sum -c -
+          echo "STORY_MODEL=$RUNNER_TEMP/$FILE" >> "$GITHUB_ENV"
+      - name: Produce structural storyboard
+        run: |
+          python3 scripts/story_001_local.py \
             --config experiments/story-001/config.json \
-            provider --out results/story001
-      - name: Show bounded qualification metadata
-        if: success()
+            storyboard --out results/story001 --model "$STORY_MODEL"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: story001-storyboard
+          path: results/story001
+          if-no-files-found: error
+          retention-days: 14
+
+  draft:
+    needs: storyboard
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CANDIDATE_ID: qwen-storyteller-q4
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .cache/neurounner
+          key: ubuntu-neurounner-runtime-v1-b11852
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: story001-storyboard
+          path: results/story001
+      - name: Fetch pinned llama.cpp runtime
+        run: bash scripts/bootstrap.sh runtime
+      - name: Resolve candidate
+        id: candidate
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          s=json.load(open("config/candidates.json"))[os.environ["CANDIDATE_ID"]]
+          print("url="+s["url"])
+          print("sha256="+s["sha256"])
+          print("file="+s["file"])
+          PY
+      - name: Download and hash-verify QwenStoryteller
+        env:
+          URL: \${{ steps.candidate.outputs.url }}
+          SHA: \${{ steps.candidate.outputs.sha256 }}
+          FILE: \${{ steps.candidate.outputs.file }}
+        run: |
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 -o "$RUNNER_TEMP/$FILE" "$URL"
+          echo "$SHA  $RUNNER_TEMP/$FILE" | sha256sum -c -
+          echo "STORY_MODEL=$RUNNER_TEMP/$FILE" >> "$GITHUB_ENV"
+      - name: Draft eight-section story
+        run: |
+          python3 scripts/story_001_local.py \
+            --config experiments/story-001/config.json \
+            draft --out results/story001 --model "$STORY_MODEL"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: story001-draft
+          path: results/story001
+          if-no-files-found: error
+          retention-days: 14
+
+  review:
+    needs: draft
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      CANDIDATE_ID: lfm25-8b-a1b
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .cache/neurounner
+          key: ubuntu-neurounner-runtime-v1-b11852
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: story001-draft
+          path: results/story001
+      - name: Fetch pinned llama.cpp runtime
+        run: bash scripts/bootstrap.sh runtime
+      - name: Resolve candidate
+        id: candidate
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          s=json.load(open("config/candidates.json"))[os.environ["CANDIDATE_ID"]]
+          print("url="+s["url"])
+          print("sha256="+s["sha256"])
+          print("file="+s["file"])
+          PY
+      - name: Download and hash-verify LFM2.5-8B-A1B
+        env:
+          URL: \${{ steps.candidate.outputs.url }}
+          SHA: \${{ steps.candidate.outputs.sha256 }}
+          FILE: \${{ steps.candidate.outputs.file }}
+        run: |
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 -o "$RUNNER_TEMP/$FILE" "$URL"
+          echo "$SHA  $RUNNER_TEMP/$FILE" | sha256sum -c -
+          echo "STORY_MODEL=$RUNNER_TEMP/$FILE" >> "$GITHUB_ENV"
+      - name: Independently review exact draft
+        run: |
+          python3 scripts/story_001_local.py \
+            --config experiments/story-001/config.json \
+            review --out results/story001 --model "$STORY_MODEL"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: story001-review
+          path: results/story001
+          if-no-files-found: error
+          retention-days: 14
+
+  edit:
+    needs: review
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CANDIDATE_ID: qwen35-4b
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .cache/neurounner
+          key: ubuntu-neurounner-runtime-v1-b11852
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: story001-review
+          path: results/story001
+      - name: Fetch pinned llama.cpp runtime
+        run: bash scripts/bootstrap.sh runtime
+      - name: Resolve candidate
+        id: candidate
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          s=json.load(open("config/candidates.json"))[os.environ["CANDIDATE_ID"]]
+          print("url="+s["url"])
+          print("sha256="+s["sha256"])
+          print("file="+s["file"])
+          PY
+      - name: Download and hash-verify Qwen3.5-4B
+        env:
+          URL: \${{ steps.candidate.outputs.url }}
+          SHA: \${{ steps.candidate.outputs.sha256 }}
+          FILE: \${{ steps.candidate.outputs.file }}
+        run: |
+          curl -fL --retry 5 --retry-all-errors --connect-timeout 20 -o "$RUNNER_TEMP/$FILE" "$URL"
+          echo "$SHA  $RUNNER_TEMP/$FILE" | sha256sum -c -
+          echo "STORY_MODEL=$RUNNER_TEMP/$FILE" >> "$GITHUB_ENV"
+      - name: Apply constrained section-wise edit
+        run: |
+          python3 scripts/story_001_local.py \
+            --config experiments/story-001/config.json \
+            edit --out results/story001 --model "$STORY_MODEL"
+      - name: Show final qualification
         run: |
           python3 - <<'PY'
           import json
-          q=json.load(open("results/story001/provider/qualification.json"))
+          q=json.load(open("results/story001/local/qualification.json"))
           print("run:",q["github_run_id"])
-          print("final stage:",q["final_stage"])
           print("words:",q["final_word_count"])
           print("word gate:",q["word_gate"])
           print("models:",q["models"])
+          print("final sha256:",q["final_sha256"])
           PY
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
@@ -121,35 +298,34 @@ jobs:
           retention-days: 14
 
   promote:
-    needs: nemotron
+    needs: edit
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.ref_name }}
+          ref: \${{ github.ref_name }}
           persist-credentials: true
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: story001-complete-evidence
           path: results/story001
-      - name: Promote durable archive and independently read back hashes
+      - name: Promote durable local archive and read back hashes
         run: |
-          python3 scripts/story_001.py \
+          python3 scripts/story_001_local.py \
             --config experiments/story-001/config.json \
             promote --source results/story001 --dest datasets/story-001
           python3 - <<'PY'
           import json, pathlib
           m=json.load(open("datasets/story-001/manifest.json"))
           assert 2700 <= m["word_count"] <= 3300
-          assert all(v.startswith("qualified") for v in m["milestones"].values())
+          assert m["pipeline_backend"]=="local_actions"
+          assert all(v=="qualified" for v in m["milestones"].values())
           story=pathlib.Path("datasets/story-001/compiled/story.md")
           assert story.stat().st_size > 1000
           print("archive readback:",m["word_count"],m["final_story_sha256"])
           PY
       - name: Commit durable STORY-001 evidence
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
         run: |
           git config user.name "neurounner experiment bot"
           git config user.email "261801702+techrote@users.noreply.github.com"
@@ -158,19 +334,19 @@ jobs:
             echo "No new STORY-001 evidence to commit."
             exit 0
           }
-          git commit -m "Archive STORY-001 Sprocket/Nemotron evidence [story001-evidence]"
-          git push origin "HEAD:\${GITHUB_REF_NAME}"
+          git commit -m "Archive STORY-001 local Actions evidence [story001-evidence]"
+          git push origin "HEAD:$GITHUB_REF_NAME"
       - name: Record workflow summary
         run: |
           {
-            echo "## STORY-001"
+            echo "## STORY-001 local Actions production"
             echo
-            echo "Durable Sprocket/Nemotron evidence promoted to datasets/story-001."
             python3 - <<'PY'
           import json
           m=json.load(open("datasets/story-001/manifest.json"))
           print(f"- final words: {m['word_count']}")
           print(f"- final sha256: {m['final_story_sha256']}")
+          print(f"- local models: {m['local_models']}")
           print(f"- milestones: {m['milestones']}")
           PY
           } >> "$GITHUB_STEP_SUMMARY"
