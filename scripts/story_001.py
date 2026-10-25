@@ -1572,9 +1572,12 @@ def provider(args: argparse.Namespace) -> None:
             )
 
         count = word_count(edited)
-        if not target_lo <= count <= target_hi:
+        hard_lo = max(soft_min, target_lo - 25)
+        hard_hi = min(soft_max, target_hi + 40)
+        if not hard_lo <= count <= hard_hi:
             raise RuntimeError(
-                f"M5 focused part {part_id} length {count} outside {target_lo}-{target_hi}"
+                f"M5 focused part {part_id} length {count} outside hard tolerance "
+                f"{hard_lo}-{hard_hi} (preferred {target_lo}-{target_hi})"
             )
         lowered = edited.lower()
         forbidden = (
@@ -1590,6 +1593,19 @@ def provider(args: argparse.Namespace) -> None:
             )
         edited_parts.append(edited)
 
+    edited_parts = rebalance(
+        edited_parts,
+        stage_prefix="m5-final",
+        model=models["editor"],
+        temperature=0.05,
+        context=(
+            "These sections already incorporate the independent M4 review and the LFM8B edit plans. "
+            "If compression is required, delete only redundant reflection or description; preserve "
+            "all physical actions, causal transitions, companion continuity and the final missing-noise uncertainty."
+        ),
+        token_budget=800,
+        rewrite_attempts=0,
+    )
     final = joined(edited_parts)
     (derived / "revision-1.md").write_text(final + "\n")
     edit_sections = derived / "edit-sections"
@@ -1598,7 +1614,7 @@ def provider(args: argparse.Namespace) -> None:
         (edit_sections / f"part-{part_id}.md").write_text(part + "\n")
 
     count = word_count(final)
-    final_stage = "m5-focused-section-edit"
+    final_stage = "m5-planned-section-edit"
     if not minimum <= count <= maximum:
         raise RuntimeError(
             f"STORY-001 focused final length {count} outside {minimum}-{maximum}"
