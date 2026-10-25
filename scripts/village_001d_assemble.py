@@ -358,6 +358,22 @@ def main() -> None:
         pair_path = pair_root / "pairs.jsonl"
         validate_pair_file(pair_path, member_id, 60)
         pair_rows = read_jsonl(pair_path)
+        feedback_dataset_sha = sha256_file(
+            feedback_root / "feedback.jsonl"
+        )
+        if any(
+            row["provenance"]["feedback_dataset_sha256"]
+            != feedback_dataset_sha
+            for row in pair_rows
+        ):
+            raise RuntimeError(
+                f"{member_id}: preference pair feedback dataset hash mismatch"
+            )
+        pair_manifest = json.loads((pair_root / "manifest.json").read_text())
+        if pair_manifest.get("feedback_dataset_sha256") != feedback_dataset_sha:
+            raise RuntimeError(
+                f"{member_id}: pair manifest feedback dataset hash mismatch"
+            )
         pair_ids = {row["pair_id"] for row in pair_rows}
         if len(pair_ids) != 60:
             raise RuntimeError(f"{member_id}: pair IDs not unique")

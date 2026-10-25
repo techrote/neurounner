@@ -74,7 +74,11 @@ def validate_pair(row: dict) -> None:
     provenance = row.get("provenance")
     if not isinstance(provenance, dict):
         fail("provenance missing")
-    for key in ("member_contract_sha256", "parent_adapter_sha256"):
+    for key in (
+        "member_contract_sha256",
+        "parent_adapter_sha256",
+        "feedback_dataset_sha256",
+    ):
         value = provenance.get(key)
         if not isinstance(value, str) or not SHA_RE.fullmatch(value):
             fail(f"provenance.{key}: invalid SHA-256")
@@ -157,6 +161,7 @@ def self_test() -> None:
         "provenance": {
             "member_contract_sha256": sha,
             "parent_adapter_sha256": sha,
+            "feedback_dataset_sha256": sha,
             "provider_call_ids": ["test-call"]
         }
     }

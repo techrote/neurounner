@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shutil
 from collections import Counter, defaultdict
@@ -27,6 +28,14 @@ SPECIALIZATION_GUIDANCE = {
         "choices and conflicting motives without catchphrase theatre."
     ),
 }
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def write_json(path: Path, value) -> None:
@@ -826,6 +835,7 @@ def main() -> None:
         parent_sha,
         pref["feedback"],
     )
+    feedback_sha = sha256_file(feedback_path)
 
     key = __import__("os").environ.get("NVIDIA_API_KEY", "").strip()
     if not key:
@@ -856,6 +866,7 @@ def main() -> None:
             "sibling": member["sibling"],
             "member_contract_sha256": population["member_contract_sha256"],
             "parent_adapter_sha256": parent_sha,
+            "feedback_dataset_sha256": feedback_sha,
             "pair_count": int(pref["pair_generation"]["pair_count"]),
             "compiler_model": campaign["nvidia"]["models"]["compiler"]["id"],
             "critic_model": campaign["nvidia"]["models"]["critic"]["id"],
@@ -885,6 +896,8 @@ def main() -> None:
                 raise RuntimeError("resume pair member contract mismatch")
             if provenance.get("parent_adapter_sha256") != parent_sha:
                 raise RuntimeError("resume pair parent adapter mismatch")
+            if provenance.get("feedback_dataset_sha256") != feedback_sha:
+                raise RuntimeError("resume pair feedback dataset hash mismatch")
             expected_feedback_ids = {
                 item["feedback_id"]
                 for item in feedback[row["scenario_id"]]
@@ -929,6 +942,8 @@ def main() -> None:
                 raise RuntimeError("partial pair member contract mismatch")
             if provenance.get("parent_adapter_sha256") != parent_sha:
                 raise RuntimeError("partial pair parent adapter mismatch")
+            if provenance.get("feedback_dataset_sha256") != feedback_sha:
+                raise RuntimeError("partial pair feedback dataset hash mismatch")
             expected_feedback_ids = {
                 item["feedback_id"]
                 for item in feedback[row["scenario_id"]]
@@ -1076,6 +1091,7 @@ def main() -> None:
                         "member_contract_sha256"
                     ],
                     "parent_adapter_sha256": parent_sha,
+                    "feedback_dataset_sha256": feedback_sha,
                     "provider_call_ids": list(compiler_labels),
                 },
             }
@@ -1164,6 +1180,7 @@ def main() -> None:
         "sibling": member["sibling"],
         "member_contract_sha256": population["member_contract_sha256"],
         "parent_adapter_sha256": parent_sha,
+        "feedback_dataset_sha256": feedback_sha,
         "pair_count": len(accepted),
         "feedback_count": sum(len(x) for x in feedback.values()),
         "compiler_model": campaign["nvidia"]["models"]["compiler"]["id"],
