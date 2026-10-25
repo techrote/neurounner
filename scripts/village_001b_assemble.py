@@ -172,6 +172,65 @@ def main() -> None:
                 "were never independently reviewed"
             )
 
+        critic_by_id: dict[str, list[dict]] = defaultdict(list)
+        adjudicator_by_key: dict[tuple[str, int], dict] = {}
+        for record in critic:
+            if not isinstance(record, dict):
+                raise RuntimeError(f"{member_id}: malformed critic record")
+            example_id = record.get("example_id")
+            round_index = record.get("round")
+            if example_id not in expansion_ids or not isinstance(round_index, int):
+                raise RuntimeError(f"{member_id}: invalid critic identity/round")
+            critic_by_id[example_id].append(record)
+
+        for decision in adjudicator:
+            if not isinstance(decision, dict):
+                raise RuntimeError(f"{member_id}: malformed adjudicator record")
+            example_id = decision.get("example_id")
+            round_index = decision.get("round")
+            key = (example_id, round_index)
+            if (
+                example_id not in expansion_ids
+                or not isinstance(round_index, int)
+                or key in adjudicator_by_key
+            ):
+                raise RuntimeError(f"{member_id}: invalid/duplicate adjudicator record")
+            adjudicator_by_key[key] = decision
+
+        terminal_curation = {}
+        for example_id in sorted(expansion_ids):
+            history = critic_by_id.get(example_id, [])
+            if not history:
+                raise RuntimeError(f"{member_id}: {example_id} has no critic history")
+            latest_round = max(record["round"] for record in history)
+            latest = [record for record in history if record["round"] == latest_round]
+            if len(latest) != 1:
+                raise RuntimeError(
+                    f"{member_id}: {example_id} has ambiguous critic round {latest_round}"
+                )
+            final_review = latest[0]
+            verdict = final_review.get("derived_verdict")
+            if verdict == "pass":
+                terminal_curation[example_id] = {
+                    "round": latest_round,
+                    "verdict": "critic_pass",
+                }
+            elif verdict == "borderline":
+                decision = adjudicator_by_key.get((example_id, latest_round))
+                if not decision or decision.get("decision") != "accept":
+                    raise RuntimeError(
+                        f"{member_id}: {example_id} borderline without terminal "
+                        "adjudicator acceptance"
+                    )
+                terminal_curation[example_id] = {
+                    "round": latest_round,
+                    "verdict": "adjudicator_accept",
+                }
+            else:
+                raise RuntimeError(
+                    f"{member_id}: {example_id} terminal critic verdict {verdict!r}"
+                )
+
         for row in expansion:
             lineage_expansion_inputs[meta["lineage"]][
                 normalize_text(row["input"])
@@ -219,6 +278,14 @@ def main() -> None:
             "expansion_surface_counts": dict(surface_counts),
             "critic_records": len(critic),
             "adjudicator_records": len(adjudicator),
+            "terminal_critic_pass": sum(
+                1 for state in terminal_curation.values()
+                if state["verdict"] == "critic_pass"
+            ),
+            "terminal_adjudicator_accept": sum(
+                1 for state in terminal_curation.values()
+                if state["verdict"] == "adjudicator_accept"
+            ),
             "training_sha256": sha256_file(examples_path),
             "validator_summary": summary,
         }
