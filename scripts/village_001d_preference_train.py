@@ -233,6 +233,11 @@ def save_checkpoint(
     source_run_id: str | None,
     parent_adapter_sha256: str,
     pair_dataset_sha256: str,
+    member_contract_sha256: str,
+    base_model: str,
+    base_revision: str,
+    parent_release: str,
+    training_config: dict,
 ) -> None:
     tmp = root.with_name(root.name + ".tmp")
     if tmp.exists():
@@ -256,6 +261,11 @@ def save_checkpoint(
             "source_run_id": source_run_id,
             "parent_adapter_sha256": parent_adapter_sha256,
             "pair_dataset_sha256": pair_dataset_sha256,
+            "member_contract_sha256": member_contract_sha256,
+            "base_model": base_model,
+            "base_revision": base_revision,
+            "parent_release": parent_release,
+            "training_config": training_config,
         },
     )
     if root.exists():
@@ -288,23 +298,37 @@ def copy_resume(resume: Path, out: Path) -> None:
 
 def validate_complete(
     out: Path,
-    member_id: str,
+    member: dict,
+    population: dict,
     parent_sha: str,
     pair_sha: str,
+    campaign: dict,
+    pref: dict,
 ) -> bool:
     result_path = out / "result.json"
     adapter = out / "adapter"
     if not result_path.is_file() or not adapter.is_dir():
         return False
     result = json.loads(result_path.read_text())
-    if result.get("experiment") != "VILLAGE-001D":
-        raise RuntimeError("resume result experiment mismatch")
-    if result.get("member_id") != member_id:
-        raise RuntimeError("resume result member mismatch")
-    if result.get("parent_adapter_sha256") != parent_sha:
-        raise RuntimeError("resume result parent adapter hash mismatch")
-    if result.get("preference_dataset_sha256") != pair_sha:
-        raise RuntimeError("resume result preference dataset hash mismatch")
+    checks = {
+        "experiment": "VILLAGE-001D",
+        "stage": "preference-continuation",
+        "member_id": member["member_id"],
+        "lineage": member["lineage"],
+        "sibling": member["sibling"],
+        "member_contract_sha256": population["member_contract_sha256"],
+        "base_model": campaign["base_model"]["id"],
+        "base_revision": campaign["base_model"]["revision"],
+        "parent_release": pref["parent_release_tag"],
+        "parent_adapter_sha256": parent_sha,
+        "preference_dataset_sha256": pair_sha,
+        "training_config": pref["preference_training"],
+    }
+    for key, expected in checks.items():
+        if result.get(key) != expected:
+            raise RuntimeError(
+                f"resume result {key} {result.get(key)!r} != {expected!r}"
+            )
     recorded = (result.get("adapter") or {}).get("sha256")
     if recorded != directory_hash(adapter):
         raise RuntimeError("resume result adapter directory hash mismatch")
@@ -386,9 +410,12 @@ def main() -> None:
 
     if validate_complete(
         out,
-        member["member_id"],
+        member,
+        population,
         expected_parent_sha,
         pair_sha,
+        campaign,
+        pref,
     ):
         print(
             json.dumps(
@@ -431,10 +458,20 @@ def main() -> None:
     checkpoint_dir = out / "checkpoint"
     checkpoint = load_checkpoint(checkpoint_dir)
     if checkpoint:
-        if checkpoint.get("parent_adapter_sha256") != expected_parent_sha:
-            raise RuntimeError("checkpoint parent adapter hash mismatch")
-        if checkpoint.get("pair_dataset_sha256") != pair_sha:
-            raise RuntimeError("checkpoint pair dataset hash mismatch")
+        checkpoint_checks = {
+            "parent_adapter_sha256": expected_parent_sha,
+            "pair_dataset_sha256": pair_sha,
+            "member_contract_sha256": population["member_contract_sha256"],
+            "base_model": campaign["base_model"]["id"],
+            "base_revision": campaign["base_model"]["revision"],
+            "parent_release": pref["parent_release_tag"],
+            "training_config": train_cfg,
+        }
+        for key, expected in checkpoint_checks.items():
+            if checkpoint.get(key) != expected:
+                raise RuntimeError(
+                    f"checkpoint {key} {checkpoint.get(key)!r} != {expected!r}"
+                )
         model = PeftModel.from_pretrained(
             base,
             checkpoint_dir / "adapter",
@@ -598,6 +635,11 @@ def main() -> None:
                 source_run_id=os.environ.get("GITHUB_RUN_ID"),
                 parent_adapter_sha256=expected_parent_sha,
                 pair_dataset_sha256=pair_sha,
+                member_contract_sha256=population["member_contract_sha256"],
+                base_model=campaign["base_model"]["id"],
+                base_revision=campaign["base_model"]["revision"],
+                parent_release=pref["parent_release_tag"],
+                training_config=train_cfg,
             )
             segment_started = time.monotonic()
 
