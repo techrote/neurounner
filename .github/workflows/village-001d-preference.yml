@@ -7,6 +7,13 @@ on:
         description: 'Optional prior VILLAGE-001D run ID for reusable feedback/pair/training artifacts'
         required: false
         type: string
+  # Workflow-authored commits use GITHUB_TOKEN and do not recursively
+  # trigger downstream push workflows. Chain stages explicitly on successful
+  # completion of the authoritative upstream workflow instead.
+  workflow_run:
+    workflows: ["VILLAGE-001C 36-member CPU SFT training"]
+    types: [completed]
+    branches: [main]
   pull_request:
     paths:
       - '.github/workflows/village-001d-preference.yml'
@@ -34,6 +41,7 @@ concurrency:
 
 jobs:
   plan:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:

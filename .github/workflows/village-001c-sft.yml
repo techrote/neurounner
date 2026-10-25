@@ -7,6 +7,13 @@ on:
         description: 'Optional prior VILLAGE-001C run ID whose per-member artifacts should be reused/resumed'
         required: false
         type: string
+  # Workflow-authored commits use GITHUB_TOKEN and do not recursively
+  # trigger downstream push workflows. Chain stages explicitly on successful
+  # completion of the authoritative upstream workflow instead.
+  workflow_run:
+    workflows: ["VILLAGE-001B member-specific SFT corpus foundry"]
+    types: [completed]
+    branches: [main]
   pull_request:
     paths:
       - '.github/workflows/village-001c-sft.yml'
@@ -30,10 +37,11 @@ concurrency:
   group: neurounner-village-001c-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
   # A new authoritative dataset push supersedes an older SFT wave. Recovered
   # artifacts are identity-bound by the trainer before reuse.
-  cancel-in-progress: ${{ github.event_name == 'push' }}
+  cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'workflow_run' }}
 
 jobs:
   plan:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:
