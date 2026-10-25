@@ -35,7 +35,10 @@ permissions:
 
 concurrency:
   group: neurounner-village-001b-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
-  cancel-in-progress: false
+  # A new main push touching VILLAGE-001B means the in-flight implementation is
+  # superseded. Cancel it, then recover completed/partial per-member artifacts below.
+  # Manual recovery runs remain non-destructive.
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
   plan:
@@ -181,19 +184,56 @@ jobs:
       - name: Verify provider gate immediately before spend
         run: python3 scripts/village_001_gate.py
 
-      - name: Recover prior member artifact when requested
-        if: ${{ inputs.resume_run_id != '' }}
+      - name: Recover prior member artifact
         env:
           GH_TOKEN: ${{ github.token }}
-          RESUME_RUN_ID: ${{ inputs.resume_run_id }}
+          EXPLICIT_RESUME_RUN_ID: ${{ inputs.resume_run_id }}
         run: |
-          mkdir -p "resume/${{ matrix.member }}"
-          if ! gh run download "$RESUME_RUN_ID" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --name "village001b-${{ matrix.member }}" \
-            --dir "resume/${{ matrix.member }}"; then
-            echo "No reusable artifact for ${{ matrix.member }} in run $RESUME_RUN_ID; starting fresh."
-            rm -rf "resume/${{ matrix.member }}"
+          set -u
+          member="${{ matrix.member }}"
+          target="resume/$member"
+          rm -rf "$target"
+          mkdir -p "$target"
+
+          candidates=()
+          if [ -n "${EXPLICIT_RESUME_RUN_ID:-}" ]; then
+            candidates+=("$EXPLICIT_RESUME_RUN_ID")
+          elif [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            # Search newest-first across prior main runs. This deliberately skips
+            # PR runs and the current run. A candidate without this member's
+            # artifact is harmless; the next candidate is tried.
+            while IFS= read -r run_id; do
+              [ -n "$run_id" ] || continue
+              [ "$run_id" = "$GITHUB_RUN_ID" ] && continue
+              candidates+=("$run_id")
+            done < <(
+              gh run list \
+                --repo "$GITHUB_REPOSITORY" \
+                --workflow "village-001b-member-corpora.yml" \
+                --branch main \
+                --limit 20 \
+                --json databaseId,event \
+                --jq '.[] | select(.event == "push") | .databaseId'
+            )
+          fi
+
+          recovered=""
+          for run_id in "${candidates[@]}"; do
+            rm -rf "$target"
+            mkdir -p "$target"
+            if gh run download "$run_id" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name "village001b-$member" \
+              --dir "$target" >/dev/null 2>&1; then
+              recovered="$run_id"
+              echo "Recovered $member from VILLAGE-001B run $run_id."
+              break
+            fi
+          done
+
+          if [ -z "$recovered" ]; then
+            echo "No reusable artifact found for $member; starting fresh."
+            rm -rf "$target"
           fi
 
       - name: Generate and independently curate member corpus
