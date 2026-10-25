@@ -940,24 +940,29 @@ def provider(args: argparse.Namespace) -> None:
                 ]
                 stage_id = f"{stage_prefix}-delete-prune-{prune_attempt}"
                 raw_path = out / "raw" / f"{stage_id}.json"
-                selection_source = "fresh"
-                try:
-                    selection, _ = provider_call(
-                        cfg=cfg,
-                        key=key,
-                        stage_id=stage_id,
-                        model=model,
-                        messages=prune_messages,
-                        max_tokens=min(1200, token_budget),
-                        temperature=0.05,
-                        out=out,
-                    )
-                except RuntimeError as exc:
-                    if "response hit max_tokens" not in str(exc) or not raw_path.exists():
-                        raise
+                if raw_path.exists():
                     obj = load_json(raw_path)
                     selection = (obj["choices"][0]["message"].get("content") or "").strip()
-                    selection_source = "salvaged_length_capped_raw"
+                    selection_source = "recovered_existing_raw"
+                else:
+                    selection_source = "fresh"
+                    try:
+                        selection, _ = provider_call(
+                            cfg=cfg,
+                            key=key,
+                            stage_id=stage_id,
+                            model=model,
+                            messages=prune_messages,
+                            max_tokens=min(1200, token_budget),
+                            temperature=0.05,
+                            out=out,
+                        )
+                    except RuntimeError as exc:
+                        if "response hit max_tokens" not in str(exc) or not raw_path.exists():
+                            raise
+                        obj = load_json(raw_path)
+                        selection = (obj["choices"][0]["message"].get("content") or "").strip()
+                        selection_source = "salvaged_length_capped_raw"
 
                 candidates = []
                 start = selection.find("{")
