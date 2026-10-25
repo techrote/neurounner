@@ -396,7 +396,16 @@ jobs:
             datasets/village-001/evaluation \
             datasets/village-001/final-manifest.json \
             datasets/village-001/final-hashes.sha256
-          git commit -m "Record VILLAGE-001E final qualification ${GITHUB_RUN_ID}"
+
+          if git diff --cached --quiet; then
+            echo "Final qualification evidence is already present in this checkout."
+          else
+            git commit -m "Record VILLAGE-001E final qualification ${GITHUB_RUN_ID}"
+          fi
+
+          # A rerun after a previous successful commit starts from the original
+          # workflow SHA. Rebase drops an already-applied identical evidence commit,
+          # or carries a genuinely new one onto current main.
           git pull --rebase origin main
           git push origin HEAD:main
 
@@ -411,17 +420,35 @@ jobs:
           )
           # The tag is deliberately neutral. A failed usable-village gate is still
           # authoritative final evidence and must not be mislabeled "qualified".
+          assets=(
+            experiments/village-001/final-evidence/summary.json
+            experiments/village-001/final-evidence/confusion-matrices.json
+            experiments/village-001/final-evidence/ecology-summary.json
+            experiments/village-001/final-evidence/model-registry.json
+            experiments/village-001/final-evidence/dataset-provenance.json
+            experiments/village-001/final-evidence/per-member-verdicts.json
+          )
+
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "$TAG already exists; final evidence remains authoritative in-repo."
+            # Repair a partial prior publication rather than treating tag existence
+            # as proof that every final evidence asset survived.
+            gh release upload "$TAG" "${assets[@]}" --clobber
           else
             gh release create "$TAG" \
               --target main \
               --title "VILLAGE-001E final cyber-goblin village evidence" \
               --notes-file experiments/village-001/final-evidence/REPORT.md \
-              experiments/village-001/final-evidence/summary.json \
-              experiments/village-001/final-evidence/confusion-matrices.json \
-              experiments/village-001/final-evidence/ecology-summary.json \
-              experiments/village-001/final-evidence/model-registry.json \
-              experiments/village-001/final-evidence/dataset-provenance.json \
-              experiments/village-001/final-evidence/per-member-verdicts.json
+              "${assets[@]}"
           fi
+
+          printf '%s\n' \
+            summary.json \
+            confusion-matrices.json \
+            ecology-summary.json \
+            model-registry.json \
+            dataset-provenance.json \
+            per-member-verdicts.json \
+            | sort > /tmp/expected-final-assets.txt
+          gh release view "$TAG" --json assets --jq '.assets[].name' \
+            | sort > /tmp/actual-final-assets.txt
+          diff -u /tmp/expected-final-assets.txt /tmp/actual-final-assets.txt
