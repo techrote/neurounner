@@ -365,6 +365,24 @@ def self_test() -> None:
         )
         (live / "README.md").write_text("downstream README\n")
 
+        # Simulate already-trained SFT evidence that binds downstream models to
+        # the exact B member-corpus bytes.
+        sft_root = root / "experiments" / "village-001" / "sft-evidence"
+        results_root = sft_root / "results"
+        results_root.mkdir(parents=True)
+        (sft_root / "summary.json").write_text(json.dumps({"members": 36}))
+        for i in range(1, 13):
+            for sibling in "ABC":
+                member = f"V-G{i:02d}-{sibling}"
+                shard = candidate / "member-corpora" / f"{member}.jsonl"
+                if member != "V-G01-A":
+                    shard.write_text(f"{member}\n")
+                (results_root / f"{member}.json").write_text(
+                    json.dumps(
+                        {"training_dataset_sha256": sha256_file(shard)}
+                    )
+                )
+
         promote_candidate(
             candidate,
             live,
@@ -397,6 +415,25 @@ def self_test() -> None:
             pass
         else:
             raise AssertionError("incompatible downstream member contract was accepted")
+
+        # Same contract is still insufficient when candidate bytes differ from
+        # already-trained SFT ancestry.
+        mismatch = root / "mismatch-candidate"
+        shutil.copytree(candidate, mismatch)
+        (mismatch / "member-corpora" / "V-G01-A.jsonl").write_text(
+            "byte-different-candidate\n"
+        )
+        try:
+            promote_candidate(
+                mismatch,
+                live,
+                repo_root=root,
+                validate=False,
+            )
+        except RuntimeError:
+            pass
+        else:
+            raise AssertionError("byte-different B corpus was accepted under SFT evidence")
 
     print("VILLAGE-001B non-destructive repromotion self-test: PASS")
 
