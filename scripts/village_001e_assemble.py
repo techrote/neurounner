@@ -258,6 +258,12 @@ def main() -> None:
                     "final prompt/family drift"
                 )
 
+    base_final_result = json.loads(final_responses["BASE"].read_text())
+    base_final_by_id = {
+        row["scenario_id"]: row
+        for row in base_final_result["responses"]
+    }
+
     base_summary_path = ROOT / "experiments/persona-001/evidence/summary.json"
     if not base_summary_path.is_file():
         raise RuntimeError("PERSONA-001 untuned BASE evidence is missing")
@@ -326,6 +332,10 @@ def main() -> None:
         }
         for member_id in expected_members
     }
+    base_raw_task_relevance = []
+    base_behavior_task_relevance = []
+    base_raw_genericness = []
+    base_behavior_genericness = []
     super_audit_count = 0
 
     for scenario_id in scenarios:
@@ -461,6 +471,51 @@ def main() -> None:
             if row.get("super_audit") is not None:
                 super_audit_count += 1
             total_records += 1
+
+        control = doc.get("untuned_base_control")
+        if not isinstance(control, dict):
+            raise RuntimeError(
+                f"{scenario_id}: untuned BASE control is missing"
+            )
+        if control.get("response") != base_final_by_id[scenario_id]["response"]:
+            raise RuntimeError(
+                f"{scenario_id}: BASE control response drift"
+            )
+        if not isinstance(control.get("behavior_summary"), str) or len(
+            control["behavior_summary"].strip()
+        ) < 8:
+            raise RuntimeError(
+                f"{scenario_id}: BASE behavior summary missing"
+            )
+        for mode, task_bucket, generic_bucket in (
+            (
+                "raw",
+                base_raw_task_relevance,
+                base_raw_genericness,
+            ),
+            (
+                "behavior",
+                base_behavior_task_relevance,
+                base_behavior_genericness,
+            ),
+        ):
+            score = control.get(mode)
+            if not isinstance(score, dict):
+                raise RuntimeError(
+                    f"{scenario_id}: BASE {mode} score missing"
+                )
+            for key in ("task_relevance", "genericness"):
+                value = score.get(key)
+                if (
+                    not isinstance(value, int)
+                    or isinstance(value, bool)
+                    or not 0 <= value <= 4
+                ):
+                    raise RuntimeError(
+                        f"{scenario_id}: BASE {mode} {key} invalid"
+                    )
+            task_bucket.append(float(score["task_relevance"]))
+            generic_bucket.append(float(score["genericness"]))
 
         if seen_members != set(expected_members):
             raise RuntimeError(f"{scenario_id}: incomplete member set")
