@@ -42,6 +42,18 @@ def hash_inventory(root: Path) -> str:
     return "\n".join(rows) + "\n"
 
 
+def dataset_hash_inventory(root: Path) -> str:
+    rows = []
+    for path in sorted(root.rglob("*")):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(root).as_posix()
+        if rel == "final-hashes.sha256":
+            continue
+        rows.append(f"{sha256_file(path)}  {rel}")
+    return "\n".join(rows) + "\n"
+
+
 def find_unique(
     root: Path,
     filename: str,
@@ -924,6 +936,52 @@ def main() -> None:
     ecology_report.append("")
     (out / "ECOLOGY_REPORT.md").write_text("\n".join(ecology_report) + "\n")
     (out / "hashes.sha256").write_text(hash_inventory(out))
+
+    # Promote the complete final qualification tree into the durable VILLAGE-001
+    # dataset archive. Actions artifacts remain staging; this committed tree is the
+    # authoritative raw tournament/ecology evidence for the completed campaign.
+    dataset_root = ROOT / campaign["archive"]["dataset_root"]
+    evaluation_root = dataset_root / "evaluation"
+    if evaluation_root.exists():
+        shutil.rmtree(evaluation_root)
+    shutil.copytree(out, evaluation_root)
+
+    final_manifest = {
+        "schema_version": 1,
+        "experiment": "VILLAGE-001",
+        "stage": "VILLAGE-001E-final-qualification",
+        "issue": 14,
+        "member_contract_sha256": population["member_contract_sha256"],
+        "evaluation_root": "evaluation",
+        "final_evidence_root": str(out.relative_to(ROOT)),
+        "preference_release_tag": preference_release["release_tag"],
+        "members": 36,
+        "scenarios": 24,
+        "ecology_sessions": ecology_summary["sessions"],
+        "usable_village": usable_village,
+        "individual_quality_pass_count": len(individual_pass),
+        "summary_sha256": sha256_file(out / "summary.json"),
+        "confusion_matrices_sha256": sha256_file(
+            out / "confusion-matrices.json"
+        ),
+        "ecology_summary_sha256": sha256_file(out / "ecology-summary.json"),
+        "model_registry_sha256": sha256_file(out / "model-registry.json"),
+    }
+    write_json(dataset_root / "final-manifest.json", final_manifest)
+    (dataset_root / "final-hashes.sha256").write_text(
+        dataset_hash_inventory(dataset_root)
+    )
+
+    # Verify the promoted copy and the final dataset inventory before allowing the
+    # workflow to commit either authority surface.
+    if sha256_file(evaluation_root / "summary.json") != final_manifest[
+        "summary_sha256"
+    ]:
+        raise RuntimeError("promoted final summary hash mismatch")
+    if sha256_file(evaluation_root / "model-registry.json") != final_manifest[
+        "model_registry_sha256"
+    ]:
+        raise RuntimeError("promoted model registry hash mismatch")
 
     print(
         json.dumps(
