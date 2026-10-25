@@ -1,32 +1,29 @@
-# VILLAGE-001 durable archive
+# VILLAGE-001 — durable campaign archive
 
-This directory is the durable archive root for the VILLAGE-001 36-member SLM campaign.
+Current promoted stage: **VILLAGE-001B member-specific SFT corpora**.
 
-**Current status:** contract only. No generated village corpus is authoritative until #11 promotes validated provider/Sprocket records here.
+## Population
 
-The archive follows `docs/DATASET_FILING_SYSTEM.md`: raw records outrank derived summaries, orchestrator-owned IDs are canonical, and Actions artifacts are staging rather than the archive.
+- 36 immutable members: G01–G12 × A/B/C
+- 160 rows/member
+- 3600 lineage-preserving BABBLE-002 ancestral copies
+- 2160 new member-specific cloud-compiled rows
+- every new row independently reviewed by Nemotron Bolt before publication
+- borderline rows adjudicated selectively by Nemotron Super
+- raw compiler/critic/adjudicator requests and responses retained under provider/
 
-Planned layout:
+## Authority
 
-```text
-datasets/village-001/
-  README.md
-  manifest.json                 # created when the first durable corpus is promoted
-  ancestors/
-  member-corpora/
-  sprocket-feedback/
-  provider/
-    minimax/
-    nemotron-bolt/
-    nemotron-super/
-  training/
-  preference/
-  evaluation/
-  provenance/
-    source-artifacts.json
-    hashes.sha256
-```
+The canonical population contract is `experiments/village-001/config.json` plus
+`scripts/village_001_manifest.py`. BABBLE-001 remains authority for raw Sprocket
+babble; BABBLE-002 remains authority for the 1,200 ancestral positive/negative rows.
 
-No empty placeholder directories are committed. Each section appears when it contains durable evidence.
+This directory is durable evidence. GitHub Actions artifacts are staging only.
 
-The exact 36 member identities are generated from `experiments/village-001/config.json` by `scripts/village_001_manifest.py`.
+See:
+
+- `manifest.json`
+- `quality/validation.json`
+- `provenance/source-artifacts.json`
+- `provenance/hashes.sha256`
+- `ancestors/source-hashes.json`

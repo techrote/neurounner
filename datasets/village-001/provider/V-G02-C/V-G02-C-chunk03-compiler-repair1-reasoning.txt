@@ -1,0 +1,51 @@
+We need output JSON exactly 20 rows, counts. Malformed has 20? Count: conflicting 4, conv 6, embodied 4, failure1, local1, mundane2, physical2 =20. But duplicates inputs rows 10,13,18 correspond used list. Need replace those inputs with new unique, preserving surfaces. Also perhaps all inputs must not repeat previous. Check row 3 input used previously exactly "A job must leave..." yes used list includes it. Detected only 10,13,18 but row3 also appears in previously used list! Indeed used list has "A job must leave the workshop in thirty minutes..." So must replace row3 too. Row5 torque wrench used. Row8 scrap stall cracked gear used. Row9 coworker shift cabinet used. Row10 knob used. Row13 gearbox cover used. Row14 seized drive gear used. Row18 wrapper? Previously used "paper cup..." not wrapper. Row18 maybe duplicate_input among malformed? Let's map malformed rows: 1 curator flawless (used similar curator historic gearbox? exact used "A curator wants a flawless historic display..." yes row1 input differs slightly? used: "A curator wants a flawless historic display, while you know its original charm appears only when the bearing sits slightly loose." malformed: "The curator wants a flawless public display, but the historic mechanism only shows its intended motion when one bearing sits slightly loose." not exact. Fine.
+Row2 colleague mount solid not used exact.
+Row3 used exact.
+Row4 apprentice bent linkage new.
+Row5 torque wrench used exact.
+Row6 coworker test motor sounds wrong maybe used "coworker asks why old motor sounds worse" not exact.
+Row7 visitor tapping gearbox cover new.
+Row8 scrap stall cracked gear used exact.
+Row9 coworker shift cabinet used exact.
+Row10 knob used exact.
+Row11 fingers cabinet vibration used similar "While your fingers rest on a control panel..." not exact.
+Row12 mounting bolt new.
+Row13 gearbox cover used exact.
+Row14 seized drive gear used exact.
+Row15 red kettle new.
+Row16 lunch tin new.
+Row17 wrapper new.
+Row18 gearbox burnt smell used exact.
+Row19 compressed air new.
+Only 19? Count malformed: conflicting 4 (1-4), conv 6 (5-10), embodied 4 (11-14), failure 1 (15), local 1 (16), mundane 2 (17-18), physical 2 (19-20). Wait row numbering shifted: row15 failure seized gear, row16 local kettle, row17 lunch, row18 wrapper, row19 gearbox smell, row20 compressed. Detected row10 duplicate = knob, row13 = gearbox cover, row18 = wrapper? Wrapper not in used list. Maybe duplicate internal? no. Hmm detected row18 duplicate_input perhaps paper wrapper duplicates something unseen? Anyway replace all known used exacts: rows 3,5,8,9,10,13,14,18,19. That's 9. Need ensure new inputs unique and not previous. We can regenerate those 9. Keep others. But row1 maybe semantic duplicate not exact; okay. Need valid JSON. Could simply output all 20 with replacements. Ensure counts.
+
+Let's craft replacements:
+row3 conflicting: "A curator wants..." new.
+row5 conv: neighbor offers wrench but wants gauge used; replace "A neighbor offers to lend..." with "A neighbor offers a spare socket set..." etc.
+row8 conv scrap stall replace "At a yard sale..."
+row9 conv coworker shift replace "A coworker offers to trade..."
+row10 conv supplier? Wait row10 is embodied knob? Let's recount actual malformed list carefully:
+1 curator bearing
+2 colleague mount
+3 job 30 min
+4 apprentice bent
+5 neighbor torque wrench
+6 coworker test motor
+7 visitor tapping cover
+8 scrap stall cracked gear
+9 coworker shift cabinet
+10 supplier linkage
+11 knob
+12 fingers cabinet
+13 mounting bolt
+14 gearbox cover
+15 seized drive gear
+16 kettle
+17 lunch tin
+18 wrapper
+19 gearbox smell
+20 compressed air.
+
+Detected row10 duplicate_input = supplier linkage? Previously used list includes "A supplier..."? I don't see. Maybe duplicate semantic with something. row13 = mounting bolt? used "A mounting bolt..." no. Hmm detected rows perhaps 1-indexed differently? row18 wrapper. Weird. But safest replace all inputs that are exact used: row3,5,8,9,11,14,15,19. Also maybe row10 supplier not used. row13 mounting bolt not used. row18 wrapper not used. Yet detected says those. To satisfy, replace rows 10,13,18 too. So 11 replacements. Keep row1,2,4,6,7,12,16,17,20. Check row12 fingers cabinet not exact used. Fine.
+
+Need output all rows. Could modify targets accordingly. Let's do concise but rich. Ensure no mention forbidden. JSON only.
