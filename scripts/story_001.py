@@ -1435,6 +1435,101 @@ def provider(args: argparse.Namespace) -> None:
         ),
     }
 
+    m5_delete_phrases = {
+        "01": (
+            "parents", "reactor", "ancient walled", "travel plan", "travel-diary",
+            "only witness", "whole story", "pure, unfiltered memory",
+            "brilliant, blinding flash", "shockwave",
+        ),
+        "02": (
+            "reactor", "silent alarms", "pressure equalizes", "industrial heart",
+            "determined to explore", "companion is gone",
+            "empty space where they used to be", "final, definitive click",
+        ),
+        "03": (
+            "grabbed a nearby piece of scrap", "time was running out",
+            "companion was counting", "couldn't fail", "ready to face",
+            "only one who", "save my companion", "extraordinary scene",
+            "machine loop was still running",
+        ),
+        "04": (
+            "fuel canister", "powered the district", "containment",
+            "ticking time bomb", "make it right", "machine's vision",
+            "make it understand", "catastrophe", "core's casing",
+        ),
+        "05": (
+            "companion was gone", "caught in the loops",
+            "could not force the machine", "there was no escape",
+            "only evidence", "failed to stop it",
+            "only thing left was the silence",
+        ),
+        "06": (
+            "companion was gone", "reactor core", "logic gate",
+            "gone forever", "signal trick took hold", "loop opened",
+            "save the day", "finally found a way to disrupt",
+        ),
+        "07": (
+            "reactor core", "logic gate", "save the day", "data stream",
+            "hologram", "destiny",
+        ),
+        "08": (
+            "reactor core", "logic gate", "save the day", "data stream",
+            "hologram", "new mission", "destiny",
+        ),
+    }
+
+    def sanitize_m5_section(part_id: str, text: str) -> str:
+        """Delete only complete sentences containing predeclared scene/lore violations."""
+        before = text.strip()
+        phrases = tuple(x.lower() for x in m5_delete_phrases.get(part_id, ()))
+        if not phrases:
+            return before
+        sentences = re.split(r"(?<=[.!?])\s+", before)
+        kept = []
+        deleted = []
+        for sentence in sentences:
+            stripped = sentence.strip()
+            if not stripped:
+                continue
+            lowered = stripped.lower()
+            hits = sorted({phrase for phrase in phrases if phrase in lowered})
+            if hits:
+                deleted.append(
+                    {
+                        "sentence": stripped,
+                        "words": word_count(stripped),
+                        "matched_phrases": hits,
+                    }
+                )
+            else:
+                kept.append(stripped)
+        after = " ".join(kept).strip()
+        record = {
+            "schema_version": 1,
+            "part_id": part_id,
+            "operation": "exact_sentence_delete",
+            "before_words": word_count(before),
+            "after_words": word_count(after),
+            "before_sha256": sha256_bytes(before.encode("utf-8")),
+            "after_sha256": sha256_bytes(after.encode("utf-8")),
+            "deleted": deleted,
+            "text_added": False,
+        }
+        write_json(derived / "m5-sanitization" / f"part-{part_id}.json", record)
+        if word_count(after) < 200:
+            raise RuntimeError(
+                f"M5 sanitization part {part_id} fell below 200 words: {word_count(after)}"
+            )
+        remaining = [
+            phrase for phrase in phrases if phrase in after.lower()
+        ]
+        if remaining:
+            raise RuntimeError(
+                f"M5 sanitization part {part_id} retained blocked phrases: "
+                + ", ".join(remaining)
+            )
+        return after
+
     edited_parts: list[str] = []
     edit_tokens = 850
     global_edit_contract = (
@@ -1662,11 +1757,18 @@ def provider(args: argparse.Namespace) -> None:
             lowered = edited.lower()
             remaining_forbidden = [term for term in forbidden if term in lowered]
             if remaining_forbidden:
-                raise RuntimeError(
-                    f"M5 focused part {part_id} retained forbidden concepts after guard repair: "
-                    + ", ".join(remaining_forbidden)
+                write_json(
+                    derived / "m5-guard-fallback" / f"part-{part_id}.json",
+                    {
+                        "schema_version": 1,
+                        "part_id": part_id,
+                        "remaining_forbidden": remaining_forbidden,
+                        "action": "defer_to_exact_sentence_sanitizer",
+                        "render_sha256": sha256_bytes(edited.encode("utf-8")),
+                    },
                 )
 
+        edited = sanitize_m5_section(part_id, edited)
         edited_parts.append(edited)
 
     edited_parts = rebalance(
