@@ -55,6 +55,8 @@ jobs:
             scripts/village_001d_assemble.py
 
       - name: Validate preference campaign contract
+        env:
+          PYTHONPATH: scripts
         run: |
           python3 scripts/village_001d_validate.py --self-test
           python3 scripts/village_001_gate.py
