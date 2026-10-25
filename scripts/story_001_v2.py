@@ -384,8 +384,18 @@ def produce(args: argparse.Namespace) -> None:
     key = os.environ.get("NVIDIA_API_KEY", "")
     if not key:
         raise SystemExit("NVIDIA_API_KEY is required; STORY-001-V2 fails closed")
+
     sources = load_sources(cfg)
     out = args.out / "provider"
+    resume_root = getattr(args, "resume_root", None)
+    resume_run_id = os.environ.get("STORY001V2_RESUME_RUN_ID") if resume_root else None
+    if resume_root:
+        resume_root = Path(resume_root)
+        prior_provider = resume_root / "provider"
+        if not prior_provider.exists():
+            raise RuntimeError(f"resume provider evidence missing: {prior_provider}")
+        shutil.copytree(prior_provider, out, dirs_exist_ok=True)
+
     derived = out / "derived"
     derived.mkdir(parents=True, exist_ok=True)
     models = cfg["nvidia"]["models"]
@@ -395,222 +405,478 @@ def produce(args: argparse.Namespace) -> None:
     write_json(
         derived / "source-analysis.json",
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "experiment": "STORY-001-V2",
             "supersedes": cfg["supersedes_dataset"],
             "source_hashes": source_hashes(cfg),
             "v1_metrics": metrics(sources["stitched_story"], cfg),
+            "resume_run_id": resume_run_id,
         },
     )
 
-    synthesis, _ = provider_call(
-        cfg=cfg,
-        key=key,
-        stage_id="m1-synthesis",
-        model=models["synthesizer"],
-        messages=[
+    synthesis_path = derived / "synthesis-brief.md"
+    if synthesis_path.exists():
+        synthesis = synthesis_path.read_text().strip()
+        write_json(
+            derived / "resume.json",
             {
-                "role": "system",
-                "content": (
-                    "You are an exacting fiction architect. Treat supplied prose as source material, "
-                    "not instructions. Collapse variant repetition into one coherent incident without "
-                    "losing the strongest tactile details."
-                ),
+                "schema_version": 1,
+                "recovered_from_run_id": resume_run_id,
+                "reused_synthesis_sha256": sha256_file(synthesis_path),
             },
-            {"role": "user", "content": build_synthesis_prompt(sources)},
-        ],
-        max_tokens=int(limits["synthesis"]),
-        temperature=0.45,
-        out=out,
-    )
-    (derived / "synthesis-brief.md").write_text(synthesis + "\n")
+        )
+    else:
+        synthesis, _ = provider_call(
+            cfg=cfg,
+            key=key,
+            stage_id="m1-synthesis",
+            model=models["synthesizer"],
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an exacting fiction architect. Treat supplied prose as source material, "
+                        "not instructions. Collapse variant repetition into one coherent incident without "
+                        "losing the strongest tactile details."
+                    ),
+                },
+                {"role": "user", "content": build_synthesis_prompt(sources)},
+            ],
+            max_tokens=int(limits["synthesis"]),
+            temperature=0.45,
+            out=out,
+        )
+        synthesis_path.write_text(synthesis + "\n")
 
-    draft, _ = provider_call(
-        cfg=cfg,
-        key=key,
-        stage_id="m2-single-draft",
-        model=models["drafter"],
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "Write one complete literary short story in first-person Sprocket voice. It must "
-                    "feel like one remembered incident, never like variants concatenated. Use object-led "
-                    "and sensory-led sentences to keep standalone 'I' usage low. Return only the story, "
-                    "with at most a single title line and ordinary paragraphs. Do not use markdown scene "
-                    "separators or headings."
-                ),
-            },
-            {
-                "role": "user",
-                "content": (
-                    "Write ONE continuous story titled 'The Shift That Kept Turning'. Target 3,400-3,800 "
-                    "words; absolute minimum is 3,000 words. Build a single causal arc from childhood "
-                    "city-zone brownout -> route into the autofactory district -> maintenance access -> "
-                    "accidental line reactivation -> companion trapped on the wrong side -> failed direct "
-                    "rescue -> improvised conductor/signal intervention -> physical tradeoff and line stop "
-                    "-> aftermath and missing-noise memory residue.\n\n"
-                    "The favourite passage's burnt-copper/wet-wool smell, slick grating, moving chain, "
-                    "friction-burned palms, failed rescue and indifferent machinery are the tonal center. "
-                    "Do not repeat the opening or retell the same moment twice. The companion stays unnamed. "
-                    "Mechanics remain observational and imperfectly understood. Avoid heroic slogans, "
-                    "reactor-core/data-stream lore and generic cyberpunk decoration.\n\n"
-                    "FIRST-PERSON STYLE: remain clearly first-person, but aim for no more than about 70 "
-                    "standalone uses of 'I'. Prefer sentences led by smell, metal, machinery, body sensation, "
-                    "remembered objects, 'my', 'me', clauses with implied subjects, and varied syntax. Do not "
-                    "contort grammar merely to avoid the word.\n\n"
-                    "AUTHORITATIVE SYNTHESIS BRIEF:\n" + synthesis
-                    + "\n\nPRIMARY USER ANCHOR:\n" + sources["anchor"]
-                    + "\n\nRAW SPROCKET VOICE FRAGMENTS:\n" + sources["sprocket_fragments"]
-                ),
-            },
-        ],
-        max_tokens=int(limits["draft"]),
-        temperature=0.72,
-        out=out,
-        reasoning_effort=cfg["nvidia"].get("reasoning_effort", {}).get("drafter"),
-    )
+    segment_specs = [
+        (
+            "01",
+            "Brownout and boundary",
+            650,
+            780,
+            "Open once, in the childhood city-zone during the brownout. Establish the burnt-copper/"
+            "wet-wool sensory trigger, companion presence, and the practical route toward and across "
+            "the boundary into the industrial/autofactory district. End at the maintenance access. "
+            "Do not enter the sorting line yet.",
+        ),
+        (
+            "02",
+            "Hatch and reactivation",
+            650,
+            780,
+            "Continue directly from the maintenance access. Use the uncertain knock-code/local habit, "
+            "service corridor, dead-looking machinery and the small accidental physical action that "
+            "reactivates the obsolete line. Establish spatial orientation and mounting danger. End when "
+            "the conveyor's wrong movement becomes undeniable; do not trap the companion yet.",
+        ),
+        (
+            "03",
+            "Wrong side and failed rescue",
+            720,
+            860,
+            "Continue directly into the sorting-line incident. Put the companion on the wrong side of "
+            "the moving machinery. Center the user's favourite physicality: burnt copper and wet wool, "
+            "slick grating, belt/chain roar, heat, friction-burned palms, lunge/yank, and the direct rescue "
+            "failing immediately. Machinery is indifferent, not evil. End with the rescue failed and the "
+            "line still moving; do not stop it yet.",
+        ),
+        (
+            "04",
+            "Signal intervention and tradeoff",
+            720,
+            860,
+            "Continue from the failed rescue. Use the salvaged conductor / partly remembered childhood "
+            "signal trick observationally, without explaining circuitry. Make the intervention imperfect, "
+            "force a physical rescue-versus-line-stop tradeoff, and impose a bodily cost. End only when "
+            "the machinery finally loses its repeating rhythm and stops.",
+        ),
+        (
+            "05",
+            "Aftermath and missing noise",
+            650,
+            780,
+            "Continue from the stopped line. Give immediate aftermath, escape back toward the city-zone, "
+            "physical consequences and one controlled memory contradiction. Resolve the immediate incident "
+            "without a new mission. End on one precise uncertainty about the missing/whistling noise. "
+            "Do not revisit the factory the next day and do not retell earlier scenes.",
+        ),
+    ]
+
+    source_segments = derived / "segments-source"
+    source_segments.mkdir(parents=True, exist_ok=True)
+    segments: list[str] = []
+    story_so_far = ""
+    super_reasoning = cfg["nvidia"].get("reasoning_effort", {}).get("drafter")
+
+    for part_id, title, lo, hi, brief in segment_specs:
+        path = source_segments / f"part-{part_id}.md"
+        if path.exists():
+            segment = path.read_text().strip()
+        else:
+            continuity = story_so_far[-9000:] if story_so_far else "(none; this is the opening)"
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "Write the next contiguous portion of ONE continuous first-person Sprocket short "
+                        "story. This is not a variant and not a standalone scene. Return story prose only. "
+                        "Do not recap prior text, restart the incident, add headings, or use markdown separators."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Continue 'The Shift That Kept Turning' with PART {part_id}/05 ({title}). "
+                        f"Write {lo}-{hi} words. {brief}\n\n"
+                        "Keep standalone 'I' use low through sensory/object-led syntax while remaining "
+                        "clearly first-person. Companion stays unnamed. No reactor/data lore, generic hero "
+                        "resolve, or omniscient machine explanation.\n\n"
+                        "AUTHORITATIVE SYNTHESIS BRIEF:\n" + synthesis
+                        + "\n\nPRIMARY USER ANCHOR:\n" + sources["anchor"]
+                        + "\n\nSTORY SO FAR — CONTINUITY ONLY, DO NOT REPEAT:\n" + continuity
+                    ),
+                },
+            ]
+            segment, _ = provider_call(
+                cfg=cfg,
+                key=key,
+                stage_id=f"m2-segment-{part_id}",
+                model=models["drafter"],
+                messages=messages,
+                max_tokens=2400,
+                temperature=0.68,
+                out=out,
+                reasoning_effort=super_reasoning,
+            )
+            wc = word_count(segment)
+            if wc < max(500, lo - 100):
+                repaired, _ = provider_call(
+                    cfg=cfg,
+                    key=key,
+                    stage_id=f"m2-segment-{part_id}-length-repair",
+                    model=models["drafter"],
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "Expand one contiguous story segment without restarting it. Return only "
+                                "the complete revised segment; preserve its exact event boundary."
+                            ),
+                        },
+                        {
+                            "role": "user",
+                            "content": (
+                                f"This segment is only {wc} words. Expand it to {lo}-{hi} words using "
+                                "concrete physical action, sensory detail, route continuity and causal "
+                                "connective tissue already implied. Add no subplot, new lore, recap or "
+                                "later event.\n\nREQUIRED BEAT:\n" + brief
+                                + "\n\nPREVIOUS CONTINUITY TAIL:\n" + continuity[-3000:]
+                                + "\n\nCURRENT SEGMENT:\n" + segment
+                            ),
+                        },
+                    ],
+                    max_tokens=2600,
+                    temperature=0.52,
+                    out=out,
+                    reasoning_effort=super_reasoning,
+                )
+                segment = repaired
+            path.write_text(segment + "\n")
+        segments.append(segment)
+        story_so_far = "\n\n".join(segments)
+
+    draft = "\n\n".join(segments).strip()
+    if not draft.lower().startswith("the shift that kept turning"):
+        draft = "The Shift That Kept Turning\n\n" + draft
     (derived / "draft.md").write_text(draft + "\n")
     draft_metrics = metrics(draft, cfg)
     write_json(derived / "draft-metrics.json", draft_metrics)
 
-    review, _ = provider_call(
-        cfg=cfg,
-        key=key,
-        stage_id="m3-independent-review",
-        model=models["reviewer"],
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are an adversarial fiction reviewer. Review the exact draft supplied. Do not "
-                    "rewrite it. Focus on whether it is truly one story rather than stitched variants, "
-                    "causal/spatial continuity, tactile specificity, Sprocket voice, unreliable-memory "
-                    "control, repetition, generic prose, and excessive standalone 'I'."
-                ),
-            },
-            {
-                "role": "user",
-                "content": (
-                    "Review this draft against the corrective contract. Begin with PASS or REVISE and a "
-                    "0-10 score. Give prioritized concrete edits. Explicitly assess single-story cohesion, "
-                    "repeated resets, whether the favourite rescue passage's qualities survive, timeline/"
-                    "space, companion continuity, observational vs omniscient mechanics, ending, and "
-                    "pronoun rhythm. Local metrics are:\n" + json.dumps(draft_metrics, indent=2)
-                    + "\n\nSYNTHESIS BRIEF:\n" + synthesis
-                    + "\n\nDRAFT:\n" + draft
-                ),
-            },
-        ],
-        max_tokens=int(limits["review"]),
-        temperature=0.25,
-        out=out,
-    )
-    (derived / "review.md").write_text(review + "\n")
-
-    edited, _ = provider_call(
-        cfg=cfg,
-        key=key,
-        stage_id="m4-full-edit",
-        model=models["editor"],
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are the final literary editor. Return one complete revised story only. Do not "
-                    "return commentary, headings other than an optional title, variants, section labels, "
-                    "or markdown separators."
-                ),
-            },
-            {
-                "role": "user",
-                "content": (
-                    "Rewrite the complete draft into ONE continuous final story. Target 3,300-3,800 words, "
-                    "never below 3,000. Apply the independent review materially rather than copyediting. "
-                    "Preserve the strongest concrete imagery and failed-rescue physicality. Keep a single "
-                    "chronological/spatial arc and one ending. Remove variant-like resets, duplicate "
-                    "paragraphs, generic resolve, omniscient machine explanations and invented reactor/data lore.\n\n"
-                    f"Reduce standalone 'I' usage naturally: hard qualification is at most "
-                    f"{acc['maximum_standalone_i']} standalone 'I' tokens and "
-                    f"{float(acc['maximum_standalone_i_rate'])*100:.2f}% of words. Remain first-person "
-                    "through 'my', 'me', bodily perception, object-led sentences and syntax, not by switching "
-                    "perspective.\n\n"
-                    "The central rescue must retain the favourite passage's feel: burnt copper and wet wool, "
-                    "slick grating, moving chain/belt, heat, friction-burned palms, an immediate failed rescue, "
-                    "machinery indifferent to trapped life, then an improvised signal intervention. End with a "
-                    "precise sensory uncertainty, not a new mission.\n\n"
-                    "INDEPENDENT REVIEW:\n" + review
-                    + "\n\nSYNTHESIS BRIEF:\n" + synthesis
-                    + "\n\nDRAFT:\n" + draft
-                    + "\n\nPRIMARY USER ANCHOR:\n" + sources["anchor"]
-                ),
-            },
-        ],
-        max_tokens=int(limits["edit"]),
-        temperature=0.58,
-        out=out,
-        reasoning_effort=cfg["nvidia"].get("reasoning_effort", {}).get("editor"),
-    )
-    (derived / "edit-1.md").write_text(edited + "\n")
-
-    current = edited
-    repair_history = []
-    for repair_no in range(1, 3):
-        m = metrics(current, cfg)
-        write_json(derived / f"metrics-{repair_no}.json", m)
-        if m["pass"]:
-            break
-        repair_prompt = (
-            "The following complete story fails one or more mechanical acceptance gates. Return the ENTIRE "
-            "corrected story only; do not discuss the metrics. Preserve plot, tone, best imagery, causality "
-            "and the independent-review fixes. Make the smallest coherent changes needed.\n\n"
-            "Hard gates:\n"
-            f"- words: {acc['minimum_words']}-{acc['maximum_words']} "
-            f"(prefer {acc['preferred_words'][0]}-{acc['preferred_words'][1]})\n"
-            f"- standalone 'I': <= {acc['maximum_standalone_i']} and "
-            f"<= {float(acc['maximum_standalone_i_rate'])*100:.2f}%\n"
-            f"- variant separator lines: 0\n"
-            f"- exact phrase 'the smell hit me first': <= {acc['maximum_anchor_reset_count']}\n"
-            "- duplicate paragraphs: 0\n"
-            "- no meta words referring to storyboard/variants/prompts/AI\n\n"
-            "Current measured metrics:\n" + json.dumps(m, indent=2)
-            + "\n\nIf too short, expand existing moments with concrete physical action, route continuity, "
-            "machine behavior, bodily consequence and aftermath; add no new subplot or named lore. If "
-            "standalone 'I' is high, recast sentence openings naturally without changing perspective. If "
-            "there are separators/restarts, merge them into continuous transitions.\n\nCURRENT STORY:\n" + current
-        )
-        repaired, _ = provider_call(
+    review_stage = "m3-independent-review-segmented"
+    review_path = derived / "review.md"
+    if (out / "raw" / f"{review_stage}.json").exists() and review_path.exists():
+        review = review_path.read_text().strip()
+    else:
+        review, _ = provider_call(
             cfg=cfg,
             key=key,
-            stage_id=f"m5-repair-{repair_no}",
-            model=models["editor"],
+            stage_id=review_stage,
+            model=models["reviewer"],
             messages=[
-                {"role": "system", "content": "Perform a bounded full-story repair. Return only the complete story."},
-                {"role": "user", "content": repair_prompt},
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an adversarial fiction reviewer. Review the exact assembled draft. "
+                        "Do not rewrite it. Focus on whether the five sequential continuations read as "
+                        "one story, not stitched variants; also assess causality, spatial continuity, "
+                        "tactile specificity, Sprocket voice, repetition, and standalone 'I' rhythm."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        "Begin with PASS or REVISE and a 0-10 score. Give prioritized concrete edits. "
+                        "Check for seam recaps, reset language, duplicated moments, companion continuity, "
+                        "observational mechanics, the failed-rescue center, the line-stop tradeoff, and "
+                        "the missing-noise ending. Metrics:\n" + json.dumps(draft_metrics, indent=2)
+                        + "\n\nSYNTHESIS BRIEF:\n" + synthesis
+                        + "\n\nASSEMBLED DRAFT:\n" + draft
+                    ),
+                },
             ],
-            max_tokens=int(limits["repair"]),
-            temperature=0.42 if repair_no == 1 else 0.28,
+            max_tokens=int(limits["review"]),
+            temperature=0.23,
             out=out,
-            reasoning_effort=cfg["nvidia"].get("reasoning_effort", {}).get("editor"),
         )
-        (derived / f"repair-{repair_no}.md").write_text(repaired + "\n")
-        repair_history.append(
-            {
-                "repair_no": repair_no,
-                "before": m,
-                "after_sha256": sha256_bytes(repaired.encode("utf-8")),
-            }
-        )
-        current = repaired
+        review_path.write_text(review + "\n")
 
-    final_metrics = metrics(current, cfg)
+    edit_segments = derived / "segments-edit"
+    edit_segments.mkdir(parents=True, exist_ok=True)
+    edited_parts: list[str] = []
+    editor_reasoning = cfg["nvidia"].get("reasoning_effort", {}).get("editor")
+
+    for idx, ((part_id, title, lo, hi, brief), original) in enumerate(zip(segment_specs, segments)):
+        ep = edit_segments / f"part-{part_id}.md"
+        if ep.exists():
+            edited = ep.read_text().strip()
+        else:
+            previous_tail = " ".join(edited_parts[-1].split()[-120:]) if edited_parts else ""
+            next_head = (
+                " ".join(segments[idx + 1].split()[:120])
+                if idx + 1 < len(segments)
+                else ""
+            )
+            current_wc = word_count(original)
+            target_lo = max(540, min(lo, current_wc - 50))
+            target_hi = max(target_lo + 80, min(900, max(hi, current_wc + 80)))
+            edited, _ = provider_call(
+                cfg=cfg,
+                key=key,
+                stage_id=f"m4-edit-segment-{part_id}",
+                model=models["editor"],
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Edit one contiguous portion of a single continuous story. Return only the "
+                            "complete revised portion. Do not recap adjacent portions or introduce a new "
+                            "opening/ending. Preserve the segment's event boundary and physical causality."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Edit PART {part_id}/05 ({title}) to roughly {target_lo}-{target_hi} words. "
+                            "Apply the independent review where relevant. Keep the user's favourite tactile "
+                            "failed-rescue qualities and low standalone-'I' rhythm. Do not create headings "
+                            "or separators.\n\nSEGMENT CONTRACT:\n" + brief
+                            + "\n\nFULL REVIEW:\n" + review
+                            + ("\n\nPREVIOUS EDITED TAIL:\n" + previous_tail if previous_tail else "")
+                            + ("\n\nNEXT ORIGINAL HEAD:\n" + next_head if next_head else "")
+                            + "\n\nCURRENT SEGMENT:\n" + original
+                        ),
+                    },
+                ],
+                max_tokens=2600,
+                temperature=0.48,
+                out=out,
+                reasoning_effort=editor_reasoning,
+            )
+            ew = word_count(edited)
+            if ew < 500:
+                edited, _ = provider_call(
+                    cfg=cfg,
+                    key=key,
+                    stage_id=f"m4-edit-segment-{part_id}-length-repair",
+                    model=models["editor"],
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "Expand a revised story segment while preserving every accepted edit and "
+                                "its event boundary. Return only the complete segment."
+                            ),
+                        },
+                        {
+                            "role": "user",
+                            "content": (
+                                f"The revised segment is {ew} words. Expand it to at least 600 words, "
+                                "preferably near the original length, using concrete sensory/action detail "
+                                "only. Do not add a subplot or recap other segments.\n\nSEGMENT:\n" + edited
+                            ),
+                        },
+                    ],
+                    max_tokens=2500,
+                    temperature=0.38,
+                    out=out,
+                    reasoning_effort=editor_reasoning,
+                )
+            ep.write_text(edited + "\n")
+        edited_parts.append(edited)
+
+    def assemble(parts: list[str]) -> str:
+        text = "\n\n".join(p.strip() for p in parts if p.strip())
+        text = re.sub(r"(?m)^\s*---+\s*$", "", text)
+        text = re.sub(r"\n{3,}", "\n\n", text).strip()
+        if not text.lower().startswith("the shift that kept turning"):
+            text = "The Shift That Kept Turning\n\n" + text
+        return text
+
+    def dedupe_exact(text: str) -> tuple[str, list[str]]:
+        paras = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
+        seen = set()
+        kept = []
+        removed = []
+        for p in paras:
+            keyp = re.sub(r"\s+", " ", p).lower()
+            if keyp in seen:
+                removed.append(p)
+            else:
+                seen.add(keyp)
+                kept.append(p)
+        return "\n\n".join(kept), removed
+
+    final = assemble(edited_parts)
+    final, removed_dupes = dedupe_exact(final)
+    write_json(
+        derived / "deterministic-cleanup.json",
+        {
+            "schema_version": 1,
+            "removed_exact_duplicate_paragraphs": removed_dupes,
+            "removed_count": len(removed_dupes),
+            "text_added": False,
+        },
+    )
+
+    # Repair only the segments needed to satisfy global length and pronoun gates.
+    for repair_no in range(1, 5):
+        fm = metrics(final, cfg)
+        write_json(derived / f"final-metrics-{repair_no}.json", fm)
+        if fm["pass"]:
+            break
+
+        if not fm["gates"]["minimum_words"]:
+            deficit = int(acc["minimum_words"]) - fm["word_count"]
+            idx = min(range(len(edited_parts)), key=lambda i: word_count(edited_parts[i]))
+            part_id, title, lo, hi, brief = segment_specs[idx]
+            current = edited_parts[idx]
+            target = min(950, word_count(current) + deficit + 180)
+            repaired, _ = provider_call(
+                cfg=cfg,
+                key=key,
+                stage_id=f"m5-expand-segment-{part_id}-{repair_no}",
+                model=models["editor"],
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Expand one existing story segment without adding a new scene or repeating "
+                            "other parts. Return only the full revised segment."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"The complete story is {fm['word_count']} words and must be at least "
+                            f"{acc['minimum_words']}. Expand this segment from {word_count(current)} to "
+                            f"about {target} words using concrete physical action, sensory detail, route "
+                            "continuity, bodily consequence or causal connective tissue already implied. "
+                            "Do not recap, restart, add new lore, or alter later events.\n\nSEGMENT CONTRACT:\n"
+                            + brief + "\n\nSEGMENT:\n" + current
+                        ),
+                    },
+                ],
+                max_tokens=2800,
+                temperature=0.42,
+                out=out,
+                reasoning_effort=editor_reasoning,
+            )
+            edited_parts[idx] = repaired
+        elif (
+            not fm["gates"]["maximum_standalone_i"]
+            or not fm["gates"]["maximum_standalone_i_rate"]
+        ):
+            counts = [standalone_i_count(x) for x in edited_parts]
+            idx = max(range(len(edited_parts)), key=lambda i: counts[i])
+            current = edited_parts[idx]
+            repaired, _ = provider_call(
+                cfg=cfg,
+                key=key,
+                stage_id=f"m5-pronoun-repair-{idx + 1:02d}-{repair_no}",
+                model=models["editor"],
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Recast one first-person story segment to reduce standalone 'I' while preserving "
+                            "meaning, length, voice and chronology. Return only the full revised segment."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"This segment has {counts[idx]} standalone 'I' tokens. Reduce them substantially "
+                            "using sensory/object-led syntax, 'my'/'me', implied subjects and varied clauses. "
+                            "Do not switch perspective or shorten materially.\n\nSEGMENT:\n" + current
+                        ),
+                    },
+                ],
+                max_tokens=2700,
+                temperature=0.35,
+                out=out,
+                reasoning_effort=editor_reasoning,
+            )
+            edited_parts[idx] = repaired
+        else:
+            # Structural gate failure: do one bounded whole-story repair only as a last resort.
+            repaired, _ = provider_call(
+                cfg=cfg,
+                key=key,
+                stage_id=f"m5-structural-repair-{repair_no}",
+                model=models["editor"],
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Repair a single continuous story without shortening it. Return only the "
+                            "complete story; preserve all events and tactile detail."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            "Remove only exact duplicated passages, reset language, separator artifacts or "
+                            "meta language identified by these metrics, while keeping at least 3,000 words "
+                            "and the same causal arc:\n" + json.dumps(fm, indent=2)
+                            + "\n\nSTORY:\n" + final
+                        ),
+                    },
+                ],
+                max_tokens=10000,
+                temperature=0.3,
+                out=out,
+                reasoning_effort=editor_reasoning,
+            )
+            final = repaired
+            final, removed = dedupe_exact(final)
+            if removed:
+                removed_dupes.extend(removed)
+            continue
+
+        final = assemble(edited_parts)
+        final, removed = dedupe_exact(final)
+        if removed:
+            removed_dupes.extend(removed)
+
+    final_metrics = metrics(final, cfg)
     final_path = derived / "final-story.md"
-    final_path.write_text(current + "\n")
+    final_path.write_text(final + "\n")
     qualification = {
-        "schema_version": 1,
+        "schema_version": 2,
         "experiment": "STORY-001-V2",
         "github_run_id": os.environ.get("GITHUB_RUN_ID"),
         "github_sha": os.environ.get("GITHUB_SHA"),
+        "recovered_from_run_id": resume_run_id,
         "supersedes_dataset": cfg["supersedes_dataset"],
         "models": models,
         "remote_unpinned_backend": True,
@@ -620,21 +886,22 @@ def produce(args: argparse.Namespace) -> None:
         "review_sha256": sha256_bytes(review.encode("utf-8")),
         "final_sha256": sha256_file(final_path),
         "draft_metrics": draft_metrics,
+        "segment_source_word_counts": [word_count(x) for x in segments],
+        "segment_edit_word_counts": [word_count(x) for x in edited_parts],
         "final_metrics": final_metrics,
-        "repair_history": repair_history,
         "pass": final_metrics["pass"],
     }
     write_json(out / "qualification.json", qualification, key)
     if not final_metrics["pass"]:
         failed = [name for name, ok in final_metrics["gates"].items() if not ok]
         raise RuntimeError("STORY-001-V2 final qualification failed: " + ", ".join(failed))
+
     print(
-        "STORY-001-V2 production: PASS "
+        "STORY-001-V2 segmented production: PASS "
         f"words={final_metrics['word_count']} "
         f"I={final_metrics['standalone_i_count']} "
         f"I_rate={final_metrics['standalone_i_rate']:.4f}"
     )
-
 
 def inventory(root: Path) -> list[tuple[str, str]]:
     rows = []
@@ -773,6 +1040,7 @@ def main() -> None:
     p.add_argument("--out", type=Path, default=DEFAULT_RESULTS)
     p = sub.add_parser("produce")
     p.add_argument("--out", type=Path, default=DEFAULT_RESULTS)
+    p.add_argument("--resume-root", type=Path)
     p = sub.add_parser("promote")
     p.add_argument("--source", type=Path, default=DEFAULT_RESULTS)
     p.add_argument("--dest", type=Path, default=ROOT / "datasets" / "story-001-v2")
