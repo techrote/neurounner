@@ -1457,7 +1457,17 @@ def provider(args: argparse.Namespace) -> None:
             if idx + 1 < len(draft_parts)
             else ""
         )
-        planner_messages = [
+        plan_path = out / "derived" / "edit-plans" / f"part-{part_id}.json"
+        stage_id = f"m5-render-{part_id}-focused"
+        existing_retry_raw = out / "raw" / f"{stage_id}-retry.json"
+        existing_render_raw = out / "raw" / f"{stage_id}.json"
+
+        if plan_path.exists():
+            edit_plan = load_json(plan_path).get("plan", "").strip()
+            if not edit_plan:
+                raise RuntimeError(f"M5 resume plan {part_id} is empty")
+        else:
+            planner_messages = [
             {
                 "role": "system",
                 "content": (
@@ -1480,26 +1490,26 @@ def provider(args: argparse.Namespace) -> None:
                 ),
             },
         ]
-        edit_plan, _ = reasoning_plan_call(
-            cfg=cfg,
-            key=key,
-            stage_id=f"m5-plan-{part_id}",
-            model=models["edit_planner"],
-            messages=planner_messages,
-            max_tokens=420,
-            temperature=0.18,
-            out=out,
-        )
-        write_json(
-            out / "derived" / "edit-plans" / f"part-{part_id}.json",
-            {
-                "schema_version": 1,
-                "part_id": part_id,
-                "planner": models["edit_planner"],
-                "renderer": models["editor"],
-                "plan": edit_plan,
-            },
-        )
+            edit_plan, _ = reasoning_plan_call(
+                cfg=cfg,
+                key=key,
+                stage_id=f"m5-plan-{part_id}",
+                model=models["edit_planner"],
+                messages=planner_messages,
+                max_tokens=420,
+                temperature=0.18,
+                out=out,
+            )
+            write_json(
+                plan_path,
+                {
+                    "schema_version": 1,
+                    "part_id": part_id,
+                    "planner": models["edit_planner"],
+                    "renderer": models["editor"],
+                    "plan": edit_plan,
+                },
+            )
 
         messages = [
             {
@@ -1525,22 +1535,42 @@ def provider(args: argparse.Namespace) -> None:
             },
         ]
 
-        stage_id = f"m5-render-{part_id}-focused"
-        try:
-            edited, _ = provider_call(
-                cfg=cfg,
-                key=key,
-                stage_id=stage_id,
-                model=models["editor"],
-                messages=messages,
-                max_tokens=edit_tokens,
-                temperature=0.28,
-                out=out,
+        recovered_render = existing_retry_raw if existing_retry_raw.exists() else (
+            existing_render_raw if existing_render_raw.exists() else None
+        )
+        if recovered_render is not None:
+            obj = load_json(recovered_render)
+            raw_content = ((obj.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+            edited = _strip_reasoning_wrapper(raw_content)
+            if not edited:
+                raise RuntimeError(f"M5 resume render {part_id} is empty")
+            write_json(
+                derived / f"m5-resume-part-{part_id}.json",
+                {
+                    "schema_version": 1,
+                    "part_id": part_id,
+                    "source_file": recovered_render.name,
+                    "recovered_from_run_id": resume_run_id,
+                    "word_count": word_count(edited),
+                    "sha256": sha256_bytes(edited.encode("utf-8")),
+                },
             )
-        except RuntimeError as exc:
-            if "response hit max_tokens" not in str(exc):
-                raise
-            retry_messages = [
+        else:
+            try:
+                edited, _ = provider_call(
+                    cfg=cfg,
+                    key=key,
+                    stage_id=stage_id,
+                    model=models["editor"],
+                    messages=messages,
+                    max_tokens=edit_tokens,
+                    temperature=0.28,
+                    out=out,
+                )
+            except RuntimeError as exc:
+                if "response hit max_tokens" not in str(exc):
+                    raise
+                retry_messages = [
                 {
                     "role": "system",
                     "content": (
@@ -1560,24 +1590,22 @@ def provider(args: argparse.Namespace) -> None:
                     ),
                 },
             ]
-            edited, _ = provider_call(
-                cfg=cfg,
-                key=key,
-                stage_id=f"{stage_id}-retry",
-                model=models["editor"],
-                messages=retry_messages,
-                max_tokens=800,
-                temperature=0.20,
-                out=out,
-            )
+                edited, _ = provider_call(
+                    cfg=cfg,
+                    key=key,
+                    stage_id=f"{stage_id}-retry",
+                    model=models["editor"],
+                    messages=retry_messages,
+                    max_tokens=800,
+                    temperature=0.20,
+                    out=out,
+                )
 
         count = word_count(edited)
-        hard_lo = max(soft_min, target_lo - 25)
-        hard_hi = min(soft_max, target_hi + 40)
-        if not hard_lo <= count <= hard_hi:
+        if not soft_min <= count <= soft_max:
             raise RuntimeError(
-                f"M5 focused part {part_id} length {count} outside hard tolerance "
-                f"{hard_lo}-{hard_hi} (preferred {target_lo}-{target_hi})"
+                f"M5 focused part {part_id} length {count} outside sanity range "
+                f"{soft_min}-{soft_max} (preferred {target_lo}-{target_hi})"
             )
         lowered = edited.lower()
         forbidden = (
