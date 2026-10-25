@@ -1055,7 +1055,33 @@ def provider(args: argparse.Namespace) -> None:
             f"after {rewrite_attempts} local rewrites and exact-sentence prune attempts"
         )
 
+    resume_has_m3_m4 = bool(
+        resume_root
+        and (derived / "draft.md").exists()
+        and (derived / "review.md").exists()
+        and all(
+            (derived / "draft-sections" / f"part-{i:02d}.md").exists()
+            for i in range(1, 9)
+        )
+    )
     draft_parts: list[str] = []
+    if resume_has_m3_m4:
+        draft_parts = [
+            (derived / "draft-sections" / f"part-{i:02d}.md").read_text().strip()
+            for i in range(1, 9)
+        ]
+        reused_draft = joined(draft_parts)
+        write_json(
+            derived / "m3-m4-reuse.json",
+            {
+                "schema_version": 1,
+                "recovered_from_run_id": resume_run_id,
+                "draft_word_count": word_count(reused_draft),
+                "draft_sha256": sha256_bytes(reused_draft.encode("utf-8")),
+                "review_sha256": sha256_file(derived / "review.md"),
+                "reuse": ["M3", "M4"],
+            },
+        )
 
     def recover_m3_parts(root: Path) -> list[str]:
         raw = root / "local-models" / "raw"
