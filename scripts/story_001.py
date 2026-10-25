@@ -96,13 +96,25 @@ def git_head() -> str:
 def validate_config(cfg: dict) -> None:
     assert cfg["experiment"] == "STORY-001"
     assert cfg["target_words"]["minimum"] < cfg["target_words"]["maximum"]
-    assert cfg["nvidia"]["models"]["storyboard"] == "nvidia/nemotron-3.5-bolt-e4b"
-    assert cfg["nvidia"]["models"]["reviewer"] == "nvidia/nemotron-3.5-bolt-e4b"
-    assert cfg["nvidia"]["models"]["drafter"] == "nvidia/nemotron-3.5-super-vl-120b-a12b"
-    assert cfg["nvidia"]["models"]["editor"] == "nvidia/nemotron-3.5-super-vl-120b-a12b"
-    assert cfg["nvidia"]["max_parallel"] == 1
+    local = cfg["local_models"]
+    assert local["max_parallel"] == 1
+    assert int(local["threads"]) == 4
+    assert int(local["context"]) >= 8192
+    models = local["models"]
+    assert models["storyboard"] == "qwen35-4b"
+    assert models["reviewer"] == "qwen35-4b"
+    assert models["editor"] == "qwen35-4b"
+    assert models["drafter"] == "qwen-storyteller-q4"
+    registry = load_json(ROOT / "config" / "candidates.json")
+    for candidate_id in sorted(set(models.values())):
+        assert candidate_id in registry, candidate_id
+        assert candidate_id in local["path_env"], candidate_id
+        spec = registry[candidate_id]
+        assert spec.get("sha256"), candidate_id
+        assert spec.get("url"), candidate_id
 
 
+def self_test() -> None:
 def self_test() -> None:
     assert word_count("one two three") == 3
     assert word_count("fault-memory can't stop") == 3
@@ -118,10 +130,24 @@ def preflight(args: argparse.Namespace) -> None:
     cfg = load_json(args.config)
     validate_config(cfg)
     pins = load_env_file(ROOT / "config" / "pins.env")
+    registry = load_json(ROOT / "config" / "candidates.json")
     out = args.out / "preflight"
     out.mkdir(parents=True, exist_ok=True)
 
-    key = os.environ.get("NVIDIA_API_KEY", "")
+    model_ids = sorted(set(cfg["local_models"]["models"].values()))
+    model_records = {}
+    for candidate_id in model_ids:
+        spec = registry[candidate_id]
+        model_records[candidate_id] = {
+            "label": spec["label"],
+            "repo": spec["repo"],
+            "file": spec["file"],
+            "sha256": spec["sha256"],
+            "quant": spec.get("quant"),
+            "source_pin": spec.get("source_pin"),
+            "path_env": cfg["local_models"]["path_env"][candidate_id],
+        }
+
     record = {
         "schema_version": 1,
         "experiment": "STORY-001",
@@ -152,26 +178,26 @@ def preflight(args: argparse.Namespace) -> None:
             "llama_commit": pins["LLAMA_COMMIT"],
             "llama_archive_sha256": pins["LLAMA_SHA256"],
         },
-        "nvidia": {
-            "endpoint": cfg["nvidia"]["endpoint"],
-            "models": cfg["nvidia"]["models"],
-            "secret_name": cfg["nvidia"]["secret"],
-            "secret_present": bool(key),
-            "remote_unpinned_backend": True,
-            "budgets": cfg["nvidia"]["budgets"],
-            "attempts": cfg["nvidia"]["attempts"],
-            "max_parallel": cfg["nvidia"]["max_parallel"],
+        "local_models": {
+            "runtime": cfg["local_models"]["runtime"],
+            "roles": cfg["local_models"]["models"],
+            "candidates": model_records,
+            "threads": cfg["local_models"]["threads"],
+            "context": cfg["local_models"]["context"],
+            "budgets": cfg["local_models"]["budgets"],
+            "max_parallel": cfg["local_models"]["max_parallel"],
+            "download_hash_verification_required": True,
+            "remote_provider_used": False,
         },
         "target_words": cfg["target_words"],
         "config_sha256": sha256_file(args.config),
         "fail_closed": True,
     }
-    write_json(out / "preflight.json", record, key)
-    if not key:
-        raise SystemExit("NVIDIA_API_KEY is required; STORY-001 fails closed")
-    print("STORY-001 M0 preflight: PASS")
+    write_json(out / "preflight.json", record)
+    print("STORY-001 M0 preflight: PASS (local runner models)")
 
 
+def wait_server(port: int, proc: subprocess.Popen, log: Path) -> float:
 def wait_server(port: int, proc: subprocess.Popen, log: Path) -> float:
     started = time.monotonic()
     deadline = started + 120
@@ -187,7 +213,7 @@ def wait_server(port: int, proc: subprocess.Popen, log: Path) -> float:
         except Exception:
             pass
         time.sleep(0.2)
-    raise TimeoutError("Sprocket llama-server health check timed out")
+    raise TimeoutError("llama-server health check timed out")
 
 
 SPROCKET_PROMPTS = [
@@ -362,6 +388,156 @@ def sprocket(args: argparse.Namespace) -> None:
         log_fh.close()
 
 
+_ACTIVE_LOCAL: dict[str, Any] = {
+    "candidate_id": None,
+    "process": None,
+    "log_handle": None,
+    "port": 18963,
+    "model_path": None,
+    "startup_seconds": None,
+}
+_LOCAL_ACTIVATION = 0
+
+
+def stop_active_local() -> None:
+    proc = _ACTIVE_LOCAL.get("process")
+    if proc is not None and proc.poll() is None:
+        proc.terminate()
+        try:
+            proc.wait(10)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait(5)
+    handle = _ACTIVE_LOCAL.get("log_handle")
+    if handle is not None and not handle.closed:
+        handle.close()
+    _ACTIVE_LOCAL.update(
+        {
+            "candidate_id": None,
+            "process": None,
+            "log_handle": None,
+            "model_path": None,
+            "startup_seconds": None,
+        }
+    )
+
+
+def ensure_local_model(cfg: dict, candidate_id: str, out: Path) -> tuple[int, dict]:
+    global _LOCAL_ACTIVATION
+    proc = _ACTIVE_LOCAL.get("process")
+    if (
+        _ACTIVE_LOCAL.get("candidate_id") == candidate_id
+        and proc is not None
+        and proc.poll() is None
+    ):
+        registry = load_json(ROOT / "config" / "candidates.json")
+        return int(_ACTIVE_LOCAL["port"]), registry[candidate_id]
+
+    stop_active_local()
+    registry = load_json(ROOT / "config" / "candidates.json")
+    if candidate_id not in registry:
+        raise RuntimeError(f"unknown local candidate: {candidate_id}")
+    spec = registry[candidate_id]
+    env_name = cfg["local_models"]["path_env"][candidate_id]
+    raw_path = os.environ.get(env_name, "")
+    if not raw_path:
+        raise RuntimeError(f"{env_name} is required for local candidate {candidate_id}")
+    model_path = Path(raw_path)
+    if not model_path.is_file():
+        raise RuntimeError(f"local model file is missing: {model_path}")
+    actual_sha = sha256_file(model_path)
+    expected_sha = spec["sha256"]
+    if actual_sha != expected_sha:
+        raise RuntimeError(
+            f"{candidate_id} SHA-256 mismatch: expected {expected_sha}, got {actual_sha}"
+        )
+
+    cache = Path(os.environ.get("NEURO_CACHE", ROOT / ".cache" / "neurounner"))
+    paths = load_env_file(cache / "paths.env")
+    server = Path(paths["LLAMA_SERVER"])
+    if not server.is_file():
+        raise RuntimeError(f"llama-server missing after bootstrap: {server}")
+
+    _LOCAL_ACTIVATION += 1
+    port = int(_ACTIVE_LOCAL["port"])
+    logdir = out / "server-logs"
+    logdir.mkdir(parents=True, exist_ok=True)
+    log = logdir / f"{_LOCAL_ACTIVATION:02d}-{candidate_id}.log"
+    log_handle = log.open("w")
+    cmd = [
+        str(server),
+        "-m",
+        str(model_path),
+        "--host",
+        "127.0.0.1",
+        "--port",
+        str(port),
+        "-t",
+        str(int(cfg["local_models"]["threads"])),
+        "-c",
+        str(int(cfg["local_models"]["context"])),
+    ]
+    process = subprocess.Popen(
+        cmd,
+        stdout=log_handle,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    try:
+        startup = wait_server(port, process, log)
+    except Exception:
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(5)
+        log_handle.close()
+        raise
+
+    _ACTIVE_LOCAL.update(
+        {
+            "candidate_id": candidate_id,
+            "process": process,
+            "log_handle": log_handle,
+            "port": port,
+            "model_path": str(model_path),
+            "startup_seconds": startup,
+        }
+    )
+    load_record = {
+        "schema_version": 1,
+        "candidate_id": candidate_id,
+        "label": spec["label"],
+        "repo": spec["repo"],
+        "file": spec["file"],
+        "sha256": expected_sha,
+        "quant": spec.get("quant"),
+        "source_pin": spec.get("source_pin"),
+        "model_bytes": model_path.stat().st_size,
+        "startup_seconds": startup,
+        "context": int(cfg["local_models"]["context"]),
+        "threads": int(cfg["local_models"]["threads"]),
+        "runner": {
+            "cpu_model": cpu_model(),
+            "cpu_count": os.cpu_count(),
+            "platform": platform.platform(),
+        },
+    }
+    write_json(out / "model-loads" / f"{_LOCAL_ACTIVATION:02d}-{candidate_id}.json", load_record)
+    return port, spec
+
+
+def _strip_reasoning_wrapper(text: str) -> str:
+    cleaned = text.strip()
+    if "</think>" in cleaned:
+        tail = cleaned.split("</think>", 1)[1].strip()
+        if tail:
+            return tail
+    return cleaned
+
+
 def provider_call(
     *,
     cfg: dict,
@@ -373,30 +549,34 @@ def provider_call(
     temperature: float,
     out: Path,
 ) -> tuple[str, dict]:
-    endpoint = cfg["nvidia"]["endpoint"]
+    del key
+    port, spec = ensure_local_model(cfg, model, out)
+    endpoint = f"http://127.0.0.1:{port}/v1/chat/completions"
+    seed = 2026102500 + int(hashlib.sha256(stage_id.encode("utf-8")).hexdigest()[:6], 16) % 100000
     payload = {
-        "model": model,
+        "model": "local",
         "messages": messages,
         "max_tokens": max_tokens,
         "temperature": temperature,
         "top_p": 0.95,
+        "seed": seed,
         "stream": False,
+        "chat_template_kwargs": {"enable_thinking": False},
     }
-    if model in {
-        cfg["nvidia"]["models"]["drafter"],
-        cfg["nvidia"]["models"]["editor"],
-    }:
-        # Super 3.5 can exhaust max_tokens in reasoning and return empty content.
-        # STORY-001 needs direct long-form prose, so use the model's supported
-        # reasoning-off chat-template mode and preserve that choice in the request.
-        payload["chat_template_kwargs"] = {"enable_thinking": False}
     request_record = {
         "schema_version": 1,
-        "provider": "nvidia",
+        "provider": "local-llama.cpp",
         "stage_id": stage_id,
+        "candidate_id": model,
+        "model": {
+            "label": spec["label"],
+            "repo": spec["repo"],
+            "file": spec["file"],
+            "sha256": spec["sha256"],
+            "quant": spec.get("quant"),
+            "source_pin": spec.get("source_pin"),
+        },
         "endpoint": endpoint,
-        "remote_unpinned_backend": True,
-        "authorization_archived": False,
         "payload": payload,
     }
     reqdir = out / "requests"
@@ -405,19 +585,18 @@ def provider_call(
     reqdir.mkdir(parents=True, exist_ok=True)
     rawdir.mkdir(parents=True, exist_ok=True)
     calldir.mkdir(parents=True, exist_ok=True)
-    write_json(reqdir / f"{stage_id}.json", request_record, key)
+    write_json(reqdir / f"{stage_id}.json", request_record)
 
-    headers = {
-        "Authorization": "Bearer " + key,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "User-Agent": "neurounner-story001",
-    }
     body = json.dumps(payload).encode("utf-8")
     attempts: list[dict] = []
-    for attempt in range(1, int(cfg["nvidia"]["attempts"]) + 1):
+    for attempt in range(1, 3):
         started = time.monotonic()
-        req = urllib.request.Request(endpoint, data=body, headers=headers, method="POST")
+        req = urllib.request.Request(
+            endpoint,
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
         try:
             with urllib.request.urlopen(req, timeout=900) as response:
                 raw_text = response.read().decode("utf-8")
@@ -430,91 +609,69 @@ def provider_call(
                         "elapsed_seconds": elapsed,
                     }
                 )
-                write_json(rawdir / f"{stage_id}.json", obj, key)
+                write_json(rawdir / f"{stage_id}.json", obj)
                 choices = obj.get("choices")
                 if not isinstance(choices, list) or not choices:
-                    raise RuntimeError(f"{stage_id}: provider response has no choices")
+                    raise RuntimeError(f"{stage_id}: local response has no choices")
                 message = choices[0].get("message") or {}
-                content = message.get("content")
+                raw_content = message.get("content")
                 finish_reason = choices[0].get("finish_reason")
-                if not isinstance(content, str) or not content.strip():
-                    raise RuntimeError(f"{stage_id}: provider response has no final content")
+                if not isinstance(raw_content, str) or not raw_content.strip():
+                    raise RuntimeError(f"{stage_id}: local response has no final content")
+                content = _strip_reasoning_wrapper(raw_content)
+                if not content:
+                    raise RuntimeError(f"{stage_id}: no prose after reasoning wrapper")
                 if finish_reason == "length":
                     raise RuntimeError(f"{stage_id}: response hit max_tokens")
+                usage = obj.get("usage")
                 call = {
                     "schema_version": 1,
                     "stage_id": stage_id,
-                    "provider": "nvidia",
-                    "model": model,
-                    "remote_unpinned_backend": True,
+                    "provider": "local-llama.cpp",
+                    "candidate_id": model,
+                    "model_sha256": spec["sha256"],
                     "elapsed_seconds": elapsed,
                     "finish_reason": finish_reason,
-                    "usage": obj.get("usage"),
-                    "word_count": word_count(content),
+                    "usage": usage,
+                    "raw_word_count": word_count(raw_content),
+                    "derived_word_count": word_count(content),
+                    "reasoning_chars": len(message.get("reasoning_content") or ""),
                     "attempts": attempts,
                 }
-                write_json(calldir / f"{stage_id}.json", call, key)
-                return content.strip(), call
-        except urllib.error.HTTPError as exc:
-            elapsed = time.monotonic() - started
-            detail = exc.read().decode("utf-8", errors="replace")
-            attempts.append(
-                {
-                    "attempt": attempt,
-                    "http_status": exc.code,
-                    "elapsed_seconds": elapsed,
-                    "detail": sanitize(detail[:6000], key),
-                }
-            )
-            write_json(
-                rawdir / f"{stage_id}-attempt-{attempt}-error.json",
-                {"http_status": exc.code, "detail": detail[:6000]},
-                key,
-            )
-            if exc.code not in RETRYABLE or attempt == int(cfg["nvidia"]["attempts"]):
-                write_json(calldir / f"{stage_id}-failed.json", {"attempts": attempts}, key)
-                raise
-            retry_after = exc.headers.get("Retry-After")
-            wait = (
-                float(retry_after)
-                if retry_after and retry_after.replace(".", "", 1).isdigit()
-                else min(30.0, 2.0**attempt)
-            )
-            time.sleep(wait)
+                write_json(calldir / f"{stage_id}.json", call)
+                return content, call
         except (urllib.error.URLError, TimeoutError, ConnectionResetError, BrokenPipeError, http.client.RemoteDisconnected) as exc:
-            elapsed = time.monotonic() - started
             attempts.append(
                 {
                     "attempt": attempt,
-                    "http_status": "transport_error",
-                    "elapsed_seconds": elapsed,
+                    "http_status": "local_transport_error",
+                    "elapsed_seconds": time.monotonic() - started,
                     "detail": repr(exc),
                 }
             )
-            if attempt == int(cfg["nvidia"]["attempts"]):
-                write_json(calldir / f"{stage_id}-failed.json", {"attempts": attempts}, key)
+            if attempt == 2:
+                write_json(calldir / f"{stage_id}-failed.json", {"attempts": attempts})
                 raise
-            time.sleep(min(30.0, 2.0**attempt))
-    raise RuntimeError(f"{stage_id}: unreachable provider retry state")
+            time.sleep(1.0)
+    raise RuntimeError(f"{stage_id}: unreachable local retry state")
 
 
 def provider(args: argparse.Namespace) -> None:
+def provider(args: argparse.Namespace) -> None:
     cfg = load_json(args.config)
     validate_config(cfg)
-    key = os.environ.get("NVIDIA_API_KEY", "")
-    if not key:
-        raise SystemExit("NVIDIA_API_KEY is required; provider stage fails closed")
+    key = ""
 
     summary = load_json(args.out / "sprocket" / "summary.json")
     fragments = "\n\n".join(
         f"### {r['kind']}\n{r['content']}" for r in summary["records"]
     )
     seed = (ROOT / "experiments" / "story-001" / "STORYBOARD_SEED.md").read_text()
-    out = args.out / "provider"
+    out = args.out / "local-models"
     derived = out / "derived"
     derived.mkdir(parents=True, exist_ok=True)
-    models = cfg["nvidia"]["models"]
-    budgets = cfg["nvidia"]["budgets"]
+    models = cfg["local_models"]["models"]
+    budgets = cfg["local_models"]["budgets"]
 
     preflight_results = []
     for role in ("storyboard", "drafter"):
@@ -540,7 +697,7 @@ def provider(args: argparse.Namespace) -> None:
         preflight_results.append(
             {"role": role, "model": models[role], "content": content, "call": call}
         )
-    write_json(out / "m0-live-provider-preflight.json", preflight_results, key)
+    write_json(out / "m0-live-local-model-preflight.json", preflight_results, key)
 
     storyboard_messages = [
         {
@@ -996,14 +1153,14 @@ def provider(args: argparse.Namespace) -> None:
             "pass": minimum <= count <= maximum,
         },
         "models": models,
-        "remote_unpinned_backend": True,
+        "remote_unpinned_backend": False,
     }
     write_json(out / "qualification.json", qualification, key)
     if not qualification["word_gate"]["pass"]:
         raise RuntimeError(
             f"STORY-001 final story length {count} outside {minimum}-{maximum}"
         )
-    print(f"STORY-001 M2-M5 provider pipeline: PASS ({count} words)")
+    stop_active_local()\n    print(f"STORY-001 M2-M5 local-model pipeline: PASS ({count} words)")
 
 
 def inventory(root: Path) -> list[tuple[str, str]]:
@@ -1026,11 +1183,11 @@ def promote(args: argparse.Namespace) -> None:
         )
     source = args.source
     dest = args.dest
-    qualification = load_json(source / "provider" / "qualification.json")
+    qualification = load_json(source / "local-models" / "qualification.json")
     if not qualification["word_gate"]["pass"]:
         raise RuntimeError("cannot promote unqualified STORY-001 output")
 
-    final_src = source / "provider" / "derived" / "final-story.md"
+    final_src = source / "local-models" / "derived" / "final-story.md"
     final_sha = sha256_file(final_src)
     if dest.exists():
         existing_manifest = dest / "manifest.json"
@@ -1047,14 +1204,14 @@ def promote(args: argparse.Namespace) -> None:
     (dest / "raw").mkdir(parents=True, exist_ok=True)
     (dest / "provenance").mkdir(parents=True, exist_ok=True)
     shutil.copytree(source / "sprocket", dest / "raw" / "sprocket")
-    shutil.copytree(source / "provider", dest / "nvidia")
+    shutil.copytree(source / "local-models", dest / "local-models")
     shutil.copy2(final_src, dest / "compiled" / "story.md")
     shutil.copy2(
-        source / "provider" / "derived" / "storyboard.md",
+        source / "local-models" / "derived" / "storyboard.md",
         dest / "compiled" / "storyboard.md",
     )
     shutil.copy2(
-        source / "provider" / "derived" / "review.md",
+        source / "local-models" / "derived" / "review.md",
         dest / "compiled" / "review.md",
     )
     shutil.copy2(args.config, dest / "config.json")
@@ -1098,8 +1255,8 @@ def promote(args: argparse.Namespace) -> None:
         "storyboard_sha256": sha256_file(dest / "compiled" / "storyboard.md"),
         "review_sha256": sha256_file(dest / "compiled" / "review.md"),
         "sprocket": cfg["sprocket"]["model"],
-        "nvidia_models": cfg["nvidia"]["models"],
-        "remote_provider_backend_unpinned": True,
+        "local_models": cfg["local_models"]["models"],
+        "remote_provider_used": False,
         "milestones": {
             "M0": "qualified",
             "M1": "qualified",
@@ -1131,11 +1288,11 @@ The incident is creative fiction. Repository Sprocket outputs were used as voice
 ## Authority
 
 - 'raw/sprocket/' preserves exact local requests, raw responses, server log and runner/model identity.
-- 'nvidia/requests/', 'nvidia/raw/' and 'nvidia/calls/' preserve the provider evidence and retries.
+- 'local-models/requests/', 'local-models/raw/' and 'local-models/calls/' preserve the provider evidence and retries.
 - 'compiled/storyboard.md', 'compiled/review.md' and 'compiled/story.md' are the promoted human-readable outputs.
 - 'manifest.json' and 'provenance/' record qualification, run identity and hashes.
 
-Raw evidence outranks derived prose when auditing what a model produced. NVIDIA backends are remote and unpinned; exact public model identifiers and requests are retained, but backend weight identity is not claimed.
+Raw evidence outranks derived prose when auditing what a model produced. All generation models are local GGUFs downloaded on GitHub-hosted runners and verified by SHA-256 before inference.
 
 Actions artifacts were staging only and are not the archive.
 """
