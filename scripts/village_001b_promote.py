@@ -20,7 +20,6 @@ B_PROVENANCE_DIRS = (
 )
 B_PROVENANCE_FILES = (
     "source-artifacts.json",
-    "hashes.sha256",
 )
 DOWNSTREAM_DATASET_MANIFESTS = (
     "preference-manifest.json",
@@ -40,13 +39,19 @@ def load_json(path: Path) -> dict:
     return json.loads(path.read_text())
 
 
-def write_inventory(root: Path, destination: Path, *, exclude: set[str]) -> None:
+def write_inventory(
+    root: Path,
+    destination: Path,
+    *,
+    exclude: set[str],
+    exclude_prefixes: tuple[str, ...] = (),
+) -> None:
     rows = []
     for path in sorted(root.rglob("*")):
         if not path.is_file():
             continue
         rel = path.relative_to(root).as_posix()
-        if rel in exclude:
+        if rel in exclude or any(rel.startswith(prefix) for prefix in exclude_prefixes):
             continue
         rows.append(f"{sha256_file(path)}  {rel}")
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -231,24 +236,80 @@ def apply_b_layer(candidate: Path, staged: Path) -> None:
         replace_path(candidate / "README.md", staged / "README.md")
 
 
+def regenerate_b_inventory(staged: Path) -> None:
+    """Write the B-stage inventory over B-owned authority only.
+
+    Root README is deliberately excluded because D/E own it after later promotion.
+    Downstream provider/preference/evaluation data is also excluded.
+    """
+    owned = []
+    for rel in ("manifest.json",):
+        path = staged / rel
+        if path.is_file():
+            owned.append(path)
+
+    for prefix in ("member-corpora", "ancestors", "quality"):
+        root = staged / prefix
+        if root.is_dir():
+            owned.extend(path for path in root.rglob("*") if path.is_file())
+
+    provider = staged / "provider"
+    if provider.is_dir():
+        for member_dir in sorted(provider.glob("V-G??-[ABC]")):
+            if member_dir.is_dir():
+                owned.extend(
+                    path for path in member_dir.rglob("*") if path.is_file()
+                )
+
+    provenance = staged / "provenance"
+    for rel in ("source-artifacts.json",):
+        path = provenance / rel
+        if path.is_file():
+            owned.append(path)
+    manifests = provenance / "member-manifests"
+    if manifests.is_dir():
+        owned.extend(path for path in manifests.rglob("*") if path.is_file())
+
+    rows = []
+    for path in sorted(set(owned)):
+        rel = path.relative_to(staged).as_posix()
+        rows.append(f"{sha256_file(path)}  {rel}")
+    destination = provenance / "hashes.sha256"
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text("\n".join(rows) + ("\n" if rows else ""))
+
+
 def regenerate_downstream_inventories(staged: Path) -> None:
     if (staged / "preference-manifest.json").is_file():
+        final_exists = (staged / "final-manifest.json").is_file()
+        exclude = {
+            "provenance/hashes.sha256",
+            "preference-hashes.sha256",
+            "final-hashes.sha256",
+        }
+        prefixes: tuple[str, ...] = ()
+        if final_exists:
+            # Preserve D's stage meaning after E has taken over root README and
+            # added evaluation/final authority.
+            exclude.update({"final-manifest.json", "README.md"})
+            prefixes = ("evaluation/",)
+        preference_inventory = staged / "preference-hashes.sha256"
         write_inventory(
             staged,
-            staged / "preference-hashes.sha256",
-            exclude={
-                "provenance/hashes.sha256",
-                "preference-hashes.sha256",
-                "final-hashes.sha256",
-            },
+            preference_inventory,
+            exclude=exclude,
+            exclude_prefixes=prefixes,
         )
+        verify_inventory(staged, preference_inventory)
 
     if (staged / "final-manifest.json").is_file():
+        final_inventory = staged / "final-hashes.sha256"
         write_inventory(
             staged,
-            staged / "final-hashes.sha256",
+            final_inventory,
             exclude={"final-hashes.sha256"},
         )
+        verify_inventory(staged, final_inventory)
 
 
 def verify_promoted_b(staged: Path, candidate_manifest: dict) -> None:
@@ -296,6 +357,7 @@ def promote_candidate(
 
     try:
         apply_b_layer(candidate, staged)
+        regenerate_b_inventory(staged)
         regenerate_downstream_inventories(staged)
         verify_promoted_b(staged, candidate_manifest)
 
