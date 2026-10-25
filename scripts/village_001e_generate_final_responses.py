@@ -195,16 +195,28 @@ def main() -> None:
         type=Path,
         default=ROOT / "experiments/village-001/tournament-config.json",
     )
-    parser.add_argument("--member", required=True)
-    parser.add_argument("--adapter", type=Path, required=True)
+    parser.add_argument("--member")
+    parser.add_argument("--adapter", type=Path)
+    parser.add_argument("--base-only", action="store_true")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
 
     cfg = json.loads(args.config.read_text())
     campaign = json.loads((ROOT / cfg["campaign_config"]).read_text())
-    population, member = member_contract(campaign, args.member)
+    population = build_manifest(campaign)
     final_eval_path, final_eval = load_final_eval(cfg)
     verify_fresh_prompts(final_eval)
+
+    if args.base_only:
+        if args.member is not None or args.adapter is not None:
+            raise SystemExit("--base-only cannot be combined with --member/--adapter")
+        member = None
+        member_id = "BASE"
+    else:
+        if not args.member or args.adapter is None:
+            raise SystemExit("--member and --adapter are required outside --base-only")
+        _, member = member_contract(campaign, args.member)
+        member_id = member["member_id"]
 
     preference_root = ROOT / cfg["preference_evidence_root"]
     release = json.loads((preference_root / "adapter-release.json").read_text())
@@ -219,39 +231,42 @@ def main() -> None:
         row["member_id"] for row in population["members"]
     }:
         raise RuntimeError("preference release member set is incomplete")
-    asset = assets[member["member_id"]]
 
-    actual_adapter_sha = directory_hash(args.adapter)
-    expected_adapter_sha = asset["adapter_directory_sha256"]
-    if actual_adapter_sha != expected_adapter_sha:
-        raise RuntimeError(
-            f"adapter directory SHA {actual_adapter_sha} != "
-            f"release manifest {expected_adapter_sha}"
-        )
-
-    # Bind the response generator to the exact preference-stage result as well as
-    # the release manifest.
-    preference_result_path = (
-        preference_root / "results" / f"{member['member_id']}.json"
-    )
-    preference_result = json.loads(preference_result_path.read_text())
-    checks = {
-        "experiment": "VILLAGE-001D",
-        "member_id": member["member_id"],
-        "lineage": member["lineage"],
-        "sibling": member["sibling"],
-        "member_contract_sha256": population["member_contract_sha256"],
-        "base_model": campaign["base_model"]["id"],
-        "base_revision": campaign["base_model"]["revision"],
-    }
-    for key, expected in checks.items():
-        if preference_result.get(key) != expected:
+    asset = None
+    actual_adapter_sha = None
+    if member is not None:
+        asset = assets[member_id]
+        actual_adapter_sha = directory_hash(args.adapter)
+        expected_adapter_sha = asset["adapter_directory_sha256"]
+        if actual_adapter_sha != expected_adapter_sha:
             raise RuntimeError(
-                f"preference result {key} "
-                f"{preference_result.get(key)!r} != {expected!r}"
+                f"adapter directory SHA {actual_adapter_sha} != "
+                f"release manifest {expected_adapter_sha}"
             )
-    if preference_result["adapter"]["sha256"] != actual_adapter_sha:
-        raise RuntimeError("preference result/release adapter hash mismatch")
+
+        # Bind each trained response generator to the exact preference-stage result
+        # as well as the release manifest.
+        preference_result_path = (
+            preference_root / "results" / f"{member_id}.json"
+        )
+        preference_result = json.loads(preference_result_path.read_text())
+        checks = {
+            "experiment": "VILLAGE-001D",
+            "member_id": member_id,
+            "lineage": member["lineage"],
+            "sibling": member["sibling"],
+            "member_contract_sha256": population["member_contract_sha256"],
+            "base_model": campaign["base_model"]["id"],
+            "base_revision": campaign["base_model"]["revision"],
+        }
+        for key, expected in checks.items():
+            if preference_result.get(key) != expected:
+                raise RuntimeError(
+                    f"preference result {key} "
+                    f"{preference_result.get(key)!r} != {expected!r}"
+                )
+        if preference_result["adapter"]["sha256"] != actual_adapter_sha:
+            raise RuntimeError("preference result/release adapter hash mismatch")
 
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
     torch.set_num_threads(min(4, os.cpu_count() or 4))
@@ -273,11 +288,14 @@ def main() -> None:
         torch_dtype=torch.float32,
     )
     base.config.use_cache = True
-    model = PeftModel.from_pretrained(
-        base,
-        args.adapter,
-        is_trainable=False,
-    )
+    if member is None:
+        model = base
+    else:
+        model = PeftModel.from_pretrained(
+            base,
+            args.adapter,
+            is_trainable=False,
+        )
     model.config.use_cache = True
     load_seconds = time.monotonic() - load_started
 
@@ -292,16 +310,21 @@ def main() -> None:
         "experiment": "VILLAGE-001E",
         "stage": "fresh-final-heldout-responses",
         "issue": 14,
-        "member_id": member["member_id"],
-        "lineage": member["lineage"],
-        "sibling": member["sibling"],
-        "specialization": member["specialization"],
+        "member_id": member_id,
+        "lineage": member["lineage"] if member is not None else None,
+        "sibling": member["sibling"] if member is not None else None,
+        "specialization": (
+            member["specialization"] if member is not None else None
+        ),
+        "base_control": member is None,
         "member_contract_sha256": population["member_contract_sha256"],
         "base_model": campaign["base_model"]["id"],
         "base_revision": campaign["base_model"]["revision"],
         "preference_release_tag": release["release_tag"],
         "preference_adapter_sha256": actual_adapter_sha,
-        "preference_adapter_archive_sha256": asset["sha256"],
+        "preference_adapter_archive_sha256": (
+            asset["sha256"] if asset is not None else None
+        ),
         "final_eval_config": cfg["final_eval_config"],
         "final_eval_config_sha256": sha256_file(final_eval_path),
         "fresh_after_preference_training": True,
@@ -330,7 +353,8 @@ def main() -> None:
     print(
         json.dumps(
             {
-                "member": member["member_id"],
+                "member": member_id,
+                "base_control": member is None,
                 "responses": len(responses),
                 "adapter_sha256": actual_adapter_sha,
                 "final_eval_sha256": result["final_eval_config_sha256"],
