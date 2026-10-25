@@ -11,6 +11,7 @@ on:
       - 'scripts/village_001_manifest.py'
       - 'scripts/village_001_validate.py'
       - 'scripts/village_001_provider_preflight.py'
+      - 'scripts/village_001_gate.py'
       - 'datasets/village-001/README.md'
   push:
     branches: [main]
@@ -22,6 +23,7 @@ on:
       - 'scripts/village_001_manifest.py'
       - 'scripts/village_001_validate.py'
       - 'scripts/village_001_provider_preflight.py'
+      - 'scripts/village_001_gate.py'
       - 'datasets/village-001/README.md'
 
 permissions:
@@ -46,7 +48,8 @@ jobs:
           python3 -m py_compile \
             scripts/village_001_manifest.py \
             scripts/village_001_validate.py \
-            scripts/village_001_provider_preflight.py
+            scripts/village_001_provider_preflight.py \
+            scripts/village_001_gate.py
 
       - name: Parse configuration and schemas
         run: |
@@ -127,6 +130,7 @@ jobs:
             --max-tokens 128 \
             --attempts 4
           test -f "$OUT/summary.json"
+          python3 scripts/village_001_gate.py
 
       - name: Verify no live provider secret entered archived records
         env:
