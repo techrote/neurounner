@@ -54,7 +54,7 @@ def load_cases(
     cfg: dict,
     scenario_id: str,
     responses_root: Path,
-) -> tuple[dict, list[dict]]:
+) -> tuple[dict, list[dict], dict]:
     campaign = json.loads((ROOT / cfg["campaign_config"]).read_text())
     population = build_manifest(campaign)
     members = population["members"]
@@ -92,6 +92,7 @@ def load_cases(
         raise RuntimeError("preference release member set incomplete")
 
     found: dict[str, Path] = {}
+    base_result_path: Path | None = None
     for result_path in responses_root.rglob("result.json"):
         try:
             result = json.loads(result_path.read_text())
@@ -103,6 +104,11 @@ def load_cases(
         ):
             continue
         member_id = result.get("member_id")
+        if member_id == "BASE":
+            if base_result_path is not None:
+                raise RuntimeError("duplicate untuned BASE response artifact")
+            base_result_path = result_path
+            continue
         if member_id not in member_meta:
             raise RuntimeError(
                 f"unexpected final-response member {member_id!r}"
@@ -119,6 +125,8 @@ def load_cases(
         raise RuntimeError(
             f"final-response artifacts mismatch missing={missing} extra={extra}"
         )
+    if base_result_path is None:
+        raise RuntimeError("untuned BASE final-response artifact is missing")
 
     rows = []
     for member in members:
@@ -135,6 +143,7 @@ def load_cases(
             "preference_adapter_sha256": release_assets[member_id][
                 "adapter_directory_sha256"
             ],
+            "base_control": False,
             "final_eval_config_sha256": final_eval_sha,
             "fresh_after_preference_training": True,
             "hidden_member_prompt_used": False,
@@ -181,14 +190,55 @@ def load_cases(
     for index, row in enumerate(rows, 1):
         row["opaque_id"] = f"R{index:03d}"
 
-    return {
+    base_result = json.loads(base_result_path.read_text())
+    base_checks = {
+        "member_id": "BASE",
+        "lineage": None,
+        "sibling": None,
+        "base_control": True,
+        "member_contract_sha256": population["member_contract_sha256"],
+        "base_model": campaign["base_model"]["id"],
+        "base_revision": campaign["base_model"]["revision"],
+        "preference_release_tag": release["release_tag"],
+        "preference_adapter_sha256": None,
+        "final_eval_config_sha256": final_eval_sha,
+        "fresh_after_preference_training": True,
+        "hidden_member_prompt_used": False,
+        "exact_training_input_collision_count": 0,
+    }
+    for key, expected in base_checks.items():
+        if base_result.get(key) != expected:
+            raise RuntimeError(
+                f"BASE: final-response {key} "
+                f"{base_result.get(key)!r} != {expected!r}"
+            )
+    base_by_id = {
+        item["scenario_id"]: item
+        for item in base_result.get("responses", [])
+    }
+    if set(base_by_id) != set(by_scenario):
+        raise RuntimeError("BASE final-response scenario set mismatch")
+    base_response = base_by_id[scenario_id]
+    if (
+        base_response.get("prompt") != expected_scenario["prompt"]
+        or base_response.get("family") != expected_scenario["family"]
+    ):
+        raise RuntimeError(f"BASE/{scenario_id}: final prompt/family drift")
+
+    scenario = {
         "scenario_id": scenario_id,
         "family": expected_scenario["family"],
         "prompt": expected_scenario["prompt"],
         "member_contract_sha256": population["member_contract_sha256"],
         "final_eval_config_sha256": final_eval_sha,
         "fresh_after_preference_training": True,
-    }, rows
+    }
+    control = {
+        "opaque_id": "R037",
+        "response": base_response["response"],
+        "base_control": True,
+    }
+    return scenario, rows, control
 
 
 def normalize_prompt(scenario: dict, rows: list[dict]) -> str:
@@ -617,7 +667,7 @@ def main() -> None:
     if not key:
         raise SystemExit("NVIDIA_API_KEY/NVKEY is required")
 
-    scenario, rows = load_cases(
+    scenario, rows, control = load_cases(
         cfg,
         args.scenario,
         args.responses_root,
@@ -637,8 +687,9 @@ def main() -> None:
 
     summaries: dict[str, str] = {}
     call_refs = []
-    for offset in range(0, len(rows), norm_chunk):
-        chunk = rows[offset : offset + norm_chunk]
+    normalization_rows = rows + [control]
+    for offset in range(0, len(normalization_rows), norm_chunk):
+        chunk = normalization_rows[offset : offset + norm_chunk]
         expected = [row["opaque_id"] for row in chunk]
         label = f"{args.scenario}-normalize-{offset // norm_chunk + 1:02d}"
         result, refs = call_json_with_repair(
@@ -662,11 +713,14 @@ def main() -> None:
 
     for row in rows:
         row["behavior_summary"] = summaries[row["opaque_id"]]
+    control["behavior_summary"] = summaries[control["opaque_id"]]
 
+    control_predictions = {}
     for mode in ("raw", "behavior"):
         predictions = {}
-        for offset in range(0, len(rows), class_chunk):
-            chunk = rows[offset : offset + class_chunk]
+        classification_rows = rows + [control]
+        for offset in range(0, len(classification_rows), class_chunk):
+            chunk = classification_rows[offset : offset + class_chunk]
             expected = [row["opaque_id"] for row in chunk]
             label = (
                 f"{args.scenario}-{mode}-classify-"
@@ -692,6 +746,7 @@ def main() -> None:
             call_refs.extend(refs)
         for row in rows:
             row[f"{mode}_prediction"] = predictions[row["opaque_id"]]
+        control_predictions[mode] = predictions[control["opaque_id"]]
 
     # Level 2 is deliberately separate: the correct lineage is supplied to the
     # judge, as required by the hierarchical VILLAGE-001E contract.
@@ -831,6 +886,12 @@ def main() -> None:
             "behavior_sibling_accuracy_given_correct_lineage": (
                 behavior_sibling_correct_given_lineage / len(records)
             ),
+        },
+        "untuned_base_control": {
+            "response": control["response"],
+            "behavior_summary": control["behavior_summary"],
+            "raw": control_predictions["raw"],
+            "behavior": control_predictions["behavior"],
         },
         "provider_call_ids": call_refs,
         "records": records,
