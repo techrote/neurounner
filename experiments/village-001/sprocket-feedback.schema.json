@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/techrote/neurounner/experiments/village-001/sprocket-feedback.schema.json",
+  "title": "VILLAGE-001 post-SFT Sprocket feedback record",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "feedback_id",
+    "member_id",
+    "lineage",
+    "sibling",
+    "parent_adapter_sha256",
+    "scenario_id",
+    "sprocket_worker",
+    "request",
+    "raw_response",
+    "valid",
+    "provenance"
+  ],
+  "properties": {
+    "feedback_id": {"type": "string", "minLength": 1},
+    "member_id": {
+      "type": "string",
+      "pattern": "^V-G(?:0[1-9]|1[0-2])-[ABC]$"
+    },
+    "lineage": {
+      "type": "string",
+      "pattern": "^G(?:0[1-9]|1[0-2])$"
+    },
+    "sibling": {"type": "string", "enum": ["A", "B", "C"]},
+    "parent_adapter_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "scenario_id": {"type": "string", "minLength": 1},
+    "sprocket_worker": {"type": "integer", "minimum": 1, "maximum": 3},
+    "request": {
+      "type": "object",
+      "required": ["messages"],
+      "properties": {
+        "messages": {"type": "array", "minItems": 1}
+      },
+      "additionalProperties": true
+    },
+    "raw_response": {"type": "string"},
+    "valid": {"type": "boolean"},
+    "parsed": {
+      "type": ["object", "null"],
+      "properties": {
+        "keep": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "mutate": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "failure_guess": {"type": "string", "minLength": 1},
+        "genericness": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        }
+      },
+      "required": ["keep", "mutate", "failure_guess", "genericness"],
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "sprocket_revision",
+        "sprocket_sha256",
+        "member_contract_sha256"
+      ],
+      "properties": {
+        "sprocket_revision": {"type": "string", "minLength": 1},
+        "sprocket_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "member_contract_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"valid": {"const": true}},
+        "required": ["valid"]
+      },
+      "then": {
+        "required": ["parsed"],
+        "properties": {"parsed": {"type": "object"}}
+      }
+    }
+  ]
+}
