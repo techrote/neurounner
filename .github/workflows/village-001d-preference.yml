@@ -118,6 +118,7 @@ jobs:
           import village_001b_generate_member as provider
           from village_001d_compile_pairs import (
               critic_prompt,
+              parse_adjudicator_partial,
               parse_compiler,
               parse_reviews_partial,
               remove_duplicate_compiled,
@@ -236,6 +237,26 @@ jobs:
           )
           assert "higher is better" in prompt
           assert "Do not use 1 as a boolean true value" in prompt
+
+          adjudicator_raw=json.dumps({"decisions":[{
+              "pair_id":"A",
+              "decision":"accept",
+              "reason":"clear behavioral distinction",
+          }]})
+          decisions,adjudicator_problems=parse_adjudicator_partial(
+              adjudicator_raw,["A","B"]
+          )
+          assert set(decisions)=={"A"}
+          assert any(
+              x.startswith("adjudicator_missing:B")
+              for x in adjudicator_problems
+          )
+          malformed='{"decisions":[{"pair_id":"A","decision":"accept","reason":"bad "quote""}]}'
+          decisions,adjudicator_problems=parse_adjudicator_partial(
+              malformed,["A"]
+          )
+          assert not decisions
+          assert "adjudicator_json_parse_failed" in adjudicator_problems
           print("VILLAGE-001D recovery regressions: PASS")
           PY
 
