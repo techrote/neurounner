@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "experiment": "VILLAGE-001",
+  "source_issues": [1, 2, 3, 5, 6],
+  "source_datasets": [
+    "datasets/babble-001",
+    "datasets/babble-002"
+  ],
+  "population": {
+    "lineages": [
+      "G01", "G02", "G03", "G04", "G05", "G06",
+      "G07", "G08", "G09", "G10", "G11", "G12"
+    ],
+    "siblings": {
+      "A": {
+        "name": "failure_hardened",
+        "surface_weights": {
+          "failure_and_recovery": 3,
+          "conflicting_motives": 2,
+          "physical_reaction": 2,
+          "embodied_decision": 1,
+          "local_memory": 1,
+          "mundane_low_stakes": 1,
+          "conversation_social": 1
+        }
+      },
+      "B": {
+        "name": "local_tinkerer",
+        "surface_weights": {
+          "local_memory": 3,
+          "mundane_low_stakes": 2,
+          "physical_reaction": 2,
+          "embodied_decision": 1,
+          "conflicting_motives": 1,
+          "failure_and_recovery": 1,
+          "conversation_social": 1
+        }
+      },
+      "C": {
+        "name": "social_scavenger",
+        "surface_weights": {
+          "conversation_social": 3,
+          "embodied_decision": 2,
+          "conflicting_motives": 2,
+          "physical_reaction": 1,
+          "local_memory": 1,
+          "failure_and_recovery": 1,
+          "mundane_low_stakes": 1
+        }
+      }
+    },
+    "expected_members": 36,
+    "id_template": "V-{lineage}-{sibling}",
+    "campaign_seed": 20261025
+  },
+  "base_model": {
+    "id": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "default_training_mode": "lora"
+  },
+  "corpus": {
+    "ancestral_examples_per_lineage": 100,
+    "new_sft_examples_per_member": 60,
+    "target_sft_examples_per_member": 160,
+    "preference_pairs_per_member": 60,
+    "sprocket_feedback_workers_per_member": 3,
+    "common_heldout_config": "experiments/persona-001/config.json",
+    "member_probe_count": 8
+  },
+  "sft_training": {
+    "epochs": 2,
+    "learning_rate": 0.0008,
+    "lora_r": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.05,
+    "max_length": 512,
+    "gradient_clip": 1.0,
+    "max_parallel": 12
+  },
+  "preference_training": {
+    "epochs": 2,
+    "learning_rate": 0.0002,
+    "beta": 2.0,
+    "target_margin_nats": 0.2,
+    "chosen_nll_weight": 0.15,
+    "max_length": 512,
+    "gradient_clip": 1.0,
+    "max_parallel": 12
+  },
+  "sprocket": {
+    "source_model": "Sprocket-500M chat Q4_K_M",
+    "source_revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+    "source_sha256": "edc2ac323a2513fa6f8e3e54adf120243de0f7a6b8cc11b349b3e6ad61494a09",
+    "feedback_schema": {
+      "required_keys": ["keep", "mutate", "failure_guess", "genericness"],
+      "genericness_values": ["low", "medium", "high"]
+    }
+  },
+  "nvidia": {
+    "endpoint": "https://integrate.api.nvidia.com/v1/chat/completions",
+    "secret": "NVKEY",
+    "cloud_max_parallel": 1,
+    "models": {
+      "compiler": {
+        "id": "minimaxai/minimax-m3.1-flash",
+        "reasoning_effort": "low",
+        "temperature": 0.9,
+        "top_p": 0.95
+      },
+      "critic": {
+        "id": "nvidia/nemotron-3.5-bolt-e4b",
+        "temperature": 0.7,
+        "top_p": 0.95
+      },
+      "adjudicator": {
+        "id": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "disagreement_only": true
+      }
+    }
+  },
+  "evaluation": {
+    "lineage_classes": 12,
+    "lineage_chance": 0.0833333333,
+    "sibling_classes": 3,
+    "sibling_chance": 0.3333333333,
+    "minimum_behavior_lineage_accuracy": 0.167,
+    "minimum_behavior_sibling_accuracy": 0.417,
+    "maximum_preference_relevance_regression": 0.5,
+    "minimum_qualified_members_for_usable_village": 30
+  },
+  "archive": {
+    "dataset_id": "village-001",
+    "dataset_root": "datasets/village-001",
+    "release_tag": "village-001-v1",
+    "raw_before_derived": true,
+    "actions_artifacts_are_staging_only": true
+  }
+}
