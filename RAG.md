@@ -35,6 +35,7 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 - **[PERSONA-001 four-cartridge tournament](docs/PERSONA_001_REPORT.md)** — four SmolLM2-135M personality LoRAs, blind raw vs style-neutral behavioural identification, base-control comparison, and durable release assets.
 - **[PERSONA-002 preference continuation](docs/PERSONA_002_REPORT.md)** — anti-sanitization pairwise continuation from PERSONA-001, fixed-tournament before/after comparison, confusion/transfer deltas, and durable `persona-002-v1` cartridges.
 - **[VILLAGE-001 cybernetic goblin foundry](docs/VILLAGE_001_CYBERGOBLIN_FOUNDRY.md)** — 36-member Sprocket-derived population contract combining member-specific curriculum, Sprocket feedback, bounded NVIDIA compilation/criticism, 72 CPU training lanes and hierarchical blind evaluation; epic #9, execution #10–#14.
+- **[VILLAGE-001E final qualification](experiments/village-001/final-evidence/REPORT.md)** — authoritative location for the 36-member raw/style-neutral tournament, 36×36 confusion matrices, per-member verdicts, prompt-neutral pair/small-group ecology, final model registry and dataset provenance once #14 executes; the predeclared protocol is in `experiments/village-001/tournament-config.json`.
 - Training datasets must follow the dataset filing-system contract before they are treated as durable evidence.
 
 ## Retrieval rules
