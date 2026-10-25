@@ -1,0 +1,404 @@
+name: VILLAGE-001E final tournament and ecology qualification
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/village-001e-final.yml'
+      - 'experiments/village-001/tournament-config.json'
+      - 'scripts/village_001e_tournament_scenario.py'
+      - 'scripts/village_001e_ecology_plan.py'
+      - 'scripts/village_001e_ecology_run.py'
+      - 'scripts/village_001e_ecology_judge.py'
+      - 'scripts/village_001e_assemble.py'
+  push:
+    branches: [main]
+    paths:
+      - 'experiments/village-001/preference-evidence/summary.json'
+      - 'experiments/village-001/preference-evidence/adapter-release.json'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: neurounner-village-001e-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      scenarios: ${{ steps.matrix.outputs.scenarios }}
+      ecology: ${{ steps.matrix.outputs.ecology }}
+      preference_ready: ${{ steps.preference.outputs.ready }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Compile VILLAGE-001E helpers
+        run: |
+          python3 -m py_compile \
+            scripts/village_001e_tournament_scenario.py \
+            scripts/village_001e_ecology_plan.py \
+            scripts/village_001e_ecology_run.py \
+            scripts/village_001e_ecology_judge.py \
+            scripts/village_001e_assemble.py
+
+      - name: Verify fixed final qualification contract
+        run: |
+          python3 scripts/village_001_gate.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.village_001e_ecology_plan import build_sessions
+
+          cfg=json.loads(Path("experiments/village-001/tournament-config.json").read_text())
+          t=cfg["tournament"]
+          assert t["scenario_count"]==24
+          assert abs(t["lineage_gate"]-(1/6))<1e-9
+          assert abs(t["sibling_gate_given_correct_lineage"]-(5/12))<1e-9
+          assert t["base_genericness_reference"]==3.83
+          assert t["individual_quality_required"]==30
+          assert t["provider_max_parallel"]==1
+          assert cfg["ecology"]["pair_sessions"]==12
+          assert cfg["ecology"]["small_group_sessions"]==12
+          assert cfg["ecology"]["rounds"]==3
+          assert t["individual_min_behavior_sibling_hits"]==8
+          assert "base_genericness_source" in t
+          sessions=build_sessions(cfg)
+          assert len(sessions)==24
+          assert len({x["session_id"] for x in sessions})==24
+          assert sum(x["kind"]=="same_lineage_pair" for x in sessions)==12
+          assert sum(x["kind"]=="cross_lineage_group" for x in sessions)==12
+          assert all(len(x["members"]) in {2,3} for x in sessions)
+          assert all(len(set(x["members"]))==len(x["members"]) for x in sessions)
+          print("VILLAGE-001E fixed qualification contract: PASS")
+          PY
+
+      - name: Build tournament/ecology matrices
+        id: matrix
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+          from scripts.village_001e_ecology_plan import build_sessions
+
+          cfg=json.loads(Path("experiments/village-001/tournament-config.json").read_text())
+          scenarios=[f"T{i:02d}" for i in range(1,cfg["tournament"]["scenario_count"]+1)]
+          sessions=build_sessions(cfg)
+          ecology={
+              "include":[
+                  {
+                      "session_id":row["session_id"],
+                      "m1":row["members"][0],
+                      "m2":row["members"][1],
+                      "m3":row["members"][2] if len(row["members"])>2 else "",
+                  }
+                  for row in sessions
+              ]
+          }
+          print("scenarios="+json.dumps(scenarios,separators=(",",":")))
+          print("ecology="+json.dumps(ecology,separators=(",",":")))
+          PY
+
+      - name: Validate matured parent population when present
+        id: preference
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ ! -f experiments/village-001/preference-evidence/summary.json ] || \
+             [ ! -f experiments/village-001/preference-evidence/adapter-release.json ]; then
+            if [ "$EVENT_NAME" = "pull_request" ]; then
+              echo "VILLAGE-001D evidence not promoted yet; PR static checks continue."
+              echo "ready=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "VILLAGE-001D evidence/release manifest is required."
+            exit 1
+          fi
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path("experiments/village-001/preference-evidence/summary.json").read_text())
+          r=json.loads(Path("experiments/village-001/preference-evidence/adapter-release.json").read_text())
+          assert s["experiment"]=="VILLAGE-001D"
+          assert s["members"]==36
+          assert len(s["members_table"])==36
+          assert len(r["assets"])==36
+          assert {x["member_id"] for x in r["assets"]}=={
+              f"V-G{i:02d}-{s}" for i in range(1,13) for s in "ABC"
+          }
+          print("VILLAGE-001D matured population: PASS")
+          PY
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+  tournament:
+    if: ${{ github.event_name != 'pull_request' && needs.plan.outputs.preference_ready == 'true' }}
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        scenario: ${{ fromJSON(needs.plan.outputs.scenarios) }}
+    env:
+      NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Verify provider gate
+        run: |
+          test -n "$NVIDIA_API_KEY" || {
+            echo "NVKEY repository secret is not configured."
+            exit 1
+          }
+          python3 scripts/village_001_gate.py
+
+      - name: Run blind 36-member scenario tournament
+        run: |
+          mkdir -p "out/${{ matrix.scenario }}"
+          python3 scripts/village_001e_tournament_scenario.py \
+            --config experiments/village-001/tournament-config.json \
+            --scenario "${{ matrix.scenario }}" \
+            --out "out/${{ matrix.scenario }}"
+
+      - name: Preserve tournament scenario evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001e-tournament-${{ matrix.scenario }}
+          path: out/${{ matrix.scenario }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  ecology_run:
+    if: ${{ github.event_name != 'pull_request' && needs.plan.outputs.preference_ready == 'true' }}
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix: ${{ fromJSON(needs.plan.outputs.ecology) }}
+    env:
+      OMP_NUM_THREADS: 4
+      MKL_NUM_THREADS: 4
+      TOKENIZERS_PARALLELISM: 'false'
+      M1: ${{ matrix.m1 }}
+      M2: ${{ matrix.m2 }}
+      M3: ${{ matrix.m3 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ~/.cache/huggingface/hub
+          key: smollm2-135m-12fd25f7-cpu-v1
+
+      - name: Install CPU ecology stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --upgrade pip
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install \
+            "transformers>=4.57,<5" \
+            "peft>=0.17,<1" \
+            "huggingface_hub>=0.36,<2" \
+            "safetensors>=0.6,<1"
+
+      - name: Recover and verify ecology participant cartridges
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p downloads adapters
+          python3 - <<'PY' > /tmp/assets.tsv
+          import json,os
+          release=json.load(open("experiments/village-001/preference-evidence/adapter-release.json"))
+          by_member={x["member_id"]:x for x in release["assets"]}
+          for member in (os.environ["M1"],os.environ["M2"],os.environ["M3"]):
+              if not member:
+                  continue
+              x=by_member[member]
+              print("\t".join([member,x["file"],x["sha256"]]))
+          PY
+
+          while IFS=$'\t' read -r member file sha; do
+            gh release download village-001-preference-v1 \
+              --pattern "$file" \
+              --dir downloads
+            echo "$sha  downloads/$file" | sha256sum -c -
+            mkdir -p "adapters/$member"
+            tar -xzf "downloads/$file" -C "adapters/$member"
+          done < /tmp/assets.tsv
+
+      - name: Run prompt-neutral three-agent ecology session
+        run: |
+          mkdir -p "out/${{ matrix.session_id }}"
+          python3 scripts/village_001e_ecology_run.py \
+            --config experiments/village-001/tournament-config.json \
+            --session "${{ matrix.session_id }}" \
+            --adapter-root adapters \
+            --out "out/${{ matrix.session_id }}"
+
+      - name: Preserve ecology transcript
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001e-ecology-${{ matrix.session_id }}
+          path: out/${{ matrix.session_id }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  ecology_judge:
+    if: ${{ github.event_name != 'pull_request' }}
+    needs: [plan, ecology_run]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix: ${{ fromJSON(needs.plan.outputs.ecology) }}
+    env:
+      NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Verify provider gate
+        run: |
+          test -n "$NVIDIA_API_KEY" || {
+            echo "NVKEY repository secret is not configured."
+            exit 1
+          }
+          python3 scripts/village_001_gate.py
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: village001e-ecology-${{ matrix.session_id }}
+          path: session/${{ matrix.session_id }}
+
+      - name: Judge ecology without member identities
+        run: |
+          mkdir -p "out/${{ matrix.session_id }}"
+          python3 scripts/village_001e_ecology_judge.py \
+            --config experiments/village-001/tournament-config.json \
+            --session "session/${{ matrix.session_id }}" \
+            --out "out/${{ matrix.session_id }}"
+
+      - name: Preserve ecology judgment evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001e-ecology-judge-${{ matrix.session_id }}
+          path: out/${{ matrix.session_id }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  assemble:
+    if: ${{ github.event_name != 'pull_request' }}
+    needs: [plan, tournament, ecology_run, ecology_judge]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: village001e-tournament-T*
+          path: artifacts/tournament
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: village001e-ecology-E-*
+          path: artifacts/ecology
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: village001e-ecology-judge-E-*
+          path: artifacts/ecology-judgments
+
+      - name: Independently assemble final village qualification
+        run: |
+          python3 scripts/village_001e_assemble.py \
+            --tournament-artifacts artifacts/tournament \
+            --ecology-artifacts artifacts/ecology \
+            --ecology-judgment-artifacts artifacts/ecology-judgments \
+            --config experiments/village-001/tournament-config.json \
+            --out experiments/village-001/final-evidence
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path("experiments/village-001/final-evidence/summary.json").read_text())
+          c=json.loads(Path("experiments/village-001/final-evidence/confusion-matrices.json").read_text())
+          e=json.loads(Path("experiments/village-001/final-evidence/ecology-summary.json").read_text())
+          assert s["members"]==36
+          assert s["scenarios"]==24
+          assert s["blind_response_records"]==864
+          assert len(s["members_table"])==36
+          assert len(c["lineage_labels"])==12
+          assert len(c["sibling_labels"])==3
+          assert len(c["member_labels"])==36
+          assert len(c["raw_member"])==36
+          assert len(c["behavior_member"])==36
+          assert e["sessions"]==24
+          assert e["pair_sessions"]==12
+          assert e["small_group_sessions"]==12
+          assert len(json.loads(Path("experiments/village-001/final-evidence/model-registry.json").read_text())["models"])==36
+          assert len(json.loads(Path("experiments/village-001/final-evidence/per-member-verdicts.json").read_text())["members"])==36
+          print(
+              "VILLAGE-001E:",
+              "usable",s["usable_village"],
+              "behavior lineage",s["behavior_only"]["lineage_accuracy"],
+              "behavior sibling",s["behavior_only"]["sibling_accuracy_given_correct_lineage"],
+              "individual",s["individual_quality_pass_count"],
+          )
+          PY
+
+      - name: Preserve complete final qualification archive
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001e-final-${{ github.run_id }}
+          path: experiments/village-001/final-evidence
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit authoritative final qualification evidence
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add experiments/village-001/final-evidence
+          git commit -m "Record VILLAGE-001E final qualification ${GITHUB_RUN_ID}"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Publish final qualification release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="village-001-qualified-v1"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "$TAG already exists; final evidence remains authoritative in-repo."
+          else
+            gh release create "$TAG" \
+              --target main \
+              --title "VILLAGE-001E final cyber-goblin village qualification" \
+              --notes-file experiments/village-001/final-evidence/REPORT.md \
+              experiments/village-001/final-evidence/summary.json \
+              experiments/village-001/final-evidence/confusion-matrices.json \
+              experiments/village-001/final-evidence/ecology-summary.json \
+              experiments/village-001/final-evidence/model-registry.json \
+              experiments/village-001/final-evidence/dataset-provenance.json \
+              experiments/village-001/final-evidence/per-member-verdicts.json
+          fi

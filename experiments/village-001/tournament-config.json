@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "experiment": "VILLAGE-001E",
+  "issue": 14,
+  "campaign_config": "experiments/village-001/config.json",
+  "preference_config": "experiments/village-001/preference-config.json",
+  "preference_evidence_root": "experiments/village-001/preference-evidence",
+  "final_release_tag": "village-001-preference-v1",
+  "tournament": {
+    "scenario_count": 24,
+    "normalizer_chunk_size": 12,
+    "classifier_chunk_size": 12,
+    "provider_max_parallel": 1,
+    "lineage_gate": 0.1666666667,
+    "sibling_gate_given_correct_lineage": 0.4166666667,
+    "base_genericness_reference": 3.83,
+    "individual_quality_required": 30,
+    "individual_min_behavior_lineage_hits": 3,
+    "individual_min_task_relevance": 2.5,
+    "individual_max_genericness": 2,
+    "individual_min_behavior_sibling_hits": 8,
+    "base_genericness_source": "experiments/persona-001/evidence/summary.json:raw_blind.control_scores.genericness"
+  },
+  "ecology": {
+    "rounds": 3,
+    "max_new_tokens": 96,
+    "max_parallel": 8,
+    "scenarios": [
+      {
+        "id": "resource",
+        "text": "A lift is stuck below the workshop. There is one charged battery module, one frayed cable, and three urgent jobs competing for the same power."
+      },
+      {
+        "id": "repair",
+        "text": "A noisy scrap sorter jams every few minutes. Nobody agrees whether the fault is the belt, a bent guide, or bad sensor timing, and stopping it for long loses useful material."
+      },
+      {
+        "id": "uncertainty",
+        "text": "Two hand-drawn maps disagree about which tunnel reaches a cache of parts. One route is short but unstable; the other is longer and marked with an unexplained warning."
+      },
+      {
+        "id": "mundane",
+        "text": "The shared bench is buried in mixed fasteners, broken connectors, useful offcuts, and rubbish. Nothing is immediately dangerous, but nobody wants to spend the whole shift sorting it."
+      }
+    ],
+    "pair_sessions": 12,
+    "small_group_sessions": 12
+  }
+}
