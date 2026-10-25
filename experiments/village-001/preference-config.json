@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "experiment": "VILLAGE-001D",
+  "issue": 13,
+  "campaign_config": "experiments/village-001/config.json",
+  "sft_evidence_root": "experiments/village-001/sft-evidence",
+  "parent_release_tag": "village-001-sft-v1",
+  "final_release_tag": "village-001-preference-v1",
+  "feedback": {
+    "scenario_count": 24,
+    "workers_per_scenario": 3,
+    "max_tokens": 160,
+    "temperature": 1.05,
+    "top_p": 0.97,
+    "server_context": 4096,
+    "server_threads": 4,
+    "max_parallel": 12
+  },
+  "pair_generation": {
+    "pair_count": 60,
+    "chunks": 3,
+    "compiler_max_tokens": 8192,
+    "compiler_repair_max_tokens": 12288,
+    "critic_max_tokens": 6144,
+    "adjudicator_max_tokens": 6144,
+    "attempts": 6,
+    "max_curation_repair_rounds": 2,
+    "cloud_max_parallel": 1
+  },
+  "preference_training": {
+    "epochs": 2,
+    "learning_rate": 0.0002,
+    "beta": 2.0,
+    "target_margin_nats": 0.2,
+    "chosen_nll_weight": 0.15,
+    "max_length": 512,
+    "gradient_clip": 1.0,
+    "checkpoint_interval_steps": 30,
+    "max_parallel": 12
+  }
+}
