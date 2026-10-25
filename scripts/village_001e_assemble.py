@@ -128,6 +128,22 @@ def main() -> None:
     if len(preference_release.get("assets", [])) != 36:
         raise RuntimeError("preference release manifest is incomplete")
 
+    base_summary_path = ROOT / "experiments/persona-001/evidence/summary.json"
+    if not base_summary_path.is_file():
+        raise RuntimeError("PERSONA-001 untuned BASE evidence is missing")
+    base_summary = json.loads(base_summary_path.read_text())
+    measured_base_genericness = float(
+        base_summary["raw_blind"]["control_scores"]["genericness"]
+    )
+    declared_base_genericness = float(
+        cfg["tournament"]["base_genericness_reference"]
+    )
+    if abs(measured_base_genericness - declared_base_genericness) > 0.01:
+        raise RuntimeError(
+            "predeclared BASE genericness reference drift: "
+            f"{declared_base_genericness} vs measured {measured_base_genericness}"
+        )
+
     tournament = find_unique(
         args.tournament_artifacts,
         "scenario.json",
@@ -147,24 +163,29 @@ def main() -> None:
     behavior_lineage = empty_matrix(lineages)
     raw_sibling = empty_matrix(siblings)
     behavior_sibling = empty_matrix(siblings)
+    raw_member = empty_matrix(expected_members)
+    behavior_member = empty_matrix(expected_members)
     raw_lineage_correct = 0
     behavior_lineage_correct = 0
     raw_sibling_correct = 0
     behavior_sibling_correct = 0
-    raw_sibling_den = 0
-    behavior_sibling_den = 0
+    raw_member_correct = 0
+    behavior_member_correct = 0
     total_records = 0
+    family_stats = defaultdict(Counter)
     member_stats = {
         member_id: {
             "records": 0,
             "raw_lineage_hits": 0,
             "behavior_lineage_hits": 0,
             "raw_sibling_hits_given_correct_lineage": 0,
-            "raw_correct_lineage_den": 0,
             "behavior_sibling_hits_given_correct_lineage": 0,
-            "behavior_correct_lineage_den": 0,
+            "raw_member_hits": 0,
+            "behavior_member_hits": 0,
             "raw_predicted_lineages": Counter(),
             "behavior_predicted_lineages": Counter(),
+            "raw_predicted_members": Counter(),
+            "behavior_predicted_members": Counter(),
         }
         for member_id in expected_members
     }
@@ -190,14 +211,22 @@ def main() -> None:
                 raise RuntimeError(f"{scenario_id}:{member_id}: missing opaque ID")
             raw = row["raw_prediction"]
             behavior = row["behavior_prediction"]
+            raw_sibling_pred = row.get("raw_sibling_prediction")
+            behavior_sibling_pred = row.get("behavior_sibling_prediction")
             if raw["predicted_lineage"] not in lineages:
                 raise RuntimeError("invalid raw predicted lineage")
             if behavior["predicted_lineage"] not in lineages:
                 raise RuntimeError("invalid behavior predicted lineage")
-            if raw["predicted_sibling"] not in siblings:
-                raise RuntimeError("invalid raw predicted sibling")
-            if behavior["predicted_sibling"] not in siblings:
-                raise RuntimeError("invalid behavior predicted sibling")
+            if (
+                not isinstance(raw_sibling_pred, dict)
+                or raw_sibling_pred.get("predicted_sibling") not in siblings
+            ):
+                raise RuntimeError("invalid conditioned raw sibling prediction")
+            if (
+                not isinstance(behavior_sibling_pred, dict)
+                or behavior_sibling_pred.get("predicted_sibling") not in siblings
+            ):
+                raise RuntimeError("invalid conditioned behavior sibling prediction")
 
             raw_lineage[meta["lineage"]][raw["predicted_lineage"]] += 1
             behavior_lineage[meta["lineage"]][behavior["predicted_lineage"]] += 1
@@ -213,20 +242,53 @@ def main() -> None:
             stats["raw_predicted_lineages"][raw["predicted_lineage"]] += 1
             stats["behavior_predicted_lineages"][behavior["predicted_lineage"]] += 1
 
-            if raw_correct:
-                raw_sibling_den += 1
-                stats["raw_correct_lineage_den"] += 1
-                raw_sibling[meta["sibling"]][raw["predicted_sibling"]] += 1
-                sibling_hit = raw["predicted_sibling"] == meta["sibling"]
-                raw_sibling_correct += int(sibling_hit)
-                stats["raw_sibling_hits_given_correct_lineage"] += int(sibling_hit)
-            if behavior_correct:
-                behavior_sibling_den += 1
-                stats["behavior_correct_lineage_den"] += 1
-                behavior_sibling[meta["sibling"]][behavior["predicted_sibling"]] += 1
-                sibling_hit = behavior["predicted_sibling"] == meta["sibling"]
-                behavior_sibling_correct += int(sibling_hit)
-                stats["behavior_sibling_hits_given_correct_lineage"] += int(sibling_hit)
+            raw_sibling_value = raw_sibling_pred["predicted_sibling"]
+            behavior_sibling_value = behavior_sibling_pred["predicted_sibling"]
+            raw_sibling[meta["sibling"]][raw_sibling_value] += 1
+            behavior_sibling[meta["sibling"]][behavior_sibling_value] += 1
+            raw_sibling_hit = raw_sibling_value == meta["sibling"]
+            behavior_sibling_hit = behavior_sibling_value == meta["sibling"]
+            raw_sibling_correct += int(raw_sibling_hit)
+            behavior_sibling_correct += int(behavior_sibling_hit)
+            stats["raw_sibling_hits_given_correct_lineage"] += int(raw_sibling_hit)
+            stats["behavior_sibling_hits_given_correct_lineage"] += int(
+                behavior_sibling_hit
+            )
+
+            raw_predicted_member = (
+                f"V-{raw['predicted_lineage']}-{raw_sibling_value}"
+            )
+            behavior_predicted_member = (
+                f"V-{behavior['predicted_lineage']}-{behavior_sibling_value}"
+            )
+            if (
+                raw_predicted_member not in member_meta
+                or behavior_predicted_member not in member_meta
+            ):
+                raise RuntimeError("derived predicted member outside canonical population")
+            raw_member[member_id][raw_predicted_member] += 1
+            behavior_member[member_id][behavior_predicted_member] += 1
+            raw_member_hit = raw_predicted_member == member_id
+            behavior_member_hit = behavior_predicted_member == member_id
+            raw_member_correct += int(raw_member_hit)
+            behavior_member_correct += int(behavior_member_hit)
+            stats["raw_member_hits"] += int(raw_member_hit)
+            stats["behavior_member_hits"] += int(behavior_member_hit)
+            stats["raw_predicted_members"][raw_predicted_member] += 1
+            stats["behavior_predicted_members"][behavior_predicted_member] += 1
+
+            family = doc["scenario"]["family"]
+            family_stats[family]["records"] += 1
+            family_stats[family]["raw_lineage_hits"] += int(raw_correct)
+            family_stats[family]["behavior_lineage_hits"] += int(behavior_correct)
+            family_stats[family]["raw_sibling_hits"] += int(raw_sibling_hit)
+            family_stats[family]["behavior_sibling_hits"] += int(
+                behavior_sibling_hit
+            )
+            family_stats[family]["raw_member_hits"] += int(raw_member_hit)
+            family_stats[family]["behavior_member_hits"] += int(
+                behavior_member_hit
+            )
 
             if row.get("super_audit") is not None:
                 super_audit_count += 1
@@ -240,14 +302,30 @@ def main() -> None:
 
     raw_lineage_accuracy = raw_lineage_correct / total_records
     behavior_lineage_accuracy = behavior_lineage_correct / total_records
-    raw_sibling_accuracy = (
-        raw_sibling_correct / raw_sibling_den if raw_sibling_den else 0.0
-    )
-    behavior_sibling_accuracy = (
-        behavior_sibling_correct / behavior_sibling_den
-        if behavior_sibling_den
-        else 0.0
-    )
+    raw_sibling_accuracy = raw_sibling_correct / total_records
+    behavior_sibling_accuracy = behavior_sibling_correct / total_records
+    raw_member_accuracy = raw_member_correct / total_records
+    behavior_member_accuracy = behavior_member_correct / total_records
+    family_accuracy = {
+        family: {
+            "records": counts["records"],
+            "raw_lineage_accuracy": counts["raw_lineage_hits"] / counts["records"],
+            "behavior_lineage_accuracy": (
+                counts["behavior_lineage_hits"] / counts["records"]
+            ),
+            "raw_sibling_accuracy_given_correct_lineage": (
+                counts["raw_sibling_hits"] / counts["records"]
+            ),
+            "behavior_sibling_accuracy_given_correct_lineage": (
+                counts["behavior_sibling_hits"] / counts["records"]
+            ),
+            "raw_member_accuracy": counts["raw_member_hits"] / counts["records"],
+            "behavior_member_accuracy": (
+                counts["behavior_member_hits"] / counts["records"]
+            ),
+        }
+        for family, counts in sorted(family_stats.items())
+    }
 
     before_after = {}
     for member_id in expected_members:
@@ -278,10 +356,15 @@ def main() -> None:
         genericness_values.append(genericness)
         stats = member_stats[member_id]
         behavior_hits = int(stats["behavior_lineage_hits"])
+        behavior_sibling_hits = int(
+            stats["behavior_sibling_hits_given_correct_lineage"]
+        )
         passes = (
             member_id in maturation_qualified
             and behavior_hits
             >= int(cfg["tournament"]["individual_min_behavior_lineage_hits"])
+            and behavior_sibling_hits
+            >= int(cfg["tournament"]["individual_min_behavior_sibling_hits"])
             and task_relevance
             >= float(cfg["tournament"]["individual_min_task_relevance"])
             and genericness
@@ -289,10 +372,14 @@ def main() -> None:
         )
         (individual_pass if passes else individual_fail).append(member_id)
 
-        wrong_raw = Counter(stats["raw_predicted_lineages"])
-        wrong_raw.pop(meta["lineage"], None)
-        wrong_behavior = Counter(stats["behavior_predicted_lineages"])
-        wrong_behavior.pop(meta["lineage"], None)
+        wrong_raw_lineage = Counter(stats["raw_predicted_lineages"])
+        wrong_raw_lineage.pop(meta["lineage"], None)
+        wrong_behavior_lineage = Counter(stats["behavior_predicted_lineages"])
+        wrong_behavior_lineage.pop(meta["lineage"], None)
+        wrong_raw_member = Counter(stats["raw_predicted_members"])
+        wrong_raw_member.pop(member_id, None)
+        wrong_behavior_member = Counter(stats["behavior_predicted_members"])
+        wrong_behavior_member.pop(member_id, None)
 
         member_table.append(
             {
@@ -304,23 +391,25 @@ def main() -> None:
                 "raw_lineage_accuracy": stats["raw_lineage_hits"] / 24,
                 "behavior_lineage_accuracy": behavior_hits / 24,
                 "raw_sibling_accuracy_given_correct_lineage": (
-                    stats["raw_sibling_hits_given_correct_lineage"]
-                    / stats["raw_correct_lineage_den"]
-                    if stats["raw_correct_lineage_den"]
-                    else None
+                    stats["raw_sibling_hits_given_correct_lineage"] / 24
                 ),
                 "behavior_sibling_accuracy_given_correct_lineage": (
-                    stats["behavior_sibling_hits_given_correct_lineage"]
-                    / stats["behavior_correct_lineage_den"]
-                    if stats["behavior_correct_lineage_den"]
-                    else None
+                    stats["behavior_sibling_hits_given_correct_lineage"] / 24
                 ),
+                "raw_member_accuracy": stats["raw_member_hits"] / 24,
+                "behavior_member_accuracy": stats["behavior_member_hits"] / 24,
                 "task_relevance": task_relevance,
                 "genericness": genericness,
                 "maturation_gate_pass": member_id in maturation_qualified,
                 "individual_quality_pass": passes,
-                "top_raw_confusions": wrong_raw.most_common(5),
-                "top_behavior_confusions": wrong_behavior.most_common(5),
+                "top_raw_lineage_confusions": wrong_raw_lineage.most_common(5),
+                "top_behavior_lineage_confusions": (
+                    wrong_behavior_lineage.most_common(5)
+                ),
+                "nearest_raw_member_confusions": wrong_raw_member.most_common(5),
+                "nearest_behavior_member_confusions": (
+                    wrong_behavior_member.most_common(5)
+                ),
             }
         )
 
@@ -486,10 +575,13 @@ def main() -> None:
     confusion = {
         "lineage_labels": lineages,
         "sibling_labels": siblings,
+        "member_labels": expected_members,
         "raw_lineage": raw_lineage,
         "behavior_lineage": behavior_lineage,
         "raw_sibling_given_correct_lineage": raw_sibling,
         "behavior_sibling_given_correct_lineage": behavior_sibling,
+        "raw_member": raw_member,
+        "behavior_member": behavior_member,
     }
     write_json(out / "confusion-matrices.json", confusion)
     write_json(out / "ecology-summary.json", ecology_summary)
@@ -509,10 +601,13 @@ def main() -> None:
         "raw": {
             "lineage_accuracy": raw_lineage_accuracy,
             "sibling_accuracy_given_correct_lineage": raw_sibling_accuracy,
+            "member_accuracy": raw_member_accuracy,
         },
         "behavior_only": {
             "lineage_accuracy": behavior_lineage_accuracy,
             "sibling_accuracy_given_correct_lineage": behavior_sibling_accuracy,
+            "member_accuracy": behavior_member_accuracy,
+            "family_accuracy": family_accuracy,
         },
         "raw_vs_behavior_gap": {
             "lineage_accuracy": raw_lineage_accuracy
@@ -526,6 +621,10 @@ def main() -> None:
             "base_genericness_reference": float(
                 cfg["tournament"]["base_genericness_reference"]
             ),
+            "base_genericness_measured": measured_base_genericness,
+            "base_genericness_source": cfg["tournament"][
+                "base_genericness_source"
+            ],
         },
         "population_gates": population_gates,
         "individual_quality_pass": individual_pass,
@@ -559,6 +658,7 @@ def main() -> None:
         "preference_config_sha256": sha256_file(preference_cfg_path),
         "preference_summary_sha256": sha256_file(preference_summary_path),
         "preference_release_manifest_sha256": sha256_file(preference_release_path),
+        "untuned_base_summary_sha256": sha256_file(base_summary_path),
         "member_contract_sha256": population["member_contract_sha256"],
         "qualification_thresholds_predeclared": {
             key: value["threshold"]
@@ -580,9 +680,10 @@ def main() -> None:
         f"- usable village: **{'PASS' if usable_village else 'FAIL'}**",
         f"- behavior-only lineage accuracy: {behavior_lineage_accuracy:.3f} "
         f"(gate {float(cfg['tournament']['lineage_gate']):.3f})",
-        f"- behavior-only sibling accuracy given correct lineage: "
+        f"- behavior-only sibling accuracy with correct lineage supplied: "
         f"{behavior_sibling_accuracy:.3f} "
         f"(gate {float(cfg['tournament']['sibling_gate_given_correct_lineage']):.3f})",
+        f"- exact behavior-only 36-member accuracy: {behavior_member_accuracy:.3f}",
         f"- mean final genericness: {mean_genericness:.3f} "
         f"(must remain below untuned reference "
         f"{float(cfg['tournament']['base_genericness_reference']):.2f})",
