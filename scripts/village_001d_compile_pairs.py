@@ -85,14 +85,25 @@ def pair_specs(member_id: str) -> list[dict]:
     return out
 
 
-def load_feedback(path: Path, member: dict, parent_sha: str) -> dict[str, list[dict]]:
+def load_feedback(
+    path: Path,
+    member: dict,
+    parent_sha: str,
+    feedback_cfg: dict,
+) -> dict[str, list[dict]]:
     rows = [
         json.loads(line)
         for line in path.read_text().splitlines()
         if line.strip()
     ]
-    if len(rows) != 72:
-        raise RuntimeError(f"{member['member_id']}: feedback count {len(rows)} != 72")
+    expected_count = (
+        int(feedback_cfg["scenario_count"])
+        + int(feedback_cfg["member_probe_count"])
+    ) * int(feedback_cfg["workers_per_scenario"])
+    if len(rows) != expected_count:
+        raise RuntimeError(
+            f"{member['member_id']}: feedback count {len(rows)} != {expected_count}"
+        )
     by_scenario: dict[str, list[dict]] = defaultdict(list)
     ids = set()
     for row in rows:
@@ -105,10 +116,26 @@ def load_feedback(path: Path, member: dict, parent_sha: str) -> dict[str, list[d
             raise RuntimeError("duplicate feedback ID")
         ids.add(feedback_id)
         by_scenario[row["scenario_id"]].append(row)
-    for i in range(1, 25):
-        sid = f"T{i:02d}"
+    expected_scenarios = [
+        *[
+            f"T{i:02d}"
+            for i in range(1, int(feedback_cfg["scenario_count"]) + 1)
+        ],
+        *[
+            f"P{i:02d}"
+            for i in range(1, int(feedback_cfg["member_probe_count"]) + 1)
+        ],
+    ]
+    expected_workers = list(
+        range(1, int(feedback_cfg["workers_per_scenario"]) + 1)
+    )
+    if set(by_scenario) != set(expected_scenarios):
+        raise RuntimeError(
+            f"feedback scenario IDs mismatch: {sorted(by_scenario)}"
+        )
+    for sid in expected_scenarios:
         group = sorted(by_scenario[sid], key=lambda x: x["sprocket_worker"])
-        if [x["sprocket_worker"] for x in group] != [1, 2, 3]:
+        if [x["sprocket_worker"] for x in group] != expected_workers:
             raise RuntimeError(f"{sid}: feedback workers incomplete")
         by_scenario[sid] = group
     return by_scenario
@@ -793,7 +820,12 @@ def main() -> None:
     feedback_path = args.feedback
     if feedback_path.is_dir():
         feedback_path = feedback_path / "feedback.jsonl"
-    feedback = load_feedback(feedback_path, member, parent_sha)
+    feedback = load_feedback(
+        feedback_path,
+        member,
+        parent_sha,
+        pref["feedback"],
+    )
 
     key = __import__("os").environ.get("NVIDIA_API_KEY", "").strip()
     if not key:
