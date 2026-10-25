@@ -225,6 +225,37 @@ def main() -> None:
         if scenario_ids != [f"T{i:02d}" for i in range(1, 25)]:
             raise RuntimeError(f"{member_id}: held-out scenario sequence mismatch")
 
+        probe_eval = result.get("member_probe_evaluation") or {}
+        probes = probe_eval.get("responses")
+        if probe_eval.get("held_out_from_member_training") is not True:
+            raise RuntimeError(f"{member_id}: member probes are not marked held-out")
+        if probe_eval.get("hidden_member_prompt_used") is not False:
+            raise RuntimeError(f"{member_id}: hidden member prompt used for probes")
+        if not isinstance(probes, list) or len(probes) != 8:
+            raise RuntimeError(f"{member_id}: member probe response count != 8")
+        if [row.get("scenario_id") for row in probes] != [
+            f"P{i:02d}" for i in range(1, 9)
+        ]:
+            raise RuntimeError(f"{member_id}: member probe ID sequence mismatch")
+        if len({row.get("prompt") for row in probes}) != 8:
+            raise RuntimeError(f"{member_id}: duplicate member probe prompt")
+        trained_ids = set(example_ids)
+        for probe in probes:
+            source_member = probe.get("source_member_id")
+            source_example = probe.get("source_example_id")
+            if (
+                not isinstance(source_member, str)
+                or source_member == member_id
+                or not source_member.startswith(f"V-{meta['lineage']}-")
+            ):
+                raise RuntimeError(
+                    f"{member_id}: invalid probe source member {source_member!r}"
+                )
+            if source_example in trained_ids:
+                raise RuntimeError(
+                    f"{member_id}: probe source {source_example} was in target training IDs"
+                )
+
         actual_adapter_hash = directory_hash(adapter_dir)
         adapter = result.get("adapter") or {}
         if adapter.get("sha256") != actual_adapter_hash:
