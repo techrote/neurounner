@@ -290,6 +290,11 @@ def save_checkpoint(
     supervised_tokens: int,
     training_seconds: float,
     source_run_id: str | None,
+    training_dataset_sha256: str,
+    member_contract_sha256: str,
+    base_model: str,
+    base_revision: str,
+    training_config: dict,
 ) -> None:
     tmp = root.with_name(root.name + ".tmp")
     if tmp.exists():
@@ -309,6 +314,11 @@ def save_checkpoint(
             "supervised_tokens": supervised_tokens,
             "training_seconds": training_seconds,
             "source_run_id": source_run_id,
+            "training_dataset_sha256": training_dataset_sha256,
+            "member_contract_sha256": member_contract_sha256,
+            "base_model": base_model,
+            "base_revision": base_revision,
+            "training_config": training_config,
         },
     )
     if root.exists():
@@ -338,18 +348,33 @@ def copy_resume(resume: Path, out: Path) -> None:
     shutil.copytree(resume, out)
 
 
-def validate_complete_artifact(out: Path, member_id: str, corpus_sha: str) -> bool:
+def validate_complete_artifact(
+    out: Path,
+    member_id: str,
+    corpus_sha: str,
+    contract_sha: str,
+    base_cfg: dict,
+    train_cfg: dict,
+) -> bool:
     result_path = out / "result.json"
     adapter = out / "adapter"
     if not result_path.is_file() or not adapter.is_dir():
         return False
     result = json.loads(result_path.read_text())
-    if result.get("experiment") != "VILLAGE-001C":
-        raise RuntimeError("resume result is not VILLAGE-001C")
-    if result.get("member_id") != member_id:
-        raise RuntimeError("resume result member mismatch")
-    if result.get("training_dataset_sha256") != corpus_sha:
-        raise RuntimeError("resume result corpus hash mismatch")
+    checks = {
+        "experiment": "VILLAGE-001C",
+        "member_id": member_id,
+        "training_dataset_sha256": corpus_sha,
+        "member_contract_sha256": contract_sha,
+        "base_model": base_cfg["id"],
+        "base_revision": base_cfg["revision"],
+        "training_config": train_cfg,
+    }
+    for key, expected in checks.items():
+        if result.get(key) != expected:
+            raise RuntimeError(
+                f"resume result {key} {result.get(key)!r} != {expected!r}"
+            )
     recorded = result.get("adapter") or {}
     if recorded.get("sha256") != directory_hash(adapter):
         raise RuntimeError("resume adapter hash mismatch")
@@ -391,7 +416,14 @@ def main() -> None:
             shutil.rmtree(out)
         out.mkdir(parents=True)
 
-    if validate_complete_artifact(out, member["member_id"], corpus_sha):
+    if validate_complete_artifact(
+        out,
+        member["member_id"],
+        corpus_sha,
+        contract_sha,
+        base_cfg,
+        train_cfg,
+    ):
         print(
             json.dumps(
                 {
@@ -434,6 +466,18 @@ def main() -> None:
     checkpoint_dir = out / "checkpoint"
     checkpoint = load_checkpoint(checkpoint_dir)
     if checkpoint:
+        checkpoint_checks = {
+            "training_dataset_sha256": corpus_sha,
+            "member_contract_sha256": contract_sha,
+            "base_model": base_cfg["id"],
+            "base_revision": base_cfg["revision"],
+            "training_config": train_cfg,
+        }
+        for key, expected in checkpoint_checks.items():
+            if checkpoint.get(key) != expected:
+                raise RuntimeError(
+                    f"checkpoint {key} {checkpoint.get(key)!r} != {expected!r}"
+                )
         model = PeftModel.from_pretrained(
             base,
             checkpoint_dir / "adapter",
@@ -548,6 +592,11 @@ def main() -> None:
                 supervised_tokens=supervised_tokens,
                 training_seconds=training_seconds,
                 source_run_id=os.environ.get("GITHUB_RUN_ID"),
+                training_dataset_sha256=corpus_sha,
+                member_contract_sha256=contract_sha,
+                base_model=base_cfg["id"],
+                base_revision=base_cfg["revision"],
+                training_config=train_cfg,
             )
             segment_started = time.monotonic()
 
