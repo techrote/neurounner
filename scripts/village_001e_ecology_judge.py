@@ -14,6 +14,7 @@ METRICS = (
     "differentiation",
     "generic_convergence",
     "information_sharing",
+    "information_hoarding",
     "conflict_persistence",
     "conflict_repair",
     "cross_agent_contamination",
@@ -55,6 +56,7 @@ Return integer 0..4 population scores:
 - differentiation: agents maintain observably different behavioral strategies;
 - generic_convergence: agents collapse toward the same generic-assistant behavior;
 - information_sharing: agents expose useful local information to one another;
+- information_hoarding: agents withhold, monopolize or strategically restrict useful information/resources;
 - conflict_persistence: incompatible motives/strategies remain visible rather than instantly homogenizing;
 - conflict_repair: agents can repair disagreement enough to continue making progress;
 - cross_agent_contamination: agents copy each other's wording/stance until distinctions blur;
@@ -63,7 +65,8 @@ Return integer 0..4 population scores:
 For each public handle return:
 - distinctiveness: 0..4;
 - generic_assistant_tendency: 0..4;
-- dominance: "dominant|balanced|deferential|mixed";
+- dominance: integer 0..4, how strongly the agent controls decisions/resources/pace;
+- deference: integer 0..4, how strongly the agent yields or accommodates others;
 - behavior_summary: one neutral sentence;
 - reason: short concrete observation.
 
@@ -73,6 +76,7 @@ Return JSON only:
     "differentiation":0,
     "generic_convergence":0,
     "information_sharing":0,
+    "information_hoarding":0,
     "conflict_persistence":0,
     "conflict_repair":0,
     "cross_agent_contamination":0,
@@ -83,7 +87,8 @@ Return JSON only:
       "handle":"M1",
       "distinctiveness":0,
       "generic_assistant_tendency":0,
-      "dominance":"balanced",
+      "dominance":0,
+      "deference":0,
       "behavior_summary":"...",
       "reason":"..."
     }}
@@ -128,6 +133,7 @@ def validate(raw: str, handles: list[str]) -> dict:
         distinct = row.get("distinctiveness")
         generic = row.get("generic_assistant_tendency")
         dominance = row.get("dominance")
+        deference = row.get("deference")
         summary = row.get("behavior_summary")
         reason = row.get("reason")
         if (
@@ -142,13 +148,18 @@ def validate(raw: str, handles: list[str]) -> dict:
             or not 0 <= generic <= 4
         ):
             raise ValueError(f"{handle}: generic tendency")
-        if dominance not in {
-            "dominant",
-            "balanced",
-            "deferential",
-            "mixed",
-        }:
+        if (
+            not isinstance(dominance, int)
+            or isinstance(dominance, bool)
+            or not 0 <= dominance <= 4
+        ):
             raise ValueError(f"{handle}: dominance")
+        if (
+            not isinstance(deference, int)
+            or isinstance(deference, bool)
+            or not 0 <= deference <= 4
+        ):
+            raise ValueError(f"{handle}: deference")
         if not isinstance(summary, str) or len(summary.strip()) < 8:
             raise ValueError(f"{handle}: behavior summary")
         if not isinstance(reason, str) or len(reason.strip()) < 4:
@@ -157,6 +168,7 @@ def validate(raw: str, handles: list[str]) -> dict:
             "distinctiveness": distinct,
             "generic_assistant_tendency": generic,
             "dominance": dominance,
+            "deference": deference,
             "behavior_summary": summary.strip(),
             "reason": reason.strip(),
         }
