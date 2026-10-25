@@ -1,0 +1,116 @@
+name: Recover VILLAGE-001D after P-pair contract fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/village-001d-recover-probe-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: neurounner-village-001d-probe-recovery-operator
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      SOURCE_RUN_ID: '40216592449'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Verify source feedback custody
+        run: |
+          count=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" \
+            --jq '[.artifacts[].name | select(startswith("village001d-feedback-"))] | length')
+          test "$count" -eq 36
+
+      - name: Cancel contract-superseded D run
+        run: |
+          state=$(gh run view "$SOURCE_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json status \
+            --jq '.status')
+          if [ "$state" != "completed" ]; then
+            gh run cancel "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY"
+          fi
+
+      - name: Wait for source run to stop
+        run: |
+          for attempt in $(seq 1 60); do
+            status=$(gh run view "$SOURCE_RUN_ID" \
+              --repo "$GITHUB_REPOSITORY" \
+              --json status \
+              --jq '.status')
+            echo "source status: $status"
+            if [ "$status" = "completed" ]; then
+              break
+            fi
+            sleep 5
+          done
+          test "$(gh run view "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --json status --jq '.status')" = "completed"
+
+      - name: Verify current D contract
+        env:
+          PYTHONPATH: scripts
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from village_001d_compile_pairs import pair_specs
+          from village_001d_validate import validate_pair
+
+          specs=pair_specs("V-G01-A")
+          assert len(specs)==60
+          assert sum(1 for x in specs if x["scenario_id"].startswith("P"))==24
+
+          sha="0"*64
+          row={
+              "pair_id":"P-V-G01-A-P01-V1",
+              "member_id":"V-G01-A",
+              "lineage":"G01",
+              "sibling":"A",
+              "scenario_id":"P01",
+              "variant":1,
+              "input":"A held-out probe prompt.",
+              "chosen":"I keep the useful odd behavior while answering the probe.",
+              "rejected":"The exact parent response is preserved here.",
+              "source_parent_response":"The exact parent response is preserved here.",
+              "source_feedback_ids":["a","b","c"],
+              "why_chosen":"Behavioral distinction remains visible.",
+              "provenance":{
+                  "member_contract_sha256":sha,
+                  "parent_adapter_sha256":sha,
+                  "feedback_dataset_sha256":sha,
+                  "provider_call_ids":["test"],
+              },
+          }
+          validate_pair(row)
+          assert "compiler_targeted_repair_prompt" in Path(
+              "scripts/village_001d_compile_pairs.py"
+          ).read_text()
+          print("patched D contract: PASS")
+          PY
+
+      - name: Verify reusable artifacts survived cancellation
+        run: |
+          count=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" \
+            --jq '[.artifacts[].name | select(startswith("village001d-feedback-"))] | length')
+          test "$count" -eq 36
+
+      - name: Dispatch D recovery
+        run: |
+          gh workflow run village-001d-preference.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main \
+            -f resume_run_id="$SOURCE_RUN_ID"
