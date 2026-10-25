@@ -1122,7 +1122,7 @@ def provider(args: argparse.Namespace) -> None:
         )
         return recovered
 
-    if resume_root:
+    if resume_root and not resume_has_m3_m4:
         draft_parts = recover_m3_parts(resume_root)
 
     previous_tail = ""
@@ -1135,7 +1135,7 @@ def provider(args: argparse.Namespace) -> None:
         "tradeoff; escape; and one unresolved sensory detail. Do not invent named institutions, "
         "historic events, missions, prophecies, or grand backstory."
     )
-    for part_id, part_title, part_brief in ([] if resume_root else part_specs):
+    for part_id, part_title, part_brief in ([] if draft_parts else part_specs):
         messages = [
             {
                 "role": "system",
@@ -1258,18 +1258,19 @@ def provider(args: argparse.Namespace) -> None:
         draft_parts.append(part)
         previous_tail = " ".join(part.split()[-100:])
 
-    draft_parts = rebalance(
-        draft_parts,
-        stage_prefix="m3-resume" if resume_root else "m3",
-        model=models["editor"],
-        temperature=0.25,
-        context=(
-            "Preserve the normalized first-person Sprocket voice, physical causality and the "
-            "requested scene boundary; do not reintroduce storyboard/meta language."
-        ),
-        token_budget=normalizer_tokens,
-        rewrite_attempts=0 if resume_root else 3,
-    )
+    if not resume_has_m3_m4:
+        draft_parts = rebalance(
+            draft_parts,
+            stage_prefix="m3-resume" if resume_root else "m3",
+            model=models["editor"],
+            temperature=0.25,
+            context=(
+                "Preserve the normalized first-person Sprocket voice, physical causality and the "
+                "requested scene boundary; do not reintroduce storyboard/meta language."
+            ),
+            token_budget=normalizer_tokens,
+            rewrite_attempts=0 if resume_root else 3,
+        )
     draft_sections = derived / "draft-sections"
     draft_sections.mkdir(parents=True, exist_ok=True)
     for (part_id, _, _), part in zip(part_specs, draft_parts):
