@@ -1100,6 +1100,10 @@ def ancestral_rows(
         raise ValueError(f"{member['member_id']}: ancestral count {len(base)}")
     out = []
     for index, row in enumerate(base, 1):
+        source_trait_refs = list(row["trait_refs"])
+        source_seed_refs = list(row.get("seed_refs", []))
+        canonical_trait_refs = list(dict.fromkeys(source_trait_refs))
+        canonical_seed_refs = list(dict.fromkeys(source_seed_refs))
         converted = {
             "example_id": f"{member['member_id']}-E{index:03d}",
             "member_id": member["member_id"],
@@ -1115,15 +1119,23 @@ def ancestral_rows(
             "source_guide_id": row["source_guide_id"],
             "source_packet_id": row["source_packet_id"],
             "source_babble_ids": row["source_babble_ids"],
-            "trait_refs": row["trait_refs"],
-            "seed_refs": row.get("seed_refs", []),
+            "trait_refs": canonical_trait_refs,
+            "seed_refs": canonical_seed_refs,
             "source_example_id": row["example_id"],
+            "source_trait_refs": source_trait_refs,
+            "source_seed_refs": source_seed_refs,
             "compiler_model": row.get("compiler_model"),
             "provenance": {
                 "source_dataset": "datasets/babble-002",
                 "member_contract_sha256": contract_sha,
                 "provider_call_ids": [],
                 "source_example_id": row["example_id"],
+                "canonicalized_duplicate_trait_refs": (
+                    source_trait_refs != canonical_trait_refs
+                ),
+                "canonicalized_duplicate_seed_refs": (
+                    source_seed_refs != canonical_seed_refs
+                ),
             },
         }
         validate_corpus_row(converted)
