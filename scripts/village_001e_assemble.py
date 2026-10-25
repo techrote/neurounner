@@ -113,6 +113,7 @@ def top_five_confusions(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--response-artifacts", type=Path, required=True)
     parser.add_argument("--tournament-artifacts", type=Path, required=True)
     parser.add_argument("--ecology-artifacts", type=Path, required=True)
     parser.add_argument("--ecology-judgment-artifacts", type=Path, required=True)
@@ -139,10 +140,24 @@ def main() -> None:
     expected_members = list(member_meta)
     lineages = [f"G{i:02d}" for i in range(1, 13)]
     siblings = ["A", "B", "C"]
-    scenarios = [
-        f"T{i:02d}"
-        for i in range(1, int(cfg["tournament"]["scenario_count"]) + 1)
-    ]
+    final_eval_path = ROOT / cfg["final_eval_config"]
+    final_eval = json.loads(final_eval_path.read_text())
+    final_eval_sha = sha256_file(final_eval_path)
+    final_scenarios = final_eval.get("scenarios")
+    if (
+        final_eval.get("experiment") != "VILLAGE-001E"
+        or final_eval.get("stage") != "fresh-final-heldout"
+        or not isinstance(final_scenarios, list)
+        or len(final_scenarios) != int(cfg["tournament"]["scenario_count"])
+    ):
+        raise RuntimeError("fresh final heldout config is invalid")
+    scenarios = [row["id"] for row in final_scenarios]
+    if scenarios != [f"F{i:02d}" for i in range(1, 25)]:
+        raise RuntimeError("fresh final heldout IDs must be F01..F24")
+    final_scenario_by_id = {
+        row["id"]: row
+        for row in final_scenarios
+    }
 
     preference_root = ROOT / cfg["preference_evidence_root"]
     preference_summary_path = preference_root / "summary.json"
@@ -155,6 +170,93 @@ def main() -> None:
         raise RuntimeError("preference summary member count mismatch")
     if len(preference_release.get("assets", [])) != 36:
         raise RuntimeError("preference release manifest is incomplete")
+    release_assets = {
+        row["member_id"]: row
+        for row in preference_release["assets"]
+    }
+    if set(release_assets) != set(expected_members):
+        raise RuntimeError("preference release member set mismatch")
+
+    final_responses = find_unique(
+        args.response_artifacts,
+        "result.json",
+        experiment="VILLAGE-001E",
+        stage="fresh-final-heldout-responses",
+        id_key="member_id",
+    )
+    expected_response_ids = set(expected_members) | {"BASE"}
+    if set(final_responses) != expected_response_ids:
+        raise RuntimeError(
+            "fresh final response set mismatch "
+            f"missing={sorted(expected_response_ids-set(final_responses))} "
+            f"extra={sorted(set(final_responses)-expected_response_ids)}"
+        )
+
+    for response_id in sorted(expected_response_ids):
+        doc = json.loads(final_responses[response_id].read_text())
+        common_checks = {
+            "member_contract_sha256": population["member_contract_sha256"],
+            "base_model": campaign["base_model"]["id"],
+            "base_revision": campaign["base_model"]["revision"],
+            "preference_release_tag": preference_release["release_tag"],
+            "final_eval_config_sha256": final_eval_sha,
+            "fresh_after_preference_training": True,
+            "exact_training_input_collision_count": 0,
+            "hidden_member_prompt_used": False,
+        }
+        for key, expected in common_checks.items():
+            if doc.get(key) != expected:
+                raise RuntimeError(
+                    f"{response_id}: final response {key} "
+                    f"{doc.get(key)!r} != {expected!r}"
+                )
+        if response_id == "BASE":
+            base_checks = {
+                "base_control": True,
+                "lineage": None,
+                "sibling": None,
+                "preference_adapter_sha256": None,
+            }
+            for key, expected in base_checks.items():
+                if doc.get(key) != expected:
+                    raise RuntimeError(
+                        f"BASE: final response {key} mismatch"
+                    )
+        else:
+            meta = member_meta[response_id]
+            member_checks = {
+                "base_control": False,
+                "lineage": meta["lineage"],
+                "sibling": meta["sibling"],
+                "preference_adapter_sha256": release_assets[
+                    response_id
+                ]["adapter_directory_sha256"],
+            }
+            for key, expected in member_checks.items():
+                if doc.get(key) != expected:
+                    raise RuntimeError(
+                        f"{response_id}: final response {key} mismatch"
+                    )
+
+        response_rows = doc.get("responses")
+        if not isinstance(response_rows, list) or len(response_rows) != 24:
+            raise RuntimeError(
+                f"{response_id}: final response cardinality mismatch"
+            )
+        if [row.get("scenario_id") for row in response_rows] != scenarios:
+            raise RuntimeError(
+                f"{response_id}: final response scenario order mismatch"
+            )
+        for row in response_rows:
+            expected = final_scenario_by_id[row["scenario_id"]]
+            if (
+                row.get("prompt") != expected["prompt"]
+                or row.get("family") != expected["family"]
+            ):
+                raise RuntimeError(
+                    f"{response_id}/{row['scenario_id']}: "
+                    "final prompt/family drift"
+                )
 
     base_summary_path = ROOT / "experiments/persona-001/evidence/summary.json"
     if not base_summary_path.is_file():
@@ -180,7 +282,7 @@ def main() -> None:
         "scenario.json",
         experiment="VILLAGE-001E",
         stage="hierarchical-blind-tournament-scenario",
-        id_key="scenario",
+        id_key="scenario_id",
     )
     missing_scenarios = sorted(set(scenarios) - set(tournament))
     extra_scenarios = sorted(set(tournament) - set(scenarios))
@@ -228,6 +330,19 @@ def main() -> None:
 
     for scenario_id in scenarios:
         doc = json.loads(tournament[scenario_id].read_text())
+        expected_scenario = final_scenario_by_id[scenario_id]
+        if (
+            doc.get("scenario_id") != scenario_id
+            or doc.get("fresh_after_preference_training") is not True
+            or doc.get("final_eval_config_sha256") != final_eval_sha
+            or doc.get("scenario", {}).get("prompt")
+            != expected_scenario["prompt"]
+            or doc.get("scenario", {}).get("family")
+            != expected_scenario["family"]
+        ):
+            raise RuntimeError(
+                f"{scenario_id}: tournament final-heldout identity mismatch"
+            )
         if doc["providers_saw_member_ids"] is not False:
             raise RuntimeError(f"{scenario_id}: tournament provider identity leak flag")
         records = doc.get("records")
