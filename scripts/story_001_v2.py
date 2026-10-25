@@ -152,6 +152,7 @@ def provider_call(
     temperature: float,
     out: Path,
     top_p: float = 0.95,
+    reasoning_effort: str | None = None,
 ) -> tuple[str, dict]:
     endpoint = cfg["nvidia"]["endpoint"]
     payload = {
@@ -162,6 +163,8 @@ def provider_call(
         "top_p": top_p,
         "stream": False,
     }
+    if reasoning_effort is not None:
+        payload["reasoning_effort"] = reasoning_effort
     request_record = {
         "schema_version": 1,
         "experiment": "STORY-001-V2",
@@ -325,6 +328,11 @@ def preflight(args: argparse.Namespace) -> None:
             max_tokens=int(cfg["nvidia"]["max_tokens"]["preflight"]),
             temperature=0.0,
             out=out,
+            reasoning_effort=(
+                cfg["nvidia"].get("reasoning_effort", {}).get(role)
+                if role in cfg["nvidia"].get("reasoning_effort", {})
+                else None
+            ),
         )
         results.append({"role": role, "model": model, "content": content, "call": call})
     write_json(
@@ -460,6 +468,7 @@ def produce(args: argparse.Namespace) -> None:
         max_tokens=int(limits["draft"]),
         temperature=0.72,
         out=out,
+        reasoning_effort=cfg["nvidia"].get("reasoning_effort", {}).get("drafter"),
     )
     (derived / "draft.md").write_text(draft + "\n")
     draft_metrics = metrics(draft, cfg)
@@ -540,6 +549,7 @@ def produce(args: argparse.Namespace) -> None:
         max_tokens=int(limits["edit"]),
         temperature=0.58,
         out=out,
+        reasoning_effort=cfg["nvidia"].get("reasoning_effort", {}).get("editor"),
     )
     (derived / "edit-1.md").write_text(edited + "\n")
 
@@ -581,6 +591,7 @@ def produce(args: argparse.Namespace) -> None:
             max_tokens=int(limits["repair"]),
             temperature=0.42 if repair_no == 1 else 0.28,
             out=out,
+            reasoning_effort=cfg["nvidia"].get("reasoning_effort", {}).get("editor"),
         )
         (derived / f"repair-{repair_no}.md").write_text(repaired + "\n")
         repair_history.append(
