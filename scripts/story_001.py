@@ -579,44 +579,134 @@ def provider(args: argparse.Namespace) -> None:
     )
     (derived / "storyboard.md").write_text(storyboard + "\n")
 
-    draft_messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are the long-form fiction drafter for STORY-001. The narrator is Sprocket. "
-                "Write a complete first-person short story, not analysis or a plan. Preserve the "
-                "source voice's mechanical/tactile awkwardness without turning every sentence into "
-                "a gimmick. The memory is fictional and unreliable; contradictions must be deliberate "
-                "and legible. Avoid generic neon/cyberpunk scenery, exposition dumps, sentimental "
-                "moralizing, and polished-assistant diction. Return only the story in markdown."
-            ),
-        },
-        {
-            "role": "user",
-            "content": (
-                "Draft 'The Shift That Kept Turning' at 2,850-3,150 words. Follow this authoritative "
-                "storyboard closely, use concrete causality and physical action, and make the "
-                "autofactory district feel functional rather than decorative. The childhood companion "
-                "may remain unnamed if the source does not establish a natural name. The ending should "
-                "resolve the immediate incident while leaving one precise sensory uncertainty.\n\n"
-                "STORYBOARD:\n"
-                + storyboard
-                + "\n\nSPROCKET SOURCE FRAGMENTS:\n"
-                + fragments
-            ),
-        },
+    part_specs = [
+        (
+            "01",
+            "Trigger and boundary",
+            "Present-day smell/noise trigger, then the childhood city-zone edge and the decision to cross toward the autofactory district during the brownout. Establish motive, tactile voice and route.",
+        ),
+        (
+            "02",
+            "Entry and accidental reactivation",
+            "Maintenance shortcut/hatch, knock-code or local habit, dead-looking service corridor, the small physical mistake that restores the wrong sorting/production loop, and the first unmistakable movement.",
+        ),
+        (
+            "03",
+            "The line remembers wrongly",
+            "Sprocket works out what the line is doing, notices a repeated dangerous misclassification or manufacturing mistake, and tries a first practical intervention that fails. Keep causality mechanical and spatially legible.",
+        ),
+        (
+            "04",
+            "Companion trapped",
+            "The companion becomes physically endangered by the reactivated machinery. Show the failed first rescue, timing pressure, Sprocket's fear and imperfect competence without heroic polish.",
+        ),
+        (
+            "05",
+            "Improvised signal and tradeoff",
+            "Sprocket uses scrap/conductor/signal knowledge to alter the control path and must choose between the immediate rescue and stopping the repeating line before it cascades. Resolve the physical tradeoff through action.",
+        ),
+        (
+            "06",
+            "Escape and missing noise",
+            "Immediate aftermath, escape back toward the city-zone, lasting physical trace, and present-day memory frame. Resolve the incident but preserve one precise unresolved sensory uncertainty about what stopped or kept turning.",
+        ),
     ]
-    draft, _ = provider_call(
-        cfg=cfg,
-        key=key,
-        stage_id="m3-draft",
-        model=models["drafter"],
-        messages=draft_messages,
-        max_tokens=int(budgets["draft_max_tokens"]),
-        temperature=0.75,
-        out=out,
-    )
+
+    draft_parts: list[str] = []
+    previous_tail = ""
+    segment_min, segment_max = 450, 550
+    segment_preferred = "480-520"
+    segment_tokens = int(budgets.get("draft_segment_max_tokens", 1600))
+    for part_id, part_title, part_brief in part_specs:
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are drafting exactly one contiguous section of STORY-001. The narrator is "
+                    "Sprocket. Return story prose only, no planning or commentary. Preserve tactile "
+                    "mechanical specificity, awkwardness and deliberate memory uncertainty without "
+                    "generic cyberpunk filler. Do not write later sections."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Write PART {part_id}/06, '{part_title}', in 470-540 words. The hard accepted "
+                    f"range after repair is {segment_min}-{segment_max} words. {part_brief}\n\n"
+                    "AUTHORITATIVE STORYBOARD:\n"
+                    + storyboard
+                    + "\n\nSPROCKET SOURCE FRAGMENTS:\n"
+                    + fragments
+                    + (
+                        "\n\nPREVIOUS PART TAIL FOR CONTINUITY ONLY:\n" + previous_tail
+                        if previous_tail
+                        else ""
+                    )
+                ),
+            },
+        ]
+        part, _ = provider_call(
+            cfg=cfg,
+            key=key,
+            stage_id=f"m3-draft-{part_id}",
+            model=models["drafter"],
+            messages=messages,
+            max_tokens=segment_tokens,
+            temperature=0.72,
+            out=out,
+        )
+        count = word_count(part)
+        if not segment_min <= count <= segment_max:
+            repair_messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are repairing the length of one story section. Return that complete "
+                        "section only. Preserve its events, voice, causal links and transition; do "
+                        "not introduce events from other sections."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"This section is {count} words. Rewrite it to {segment_preferred} words, "
+                        f"with hard acceptance {segment_min}-{segment_max}. Keep every material event "
+                        "and concrete mechanical detail, changing only local pacing/detail density.\n\n"
+                        "SECTION:\n"
+                        + part
+                    ),
+                },
+            ]
+            part, _ = provider_call(
+                cfg=cfg,
+                key=key,
+                stage_id=f"m3-draft-{part_id}-length-repair",
+                model=models["drafter"],
+                messages=repair_messages,
+                max_tokens=segment_tokens,
+                temperature=0.45,
+                out=out,
+            )
+            count = word_count(part)
+        if not segment_min <= count <= segment_max:
+            raise RuntimeError(
+                f"m3 part {part_id} length {count} outside {segment_min}-{segment_max}"
+            )
+        part_path = derived / "draft-sections" / f"part-{part_id}.md"
+        part_path.parent.mkdir(parents=True, exist_ok=True)
+        part_path.write_text(part + "\n")
+        draft_parts.append(part)
+        previous_tail = " ".join(part.split()[-120:])
+
+    draft = "\n\n---\n\n".join(draft_parts)
     (derived / "draft.md").write_text(draft + "\n")
+    draft_count = word_count(draft)
+    minimum = int(cfg["target_words"]["minimum"])
+    maximum = int(cfg["target_words"]["maximum"])
+    if not minimum <= draft_count <= maximum:
+        raise RuntimeError(
+            f"M3 assembled draft length {draft_count} outside {minimum}-{maximum}"
+        )
     draft_sha = sha256_bytes(draft.encode("utf-8"))
 
     review_messages = [
@@ -625,17 +715,18 @@ def provider(args: argparse.Namespace) -> None:
             "content": (
                 "You are the independent STORY-001 fiction reviewer. Be specific and adversarial. "
                 "Assess continuity, causality, spatial logic, pacing, Sprocket voice drift, generic "
-                "prose, chronology, emotional coherence, accidental lore claims, and whether unreliable "
-                "memory is deliberate rather than merely inconsistent. Return markdown review only."
+                "prose, chronology, emotional coherence, accidental lore claims, section seams, and "
+                "whether unreliable memory is deliberate rather than merely inconsistent. Return "
+                "markdown review only."
             ),
         },
         {
             "role": "user",
             "content": (
-                f"Review draft SHA-256 {draft_sha}. Start with PASS/REVISE and a 0-10 score. Then give "
-                "a prioritized finding list with quoted short anchors, concrete repair instructions, "
-                "and a final checklist. Independently note approximate length but do not rewrite the "
-                "story.\n\nSTORYBOARD:\n"
+                f"Review draft SHA-256 {draft_sha}, measured locally at {draft_count} words. Start "
+                "with PASS/REVISE and a 0-10 score. Then give a prioritized finding list with quoted "
+                "short anchors, concrete repair instructions, and a final checklist. Do not rewrite "
+                "the story.\n\nSTORYBOARD:\n"
                 + storyboard
                 + "\n\nDRAFT:\n"
                 + draft
@@ -654,79 +745,108 @@ def provider(args: argparse.Namespace) -> None:
     )
     (derived / "review.md").write_text(review + "\n")
 
-    edit_messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are the final STORY-001 fiction editor. Return a complete revised story only. "
-                "Apply the independent review where it improves continuity, causality, pacing and voice, "
-                "but do not sanitize Sprocket's awkward physical specificity. Preserve deliberate memory "
-                "uncertainty and the established incident. Do not add meta-commentary."
-            ),
-        },
-        {
-            "role": "user",
-            "content": (
-                "Revise the complete draft into 2,850-3,150 words. Address every material review finding; "
-                "do not merely copyedit. Keep the title 'The Shift That Kept Turning'. Avoid introducing "
-                "new proper-noun lore just to make the world sound richer.\n\nSTORYBOARD:\n"
-                + storyboard
-                + "\n\nREVIEW:\n"
-                + review
-                + "\n\nDRAFT:\n"
-                + draft
-            ),
-        },
-    ]
-    revised, _ = provider_call(
-        cfg=cfg,
-        key=key,
-        stage_id="m5-edit",
-        model=models["editor"],
-        messages=edit_messages,
-        max_tokens=int(budgets["edit_max_tokens"]),
-        temperature=0.65,
-        out=out,
-    )
-    (derived / "revision-1.md").write_text(revised + "\n")
-
-    minimum = int(cfg["target_words"]["minimum"])
-    maximum = int(cfg["target_words"]["maximum"])
-    count = word_count(revised)
-    final = revised
-    final_stage = "m5-edit"
-    if not minimum <= count <= maximum:
-        repair_messages = [
+    edited_parts: list[str] = []
+    edit_tokens = int(budgets.get("edit_segment_max_tokens", 1600))
+    for idx, ((part_id, part_title, _), original) in enumerate(
+        zip(part_specs, draft_parts)
+    ):
+        previous_tail = (
+            " ".join(edited_parts[-1].split()[-100:]) if edited_parts else ""
+        )
+        next_head = (
+            " ".join(draft_parts[idx + 1].split()[:100])
+            if idx + 1 < len(draft_parts)
+            else ""
+        )
+        edit_messages = [
             {
                 "role": "system",
                 "content": (
-                    "You are doing a bounded length-and-continuity repair on a finished story. "
-                    "Return the complete story only. Preserve plot, voice, review fixes and title."
+                    "You are the final STORY-001 section editor. Return only the complete revised "
+                    "section. Apply review findings relevant to this section, preserve plot/causality "
+                    "and Sprocket's tactile awkwardness, and keep transitions compatible with adjacent "
+                    "sections. Do not write or summarize other sections."
                 ),
             },
             {
                 "role": "user",
                 "content": (
-                    f"The current story is {count} words; acceptance is {minimum}-{maximum}, with a "
-                    "preferred 2,900-3,100 words. Tighten or expand locally without adding a new subplot "
-                    "or deleting the central rescue/line-stop tradeoff.\n\nCURRENT STORY:\n"
-                    + revised
+                    f"Edit PART {part_id}/06, '{part_title}', to 470-540 words; hard acceptance "
+                    f"is {segment_min}-{segment_max}. Address every material reviewer finding that "
+                    "touches this section without adding new proper-noun lore.\n\nFULL REVIEW:\n"
+                    + review
+                    + "\n\nCURRENT SECTION:\n"
+                    + original
+                    + (
+                        "\n\nPREVIOUS EDITED TAIL:\n" + previous_tail
+                        if previous_tail
+                        else ""
+                    )
+                    + (
+                        "\n\nNEXT ORIGINAL HEAD:\n" + next_head
+                        if next_head
+                        else ""
+                    )
                 ),
             },
         ]
-        final, _ = provider_call(
+        edited, _ = provider_call(
             cfg=cfg,
             key=key,
-            stage_id="m5-length-repair",
+            stage_id=f"m5-edit-{part_id}",
             model=models["editor"],
-            messages=repair_messages,
-            max_tokens=int(budgets["edit_max_tokens"]),
-            temperature=0.45,
+            messages=edit_messages,
+            max_tokens=edit_tokens,
+            temperature=0.58,
             out=out,
         )
-        (derived / "revision-length-repair.md").write_text(final + "\n")
-        final_stage = "m5-length-repair"
-        count = word_count(final)
+        count = word_count(edited)
+        if not segment_min <= count <= segment_max:
+            repair_messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "Repair only this edited story section's length. Return the complete section "
+                        "only; preserve all review fixes, events, voice and boundary transitions."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"The edited section is {count} words. Rewrite to {segment_preferred} words "
+                        f"with hard acceptance {segment_min}-{segment_max}.\n\nSECTION:\n"
+                        + edited
+                    ),
+                },
+            ]
+            edited, _ = provider_call(
+                cfg=cfg,
+                key=key,
+                stage_id=f"m5-edit-{part_id}-length-repair",
+                model=models["editor"],
+                messages=repair_messages,
+                max_tokens=edit_tokens,
+                temperature=0.4,
+                out=out,
+            )
+            count = word_count(edited)
+        if not segment_min <= count <= segment_max:
+            raise RuntimeError(
+                f"m5 part {part_id} length {count} outside {segment_min}-{segment_max}"
+            )
+        edit_path = derived / "edit-sections" / f"part-{part_id}.md"
+        edit_path.parent.mkdir(parents=True, exist_ok=True)
+        edit_path.write_text(edited + "\n")
+        edited_parts.append(edited)
+
+    final = "\n\n---\n\n".join(edited_parts)
+    (derived / "revision-1.md").write_text(final + "\n")
+    count = word_count(final)
+    final_stage = "m5-section-edit"
+    if not minimum <= count <= maximum:
+        raise RuntimeError(
+            f"STORY-001 section-edited final length {count} outside {minimum}-{maximum}"
+        )
 
     final_path = derived / "final-story.md"
     final_path.write_text(final + "\n")
