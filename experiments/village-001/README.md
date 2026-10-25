@@ -28,3 +28,5 @@ Issue #10 adds two explicit row contracts:
 `scripts/village_001_provider_preflight.py` performs sequential protocol checks against the configured NVIDIA compiler, critic and adjudicator. Authorization is never written to disk; all archived request/response/error records are scrubbed against the live secret before serialization. The provider gate fails closed if the secret is absent, a configured model is unavailable, transport fails, or the provider response shape is incompatible.
 
 Provider preflight evidence is written under `experiments/village-001/provider-preflight/run-<github-run-id>/` by the VILLAGE-001A workflow.
+
+`scripts/village_001_gate.py` is the reusable fail-closed launch gate for #11 onward. It requires a durable successful provider preflight and verifies that its endpoint, roles and exact configured model IDs still match the current campaign configuration. Any later change to a provider model therefore invalidates the old gate until a new preflight is archived.
