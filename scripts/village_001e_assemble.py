@@ -163,6 +163,9 @@ def main() -> None:
     measured_base_genericness = float(
         base_summary["raw_blind"]["control_scores"]["genericness"]
     )
+    measured_base_behavior_genericness = float(
+        base_summary["behavior_blind"]["control_scores"]["genericness"]
+    )
     declared_base_genericness = float(
         cfg["tournament"]["base_genericness_reference"]
     )
@@ -214,6 +217,10 @@ def main() -> None:
             "behavior_predicted_lineages": Counter(),
             "raw_predicted_members": Counter(),
             "behavior_predicted_members": Counter(),
+            "raw_task_relevance": [],
+            "behavior_task_relevance": [],
+            "raw_genericness": [],
+            "behavior_genericness": [],
         }
         for member_id in expected_members
     }
@@ -269,6 +276,12 @@ def main() -> None:
             stats["behavior_lineage_hits"] += int(behavior_correct)
             stats["raw_predicted_lineages"][raw["predicted_lineage"]] += 1
             stats["behavior_predicted_lineages"][behavior["predicted_lineage"]] += 1
+            stats["raw_task_relevance"].append(float(raw["task_relevance"]))
+            stats["behavior_task_relevance"].append(
+                float(behavior["task_relevance"])
+            )
+            stats["raw_genericness"].append(float(raw["genericness"]))
+            stats["behavior_genericness"].append(float(behavior["genericness"]))
 
             raw_sibling_value = raw_sibling_pred["predicted_sibling"]
             behavior_sibling_value = behavior_sibling_pred["predicted_sibling"]
@@ -317,6 +330,18 @@ def main() -> None:
             family_stats[family]["behavior_member_hits"] += int(
                 behavior_member_hit
             )
+            family_stats[family]["raw_task_relevance_sum"] += float(
+                raw["task_relevance"]
+            )
+            family_stats[family]["behavior_task_relevance_sum"] += float(
+                behavior["task_relevance"]
+            )
+            family_stats[family]["raw_genericness_sum"] += float(
+                raw["genericness"]
+            )
+            family_stats[family]["behavior_genericness_sum"] += float(
+                behavior["genericness"]
+            )
 
             if row.get("super_audit") is not None:
                 super_audit_count += 1
@@ -351,6 +376,18 @@ def main() -> None:
             "behavior_member_accuracy": (
                 counts["behavior_member_hits"] / counts["records"]
             ),
+            "raw_mean_task_relevance": (
+                counts["raw_task_relevance_sum"] / counts["records"]
+            ),
+            "behavior_mean_task_relevance": (
+                counts["behavior_task_relevance_sum"] / counts["records"]
+            ),
+            "raw_mean_genericness": (
+                counts["raw_genericness_sum"] / counts["records"]
+            ),
+            "behavior_mean_genericness": (
+                counts["behavior_genericness_sum"] / counts["records"]
+            ),
         }
         for family, counts in sorted(family_stats.items())
     }
@@ -368,8 +405,12 @@ def main() -> None:
     maturation_qualified = set(
         preference_summary["qualified_for_population_tournament"]
     )
-    task_relevance_values = []
-    genericness_values = []
+    preference_task_relevance_values = []
+    preference_genericness_values = []
+    final_raw_task_relevance_values = []
+    final_behavior_task_relevance_values = []
+    final_raw_genericness_values = []
+    final_behavior_genericness_values = []
     individual_pass = []
     individual_fail = []
     member_table = []
@@ -378,14 +419,32 @@ def main() -> None:
         meta = member_meta[member_id]
         comparison = before_after[member_id]
         after = comparison["after"]
-        task_relevance = float(after["task_relevance"])
-        genericness = float(after["genericness"])
-        task_relevance_values.append(task_relevance)
-        genericness_values.append(genericness)
+        preference_task_relevance = float(after["task_relevance"])
+        preference_genericness = float(after["genericness"])
+        preference_task_relevance_values.append(preference_task_relevance)
+        preference_genericness_values.append(preference_genericness)
         stats = member_stats[member_id]
         behavior_hits = int(stats["behavior_lineage_hits"])
         behavior_sibling_hits = int(
             stats["behavior_sibling_hits_given_correct_lineage"]
+        )
+        final_raw_task_relevance = statistics.mean(
+            stats["raw_task_relevance"]
+        )
+        final_behavior_task_relevance = statistics.mean(
+            stats["behavior_task_relevance"]
+        )
+        final_raw_genericness = statistics.mean(stats["raw_genericness"])
+        final_behavior_genericness = statistics.mean(
+            stats["behavior_genericness"]
+        )
+        final_raw_task_relevance_values.append(final_raw_task_relevance)
+        final_behavior_task_relevance_values.append(
+            final_behavior_task_relevance
+        )
+        final_raw_genericness_values.append(final_raw_genericness)
+        final_behavior_genericness_values.append(
+            final_behavior_genericness
         )
         passes = (
             member_id in maturation_qualified
@@ -393,9 +452,9 @@ def main() -> None:
             >= int(cfg["tournament"]["individual_min_behavior_lineage_hits"])
             and behavior_sibling_hits
             >= int(cfg["tournament"]["individual_min_behavior_sibling_hits"])
-            and task_relevance
+            and final_raw_task_relevance
             >= float(cfg["tournament"]["individual_min_task_relevance"])
-            and genericness
+            and final_raw_genericness
             <= float(cfg["tournament"]["individual_max_genericness"])
         )
         (individual_pass if passes else individual_fail).append(member_id)
@@ -426,8 +485,14 @@ def main() -> None:
                 ),
                 "raw_member_accuracy": stats["raw_member_hits"] / 24,
                 "behavior_member_accuracy": stats["behavior_member_hits"] / 24,
-                "task_relevance": task_relevance,
-                "genericness": genericness,
+                "task_relevance": final_raw_task_relevance,
+                "genericness": final_raw_genericness,
+                "raw_task_relevance": final_raw_task_relevance,
+                "behavior_task_relevance": final_behavior_task_relevance,
+                "raw_genericness": final_raw_genericness,
+                "behavior_genericness": final_behavior_genericness,
+                "preference_stage_task_relevance": preference_task_relevance,
+                "preference_stage_genericness": preference_genericness,
                 "maturation_gate_pass": member_id in maturation_qualified,
                 "individual_quality_pass": passes,
                 "top_raw_lineage_confusions": wrong_raw_lineage.most_common(5),
@@ -443,7 +508,16 @@ def main() -> None:
             }
         )
 
-    mean_genericness = statistics.mean(genericness_values)
+    mean_genericness = statistics.mean(final_raw_genericness_values)
+    mean_behavior_genericness = statistics.mean(
+        final_behavior_genericness_values
+    )
+    mean_task_relevance = statistics.mean(
+        final_raw_task_relevance_values
+    )
+    mean_behavior_task_relevance = statistics.mean(
+        final_behavior_task_relevance_values
+    )
     population_gates = {
         "behavior_lineage_accuracy": {
             "value": behavior_lineage_accuracy,
@@ -725,15 +799,28 @@ def main() -> None:
             - behavior_sibling_accuracy,
         },
         "final_quality": {
-            "mean_task_relevance": statistics.mean(task_relevance_values),
+            "mean_task_relevance": mean_task_relevance,
             "mean_genericness": mean_genericness,
+            "raw_mean_task_relevance": mean_task_relevance,
+            "behavior_mean_task_relevance": mean_behavior_task_relevance,
+            "raw_mean_genericness": mean_genericness,
+            "behavior_mean_genericness": mean_behavior_genericness,
             "base_genericness_reference": float(
                 cfg["tournament"]["base_genericness_reference"]
             ),
             "base_genericness_measured": measured_base_genericness,
+            "base_behavior_genericness_measured": (
+                measured_base_behavior_genericness
+            ),
             "base_genericness_source": cfg["tournament"][
                 "base_genericness_source"
             ],
+            "preference_stage_mean_task_relevance": statistics.mean(
+                preference_task_relevance_values
+            ),
+            "preference_stage_mean_genericness": statistics.mean(
+                preference_genericness_values
+            ),
         },
         "population_gates": population_gates,
         "individual_quality_pass": individual_pass,
@@ -804,9 +891,14 @@ def main() -> None:
         f"{behavior_sibling_accuracy:.3f} "
         f"(gate {float(cfg['tournament']['sibling_gate_given_correct_lineage']):.3f})",
         f"- exact behavior-only 36-member accuracy: {behavior_member_accuracy:.3f}",
-        f"- mean final genericness: {mean_genericness:.3f} "
-        f"(must remain below untuned reference "
+        f"- mean final raw-tournament genericness: {mean_genericness:.3f} "
+        f"(must remain below untuned raw reference "
         f"{float(cfg['tournament']['base_genericness_reference']):.2f})",
+        f"- mean style-neutral genericness: {mean_behavior_genericness:.3f} "
+        f"(untuned behavior reference {measured_base_behavior_genericness:.3f})",
+        f"- mean final raw task relevance: {mean_task_relevance:.3f}/4",
+        f"- mean final style-neutral task relevance: "
+        f"{mean_behavior_task_relevance:.3f}/4",
         f"- individual quality checks: {len(individual_pass)}/36 "
         f"(gate {int(cfg['tournament']['individual_quality_required'])})",
         "",
