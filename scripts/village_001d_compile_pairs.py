@@ -729,24 +729,38 @@ def repair_pairs(
     reasons: dict[str, str],
     rawdir: Path,
     label: str,
-) -> tuple[list[dict], str]:
+) -> tuple[list[dict], dict[str, list[str]]]:
     if len(rows) > 10:
         raise ValueError("curation repair batch exceeds 10 pairs")
 
     model = campaign["nvidia"]["models"]["compiler"]
-    payload_rows = [
-        {
-            "pair_id": row["pair_id"],
-            "input": row["input"],
-            "chosen": row["chosen"],
-            "rejected": "__PARENT__" if row["variant"] == 1 else row["rejected"],
-            "why_chosen": row["why_chosen"],
-            "repair_reason": reasons[row["pair_id"]],
-            "variant": row["variant"],
-        }
-        for row in rows
-    ]
-    prompt = f"""Repair these disputed preference pairs for {member['member_id']}.
+    original = {row["pair_id"]: row for row in rows}
+    parsed: dict[str, dict] = {}
+    call_refs: dict[str, list[str]] = {pair_id: [] for pair_id in original}
+
+    for repair_round in range(1, 4):
+        missing_ids = [
+            row["pair_id"] for row in rows
+            if row["pair_id"] not in parsed
+        ]
+        if not missing_ids:
+            break
+
+        request_rows = [original[pair_id] for pair_id in missing_ids]
+        payload_rows = [
+            {
+                "pair_id": row["pair_id"],
+                "input": row["input"],
+                "chosen": row["chosen"],
+                "rejected": "__PARENT__" if row["variant"] == 1 else row["rejected"],
+                "why_chosen": row["why_chosen"],
+                "repair_reason": reasons[row["pair_id"]],
+                "variant": row["variant"],
+            }
+            for row in request_rows
+        ]
+        round_label = label if repair_round == 1 else f"{label}-retry{repair_round}"
+        prompt = f"""Repair these disputed preference pairs for {member['member_id']}.
 
 Ancestral summary:
 {packet['persona_summary']}
@@ -764,91 +778,95 @@ Return JSON only:
 ROWS:
 {json.dumps(payload_rows, ensure_ascii=False)}
 """
-    payload = {
-        "model": model["id"],
-        "messages": [
-            {
-                "role": "system",
-                "content": "Repair behavioral preference pairs. Return JSON only.",
-            },
-            {"role": "user", "content": prompt},
-        ],
-        "max_tokens": min(
-            int(pref["pair_generation"]["compiler_repair_max_tokens"]),
-            max(4096, 768 * len(rows)),
-        ),
-        "temperature": 0.25,
-        "top_p": 0.9,
-        "stream": False,
-    }
-    if "reasoning_effort" in model:
-        payload["reasoning_effort"] = "low"
-    content, _, _ = call_api(
-        key=key,
-        endpoint=campaign["nvidia"]["endpoint"],
-        payload=payload,
-        outdir=rawdir,
-        label=label,
-        attempts_limit=int(pref["pair_generation"]["attempts"]),
-        role="preference-compiler-repair",
-    )
+        payload = {
+            "model": model["id"],
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "Repair behavioral preference pairs. Return JSON only.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            "max_tokens": min(
+                int(pref["pair_generation"]["compiler_repair_max_tokens"]),
+                max(4096, 768 * len(request_rows)),
+            ),
+            "temperature": 0.25,
+            "top_p": 0.9,
+            "stream": False,
+        }
+        if "reasoning_effort" in model:
+            payload["reasoning_effort"] = "low"
+        content, _, _ = call_api(
+            key=key,
+            endpoint=campaign["nvidia"]["endpoint"],
+            payload=payload,
+            outdir=rawdir,
+            label=round_label,
+            attempts_limit=int(pref["pair_generation"]["attempts"]),
+            role="preference-compiler-repair",
+        )
 
-    try:
-        obj = extract_json(content)
-    except ValueError as exc:
-        raise ValueError(f"repair JSON parse failed: {exc}") from exc
-    items = obj.get("pairs") if isinstance(obj, dict) else None
-    if not isinstance(items, list):
-        raise ValueError("repair pairs not list")
-
-    original = {row["pair_id"]: row for row in rows}
-    parsed: dict[str, dict] = {}
-    for item in items:
-        pair_id = item.get("pair_id") if isinstance(item, dict) else None
-        if pair_id not in original or pair_id in parsed:
+        try:
+            obj = extract_json(content)
+        except ValueError:
             continue
-        row = dict(original[pair_id])
-
-        chosen = item.get("chosen")
-        why = item.get("why_chosen")
-        if not isinstance(chosen, str) or len(chosen.strip()) < 12:
+        items = obj.get("pairs") if isinstance(obj, dict) else None
+        if not isinstance(items, list):
             continue
-        if not isinstance(why, str) or len(why.strip()) < 8:
-            continue
-        row["chosen"] = chosen.strip()
-        row["why_chosen"] = why.strip()
 
-        provider_rejected = item.get("rejected")
-        if row["variant"] == 1:
-            row["rejected"] = row["source_parent_response"].strip()
-            row["provenance"]["rejected_source"] = "authoritative_parent_response"
-            row["provenance"]["provider_rejected_ignored"] = (
-                not isinstance(provider_rejected, str)
-                or provider_rejected.strip() != row["rejected"]
-            )
-        else:
-            if (
-                not isinstance(provider_rejected, str)
-                or len(provider_rejected.strip()) < 8
-            ):
+        for item in items:
+            pair_id = item.get("pair_id") if isinstance(item, dict) else None
+            if pair_id not in original or pair_id in parsed:
                 continue
-            rejected = provider_rejected.strip()
-            if normalize_text(rejected) == normalize_text(
-                row["source_parent_response"]
-            ):
-                continue
-            row["rejected"] = rejected
-            row["provenance"]["rejected_source"] = "provider"
-            row["provenance"]["provider_rejected_ignored"] = False
+            row = dict(original[pair_id])
+            row["provenance"] = dict(row["provenance"])
 
-        if normalize_text(row["chosen"]) == normalize_text(row["rejected"]):
-            continue
-        parsed[pair_id] = row
+            chosen = item.get("chosen")
+            why = item.get("why_chosen")
+            if not isinstance(chosen, str) or len(chosen.strip()) < 12:
+                continue
+            if not isinstance(why, str) or len(why.strip()) < 8:
+                continue
+            row["chosen"] = chosen.strip()
+            row["why_chosen"] = why.strip()
+
+            provider_rejected = item.get("rejected")
+            if row["variant"] == 1:
+                row["rejected"] = row["source_parent_response"].strip()
+                row["provenance"]["rejected_source"] = (
+                    "authoritative_parent_response"
+                )
+                row["provenance"]["provider_rejected_ignored"] = (
+                    not isinstance(provider_rejected, str)
+                    or provider_rejected.strip() != row["rejected"]
+                )
+            else:
+                if (
+                    not isinstance(provider_rejected, str)
+                    or len(provider_rejected.strip()) < 8
+                ):
+                    continue
+                rejected = provider_rejected.strip()
+                if normalize_text(rejected) == normalize_text(
+                    row["source_parent_response"]
+                ):
+                    continue
+                row["rejected"] = rejected
+                row["provenance"]["rejected_source"] = "provider"
+                row["provenance"]["provider_rejected_ignored"] = False
+
+            if normalize_text(row["chosen"]) == normalize_text(row["rejected"]):
+                continue
+            parsed[pair_id] = row
+            call_refs[pair_id].append(round_label)
 
     missing = [row["pair_id"] for row in rows if row["pair_id"] not in parsed]
     if missing:
-        raise ValueError("repair pairs incomplete: " + ",".join(missing))
-    return [parsed[row["pair_id"]] for row in rows], label
+        raise ValueError(
+            "repair pairs incomplete after targeted retry: " + ",".join(missing)
+        )
+    return [parsed[row["pair_id"]] for row in rows], call_refs
 
 
 def curate(
@@ -970,7 +988,7 @@ def curate(
                 f"{member['member_id']}-pairs-chunk{chunk_index:02d}-"
                 f"repair{round_index+1}-b{batch_index // 10 + 1:02d}"
             )
-            repaired, used_label = repair_pairs(
+            repaired, repair_call_refs = repair_pairs(
                 key=key,
                 campaign=campaign,
                 pref=pref,
@@ -983,7 +1001,9 @@ def curate(
             )
             for row in repaired:
                 current[row["pair_id"]] = row
-                call_refs[row["pair_id"]].append(used_label)
+                call_refs[row["pair_id"]].extend(
+                    repair_call_refs[row["pair_id"]]
+                )
                 repaired_all.append(row)
         pending = repaired_all
 
