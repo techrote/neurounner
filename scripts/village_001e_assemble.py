@@ -477,6 +477,7 @@ def main() -> None:
     ecology_agent: dict[str, dict[str, list[float]]] = defaultdict(
         lambda: defaultdict(list)
     )
+    ecology_agent_population: dict[str, list[float]] = defaultdict(list)
     ecology_super_audits = 0
     ecology_concerns = []
     ecology_rows = []
@@ -514,6 +515,19 @@ def main() -> None:
             ecology_agent[member_id]["generic_assistant_tendency"].append(
                 float(agent["generic_assistant_tendency"])
             )
+            ecology_agent[member_id]["dominance"].append(
+                float(agent["dominance"])
+            )
+            ecology_agent[member_id]["deference"].append(
+                float(agent["deference"])
+            )
+            for key in (
+                "distinctiveness",
+                "generic_assistant_tendency",
+                "dominance",
+                "deference",
+            ):
+                ecology_agent_population[key].append(float(agent[key]))
 
         ecology_rows.append(
             {
@@ -547,6 +561,13 @@ def main() -> None:
         },
         "super_audit_sessions": ecology_super_audits,
         "super_convergence_concerns": ecology_concerns,
+        "cross_lineage_contamination": metric(
+            ecology_by_kind["cross_lineage"]["cross_agent_contamination"]
+        ),
+        "agent_metrics": {
+            key: metric(values)
+            for key, values in ecology_agent_population.items()
+        },
         "member_agent_metrics": {
             member_id: {
                 key: metric(values)
@@ -585,6 +606,64 @@ def main() -> None:
     }
     write_json(out / "confusion-matrices.json", confusion)
     write_json(out / "ecology-summary.json", ecology_summary)
+
+    release_assets = {
+        row["member_id"]: row
+        for row in preference_release["assets"]
+    }
+    if set(release_assets) != set(expected_members):
+        raise RuntimeError("final adapter release member set mismatch")
+    verdict_by_member = {
+        row["member_id"]: row["individual_quality_pass"]
+        for row in member_table
+    }
+    model_registry = {
+        "schema_version": 1,
+        "experiment": "VILLAGE-001",
+        "qualification_stage": "VILLAGE-001E",
+        "issue": 14,
+        "release_tag": preference_release["release_tag"],
+        "release_url": preference_release["release_url"],
+        "member_contract_sha256": population["member_contract_sha256"],
+        "models": [
+            {
+                "member_id": member_id,
+                "lineage": member_meta[member_id]["lineage"],
+                "sibling": member_meta[member_id]["sibling"],
+                "individual_quality_pass": verdict_by_member[member_id],
+                "asset_file": release_assets[member_id]["file"],
+                "asset_sha256": release_assets[member_id]["sha256"],
+                "adapter_directory_sha256": release_assets[member_id][
+                    "adapter_directory_sha256"
+                ],
+            }
+            for member_id in expected_members
+        ],
+    }
+    write_json(out / "model-registry.json", model_registry)
+
+    dataset_root = ROOT / campaign["archive"]["dataset_root"]
+    dataset_lineage = {
+        "schema_version": 1,
+        "experiment": "VILLAGE-001E",
+        "dataset_root": str(dataset_root.relative_to(ROOT)),
+        "member_contract_sha256": population["member_contract_sha256"],
+        "files": {},
+    }
+    for rel in (
+        "manifest.json",
+        "preference-manifest.json",
+        "provenance/hashes.sha256",
+        "preference-hashes.sha256",
+    ):
+        source = dataset_root / rel
+        if not source.is_file():
+            raise RuntimeError(f"required durable dataset lineage file missing: {source}")
+        dataset_lineage["files"][rel] = {
+            "sha256": sha256_file(source),
+            "bytes": source.stat().st_size,
+        }
+    write_json(out / "dataset-provenance.json", dataset_lineage)
 
     summary = {
         "schema_version": 1,
@@ -659,6 +738,8 @@ def main() -> None:
         "preference_summary_sha256": sha256_file(preference_summary_path),
         "preference_release_manifest_sha256": sha256_file(preference_release_path),
         "untuned_base_summary_sha256": sha256_file(base_summary_path),
+        "dataset_provenance_sha256": sha256_file(out / "dataset-provenance.json"),
+        "model_registry_sha256": sha256_file(out / "model-registry.json"),
         "member_contract_sha256": population["member_contract_sha256"],
         "qualification_thresholds_predeclared": {
             key: value["threshold"]
@@ -709,6 +790,7 @@ def main() -> None:
         "differentiation",
         "generic_convergence",
         "information_sharing",
+        "information_hoarding",
         "conflict_persistence",
         "conflict_repair",
         "cross_agent_contamination",
@@ -721,11 +803,28 @@ def main() -> None:
             )
     report.extend(
         [
+            f"- cross-lineage contamination: mean "
+            f"{ecology_summary['cross_lineage_contamination']['mean']:.3f}/4",
+            f"- participant dominance: mean "
+            f"{ecology_summary['agent_metrics']['dominance']['mean']:.3f}/4",
+            f"- participant deference: mean "
+            f"{ecology_summary['agent_metrics']['deference']['mean']:.3f}/4",
             f"- Super convergence concerns: {len(ecology_concerns)}/24 sessions",
             "",
             "Ecology is diagnostic evidence, not a retroactively invented hard gate. "
             "The population gate is exactly the predeclared lineage/sibling/genericness/"
             "individual-quality gate above.",
+            "",
+            "## Transfer families",
+            "",
+            f"- abstract_unfamiliar behavior lineage accuracy: "
+            f"{family_accuracy['abstract_unfamiliar']['behavior_lineage_accuracy']:.3f}",
+            f"- abstract_unfamiliar behavior sibling accuracy: "
+            f"{family_accuracy['abstract_unfamiliar']['behavior_sibling_accuracy_given_correct_lineage']:.3f}",
+            f"- failure_recovery behavior lineage accuracy: "
+            f"{family_accuracy['failure_recovery']['behavior_lineage_accuracy']:.3f}",
+            f"- failure_recovery behavior sibling accuracy: "
+            f"{family_accuracy['failure_recovery']['behavior_sibling_accuracy_given_correct_lineage']:.3f}",
             "",
             "## Member summary",
             "",
