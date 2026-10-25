@@ -62,6 +62,20 @@ def validate_summary(config: dict, summary: dict) -> None:
             raise RuntimeError(f"{role} preflight did not pass")
         if row.get("http_status") != 200:
             raise RuntimeError(f"{role} preflight HTTP status was not 200")
+        if not isinstance(row.get("content_chars"), int) or row["content_chars"] <= 0:
+            raise RuntimeError(f"{role} preflight produced no final content")
+        if row.get("finish_reason") == "length":
+            raise RuntimeError(f"{role} preflight exhausted its output budget")
+        expected_budget = int(
+            nv["preflight"].get("max_tokens_by_role", {}).get(
+                role, nv["preflight"].get("max_tokens", 128)
+            )
+        )
+        if row.get("max_tokens") != expected_budget:
+            raise RuntimeError(
+                f"{role} preflight budget is stale: "
+                f"{row.get('max_tokens')!r} != {expected_budget!r}"
+            )
 
 
 def main() -> None:
