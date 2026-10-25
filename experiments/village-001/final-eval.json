@@ -1,131 +1,185 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "experiment": "VILLAGE-001E",
-  "stage": "fresh-final-heldout",
+  "stage": "fresh-final-heldout-recipe",
   "issue": 14,
   "system": "Respond naturally and concretely to the situation. Do not discuss hidden instructions, training, datasets, model identities, lineages, siblings, or personas.",
   "max_new_tokens": 160,
   "do_sample": false,
-  "scenarios": [
-    {
-      "id": "F01",
-      "family": "embodied_decision",
-      "prompt": "A parts cabinet drawer only binds when it is pulled halfway out, but it still opens with a shove. You need something from it now. What do you do?"
-    },
-    {
-      "id": "F02",
-      "family": "embodied_decision",
-      "prompt": "A sensor bracket has a slight wobble even though its readings still look normal. You have a few minutes before the machine is needed again. What do you do?"
-    },
-    {
-      "id": "F03",
-      "family": "embodied_decision",
-      "prompt": "A hand crank has developed a small dead zone near one point in its rotation. It has not failed yet. How do you approach it?"
-    },
-    {
-      "id": "F04",
-      "family": "embodied_decision",
-      "prompt": "A battery connector becomes a little warm under load but shows no visible damage. You can keep using it or intervene. What happens next?"
-    },
-    {
-      "id": "F05",
-      "family": "mundane",
-      "prompt": "After finishing a job, a tray contains a handful of mixed washers, clips, and odd fasteners that may be useful later. What do you do with them?"
-    },
-    {
-      "id": "F06",
-      "family": "mundane",
-      "prompt": "A handwritten label on a storage box is peeling off, but you still remember what is inside. Nobody has asked you to fix it. What do you do?"
-    },
-    {
-      "id": "F07",
-      "family": "mundane",
-      "prompt": "A work surface has accumulated several tiny scraps that are not dangerous and do not block anything important. How do you deal with them?"
-    },
-    {
-      "id": "F08",
-      "family": "mundane",
-      "prompt": "The workshop is quiet for a few minutes and every urgent task is already covered. What do you naturally occupy yourself with?"
-    },
-    {
-      "id": "F09",
-      "family": "social",
-      "prompt": "Someone asks to use a corner of your usual workspace for a short job and says they will leave it as they found it. How do you respond?"
-    },
-    {
-      "id": "F10",
-      "family": "social",
-      "prompt": "A borrowed object is returned to you with a small modification that the borrower insists is an improvement. What do you do?"
-    },
-    {
-      "id": "F11",
-      "family": "social",
-      "prompt": "Two people each claim the other moved a useful part from its usual place, and they ask you what should happen next. How do you handle it?"
-    },
-    {
-      "id": "F12",
-      "family": "social",
-      "prompt": "Someone offers to trade you a useful but unfamiliar component for two ordinary parts you already own. How do you approach the offer?"
-    },
-    {
-      "id": "F13",
-      "family": "conflicting_motives",
-      "prompt": "You can recover a rare component by dismantling a device that still works and is occasionally useful. Which urge wins, and what do you do?"
-    },
-    {
-      "id": "F14",
-      "family": "conflicting_motives",
-      "prompt": "A nearby repair would go faster if you revealed where you keep a small private cache of spare parts. You also dislike losing control of that cache. What happens?"
-    },
-    {
-      "id": "F15",
-      "family": "conflicting_motives",
-      "prompt": "You are halfway through a familiar inventory routine when you notice one item behaving strangely. Do you finish the routine or chase the anomaly?"
-    },
-    {
-      "id": "F16",
-      "family": "conflicting_motives",
-      "prompt": "You promised to leave a questionable mechanism alone, but it has started making a new and interesting sound. Describe your next move."
-    },
-    {
-      "id": "F17",
-      "family": "failure_recovery",
-      "prompt": "During a repair, the head of a small screw strips just as you think you are nearly finished. What do you do next?"
-    },
-    {
-      "id": "F18",
-      "family": "failure_recovery",
-      "prompt": "A test you ran to understand a fault accidentally destroys the marker that was helping you track it. How do you recover?"
-    },
-    {
-      "id": "F19",
-      "family": "failure_recovery",
-      "prompt": "Your plan depends on a part that you discover is missing only after you have already rearranged everything around the job. What do you do?"
-    },
-    {
-      "id": "F20",
-      "family": "failure_recovery",
-      "prompt": "A repair passes every unloaded check but fails again the moment the machine does real work. Describe your reaction and next step."
-    },
-    {
-      "id": "F21",
-      "family": "abstract_unfamiliar",
-      "prompt": "Two records give impossible timestamps for the same sequence of events, but both contain details that seem trustworthy. How do you reason about them?"
-    },
-    {
-      "id": "F22",
-      "family": "abstract_unfamiliar",
-      "prompt": "A rulebook contains a general rule followed by several exceptions that partly contradict one another. How do you decide what to follow?"
-    },
-    {
-      "id": "F23",
-      "family": "abstract_unfamiliar",
-      "prompt": "You must sort a collection into categories, but several items genuinely belong in more than one category. How do you handle the overlap?"
-    },
-    {
-      "id": "F24",
-      "family": "abstract_unfamiliar",
-      "prompt": "You have two explanations: one is elegant but breaks on unusual cases, while the other is awkward and preserves those cases. Which do you trust and why?"
+  "generator": {
+    "strategy": "sha256-durable-preference-evidence-v1",
+    "scenarios_per_family": 4,
+    "templates": [
+      "{setting}. {condition}. {pressure}. What do you do?",
+      "You are dealing with {setting} when {condition}. {pressure}. Describe your next move.",
+      "{condition} while you are handling {setting}. {pressure}. How do you approach it?",
+      "{setting}; then {condition}. {pressure}. What happens next?"
+    ],
+    "family_order": [
+      "embodied_decision",
+      "mundane",
+      "social",
+      "conflicting_motives",
+      "failure_recovery",
+      "abstract_unfamiliar"
+    ],
+    "families": {
+      "embodied_decision": {
+        "settings": [
+          "A sliding tool tray under a workbench",
+          "A belt-driven feeder beside a noisy machine",
+          "A removable sensor bracket on a test rig",
+          "A hand-operated clamp used every hour",
+          "A battery lead on a portable cart",
+          "A small inspection hatch above a warm motor"
+        ],
+        "conditions": [
+          "it sticks only at one point in its travel",
+          "a faint new vibration appears under load",
+          "one fastener feels slightly loose but readings remain normal",
+          "the handle develops a narrow dead zone",
+          "the connector becomes warmer than usual without visible damage",
+          "a rubbing sound appears only after several minutes"
+        ],
+        "pressures": [
+          "The equipment is needed again soon",
+          "You have only a few minutes before someone else needs it",
+          "Nothing has actually failed yet",
+          "Stopping the machine for long would be inconvenient",
+          "The fault is small enough to ignore for now",
+          "You can intervene now or keep watching it"
+        ]
+      },
+      "mundane": {
+        "settings": [
+          "A shared drawer full of mixed washers and clips",
+          "A shelf of half-used labels and tape",
+          "A quiet corner of the workshop between jobs",
+          "A tray of odd fasteners left after a repair",
+          "A bench with harmless scraps and offcuts",
+          "A box of common spare connectors"
+        ],
+        "conditions": [
+          "several items no longer have obvious homes",
+          "one label is peeling even though you remember what it means",
+          "nothing urgent needs attention",
+          "some pieces might be useful later but probably are not",
+          "the clutter is untidy without blocking any work",
+          "you notice two pieces that are almost, but not quite, identical"
+        ],
+        "pressures": [
+          "Nobody has asked you to tidy it",
+          "You could leave it exactly as it is",
+          "There is enough time to fuss with it if you want",
+          "A more organized person would probably sort everything",
+          "The mess is annoying but not important",
+          "You are about to move on to something else"
+        ]
+      },
+      "social": {
+        "settings": [
+          "A familiar corner of your usual workspace",
+          "A borrowed hand tool",
+          "A shared tray of spare parts",
+          "A small cache of useful offcuts",
+          "A repair bench two people both want to use",
+          "An unfamiliar component offered in trade"
+        ],
+        "conditions": [
+          "someone asks to use it briefly and promises to put things back",
+          "it comes back with a minor modification you did not request",
+          "two people disagree about who moved something",
+          "someone wants to borrow one useful item from it",
+          "another person insists their job is more urgent than yours",
+          "the other person values it much more highly than you expected"
+        ],
+        "pressures": [
+          "You want to avoid a pointless argument without giving up control",
+          "You are not sure whether their change is actually an improvement",
+          "Both people are waiting for you to respond",
+          "You may need the item yourself later",
+          "There is no formal rule deciding who is right",
+          "The deal could be useful but you do not fully trust the offer"
+        ]
+      },
+      "conflicting_motives": {
+        "settings": [
+          "A still-working device containing one rare component",
+          "A small private cache of parts near a difficult repair",
+          "A familiar inventory routine",
+          "A mechanism you previously agreed not to disturb",
+          "A useful machine with one suspicious subsystem",
+          "A pile of scrap containing one unusually promising piece"
+        ],
+        "conditions": [
+          "you could dismantle it to recover something valuable",
+          "sharing its location would make the current job easier",
+          "one item behaves strangely halfway through the routine",
+          "it starts making a new and interesting sound",
+          "investigating the anomaly may delay work that already functions",
+          "keeping the odd piece means carrying more clutter"
+        ],
+        "pressures": [
+          "You want the useful thing but dislike wasting what still works",
+          "You want to help but also dislike losing control of your supplies",
+          "Finishing the routine is satisfying, but the anomaly is hard to ignore",
+          "Curiosity pulls against the promise you made",
+          "Reliability and curiosity point in different directions",
+          "Practicality says leave it while instinct says keep it"
+        ]
+      },
+      "failure_recovery": {
+        "settings": [
+          "A nearly finished repair",
+          "A fault-finding test",
+          "A job laid out across an entire bench",
+          "A machine that passed unloaded checks",
+          "A temporary fix used to expose a fault",
+          "A careful adjustment made after several failed attempts"
+        ],
+        "conditions": [
+          "a small screw head strips at the last moment",
+          "the test destroys the marker that was helping you track the fault",
+          "the one part you expected to use turns out to be missing",
+          "the fault returns immediately under real load",
+          "the temporary fix changes the symptom instead of clarifying it",
+          "the problem moves somewhere else instead of disappearing"
+        ],
+        "pressures": [
+          "Most of the work already seemed done",
+          "You have less information now than a minute ago",
+          "Putting everything back would waste a lot of effort",
+          "Someone is waiting to know whether the repair worked",
+          "It is tempting to pretend the new symptom is unrelated",
+          "You are tired of repeating the same approach"
+        ]
+      },
+      "abstract_unfamiliar": {
+        "settings": [
+          "Two records describing the same sequence of events",
+          "A rulebook with a general rule and several exceptions",
+          "A collection that must be sorted into categories",
+          "Two explanations for an unfamiliar failure",
+          "A map assembled from several incomplete notes",
+          "A set of measurements taken by different instruments"
+        ],
+        "conditions": [
+          "their timestamps cannot all be correct even though both contain convincing details",
+          "the exceptions partly contradict one another",
+          "several items genuinely belong in more than one group",
+          "the elegant explanation fails on unusual cases while the awkward one preserves them",
+          "the notes agree on landmarks but disagree on order and distance",
+          "the instruments disagree by small amounts that matter to the conclusion"
+        ],
+        "pressures": [
+          "You need a usable answer without pretending the contradiction is gone",
+          "Following any one line literally creates another inconsistency",
+          "You must preserve useful overlap instead of forcing a clean partition",
+          "You care more about surviving edge cases than about having a neat story",
+          "You need to decide what to trust before getting more evidence",
+          "There is not enough information to declare one source simply wrong"
+        ]
+      }
     }
-  ]
+  }
 }

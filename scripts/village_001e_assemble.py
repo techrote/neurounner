@@ -924,6 +924,17 @@ def main() -> None:
         shutil.rmtree(out)
     out.mkdir(parents=True)
 
+    # The actual F01-F24 prompt suite is generated only after durable D evidence
+    # exists. Preserve that exact runtime suite in terminal evidence before any
+    # dataset promotion so later readers never depend on an Actions-only artifact.
+    final_eval_dest = out / "final-eval.json"
+    shutil.copy2(final_eval_path, final_eval_dest)
+    durable_final_eval_config = (
+        final_eval_dest.relative_to(ROOT).as_posix()
+        if final_eval_dest.is_absolute()
+        else final_eval_dest.as_posix()
+    )
+
     final_responses_dest = out / "final-responses"
     tournament_dest = out / "tournament-scenarios"
     ecology_dest = out / "ecology"
@@ -1020,7 +1031,7 @@ def main() -> None:
         "scenarios": 24,
         "blind_response_records": total_records,
         "fresh_final_heldout": {
-            "config": cfg["final_eval_config"],
+            "config": durable_final_eval_config,
             "config_sha256": final_eval_sha,
             "scenario_ids": scenarios,
             "fresh_after_preference_training": True,
@@ -1107,7 +1118,7 @@ def main() -> None:
         "qualification_evidence_release": cfg["qualification_release_tag"],
         "fresh_final_response_artifacts": len(final_responses),
         "fresh_final_response_ids": sorted(final_responses),
-        "fresh_final_heldout_config": cfg["final_eval_config"],
+        "fresh_final_heldout_config": durable_final_eval_config,
         "fresh_final_heldout_config_sha256": final_eval_sha,
         "untuned_base_control_on_same_suite": True,
     }
@@ -1359,7 +1370,7 @@ def main() -> None:
         "qualification_evidence_release": cfg["qualification_release_tag"],
         "members": 36,
         "scenarios": 24,
-        "final_eval_config": cfg["final_eval_config"],
+        "final_eval_config": "evaluation/final-eval.json",
         "final_eval_config_sha256": final_eval_sha,
         "fresh_after_preference_training": True,
         "fresh_final_response_artifacts": len(final_responses),
