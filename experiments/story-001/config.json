@@ -21,25 +21,6 @@
     "top_p": 0.96,
     "seed_base": 2026102500
   },
-  "nvidia": {
-    "endpoint": "https://integrate.api.nvidia.com/v1/chat/completions",
-    "secret": "NVKEY",
-    "remote_unpinned_backend": true,
-    "max_parallel": 1,
-    "attempts": 4,
-    "models": {
-      "storyboard": "nvidia/nemotron-3.5-bolt-e4b",
-      "drafter": "nvidia/nemotron-3.5-super-vl-120b-a12b",
-      "reviewer": "nvidia/nemotron-3.5-bolt-e4b",
-      "editor": "nvidia/nemotron-3.5-super-vl-120b-a12b"
-    },
-    "budgets": {
-      "storyboard_max_tokens": 3200,
-      "draft_max_tokens": 8192,
-      "review_max_tokens": 3200,
-      "edit_max_tokens": 8192
-    }
-  },
   "archive": {
     "dataset_id": "story-001",
     "dataset_root": "datasets/story-001",
@@ -48,10 +29,26 @@
   },
   "pipeline_backend": "local_actions",
   "local_models": {
-    "storyboard": "lfm25-8b-a1b",
-    "drafter": "qwen-storyteller-q4",
-    "reviewer": "lfm25-8b-a1b",
-    "editor": "qwen35-4b"
+    "runtime": "llama.cpp b11852",
+    "max_parallel": 1,
+    "threads": 4,
+    "context": 12288,
+    "models": {
+      "storyboard": "qwen35-4b",
+      "drafter": "qwen-storyteller-q4",
+      "reviewer": "qwen35-4b",
+      "editor": "qwen35-4b"
+    },
+    "path_env": {
+      "qwen35-4b": "STORY001_QWEN35_4B",
+      "qwen-storyteller-q4": "STORY001_QWEN_STORYTELLER"
+    },
+    "budgets": {
+      "storyboard_max_tokens": 3200,
+      "draft_max_tokens": 8192,
+      "review_max_tokens": 3200,
+      "edit_max_tokens": 8192
+    }
   },
   "local_budgets": {
     "storyboard_max_tokens": 2200,
