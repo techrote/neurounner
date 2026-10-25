@@ -1,0 +1,159 @@
+name: STORY-001-V2 NVIDIA single story
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - story-001-autofactory-kickoff
+    paths:
+      - '.github/workflows/story-001-v2.yml'
+      - 'scripts/story_001_v2.py'
+      - 'experiments/story-001-v2/**'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: story-001-v2-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  preflight:
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[story001v2-evidence]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Offline contract checks
+        run: |
+          python3 -m py_compile scripts/story_001_v2.py
+          python3 scripts/story_001_v2.py \
+            --config experiments/story-001-v2/config.json \
+            self-test
+      - name: NVIDIA Bolt/Super preflight
+        run: |
+          test -n "$NVIDIA_API_KEY" || {
+            echo "NVKEY repository secret is not configured."
+            exit 1
+          }
+          python3 scripts/story_001_v2.py \
+            --config experiments/story-001-v2/config.json \
+            preflight --out results/story001v2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: story001v2-preflight
+          path: results/story001v2
+          if-no-files-found: error
+          retention-days: 14
+
+  produce:
+    needs: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: story001v2-preflight
+          path: results/story001v2
+      - name: Synthesize, draft, review and edit one continuous story
+        run: |
+          test -n "$NVIDIA_API_KEY" || {
+            echo "NVKEY repository secret is not configured."
+            exit 1
+          }
+          python3 scripts/story_001_v2.py \
+            --config experiments/story-001-v2/config.json \
+            produce --out results/story001v2
+      - name: Show single-story qualification
+        if: success()
+        run: |
+          python3 - <<'PY'
+          import json
+          q=json.load(open("results/story001v2/provider/qualification.json"))
+          m=q["final_metrics"]
+          print("words:",m["word_count"])
+          print("standalone I:",m["standalone_i_count"])
+          print("I rate:",m["standalone_i_rate"])
+          print("variant separators:",m["variant_separator_count"])
+          print("duplicate paragraphs:",m["duplicate_paragraph_count"])
+          print("anchor resets:",m["anchor_reset_count"])
+          print("pass:",q["pass"])
+          print("final sha256:",q["final_sha256"])
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: story001v2-complete-evidence
+          path: results/story001v2
+          if-no-files-found: error
+          retention-days: 14
+
+  promote:
+    needs: produce
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: true
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: story001v2-complete-evidence
+          path: results/story001v2
+      - name: Promote and independently read back STORY-001-V2
+        run: |
+          python3 scripts/story_001_v2.py \
+            --config experiments/story-001-v2/config.json \
+            promote --source results/story001v2 --dest datasets/story-001-v2
+          python3 - <<'PY'
+          import json, pathlib, re
+          m=json.load(open("datasets/story-001-v2/manifest.json"))
+          story=pathlib.Path("datasets/story-001-v2/compiled/story.md").read_text()
+          words=len(re.findall(r"\b[\w’'-]+\b", story))
+          ic=len(re.findall(r"(?<![\w’'])I(?![\w’'])", story))
+          assert words == m["word_count"] and words >= 3000
+          assert ic == m["standalone_i_count"] and ic <= 80
+          assert m["variant_separator_count"] == 0
+          assert m["duplicate_paragraph_count"] == 0
+          assert m["qualified"] is True
+          print("independent readback:", words, "words,", ic, "standalone I")
+          print("sha256:",m["final_story_sha256"])
+          PY
+      - name: Commit durable corrective archive
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add datasets/story-001-v2
+          git diff --cached --exit-code && {
+            echo "No new STORY-001-V2 evidence to commit."
+            exit 0
+          }
+          git commit -m "Archive STORY-001-V2 NVIDIA single-story evidence [story001v2-evidence]"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+      - name: Record workflow summary
+        run: |
+          {
+            echo "## STORY-001-V2"
+            echo
+            echo "Corrective single-story NVIDIA archive promoted."
+            python3 - <<'PY'
+          import json
+          m=json.load(open("datasets/story-001-v2/manifest.json"))
+          print(f"- words: {m['word_count']}")
+          print(f"- standalone I: {m['standalone_i_count']} ({m['standalone_i_rate']:.3%})")
+          print(f"- final sha256: {m['final_story_sha256']}")
+          print(f"- models: {m['models']}")
+          PY
+          } >> "$GITHUB_STEP_SUMMARY"
