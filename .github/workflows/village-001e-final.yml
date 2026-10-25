@@ -368,7 +368,7 @@ jobs:
 
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          pattern: village001e-final-responses-V-*
+          pattern: village001e-final-responses-*
           path: responses
 
       - name: Run blind 36-member fresh-heldout scenario tournament
@@ -527,7 +527,7 @@ jobs:
 
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          pattern: village001e-final-responses-V-*
+          pattern: village001e-final-responses-*
           path: artifacts/final-responses
 
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
@@ -583,6 +583,20 @@ jobs:
           assert Path("datasets/village-001/evaluation/summary.json").is_file()
           assert Path("datasets/village-001/evaluation/ecology-summary.json").is_file()
           assert Path("datasets/village-001/evaluation/model-registry.json").is_file()
+          response_results=list(
+              Path("experiments/village-001/final-evidence/final-responses").glob("*/result.json")
+          )
+          assert len(response_results)==37
+          assert Path("experiments/village-001/final-evidence/final-responses/BASE/result.json").is_file()
+          assert Path("datasets/village-001/evaluation/final-responses/BASE/result.json").is_file()
+          assert s["fresh_final_heldout"]["scenario_ids"]==[
+              f"F{i:02d}" for i in range(1,25)
+          ]
+          assert s["fresh_final_heldout"]["trained_members"]==36
+          assert s["fresh_final_heldout"]["untuned_base_control"] is True
+          assert s["fresh_final_heldout"]["exact_training_input_collision_count"]==0
+          assert fm["fresh_final_response_artifacts"]==37
+          assert fm["untuned_base_control"] is True
           print(
               "VILLAGE-001E:",
               "usable",s["usable_village"],
