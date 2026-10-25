@@ -15,6 +15,7 @@ on:
       - 'scripts/village_001_manifest.py'
       - 'scripts/village_001_validate.py'
       - 'scripts/village_001_gate.py'
+      - 'scripts/babble_002_expand.py'
       - 'scripts/village_001b_generate_member.py'
       - 'scripts/village_001b_assemble.py'
   push:
@@ -26,6 +27,7 @@ on:
       - 'scripts/village_001_manifest.py'
       - 'scripts/village_001_validate.py'
       - 'scripts/village_001_gate.py'
+      - 'scripts/babble_002_expand.py'
       - 'scripts/village_001b_generate_member.py'
       - 'scripts/village_001b_assemble.py'
 
@@ -61,6 +63,45 @@ jobs:
             scripts/village_001_gate.py \
             scripts/village_001b_generate_member.py \
             scripts/village_001b_assemble.py
+
+      - name: Verify compiler ref uniqueness is fail-closed
+        run: |
+          python3 - <<'PY'
+          from scripts.babble_002_expand import (
+              packet_for,
+              salvage_from_candidates,
+              trait_catalog,
+              validate_examples,
+          )
+          import json
+
+          packet=packet_for("G01")
+          catalog=trait_catalog(packet)
+          trait=next(k for k in catalog if not k.startswith("S"))
+          seed=next((k for k in catalog if k.startswith("S")),None)
+          row={
+              "surface":"mundane_low_stakes",
+              "input":"A loose tray rattles quietly beside an otherwise ordinary workbench.",
+              "target":"I wedge the tray with a scrap, listen once more, then keep the scrap there because it worked.",
+              "generic_bad_target":"I would inspect and secure the tray using an appropriate maintenance procedure.",
+              "why_bad":"It removes the local improvised habit and stubborn settling behavior.",
+              "trait_refs":[trait,trait],
+              "seed_refs":[seed,seed] if seed else [],
+          }
+          raw={"examples":[row]}
+          rows,problems=validate_examples(
+              raw,"G01",packet,{"mundane_low_stakes":1},set(),1
+          )
+          assert "row0:trait_refs" in problems,problems
+          if seed:
+              assert "row0:seed_refs" in problems,problems
+          salvaged,missing=salvage_from_candidates(
+              [json.dumps(raw)],packet,{"mundane_low_stakes":1},set()
+          )
+          assert salvaged==[],salvaged
+          assert missing=={"mundane_low_stakes":1},missing
+          print("duplicate trait/seed refs: correctly rejected before terminal validation")
+          PY
 
       - name: Parse campaign configuration
         run: |
