@@ -361,19 +361,19 @@ The remaining members are still archived as failures/oddities, not erased.
 
 The campaign should be implemented as five narrow workstreams:
 
-1. **VILLAGE-001A — population contract and corpus foundry**  
+1. **#10 — VILLAGE-001A: population contract and corpus foundry**  
    Deterministic 36-member manifest, member-specific corpus schema, Sprocket feedback schema, NVIDIA provider abstraction and archive contract.
 
-2. **VILLAGE-001B — source/feedback generation**  
+2. **#11 — VILLAGE-001B: source/feedback generation**  
    Generate member-specific Sprocket material and bounded cloud-compiled SFT/preference shards with restartable partial recovery.
 
-3. **VILLAGE-001C — 36-lane SFT wave**  
+3. **#12 — VILLAGE-001C: 36-lane SFT wave**  
    Generalize the proven PERSONA trainer to arbitrary member IDs, train all 36 independent SFT cartridges and publish hashes/artifacts.
 
-4. **VILLAGE-001D — feedback preference maturation**  
+4. **#13 — VILLAGE-001D: feedback preference maturation**  
    Collect Sprocket feedback against provisional cartridges, compile pairs, run 36 preference-continuation lanes and preserve before/after evidence.
 
-5. **VILLAGE-001E — hierarchical tournament and village ecology**  
+5. **#14 — VILLAGE-001E: hierarchical tournament and village ecology**  
    Run clan/sibling blind tournaments, behavior-only normalization, confusion analysis, genericness/relevance gates and fixed multi-agent ecology probes.
 
 TRAIN-003 / PR #8 is complementary and can proceed in parallel. Its semantic-mechanical compiler corpus should not become a hidden dependency of VILLAGE-001 unless a later issue explicitly imports it.
