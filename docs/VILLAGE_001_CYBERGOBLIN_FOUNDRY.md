@@ -383,3 +383,27 @@ TRAIN-003 / PR #8 is complementary and can proceed in parallel. Its semantic-mec
 ---
 
 The governing principle is: **high-volume weirdness from Sprocket, deterministic identity from the orchestrator, bounded synthesis/criticism from multiple NVIDIA models, cheap independent CPU training at population scale, and blind behavioral evidence before a goblin is considered real.**
+
+
+### Stage-B repromotion hygiene
+
+The first VILLAGE-001B promotion creates the durable `datasets/village-001/` root. Later
+stages are additive beneath that same root, so **a future B rerun must never replace the
+whole dataset directory**.
+
+After later-stage evidence exists, B repromotion is permitted only when:
+
+- the candidate independently passes the complete 36-member B validation contract;
+- downstream preference/final manifests carry the same immutable member-contract SHA;
+- if SFT evidence exists, every candidate `member-corpora/V-*.jsonl` SHA-256 exactly
+  matches the `training_dataset_sha256` recorded by the corresponding trained cartridge;
+- only B-owned paths are replaced transactionally;
+- D/E-owned paths, manifests, evaluation evidence and the newest-stage root README survive;
+- B/D/E hash inventories are regenerated and independently verified before the staged tree
+  replaces the live tree.
+
+A same-ID or same-member-contract corpus is **not** sufficient compatibility once models
+have been trained. Byte-different B training data beneath existing SFT/preference/final
+evidence is an ancestry violation and must fail closed.
+
+Implementation: `scripts/village_001b_promote.py` / issue #31.
