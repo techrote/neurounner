@@ -30,3 +30,19 @@ Issue #10 adds two explicit row contracts:
 Provider preflight evidence is written under `experiments/village-001/provider-preflight/run-<github-run-id>/` by the VILLAGE-001A workflow.
 
 `scripts/village_001_gate.py` is the reusable fail-closed launch gate for #11 onward. It requires a durable successful provider preflight and verifies that its endpoint, roles and exact configured model IDs still match the current campaign configuration. Any later change to a provider model therefore invalidates the old gate until a new preflight is archived.
+
+
+## VILLAGE-001B member-corpus foundry
+
+Issue #11 expands each immutable member from its 100-row BABBLE-002 ancestral shard to a 160-row SFT corpus.
+
+- A/B/C use different fixed surface quotas; this is curriculum diversity, not a hyperparameter sweep.
+- MiniMax M3.1 Flash compiles the 60 new rows/member from the exact BABBLE-001 Sprocket conversations, durable packet, and sibling specialization.
+- Nemotron 3.5 Bolt independently scores behavioral fidelity, genericness, and style dependence.
+- Borderline cases alone are sent to Nemotron 3.5 Super for sparse adjudication.
+- Failed or adjudicator-rejected rows are repaired by the compiler and re-reviewed; unresolved rows fail closed.
+- All provider calls are retained before parsing and repair.
+- The Actions matrix has 36 member jobs but cloud concurrency is one. A manual rerun may provide a prior workflow run ID to reuse complete member artifacts and resume partial ones.
+- Publication is all-or-nothing: the assembler requires 36 canonical 160-row shards before replacing the durable `datasets/village-001/` stage.
+
+The corresponding implementation is `scripts/village_001b_generate_member.py`, `scripts/village_001b_assemble.py`, and `.github/workflows/village-001b-member-corpora.yml`.
