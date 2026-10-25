@@ -1,0 +1,147 @@
+name: Repair VILLAGE-001C durable member results
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/village-001c-repair-results.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: neurounner-village-001c-result-repair
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      SOURCE_RUN_ID: '40205914157'
+      SOURCE_ARTIFACT: 'village001c-complete-40205914157'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Download exact completed C evidence artifact
+        run: |
+          rm -rf repair-artifact
+          mkdir -p repair-artifact
+          gh run download "$SOURCE_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "$SOURCE_ARTIFACT" \
+            --dir repair-artifact
+
+      - name: Verify artifact matches committed C authority
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          repo = Path(".")
+          committed = repo / "experiments/village-001/sft-evidence"
+          source = repo / "repair-artifact/experiments/village-001/sft-evidence"
+
+          for name in (
+              "REPORT.md",
+              "adapter-release.json",
+              "provenance.json",
+              "summary.json",
+              "hashes.sha256",
+          ):
+              if (committed / name).read_bytes() != (source / name).read_bytes():
+                  raise SystemExit(f"artifact/committed C authority mismatch: {name}")
+
+          results = sorted((source / "results").glob("V-G??-[ABC].json"))
+          if len(results) != 36:
+              raise SystemExit(f"expected 36 C results, found {len(results)}")
+
+          summary = json.loads((committed / "summary.json").read_text())
+          release = json.loads((committed / "adapter-release.json").read_text())
+          expected_members = {row["member_id"] for row in summary["members_table"]}
+          if expected_members != {p.stem for p in results}:
+              raise SystemExit("C result member set does not match committed summary")
+          if expected_members != {row["member_id"] for row in release["assets"]}:
+              raise SystemExit("C release member set does not match committed summary")
+
+          inventory = {}
+          for line in (committed / "hashes.sha256").read_text().splitlines():
+              if not line.strip():
+                  continue
+              digest, rel = line.split("  ", 1)
+              inventory[rel] = digest
+
+          for path in results:
+              rel = f"results/{path.name}"
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              if inventory.get(rel) != digest:
+                  raise SystemExit(
+                      f"{rel}: artifact hash {digest} != committed inventory "
+                      f"{inventory.get(rel)}"
+                  )
+
+              result = json.loads(path.read_text())
+              if result.get("experiment") != "VILLAGE-001C":
+                  raise SystemExit(f"{rel}: wrong experiment")
+              if result.get("member_id") != path.stem:
+                  raise SystemExit(f"{rel}: member identity mismatch")
+
+          print("36 retained C results exactly match committed C authority: PASS")
+          PY
+
+      - name: Promote only the missing durable C member results
+        run: |
+          mkdir -p experiments/village-001/sft-evidence/results
+          cp -a repair-artifact/experiments/village-001/sft-evidence/results/. \
+            experiments/village-001/sft-evidence/results/
+
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+
+          root = Path("experiments/village-001/sft-evidence")
+          inventory = {}
+          for line in (root / "hashes.sha256").read_text().splitlines():
+              if line.strip():
+                  digest, rel = line.split("  ", 1)
+                  inventory[rel] = digest
+
+          results = sorted((root / "results").glob("V-G??-[ABC].json"))
+          assert len(results) == 36, len(results)
+          for path in results:
+              rel = f"results/{path.name}"
+              actual = hashlib.sha256(path.read_bytes()).hexdigest()
+              assert inventory[rel] == actual, (rel, inventory[rel], actual)
+          print("promoted C member-result inventory: PASS")
+          PY
+
+          if git check-ignore -q experiments/village-001/sft-evidence/results/V-G01-A.json; then
+            echo "nested C result evidence is unexpectedly ignored"
+            exit 1
+          fi
+
+      - name: Commit repaired C evidence
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add experiments/village-001/sft-evidence/results
+          staged=$(git diff --cached --name-only -- 'experiments/village-001/sft-evidence/results/*.json' | wc -l)
+          test "$staged" -eq 36
+
+          git commit -m "Restore VILLAGE-001C per-member evidence from run $SOURCE_RUN_ID"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Dispatch VILLAGE-001D against repaired main
+        run: |
+          gh workflow run village-001d-preference.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main
+          echo "VILLAGE-001D explicitly dispatched from repaired durable C evidence."
