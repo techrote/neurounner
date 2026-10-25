@@ -574,6 +574,8 @@ jobs:
           assert d["feedback_records"]==3456
           assert d["preference_pairs"]==2160
           assert len(list(Path("release-assets").glob("*.tar.gz")))==36
+          readme=Path("datasets/village-001/README.md").read_text()
+          assert "VILLAGE-001D preference-matured population" in readme
           print(
               "VILLAGE-001D assembly: PASS",
               "qualified",s["qualified_count"],
@@ -632,7 +634,8 @@ jobs:
             datasets/village-001/provider/preference \
             datasets/village-001/preference-quality \
             datasets/village-001/preference-manifest.json \
-            datasets/village-001/preference-hashes.sha256
+            datasets/village-001/preference-hashes.sha256 \
+            datasets/village-001/README.md
           git commit -m "Record VILLAGE-001D preference maturation ${GITHUB_RUN_ID}"
           git pull --rebase origin main
           git push origin HEAD:main

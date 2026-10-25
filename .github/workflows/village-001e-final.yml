@@ -597,6 +597,8 @@ jobs:
           assert s["fresh_final_heldout"]["exact_training_input_collision_count"]==0
           assert fm["fresh_final_response_artifacts"]==37
           assert fm["untuned_base_control"] is True
+          readme=Path("datasets/village-001/README.md").read_text()
+          assert "VILLAGE-001E final qualification" in readme
           print(
               "VILLAGE-001E:",
               "usable",s["usable_village"],
@@ -626,7 +628,8 @@ jobs:
             experiments/village-001/final-evidence \
             datasets/village-001/evaluation \
             datasets/village-001/final-manifest.json \
-            datasets/village-001/final-hashes.sha256
+            datasets/village-001/final-hashes.sha256 \
+            datasets/village-001/README.md
 
           if git diff --cached --quiet; then
             echo "Final qualification evidence is already present in this checkout."
