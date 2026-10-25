@@ -938,25 +938,59 @@ def provider(args: argparse.Namespace) -> None:
                         ),
                     },
                 ]
-                selection, _ = provider_call(
-                    cfg=cfg,
-                    key=key,
-                    stage_id=f"{stage_prefix}-delete-prune-{prune_attempt}",
-                    model=model,
-                    messages=prune_messages,
-                    max_tokens=min(1200, token_budget),
-                    temperature=0.05,
-                    out=out,
-                )
+                stage_id = f"{stage_prefix}-delete-prune-{prune_attempt}"
+                raw_path = out / "raw" / f"{stage_id}.json"
+                selection_source = "fresh"
+                try:
+                    selection, _ = provider_call(
+                        cfg=cfg,
+                        key=key,
+                        stage_id=stage_id,
+                        model=model,
+                        messages=prune_messages,
+                        max_tokens=min(1200, token_budget),
+                        temperature=0.05,
+                        out=out,
+                    )
+                except RuntimeError as exc:
+                    if "response hit max_tokens" not in str(exc) or not raw_path.exists():
+                        raise
+                    obj = load_json(raw_path)
+                    selection = (obj["choices"][0]["message"].get("content") or "").strip()
+                    selection_source = "salvaged_length_capped_raw"
+
+                candidates = []
                 start = selection.find("{")
                 end = selection.rfind("}")
-                parsed = None
                 if start >= 0 and end > start:
                     try:
                         parsed = json.loads(selection[start : end + 1])
+                        if isinstance(parsed, dict) and isinstance(parsed.get("delete"), list):
+                            candidates = parsed["delete"]
                     except json.JSONDecodeError:
-                        parsed = None
-                candidates = parsed.get("delete", []) if isinstance(parsed, dict) else []
+                        pass
+
+                if not candidates:
+                    delete_key = selection.find('"delete"')
+                    array_start = selection.find("[", delete_key) if delete_key >= 0 else -1
+                    if array_start >= 0:
+                        decoder = json.JSONDecoder()
+                        pos = array_start + 1
+                        while pos < len(selection):
+                            while pos < len(selection) and selection[pos] in " \\t\\r\\n,":
+                                pos += 1
+                            if pos >= len(selection) or selection[pos] != '"':
+                                break
+                            try:
+                                value, consumed = decoder.raw_decode(selection[pos:])
+                            except json.JSONDecodeError:
+                                break
+                            if not isinstance(value, str):
+                                break
+                            candidates.append(value)
+                            pos += consumed
+                        if candidates:
+                            selection_source += "+partial_json_strings"
                 working = list(parts)
                 applied = []
                 rejected = []
@@ -1001,6 +1035,8 @@ def provider(args: argparse.Namespace) -> None:
                     "before_sha256": sha256_bytes(before.encode("utf-8")),
                     "after_sha256": sha256_bytes(after.encode("utf-8")),
                     "target_delete_words": [target_lo, target_hi],
+                    "selection_source": selection_source,
+                    "candidate_count": len(candidates),
                     "applied": applied,
                     "rejected": rejected,
                 }
@@ -1014,7 +1050,6 @@ def provider(args: argparse.Namespace) -> None:
             f"after {rewrite_attempts} local rewrites and exact-sentence prune attempts"
         )
 
-    draft_parts: list[str] = []
     draft_parts: list[str] = []
 
     def recover_m3_parts(root: Path) -> list[str]:
