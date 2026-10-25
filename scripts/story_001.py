@@ -1069,7 +1069,7 @@ def provider(args: argparse.Namespace) -> None:
 
         balance_files = []
         for p in raw.glob("m3-balance-*-part-*.json"):
-            m = re.match(r"m3-balance-(\\d+)-part-(\\d+)\\.json$", p.name)
+            m = re.match(r"m3-balance-(\d+)-part-(\d+)\.json$", p.name)
             if m:
                 balance_files.append((int(m.group(1)), int(m.group(2)), p))
         for _, part_no, p in sorted(balance_files):
