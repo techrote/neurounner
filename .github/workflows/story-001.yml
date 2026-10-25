@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
-      STORY001_RESUME_RUN_ID: '40219258883'
+      STORY001_RESUME_RUN_ID: '40225378737'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -95,12 +95,12 @@ jobs:
           name: story001-preflight
           path: results/story001
 
-      - name: Recover failed M3 evidence from run 40219258883
+      - name: Recover failed M3 evidence from run 40225378737
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p results/resume
-          gh run download 40219258883             --repo "${GITHUB_REPOSITORY}"             --name story001-complete-evidence             --dir results/resume
+          gh run download 40225378737             --repo "${GITHUB_REPOSITORY}"             --name story001-complete-evidence             --dir results/resume
           test -f results/resume/local-models/derived/storyboard.md
           test -f results/resume/sprocket/summary.json
           test -f results/resume/local-models/raw/m3-normalize-01.json
