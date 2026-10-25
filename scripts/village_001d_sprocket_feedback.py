@@ -357,16 +357,26 @@ def main() -> None:
     scenarios = common_scenarios + probe_scenarios
 
     out = args.out
+    resume_rejection = None
     if args.resume:
         copy_resume(args.resume, out)
-        if validate_complete_feedback(
-            out,
-            member,
-            population,
-            parent_adapter_sha,
-            campaign,
-            feedback_cfg,
-        ):
+        try:
+            complete_resume = validate_complete_feedback(
+                out,
+                member,
+                population,
+                parent_adapter_sha,
+                campaign,
+                feedback_cfg,
+            )
+        except RuntimeError as exc:
+            # Identity-bound recovery is fail-closed for reuse, but an incompatible
+            # artifact must not abort the lane. Its original bytes remain preserved
+            # in the source Actions run; regenerate this member from clean authority.
+            complete_resume = False
+            resume_rejection = str(exc)
+
+        if complete_resume:
             print(
                 json.dumps(
                     {
@@ -382,10 +392,38 @@ def main() -> None:
                 )
             )
             return
+
+        if resume_rejection is None:
+            resume_rejection = "resume feedback artifact is incomplete"
+
         # Feedback generation is not chunk-checkpointed. Preserve the previous
-        # incomplete artifact in its source Actions run and restart this lane cleanly.
+        # incompatible/incomplete artifact in its source Actions run and restart
+        # this lane cleanly, recording why reuse was refused.
         shutil.rmtree(out)
         out.mkdir(parents=True)
+        write_json(
+            out / "recovery-rejected.json",
+            {
+                "schema_version": 1,
+                "experiment": "VILLAGE-001D",
+                "stage": "sprocket-feedback",
+                "member_id": member["member_id"],
+                "resume_source": str(args.resume),
+                "reason": resume_rejection,
+                "expected_parent_adapter_sha256": parent_adapter_sha,
+                "member_contract_sha256": population["member_contract_sha256"],
+            },
+        )
+        print(
+            json.dumps(
+                {
+                    "member": member["member_id"],
+                    "resume": "rejected_regenerate_clean",
+                    "reason": resume_rejection,
+                },
+                indent=2,
+            )
+        )
     else:
         if out.exists():
             shutil.rmtree(out)
