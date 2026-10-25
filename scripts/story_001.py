@@ -381,6 +381,14 @@ def provider_call(
         "top_p": 0.95,
         "stream": False,
     }
+    if model in {
+        cfg["nvidia"]["models"]["drafter"],
+        cfg["nvidia"]["models"]["editor"],
+    }:
+        # Super 3.5 can exhaust max_tokens in reasoning and return empty content.
+        # STORY-001 needs direct long-form prose, so use the model's supported
+        # reasoning-off chat-template mode and preserve that choice in the request.
+        payload["chat_template_kwargs"] = {"enable_thinking": False}
     request_record = {
         "schema_version": 1,
         "provider": "nvidia",
