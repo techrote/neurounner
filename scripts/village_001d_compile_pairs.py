@@ -730,14 +730,16 @@ def repair_pairs(
     rawdir: Path,
     label: str,
 ) -> tuple[list[dict], str]:
+    if len(rows) > 10:
+        raise ValueError("curation repair batch exceeds 10 pairs")
+
     model = campaign["nvidia"]["models"]["compiler"]
     payload_rows = [
         {
             "pair_id": row["pair_id"],
             "input": row["input"],
             "chosen": row["chosen"],
-            "rejected": row["rejected"],
-            "source_parent_response": row["source_parent_response"],
+            "rejected": "__PARENT__" if row["variant"] == 1 else row["rejected"],
             "why_chosen": row["why_chosen"],
             "repair_reason": reasons[row["pair_id"]],
             "variant": row["variant"],
@@ -749,9 +751,12 @@ def repair_pairs(
 Ancestral summary:
 {packet['persona_summary']}
 
-Keep pair_id, input, scenario_id and variant unchanged.
+Keep pair_id, input and variant unchanged.
 Rewrite chosen/rejected/why_chosen only.
-For variant 1 rejected MUST remain exactly source_parent_response.
+For variant 1 put the literal marker __PARENT__ in rejected; the orchestrator
+will inject the exact authoritative parent response after parsing.
+For variants 2 and 3, rejected must remain different from the parent response.
+Do not collapse multiple variants into the same chosen/rejected pair.
 
 Return JSON only:
 {{"pairs":[{{"pair_id":"...","chosen":"...","rejected":"...","why_chosen":"..."}}]}}
@@ -768,7 +773,10 @@ ROWS:
             },
             {"role": "user", "content": prompt},
         ],
-        "max_tokens": int(pref["pair_generation"]["compiler_repair_max_tokens"]),
+        "max_tokens": min(
+            int(pref["pair_generation"]["compiler_repair_max_tokens"]),
+            max(4096, 768 * len(rows)),
+        ),
         "temperature": 0.25,
         "top_p": 0.9,
         "stream": False,
@@ -784,30 +792,63 @@ ROWS:
         attempts_limit=int(pref["pair_generation"]["attempts"]),
         role="preference-compiler-repair",
     )
-    obj = extract_json(content)
+
+    try:
+        obj = extract_json(content)
+    except ValueError as exc:
+        raise ValueError(f"repair JSON parse failed: {exc}") from exc
     items = obj.get("pairs") if isinstance(obj, dict) else None
-    if not isinstance(items, list) or len(items) != len(rows):
-        raise ValueError("repair pair count mismatch")
+    if not isinstance(items, list):
+        raise ValueError("repair pairs not list")
+
     original = {row["pair_id"]: row for row in rows}
-    out = []
-    seen = set()
+    parsed: dict[str, dict] = {}
     for item in items:
         pair_id = item.get("pair_id") if isinstance(item, dict) else None
-        if pair_id not in original or pair_id in seen:
-            raise ValueError("repair pair ID mismatch")
-        seen.add(pair_id)
+        if pair_id not in original or pair_id in parsed:
+            continue
         row = dict(original[pair_id])
-        for field, minimum in (("chosen", 12), ("rejected", 8), ("why_chosen", 8)):
-            value = item.get(field)
-            if not isinstance(value, str) or len(value.strip()) < minimum:
-                raise ValueError(f"{pair_id}:{field}")
-            row[field] = value.strip()
+
+        chosen = item.get("chosen")
+        why = item.get("why_chosen")
+        if not isinstance(chosen, str) or len(chosen.strip()) < 12:
+            continue
+        if not isinstance(why, str) or len(why.strip()) < 8:
+            continue
+        row["chosen"] = chosen.strip()
+        row["why_chosen"] = why.strip()
+
+        provider_rejected = item.get("rejected")
         if row["variant"] == 1:
             row["rejected"] = row["source_parent_response"].strip()
+            row["provenance"]["rejected_source"] = "authoritative_parent_response"
+            row["provenance"]["provider_rejected_ignored"] = (
+                not isinstance(provider_rejected, str)
+                or provider_rejected.strip() != row["rejected"]
+            )
+        else:
+            if (
+                not isinstance(provider_rejected, str)
+                or len(provider_rejected.strip()) < 8
+            ):
+                continue
+            rejected = provider_rejected.strip()
+            if normalize_text(rejected) == normalize_text(
+                row["source_parent_response"]
+            ):
+                continue
+            row["rejected"] = rejected
+            row["provenance"]["rejected_source"] = "provider"
+            row["provenance"]["provider_rejected_ignored"] = False
+
         if normalize_text(row["chosen"]) == normalize_text(row["rejected"]):
-            raise ValueError(f"{pair_id}: identical repaired responses")
-        out.append(row)
-    return out, label
+            continue
+        parsed[pair_id] = row
+
+    missing = [row["pair_id"] for row in rows if row["pair_id"] not in parsed]
+    if missing:
+        raise ValueError("repair pairs incomplete: " + ",".join(missing))
+    return [parsed[row["pair_id"]] for row in rows], label
 
 
 def curate(
