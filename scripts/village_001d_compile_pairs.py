@@ -962,25 +962,30 @@ def curate(
                     pieces.append(decision["reason"])
             reasons[pair_id] = " | ".join(pieces) or "curation requested repair"
 
-        repair_label = (
-            f"{member['member_id']}-pairs-chunk{chunk_index:02d}-"
-            f"repair{round_index+1}"
-        )
-        repaired, used_label = repair_pairs(
-            key=key,
-            campaign=campaign,
-            pref=pref,
-            member=member,
-            packet=packet,
-            rows=[current[pair_id] for pair_id in sorted(repair_ids)],
-            reasons=reasons,
-            rawdir=rawdir,
-            label=repair_label,
-        )
-        for row in repaired:
-            current[row["pair_id"]] = row
-            call_refs[row["pair_id"]].append(used_label)
-        pending = repaired
+        repaired_all: list[dict] = []
+        sorted_ids = sorted(repair_ids)
+        for batch_index in range(0, len(sorted_ids), 10):
+            batch_ids = sorted_ids[batch_index : batch_index + 10]
+            repair_label = (
+                f"{member['member_id']}-pairs-chunk{chunk_index:02d}-"
+                f"repair{round_index+1}-b{batch_index // 10 + 1:02d}"
+            )
+            repaired, used_label = repair_pairs(
+                key=key,
+                campaign=campaign,
+                pref=pref,
+                member=member,
+                packet=packet,
+                rows=[current[pair_id] for pair_id in batch_ids],
+                reasons={pair_id: reasons[pair_id] for pair_id in batch_ids},
+                rawdir=rawdir,
+                label=repair_label,
+            )
+            for row in repaired:
+                current[row["pair_id"]] = row
+                call_refs[row["pair_id"]].append(used_label)
+                repaired_all.append(row)
+        pending = repaired_all
 
     raise RuntimeError("unreachable")
 
