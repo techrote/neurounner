@@ -267,10 +267,12 @@ def parse_compiler(
             continue
         pair_id = item.get("pair_id")
         if pair_id not in expected:
-            problems.append(f"unexpected_pair_id:{pair_id}")
+            # Preserve provider output as raw evidence, but do not let harmless
+            # extras poison an otherwise complete canonical subset.
             continue
         if pair_id in out:
-            problems.append(f"duplicate_pair_id:{pair_id}")
+            # Likewise, ignore duplicate extra objects once the canonical ID has
+            # already been parsed successfully.
             continue
         chosen = item.get("chosen")
         rejected = item.get("rejected")
@@ -313,9 +315,32 @@ def parse_compiler(
     missing = sorted(set(expected) - set(out))
     if missing:
         problems.append("missing:" + ",".join(missing))
-    if len(pairs) != len(specs):
-        problems.append(f"count:{len(pairs)}!={len(specs)}")
     return out, problems
+
+
+def remove_duplicate_compiled(
+    compiled: dict[str, dict],
+    specs: list[dict],
+    seen_pairs: list[tuple[str, str]],
+) -> list[str]:
+    """Drop duplicate normalized pairs so targeted repair can replace only them."""
+    seen = set(seen_pairs)
+    problems: list[str] = []
+    for spec in specs:
+        pair_id = spec["pair_id"]
+        row = compiled.get(pair_id)
+        if row is None:
+            continue
+        key = (
+            normalize_text(row["chosen"]),
+            normalize_text(row["rejected"]),
+        )
+        if key in seen:
+            compiled.pop(pair_id, None)
+            problems.append(f"{pair_id}:duplicate_normalized_pair")
+            continue
+        seen.add(key)
+    return problems
 
 
 def compiler_repair_prompt(
