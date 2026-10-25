@@ -260,6 +260,27 @@ jobs:
           print("VILLAGE-001D recovery regressions: PASS")
           PY
 
+      - name: Verify adjudicator completion budget
+        env:
+          PYTHONPATH: scripts
+        run: |
+          python3 - <<'PY'
+          from village_001d_compile_pairs import adjudicator_token_budget
+
+          pref={"pair_generation":{"adjudicator_max_tokens":6144}}
+          assert adjudicator_token_budget(pref,1)==2048
+          assert adjudicator_token_budget(pref,4)==3072
+          assert adjudicator_token_budget(pref,8)==6144
+          assert adjudicator_token_budget(pref,20)==6144
+          try:
+              adjudicator_token_budget(pref,0)
+          except ValueError:
+              pass
+          else:
+              raise AssertionError("zero adjudicator cases did not fail")
+          print("adjudicator output budget: PASS")
+          PY
+
       - name: Validate preference campaign contract
         env:
           PYTHONPATH: scripts
