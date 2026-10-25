@@ -1105,6 +1105,11 @@ def main() -> None:
         },
         "final_adapter_release": cfg["final_release_tag"],
         "qualification_evidence_release": cfg["qualification_release_tag"],
+        "fresh_final_response_artifacts": len(final_responses),
+        "fresh_final_response_ids": sorted(final_responses),
+        "fresh_final_heldout_config": cfg["final_eval_config"],
+        "fresh_final_heldout_config_sha256": final_eval_sha,
+        "untuned_base_control_on_same_suite": True,
     }
     write_json(out / "summary.json", summary)
     write_json(
@@ -1354,6 +1359,12 @@ def main() -> None:
         "qualification_evidence_release": cfg["qualification_release_tag"],
         "members": 36,
         "scenarios": 24,
+        "final_eval_config": cfg["final_eval_config"],
+        "final_eval_config_sha256": final_eval_sha,
+        "fresh_after_preference_training": True,
+        "fresh_final_response_artifacts": len(final_responses),
+        "untuned_base_control": "BASE" in final_responses,
+        "exact_training_input_collision_count": 0,
         "ecology_sessions": ecology_summary["sessions"],
         "usable_village": usable_village,
         "individual_quality_pass_count": len(individual_pass),
