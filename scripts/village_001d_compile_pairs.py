@@ -698,6 +698,15 @@ def parse_adjudicator_partial(
     return out, problems
 
 
+def adjudicator_token_budget(pref: dict, case_count: int) -> int:
+    if case_count < 1:
+        raise ValueError("adjudicator case_count must be positive")
+    return min(
+        int(pref["pair_generation"]["adjudicator_max_tokens"]),
+        max(2048, 768 * case_count),
+    )
+
+
 def run_adjudicator(
     *,
     key: str,
@@ -731,7 +740,8 @@ def run_adjudicator(
                     "role": "system",
                     "content": (
                         "You are the sparse final adjudicator for disputed "
-                        "preference data. Return JSON only."
+                        "preference data. Return the final JSON immediately. "
+                        "Do not spend the response budget narrating analysis."
                     ),
                 },
                 {
@@ -739,10 +749,7 @@ def run_adjudicator(
                     "content": adjudicator_prompt(member, packet, cases),
                 },
             ],
-            "max_tokens": min(
-                int(pref["pair_generation"]["adjudicator_max_tokens"]),
-                max(1024, 320 * len(cases)),
-            ),
+            "max_tokens": adjudicator_token_budget(pref, len(cases)),
             "temperature": 0.2,
             "top_p": 0.9,
             "stream": False,
