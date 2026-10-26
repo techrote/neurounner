@@ -131,7 +131,7 @@ class ProtocolGuards(unittest.TestCase):
             self.assertIn(name, ncr.json_load(ncr.PROTOCOL)["models"])
         self.assertFalse(ncr.validate()["training_authorized"])
 
-    def test_void_byte_tokenizer_metadata_without_tokenizer_json(self):
+    def test_void_rejects_custom_byte_source_hash_mismatch(self):
         p = ncr.json_load(ncr.PROTOCOL)
         m = p["models"]["void1"]
         config = dict(m["expected_config"])
@@ -163,7 +163,9 @@ class ProtocolGuards(unittest.TestCase):
             )
             with patch.dict("sys.modules", {"huggingface_hub": hub}):
                 preflight = ncr._source_preflight("void1", m)
-        self.assertEqual(preflight["status"], "METADATA_PASS_FULL_WEIGHT_HASH_PENDING")
+        self.assertEqual(preflight["status"], "BLOCKED_REQUIRES_SOURCE_REVIEW")
+        self.assertTrue(any("differs from TRAIN-002b" in value
+                            for value in preflight["blockers"]))
         self.assertEqual(preflight["tap_indices"], [7, 15, 23])
         self.assertTrue(preflight["weight_file_present"])
         self.assertFalse(preflight["tokenizer_code_executed"])
