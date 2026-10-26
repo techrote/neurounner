@@ -45,3 +45,9 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 3. Use orchestrator-owned IDs/lineage from durable manifests, not model-invented provenance.
 4. Treat GitHub Actions artifacts as transient staging unless their contents have been promoted under `datasets/`.
 5. When an experiment fails, inspect preserved partial artifacts before rerunning; successful partial work may already be authoritative.
+
+## NCR-001 experimental architecture (source-gated)
+
+- **[NCR-001A preregistration](experiments/ncr-001/protocol.md)** — persistent-depth 8×8×4 NCA hypothesis, exact frozen-model identities, causal state boundaries, matched controls, hard preflight and resource gates; **no training admitted yet**.
+- **[NCR-001 machine-readable protocol](experiments/ncr-001/protocol.json)** — provisional two-model source locks, SmolLM2/Sprocket variant guard, selected depth-tap policy, sealed TRAIN-003 holdout and outstanding fixture/checkpoint approvals.
+- **[NCR-001A read-only preflight](scripts/ncr_001_protocol.py)** — verify local protocol & fixed corpus without network, or inspect exact pinned HF model/tokenizer/config metadata without downloading model weights. Do not interpret metadata-preflight success as causal conformance or training authorization.
