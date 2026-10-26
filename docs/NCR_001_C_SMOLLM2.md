@@ -41,6 +41,29 @@ Run in the pinned CPU environment:
 
 Evidence is staged at runtime/ncr-001/smollm2-preflight.json, including failed partial runs; source-bound results must be read back and promoted in Git before the Actions artifact expires.
 
+## Hosted source-bound result — 26 October 2026
+
+[GitHub Actions 40422167066](https://github.com/techrote/neurounner/actions/runs/40422167066) passed **all six offline toy-hook tests and the genuine frozen HF SmolLM2 integration prepass**. The actual 269,060,552-byte safetensors checkpoint SHA-256 was verified by reading downloaded bytes, not simply trusting published metadata: **5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c**. All pinned config and tokenizer hashes matched.
+
+| Test | Measured result |
+|---|---:|
+| Zero-init original-vs-adapter logits, three lengths | 0 maximum absolute difference |
+| Zero-init padded two-request logits | 0 |
+| Greedy three-token generation | Identical outputs, three independent decoder forwards |
+| Real frozen-base readout gradient L1 | 476.267 |
+| Base parameters with gradients | 0 |
+| Manual nontrained readout perturbation, max logit effect | 0.002409 |
+| Nonzero NCA full-vs-incremental KV-cache maximum error | **5.2452 × 10⁻⁵**, under fixed 5 × 10⁻⁴ tolerance |
+| Nonzero NCA future-suffix invariance | 0 maximum absolute difference |
+| Real backbone optimizer steps | 0 |
+| Peak process RSS | 1,166,016 KiB |
+
+The run used four threads on Intel Xeon Platinum 8370C with torch 2.14.1+cpu and Transformers 4.57.6. **These are short-sequence source-bound conformance measurements, not throughput or model-quality results.**
+
+The original [complete 3,891-byte JSON receipt](../experiments/ncr-001/smollm2-preflight/receipt.json) and [source-bound provenance](../experiments/ncr-001/smollm2-preflight/provenance.json) are preserved in Git. The report SHA-256, **b607dabd1a2da866e37f5c96ec5cc2db49bbd4482caa1aad405a9ee61bc14e23**, is checked in CI against the promoted bytes; the original Actions ZIP artifact #12698945189 was recorded separately.
+
+**Verdict:** preliminary SmolLM2 hook compatibility **PASS**. Full independent #72, including longer sessions, fresh checkpoint reload and a separate reviewer, remains outstanding. No NCA training or quantitative performance comparison is authorised.
+
 ## Execution and stop conditions
 
 This PR intentionally stacks onto shared-core PR #82 while protocol PR #77 is still draft. Do **not** merge model-specific hooks to main before the protocol and core have been independently reviewed and accepted.
