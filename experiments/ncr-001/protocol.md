@@ -13,9 +13,9 @@ The comparison is **within each frozen model**, not SmolLM2-versus-Sprocket supe
 | Lane | Required source | Current factual basis | Hard gate |
 |---|---|---|---|
 | SmolLM2-135M-Instruct | `HuggingFaceTB/SmolLM2-135M-Instruct@12fd25f77366fa6b3b4b768ec3050bf629380bac` | TRAIN-001/003 proved CPU train/load/evaluate for this identity; Llama, 30 blocks, width 576, 9 query/3 KV heads, 8192 positions | Verify complete source identity + file hashes in a pinned preflight before training |
-| Sprocket-500M **chat** | `kandivault/sprocket-500m@eb157d4ddddc4619e661d4a2426bb2dd000fc668`, proposed `chat/model.safetensors` | Publisher documents chat F16 and Q4 GGUF, 2048 context, 20 query/4 KV heads, 32k vocabulary. Only the **instruct** build is explicitly advertised as root HF safetensors in the model card. Whether `chat/model.safetensors` exists is **unverified**. | Check exact pinned repo tree, chat config/tokenizer and trainable checkpoint. If absent, mark **BLOCKED** and request separately authorised chat-HF export. Never use root instruct weights silently. |
+| Sprocket-500M **chat** | `kandivault/sprocket-500m@eb157d4ddddc4619e661d4a2426bb2dd000fc668`, `chat/model.safetensors` | **Pinned source inventory verified:** trainable `chat/model.safetensors` exists; 26 Llama blocks, hidden width 1280, 20 query/4 KV heads, 2048 context, 32k vocab. Publisher card omits the chat HF checkpoint, but the pinned repository has it. | Exact tokenizer/chat-template semantics and **checkpoint bytes** still require independent verification, followed by #72 model-forward and cache conformance. Do not use root instruct weights as chat. |
 
-The SHA above for Sprocket is an existing neurounner model reference, **not** proof that a trainable chat checkpoint exists at that revision. The reference GGUF is a useful behavioural benchmark, but its bits are not a differentiable safetensors checkpoint. If chat HF cannot be verified, work on the SmolLM2 lane may proceed independently after its own gates; Sprocket comparisons stay blocked.
+**Source inventory result:** [NCR-001A Actions 40401534069](https://github.com/techrote/neurounner/actions/runs/40401534069) confirmed the exact `chat/model.safetensors` file and pinned architecture. This is **metadata/file-presence evidence, not a downloaded weight SHA or numeric model-load qualification**. The chat GGUF remains a distinct behavioural reference; it is not a substitute for HF safetensors. SmolLM2 integration and Sprocket chat-template qualification can now proceed as separable tracks.
 
 ### Preflight commands
 
@@ -32,7 +32,7 @@ Only the last command contacts Hugging Face. It downloads metadata and small tok
 
 - Position-specific field `F[B,T,4,8,8]`, 256 float32 variables per token, spatially **independent across T**. The shape is a conceptual layout; internal tensor ordering may differ with tests.
 - Three depth taps **after** a transformer block, using **zero-based** completed-block indices: `floor(L/3)-1`, `floor(2L/3)-1`, `L-1`.
-- SmolLM2's 30-block taps therefore are **[9, 19, 29]**; Sprocket tap indices must be frozen from its actual pinned config, not guessed from parameter count.
+- SmolLM2's 30-block taps are **[9, 19, 29]**; verified 26-block Sprocket-chat taps are **[7, 16, 25]**. Both use actual pinned configs (post-block 0-based).
 - At the first tap, initialize the field from the current token's hidden representation and apply three learned local update iterations; later taps inject a new observation but **reuse/evolve the same field**, not overwrite it with a new field.
 - A single learnable local rule scans 3×3 neighbours with **zero padding**, bounded/gated residual updates and weights shared across all sites and taps; there is no toroidal boundary by default.
 - A learned field-to-hidden output projection is initialized to **exactly zero**, and is injected as an additive residual. Initial logits must therefore match a frozen, same-weights unmodified reference. After training begins, gradient-flow tests must account for the zero-init readout initially suppressing upstream NCA gradients until it moves.
@@ -87,4 +87,4 @@ The listed optimizer LR/betas/weight decay and natural-language corpus are **not
 - Small metadata can live in Git; actual checkpoints and model binary blobs must use [model storage policy](../../docs/MODEL_STORAGE.md).
 - Never edit fixed Village/Persona competitions or their immutable evidence; no Cybersand engine runtime integration, MoE execution, multi-token NCA recurrence or CUDA campaign in this epic.
 
-**Next:** review the read-only pinned HF preflight, resolve the Sprocket chat checkpoint question, freeze Sprocket tap list and fixture SHA-256s, lock optimizer controls, independently approve #68, then start synthetic #69 core tests. No expensive training yet.
+**Next:** independently review the read-only pinned source evidence and Sprocket chat tokenizer/template identity, freeze missing fixture SHA-256s and optimizer controls, approve #68, then start synthetic #69 core tests. Actual checkpoint bytes and cache/forward semantics are reserved for #70–#72. No expensive training yet.
