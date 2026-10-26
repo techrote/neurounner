@@ -47,6 +47,26 @@ jobs:
             tests/test_ncr_001_smollm2.py
           python3 -m unittest discover -s tests -p "test_ncr_001_smollm2.py" -v
 
+      - name: Verify exact promoted hosted model-source receipt
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path("experiments/ncr-001/smollm2-preflight")
+          report=root/"receipt.json"
+          provenance=json.loads((root/"provenance.json").read_text())
+          expected=provenance["source_run"]["original_report_sha256"]
+          actual=hashlib.sha256(report.read_bytes()).hexdigest()
+          assert actual==expected,(actual,expected)
+          d=json.loads(report.read_text())
+          assert d["status"]=="PASS_PRELIMINARY_SOURCE_BOUND_SMOLLM2_HOOK_CONFORMANCE"
+          assert d["model_training_performed"] is False
+          assert d["optimizer_steps"]==0
+          assert d["source_files"]["model.safetensors"]["sha256"]==provenance["original_model"]["model_safetensors_actual_downloaded_sha256"]
+          assert d["checks"]["nonzero_nca_full_vs_incremental_cache"]["close"] is True
+          print("Original model-source receipt SHA-256 verified:",actual)
+          PY
+
   pinned-real-model:
     name: Pinned frozen 135M checkpoint + KV-cache prepass
     needs: frozen-hook-toy
