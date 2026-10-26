@@ -6,7 +6,7 @@
 
 Does an explicitly spatial, iteratively updated 8×8×4 neural field, *carried through transformer depth for each token*, improve a frozen language model more than an ordinary parameter-matched feed-forward residual adapter? Benefits are **hypotheses**, not prior evidence.
 
-The comparison is **within each frozen model**, not SmolLM2-versus-Sprocket superiority. A positive score obtained by merely adding extra trainable parameters does not establish locality, recurrence or useful routing.
+The comparison is **within each frozen model**: SmolLM2, Sprocket Chat, Sprocket Instruct, and void.1. Chat versus Instruct has differing fine-tune weights; void.1 has a different decoder family and byte-level tokenizer. None is an across-model causal comparison. A positive score obtained by merely adding extra trainable parameters does not establish locality, recurrence or useful routing.
 
 ## Sources, known information and hard uncertainty
 
@@ -28,11 +28,22 @@ python3 scripts/ncr_001_protocol.py preflight --out runtime/ncr-001/source-prefl
 
 Only the last command contacts Hugging Face. It downloads metadata and small tokenizer/config files, **never weights**, and leaves training forbidden even when it succeeds. CI stores a temporary preflight receipt; promote reviewed source identities/digests into the repository before considering #68 complete.
 
+## Additional model lanes — 2026-10-26 owner amendment
+
+| Lane | Pin and adapter-specific identity | Architecture and taps | Qualification constraint |
+|---|---|---|---|
+| **Sprocket Instruct** | `kandivault/sprocket-500m@eb157d4ddddc4619e661d4a2426bb2dd000fc668`, **root** `model.safetensors` | Llama, 26×1280, **[7,16,25]** (verify fresh source inventory) | Distinct weights from Chat; preserve intended `<\|tool_call\|>` and `<\|memory_write\|>` control-token behavior, baseline negative results and exact instruct formatting |
+| **void.1** | `dotlabs/void.1@9c2be5087772867d45961abd11f6b35110617563` | **Qwen3**, 24×640, **[7,15,23]** (verify fresh source inventory); 259-token vocabulary | Use pinned `tokenization_byte.py` + `byte_vocab.json`; inspect remote code **without executing it in metadata preflight**, then explicitly review before HF loader; byte-aware generation budgets |
+
+The prior [TRAIN-002b eight-lane study](../../docs/TRAIN_002B_VOID_EIGHT_LANE.md) already qualified void.1 CPU LoRA and documented its tokenizer trap; its exact checkpoint revision and source hash should be reused, not replaced by a newer unpinned version. Independent additions are integration issues **#78/#79**, bounded experiments **#80/#81**; #72, #73 and #76 apply to all four, conditional on per-model PASS.
+
+Sprocket Chat remains a first-class **separate** lane. A user preference for Instruct does not retroactively relabel Chat evidence. Shared across lanes: only the NCA algorithm, field geometry and evaluation design, not weights, tokenizers, hidden-layer hooks or absolute-token score expectations.
+
 ## Exact NCA design candidate
 
 - Position-specific field `F[B,T,4,8,8]`, 256 float32 variables per token, spatially **independent across T**. The shape is a conceptual layout; internal tensor ordering may differ with tests.
 - Three depth taps **after** a transformer block, using **zero-based** completed-block indices: `floor(L/3)-1`, `floor(2L/3)-1`, `L-1`.
-- SmolLM2's 30-block taps are **[9, 19, 29]**; verified 26-block Sprocket-chat taps are **[7, 16, 25]**. Both use actual pinned configs (post-block 0-based).
+- SmolLM2's 30-block taps are **[9, 19, 29]**; both 26-block Sprocket variants use **[7, 16, 25]**; void.1's 24-block Qwen3 architecture uses **[7, 15, 23]**. Initial instruct/void numbers must be confirmed against exact revision in the hosted preflight before being accepted as source-proven.
 - At the first tap, initialize the field from the current token's hidden representation and apply three learned local update iterations; later taps inject a new observation but **reuse/evolve the same field**, not overwrite it with a new field.
 - A single learnable local rule scans 3×3 neighbours with **zero padding**, bounded/gated residual updates and weights shared across all sites and taps; there is no toroidal boundary by default.
 - A learned field-to-hidden output projection is initialized to **exactly zero**, and is injected as an additive residual. Initial logits must therefore match a frozen, same-weights unmodified reference. After training begins, gradient-flow tests must account for the zero-init readout initially suppressing upstream NCA gradients until it moves.
@@ -53,7 +64,7 @@ For each backbone separately, #72 must demonstrate:
 5. Frozen base weights unchanged after optimizer step and trainable NCA gradients demonstrably nonzero after the readout starts learning.
 6. Deterministic state/checkpoint reload, finite activations/losses, bounded RSS and no unintended base gradient.
 
-Training is prohibited for any model lacking its **own** conformance PASS. A passing SmolLM2 test must never waive a failed Sprocket test.
+Training is prohibited for any model lacking its **own** conformance PASS. Passing conformance for any model must never waive failure on another; record four independently gated results. Sprocket Chat and Instruct have different weights even when their layer geometry matches. Void.1 must use its own Qwen3 hooks rather than Llama hooks.
 
 ## Control lanes and evaluation
 
@@ -66,7 +77,7 @@ Keep the **same model/weights, data split, sample order, optimizer policy, updat
 5. Three-update NCA **reset** at each tap.
 6. Three-update NCA with a fixed, seed-recorded neighbourhood permutation to distinguish local geometry from generic capacity.
 
-The authoritative TRAIN-003 corpus contains **768 train / 128 family-disjoint held-out rows** and uses a fixed mechanical evaluator. Reuse it, but do not retune on the 128 held-out examples or use those examples to make Sprocket more instruction-following. Pre-register a separate original/appropriately licensed natural-language next-token holdout and immutable Sprocket behaviour probes; both **still require final hashes and approval**. Scores may not be compared across different tokenizers without careful normalization.
+The authoritative TRAIN-003 corpus contains **768 train / 128 family-disjoint held-out rows** and uses a fixed mechanical evaluator. Reuse it, but do not retune on the 128 held-out examples or use those examples to make Sprocket more instruction-following. Pre-register a separate original/appropriately licensed natural-language next-token holdout and immutable Sprocket behaviour probes; both **still require final hashes and approval**. Scores may not be compared across different tokenizers without careful normalization. **void.1** requires its custom pinned `tokenization_byte.py`/ByteTokenizer and `byte_vocab.json`; record tokenizer units, UTF-8 bytes, characters, budget exhaustion, EOS behavior, and bytes/sec separately. Earlier TRAIN-002b (issue #1) showed 768-unit generation exhaustion despite valid first JSON, so the proposed 256-unit training cap remains subject to actual-length preflight rather than truncating examples.
 
 Record actual sequence and supervised tokens, optimizer steps, wall seconds, CPU model/thread count, peak RSS, checkpoint bytes, parameter counts, loss, forward/decode speed, raw outputs and scorer version. Baseline gains can be misleading when host hardware differs, evaluation selects only a single favourable seed, or the baseline adapter has significantly fewer trainable parameters.
 
@@ -74,7 +85,7 @@ Record actual sequence and supervised tokens, optimizer steps, wall seconds, CPU
 
 - Initial CPU smoke: **≤32 optimizer steps**, no held-out tuning.
 - Next controlled primary lane: **192 steps/seed**, maximum **256 sequence tokens/example**, seeds **20261026, 20261027, 20261028**.
-- Maximum peak RSS: **12 GiB**; per-lane hard wall cap: **60 min SmolLM2**, **90 min Sprocket**. These are *ceilings*, not permission to spend them before preflight.
+- Maximum peak RSS: **12 GiB**; provisional per-lane hard wall cap: **60 min SmolLM2/void.1**, **90 min each Sprocket variant**. These are *ceilings*, not permission to spend them before preflight.
 - Tentative continuation rule: overall mean mechanical-score improvement of ≥0.03 absolute vs the matched MLP, nonnegative differences in ≥2/3 seeds, no natural-text CE deterioration >0.01 nats/token, and decode overhead ≤1.5× on reasonably matched hosts. Report effect uncertainty and sensitivity; this does not establish scientific significance with three seeds.
 - **GO** means worth a larger controlled study, not production readiness. **NO-GO** means failed causal/source/numerical or cost gates or convincing nonbenefit. **INCONCLUSIVE** includes unverified source, missing heldout proof, or uncertain effects.
 
@@ -87,4 +98,4 @@ The listed optimizer LR/betas/weight decay and natural-language corpus are **not
 - Small metadata can live in Git; actual checkpoints and model binary blobs must use [model storage policy](../../docs/MODEL_STORAGE.md).
 - Never edit fixed Village/Persona competitions or their immutable evidence; no Cybersand engine runtime integration, MoE execution, multi-token NCA recurrence or CUDA campaign in this epic.
 
-**Next:** independently review the read-only pinned source evidence and Sprocket chat tokenizer/template identity, freeze missing fixture SHA-256s and optimizer controls, approve #68, then start synthetic #69 core tests. Actual checkpoint bytes and cache/forward semantics are reserved for #70–#72. No expensive training yet.
+**Next:** read back fresh exact-revision source metadata for Sprocket Instruct and void.1, verify the custom byte-tokenizer source identity and Sprocket Instruct control-token serialization, freeze missing fixture SHA-256s and optimizer controls, approve #68, then start synthetic #69 core tests. Full checkpoint bytes and cache/forward semantics are reserved for #70–#72 and #78–#79. No comparative training yet.
