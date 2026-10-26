@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Pinned Sprocket Instruct-135M read-only NCA hook conformance spike.
+"""Pinned Sprocket-500M Instruct read-only NCA hook conformance spike.
 
 Loads the exact upstream HF checkpoint, tests frozen no-op and cache/causality,
 and computes a gradient without ANY optimizer step. Do not train or publish
-modified weights. Reuse TRAIN-003's known CPU model/tokenizer identity.
+modified weights. This pin uses root Instruct model.safetensors, not chat/model.safetensors.
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ from ncr_001_sprocket_instruct import (
 ROOT = Path(__file__).resolve().parents[1]
 PROTOCOL = ROOT / "experiments/ncr-001/protocol.json"
 PINS = ROOT / "experiments/ncr-001/source-pins.json"
-OUT = ROOT / "runtime/ncr-001/sprocket_instruct-preflight.json"
+OUT = ROOT / "runtime/ncr-001/sprocket-instruct-preflight.json"
 STATE = {"experiment": "NCR-001J",
          "classification": "real_frozen_HF_hook_and_cache_conformance_prepass",
          "status": "running",
@@ -99,6 +99,8 @@ def main() -> None:
     STATE["protocol_sha256"] = sha_file(PROTOCOL)
     STATE["source_pins_sha256"] = sha_file(PINS)
     STATE["model"] = MODEL_ID
+    STATE["model_variant"] = "instruct"
+    STATE["weight_path"] = "model.safetensors"
     STATE["revision"] = MODEL_REVISION
     STATE["runner"] = {
         "cpu": cpu_model(), "threads": torch.get_num_threads(),
