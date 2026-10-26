@@ -9,7 +9,8 @@ This file is the first retrieval/signposting document for agents, RAG systems an
 - **[BABBLE-001 archive](datasets/babble-001/README.md)** — first fully filed babble/personality dataset: guides, 48 Sprocket histories, NVIDIA compiler history and 12 derived packets.
 - **[BABBLE-002 archive](datasets/babble-002/README.md)** — 1,200 expanded personality-training examples across 12 personas, paired generic negatives, trait lineage and raw NVIDIA expansion history.
 - **[TRAIN-003 corpus](datasets/train-003/README.md)** — 896 reviewed semantic mechanical-compiler examples with balanced four-way decisions and family-disjoint held-out cases.
-- **[STORY-001 archive](datasets/story-001/README.md)** — qualified 2,706-word fictional Sprocket autofactory-memory story with pinned local-runner generation/review/edit evidence, exact prompts/raw outputs, provenance and SHA-256 inventory.
+- **[STORY-001 v1 archive](datasets/story-001/README.md)** — superseded local-model attempt retained as provenance; its accepted narrative was later rejected as stitched/variant-like.
+- **[STORY-001-V2 archive](datasets/story-001-v2/README.md)** — authoritative corrective artifact: one continuous 3,057-word fictional Sprocket autofactory-memory story produced with NVIDIA Nemotron Bolt/Super, with raw requests/responses, independent review, source hashes and post-qualification semantic-deduplication evidence.
 
 Raw records outrank derived summaries. Do not discard failed/malformed generations merely because a later compiler produced cleaner output.
 
