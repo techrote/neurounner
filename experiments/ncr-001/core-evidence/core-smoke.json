@@ -1,0 +1,102 @@
+{
+  "classification": "synthetic_cpu_pretraining_probe_not_lm_conformance",
+  "experiment": "NCR-001B",
+  "field": {
+    "bytes_per_token_fp32": 1024,
+    "channels": 4,
+    "height": 8,
+    "width": 8
+  },
+  "lanes": {
+    "smollm2": {
+      "field_bytes_per_batch": 65536,
+      "hidden_size": 576,
+      "no_op_exact_identity": true,
+      "note": "Wall seconds represent only synthetic NCA kernels (no LLM).",
+      "sequence_positions": 64,
+      "state_shape": [
+        1,
+        64,
+        4,
+        8,
+        8
+      ],
+      "three_taps_three_steps_wall_seconds": [
+        0.002667919000003849,
+        0.0026152110000055018,
+        0.002571154999998271
+      ],
+      "trainable_parameters": 297048
+    },
+    "sprocket_chat": {
+      "field_bytes_per_batch": 65536,
+      "hidden_size": 1280,
+      "no_op_exact_identity": true,
+      "note": "Wall seconds represent only synthetic NCA kernels (no LLM).",
+      "sequence_positions": 64,
+      "state_shape": [
+        1,
+        64,
+        4,
+        8,
+        8
+      ],
+      "three_taps_three_steps_wall_seconds": [
+        0.003298032000003559,
+        0.003285223000005999,
+        0.0032657739999990554
+      ],
+      "trainable_parameters": 658904
+    },
+    "sprocket_instruct": {
+      "field_bytes_per_batch": 65536,
+      "hidden_size": 1280,
+      "no_op_exact_identity": true,
+      "note": "Wall seconds represent only synthetic NCA kernels (no LLM).",
+      "sequence_positions": 64,
+      "state_shape": [
+        1,
+        64,
+        4,
+        8,
+        8
+      ],
+      "three_taps_three_steps_wall_seconds": [
+        0.0033187829999974383,
+        0.003292774000016152,
+        0.0032799250000152824
+      ],
+      "trainable_parameters": 658904
+    },
+    "void1": {
+      "field_bytes_per_batch": 65536,
+      "hidden_size": 640,
+      "no_op_exact_identity": true,
+      "note": "Wall seconds represent only synthetic NCA kernels (no LLM).",
+      "sequence_positions": 64,
+      "state_shape": [
+        1,
+        64,
+        4,
+        8,
+        8
+      ],
+      "three_taps_three_steps_wall_seconds": [
+        0.0026607089999970412,
+        0.002609962999997606,
+        0.0026945889999865358
+      ],
+      "trainable_parameters": 329944
+    }
+  },
+  "model_weights_loaded": false,
+  "peak_rss_kib": 243632,
+  "protocol_training_authorized": false,
+  "runner": {
+    "cpu_model": "AMD EPYC 9V45 96-Core Processor",
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "threads": 4
+  },
+  "torch_version": "2.14.1+cpu",
+  "training_performed": false
+}
