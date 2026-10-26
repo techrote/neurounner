@@ -98,9 +98,10 @@ These are **fixed candidate hyperparameters**, not evidence that they perform we
 - [Sprocket Chat](fixtures/sprocket-chat-probes.json) — 16 previously staged workshop/persona/coherence prompts.
 - [Sprocket Instruct](fixtures/sprocket-instruct-probes.json) — 16 original role, tool, memory and repetition prompts. An authorised instruct formatter/tool harness must be qualified in #78; no hardcoded unreviewed special tokens.
 - [void.1](fixtures/void-byte-probes.json) — 16 byte/Unicode/JSON/EOS/exhaustion probes, using pinned byte-tokenizer semantics only after #79 source review.
-- A **disjoint natural-text holdout** with licensed/public-domain provenance and an original common behavioural regression fixture remain **unspecified** and deliberately block training. Predeclare their byte hashes without choosing data from held-out model responses.
+- [Common original behaviour regressions](fixtures/behaviour-regression.json) — 16 original model-neutral prompts across causal, uncertainty, structured and odd-mechanics families, held out from all adapters.
+- [Natural-text CE pilot](fixtures/natural-text-holdout.json) — 20 original English prose passages (daily life, nature, culture, science, work), 4/domain. This is **not** a general-population or independent human-authored language benchmark; treat deltas as a narrow regression signal rather than conclusive perplexity improvement. It requires no third-party corpus license.
 
-All prompt fixture hashes must be read from the committed bytes, not re-created from a model generation. CI prints exact SHA-256 to support a later reviewed promotion.
+**All five non-TRAIN-003 fixture sets now have SHA-256s recorded in protocol.json** from GitHub-hosted source checkouts ([four behavioural sets](https://github.com/techrote/neurounner/actions/runs/40410019066), [prose set](https://github.com/techrote/neurounner/actions/runs/40410511697)). Their content is still **pending independent acceptance**; these hashes prevent invisible subsequent modification, not protect an unopened/private test suite. No assistant-owned source may be used for hyperparameter selection after results are observed.
 
 ## Provisional ceilings and decision policy
 
@@ -110,7 +111,7 @@ All prompt fixture hashes must be read from the committed bytes, not re-created 
 - Tentative continuation rule: overall mean mechanical-score improvement of ≥0.03 absolute vs the matched MLP, nonnegative differences in ≥2/3 seeds, no natural-text CE deterioration >0.01 nats/token, and decode overhead ≤1.5× on reasonably matched hosts. Report effect uncertainty and sensitivity; this does not establish scientific significance with three seeds.
 - **GO** means worth a larger controlled study, not production readiness. **NO-GO** means failed causal/source/numerical or cost gates or convincing nonbenefit. **INCONCLUSIVE** includes unverified source, missing heldout proof, or uncertain effects.
 
-The listed optimizer LR/betas/weight decay and natural-language corpus are **not frozen**; the machine-readable protocol therefore **denies training**. The missing pieces must be finalized and reviewed without consulting the final held-out outputs. This is a deliberately transparent incomplete kickoff, not a claim that experimental preregistration is finished.
+Optimizer constants, cellular update coefficients, five original evaluation-fixture files and their byte hashes **are now frozen** in the machine-readable protocol. **Training nevertheless remains forbidden** until source/checkpoint/formatter qualification, independent preregistration review, #72 per-model causal/cache/no-op conformance, and an explicit later change to the training-admission flag. No actual model results were consulted when fixing these candidates.
 
 ## Evidence, integration boundaries and next actions
 
