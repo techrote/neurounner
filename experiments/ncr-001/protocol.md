@@ -81,6 +81,27 @@ The authoritative TRAIN-003 corpus contains **768 train / 128 family-disjoint he
 
 Record actual sequence and supervised tokens, optimizer steps, wall seconds, CPU model/thread count, peak RSS, checkpoint bytes, parameter counts, loss, forward/decode speed, raw outputs and scorer version. Baseline gains can be misleading when host hardware differs, evaluation selects only a single favourable seed, or the baseline adapter has significantly fewer trainable parameters.
 
+## Frozen optimizer and cellular update values
+
+Before any actual model training, the shared architecture and trainer defaults have been recorded in machine-readable `protocol.json` and enforced by negative mutation tests:
+
+- Local state 8×8×4; hidden projection H→256 with affine LayerNorm and tanh; first-tap seed; at later depth taps, add 0.2×new observation to the previous field, apply tanh, then three recurrent update iterations.
+- Every recurrent iteration: 3×3 zero-padded Conv2d 4→16, SiLU, pointwise Conv2d 16→8 split delta/gate, followed by **tanh(field + 0.25×sigmoid(gate)×tanh(delta))**. A zero-initialized 256→H bias-free residual readout keeps initial model logits unchanged.
+- Shared NCA trainable parameter count is **514×H+984**. Its noncellular control gets a 256-unit bottleneck, LayerNorm, nonlinearity, gating and zero-initialized readout, with exact parameter count and compute budget verified in #73.
+- **AdamW** adapter-only; learning rate **8e-4**; betas **(0.9,0.95)**; weight decay **0.01**; global gradient clip norm **1.0**; baseline and NCA receive identical in-model examples/order and update caps.
+- Training per-example tentative ceilings: **256 ordinary tokenizer units** for SmolLM2 and both Sprocket variants, **1024 void.1 byte-tokenizer units**. Sample lengths must be preflight-checked; silently truncating ground-truth completions is prohibited.
+
+These are **fixed candidate hyperparameters**, not evidence that they perform well. The experiment still has `train_authorized=false`: source-lane template/conformance, evaluation fixture hashes and the independent PR review remain separate gates.
+
+### Original evaluation probes under review
+
+- [Sprocket Chat](fixtures/sprocket-chat-probes.json) — 16 previously staged workshop/persona/coherence prompts.
+- [Sprocket Instruct](fixtures/sprocket-instruct-probes.json) — 16 original role, tool, memory and repetition prompts. An authorised instruct formatter/tool harness must be qualified in #78; no hardcoded unreviewed special tokens.
+- [void.1](fixtures/void-byte-probes.json) — 16 byte/Unicode/JSON/EOS/exhaustion probes, using pinned byte-tokenizer semantics only after #79 source review.
+- A **disjoint natural-text holdout** with licensed/public-domain provenance and an original common behavioural regression fixture remain **unspecified** and deliberately block training. Predeclare their byte hashes without choosing data from held-out model responses.
+
+All prompt fixture hashes must be read from the committed bytes, not re-created from a model generation. CI prints exact SHA-256 to support a later reviewed promotion.
+
 ## Provisional ceilings and decision policy
 
 - Initial CPU smoke: **≤32 optimizer steps**, no held-out tuning.
