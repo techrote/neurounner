@@ -46,7 +46,8 @@ jobs:
           root=Path("experiments/ncr-001/fixtures")
           expect={"sprocket-chat-probes.json":16,
                   "sprocket-instruct-probes.json":16,
-                  "void-byte-probes.json":16}
+                  "void-byte-probes.json":16,
+                  "behaviour-regression.json":16}
           for name,n in expect.items():
               data=json.loads((root/name).read_text(encoding="utf-8"))
               rows=data["cases"]
@@ -58,6 +59,7 @@ jobs:
           sha256sum experiments/ncr-001/fixtures/sprocket-chat-probes.json
           sha256sum experiments/ncr-001/fixtures/sprocket-instruct-probes.json
           sha256sum experiments/ncr-001/fixtures/void-byte-probes.json
+          sha256sum experiments/ncr-001/fixtures/behaviour-regression.json
 
   sources:
     name: Read-only upstream metadata inventory
