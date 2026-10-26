@@ -1,0 +1,83 @@
+name: NCR-001A source and protocol preflight
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/ncr-001a.yml"
+      - "experiments/ncr-001/**"
+      - "scripts/ncr_001_protocol.py"
+      - "tests/test_ncr_001_protocol.py"
+      - "RAG.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr-001a-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  HF_HUB_DISABLE_TELEMETRY: "1"
+
+jobs:
+  protocol:
+    name: Offline protocol validation / synthetic safeguards
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Check syntax
+        run: python3 -m py_compile scripts/ncr_001_protocol.py tests/test_ncr_001_protocol.py
+      - name: Validate locked existing corpus and experimental permission gates
+        run: python3 scripts/ncr_001_protocol.py validate
+      - name: Synthetic source-security and protocol tests (no network)
+        run: python3 -m unittest discover -s tests -p "test_ncr_001_protocol.py" -v
+
+  sources:
+    name: Read-only upstream metadata inventory
+    needs: protocol
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install minimal HF metadata client (no PyTorch and no weights)
+        run: python3 -m pip install --disable-pip-version-check "huggingface_hub>=0.36,<2"
+      - name: Verify exact pinned source revisions and chat checkpoint existence
+        run: |
+          python3 scripts/ncr_001_protocol.py preflight --out runtime/ncr-001/source-preflight.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("runtime/ncr-001/source-preflight.json").read_text())
+          assert d["weight_bytes_downloaded"] == 0
+          assert d["training_performed"] is False
+          assert d["training_authorized"] is False
+          with open(Path.cwd()/"runtime/ncr-001/source-summary.md","w") as f:
+              f.write("# NCR-001A source metadata (not training admission)\n\n")
+              for name,x in d["models"].items():
+                  f.write(f"- **{name}**: {x['status']} at {x['revision']}\n")
+                  cfg=x.get("configuration") or {}
+                  f.write(f"  - discovered layers: {cfg.get('num_hidden_layers')}; width: {cfg.get('hidden_size')}; taps: {x.get('tap_indices')}\n")
+                  f.write(f"  - exact requested trainable file present: {x.get('weight_file_present')}\n")
+                  for issue in x.get("blockers",[]):
+                      f.write(f"  - BLOCKED: {issue}\n")
+                  if x["status"].startswith("BLOCKED"):
+                      print(f"::warning title=NCR source gate::{name} is blocked; do not train or substitute variants")
+          print(Path("runtime/ncr-001/source-summary.md").read_text())
+          PY
+      - name: Publish read-only snapshot / blocker evidence (transient staging)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr-001a-preflight-${{ github.run_attempt }}
+          path: runtime/ncr-001
+          if-no-files-found: warn
+          retention-days: 30
