@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001",
+  "parent_issue": 67,
+  "protocol_issue": 68,
+  "state": "provisional_pending_remote_checkpoint_and_holdout_lock",
+  "created_utc": "2026-10-26",
+  "source_branch_base_commit": "66c5a99a98efdf1ea9dea5c9cdb89a2dca0a35c7",
+  "train_authorized": false,
+  "hypothesis": "An 8x8x4 spatially local field, persistent across transformer depth, improves a held-out quality metric beyond a parameter-matched noncellular residual adapter under equal per-model sample and training budgets.",
+  "models": {
+    "smollm2": {
+      "repo_id": "HuggingFaceTB/SmolLM2-135M-Instruct",
+      "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+      "variant": "instruct",
+      "weight_file": "model.safetensors",
+      "config_file": "config.json",
+      "tokenizer_candidates": [
+        "tokenizer.json",
+        "tokenizer_config.json"
+      ],
+      "expected_config": {
+        "model_type": "llama",
+        "architectures": [
+          "LlamaForCausalLM"
+        ],
+        "hidden_size": 576,
+        "num_hidden_layers": 30,
+        "num_attention_heads": 9,
+        "num_key_value_heads": 3,
+        "max_position_embeddings": 8192,
+        "vocab_size": 49152
+      },
+      "taps_after_block_zero_based": [
+        9,
+        19,
+        29
+      ],
+      "checkpoint_state": "awaiting_snapshot_and_file_hash_preflight",
+      "numeric_oracle": "same pinned HF checkpoint in torch.float32"
+    },
+    "sprocket_chat": {
+      "repo_id": "kandivault/sprocket-500m",
+      "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+      "variant": "chat",
+      "weight_file": "chat/model.safetensors",
+      "config_file": "chat/config.json",
+      "optional_architecture_config_file": "config.json",
+      "tokenizer_candidates": [
+        "chat/tokenizer.json",
+        "tokenizer.json",
+        "chat/tokenizer_config.json",
+        "tokenizer_config.json"
+      ],
+      "reference_only_gguf": [
+        "sprocket-500m-chat-f16.gguf",
+        "sprocket-500m-chat-q4_k_m.gguf"
+      ],
+      "expected_config": {
+        "model_type": "llama",
+        "architectures": [
+          "LlamaForCausalLM"
+        ],
+        "num_attention_heads": 20,
+        "num_key_value_heads": 4,
+        "max_position_embeddings": 2048,
+        "vocab_size": 32000
+      },
+      "taps_after_block_zero_based": null,
+      "checkpoint_state": "UNVERIFIED: publisher card only explicitly advertises HF safetensors for the instruct build",
+      "numeric_oracle": "same pinned HF chat checkpoint if independently verified; root instruct and chat GGUF are not equivalent substitutes"
+    }
+  },
+  "architecture": {
+    "state_geometry": {
+      "height": 8,
+      "width": 8,
+      "channels": 4,
+      "scalars_per_token": 256
+    },
+    "state_semantics": "one explicit [B,T,4,8,8] field per forward; independent across tokens; lives across depth taps only; reinitialized on new forward, request or generation step",
+    "tap_selection": "zero-based post-block hidden states at floor(N/3)-1, floor(2*N/3)-1, N-1; exact per-model list frozen after source preflight",
+    "tap_count": 3,
+    "nca_steps_per_tap": 3,
+    "neighborhood": "3x3 spatial same-weight local update, zero-padding, no wraparound and no token-axis interaction",
+    "update": "bounded gated residual update with shared weights over cells and all depth taps; hidden-token projection supplies observations at each tap",
+    "readout": "additive residual projection from flattened field to hidden state, output projection initialized identically to zero",
+    "backbone_policy": "every base parameter frozen, optimizer contains only NCA/projections; no GGUF gradient path",
+    "cross_token_recurrence": false,
+    "dynamic_sparse_execution": false
+  },
+  "comparisons": [
+    "frozen_base_no_adapter",
+    "parameter_matched_gated_mlp",
+    "persistent_nca_3_steps",
+    "persistent_nca_1_step",
+    "reset_each_tap_nca_3_steps",
+    "permuted_neighborhood_nca_3_steps"
+  ],
+  "match_constraints": {
+    "comparison_within_each_model": true,
+    "adapter_trainable_param_tolerance_fraction": 0.05,
+    "same_examples_order_optimizer_updates_seed_and_taps": true,
+    "record_actual_sequence_and_supervised_tokens": true,
+    "no_cross_model_raw_token_perplexity_ranking": true
+  },
+  "datasets": {
+    "train_003": {
+      "manifest_path": "datasets/train-003/manifest.json",
+      "manifest_sha256": "d487a886654f4c8e815a5f6d79b67f067b520684e9db6cb52c46a7dcdfb353d5",
+      "train_rows": 768,
+      "heldout_rows": 128,
+      "train_data_role": "reusable frozen training examples",
+      "heldout_data_role": "SEALED: evaluation only; never adapt/train/prompt-select on it",
+      "model_applicability": "within-model mechanic evaluation; not evidence of Sprocket-vs-SmolLM2 parity"
+    },
+    "natural_language_holdout": {
+      "state": "pending_licensed_provenance_and_hash_before_training",
+      "path": null,
+      "sha256": null
+    },
+    "sprocket_chat_probes": {
+      "state": "pending_fixture_hash_before_training",
+      "path": "experiments/ncr-001/fixtures/sprocket-chat-probes.json",
+      "sha256": null
+    },
+    "other_original_behaviour_probes": {
+      "state": "pending_fixture_hash_before_training",
+      "path": "experiments/ncr-001/fixtures/behaviour-regression.json",
+      "sha256": null
+    }
+  },
+  "training": {
+    "hardware": "GitHub-hosted ubuntu-24.04, four exposed vCPUs, CPU-only initial qualification",
+    "torch_threads": 4,
+    "trainable_backbone": false,
+    "precision": "float32",
+    "seed_list": [
+      20261026,
+      20261027,
+      20261028
+    ],
+    "initial_smoke_max_steps": 32,
+    "primary_steps_per_seed": 192,
+    "max_seq_tokens_per_sample": 256,
+    "optimizer": "AdamW; details fixed in NCR-001F before any training",
+    "optimizer_lr": null,
+    "optimizer_betas": null,
+    "weight_decay": null,
+    "preflight_gate": "no training while protocol.train_authorized=false or per-model NCR-001E fails"
+  },
+  "resource_watchdogs": {
+    "max_peak_rss_gib": 12,
+    "max_cpu_lane_wall_seconds": {
+      "smollm2": 3600,
+      "sprocket_chat": 5400
+    },
+    "report_cpu_model_platform_process_threads_and_sha": true,
+    "no_silent_budget_extension": true
+  },
+  "conformance": {
+    "frozen_base_noop_atol": 0.0001,
+    "frozen_base_noop_rtol": 0.0001,
+    "full_vs_cached_prefill_atol": 0.0005,
+    "full_vs_cached_prefill_rtol": 0.0005,
+    "required_checks": [
+      "same_base_logits",
+      "base_weight_unchanged_after_step",
+      "causal_suffix_invariance",
+      "full_prefix_vs_incremental_cache",
+      "per_token_isolation",
+      "per_request_reset",
+      "nonzero_adapter_gradient_after_warmup",
+      "finite_state_and_loss",
+      "cold_reload_state_dict"
+    ],
+    "any_failure_blocks_model_qualification": true
+  },
+  "evaluation": {
+    "primary_effect": "matched NCA minus within-model MLP on fixed sealed task metric",
+    "report_metrics": [
+      "heldout_mean_next_token_cross_entropy",
+      "train003_mechanical_score",
+      "train003_overall_score",
+      "chat_behaviour_regression",
+      "decode_tokens_per_second",
+      "prompt_tokens_per_second",
+      "training_sequence_tokens_per_second",
+      "peak_rss_gib",
+      "parameter_count",
+      "estimated_flops"
+    ],
+    "improvement_gate": "GO for expanded investigation only if mean train003 mechanical improvement >=0.03 absolute and >=2/3 seeds nonnegative, no >0.01 nats/token natural-language CE regression, and <=1.5x decode wall overhead on reasonably matched CPU hosts. Sensitivity and confidence reported; not a statistical proof.",
+    "verdicts": [
+      "GO",
+      "NO_GO",
+      "INCONCLUSIVE"
+    ],
+    "stop_rules": "Causality failure or source mismatch=NO_GO and halt; missing pinned chat checkpoint=BLOCKED not substitute; unstable/nan=halt; missing locked holdout=training forbidden; weak/uncertain evidence=INCONCLUSIVE.",
+    "preregistered_number_of_seeds": 3
+  },
+  "provenance": {
+    "permanent_records": [
+      "source_sha",
+      "protocol_sha",
+      "pinned_model_repo_revision",
+      "config_and_tokenizer_sha256",
+      "verified_checkpoint_digest",
+      "dataset_manifest_sha256",
+      "per_lane_seed",
+      "cpu_model",
+      "package_versions",
+      "runner_id",
+      "raw_generations_and_failures"
+    ],
+    "data_policy": "docs/DATASET_FILING_SYSTEM.md",
+    "weight_policy": "docs/MODEL_STORAGE.md",
+    "citation_authority": "RAG.md",
+    "staging_only": "GitHub Actions artifacts are not the durable archive"
+  }
+}
