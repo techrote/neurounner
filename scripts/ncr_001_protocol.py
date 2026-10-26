@@ -34,7 +34,7 @@ def validate() -> dict:
     p = json_load(PROTOCOL)
     assert p["schema_version"] == 1 and p["experiment"] == "NCR-001"
     assert p["parent_issue"] == 67 and p["protocol_issue"] == 68
-    assert p["state"] == "provisional_pending_remote_checkpoint_and_holdout_lock"
+    assert p["state"] == "provisional_four_model_sources_and_holdouts_pending_lock"
     assert p["train_authorized"] is False, "NCR-001A must never permit training"
     a = p["architecture"]
     assert a["state_geometry"] == {
@@ -51,7 +51,7 @@ def validate() -> dict:
     assert p["match_constraints"]["adapter_trainable_param_tolerance_fraction"] <= 0.05
 
     models = p["models"]
-    assert set(models) == {"smollm2", "sprocket_chat"}
+    assert set(models) == {"smollm2", "sprocket_chat", "sprocket_instruct", "void1"}
     assert models["smollm2"]["repo_id"] == "HuggingFaceTB/SmolLM2-135M-Instruct"
     assert models["sprocket_chat"]["repo_id"] == "kandivault/sprocket-500m"
     assert models["sprocket_chat"]["weight_file"] == "chat/model.safetensors"
@@ -62,11 +62,26 @@ def validate() -> dict:
     assert models["sprocket_chat"]["taps_after_block_zero_based"] == taps_for_layers(
         models["sprocket_chat"]["expected_config"]["num_hidden_layers"]
     )
-    for m in models.values():
+    assert models["sprocket_instruct"]["variant"] == "instruct"
+    assert models["sprocket_instruct"]["weight_file"] == "model.safetensors"
+    assert models["sprocket_instruct"]["taps_after_block_zero_based"] == [7, 16, 25]
+    assert models["void1"]["repo_id"] == "dotlabs/void.1"
+    assert models["void1"]["weight_file"] == "model.safetensors"
+    assert models["void1"]["taps_after_block_zero_based"] == [7, 15, 23]
+    for name, m in models.items():
         assert len(m["revision"]) == 40
         int(m["revision"], 16)
-        assert m["expected_config"]["model_type"] == "llama"
-        assert m["expected_config"]["architectures"] == ["LlamaForCausalLM"]
+        if name == "void1":
+            assert m["expected_config"]["model_type"] == "qwen3"
+            assert m["expected_config"]["architectures"] == ["Qwen3ForCausalLM"]
+            assert "tokenization_byte.py" in m["tokenizer_candidates"]
+            assert "byte_vocab.json" in m["tokenizer_candidates"]
+        else:
+            assert m["expected_config"]["model_type"] == "llama"
+            assert m["expected_config"]["architectures"] == ["LlamaForCausalLM"]
+        assert m["taps_after_block_zero_based"] == taps_for_layers(
+            m["expected_config"]["num_hidden_layers"]
+        )
 
     # Source inventory is retained in Git; no ephemeral Actions artifact is authority.
     pins_path = ROOT / "experiments/ncr-001/source-pins.json"
@@ -76,13 +91,18 @@ def validate() -> dict:
     assert pins["schema_version"] == 1 and pins["experiment"] == "NCR-001"
     assert pins["source"]["model_weights_downloaded"] is False
     assert pins["source"]["training_performed"] is False
+    source_pending = []
+    assert set(pins["models"]) == set(models)
     for name, model in models.items():
         source = pins["models"][name]
         assert source["repo_id"] == model["repo_id"]
         assert source["revision"] == model["revision"]
         assert source["variant"] == model["variant"]
         assert source["hf_weight_file"] == model["weight_file"]
-        assert source["weight_present"] is True
+        if source["weight_present"] is not True:
+            # An unverified new model may be drafted but can never be admitted.
+            assert source["weight_present"] is None and name in ("sprocket_instruct", "void1")
+            source_pending.append(f"{name}: pinned HF checkpoint metadata not yet verified")
         for source_key, expected_key in (
                 ("layers", "num_hidden_layers"),
                 ("hidden", "hidden_size"),
@@ -91,8 +111,12 @@ def validate() -> dict:
             assert source["architecture"][source_key] == model["expected_config"][expected_key]
         assert source["tap_indices_post_block_zero_based"] == model["taps_after_block_zero_based"]
         declared_hash = source["weight_declared_lfs_sha256_not_downloaded"]
-        assert isinstance(declared_hash, str) and len(declared_hash) == 64
-        int(declared_hash, 16)
+        if declared_hash is None:
+            assert name in ("sprocket_instruct", "void1")
+            source_pending.append(f"{name}: declared weight checksum not yet inventoried")
+        else:
+            assert isinstance(declared_hash, str) and len(declared_hash) == 64
+            int(declared_hash, 16)
 
     dataset = p["datasets"]["train_003"]
     manifest_path = ROOT / dataset["manifest_path"]
@@ -109,8 +133,9 @@ def validate() -> dict:
     for shard in manifest["training_shards"] + [manifest["heldout_shard"]]:
         assert (manifest_path.parent / shard).is_file(), f"Missing pinned shard: {shard}"
 
-    unresolved = []
+    unresolved = list(source_pending)
     for fixture_key in ("natural_language_holdout", "sprocket_chat_probes",
+                        "sprocket_instruct_probes", "void_byte_probes",
                         "other_original_behaviour_probes"):
         record = p["datasets"][fixture_key]
         if not record.get("sha256"):
@@ -123,7 +148,8 @@ def validate() -> dict:
         if p["training"][field] is None:
             unresolved.append(f"training.{field}: not frozen")
     unresolved.append("both model checkpoint byte digests: not yet verified")
-    unresolved.append("Sprocket chat trainable HF checkpoint: not yet verified")
+    unresolved.append("Full model checkpoint bytes and forward parity: pending for all four models")
+    unresolved.append("Sprocket instruct tool-token and void.1 byte tokenizer semantics: not yet verified")
     if models["sprocket_chat"]["taps_after_block_zero_based"] is None:
         unresolved.append("Sprocket exact post-block tap indices: not frozen")
     return {
@@ -240,7 +266,13 @@ def _source_preflight(name: str, m: dict) -> dict:
                 )
             }
 
-    if not any(k.endswith("tokenizer.json") for k in response["metadata_sha256"]):
+    if name == "void1":
+        for required in ("tokenization_byte.py", "byte_vocab.json", "tokenizer_config.json"):
+            if required not in response["metadata_sha256"]:
+                response["blockers"].append(f"Missing independently hashed void byte-tokenizer file: {required}")
+        response["tokenizer_code_executed"] = False
+        response["tokenizer_remote_code_review_required"] = True
+    elif not any(k.endswith("tokenizer.json") for k in response["metadata_sha256"]):
         response["blockers"].append("No independently hashed tokenizer.json")
     if not weight:
         response["blockers"].append(
