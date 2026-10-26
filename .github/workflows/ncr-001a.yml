@@ -38,6 +38,26 @@ jobs:
         run: python3 scripts/ncr_001_protocol.py validate
       - name: Synthetic source-security and protocol tests (no network)
         run: python3 -m unittest discover -s tests -p "test_ncr_001_protocol.py" -v
+      - name: Inventory model-specific fixed prompts (not training admission)
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("experiments/ncr-001/fixtures")
+          expect={"sprocket-chat-probes.json":16,
+                  "sprocket-instruct-probes.json":16,
+                  "void-byte-probes.json":16}
+          for name,n in expect.items():
+              data=json.loads((root/name).read_text(encoding="utf-8"))
+              rows=data["cases"]
+              assert len(rows)==n,(name,len(rows))
+              assert len(set(x["id"] for x in rows))==n,name
+              assert all(isinstance(x.get("id"),str) for x in rows),name
+              print(name, "rows",len(rows),"status",data.get("status"))
+          PY
+          sha256sum experiments/ncr-001/fixtures/sprocket-chat-probes.json
+          sha256sum experiments/ncr-001/fixtures/sprocket-instruct-probes.json
+          sha256sum experiments/ncr-001/fixtures/void-byte-probes.json
 
   sources:
     name: Read-only upstream metadata inventory
