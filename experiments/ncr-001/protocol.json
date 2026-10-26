@@ -3,11 +3,11 @@
   "experiment": "NCR-001",
   "parent_issue": 67,
   "protocol_issue": 68,
-  "state": "provisional_pending_remote_checkpoint_and_holdout_lock",
+  "state": "provisional_four_model_sources_and_holdouts_pending_lock",
   "created_utc": "2026-10-26",
   "source_branch_base_commit": "66c5a99a98efdf1ea9dea5c9cdb89a2dca0a35c7",
   "train_authorized": false,
-  "hypothesis": "An 8x8x4 spatially local field, persistent across transformer depth, improves a held-out quality metric beyond a parameter-matched noncellular residual adapter under equal per-model sample and training budgets.",
+  "hypothesis": "For each of four frozen models (SmolLM2, Sprocket chat, Sprocket instruct, void.1), a per-token 8x8x4 spatially local field persistent across transformer depth can improve held-out quality relative to matched noncellular residual adapter under identical within-model budgets. No cross-model/tokenizer causal comparison is implied.",
   "models": {
     "smollm2": {
       "repo_id": "HuggingFaceTB/SmolLM2-135M-Instruct",
@@ -76,6 +76,87 @@
       "checkpoint_state": "pinned chat/model.safetensors presence and architecture confirmed by metadata-only Actions 40401534069; full weight byte hash, tokenizer/template semantics, model forward parity remain pending",
       "numeric_oracle": "same pinned HF chat checkpoint if independently verified; root instruct and chat GGUF are not equivalent substitutes",
       "source_metadata_evidence_url": "https://github.com/techrote/neurounner/actions/runs/40401534069"
+    },
+    "sprocket_instruct": {
+      "repo_id": "kandivault/sprocket-500m",
+      "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+      "variant": "instruct",
+      "weight_file": "model.safetensors",
+      "config_file": "config.json",
+      "tokenizer_candidates": [
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "special_tokens_map.json"
+      ],
+      "tokenizer_protocol": "root tokenizer + instruct tool/memory control tokens; chat template and explicit serialization must be checked before training",
+      "expected_config": {
+        "model_type": "llama",
+        "architectures": [
+          "LlamaForCausalLM"
+        ],
+        "num_attention_heads": 20,
+        "num_key_value_heads": 4,
+        "max_position_embeddings": 2048,
+        "vocab_size": 32000,
+        "hidden_size": 1280,
+        "num_hidden_layers": 26
+      },
+      "taps_after_block_zero_based": [
+        7,
+        16,
+        25
+      ],
+      "checkpoint_state": "published root instruct HF safetensors; exact pinned source/byte SHA, special-token template and forward parity PENDING new NCR-001A preflight",
+      "numeric_oracle": "same pinned HF root instruct checkpoint; not chat or GGUF",
+      "integration_issue": 78,
+      "comparison_issue": 80
+    },
+    "void1": {
+      "repo_id": "dotlabs/void.1",
+      "revision": "9c2be5087772867d45961abd11f6b35110617563",
+      "variant": "base_byte",
+      "weight_file": "model.safetensors",
+      "config_file": "config.json",
+      "tokenizer_candidates": [
+        "tokenization_byte.py",
+        "byte_vocab.json",
+        "tokenizer_config.json",
+        "special_tokens_map.json"
+      ],
+      "tokenizer_protocol": "ByteTokenizer from exact pinned source, remote Python source must be independently reviewed and hashed before trust_remote_code; raw bytes/characters/units tracked separately",
+      "expected_config": {
+        "model_type": "qwen3",
+        "architectures": [
+          "Qwen3ForCausalLM"
+        ],
+        "hidden_size": 640,
+        "num_hidden_layers": 24,
+        "num_attention_heads": 10,
+        "num_key_value_heads": 2,
+        "max_position_embeddings": 2048,
+        "vocab_size": 259
+      },
+      "taps_after_block_zero_based": [
+        7,
+        15,
+        23
+      ],
+      "checkpoint_state": "TRAIN-002b #1 CPU LoRA proven at exact pin; NCR-001A weight/file metadata inventory PENDING; full bytes and model-forward parity reserved for #79/#72",
+      "numeric_oracle": "same pinned Qwen3 HF checkpoint with reviewed custom byte tokenizer",
+      "tokenizer_reference": {
+        "class": "ByteTokenizer",
+        "source_file": "tokenization_byte.py",
+        "train002b_source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+        "ids": {
+          "pad": 256,
+          "bos": 257,
+          "eos": 258
+        },
+        "generation_budget_units": 768
+      },
+      "integration_issue": 79,
+      "comparison_issue": 81,
+      "source_train002b_evidence": "experiments/train-002b/evidence/summary.json"
     }
   },
   "architecture": {
@@ -86,13 +167,13 @@
       "scalars_per_token": 256
     },
     "state_semantics": "one explicit [B,T,4,8,8] field per forward; independent across tokens; lives across depth taps only; reinitialized on new forward, request or generation step",
-    "tap_selection": "zero-based post-block hidden states at floor(N/3)-1, floor(2*N/3)-1, N-1; exact per-model list frozen after source preflight",
+    "tap_selection": "zero-based post-block indices floor(N/3)-1, floor(2N/3)-1, N-1; model-specific pinned [9,19,29] SmolLM2; [7,16,25] both Sprocket variants; [7,15,23] void.1 Qwen3. Do not assume a Llama block interface for void.1.",
     "tap_count": 3,
     "nca_steps_per_tap": 3,
     "neighborhood": "3x3 spatial same-weight local update, zero-padding, no wraparound and no token-axis interaction",
     "update": "bounded gated residual update with shared weights over cells and all depth taps; hidden-token projection supplies observations at each tap",
     "readout": "additive residual projection from flattened field to hidden state, output projection initialized identically to zero",
-    "backbone_policy": "every base parameter frozen, optimizer contains only NCA/projections; no GGUF gradient path",
+    "backbone_policy": "four independent frozen HF base checkpoints and model-specific projections, shared algorithm only; base model variants never substituted; no GGUF gradient path",
     "cross_token_recurrence": false,
     "dynamic_sparse_execution": false
   },
@@ -109,7 +190,9 @@
     "adapter_trainable_param_tolerance_fraction": 0.05,
     "same_examples_order_optimizer_updates_seed_and_taps": true,
     "record_actual_sequence_and_supervised_tokens": true,
-    "no_cross_model_raw_token_perplexity_ranking": true
+    "no_cross_model_raw_token_perplexity_ranking": true,
+    "sprocket_variant_pairing": "chat vs instruct is a descriptive across-checkpoint comparison only; each NCA effect computed relative to own checkpoint and control",
+    "byte_tokenizer": "void.1 byte-level tokenizer units are not comparable to other models' BPE tokens; report UTF-8 bytes/s, chars/s, EOS/truncation and byte-normalized CE separately"
   },
   "datasets": {
     "train_003": {
@@ -135,6 +218,16 @@
       "state": "pending_fixture_hash_before_training",
       "path": "experiments/ncr-001/fixtures/behaviour-regression.json",
       "sha256": null
+    },
+    "sprocket_instruct_probes": {
+      "state": "pending_fixture_hash_before_training",
+      "path": "experiments/ncr-001/fixtures/sprocket-instruct-probes.json",
+      "sha256": null
+    },
+    "void_byte_probes": {
+      "state": "pending_fixture_hash_before_training",
+      "path": "experiments/ncr-001/fixtures/void-byte-probes.json",
+      "sha256": null
     }
   },
   "training": {
@@ -154,13 +247,16 @@
     "optimizer_lr": null,
     "optimizer_betas": null,
     "weight_decay": null,
-    "preflight_gate": "no training while protocol.train_authorized=false or per-model NCR-001E fails"
+    "preflight_gate": "no training while protocol.train_authorized=false or per-model NCR-001E fails",
+    "void1_tokenizer_unit_policy": "initial 256 training units per sample is provisional and may truncate even basic responses; must preflight actual byte length and preregister revised cap before training"
   },
   "resource_watchdogs": {
     "max_peak_rss_gib": 12,
     "max_cpu_lane_wall_seconds": {
       "smollm2": 3600,
-      "sprocket_chat": 5400
+      "sprocket_chat": 5400,
+      "sprocket_instruct": 5400,
+      "void1": 3600
     },
     "report_cpu_model_platform_process_threads_and_sha": true,
     "no_silent_budget_extension": true
@@ -181,7 +277,13 @@
       "finite_state_and_loss",
       "cold_reload_state_dict"
     ],
-    "any_failure_blocks_model_qualification": true
+    "any_failure_blocks_model_qualification": true,
+    "per_model_gates": [
+      "smollm2",
+      "sprocket_chat",
+      "sprocket_instruct",
+      "void1"
+    ]
   },
   "evaluation": {
     "primary_effect": "matched NCA minus within-model MLP on fixed sealed task metric",
@@ -195,15 +297,19 @@
       "training_sequence_tokens_per_second",
       "peak_rss_gib",
       "parameter_count",
-      "estimated_flops"
+      "estimated_flops",
+      "utf8_bytes_per_second",
+      "generated_characters_per_second",
+      "byte_tokenizer_unit_budget_exhaustion_rate",
+      "sprocket_instruct_tool_token_regression"
     ],
-    "improvement_gate": "GO for expanded investigation only if mean train003 mechanical improvement >=0.03 absolute and >=2/3 seeds nonnegative, no >0.01 nats/token natural-language CE regression, and <=1.5x decode wall overhead on reasonably matched CPU hosts. Sensitivity and confidence reported; not a statistical proof.",
+    "improvement_gate": "Per-model bounded GO only if NCA outperforms parameter-matched gate on own predeclared held-out metric without material CE/coherence regressions and within compute overhead; initial target >=0.03 absolute mechanical-score delta, >=2 of 3 seeds nonnegative, <=0.01 nats/byte (void.1) or nats/token (BPE models) natural-text CE regression, <=1.5x decode wall overhead on matched CPU. These are candidate—not yet accepted—gates and not cross-tokenizer comparisons.",
     "verdicts": [
       "GO",
       "NO_GO",
       "INCONCLUSIVE"
     ],
-    "stop_rules": "Causality failure or source mismatch=NO_GO and halt; missing pinned chat checkpoint=BLOCKED not substitute; unstable/nan=halt; missing locked holdout=training forbidden; weak/uncertain evidence=INCONCLUSIVE.",
+    "stop_rules": "Unverified exact checkpoint, source variant substitution, unreviewed remote tokenizer code, causal/cache failure, NaN or resource breach blocks that individual model; other qualified lanes may proceed. Missing fixture/source hash or optimizer lock forbids comparative training. No silent chat/instruct swap.",
     "preregistered_number_of_seeds": 3
   },
   "provenance": {
@@ -218,7 +324,9 @@
       "cpu_model",
       "package_versions",
       "runner_id",
-      "raw_generations_and_failures"
+      "raw_generations_and_failures",
+      "void1_custom_tokenizer_source_sha256",
+      "Sprocket_instruct_vs_chat_variant_identity"
     ],
     "data_policy": "docs/DATASET_FILING_SYSTEM.md",
     "weight_policy": "docs/MODEL_STORAGE.md",
