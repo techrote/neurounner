@@ -217,12 +217,14 @@ def _source_preflight(name: str, m: dict) -> dict:
             "Missing requested trainable HF checkpoint. Full-precision chat GGUF "
             "is not a drop-in differentiable HF chat checkpoint; no instruct fallback."
         )
-    if name == "sprocket_chat" and not response["tokenizer_config"].get(
-            "has_chat_template", False) if "tokenizer_config" in response else (
-            name == "sprocket_chat"):
-        response["blockers"].append(
-            "Sprocket chat-template equivalence still requires tokenizer/format review"
+    if name == "sprocket_chat":
+        template_known = response.get("tokenizer_config", {}).get(
+            "has_chat_template", False
         )
+        if not template_known:
+            response["blockers"].append(
+                "Sprocket chat-template equivalence requires tokenizer/format review"
+            )
     if name == "sprocket_chat" and m["taps_after_block_zero_based"] is None:
         response["blockers"].append(
             "Derived Sprocket tap indices must be frozen in protocol after review"
