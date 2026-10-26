@@ -225,5 +225,19 @@ class ProtocolGuards(unittest.TestCase):
                         ncr.validate()
 
 
+    def test_model_probe_sha256_mismatch_fails_closed(self):
+        reference = ncr.json_load(ncr.PROTOCOL)
+        for key in ("sprocket_chat_probes", "sprocket_instruct_probes",
+                    "void_byte_probes"):
+            altered = json.loads(json.dumps(reference))
+            altered["datasets"][key]["sha256"] = "0" * 64
+            with tempfile.TemporaryDirectory() as td:
+                path = Path(td) / "protocol.json"
+                path.write_text(json.dumps(altered), encoding="utf-8")
+                with patch.object(ncr, "PROTOCOL", path):
+                    with self.assertRaises(AssertionError, msg=key):
+                        ncr.validate()
+
+
 if __name__ == "__main__":
     unittest.main()
