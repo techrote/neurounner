@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "experiment": "NCR-001",
-  "kind": "read_only_source_metadata_evidence",
+  "kind": "read_only_source_metadata_evidence_with_unverified_new_lanes",
   "created_utc": "2026-10-26T21:06:59.816933+00:00",
   "source": {
     "workflow_run": "https://github.com/techrote/neurounner/actions/runs/40401534069",
@@ -15,7 +15,8 @@
     "method": "HfApi.model_info(files_metadata=True) with exact pinned revisions; hf_hub_download of small config/tokenizer metadata only",
     "model_weights_downloaded": false,
     "tokenizer_config_verified_as_runtime_equivalent": false,
-    "training_performed": false
+    "training_performed": false,
+    "extension_note": "Sprocket instruct and void1 are newly added lane candidates. Their hash fields are null until a pinned hosted preflight and a source-bound readback are committed. Old source metadata hashes retained, not revalidated here."
   },
   "models": {
     "smollm2": {
@@ -77,12 +78,70 @@
         25
       ],
       "metadata_status": "CHAT_HF_FILE_PRESENT; tokenizer chat-template equivalence and actual HF weight contents/parity pending"
+    },
+    "sprocket_instruct": {
+      "repo_id": "kandivault/sprocket-500m",
+      "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+      "variant": "instruct",
+      "hf_weight_file": "model.safetensors",
+      "weight_present": null,
+      "weight_declared_lfs_sha256_not_downloaded": null,
+      "weight_bytes": null,
+      "config_sha256": null,
+      "tokenizer_sha256": null,
+      "tokenizer_config_sha256": null,
+      "architecture": {
+        "layers": 26,
+        "hidden": 1280,
+        "heads": 20,
+        "kv_heads": 4,
+        "vocab": 32000,
+        "context": 2048
+      },
+      "tap_indices_post_block_zero_based": [
+        7,
+        16,
+        25
+      ],
+      "metadata_status": "UNVERIFIED_AT_NCR_001_PIN; upstream model card describes root instruct HF safetensors but a new exact-revision metadata inventory is required",
+      "evidence_type": "published model card + NCR protocol hypothesis; NOT pinned file-byte verification"
+    },
+    "void1": {
+      "repo_id": "dotlabs/void.1",
+      "revision": "9c2be5087772867d45961abd11f6b35110617563",
+      "variant": "base_byte",
+      "hf_weight_file": "model.safetensors",
+      "weight_present": null,
+      "weight_declared_lfs_sha256_not_downloaded": null,
+      "weight_bytes": null,
+      "config_sha256": null,
+      "tokenizer_config_sha256": null,
+      "tokenization_byte_py_sha256": null,
+      "byte_vocab_sha256": null,
+      "train002b_tokenizer_source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+      "architecture": {
+        "layers": 24,
+        "hidden": 640,
+        "heads": 10,
+        "kv_heads": 2,
+        "vocab": 259,
+        "context": 2048
+      },
+      "tap_indices_post_block_zero_based": [
+        7,
+        15,
+        23
+      ],
+      "metadata_status": "UNVERIFIED_AT_NCR_001_PIN; base and tokenizer loaded successfully by prior TRAIN-002b but new pinned file/hash inventory required",
+      "evidence_type": "existing neurounner TRAIN-002b issue #1 and upstream published config; NOT new snapshot verification"
     }
   },
   "interpretation": "These SHA256 values for config/tokenizer files are calculated from downloaded bytes. Weight LFS hashes are publisher metadata and are NOT independent file-byte verification. The preflight neither downloaded weights nor established numeric model correctness.",
   "checkpoints_for_next_phase": [
     "Review Sprocket special tokens and explicit chat-template semantics before model training",
     "Independently verify each fetched model checkpoint against its declared LFS SHA256 during #70/#71",
-    "Qualify prefill vs cached incremental equivalence and no-op frozen logits in #72"
+    "Qualify prefill vs cached incremental equivalence and no-op frozen logits in #72",
+    "Inventory root Sprocket instruct and void.1 exact pins, config/tokenizer SHA-256 and declared LFS file IDs; permit unresolved preflight but never pass model training",
+    "Audit void.1 ByteTokenizer pinned custom source and test token-unit-to-UTF8 accounting independently"
   ]
 }
