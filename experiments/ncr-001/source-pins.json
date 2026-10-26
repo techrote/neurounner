@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001",
+  "kind": "read_only_source_metadata_evidence",
+  "created_utc": "2026-10-26T21:06:59.816933+00:00",
+  "source": {
+    "workflow_run": "https://github.com/techrote/neurounner/actions/runs/40401534069",
+    "workflow_id": 397554745,
+    "artifact_id": 12689227086,
+    "artifact_name": "ncr-001a-preflight-1",
+    "artifact_zip_digest": "sha256:f8e267f22eeaf1764a16482a19c76e5d69316c8d1e0532af9677c58527d8c6cf",
+    "source_report_sha256": "48be3da955464c0b9b520d487921149287c81fd450c3695ace5c193617ebc5f9",
+    "source_commit": "c3fe3bf991e8d0b88f7297f19f654c8832af84be",
+    "original_protocol_sha256": "938da72fe0c8aee1ce53bfe7314b62b1122a209122dd80a0f27",
+    "method": "HfApi.model_info(files_metadata=True) with exact pinned revisions; hf_hub_download of small config/tokenizer metadata only",
+    "model_weights_downloaded": false,
+    "tokenizer_config_verified_as_runtime_equivalent": false,
+    "training_performed": false
+  },
+  "models": {
+    "smollm2": {
+      "repo_id": "HuggingFaceTB/SmolLM2-135M-Instruct",
+      "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+      "variant": "instruct",
+      "hf_weight_file": "model.safetensors",
+      "weight_present": true,
+      "weight_declared_lfs_sha256_not_downloaded": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+      "weight_bytes": 269060552,
+      "config_sha256": "8eb740e8bbe4cff95ea7b4588d17a2432deb16e8075bc5828ff7ba9be94d982a",
+      "tokenizer_sha256": "9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c",
+      "tokenizer_config_sha256": "4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df",
+      "chat_template_in_tokenizer_config": true,
+      "chat_template_sha256": "872be49dbb638044ad01b60388f48d469ff2980e5f0dccdc22ec907db54d0788",
+      "architecture": {
+        "layers": 30,
+        "hidden": 576,
+        "heads": 9,
+        "kv_heads": 3,
+        "vocab": 49152,
+        "context": 8192
+      },
+      "tap_indices_post_block_zero_based": [
+        9,
+        19,
+        29
+      ],
+      "metadata_status": "PASS; actual HF weight contents/full-load parity pending"
+    },
+    "sprocket_chat": {
+      "repo_id": "kandivault/sprocket-500m",
+      "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+      "variant": "chat",
+      "hf_weight_file": "chat/model.safetensors",
+      "weight_present": true,
+      "weight_declared_lfs_sha256_not_downloaded": "551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97",
+      "weight_bytes": 1002207984,
+      "chat_config_sha256": "557aacbcb7e23a322221ab91b62c4343dd22130388efc3eb4dcdfe1edfd8d1b7",
+      "chat_tokenizer_sha256": "178a63d94a7de4aa273a6a9c218180c3b7d1912f5a18a91be34bab252f7277eb",
+      "chat_tokenizer_config_sha256": "1d1c0733848e0c78a2ec48a7f20cd55ec5ee0b4cbcda9785249af9e489823408",
+      "chat_tokenizer_same_hash_as_root": true,
+      "chat_tokenizer_config_same_hash_as_root": true,
+      "chat_template_in_tokenizer_config": false,
+      "reference_gguf_f16_declared_sha256": "3b556c9488db4dfcddb5bfeaa5e065a9f52b7b839cb5c5271283c97b845f0ede",
+      "reference_gguf_q4_declared_sha256": "edc2ac323a2513fa6f8e3e54adf120243de0f7a6b8cc11b349b3e6ad61494a09",
+      "root_instruct_safetensors_exists_but_not_allowed_as_chat": true,
+      "architecture": {
+        "layers": 26,
+        "hidden": 1280,
+        "heads": 20,
+        "kv_heads": 4,
+        "vocab": 32000,
+        "context": 2048
+      },
+      "tap_indices_post_block_zero_based": [
+        7,
+        16,
+        25
+      ],
+      "metadata_status": "CHAT_HF_FILE_PRESENT; tokenizer chat-template equivalence and actual HF weight contents/parity pending"
+    }
+  },
+  "interpretation": "These SHA256 values for config/tokenizer files are calculated from downloaded bytes. Weight LFS hashes are publisher metadata and are NOT independent file-byte verification. The preflight neither downloaded weights nor established numeric model correctness.",
+  "checkpoints_for_next_phase": [
+    "Review Sprocket special tokens and explicit chat-template semantics before model training",
+    "Independently verify each fetched model checkpoint against its declared LFS SHA256 during #70/#71",
+    "Qualify prefill vs cached incremental equivalence and no-op frozen logits in #72"
+  ]
+}
