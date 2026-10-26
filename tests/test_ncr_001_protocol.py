@@ -52,7 +52,7 @@ class ProtocolGuards(unittest.TestCase):
         """A valid root instruct checkpoint must not qualify Sprocket chat."""
         p = ncr.json_load(ncr.PROTOCOL)
         expected = p["models"]["sprocket_chat"]["expected_config"].copy()
-        expected.update({"num_hidden_layers": 24, "hidden_size": 1280})
+        expected.update({"num_hidden_layers": 26, "hidden_size": 1280})
         files = {
             "config.json": json.dumps(expected),
             "tokenizer.json": "{}",
@@ -91,7 +91,7 @@ class ProtocolGuards(unittest.TestCase):
         self.assertEqual(result["status"], "BLOCKED_REQUIRES_SOURCE_REVIEW")
         self.assertTrue(result["root_instruct_safetensors_present"])
         self.assertFalse(result["weight_file_present"])
-        self.assertEqual(result["tap_indices"], [7, 15, 23])
+        self.assertEqual(result["tap_indices"], [7, 16, 25])
         self.assertTrue(any("Missing requested trainable HF checkpoint" in reason
                             for reason in result["blockers"]))
         self.assertTrue(all("model.safetensors" not in key
