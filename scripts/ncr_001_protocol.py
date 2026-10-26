@@ -59,7 +59,9 @@ def validate() -> dict:
     assert models["smollm2"]["taps_after_block_zero_based"] == taps_for_layers(
         models["smollm2"]["expected_config"]["num_hidden_layers"]
     )
-    assert models["sprocket_chat"]["taps_after_block_zero_based"] is None
+    assert models["sprocket_chat"]["taps_after_block_zero_based"] == taps_for_layers(
+        models["sprocket_chat"]["expected_config"]["num_hidden_layers"]
+    )
     for m in models.values():
         assert len(m["revision"]) == 40
         int(m["revision"], 16)
@@ -96,7 +98,8 @@ def validate() -> dict:
             unresolved.append(f"training.{field}: not frozen")
     unresolved.append("both model checkpoint byte digests: not yet verified")
     unresolved.append("Sprocket chat trainable HF checkpoint: not yet verified")
-    unresolved.append("Sprocket exact post-block tap indices: not frozen")
+    if models["sprocket_chat"]["taps_after_block_zero_based"] is None:
+        unresolved.append("Sprocket exact post-block tap indices: not frozen")
     return {
         "status": "PASS_WITH_EXPLICIT_TRAINING_BLOCKERS",
         "experiment": p["experiment"],
