@@ -1,0 +1,58 @@
+{
+  "schema_version": 2,
+  "experiment": "STORY-001-V2",
+  "issue": 43,
+  "supersedes_dataset": "datasets/story-001",
+  "dataset_root": "datasets/story-001-v2",
+  "title": "The Shift That Kept Turning",
+  "source": {
+    "stitched_story": "datasets/story-001/compiled/story.md",
+    "sprocket_fragments": "datasets/story-001/raw/sprocket/memory-fragments.md",
+    "prior_review": "datasets/story-001/compiled/review.md",
+    "prior_storyboard": "datasets/story-001/compiled/storyboard.md",
+    "anchor": "experiments/story-001-v2/ANCHOR.md"
+  },
+  "acceptance": {
+    "minimum_words": 3000,
+    "maximum_words": 4300,
+    "preferred_words": [
+      3300,
+      3800
+    ],
+    "maximum_standalone_i": 80,
+    "maximum_standalone_i_rate": 0.025,
+    "maximum_variant_separators": 0,
+    "maximum_anchor_reset_count": 1
+  },
+  "nvidia": {
+    "endpoint": "https://integrate.api.nvidia.com/v1/chat/completions",
+    "secret": "NVKEY",
+    "attempts": 4,
+    "remote_unpinned_backend": true,
+    "models": {
+      "synthesizer": "nvidia/nemotron-3.5-bolt-e4b",
+      "drafter": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+      "reviewer": "nvidia/nemotron-3.5-bolt-e4b",
+      "editor": "nvidia/nemotron-3.5-super-vl-120b-a12b"
+    },
+    "max_tokens": {
+      "preflight": 768,
+      "synthesis": 4200,
+      "draft": 10000,
+      "review": 3600,
+      "edit": 10000,
+      "repair": 10000
+    },
+    "reasoning_effort": {
+      "drafter": "none",
+      "editor": "none"
+    }
+  },
+  "evidence": {
+    "preserve_raw_requests": true,
+    "preserve_raw_responses": true,
+    "preserve_failed_attempts": true,
+    "raw_before_derived": true,
+    "actions_artifacts_are_staging_only": true
+  }
+}
