@@ -181,5 +181,21 @@ class NCRCoreTests(unittest.TestCase):
                 wrong_width.load_state_dict(core.state_dict())
 
 
+    def test_persistence_reset_and_iteration_ablation_are_distinct(self):
+        torch.manual_seed(76)
+        core = PersistentDepthNCA(16)
+        first = torch.randn(1, 2, 16)
+        second = torch.randn(1, 2, 16)
+        _, state = core.step(first, None, tap_index=0)
+        _, persistent = core.step(second, state, tap_index=1)
+        _, reset = core.step(second, state, tap_index=1, reset_each_tap=True)
+        self.assertFalse(torch.allclose(persistent.field, reset.field))
+        _, one_step = core.step(second, state, tap_index=1, iterations=1)
+        self.assertFalse(torch.allclose(persistent.field, one_step.field))
+        # The depth state is an explicit returned tensor rather than on module.
+        self.assertEqual(set(core.state_dict()).intersection({"field", "state"}), set())
+
+
+
 if __name__ == "__main__":
     unittest.main()
