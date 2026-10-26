@@ -6,16 +6,20 @@ The earlier `datasets/story-001/` archive is preserved unchanged as superseded e
 
 ## Final qualification
 
-- words: **3322**
-- standalone `I`: **66** (1.987%)
+- words: **3057**
+- standalone `I`: **64** (2.094%)
 - variant separator lines: **0**
 - duplicate paragraphs: **0**
-- final SHA-256: `3101cd115384d69282cbdd30e23a230f591080c5b64775befb92b21904b6aaea`
+- final SHA-256: `ee163eb4ec14d0bb64edf6cd14c96edc143a583f19683d7f038ccf5d7dbb432a`
 - provider: NVIDIA API (remote backend identity remains unpinned)
 - synthesis/review: `nvidia/nemotron-3.5-bolt-e4b`
 - draft/edit: `nvidia/nemotron-3.5-super-vl-120b-a12b` / `nvidia/nemotron-3.5-super-vl-120b-a12b`
 
 The story is creative fiction, not historical Sprocket canon.
+
+## Post-qualification semantic audit
+
+The NVIDIA provider output was 3,322 words and passed the original mechanical gates, but a semantic read-back found one near-verbatim repeat of the central rescue sequence. That provider output is preserved as `compiled/story-pre-semantic-audit.md`. The accepted `compiled/story.md` removes only those three repeated paragraphs; no replacement prose was added. The accepted story is 3,057 words, contains 64 standalone `I` tokens, and has no remaining paragraph pair at Jaccard similarity ≥ 0.28. See `provenance/post-qualification-audit.json`.
 
 ## Evidence
 
