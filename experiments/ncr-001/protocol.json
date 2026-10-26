@@ -219,9 +219,12 @@
       "model_applicability": "within-model mechanic evaluation; not evidence of Sprocket-vs-SmolLM2 parity"
     },
     "natural_language_holdout": {
-      "state": "pending_licensed_provenance_and_hash_before_training",
-      "path": null,
-      "sha256": null
+      "state": "SHA256_FROZEN_PILOT_ORIGINAL_PROSE_PENDING_INDEPENDENT_REVIEW",
+      "path": "experiments/ncr-001/fixtures/natural-text-holdout.json",
+      "sha256": "3964caedd88017feb35c0cd2dfc9dbeae2a1614ef55a56909fb3f3f4aa262cde",
+      "source_type": "Original assistant-authored English prose, 20 sealed evaluation passages, five domains, 4/domain",
+      "benchmark_limitations": "Small LLM-authored/English-only domain-skewed pilot set, not external public natural-language authority; caution about effect size/coverage",
+      "evaluation_contract": "Compute conditional CE on exact passage UTF8 bytes under each pinned model tokenizer; report within-model NCA vs matched gate deltas; never compare raw BPE-vs-byte token CE across families."
     },
     "sprocket_chat_probes": {
       "state": "SHA256_FROZEN_EVAL_CANDIDATE_PENDING_INDEPENDENT_REVIEW",
@@ -377,6 +380,16 @@
         "rows": 16,
         "reviewed": false
       }
+    },
+    "natural_prose_holdout_preflight": {
+      "run": "https://github.com/techrote/neurounner/actions/runs/40410511697",
+      "source_commit": "e5f6c6f6aecdd22ef69d155e685213f8fb27b8d7",
+      "path": "experiments/ncr-001/fixtures/natural-text-holdout.json",
+      "sha256": "3964caedd88017feb35c0cd2dfc9dbeae2a1614ef55a56909fb3f3f4aa262cde",
+      "cases": 20,
+      "domains": 5,
+      "verified": "Committed byte lengths 120..900 per paragraph, original fixed texts and unique IDs",
+      "training_authorized": false
     }
   }
 }
