@@ -224,9 +224,9 @@
       "sha256": null
     },
     "sprocket_chat_probes": {
-      "state": "pending_fixture_hash_before_training",
+      "state": "SHA256_FROZEN_EVAL_CANDIDATE_PENDING_INDEPENDENT_REVIEW",
       "path": "experiments/ncr-001/fixtures/sprocket-chat-probes.json",
-      "sha256": null
+      "sha256": "dbb3074bb6e38f65ed69644ab2d31b658faa5c7fbc7fe3e1423bedb02892f9f5"
     },
     "other_original_behaviour_probes": {
       "state": "pending_fixture_hash_before_training",
@@ -234,14 +234,14 @@
       "sha256": null
     },
     "sprocket_instruct_probes": {
-      "state": "pending_fixture_hash_before_training",
+      "state": "SHA256_FROZEN_EVAL_CANDIDATE_PENDING_INDEPENDENT_REVIEW",
       "path": "experiments/ncr-001/fixtures/sprocket-instruct-probes.json",
-      "sha256": null
+      "sha256": "1814a5e27528d22d75c8e6d4da3193f8a215617f5e04bee6c2ac5b445515da00"
     },
     "void_byte_probes": {
-      "state": "pending_fixture_hash_before_training",
+      "state": "SHA256_FROZEN_EVAL_CANDIDATE_PENDING_INDEPENDENT_REVIEW",
       "path": "experiments/ncr-001/fixtures/void-byte-probes.json",
-      "sha256": null
+      "sha256": "59f76dafc850a0cf9401930bf26a4c86cfc55d9bc7a418b2cacb512f2df26c88"
     }
   },
   "training": {
@@ -358,6 +358,17 @@
     "weight_policy": "docs/MODEL_STORAGE.md",
     "citation_authority": "RAG.md",
     "staging_only": "GitHub Actions artifacts are not the durable archive",
-    "protocol_frozen_optimizer_note": "Trainer hyperparameters fixed before any hosted LM training. Even after control/fixture lock, training remains independently gated by model-specific NCR-001E and train_authorized flag."
+    "protocol_frozen_optimizer_note": "Trainer hyperparameters fixed before any hosted LM training. Even after control/fixture lock, training remains independently gated by model-specific NCR-001E and train_authorized flag.",
+    "original_fixture_preflight": {
+      "run": "https://github.com/techrote/neurounner/actions/runs/40409733858",
+      "source_commit": "5000e3bba79d4e657a9f537918d6b30ba15ef1c8",
+      "method": "GitHub-hosted ubuntu-24.04 sha256sum over checked-out exact committed fixture bytes; 16 unique cases per three model-lane fixture sets",
+      "fixture_sha256": {
+        "sprocket_chat_probes": "dbb3074bb6e38f65ed69644ab2d31b658faa5c7fbc7fe3e1423bedb02892f9f5",
+        "sprocket_instruct_probes": "1814a5e27528d22d75c8e6d4da3193f8a215617f5e04bee6c2ac5b445515da00",
+        "void_byte_probes": "59f76dafc850a0cf9401930bf26a4c86cfc55d9bc7a418b2cacb512f2df26c88"
+      },
+      "note": "Fixture content hashes locked before real model training. Review of prompt semantics/instruct tool formatting/void tokenizer continues; training remains prohibited."
+    }
   }
 }
