@@ -68,6 +68,32 @@ def validate() -> dict:
         assert m["expected_config"]["model_type"] == "llama"
         assert m["expected_config"]["architectures"] == ["LlamaForCausalLM"]
 
+    # Source inventory is retained in Git; no ephemeral Actions artifact is authority.
+    pins_path = ROOT / "experiments/ncr-001/source-pins.json"
+    if not pins_path.is_file():
+        raise AssertionError("NCR-001 source pins missing from durable repository")
+    pins = json_load(pins_path)
+    assert pins["schema_version"] == 1 and pins["experiment"] == "NCR-001"
+    assert pins["source"]["model_weights_downloaded"] is False
+    assert pins["source"]["training_performed"] is False
+    for name, model in models.items():
+        source = pins["models"][name]
+        assert source["repo_id"] == model["repo_id"]
+        assert source["revision"] == model["revision"]
+        assert source["variant"] == model["variant"]
+        assert source["hf_weight_file"] == model["weight_file"]
+        assert source["weight_present"] is True
+        for source_key, expected_key in (
+                ("layers", "num_hidden_layers"),
+                ("hidden", "hidden_size"),
+                ("context", "max_position_embeddings"),
+                ("vocab", "vocab_size")):
+            assert source["architecture"][source_key] == model["expected_config"][expected_key]
+        assert source["tap_indices_post_block_zero_based"] == model["taps_after_block_zero_based"]
+        declared_hash = source["weight_declared_lfs_sha256_not_downloaded"]
+        assert isinstance(declared_hash, str) and len(declared_hash) == 64
+        int(declared_hash, 16)
+
     dataset = p["datasets"]["train_003"]
     manifest_path = ROOT / dataset["manifest_path"]
     assert manifest_path.is_file(), "Pinned TRAIN-003 dataset not present"
@@ -105,6 +131,7 @@ def validate() -> dict:
         "experiment": p["experiment"],
         "protocol_sha256": digest(PROTOCOL),
         "train003_manifest_sha256": manifest_sha,
+        "source_pins_sha256": digest(pins_path),
         "smollm2_taps": models["smollm2"]["taps_after_block_zero_based"],
         "training_authorized": False,
         "unresolved": unresolved,
