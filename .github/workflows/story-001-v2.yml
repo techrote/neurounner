@@ -58,6 +58,7 @@ jobs:
     timeout-minutes: 75
     env:
       NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+      STORY001V2_RESUME_RUN_ID: '40246971066'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -66,6 +67,14 @@ jobs:
         with:
           name: story001v2-preflight
           path: results/story001v2
+      - name: Recover accepted Bolt synthesis and failed short-form evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p results/resume
+          gh run download "$STORY001V2_RESUME_RUN_ID" --repo "$GITHUB_REPOSITORY" --name story001v2-complete-evidence --dir results/resume
+          test -f results/resume/provider/derived/synthesis-brief.md
+          test -f results/resume/provider/raw/m1-synthesis.json
       - name: Synthesize, draft, review and edit one continuous story
         run: |
           test -n "$NVIDIA_API_KEY" || {
@@ -74,7 +83,7 @@ jobs:
           }
           python3 scripts/story_001_v2.py \
             --config experiments/story-001-v2/config.json \
-            produce --out results/story001v2
+            produce --out results/story001v2 --resume-root results/resume
       - name: Show single-story qualification
         if: success()
         run: |
