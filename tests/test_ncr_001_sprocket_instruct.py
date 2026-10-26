@@ -1,4 +1,4 @@
-"""Offline test of hook lifetime and invariants with a frozen 30-layer toy."""
+"""Offline test of hook lifetime and invariants with a frozen 26-layer Sprocket toy."""
 from __future__ import annotations
 
 import importlib.util
@@ -144,7 +144,7 @@ class DepthHookTests(unittest.TestCase):
                 self.assertTrue(torch.equal(p, dict(new.nca.named_parameters())[name]))
             file = Path(temp) / "metadata.json"
             bad = file.read_text().replace(
-                "SprocketInstruct-135M-Instruct", "SprocketInstruct-135M-BAD"
+                "kandivault/sprocket-500m", "kandivault/WRONG-checkpoint"
             )
             file.write_text(bad)
             with self.assertRaises(RuntimeError):
