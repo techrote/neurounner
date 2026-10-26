@@ -46,7 +46,7 @@ class ProtocolGuards(unittest.TestCase):
         self.assertEqual(s["variant"], "chat")
         self.assertEqual(s["weight_file"], "chat/model.safetensors")
         self.assertNotEqual(s["weight_file"], "model.safetensors")
-        self.assertIsNone(s["taps_after_block_zero_based"])
+        self.assertEqual(s["taps_after_block_zero_based"], [7, 16, 25])
 
     def test_missing_chat_safetensors_is_explicit_blocker(self):
         """A valid root instruct checkpoint must not qualify Sprocket chat."""
