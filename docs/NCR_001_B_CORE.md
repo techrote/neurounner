@@ -55,6 +55,21 @@ The eight synthetic tests cover:
 
 The dedicated [NCR-001B CPU workflow](../.github/workflows/ncr-001b.yml) installs the same CPU torch pin as Neurounner's TRAIN-003/004 recorded environment, executes tests, and saves temporary synthetic-only JSON. Source pin checks, conformance and training budget gates **remain with #68 and #72**; all four model lanes must pass their own future adapter-hook and full-vs-KV-cache tests.
 
+## Hosted CPU verification — 26 October 2026
+
+The [NCR-001B Actions run 40408418607](https://github.com/techrote/neurounner/actions/runs/40408418607) is **PASS**: all eight synthetic unit tests and the four-width preflight completed on a four-thread AMD EPYC 9V45 runner with PyTorch 2.14.1+cpu. No HF model files were loaded and no LLM training occurred.
+
+| Synthetic core-only lane | NCA trainable params | Three-tap × three-step wall time (median of three) |
+|---|---:|---:|
+| SmolLM2 width 576 | 297,048 | 2.62 ms |
+| Sprocket Chat width 1280 | 658,904 | 3.29 ms |
+| Sprocket Instruct width 1280 | 658,904 | 3.29 ms |
+| void.1 width 640 | 329,944 | 2.66 ms |
+
+Measurements used [64 independent token positions](../experiments/ncr-001/core-evidence/core-smoke.json), batch size 1 and **4 CPU threads**. Exact synthetic field storage was 65,536 bytes per width. Observed process peak RSS was 243,632 KiB, but is **not per-model** and includes runtime overhead. Reported synthetic timing is **not** a valid end-to-end inference overhead ratio; no claims about speedup or model quality follow.
+
+Raw JSON probe measurements have been [promoted into Git](../experiments/ncr-001/core-evidence/core-smoke.json), with [source-run and original artifact hashes](../experiments/ncr-001/core-evidence/provenance.json) so the Actions ZIP can expire without losing numerical history. The provenance fixes source revision and labels source-only results distinctly from future #72 model conformance.
+
 ## Next
 
 Review synthetic CI and independently re-run the eight tests. Only after accepting #68's protocol and #69's shared module should each separate model integration (#70 SmolLM2, #71 Sprocket Chat, #78 Sprocket Instruct, #79 void.1 Qwen3) begin. No model numerical claims can be drawn from this isolated test suite.
