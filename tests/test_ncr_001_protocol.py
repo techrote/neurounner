@@ -99,6 +99,109 @@ class ProtocolGuards(unittest.TestCase):
         self.assertTrue(any(x["path"].endswith("-f16.gguf")
                             for x in result["known_reference_gguf"]))
 
+    def test_all_four_models_are_independently_pinned_and_cpu_only(self):
+        protocol = ncr.json_load(ncr.PROTOCOL)
+        models = protocol["models"]
+        self.assertEqual(set(models), {
+            "smollm2", "sprocket_chat", "sprocket_instruct", "void1"
+        })
+        self.assertEqual(
+            models["sprocket_chat"]["revision"], models["sprocket_instruct"]["revision"]
+        )
+        self.assertNotEqual(
+            models["sprocket_chat"]["weight_file"],
+            models["sprocket_instruct"]["weight_file"]
+        )
+        self.assertEqual(models["void1"]["expected_config"]["model_type"], "qwen3")
+        self.assertEqual(
+            models["void1"]["expected_config"]["architectures"], ["Qwen3ForCausalLM"]
+        )
+        self.assertEqual(models["void1"]["taps_after_block_zero_based"], [7, 15, 23])
+        self.assertFalse(protocol["train_authorized"])
+        self.assertTrue(all(m in protocol["resource_watchdogs"]["max_cpu_lane_wall_seconds"]
+                            for m in models))
+        self.assertTrue(all(m in protocol["conformance"]["per_model_gates"]
+                            for m in models))
+
+    def test_new_model_source_is_provisional_unless_hashes_are_attested(self):
+        pins = ncr.json_load(ROOT / "experiments/ncr-001/source-pins.json")
+        for name in ("sprocket_instruct", "void1"):
+            self.assertIn(pins["models"][name]["weight_present"], (None, True))
+            self.assertNotIn(pins["models"][name]["variant"], ("chat", "instruct_chat"))
+            self.assertIn(name, ncr.json_load(ncr.PROTOCOL)["models"])
+        self.assertFalse(ncr.validate()["training_authorized"])
+
+    def test_void_byte_tokenizer_metadata_without_tokenizer_json(self):
+        p = ncr.json_load(ncr.PROTOCOL)
+        m = p["models"]["void1"]
+        config = dict(m["expected_config"])
+        files = {
+            "config.json": json.dumps(config),
+            "tokenization_byte.py": "# intentionally never executed during source discovery",
+            "byte_vocab.json": "{}",
+            "tokenizer_config.json": json.dumps({"tokenizer_class": "ByteTokenizer"}),
+            "special_tokens_map.json": "{}",
+        }
+        with tempfile.TemporaryDirectory() as td:
+            for filename, contents in files.items():
+                (Path(td) / filename).write_text(contents, encoding="utf-8")
+            class Sibling:
+                def __init__(self, filename):
+                    self.rfilename = filename
+                    self.size = 1024
+                    self.blob_id = "test"
+            class Info:
+                sha = m["revision"]
+                siblings = [Sibling(f) for f in ["model.safetensors", *files]]
+            hub = types.SimpleNamespace(
+                HfApi=lambda: types.SimpleNamespace(
+                    model_info=lambda repo_id, revision, files_metadata: Info()
+                ),
+                hf_hub_download=lambda repo_id, revision, filename: str(
+                    Path(td) / filename
+                ),
+            )
+            with patch.dict("sys.modules", {"huggingface_hub": hub}):
+                preflight = ncr._source_preflight("void1", m)
+        self.assertEqual(preflight["status"], "METADATA_PASS_FULL_WEIGHT_HASH_PENDING")
+        self.assertEqual(preflight["tap_indices"], [7, 15, 23])
+        self.assertTrue(preflight["weight_file_present"])
+        self.assertFalse(preflight["tokenizer_code_executed"])
+        self.assertTrue(preflight["tokenizer_remote_code_review_required"])
+        self.assertIn("tokenization_byte.py", preflight["metadata_sha256"])
+        self.assertNotIn("tokenizer.json", preflight["metadata_sha256"])
+
+    def test_void_missing_custom_code_fails_closed(self):
+        p = ncr.json_load(ncr.PROTOCOL)
+        m = p["models"]["void1"]
+        with tempfile.TemporaryDirectory() as td:
+            (Path(td) / "config.json").write_text(json.dumps(m["expected_config"]))
+            (Path(td) / "byte_vocab.json").write_text("{}")
+            (Path(td) / "tokenizer_config.json").write_text("{}")
+            class Sibling:
+                def __init__(self, filename):
+                    self.rfilename = filename
+                    self.size = 1024
+                    self.blob_id = "test"
+            class Info:
+                sha = m["revision"]
+                siblings = [Sibling(f) for f in
+                            ["model.safetensors", "config.json", "byte_vocab.json",
+                             "tokenizer_config.json"]]
+            hub = types.SimpleNamespace(
+                HfApi=lambda: types.SimpleNamespace(
+                    model_info=lambda repo_id, revision, files_metadata: Info()
+                ),
+                hf_hub_download=lambda repo_id, revision, filename: str(
+                    Path(td) / filename
+                ),
+            )
+            with patch.dict("sys.modules", {"huggingface_hub": hub}):
+                result = ncr._source_preflight("void1", m)
+        self.assertEqual(result["status"], "BLOCKED_REQUIRES_SOURCE_REVIEW")
+        self.assertTrue(any("tokenization_byte.py" in blocker
+                            for blocker in result["blockers"]))
+
 
 if __name__ == "__main__":
     unittest.main()
