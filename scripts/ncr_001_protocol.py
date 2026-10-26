@@ -117,6 +117,17 @@ def validate() -> dict:
         else:
             assert isinstance(declared_hash, str) and len(declared_hash) == 64
             int(declared_hash, 16)
+        if name == "void1":
+            # Reuse immutable, prior experimentally observed byte-tokenizer source.
+            expected_tokenizer = model["tokenizer_reference"]["train002b_source_sha256"]
+            assert source["tokenization_byte_py_sha256"] == expected_tokenizer
+            assert source["train002b_tokenizer_source_sha256"] == expected_tokenizer
+            assert len(source["byte_vocab_sha256"]) == 64
+        if name == "sprocket_instruct":
+            assert source["hf_weight_file"] == "model.safetensors"
+            assert source["weight_declared_lfs_sha256_not_downloaded"] != (
+                pins["models"]["sprocket_chat"]["weight_declared_lfs_sha256_not_downloaded"]
+            )
 
     dataset = p["datasets"]["train_003"]
     manifest_path = ROOT / dataset["manifest_path"]
@@ -147,7 +158,7 @@ def validate() -> dict:
     for field in ("optimizer_lr", "optimizer_betas", "weight_decay"):
         if p["training"][field] is None:
             unresolved.append(f"training.{field}: not frozen")
-    unresolved.append("both model checkpoint byte digests: not yet verified")
+    unresolved.append("four model checkpoint byte digests: not yet independently verified")
     unresolved.append("Full model checkpoint bytes and forward parity: pending for all four models")
     unresolved.append("Sprocket instruct tool-token and void.1 byte tokenizer semantics: not yet verified")
     if models["sprocket_chat"]["taps_after_block_zero_based"] is None:
@@ -270,6 +281,13 @@ def _source_preflight(name: str, m: dict) -> dict:
         for required in ("tokenization_byte.py", "byte_vocab.json", "tokenizer_config.json"):
             if required not in response["metadata_sha256"]:
                 response["blockers"].append(f"Missing independently hashed void byte-tokenizer file: {required}")
+        previous_sha = m.get("tokenizer_reference", {}).get("train002b_source_sha256")
+        actual_sha = response["metadata_sha256"].get("tokenization_byte.py")
+        if previous_sha and actual_sha != previous_sha:
+            response["blockers"].append(
+                "Pinned void.1 ByteTokenizer source differs from TRAIN-002b evidence; "
+                "require explicit review, not trust_remote_code fallback"
+            )
         response["tokenizer_code_executed"] = False
         response["tokenizer_remote_code_review_required"] = True
     elif not any(k.endswith("tokenizer.json") for k in response["metadata_sha256"]):
