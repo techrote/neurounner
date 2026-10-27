@@ -14,7 +14,6 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 
 from scripts.detective_001c3_dataset import sha_file,norm  # noqa: E402
-from scripts.detective_001c2_train import directory_hash  # noqa: E402
 
 CONFIG=ROOT/"experiments/detective-001/training-c3.json"
 DATASET=ROOT/"datasets/detective-001c3"
@@ -53,6 +52,17 @@ def write_json(p:Path,v:Any)->None:
     p.parent.mkdir(parents=True,exist_ok=True)
     p.write_text(json.dumps(v,indent=2,sort_keys=True,
                             ensure_ascii=False)+"\n",encoding="utf-8")
+
+
+def directory_hash(path:Path)->str:
+    """Hash an adapter directory without importing the training stack."""
+    h=hashlib.sha256()
+    for item in sorted(x for x in path.rglob("*") if x.is_file()):
+        rel=item.relative_to(path).as_posix().encode()
+        h.update(len(rel).to_bytes(4,"big"))
+        h.update(rel)
+        h.update(bytes.fromhex(sha_file(item)))
+    return h.hexdigest()
 
 
 def load_authority()->tuple[dict,dict]:
