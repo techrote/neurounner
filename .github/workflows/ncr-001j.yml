@@ -47,6 +47,26 @@ jobs:
             tests/test_ncr_001_sprocket_instruct.py
           python3 -m unittest discover -s tests -p "test_ncr_001_sprocket_instruct.py" -v
 
+      - name: Check archived Sprocket Instruct source receipt SHA-256
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path("experiments/ncr-001/sprocket-instruct-preflight")
+          report=root/"receipt.json"
+          info=json.loads((root/"provenance.json").read_text())
+          h=hashlib.sha256(report.read_bytes()).hexdigest()
+          expected=info["source_run"]["original_report_sha256"]
+          assert h==expected,(h,expected)
+          d=json.loads(report.read_text())
+          assert d["status"]=="PASS_PRELIMINARY_SOURCE_BOUND_SPROCKET_INSTRUCT_HOOK_CONFORMANCE"
+          assert d["model_variant"]=="instruct"
+          assert d["weight_path"]=="model.safetensors"
+          assert d["optimizer_steps"]==0
+          assert d["source_files"]["model.safetensors"]["sha256"]==info["model"]["actual_full_safetensors_sha256"]
+          print("Sprocket Instruct raw evidence source hash PASS:",h)
+          PY
+
   pinned-real-model:
     name: Pinned frozen 500M checkpoint + KV-cache prepass
     needs: frozen-hook-toy
