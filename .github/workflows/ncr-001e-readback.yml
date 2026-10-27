@@ -54,6 +54,23 @@ jobs:
           assert all(not m["training_admitted"] for m in report["model_lanes"].values())
           print("Exact source-bound audit SHA-256:",hashlib.sha256(path.read_bytes()).hexdigest())
           PY
+      - name: Independently regenerate and verify original auditor report SHA-256
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          path=Path("runtime/ncr-001/four-model-prepass-readback.json")
+          p=json.loads(Path("experiments/ncr-001/evidence-review/audit-provenance.json").read_text())
+          want=p["source"]["original_uncompressed_report_sha256"]
+          got=hashlib.sha256(path.read_bytes()).hexdigest()
+          assert got==want,(got,want)
+          data=json.loads(path.read_text())
+          assert data["source_integrity_readback_pass"] is True
+          assert data["independent_runtime_conformance_pass"] is False
+          assert data["any_model_training_admitted"] is False
+          assert all(not m["training_admitted"] for m in data["model_lanes"].values())
+          print("Four-source original audit reproduced:",got)
+          PY
       - name: Save ephemeral audit report
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
