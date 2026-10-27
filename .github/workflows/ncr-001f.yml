@@ -1,0 +1,71 @@
+name: NCR-001F matched gated control / sealed-split preflight
+
+on:
+  pull_request:
+    branches: [main, research/ncr-001b-pure-torch-core]
+    paths:
+      - ".github/workflows/ncr-001f.yml"
+      - "scripts/ncr_001f_controls.py"
+      - "scripts/ncr_001f_plan.py"
+      - "tests/test_ncr_001f_controls.py"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/fixtures/**"
+      - "datasets/train-003/**"
+      - "scripts/ncr_001_core.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neurounner-ncr001f-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  TOKENIZERS_PARALLELISM: "false"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  synthetic-control:
+    name: Parameter match / no-op / leakage and planned admission refusal
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU torch, no model libraries
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu \
+            "torch==2.14.1+cpu"
+      - name: Compile controls and run source-leakage tests
+        run: |
+          python3 -m py_compile scripts/ncr_001f_controls.py \
+            scripts/ncr_001f_plan.py tests/test_ncr_001f_controls.py
+          python3 -m unittest discover -s tests -p "test_ncr_001f_controls.py" -v
+      - name: Record four-model matching, split separation and blocked schedules
+        run: |
+          python3 scripts/ncr_001f_plan.py --out runtime/ncr-001/matched-control-plan.json
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          file=Path("runtime/ncr-001/matched-control-plan.json")
+          data=json.loads(file.read_text())
+          assert data["training_authorized"] is False
+          assert data["all_model_conformance_gate_pass"] is False
+          assert len(data["lanes"])==4 and len(data["schedules"])==3
+          assert all(item["parameter_contract"]["within_limit"] for item in data["lanes"].values())
+          assert len(data["sealed_fixtures"])==5
+          print("NCR-001F planned-only source-bound receipt SHA-256:",hashlib.sha256(file.read_bytes()).hexdigest())
+          PY
+      - name: Upload transient preflight (not training data)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr-001f-matched-controls-a${{ github.run_attempt }}
+          path: runtime/ncr-001/matched-control-plan.json
+          retention-days: 30
+          if-no-files-found: warn
