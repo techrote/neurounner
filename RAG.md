@@ -44,6 +44,8 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 
 - **[NCR-001F pinned frozen MLP hook prepass](docs/NCR_001_F_FROZEN_MLP_HOOKS.md)** — four independently source-identified no-training matched-control transformer post-block wrappers with synthetic hook/variant refusals and a separately pinned actual SmolLM2 frozen-model KV-cache/gradient-only source runner. **Real Sprocket/void MLP hosts, #72 independent acceptance and training admission remain outstanding.**
 
+- **[NCR-001F frozen void.1 ByteTokenizer MLP host prepass](docs/NCR_001_F_VOID_REAL_MLP.md)** — separately source-reviewed, original pinned Qwen3 640-hidden matched gated-MLP execution path; [bounded no-training source/causal/cache workflow](.github/workflows/ncr-001f-real-void.yml) preserves partial and failed runs. This is distinct from original void NCA #93 and BYTE-EOS-001 #94; **actual-host acceptance and original Actions evidence custody are contingent on the relevant run and byte-exact readback**, not source preparation alone; training remains disabled.
+
 ## Retrieval rules
 
 1. Prefer primary dataset records over prose summaries when answering questions about exact prompts or outputs.
