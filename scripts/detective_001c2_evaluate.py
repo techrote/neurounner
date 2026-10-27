@@ -162,6 +162,7 @@ def lane_eval(cfg: dict, suite: dict, member: str, lane_kind: str,
             "case_family": scenario["case_family"],
             "relation_label": scenario["relation_label"],
             "prompt": scenario["prompt"],
+            "evaluation": scenario["evaluation"],
             **generated, "score": score,
         })
 
