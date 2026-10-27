@@ -102,3 +102,22 @@ Independent standard-library readback recomputes every proposition score and eve
 Once committed evidence passes readback, later CI **must not retrain**. It rebuilds the deterministic pair corpus, compares it to the committed dataset, replays the evidence, verifies the two public release assets and actual Git tag ref, and skips both training and evaluation.
 
 C1 final remains permanent historical evidence and never becomes C2 training material.
+
+
+## Executed outcome — 2026-10-27
+
+Authoritative source-bound execution: [Actions 40598884556](https://github.com/techrote/neurounner/actions/runs/40598884556), exact pre-evidence source `f53c36b4ffc4c1cd4dca3087896754d204827e38`.
+
+Both 40-step pairwise lanes completed, the 18-case final was generated only after both trained adapter hashes existed, four-lane parent/trained inference completed, independent standard-library gate replay passed, neutral release `detective-001c2-v1` was published, and exact evidence was promoted under `datasets/detective-001c2/` plus `experiments/detective-001/training-c2-evidence/`.
+
+Measured final:
+
+- V-G02-A: parent 12/18 → C2 **13/18**; lie **1/3** (FAIL), withholding **3/3**, correction **3/3**, speculation **3/3**, corrupted-belief **0/3** after parent 2/3; protected leaks 3→2; evidence-ID leaks 0.
+- V-G09-C: parent 8/18 → C2 **14/18**; lie **2/3**, withholding **3/3**, correction **3/3**, speculation **3/3**, truthful **3/3**, corrupted-belief **0/3**; protected leaks 3→1; evidence-ID leaks 0.
+- Aggregate proposition gate: **FAIL** because G02-A does not meet the locked lie threshold.
+- Independent old-task relevance: **UNSCORED_NO_INDEPENDENT_RATINGS**.
+- Larger-cast expansion: **NOT ADMITTED**.
+
+The pair objective itself reached 100% preference accuracy for both lanes; this did not override the sealed-final result. See [REPORT_001C2.md](REPORT_001C2.md) for interpretation. G09-C is retained as a promising transactional/deceptive control; G02-A demonstrates policy interference and should not receive the same broad repair again.
+
+This evidence-ready source now requires verification-only CI: rebuild/diff pair corpus, replay raw evidence and scores, verify release assets/tag source, and **skip all training/evaluation**.
