@@ -42,6 +42,8 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 
 - **[NCR-001K frozen void.1/Qwen3 depth-hook prepass](docs/NCR_001_K_VOID1.md)** — exact 360 MB checkpoint and pinned ByteTokenizer *source-byte* hash, no execution of downloaded tokenizer Python; short raw-token causal/cache success, [full original receipt](experiments/ncr-001/void1-preflight/receipt.json) and [provenance](experiments/ncr-001/void1-preflight/provenance.json). Byte roundtrip, security review and independent #72 remain pending.
 
+- **[BYTE-EOS-001 future void.1 ID-correct supervised labels](docs/BYTE_EOS_001_FUTURE_LABELS.md)** — bug #92: historical text-appended `<eos>` encoded as five UTF-8 bytes rather than real EOS 258; new future-only strict masked-label serializer and [source-bound exact offline proof](experiments/ncr-001/byte-eos-001/receipt.json) with [provenance](experiments/ncr-001/byte-eos-001/provenance.json). Original TRAIN-002b evidence unchanged, no NCR training admitted.
+
 ## Retrieval rules
 
 1. Prefer primary dataset records over prose summaries when answering questions about exact prompts or outputs.
