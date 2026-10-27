@@ -125,7 +125,19 @@ def verify_original(file_bytes: dict[str, bytes], provenance: dict) -> None:
     for field in ("actual_model_training", "heldout_evaluation", "train_authorized",
                   "final_72_admission", "tool_memory_semantics_qualified"):
         require(original[field] is False, "false admission or training claim: " + field)
-    require(original["optimizer_steps"] == provenance["original_results"]["optimizer_steps"] == 0,
+    results = provenance["original_results"]
+    require(results["status"] == original["status"]
+            and results["synthetic_cases"] == 7
+            and results["source_parity_cases"] == 8
+            and results["raw_generations"] == 21
+            and results["modes"] == list(MODES),
+            "original diagnostic outcome inventory changed")
+    for key in ("train_authorized", "heldout_evaluation",
+                "final_four_model_conformance",
+                "tool_memory_semantics_qualified"):
+        require(results[key] is False,
+                "manifest falsely promotes source-only evidence: " + key)
+    require(original["optimizer_steps"] == results["optimizer_steps"] == 0,
             "optimizer steps not zero")
     source = provenance["source"]
     require(source["model_key"] == "sprocket_instruct"
