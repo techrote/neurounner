@@ -182,7 +182,7 @@ def verify(dataset_root:Path,evidence:Path)->dict:
          and all(x["score_0_to_4"] is None for x in relevance["items"]),
          "C3 relevance packet invalid/pre-scored")
     rendered=json.dumps(relevance,sort_keys=True)
-    for secret in ("V-G02-A",'"lane_kind"',"parent","trained"):
+    for secret in ("V-G02-A",'"member_id"','"lane_kind"'):
         need(secret not in rendered,"C3 relevance identity leak")
 
     need(train.get("schema")=="detective-witness-c3-preference-result-v1"
