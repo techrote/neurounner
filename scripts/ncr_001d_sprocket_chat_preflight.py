@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Pinned Sprocket-500M Instruct read-only NCA hook conformance spike.
+"""Pinned Sprocket-500M Chat read-only NCA hook conformance spike.
 
 Loads the exact upstream HF checkpoint, tests frozen no-op and cache/causality,
 and computes a gradient without ANY optimizer step. Do not train or publish
-modified weights. This pin uses root Instruct model.safetensors, not chat/model.safetensors.
+modified weights. This pin uses chat/model.safetensors and chat/ tokenizer files, never root Instruct.
 """
 from __future__ import annotations
 
