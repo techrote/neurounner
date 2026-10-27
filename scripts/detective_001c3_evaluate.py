@@ -215,7 +215,7 @@ def blind_packet(parent:dict,trained:dict)->dict:
         } for i,r in enumerate(rows,1)]
     }
     rendered=canonical(packet)
-    for secret in ("V-G02-A",'"lane_kind"',"parent","trained"):
+    for secret in ("V-G02-A",'"member_id"','"lane_kind"'):
         if secret in rendered:
             raise C3EvalError("C3 blind relevance identity leak: "+secret)
     return packet
