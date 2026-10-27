@@ -537,8 +537,8 @@ if __name__ == "__main__":
     args = ap.parse_args()
     if args.source_test:
         g = gapped_right_prefix([
-            [3, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 4],
-            [3, 17, 18, 19, 20, 21, 22, 23, 24, 4],
+            [3] + [17] * 28 + [4],
+            [3] + [17] * 14 + [4],
         ])
         print(json.dumps({"geometry_valid": bool(check_plan()),
                           "right_gap_width": g["width"],
