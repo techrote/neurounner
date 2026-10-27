@@ -1,0 +1,150 @@
+name: DETECTIVE-001B3 source-correct Sprocket Instruct scripter
+
+on:
+  pull_request:
+    paths:
+      - "scripts/detective_001b3_sprocket.py"
+      - "scripts/detective_001b3_verify.py"
+      - "tests/test_detective_001b3_sprocket.py"
+      - "experiments/detective-001/sprocket-scripter.json"
+      - "experiments/detective-001/SPROCKET_SCRIPTER_001B3.md"
+      - ".github/workflows/detective-001b3-sprocket.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: detective-001b3-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile and run all detective source/authority tests
+        run: |
+          python3 -m py_compile scripts/detective_001b3_sprocket.py scripts/detective_001b3_verify.py tests/test_detective_001b3_sprocket.py
+          python3 -m unittest discover -s tests -p 'test_detective_001*.py' -v
+          mkdir -p artifacts
+          python3 scripts/detective_001b3_sprocket.py --mode check > artifacts/detective001b3-plan.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective001b3-source-plan
+          path: artifacts/detective001b3-plan.json
+          retention-days: 30
+
+  root-instruct-native:
+    needs: offline-contract
+    if: >-
+      ${{ github.event_name }} == 'pull_request' &&
+      ${{ github.head_ref }} == 'research/detective-001b3-sprocket-instruct-scripter-20261027' &&
+      ${{ github.event.pull_request.head.repo.full_name }} == 'techrote/neurounner' &&
+      ${{ github.event.pull_request.user.login }} == 'techrote'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      HF_HOME: /tmp/detective-001b3-hf
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
+      DETECTIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: kandivault-source/Sprocket-500M
+          ref: a003767e70d766bc14b40c89792543ee8641c8bc
+          path: publisher
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Refuse publisher source drift or Chat/Instruct conflation
+        run: |
+          test "$(git -C publisher rev-parse HEAD)" = "a003767e70d766bc14b40c89792543ee8641c8bc"
+          test "$(git -C publisher hash-object src/train/sft_data.py)" = "90bddf8976b9d6410fe7c5c1f084708e1cebab73"
+          test "$(git -C publisher hash-object scripts/harvest_round.py)" = "97811aa4245ad3f05f66ce0c2d8aa8c353619267"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/detective-001/sprocket-scripter.json"))
+          assert p["model"]["variant"]=="root-instruct"
+          assert p["model"]["weight_file"]=="model.safetensors"
+          assert p["model"]["chat_checkpoint_forbidden"]=="chat/model.safetensors"
+          assert p["limits"]["training_steps"]==0
+          assert p["limits"]["paid_api_calls"]==0
+          text=open("publisher/src/train/sft_data.py",encoding="utf-8").read()
+          for pair in (
+              '"tool": "<|tool_result|>"',
+              '"memory": "<|memory_read|>"',
+              'TRAINED_ROLES = {"assistant"}',
+              '"<|tool_call|>"',
+          ):
+              assert pair in text, pair
+          print("PUBLISHER ROOT INSTRUCT WIRE SOURCE: PASS")
+          PY
+      - name: Revalidate or prepare fresh source-bound run
+        id: cached
+        run: |
+          if [ -e datasets/detective-001-sprocket-scripter/manifest.json ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            python3 scripts/detective_001b3_verify.py --dataset datasets/detective-001-sprocket-scripter
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            python3 scripts/detective_001b3_sprocket.py --mode check
+          fi
+      - name: Install pinned CPU-only native inference dependencies
+        if: steps.cached.outputs.skip == 'false'
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "huggingface_hub==0.36.2" "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Run five publisher-wire fictional evidence tasks
+        if: steps.cached.outputs.skip == 'false'
+        run: |
+          python3 scripts/detective_001b3_sprocket.py \
+            --mode run --out out/detective-001b3 --publisher-dir publisher
+      - name: Independent raw/source/tool-result readback
+        if: steps.cached.outputs.skip == 'false'
+        run: |
+          python3 scripts/detective_001b3_verify.py \
+            --dataset out/detective-001b3/dataset
+      - name: Preserve complete or partial raw evidence
+        if: always() && steps.cached.outputs.skip == 'false'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective001b3-sprocket-root-instruct-raw
+          path: |
+            out/detective-001b3/raw
+            out/detective-001b3/dataset
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Promote only independently verified source-bound evidence
+        if: success() && steps.cached.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          branch='research/detective-001b3-sprocket-instruct-scripter-20261027'
+          remote_sha=$(git ls-remote --heads origin "refs/heads/$branch" | cut -f 1)
+          if [ "$remote_sha" != "$DETECTIVE_HEAD_SHA" ]; then
+            echo "Source PR head changed during model run; refusing stale evidence promotion"
+            exit 1
+          fi
+          test ! -e datasets/detective-001-sprocket-scripter
+          mkdir -p datasets/detective-001-sprocket-scripter
+          cp -a out/detective-001b3/dataset/. datasets/detective-001-sprocket-scripter/
+          python3 scripts/detective_001b3_verify.py --dataset datasets/detective-001-sprocket-scripter
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add datasets/detective-001-sprocket-scripter
+          git commit -m "DETECTIVE-001B3: archive source-bound Sprocket Instruct scripting evidence"
+          git push origin HEAD:"refs/heads/$branch"
