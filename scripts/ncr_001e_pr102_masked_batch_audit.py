@@ -145,11 +145,45 @@ def verify_originals(files, provenance) -> None:
             and j["actual_files"]["model.safetensors"]["sha256"] ==
             prefetch["files"]["model.safetensors"]["sha256"] == MODEL_SHA,
             "complete original root checkpoint digest/size changed")
-    for name, key in (("config.json","config_sha256"),):
-        require(j["actual_files"][name]["sha256"] ==
-                prefetch["files"][name]["sha256"] ==
-                "557aacbcb7e23a322221ab91b62c4343dd22130388efc3eb4dcdfe1edfd8d1b7",
-                "checkpoint config source mutated")
+    # Independent post-run source-custody gate: the original model run already
+    # verified these exact file bytes, but the archival auditor must independently
+    # bind *every* tokenizer/config/control source, not just the checkpoint and
+    # config. All declared source hashes come from the unchanged four-lane pins.
+    pin_path = ROOT / "experiments/ncr-001/source-pins.json"
+    require(sha(pin_path.read_bytes()) == j["source"]["pins_sha256"] ==
+            source["source_pins_sha256"], "source pins file byte drift")
+    pins = json.loads(pin_path.read_text(encoding="utf-8"))
+    require(set(pins["models"]) ==
+            {"smollm2", "sprocket_chat", "sprocket_instruct", "void1"},
+            "pinned source model inventory changed")
+    instruct_pin = pins["models"]["sprocket_instruct"]
+    chat_pin = pins["models"]["sprocket_chat"]
+    require(instruct_pin["repo_id"] == source["model_repository"]
+            and instruct_pin["revision"] == source["model_revision"]
+            and instruct_pin["variant"] == "instruct"
+            and instruct_pin["hf_weight_file"] == "model.safetensors"
+            and chat_pin["hf_weight_file"] == "chat/model.safetensors"
+            and instruct_pin["weight_declared_lfs_sha256_not_downloaded"] ==
+            MODEL_SHA and chat_pin["weight_declared_lfs_sha256_not_downloaded"] ==
+            source["distinct_chat_checkpoint_sha256"] ==
+            "551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97",
+            "Instruct/Chat checkpoint or variant source substitution")
+    original_files = {
+        "model.safetensors": ("weight_declared_lfs_sha256_not_downloaded", 1002207984),
+        "config.json": ("config_sha256", 689),
+        "tokenizer.json": ("tokenizer_sha256", 2269469),
+        "tokenizer_config.json": ("tokenizer_config_sha256", 3325),
+        "special_tokens_map.json": ("special_tokens_map_sha256", 333),
+    }
+    require(set(j["actual_files"]) == set(prefetch["files"]) ==
+            set(original_files), "original model/prefetch source file inventory mismatch")
+    for name, (pin_field, pinned_len) in original_files.items():
+        original = j["actual_files"][name]
+        staged = prefetch["files"][name]
+        require(original["sha256"] == staged["sha256"] ==
+                instruct_pin[pin_field] and
+                original["bytes"] == staged["bytes"] == pinned_len,
+                "pinned original tokenizer/config/weight source drift: " + name)
     require(prefetch["model_variant"] == "sprocket_instruct"
             and prefetch["train_authorized"] is False
             and prefetch["optimizer_steps"] == 0
