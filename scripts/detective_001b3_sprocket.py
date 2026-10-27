@@ -242,9 +242,12 @@ def render_text(turns: list[dict]) -> str:
 
 def verify_tokenizer(tok, spec: dict) -> None:
     for marker, expected in spec["special_token_ids"].items():
-        converted = tok.convert_tokens_to_ids(marker)
-        encoded = tok.encode(marker, add_special_tokens=False)
-        decoded = tok.convert_ids_to_tokens(expected)
+        try:
+            converted = tok.convert_tokens_to_ids(marker)
+            encoded = tok.encode(marker, add_special_tokens=False)
+            decoded = tok.convert_ids_to_tokens(expected)
+        except Exception as exc:
+            raise ContractError("special token lookup failed: " + marker) from exc
         if converted != expected or encoded != [expected] or decoded != marker:
             raise ContractError("special token identity mismatch: " + marker)
 
