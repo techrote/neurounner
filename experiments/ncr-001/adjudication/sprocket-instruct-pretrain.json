@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001E",
+  "issue": 72,
+  "model_key": "sprocket_instruct",
+  "model_variant": "instruct",
+  "adjudication": "BLOCKED_REQUIRED_LEARNING_CHECKS__SOURCE_RUNTIME_PRETRAIN_PASS",
+  "per_model_gate": false,
+  "source_runtime_pretraining_subgate": true,
+  "train_authorized": false,
+  "optimizer_steps_observed": 0,
+  "heldout_evaluation": false,
+  "reviewed_pr_heads": {
+    "pr102": "3592841802d85c442ca2521479b5d8795bee7233",
+    "pr113": "7dec2f91b6542854762542807978e5bddead4f64"
+  },
+  "source": {
+    "repo_id": "kandivault/sprocket-500m",
+    "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+    "weight_file": "model.safetensors",
+    "weight_sha256": "1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864",
+    "weight_bytes": 1002207984,
+    "original_hook_commit": "b95c010f9b2ba3cbd9f81317981316bb9c8acd19",
+    "taps_after_block_zero_based": [
+      7,
+      16,
+      25
+    ],
+    "distinct_chat_weight_sha256": "551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97"
+  },
+  "protocol": {
+    "sha256": "a76d38f80a57012ca8e62fba183d1cf2e91fd0986032f1adcdfb0aef843bf0b4",
+    "source_pins_sha256": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1",
+    "cache_atol": 0.0005,
+    "cache_rtol": 0.0005,
+    "any_failure_blocks_model_qualification": true,
+    "required_checks": [
+      "same_base_logits",
+      "base_weight_unchanged_after_step",
+      "causal_suffix_invariance",
+      "full_prefix_vs_incremental_cache",
+      "per_token_isolation",
+      "per_request_reset",
+      "nonzero_adapter_gradient_after_warmup",
+      "finite_state_and_loss",
+      "cold_reload_state_dict"
+    ]
+  },
+  "matrix": {
+    "same_base_logits": {
+      "status": "PASS",
+      "evidence": [
+        "40469703065",
+        "40590487839",
+        "40598034739"
+      ],
+      "note": "Exact frozen-vs-zero logits observed at multiple lengths/padding/generation paths."
+    },
+    "base_weight_unchanged_after_step": {
+      "status": "BLOCKED_BY_TRAINING_POLICY",
+      "evidence": [],
+      "note": "No optimizer step is permitted while protocol.train_authorized=false."
+    },
+    "causal_suffix_invariance": {
+      "status": "PASS",
+      "evidence": [
+        "40469703065",
+        "40515083104",
+        "40567832272"
+      ],
+      "note": "Future suffix influence and A→B→A request leakage were exactly zero."
+    },
+    "full_prefix_vs_incremental_cache": {
+      "status": "PASS",
+      "evidence": [
+        "40515083104",
+        "40544384293",
+        "40573188117",
+        "40590487839",
+        "40598034739"
+      ],
+      "note": "Short, 256, 2048-tail, all-position structural, padded-gap, and actual HF.generate cache paths remain within 5e-4."
+    },
+    "per_token_isolation": {
+      "status": "PASS_SOURCE_RUNTIME",
+      "evidence": [
+        "40573188117",
+        "40590487839",
+        "40598034739"
+      ],
+      "note": "All-position/padded/cached hook traces and masked-control sentinels demonstrate per-token source isolation."
+    },
+    "per_request_reset": {
+      "status": "PASS",
+      "evidence": [
+        "40469703065",
+        "40515083104",
+        "40590487839",
+        "40598034739"
+      ],
+      "note": "Independent A→B→A/request/batch/generate isolation was exact."
+    },
+    "nonzero_adapter_gradient_after_warmup": {
+      "status": "BLOCKED_BY_TRAINING_POLICY",
+      "evidence": [],
+      "note": "No backward/training warmup is admitted while train_authorized=false."
+    },
+    "finite_state_and_loss": {
+      "status": "PARTIAL_BLOCKED_LOSS_BY_TRAINING_POLICY",
+      "evidence": [
+        "40590487839",
+        "40598034739"
+      ],
+      "note": "Finite states/logits are demonstrated; supervised training loss is intentionally not executed."
+    },
+    "cold_reload_state_dict": {
+      "status": "PASS_PRETRAIN",
+      "evidence": [
+        "40469703065",
+        "40515083104"
+      ],
+      "note": "Same-process cold adapter reconstruction plus separate-Python-process frozen-base/adapter replay are exact."
+    }
+  },
+  "blocking_required_checks": [
+    "base_weight_unchanged_after_step",
+    "nonzero_adapter_gradient_after_warmup",
+    "finite_state_and_loss"
+  ],
+  "nonblocking_scope_limits": {
+    "publisher_source_is_crypto_training_build_attestation": false,
+    "model_generated_tool_memory_competence_qualified": false,
+    "comparative_NCA_MLP_training_performed": false,
+    "sealed_holdouts_opened": false,
+    "all_parent_prs_merged": false
+  },
+  "evidence_runs": [
+    40469703065,
+    40515083104,
+    40544384293,
+    40567832272,
+    40573188117,
+    40590487839,
+    40598034739
+  ],
+  "decision_note": "Do not set sprocket_instruct_conformance_pass=true and do not authorize training. The source/runtime pre-training portion is independently well-supported; final #72 remains blocked only by protocol-required learning/update/loss checks that are prohibited while train_authorized=false."
+}
