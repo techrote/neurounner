@@ -19,7 +19,9 @@ class Tests(unittest.TestCase):
         self.assertIn('detective-script-v1',p)
         self.assertNotIn('OXIDATION',p)
         self.assertNotIn('/etc/passwd',p)
-        self.assertNotIn('shell',p)
+        self.assertNotIn('"op":"shell"',p)
+        self.assertNotIn('"cmd":',p)
+        self.assertIn('Do not invent IDs, paths, shell commands, network actions, or credentials.',p)
     def test_strict_json_and_typed_authority(self):
         good='{"schema":"detective-script-v1","steps":[{"op":"read_asset","asset_id":"transfer-card"}]}'
         sc=s.score(self.spec,self.case,self.tasks['L01'],good)
