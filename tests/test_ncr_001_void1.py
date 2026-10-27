@@ -105,7 +105,7 @@ class DepthHookTests(unittest.TestCase):
 
     def test_wrong_backbone_or_tap_configuration_rejected(self):
         for key, value in (
-            ("model_type", "llama"), ("hidden_size", 640), ("num_hidden_layers", 24)
+            ("model_type", "llama"), ("hidden_size", 576), ("num_hidden_layers", 30)
         ):
             base = ToyLM()
             setattr(base.config, key, value)
