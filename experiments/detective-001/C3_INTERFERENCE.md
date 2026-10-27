@@ -121,3 +121,24 @@ Independent standard-library verification recomputes every proposition score and
 Once committed evidence passes, subsequent CI rebuilds/diffs the corpus, replays evidence, verifies the one release asset/tag, and **skips all training/evaluation**.
 
 If lie and corrupted-belief retention cannot coexist under this bounded repair, C3 stops with that result. No post-hoc extra steps.
+
+
+## Executed outcome — 2026-10-27
+
+Authoritative complete execution: [Actions 40602963001](https://github.com/techrote/neurounner/actions/runs/40602963001), exact pre-evidence source `c7c195e56c39e0e3dd419687dde7e2e09c3ca4fd`.
+
+- trained adapter directory: `a3185187e81634e11079aa6eb58ee87b495dac260fc3b2dd17120eed8a9d2ae3`;
+- pair margin 1.8703→4.3506 nats/token;
+- matched final total **15/18→15/18**;
+- lie **3/3→3/3**;
+- corrupted belief **1/3→2/3**;
+- withholding **3/3→3/3**;
+- correction **3/3→3/3**;
+- speculation **3/3→2/3**;
+- protected leaks 0→0; evidence-ID leaks 0;
+- final SHA `617c8457290b8bb8746c0eaa4f5fa35028d9e985d79413630f502039e97e9c29`;
+- frozen G09-C2 remained zero-step.
+
+The intended lie + sincere-corrupted-memory coexistence was demonstrated, but the locked aggregate gate is **FAIL** because total score did not improve. No threshold is relaxed. See [REPORT_001C3.md](REPORT_001C3.md).
+
+Evidence-ready reruns must now rebuild/diff the corpus, replay raw evidence, verify the single release asset/tag, and **skip all training and evaluation**.
