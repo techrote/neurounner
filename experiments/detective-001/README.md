@@ -78,3 +78,10 @@ Future inference/training qualification requires:
 - This fixture's `public` flag proves an intended accessible recovery route *in the schema*. A production case graph must prove actual physical availability and progression reachability; the game must not withdraw all public evidence through later gameplay. A true game integration also needs turn/session IDs, actor belief updates, authoritative evidence unlock transactions and replayable interview records.
 
 The useful end state is a solver where every player interview is interesting even when the NPC is wrong; verified evidence, access permissions and eventual case conclusions still derive only from the game world.
+
+
+## DETECTIVE-001B — source-matched, bounded live development smoke
+
+The next stage is [PILOT_001B.md](PILOT_001B.md), tracked in #103. It preregisters **two independent released Village SmolLM2-135M SFT LoRA cartridges (V-G02-A and V-G09-C) against a matched untuned SmolLM2 base**, with identical identity-blind actor questions, individual followups, and two deterministic fictional scripter tasks. This is a one-case-family **exploratory smoke**, not a final held-out score, new training, or a Sprocket-500M checkpoint qualification.
+
+The source-gated runner, offline tests, independent readback, finite CPU/token budget, and raw-first dataset promotion are implemented in scripts/detective_001b_pilot.py, scripts/detective_001b_verify.py, and the dedicated detective-001b workflow. Later Sprocket Chat/Instruct, void.1, six-member expansion and actual fine-tuning require separate proof and admission; Village #13/#14 are not modified.
