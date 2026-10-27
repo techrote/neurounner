@@ -24,7 +24,7 @@ class RightPaddingSourceTests(unittest.TestCase):
         self.assertEqual(wire.SOURCE_IMPL,
                          "b95c010f9b2ba3cbd9f81317981316bb9c8acd19")
         self.assertEqual(wire.REVIEWER_SOURCE_BLOB,
-                         "6ade653f0452e58f82c8c78e79d326018c30bcf1a")
+                         "6ade653f0452e58f82c8c78e79d326018c30bcf1")
         self.assertEqual(wire.ROOT_SHA,
                          "1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864")
         self.assertNotEqual(wire.ROOT_SHA, wire.CHAT_SHA)
