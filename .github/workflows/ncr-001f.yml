@@ -61,6 +61,25 @@ jobs:
           assert len(data["sealed_fixtures"])==5
           print("NCR-001F planned-only source-bound receipt SHA-256:",hashlib.sha256(file.read_bytes()).hexdigest())
           PY
+      - name: Independently regenerate source-bound original plan SHA-256
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          p=Path("runtime/ncr-001/matched-control-plan.json")
+          source=Path("experiments/ncr-001/controls-evidence/provenance.json")
+          evidence=json.loads(source.read_text(encoding="utf-8"))
+          want=evidence["source"]["original_uncompressed_report_sha256"]
+          got=hashlib.sha256(p.read_bytes()).hexdigest()
+          assert p.stat().st_size==evidence["source"]["original_uncompressed_report_bytes"]
+          assert got==want,(got,want)
+          d=json.loads(p.read_text(encoding="utf-8"))
+          assert d["status"]=="PASS_COMPARISON_PLAN_PRECHECK__BLOCKED_FOR_TRAINING"
+          assert d["training_authorized"] is False
+          assert len(d["lanes"])==4 and len(d["sealed_fixtures"])==5
+          assert d["schedules"]["20261026"]["train_schedule_indices_sha256"]==evidence["observed"]["exact_train_schedule_sha256"]["20261026"]
+          print("Source-bound original NCR-001F plan independently reproduced:",got)
+          PY
       - name: Upload transient preflight (not training data)
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
