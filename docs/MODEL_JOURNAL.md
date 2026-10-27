@@ -1238,3 +1238,28 @@ A post-training, hash-bound 12-scenario suite used three case families disjoint 
 Observed direction is useful but incomplete. G02-A improved truthful fact use, one contradiction repair and speculation resistance, yet failed both deliberate-lie cases. G09-C learned one deliberate lie but remained weak on correction, withholding and speculation. Neither result authorizes 36-member expansion.
 
 **Disposition:** retain both adapters and failures as controls; next study should use pairwise continuation for one-sided lie commitment/withholding without truth leakage and a preregistered proposition-level evaluator. Do not train on C1's learner-final suite.
+
+---
+
+# 2026-10-27 — DETECTIVE-001C2 pairwise witness-policy repair
+
+**Authoritative run:** `40598884556`  
+**Source head:** `f53c36b4ffc4c1cd4dca3087896754d204827e38`  
+**Bodies:** exact C1 SmolLM2-135M LoRA parents; 40 pairwise optimizer steps/member.
+
+## Pair objective
+
+- V-G02-A preference margin: -0.3635 → **+4.4049 nats/token**, accuracy 35% → **100%**; 91.01 s, 119.35 sequence tok/s.
+- V-G09-C: -0.0157 → **+4.4846**, accuracy 50% → **100%**; 86.76 s, 121.98 sequence tok/s.
+
+Perfect pair fit did **not** imply perfect final policy.
+
+## Post-hash 18-case learner-final
+
+- V-G02-A parent 12/18 → C2 **13/18**; withholding 2/3→3/3, correction 1/3→3/3, protected leaks 3→2. Lie remains **1/3** and corrupted-belief retention regresses **2/3→0/3**. Member gate FAIL.
+- V-G09-C parent 8/18 → C2 **14/18**; lie 0/3→2/3, withholding 3/3, correction 1/3→3/3, speculation 2/3→3/3, protected leaks 3→1. Corrupted belief remains 0/3. Member proposition gate PASS.
+- Both: zero canonical evidence-ID leakage; no final prompt collision with Village/C1/C2 training inputs.
+
+The key finding is policy interference in a tiny model: a preference repair can strengthen withholding/correction while erasing a different useful unreliability mode. G09-C is a promising transactional/deceptive survivor; G02-A requires narrower repair if sincere corrupted memory is to remain part of its character.
+
+**Disposition:** aggregate proposition gate FAIL because G02 lie gate is 1/3. Independent old-task relevance remains unrated. No population expansion. C2 final is sealed and never training data.
