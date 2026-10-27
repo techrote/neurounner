@@ -1,0 +1,37 @@
+name: NCR-001E independent publisher-wire original receipt readback (no model)
+
+on:
+  pull_request:
+    branches:
+      - review/ncr-001e-sprocket-extended-context-20261027
+    paths:
+      - ".github/workflows/ncr-001e-sprocket-publisher-audit.yml"
+      - "scripts/ncr_001e_sprocket_publisher_receipt_audit.py"
+      - "tests/test_ncr_001e_sprocket_publisher_receipt_audit.py"
+      - "experiments/ncr-001/evidence-review/sprocket-publisher-wire/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-receipt-custody:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Independent byte-precise Actions evidence and false-admission sentinel audit
+        run: |
+          python3 scripts/ncr_001e_sprocket_publisher_receipt_audit.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_sprocket_publisher_receipt_audit.py' -v
+      - name: Confirm four-lane train gate remains closed
+        run: |
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("ARCHIVAL_READBACK_ONLY train_authorized=false; no actual frozen model execution")
+          PY
