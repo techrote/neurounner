@@ -79,6 +79,10 @@ Future inference/training qualification requires:
 
 The useful end state is a solver where every player interview is interesting even when the NPC is wrong; verified evidence, access permissions and eventual case conclusions still derive only from the game world.
 
+**Followup evidence:** [DETECTIVE-001B2 presentation A/B](REPORT_001B2.md), [preregistered contract](PRESENTATION_001B2.md) and [independently verified original outputs](../../datasets/detective-001-presentation-ab/). On the same two admitted first-turn witness situations and the same three exact models, JSON rendered 4/6 object-prefixed replies; a semantically matched natural-language rendering rendered 0/6. This isolates a plausible model-input-format confound, but does not prove reliable NPC memories or deception.
+
+
+
 
 ## DETECTIVE-001B — source-matched, bounded live development smoke
 
