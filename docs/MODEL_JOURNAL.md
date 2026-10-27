@@ -1263,3 +1263,33 @@ Perfect pair fit did **not** imply perfect final policy.
 The key finding is policy interference in a tiny model: a preference repair can strengthen withholding/correction while erasing a different useful unreliability mode. G09-C is a promising transactional/deceptive survivor; G02-A requires narrower repair if sincere corrupted memory is to remain part of its character.
 
 **Disposition:** aggregate proposition gate FAIL because G02 lie gate is 1/3. Independent old-task relevance remains unrated. No population expansion. C2 final is sealed and never training data.
+
+---
+
+# 2026-10-27 — DETECTIVE-001C3 G02 interference repair
+
+**Authoritative run:** `40602963001`  
+**Source head:** `c7c195e56c39e0e3dd419687dde7e2e09c3ca4fd`  
+**Trainable cartridge:** exact V-G02-A C2; V-G09-C2 frozen, zero optimizer steps.
+
+## Training
+
+28 CPU preference steps, LR 1.5e-4. Pair margin **1.8703→4.3506 nats/token**, preference accuracy already 100% before and after. Adapter directory `a3185187e81634e11079aa6eb58ee87b495dac260fc3b2dd17120eed8a9d2ae3`.
+
+A preceding run completed optimizer work but failed during post-training provenance serialization due a missing standard-library import. Its incomplete artifact was not promoted; the source-correct rerun is the authority.
+
+## Matched post-hash final
+
+- total: **15/18→15/18**;
+- deliberate lie: **3/3→3/3**;
+- sincere corrupted belief: **1/3→2/3**;
+- withholding: **3/3→3/3**;
+- correction: **3/3→3/3**;
+- speculation resistance: **3/3→2/3**;
+- truthful: **2/3→2/3**;
+- protected leaks: **0→0**;
+- evidence-ID leaks: **0**.
+
+The narrow coexistence hypothesis is supported: explicit sincere false memory and protective deliberate lying coexist in one 135M cartridge. However the repair redistributed an error from corrupted-memory retention into speculation resistance rather than improving the total.
+
+**Disposition:** locked C3 gate **FAIL** because `total_improved` is false. Stop training; do not relax the gate. Next bottleneck is independent old-task relevance, not another immediate continuation.
