@@ -145,7 +145,7 @@ def validate_ratings(label:str,path:Path)->tuple[dict,dict[str,dict]]:
     actual=read(path)
     if (actual.get("schema")!=expected["schema"]
             or actual.get("experiment")!="DETECTIVE-001R1"
-            or actual.get("issue")!=120
+            or actual.get("issue")!=expected["issue"]
             or actual.get("packet")!=label
             or actual.get("packet_sha256")!=expected["packet_sha256"]):
         raise ReviewError(label+" rating source identity/hash mismatch")
