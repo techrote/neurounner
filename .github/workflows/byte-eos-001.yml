@@ -40,6 +40,23 @@ jobs:
           ref: a1b41c358d215974ea9ef2748baa13c3872b0fbb
           path: prereg
           persist-credentials: false
+      - name: Independently verify original future-only label receipt SHA-256
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path("experiments/ncr-001/byte-eos-001")
+          original=root/"receipt.json"
+          p=json.loads((root/"provenance.json").read_text())
+          actual=hashlib.sha256(original.read_bytes()).hexdigest()
+          assert actual==p["original_raw_report_sha256"],(actual,p["original_raw_report_sha256"])
+          d=json.loads(original.read_text())
+          assert d["status"]=="PASS_CORRECT_FUTURE_EOS_ID_LABELS__NCR_TRAINING_STILL_BLOCKED"
+          assert d["terminal_actual_eos"]==258 and d["terminal_eos_supervised"] is True
+          assert d["historic_literal_tail"]==[60,101,111,115,62]
+          assert d["any_model_optimizer_steps"]==0 and d["training_authorized"] is False
+          print("Archived original BYTE-EOS-001 receipt SHA-256 matched",actual)
+          PY
       - name: No dependencies, no model, verify strict label construction
         run: |
           python3 -m py_compile scripts/byte_eos_001_void_labels.py \
