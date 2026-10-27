@@ -63,6 +63,23 @@ class CaseContractTests(unittest.TestCase):
         self.assertNotIn("terminals", view)
         self.assertNotIn("leads", view)
 
+    def test_blind_projection_contains_no_persona_or_member_identity(self):
+        ordinary = witness_view(self.case, "V-G02-A", "Where were you?")
+        blind = witness_view(self.case, "V-G02-A", "Where were you?", blind=True)
+        for forbidden in ("npc_id", "kind", "backstory", "motivation", "fault"):
+            self.assertIn(forbidden, ordinary)
+            self.assertNotIn(forbidden, blind)
+        self.assertEqual(blind["admitted_memories"], ordinary["admitted_memories"])
+        self.assertNotIn("V-G02-A", json.dumps(blind))
+        with self.assertRaises(ContractError):
+            witness_view(self.case, "V-G02-A", "Where were you?", blind="yes")
+
+    def test_non_json_case_values_refuse_without_crashing(self):
+        variant = copy.deepcopy(self.case)
+        variant["facts"][0]["text"] = float("nan")
+        with self.assertRaises(ContractError):
+            validate_case(variant)
+
     def test_scripter_does_not_mutate_canonical_case(self):
         before = copy.deepcopy(self.case)
         view = witness_view(self.case, "V-G02-A", "Who owns the canister?")
