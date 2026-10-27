@@ -77,7 +77,9 @@ def digest(raw):
 def load_originals(archive_path=ARCHIVE, provenance_path=PROVENANCE):
     p = json.loads(Path(provenance_path).read_text(encoding="utf-8"))
     a = p["archived_text"]
-    encoded = Path(archive_path).read_text(encoding="ascii").strip()
+    # Git text storage wraps Base64 at 128 chars; wrapping is transport only.
+    # Still require the exact decoded byte length and immutable source digest.
+    encoded = "".join(Path(archive_path).read_text(encoding="ascii").split())
     require(len(encoded) == 5848 and encoded.isascii(), "base64 envelope altered")
     compressed = base64.b64decode(encoded, validate=True)
     require(len(compressed) == a["original_xz_bytes"] == 4384
