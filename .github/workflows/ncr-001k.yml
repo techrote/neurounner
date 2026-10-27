@@ -47,6 +47,27 @@ jobs:
             tests/test_ncr_001_void1.py
           python3 -m unittest discover -s tests -p "test_ncr_001_void1.py" -v
 
+      - name: Verify source-bound archived void.1 receipt bytes
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path("experiments/ncr-001/void1-preflight")
+          receipt=root/"receipt.json"
+          p=json.loads((root/"provenance.json").read_text())
+          actual=hashlib.sha256(receipt.read_bytes()).hexdigest()
+          expected=p["source_run"]["original_report_sha256"]
+          assert actual==expected,(actual,expected)
+          d=json.loads(receipt.read_text())
+          assert d["status"]=="PASS_PRELIMINARY_VOID1_QWEN3_HOOK_CONFORMANCE"
+          assert d["custom_tokenizer_code_executed"] is False
+          assert d["tokenizer_semantic_qualification"] is False
+          assert d["optimizer_steps"]==0
+          assert d["source_files"]["model.safetensors"]["sha256"]==p["model"]["actual_model_safetensors_sha256"]
+          assert d["source_files"]["tokenization_byte.py"]["sha256"]==p["model"]["custom_tokenizer_python_sha256"]
+          print("NCR-001K source-bound raw receipt SHA-256 PASS",actual)
+          PY
+
   pinned-real-model:
     name: Pinned frozen 92M checkpoint + KV-cache prepass
     needs: frozen-hook-toy
