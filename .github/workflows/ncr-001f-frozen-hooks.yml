@@ -43,6 +43,11 @@ jobs:
           assert set(d["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
           print("NO NCR training admission; all four variants remain distinct.")
           PY
+      - name: Independently read back exact original 5,505-byte source-bound model receipt and negative gates
+        run: |
+          python3 -m py_compile scripts/ncr_001f_mlp_receipt_audit.py tests/test_ncr_001f_mlp_receipt_audit.py
+          python3 -m unittest discover -s tests -p "test_ncr_001f_mlp_receipt_audit.py" -v
+          python3 scripts/ncr_001f_mlp_receipt_audit.py
       - name: Compile and run source-layout, lifecycle, gradient-only and checkpoint refusals
         run: |
           python3 -m py_compile scripts/ncr_001f_controls.py \
