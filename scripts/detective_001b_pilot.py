@@ -170,11 +170,16 @@ def messages_first(cfg: dict, case: dict, idx: int) -> list[dict]:
 
 
 def messages_followup(cfg: dict, case: dict, idx: int, raw_first: str) -> list[dict]:
-    inp = witness_view(case, cfg["dialogue"]["witness_ids"][idx],
-                       cfg["dialogue"]["followup_questions"][idx], blind=True)
+    # Admitted memories are already present in the first user message.
+    # The follow-up adds no new case facts, identities or private world data.
+    followup = {
+        "schema": "detective-followup-v1",
+        "case_id": case["case_id"],
+        "player_question": cfg["dialogue"]["followup_questions"][idx],
+    }
     return messages_first(cfg, case, idx) + [
         {"role": "assistant", "content": raw_first},
-        {"role": "user", "content": canonical(inp)},
+        {"role": "user", "content": canonical(followup)},
     ]
 
 
@@ -439,7 +444,8 @@ def run(out: Path, download_dir: Path) -> dict:
             "request": {"messages": messages, "prompt_token_count": int(ids.shape[-1]),
                         "input_token_sha256": digest_bytes(ids.numpy().tobytes()),
                         "max_new_tokens": tokens, "do_sample": False},
-            "response": tokenizer.decode(tail, skip_special_tokens=True).strip(),
+            "response": tokenizer.decode(tail, skip_special_tokens=True),
+            "response_raw_with_special_tokens": tokenizer.decode(tail, skip_special_tokens=False),
             "generated_token_ids": tail,
             "generated_tokens": len(tail),
             "elapsed_seconds": elapsed,
