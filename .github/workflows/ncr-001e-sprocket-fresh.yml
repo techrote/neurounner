@@ -12,6 +12,9 @@ on:
       - "experiments/ncr-001/protocol.json"
       - "experiments/ncr-001/source-pins.json"
       - "docs/NCR_001_E_SPROCKET_FRESH.md"
+      - "scripts/ncr_001e_sprocket_receipt_audit.py"
+      - "experiments/ncr-001/evidence-review/sprocket-fresh/**"
+      - "RAG.md"
   workflow_dispatch:
 
 permissions:
@@ -38,6 +41,20 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - name: Re-read exact original archived role and real-model receipts
+        run: |
+          python3 scripts/ncr_001e_sprocket_receipt_audit.py
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0,"scripts")
+          from ncr_001e_sprocket_receipt_audit import audit
+          data=audit()
+          assert data["status"]=="PASS_ORIGINAL_TRIPLE_SPROCKET_RECEIPT_BYTE_HASH_AND_NUMERIC_READBACK"
+          assert data["tool_and_memory_behavior_qualified"] is False
+          assert data["fresh_separate_process_cold_model_reload_proved"] is False
+          assert data["training_authorized"] is False
+          print("Original source ZIPs promoted losslessly; full #72 still not admitted")
+          PY
       - name: Install pinned tokenizer-only dependencies
         run: |
           python3 -m pip install --disable-pip-version-check \
