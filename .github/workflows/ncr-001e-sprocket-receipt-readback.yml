@@ -1,0 +1,72 @@
+name: NCR-001E archived two-process Sprocket source receipt byte audit
+
+on:
+  pull_request:
+    branches:
+      - review/ncr-001e-sprocket-source-formatter-cold-cache
+    paths:
+      - ".github/workflows/ncr-001e-sprocket-receipt-readback.yml"
+      - "scripts/ncr_001e_sprocket_process_receipt_audit.py"
+      - "tests/test_ncr_001e_sprocket_receipt_readback.py"
+      - "experiments/ncr-001/evidence-review/sprocket-cross-process/**"
+      - "docs/NCR_001_E_SPROCKET_CROSS_PROCESS.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-source-json-readback:
+    name: Lossless original dual frozen-host JSON and tamper sentinels (no model)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Confirm original four-model no-training admission rule
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("NCR-001: no training; read-only source receipt custody only")
+          PY
+      - name: Compile standard-library evidence validator and run mutation sentinels
+        run: |
+          python3 -m py_compile \
+            scripts/ncr_001e_sprocket_process_receipt_audit.py \
+            tests/test_ncr_001e_sprocket_receipt_readback.py
+          python3 -m unittest discover -s tests \
+            -p 'test_ncr_001e_sprocket_receipt_readback.py' -v
+      - name: Preserve fully deterministic independent evidence-readback summary
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          import sys
+          sys.path.insert(0,"scripts")
+          from ncr_001e_sprocket_process_receipt_audit import audit,READBACK_STATUS
+          report=audit()
+          assert report["status"]==READBACK_STATUS
+          assert report["source_integrity_readback_pass"] is True
+          assert report["this_auditor_executes_llms"] is False
+          assert report["train_authorized"] is False
+          assert report["four_model_conformance_pass"] is False
+          assert report["tool_and_memory_behavior_qualified"] is False
+          assert len(report["original_variants"])==2
+          path=Path("runtime/ncr-001/sprocket-cross-process-readback.json")
+          path.parent.mkdir(parents=True,exist_ok=True)
+          path.write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(report,indent=2,sort_keys=True),flush=True)
+          PY
+      - name: Keep independent source-readback output even on subsequent failure
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001e-sprocket-original-two-process-readback-a${{ github.run_attempt }}
+          path: runtime/ncr-001/sprocket-cross-process-readback.json
+          if-no-files-found: warn
+          retention-days: 30
