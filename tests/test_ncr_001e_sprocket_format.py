@@ -77,10 +77,13 @@ class SourceRoleContractTests(unittest.TestCase):
             + " ".join(ALL_SOURCE_CONTROL_MARKERS)
         )
         validate_pinned_card(card)
-        with self.assertRaisesRegex(RuntimeError,"variant claim"):
-            validate_pinned_card(card.replace("Chat build: start here","Unverified build"))
+        # Build prose must be recorded if present, not fabricated as a hard
+        # requirement: published README descriptions can vary by revision.
+        validate_pinned_card(card.replace("Chat build: start here","Unverified build"))
         with self.assertRaisesRegex(RuntimeError,"source token"):
             validate_pinned_card(card.replace("<|memory_read|>","deleted"))
+        with self.assertRaisesRegex(RuntimeError,"chat-format"):
+            validate_pinned_card(card.replace("### Chat format","### Other format"))
 
     def test_all_source_control_symbols_have_dedicated_ids(self):
         for variant in ("chat","instruct"):
