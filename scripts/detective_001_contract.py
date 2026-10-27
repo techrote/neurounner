@@ -18,7 +18,10 @@ class ContractError(ValueError):
 
 
 def _json(value: Any) -> str:
-    return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+    try:
+        return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+    except (TypeError, ValueError) as exc:
+        raise ContractError("unserializable or non-finite JSON value") from exc
 
 
 def _id(value: Any) -> str:
@@ -140,27 +143,37 @@ def validate_case(case: Any) -> None:
             raise ContractError("mandatory lead needs two independent routes and public evidence")
 
 
-def witness_view(case: dict, npc_id: str, question: str) -> dict:
-    """Whitelisted generation view; omits other actors and the global case ledger."""
+def witness_view(case: dict, npc_id: str, question: str, *, blind: bool = False) -> dict:
+    """Whitelisted generation view; optional identity-blind qualification input.
+
+    The orchestrator binds model/member identity in separate run metadata.
+    The blind text contains no ID, backstory, motive, fault or species cue.
+    """
     validate_case(case)
     _id(npc_id)
     _text(question, 512)
+    if type(blind) is not bool:
+        raise ContractError("invalid interview mode")
     npcs = {item["id"]: item for item in case["npcs"]}
     if npc_id not in npcs:
         raise ContractError("unknown witness")
     npc = npcs[npc_id]
     facts = {item["id"]: item["text"] for item in case["facts"]}
-    return {
+    view = {
         "schema": "detective-interview-v1",
         "case_id": case["case_id"],
-        "npc_id": npc_id,
-        "kind": npc["kind"],
-        "backstory": npc["backstory"],
-        "motivation": npc["motivation"],
-        "fault": npc["fault"],
         "admitted_memories": [{"id": i, "text": facts[i]} for i in npc["known_fact_ids"]],
         "player_question": question,
     }
+    if not blind:
+        view.update({
+            "npc_id": npc_id,
+            "kind": npc["kind"],
+            "backstory": npc["backstory"],
+            "motivation": npc["motivation"],
+            "fault": npc["fault"],
+        })
+    return view
 
 
 def _no_duplicate_pairs(pairs: list[tuple[str, Any]]) -> dict:
