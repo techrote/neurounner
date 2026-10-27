@@ -1,0 +1,45 @@
+name: NCR-001E original void.1 two-process frozen-host receipt SHA audit (no model)
+
+on:
+  pull_request:
+    branches:
+      - review/ncr-001e-void-real-text-cache
+    paths:
+      - ".github/workflows/ncr-001e-void-process-receipt-readback.yml"
+      - "scripts/ncr_001e_void_process_receipt_audit.py"
+      - "tests/test_ncr_001e_void_process_receipt_audit.py"
+      - "experiments/ncr-001/evidence-review/void1-cross-process/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  immutable-original-readback:
+    name: Verify original Qwen3 fresh-interpreter JSON bytes, SHA and tamper sentinels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Require four frozen model variants and training forbidden
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          assert set(p["models"]) == {
+              "smollm2", "sprocket_chat", "sprocket_instruct", "void1"
+          }
+          assert p["train_authorized"] is False
+          print("NCR-001E original-source receipt readback, no optimizer or original model")
+          PY
+      - name: Full byte-exact original archive and negative mutation tests
+        run: |
+          python3 -m py_compile scripts/ncr_001e_void_process_receipt_audit.py
+          python3 -m unittest discover -s tests \
+            -p "test_ncr_001e_void_process_receipt_audit.py" -v
+      - name: Require originally captured source/CPU/real frozen Qwen3 evidence PASS
+        run: |
+          python3 scripts/ncr_001e_void_process_receipt_audit.py
