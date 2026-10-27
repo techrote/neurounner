@@ -1,0 +1,42 @@
+name: NCR-001E independent original 2048-context receipt readback (no model)
+
+on:
+  pull_request:
+    branches:
+      - review/ncr-001e-sprocket-two-process-restart-20261027
+    paths:
+      - ".github/workflows/ncr-001e-sprocket-extended-audit.yml"
+      - "scripts/ncr_001e_sprocket_extended_receipt_audit.py"
+      - "tests/test_ncr_001e_sprocket_extended_receipt_audit.py"
+      - "experiments/ncr-001/evidence-review/sprocket-extended-context/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frozen-evidence-readback:
+    name: Read exact original Chat/Instruct source receipts and negative sentinels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Reject any protocol admission or lost source lanes
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("NCR-001E independent evidence readback only, training forbidden")
+          PY
+      - name: Negative source, cache and false-training/qualification mutation tests
+        run: |
+          python3 -m py_compile scripts/ncr_001e_sprocket_extended_receipt_audit.py
+          python3 -m unittest discover -s tests \
+            -p "test_ncr_001e_sprocket_extended_receipt_audit.py" -v
+      - name: Require byte-for-byte two original real frozen-host receipts
+        run: python3 scripts/ncr_001e_sprocket_extended_receipt_audit.py
