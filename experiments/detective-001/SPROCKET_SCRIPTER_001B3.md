@@ -71,3 +71,9 @@ Offline, no model download:
 The live workflow checks out the exact publisher source, validates blob identities, installs the exact existing CPU stack, then downloads/verifies only the root Sprocket HF checkpoint and tokenizer files. The independent verifier later reconstructs every prompt, parses every raw output again, re-executes the synthetic game receipts and recomputes the archive inventory. Evidence is promoted to a new dataset only on complete source-matched PASS. Partial/failing raw output remains an Actions artifact.
 
 This work does not modify NCR-001, VILLAGE-001 D/E, or the existing DETECTIVE datasets.
+
+## Executed native result
+
+The preregistered battery completed in [Actions 40584860609](https://github.com/techrote/neurounner/actions/runs/40584860609) at source head e7a81b1eaca8f17f8c13e98593c38003dc97d4ba. Exact publisher-source and root-Instruct model/tokenizer checks, five generations, independent receipt replay and durable archive promotion passed.
+
+Measured outcome: **0/2 correct novel detective tool selections**, **1/1 tool restraint**, and **2/2 narrow positive-result/access-denial consumption checks**. The model produced publisher-style tool-call control syntax, but one call invented `read_file` and the other used a hallucinated asset UUID. See [REPORT_001B3.md](REPORT_001B3.md) and [raw archive](../../datasets/detective-001-sprocket-scripter/). General scripting remains NOT ADMITTED.
