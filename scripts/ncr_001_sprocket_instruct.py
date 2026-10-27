@@ -183,7 +183,7 @@ class FrozenSprocketInstructDepthNCA(nn.Module):
             return self.backbone.generate(*args, **kwargs)
 
     def save_adapter(self, destination: str | Path) -> dict[str, Any]:
-        """Only ~297k adapter parameters, never the 135M-parameter backbone."""
+        """Only ~659k adapter parameters, never the 500M-parameter backbone."""
         self.verify_frozen_base()
         directory = Path(destination)
         directory.mkdir(parents=True, exist_ok=True)
