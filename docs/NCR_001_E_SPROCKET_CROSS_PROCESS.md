@@ -36,6 +36,31 @@ There are two distinct sources:
 - Any failed cold-source hash, manifest guard, float32 replay exactness, 256-unit causal/cache tolerance, resource bound or process separation is a **failure** to preserve, not a reason to relax a fixed gate.
 - Neither Sprocket lane has a final independently admitted **#72 PASS** from this alone. SmolLM2 and void.1 have separate blocked acceptance dependencies. **train_authorized=false must remain unchanged.** All upstream and this draft PR remain unmerged until independently reviewed.
 
-## Current execution and archival state
+## Verified actual frozen source-run and original evidence custody — 27 October 2026
 
-This document describes the *proposed* real-weight invocation, not its result. A committed workflow and source alone do not constitute evidence of an actual-host pass. Record the exact workflow run, head commit, both job results, raw original artifact hashes and any failures here **only after** verified execution and independent original-byte readback.
+[Original Actions run 40515083104](https://github.com/techrote/neurounner/actions/runs/40515083104) **SUCCESS in both actual 500M model jobs**, bound to PR #97 original head a49a33632aa6f4be9df94b07e00e0e1ea58ee10f (GitHub Actions PR synthetic merge e6277a729613de21c260cd4f856d1ebc4578607a). This run used the exact original Chat and root Instruct hook revisions given above, genuine complete 1,002,207,984-byte original model files, reviewed 8,718-byte pinned README, frozen 501,090,560-parameter original model, 658,904 untrained NCA parameters, and recorded 4-CPU/Python 3.12.3/torch 2.14.1+cpu/Transformers 4.57.6 runner provenance.
+
+| Actual source-bound 256-unit witness | Chat subfolder | Root Instruct |
+|---|---:|---:|
+| **240-prefill + 16 genuinely cached incremental positions** max absolute logit deviation | **3.814697265625e-05** | **4.4345855712890625e-05** |
+| Fixed absolute/relative gate | 0.0005 / 0.0005 | 0.0005 / 0.0005 |
+| Manually activated, **untrained** NCA effect on logits | 0.0184458494 | 0.0334434509 |
+| Changed-future suffix drift; A→B→A reset drift | **0; 0** | **0; 0** |
+| Fresh-process restored active/disabled logits and A→B→A replay max deviation | **0 exact** | **0 exact** |
+| Producer / consumer Python OS PIDs | **2474 / 2489** | **2722 / 2738** |
+| Original runner | GitHub Actions 1000045113 | GitHub Actions 1000045114 |
+| Original full artifact ZIP ID | 12739296072 | 12740195021 |
+| Exact original artifact ZIP SHA-256 | 6598b26dee5e774353a092e28265ee3cfd08f05673e3a38c17012da36caa5fb4 | 5677cdf4e8974f83d5c0c68188311659b04bf282c1dcda08c6f597e6185d2084 |
+
+Six standalone manifest/source-negative checks also passed in each actual model CI job. All original numerical reports explicitly retain zero optimizer/training/held-out/evaluator claims. **No failure occurred in the original run**; future failed or partial stage receipts must be retained rather than overwritten.
+
+### Durable original receipt archive and independent readback
+
+The actual original GitHub Actions artifacts were downloaded and their complete ZIP byte SHA-256s computed. The **eight original JSONs** (each variant's producer, consumer, manifest, adapter metadata), *unaltered byte-for-byte*, are archived in [the source-JSON gzip/base64 bundle](../experiments/ncr-001/evidence-review/sprocket-cross-process/original-jsons.tar.gz.b64), with [individual byte lengths/SHA-256, source/runner identity, original ZIP digests and tensor-handoff digests](../experiments/ncr-001/evidence-review/sprocket-cross-process/provenance.json). The original compressed gzip member bytes have SHA-256 **73544c842468d9bf5c3eae8d8ba92a253716990be514e3bc969e834d8595f3bc** (2,919 bytes), and the eight JSON files are individually verified. The original full binary adapter and float32 reference tensors are retained in their Actions ZIP artifacts, not falsely described as copied into Git.
+
+[Independent standard-library readback](../scripts/ncr_001e_sprocket_process_receipt_audit.py) validates compressed and individual original JSON hashes, two original pinned frozen checkpoint identities, protocol/tap/runner/original process identities, fixed numerical limits, exact cold restored output and absence of false training/tool/memory/final-#72 claims. Nine tamper and false-success [negative sentinels](../tests/test_ncr_001e_sprocket_receipt_readback.py) passed in separate **no-model** [Actions run 40516673958](https://github.com/techrote/neurounner/actions/runs/40516673958), independently of the two 1 GB frozen-host processes. It proves source receipt custody consistency; it is **not** a third real model execution or a standalone scientific admission.
+
+### Remaining explicit barriers
+
+These results close the narrower **different-Python-process, same-runner frozen Sprocket adapter restoration** gap for both separately pinned variants. They do **not** prove an independent machine restart, 2048-unit full context, long multi-turn tool/memory continuity, original Instruct's tool-call argument/result grammar, Chat tool ability, or all #72 acceptance gates. SmolLM2 and void.1 remain distinct source lanes. Model-specific complete #72 source/runtime/fixture reviews and the #73 matched MLP real-host Sprocket/void lanes remain outstanding. BYTE-EOS-001 is tracked separately by #92/#94. **Four-model training admission remains denied; train_authorized=false, zero optimizer steps, no sealed holdouts and no draft PR merges.**
+
