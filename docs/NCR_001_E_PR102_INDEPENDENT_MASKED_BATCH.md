@@ -105,3 +105,115 @@ do **not** satisfy all requirements for final independent issue #72 admission.
 No source variant, evaluation fixture, frozen checkpoint, generation receipt,
 original model hook, protocol or training flag was modified;
 **`train_authorized=false` remains enforced.**
+
+## Additional new source-bound HF generation/right-padding qualification — 27 October 2026
+
+The prior finite masked-batch PASS (original [Actions 40590487839](https://github.com/techrote/neurounner/actions/runs/40590487839))
+did **not** exercise the original HF `GenerationMixin.generate()` in both
+cached and uncached modes, nor the harder right-padding case in which a shorter
+sample's real incremental tokens are appended **after an attention-masked gap
+in a shared KV cache**. A disjoint, bounded reviewer-owned test now covers
+those previously untested call shapes, using the **same pinned Instruct and
+publisher wire geometry**, without expanding or replacing any preregistered
+held-out evaluation.
+
+- [Original new frozen-source workflow **40598034739**](https://github.com/techrote/neurounner/actions/runs/40598034739)
+  **PASS**: pure source test job `122518832102`, real original full
+  1,002,207,984-byte root Instruct checkpoint job `122518920068`.
+  Original source branch head `d727640e36ec9f7915aa208d69d9b78e4448f0c6`;
+  original GH Actions merge commit `4470f3070abdee1a6b31d82b27663a8bfe0fdd41`.
+- Fully reverified original weight SHA
+  `1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864`,
+  pinned model revision `eb157d4ddddc4619e661d4a2426bb2dd000fc668`,
+  distinct Chat weight and all four original independent protocol keys. The
+  original hook source, candidate serializer, publisher SFT source and
+  original reviewer helper were checked out/hash-verified independently.
+- Source inputs remained synthetic, **133 and 31 tokenizer units**. The
+  right-padded batched cache prefills have **129 and 27 valid units** plus an
+  attention-masked gap of 102 physical positions. Four genuine one-token
+  forwards then append each sample's remaining units with separate,
+  source-correct `position_ids`. The resulting valid-position logit
+  maximum absolute deviations versus each independent original full forward
+  were **4.920363426208496e-05** and **2.6702880859375e-05**.
+  The protocol **5e-4 absolute/relative** limits remain unchanged.
+- Replacing masked right-padding with actual host `<|tool_result|>` control ID
+  **7** produced **exactly zero** change. Deliberately **unmasking** the same
+  source gaps changed the second request's logits by **11.143782615661621**
+  (required negative sentinel).
+- Actual original `wrapper.generate()`, not a handwritten greedy loop,
+  exercised disabled, zero-NCA and manually activated **untrained** NCA modes,
+  each with `use_cache=true` and `use_cache=false`, for **four deterministic
+  source units**. All six produced the same four tokenizer IDs
+  `[8184, 746, 1066, 1525]`. Original frozen versus zero-readout
+  processed scores were **bitwise exact** in both modes; cache-vs-uncached
+  score maximum absolute deviations were at most
+  **3.528594970703125e-05**, again under frozen 5e-4. Each score vector has
+  31,999 finite logits and one expected suppressed EOS score; the
+  independent comparison verifies the nonfinite masks agree exactly before
+  checking finite values. Hook tracing confirms 4 completed, independent
+  depth-3 forwards with per-token field reset.
+- The manually altered **untrained** readout had a nonzero logit effect
+  `0.03652691841125488`. The frozen base tensor SHA
+  `b73d854127c43266d123bdb266db63a15b4189db9bb3398be035463cbb4fac4d`
+  was unchanged before/after. A→B→A request reset was exact, no hooks leaked,
+  no gradient/optimizer training occurred. Python 3.12.3, PyTorch 2.14.1+cpu,
+  Transformers 4.57.6, four CPUs, runner
+  `GitHub Actions 1000045611`, PID `3423`, maximum RSS 3,277,044 KiB.
+
+### Newly durable original evidence and negative CI
+
+The original [Actions artifact #12777685787](https://github.com/techrote/neurounner/actions/runs/40598034739/artifacts/12777685787)
+was 5,754 bytes, ZIP SHA-256
+`30bc7fa3231047561b5ab0142b59b7012e7e1ee4e72329198f7d778b65be9a1e`.
+All **five original unmodified artifact members** (actual frozen-model
+`pr113-rightpad-generate.json` 13,952 bytes, source-prefetch JSON 1,056
+bytes, package inventory, source commit, source hashes) are [archived
+losslessly](../experiments/ncr-001/evidence-review/pr113-rightpad-generation/)
+under a deterministic USTAR/XZ Base64 container; original report SHA
+`c50bc096161a2b0cfe40c19278adada101cb7314bff822064117ae347f232224`,
+archived compressed XZ SHA
+`3d2081f1494af69eb7cf8a9e90eea326ffc60ff1845483a4d02be34951728751`.
+The **original ZIP bytes** are still in Actions retention, not Git; its
+byte-identical *contents* are preserved and independently SHA-checked. A
+[separate standard-library auditor](../scripts/ncr_001e_pr113_rightpad_receipt_audit.py)
+and [tamper/missing-source/false-admission tests](../tests/test_ncr_001e_pr113_rightpad_receipt_audit.py)
+re-read every original byte without executing a model.
+
+Preserve all historical negative CI, rather than labelling it as model failure:
+
+- [40597707675](https://github.com/techrote/neurounner/actions/runs/40597707675)
+  and [40597891619](https://github.com/techrote/neurounner/actions/runs/40597891619)
+  **FAILED before any model execution**: an invalid 41-character reviewer
+  helper SHA was transcribed into the new CI guard. The exact original helper
+  Git blob was never modified. Commit
+  [`d727640`](https://github.com/techrote/neurounner/commit/d727640e36ec9f7915aa208d69d9b78e4448f0c6)
+  corrected the expected 40-character blob, keeping strict validation.
+- [40599710069](https://github.com/techrote/neurounner/actions/runs/40599710069)
+  **FAILED only archival transport parsing**: the first auditor counted
+  line breaks in a line-wrapped Base64 text envelope.
+  [`1e28029`](https://github.com/techrote/neurounner/commit/1e280296c12ac921b9b0ab113192f5ee5be725d5)
+  strips transport whitespace **before** enforcing the exact encoded length
+  and original XZ/tar SHA. [Follow-up archival Actions
+  40599803975](https://github.com/techrote/neurounner/actions/runs/40599803975)
+  **PASS** with immutable original byte and negative-source checks. This is
+  archive readback only, never a second real-model run.
+
+The new dedicated source-matched [right-gap/generation workflow](../.github/workflows/ncr-001e-pr102-rightpad-generate.yml)
+now distinguishes changes to the executable source from archive-only commits,
+preventing repeated 1 GB checkpoint tests when only evidence or explanatory
+documentation changes. **A green archive-only workflow is not new actual
+frozen-model qualification.**
+
+### Remaining scope and source-independent acceptance
+
+This is an additional **finite PASS of original frozen Sprocket root Instruct
+right-gapped cached continuation and actual HF generation path**, *not* a
+quality or tool/memory benchmark. All source-structured tool-result/memory
+turns were synthetic; the model was never asked to execute a tool, retain a
+fact in storage, update weights or access sealed held-outs. The released
+publisher SFT source remains descriptive code evidence, **not cryptographic
+training-build attestation**. Final independent #72 source/runtime/optimizer
+acceptance, full four-lane conformance, and matched #73 controls remain
+blocked. The four distinct model identities, original fixtures and frozen
+tolerances remain unchanged; `train_authorized=false`. **PR #113 and all
+parent branches must stay draft/unmerged.**
