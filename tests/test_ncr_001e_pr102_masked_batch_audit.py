@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import importlib.util
 import shutil
+import subprocess
 from unittest import mock
 from pathlib import Path
 import sys
@@ -132,6 +135,56 @@ class ReviewerArchiveTests(unittest.TestCase):
                     raw.replace("1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864",
                                 "0" * 64), encoding="utf-8")
                 with self.assertRaises(RuntimeError):
+                    verify_originals(self.data, self.p)
+
+    def test_original_unchecked_pin_manifest_gap_reproduced_then_refused(self):
+        """Historical exact source accepted changed on-disk pins; reviewer repair refuses.
+
+        No original Actions JSONs, model weights, numerical gate or fixtures are
+        modified. Test runs the historical Git-blob-pinned stdlib auditor only.
+        """
+        historical_commit = "31b052df673ec9fa382cf7a3d7587cdcbeb1707d"
+        expected_blob = "2d1fb3eb6e3a30947d52b29d99d63be9fdaa936a"
+        previous = ROOT / "previous"
+        old_script = previous / "scripts/ncr_001e_pr102_masked_batch_audit.py"
+        if not old_script.exists():
+            self.skipTest("Historical exact checkout only available in source CI")
+        old_commit = subprocess.check_output(
+            ["git", "-C", str(previous), "rev-parse", "HEAD"], text=True
+        ).strip()
+        self.assertEqual(old_commit, historical_commit)
+        old_blob = subprocess.check_output(
+            ["git", "-C", str(previous), "hash-object", str(old_script)],
+            text=True
+        ).strip()
+        self.assertEqual(old_blob, expected_blob)
+        spec = importlib.util.spec_from_file_location(
+            "historic_source_pin_gap", old_script)
+        historical = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(historical)
+
+        with TemporaryDirectory() as temporary:
+            temp_root = Path(temporary)
+            original = ROOT / "experiments/ncr-001"
+            copied = temp_root / "experiments/ncr-001"
+            copied.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(original / "protocol.json", copied / "protocol.json")
+            shutil.copy2(original / "source-pins.json", copied / "source-pins.json")
+            altered = (copied / "source-pins.json").read_text(encoding="utf-8")
+            altered = altered.replace(
+                "178a63d94a7de4aa273a6a9c218180c3b7d1912f5a18a91be34bab252f7277eb",
+                "f" * 64,
+            )
+            self.assertNotEqual(
+                altered,
+                (copied / "source-pins.json").read_text(encoding="utf-8"))
+            (copied / "source-pins.json").write_text(altered, encoding="utf-8")
+            with mock.patch.object(historical, "ROOT", temp_root), \
+                    mock.patch.object(source_audit, "ROOT", temp_root):
+                # Explicit *negative* receipt: prior reviewer did not bind
+                # original tokenizer hashes to mutated repository pins.
+                historical.verify_originals(self.data, self.p)
+                with self.assertRaisesRegex(RuntimeError, "source pins file"):
                     verify_originals(self.data, self.p)
 
     def test_manifest_false_chat_variant_source_digest_refused(self):
