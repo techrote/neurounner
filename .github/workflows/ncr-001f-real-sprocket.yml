@@ -3,8 +3,18 @@ name: NCR-001F actual pinned Sprocket Chat/Instruct matched MLP (no train)
 on:
   push:
     branches: [review/ncr-001f-sprocket-real-mlp-20261027]
+    paths: &actual_host_source_paths
+      - ".github/workflows/ncr-001f-real-sprocket.yml"
+      - "scripts/ncr_001f_real_sprocket.py"
+      - "scripts/ncr_001f_frozen_hooks.py"
+      - "scripts/ncr_001f_controls.py"
+      - "tests/test_ncr_001f_real_sprocket.py"
+      - "tests/test_ncr_001f_frozen_hooks.py"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/source-pins.json"
   pull_request:
     branches: [review/ncr-001f-pinned-four-mlp-hooks-20261027]
+    paths: *actual_host_source_paths
   workflow_dispatch:
 
 permissions:
