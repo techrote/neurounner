@@ -5,9 +5,12 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
 
-from detective_001b_pilot import (
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from scripts.detective_001b_pilot import (
     CASE, CONFIG, MANIFEST, ROOT, canonical, check_config, digest_bytes, file_sha,
     grade_script, messages_first, messages_followup, messages_script, plan
 )
