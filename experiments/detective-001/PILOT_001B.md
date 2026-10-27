@@ -52,3 +52,10 @@ The runner does **not** read the sealed Village final F-suite. It checks the six
 **Exploratory smoke completion:** three source-matched lanes, all fourteen attempted turns, provenance and transcript readback, controlled CPU resource envelope. A malformed script is a legitimate measured outcome and does not justify editing a transcript or relaxing a benchmark gate.
 
 **Not admitted:** no claim of a solvable connected game, family-disjoint generalization, independent persona differentiation, intentional deception learned, or reliable instruct scripting. Before a gameplay or training gate, qualify an independent case-family holdout, behavior-only blind tournament, human/independent proposition annotation, reliable alternate clue routes in a connected game, denial/recovery for script tools, and quantitative variance estimates. Keep Village D/E and NCR research untouched.
+
+
+## Executed source-bound smoke and recorded decision
+
+The predeclared one-case-family smoke **completed** on [Actions 40579442013](https://github.com/techrote/neurounner/actions/runs/40579442013): three exact native model lanes, fourteen recorded turns, 885 generated tokens and no training. The two base-model script proposals both failed strict JSON/typed-IR validation (0/2). Some interview responses simply echoed the JSON-shaped admitted-memory prompts, while the two trained personalities produced distinct but unqualified fragments in the clock situation.
+
+The complete source-bound raw records, hashes and environment are promoted under [datasets/detective-001-smoke](../../datasets/detective-001-smoke/); start interpretation from [REPORT_001B.md](REPORT_001B.md). **Infrastructure readback PASS; behavioral admission NO-GO/NOT SCORED.** No scripter or NPC-trained-purpose claim follows from the success of the CI run.
