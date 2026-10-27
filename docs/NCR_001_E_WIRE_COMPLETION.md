@@ -51,8 +51,13 @@ gates are unchanged. No optimizer is instantiated or stepped.
 
 The workflow skips a new model invocation for archive-only updates, while
 still rechecking guards and archived evidence. A green archive check is not a
-fresh model run. First model receipt and any partial failure output must be
-promoted to `datasets/ncr-001-sprocket-wire-diagnostic/` under the filing policy.
+fresh model run. The first original diagnostic's seven-case plan, complete 21 generated outputs,
+original raw prompts and masks, source-prefetch metadata, package inventory,
+historical negative reproduction and test log have now been preserved byte-for-byte
+under [the durable diagnostic archive](../datasets/ncr-001-sprocket-wire-diagnostic/README.md).
+The original full artifact ZIP and binary source tar remain in Actions retention
+only; their exact SHA-256/size and the immutable Git source commit are recorded.
+Never describe those unarchived binaries as preserved in Git.
 
 ## Completion boundary
 
@@ -64,3 +69,42 @@ Chat keeps its own frozen checkpoint and inherits no Instruct action result.
 SmolLM2, void.1/Byte-EOS and matched-MLP controls retain their existing gates.
 A reviewer must assess the final exact source/evidence commit separately;
 implementation-session checks are not a substitute for that independent review.
+
+## Original diagnostic readback and independent audit — 27 October 2026
+
+Source execution [Actions 40573188117](https://github.com/techrote/neurounner/actions/runs/40573188117)
+ran on full pinned root Sprocket Instruct (original source commit
+`905e237136e4ea75208a8ed92392489a9f62849d`). Original
+`receipt.json` is 75,464 unchanged bytes, SHA-256
+`94b1ff4f3ee4cb19d3e1e8cd57f8e9e7eee9534503b87a86d1aa6c5951de3b45`.
+Actions ZIP SHA-256 `7e38a9c8438701c460597fc87016f3a26ece2d12b97482cfbcb44b0e6974a2ab`.
+Text original bytes are compressed in a deterministic USTAR/xz envelope with
+SHA-256 `982dfaee356bbcdce705194413a71ace1ce7787c4421ea017dd8b95e8aec2921`.
+The exact 68,602-byte original source tar is not committed (SHA independently
+recorded). Original source files remain in immutable Git history.
+
+- Full 108-position genuine one-token cache maximum absolute logit deviation:
+  `3.590583801269531e-4`, below the unchanged 5e-4 gate.
+- Seven synthetic cases × three modes: **21 raw originals**; frozen/zero generation
+  identical, no strict tool envelope or memory action, five cases exhausted the
+  64-unit budget. Counterfactual host tool result `42` was absent from output,
+  `17` was present, and both synthetic memory labels appeared. These are
+  *descriptive observations*, not behavioural quality PASS criteria.
+- [First archival readback CI 40584453555](https://github.com/techrote/neurounner/actions/runs/40584453555)
+  **FAILED** because three altered *manifest* claims (training, tool semantics,
+  final model acceptance) were not rejected; the original receipt itself remained
+  valid. [Commit `88cf5df`](https://github.com/techrote/neurounner/commit/88cf5df383556ec28246cbb93755014fb91bde95)
+  fixed the direct semantic verifier while retaining the failure evidence.
+- [Follow-up Actions 40584618404](https://github.com/techrote/neurounner/actions/runs/40584618404)
+  **PASS**, all nine original-byte/false-promotion test groups. It correctly
+  reported `FRESH_MODEL_DIAGNOSTIC_REQUIRED=False`: this is an archive verifier,
+  not another actual frozen-host execution.
+
+The durable [dataset manifest](../datasets/ncr-001-sprocket-wire-diagnostic/manifest.json),
+[original JSON archive](../datasets/ncr-001-sprocket-wire-diagnostic/original-text-members.tar.xz.b64),
+[original artifact/runner provenance](../datasets/ncr-001-sprocket-wire-diagnostic/provenance.json)
+and [standard-library audit](../scripts/ncr_001e_sprocket_wire_archive.py) are
+available for independent reviewer custody. None authorizes comparative training,
+opens a sealed fixture, qualifies general model-generated tool/memory behavior, or
+changes `train_authorized=false`. PR #102 and every upstream dependency remain
+**draft, unmerged, pending independent final #72 review**.
