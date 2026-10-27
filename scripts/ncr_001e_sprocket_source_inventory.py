@@ -66,12 +66,23 @@ def main()->int:
     md=Path(hf_hub_download(SOURCE_REPO,"README.md",revision=SOURCE_REV))
     raw=md.read_bytes()
     validate_pinned_card(raw.decode("utf-8"))
+    original_card=raw.decode("utf-8")
+    normalized_card=" ".join(original_card.split())
     RESULT["model_card"]={
         "sha256":sha(raw),"bytes":len(raw),
         "ordinary_chat_format_source_verified":True,
-        "chat_variant_described_as_no_tool_memory_examples":True,
-        "instruct_variant_described_as_tool_call_trained":True,
+        "pinned_variant_descriptive_claims":{
+            "chat_examples_removed": "tool-calling and memory examples removed" in normalized_card,
+            "instruct_tool_training_description": "Instruct build: the tool-calling one" in normalized_card,
+            "chat_build_label": "Chat build: start here" in normalized_card,
+        },
+        "relevant_exact_source_lines":[
+            line.strip()[:240] for line in original_card.splitlines()
+            if any(term in line.lower() for term in ("chat build","instruct build",
+                "memory examples removed", "tool-calling one", "chat format"))
+        ][:16],
         "tool_runtime_behavior_independently_verified":False,
+        "note":"Pinned README role example and tokens are source authority; variant prose presence is only an observed descriptor, not tool-call semantic qualification",
     }
     for variant,key in wanted.items():
         p=protocol["models"][key]
