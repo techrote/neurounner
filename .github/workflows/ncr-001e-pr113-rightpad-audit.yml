@@ -1,0 +1,40 @@
+name: NCR-001E PR113 original rightpad/generation receipt byte audit (no model)
+
+on:
+  pull_request:
+    branches: [review/ncr-001e-sprocket-publisher-wire-20261027]
+    paths:
+      - '.github/workflows/ncr-001e-pr113-rightpad-audit.yml'
+      - 'scripts/ncr_001e_pr113_rightpad_receipt_audit.py'
+      - 'tests/test_ncr_001e_pr113_rightpad_receipt_audit.py'
+      - 'experiments/ncr-001/evidence-review/pr113-rightpad-generation/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  immutable-five-originals:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Independent five-member byte archive, runner and full source-model gate
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_pr113_rightpad_receipt_audit.py
+          python3 scripts/ncr_001e_pr113_rightpad_receipt_audit.py
+          python3 -m unittest discover -s tests \
+            -p 'test_ncr_001e_pr113_rightpad_receipt_audit.py' -v
+      - name: Refuse drift in four original independent model lanes and train authorization
+        run: |
+          python3 - <<'PY'
+          import json
+          p=json.load(open('experiments/ncr-001/protocol.json'))
+          assert p['train_authorized'] is False
+          assert set(p['models']) == {'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          assert p['conformance']['full_vs_cached_prefill_atol'] == p['conformance']['full_vs_cached_prefill_rtol'] == .0005
+          print('ARCHIVE_READBACK_ONLY frozen model not executed; optimizer_steps=0')
+          PY
