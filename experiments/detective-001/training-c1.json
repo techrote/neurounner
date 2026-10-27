@@ -1,0 +1,113 @@
+{
+  "schema": "detective-witness-continuation-v1",
+  "experiment": "DETECTIVE-001C1",
+  "issue": 111,
+  "parent_issue": 103,
+  "base_model": {
+    "id": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "weights_sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
+  },
+  "parent_release": {
+    "tag": "village-001-sft-v1",
+    "manifest": "experiments/village-001/sft-evidence/adapter-release.json",
+    "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e"
+  },
+  "members": {
+    "V-G02-A": {
+      "policy_id": "clock_protective",
+      "parent_archive": "village-001-sft-V-G02-A-smollm2-135m-lora.tar.gz",
+      "parent_archive_sha256": "e7b2537434db13c716af9bb6fb44f55ec00e83d1d35c076b2c09e3c925f3e1db",
+      "parent_directory_sha256": "5d8ed9ee20b87167ac74eac277ab14ee12bc581f400bbd47e709cdc0774818c0",
+      "seed": 31102002,
+      "protected_relation": "coworker",
+      "style": "mechanical_evidence_uncertain_time"
+    },
+    "V-G09-C": {
+      "policy_id": "transactional_scavenger",
+      "parent_archive": "village-001-sft-V-G09-C-smollm2-135m-lora.tar.gz",
+      "parent_archive_sha256": "8e36f62c47a156eef02bbb90771c6f74b6333ff3d39c3f7fdc87da75b9df4970",
+      "parent_directory_sha256": "887fd8d58a6db3885ad10607a3a54afbc5a88a8115aba5fa7b71d33f7517143e",
+      "seed": 31109003,
+      "protected_relation": "self_and_trading_partner",
+      "style": "tactile_bargaining_repetition"
+    }
+  },
+  "dataset": {
+    "detective_rows_per_member": 48,
+    "parent_anchor_rows_per_member": 16,
+    "total_rows_per_member": 64,
+    "relation_labels": [
+      "truthful_known_fact",
+      "corrupted_belief",
+      "intentional_lie",
+      "withheld_fact",
+      "uninformed_speculation",
+      "contradiction_repair"
+    ],
+    "training_families": [
+      "scrapyard_shift",
+      "tram_depot",
+      "clinic_power_room",
+      "night_market_lockers"
+    ],
+    "rows_per_family": 12,
+    "renderer": "natural_v1",
+    "raw_before_derived": true
+  },
+  "training": {
+    "epochs": 1,
+    "learning_rate": 0.00015,
+    "max_length": 512,
+    "gradient_clip": 1,
+    "max_threads": 4,
+    "max_minutes_per_member": 30,
+    "optimizer_steps_per_member": 64,
+    "paid_api_calls": 0,
+    "gpu_required": false
+  },
+  "final_suite_recipe": {
+    "schema": "detective-final-recipe-v1",
+    "materialize_only_after_both_trained_adapters": true,
+    "family_names": [
+      "canal_pump_station",
+      "orbital_ferry_baggage",
+      "municipal_archive_lift"
+    ],
+    "scenarios_per_family": 4,
+    "total_scenarios": 12,
+    "seed_salt": "DETECTIVE-001C1-final-v1",
+    "bind_inputs": [
+      "recipe_sha256",
+      "dataset_manifest_sha256",
+      "V-G02-A.parent_directory_sha256",
+      "V-G09-C.parent_directory_sha256",
+      "V-G02-A.trained_directory_sha256",
+      "V-G09-C.trained_directory_sha256"
+    ],
+    "exact_collision_check_parent_sft": true,
+    "exact_collision_check_detective_training": true,
+    "natural_renderer_only": true
+  },
+  "evaluation": {
+    "max_new_tokens": 96,
+    "do_sample": false,
+    "parent_and_trained_same_prompts": true,
+    "relation_score_fields": [
+      "required_marker_hit",
+      "forbidden_marker_leak",
+      "lie_target_hit",
+      "truth_target_hit",
+      "uncertainty_or_withhold_phrase_hit",
+      "truncated"
+    ],
+    "protected_leakage_must_not_increase": true,
+    "require_both_members_policy_score_improve": true,
+    "maximum_reference_relevance_regression": 0.5
+  },
+  "release": {
+    "tag": "detective-001c1-v1",
+    "dataset_root": "datasets/detective-001c",
+    "evidence_root": "experiments/detective-001/training-c1-evidence"
+  }
+}
