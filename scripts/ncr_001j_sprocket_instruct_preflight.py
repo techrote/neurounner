@@ -262,7 +262,7 @@ def main() -> None:
                    within(before[:, :-1], after[:, :-1],
                           cache_atol, cache_rtol))
 
-    STATE["status"] = "PASS_PRELIMINARY_SOURCE_BOUND_SMOLLM2_HOOK_CONFORMANCE"
+    STATE["status"] = "PASS_PRELIMINARY_SOURCE_BOUND_SPROCKET_INSTRUCT_HOOK_CONFORMANCE"
     STATE["qualification_limitations"] = [
         "One model only (Sprocket Instruct); four-model NCR conformance not complete",
         "No optimizer step on the full HF model; test was readout-gradient only",
