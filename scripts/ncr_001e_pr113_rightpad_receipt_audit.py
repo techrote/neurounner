@@ -334,6 +334,17 @@ def verify_originals(members, provenance):
                 all(isinstance(h,str) and len(h)==64 for h in gen["scores_sha256"]),
                 "raw generated IDs, score hashes or no-training limits drifted")
     maxima=[]
+    generated_scores = {
+        (g["mode"], g["use_cache"]): g["scores_sha256"] for g in observed
+    }
+    for use_cache in (False, True):
+        require(generated_scores[("disabled", use_cache)] ==
+                generated_scores[("zero", use_cache)],
+                "original frozen and zero-adapter HF.generate score bytes disagree")
+    for mode in ("disabled", "zero", "active_untrained"):
+        require(generated_scores[(mode, False)][0] ==
+                generated_scores[(mode, True)][0],
+                "source-generated first-step cached and uncached scores diverged")
     for cache in ("False","True"):
         for step in range(4):
             name=f"generate_zero_original_exact_cache_{cache}_step_{step}"
