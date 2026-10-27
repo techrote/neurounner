@@ -221,9 +221,11 @@ def build_report() -> dict:
             "right-gap/HF.generate source evidence/limits changed")
 
     # Preserve negative model-output evidence; source serialization != competence.
-    require(diagnostic["limits"]["train_authorized"] is False
-            and diagnostic["limits"]["optimizer_steps"] == 0
-            and diagnostic["limits"]["model_generated_tool_memory_semantics_qualified"] is False
+    require(diagnostic["original_results"]["train_authorized"] is False
+            and diagnostic["original_results"]["optimizer_steps"] == 0
+            and diagnostic["original_results"]["heldout_evaluation"] is False
+            and diagnostic["original_results"]["tool_memory_semantics_qualified"] is False
+            and diagnostic["original_results"]["final_four_model_conformance"] is False
             and diagnostic["original_results"]["strict_tool_envelopes_seen"] == 0
             and diagnostic["original_results"]["assistant_memory_write_markers_seen"] == 0,
             "diagnostic negative evidence falsely promoted")
