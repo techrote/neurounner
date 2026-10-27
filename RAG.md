@@ -40,6 +40,8 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 
 - **[NCR-001E source-bound four-model prepass receipt audit](docs/NCR_001_E_PREPASS_AUDIT.md)** — separate standard-library readback of original SmolLM2, Sprocket Chat/Instruct and void.1 full-weight/hash/logit/cache receipts, [frozen per-model originals](experiments/ncr-001/evidence-review/) and negative tamper/leakage sentinel tests. **No fresh model execution or independent #72 conformance claim; training still prohibited.**
 
+- **[NCR-001E fresh actual frozen SmolLM2 reviewer run](docs/NCR_001_E_SMOL_FRESH.md)** — source-pinned PR #83 implementation re-executed on a separate runner; 128-token initial parity, left/right masked padding, 48-token one-step KV-cache, A→B→A reset and same-base cold adapter reload. [Raw receipt](experiments/ncr-001/evidence-review/smolllm2-fresh/receipt.json) and [source-bound provenance](experiments/ncr-001/evidence-review/smolllm2-fresh/provenance.json) retained. **SmolLM2-only prepass; not full #72 or training admission.**
+
 ## Retrieval rules
 
 1. Prefer primary dataset records over prose summaries when answering questions about exact prompts or outputs.
