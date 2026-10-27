@@ -1,0 +1,163 @@
+name: NCR-001E void.1 exact 512/1024/2048 + HF.generate (no training)
+
+on:
+  pull_request:
+    branches:
+      - review/ncr-001e-void-two-process-20261027
+    paths:
+      - '.github/workflows/ncr-001e-void-2048-context.yml'
+      - 'scripts/ncr_001e_void_2048_context.py'
+      - 'tests/test_ncr_001e_void_2048_context.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001e-void2048-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+env:
+  HF_HOME: /tmp/ncr001e-void2048-hf
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+  PYTHONDONTWRITEBYTECODE: '1'
+
+jobs:
+  source:
+    name: Exact Qwen3/ByteTokenizer/max-context source sentinels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 5fa3dc8c0de153098d1800f7b0c809819620aef4
+          path: implementation
+          persist-credentials: false
+      - name: Refuse source/model/tap/context/gate drift
+        run: |
+          set -euo pipefail
+          test "$(git -C implementation rev-parse HEAD)" = "5fa3dc8c0de153098d1800f7b0c809819620aef4"
+          test "$(git -C implementation hash-object scripts/ncr_001_void1.py)" = "3640624df6dbd994dc11b3ca5cd759bdef8757dd"
+          python3 - <<'PY'
+          import json
+          p=json.load(open('experiments/ncr-001/protocol.json'))
+          pins=json.load(open('experiments/ncr-001/source-pins.json'))
+          assert p['train_authorized'] is False
+          assert set(p['models']) == set(pins['models']) == {'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          v=p['models']['void1'];s=pins['models']['void1']
+          assert v['repo_id']==s['repo_id']=='dotlabs/void.1'
+          assert v['revision']==s['revision']=='9c2be5087772867d45961abd11f6b35110617563'
+          assert v['expected_config']['max_position_embeddings']==2048
+          assert v['taps_after_block_zero_based']==[7,15,23]
+          assert s['weight_declared_lfs_sha256_not_downloaded']=='ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3'
+          assert s['tokenization_byte_py_sha256']=='279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03'
+          assert p['conformance']['full_vs_cached_prefill_atol'] == p['conformance']['full_vs_cached_prefill_rtol'] == .0005
+          print('VOID1_EXACT_MAX_CONTEXT_SOURCE context=2048; train_authorized=false')
+          PY
+      - name: Pure source length/model/false-admission tests
+        run: |
+          python3 -m py_compile scripts/ncr_001e_void_2048_context.py
+          python3 scripts/ncr_001e_void_2048_context.py --source-test
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_void_2048_context.py' -v
+
+  actual-model:
+    needs: source
+    name: Actual frozen void.1 512/1024/2048 true cached tails + GenerationMixin
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 5fa3dc8c0de153098d1800f7b0c809819620aef4
+          path: implementation
+          persist-credentials: false
+      - name: Exact source guards before dependencies/weights
+        run: |
+          set -euo pipefail
+          test "$(git -C implementation rev-parse HEAD)" = "5fa3dc8c0de153098d1800f7b0c809819620aef4"
+          test "$(git -C implementation hash-object scripts/ncr_001_void1.py)" = "3640624df6dbd994dc11b3ca5cd759bdef8757dd"
+          python3 scripts/ncr_001e_void_2048_context.py --source-test
+      - name: Install qualified CPU runtime
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+          python3 -m pip install --disable-pip-version-check \
+            'transformers==4.57.6' 'huggingface_hub==0.36.2' \
+            'safetensors==0.8.0' 'sentencepiece>=0.2,<1'
+          mkdir -p runtime/ncr-001
+          python3 -m pip freeze > runtime/ncr-001/void1-2048-packages.txt
+      - name: Audit remote ByteTokenizer source before dynamic import
+        run: |
+          python3 scripts/ncr_001k_byte_source_audit.py
+      - name: Prefetch and hash exact full frozen model + all tokenizer sources
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,platform
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          p=json.load(open('experiments/ncr-001/source-pins.json'))['models']['void1']
+          report={'status':'RUNNING','variant':'void1','train_authorized':False,
+                  'optimizer_steps':0,'files':{},
+                  'runner':{'github_run_id':os.getenv('GITHUB_RUN_ID'),
+                            'github_sha':os.getenv('GITHUB_SHA'),
+                            'runner_name':os.getenv('RUNNER_NAME'),
+                            'python':platform.python_version()}}
+          out=Path('runtime/ncr-001/void1-2048-prefetch.json')
+          out.write_text(json.dumps(report,sort_keys=True,indent=2)+'\n')
+          try:
+              for name,key in (
+                  ('model.safetensors','weight_declared_lfs_sha256_not_downloaded'),
+                  ('config.json','config_sha256'),
+                  ('tokenization_byte.py','tokenization_byte_py_sha256'),
+                  ('byte_vocab.json','byte_vocab_sha256'),
+                  ('tokenizer_config.json','tokenizer_config_sha256'),
+                  ('special_tokens_map.json','special_tokens_map_sha256')):
+                  path=Path(hf_hub_download(p['repo_id'],name,revision=p['revision']))
+                  h=hashlib.sha256()
+                  with path.open('rb') as f:
+                      for chunk in iter(lambda:f.read(4*1024*1024),b''):h.update(chunk)
+                  digest=h.hexdigest()
+                  assert digest==p[key],(name,digest,p[key])
+                  if name=='model.safetensors':assert path.stat().st_size==360622744
+                  report['files'][name]={'sha256':digest,'bytes':path.stat().st_size}
+                  out.write_text(json.dumps(report,sort_keys=True,indent=2)+'\n')
+                  print('VOID1_ORIGINAL_SOURCE',name,digest,path.stat().st_size,flush=True)
+              report['status']='PASS_VOID1_2048_SOURCE_PREFETCH'
+          except BaseException as exc:
+              report['status']='FAIL_VOID1_2048_SOURCE_PREFETCH'
+              report['error']=type(exc).__name__+': '+str(exc)
+              raise
+          finally:
+              out.write_text(json.dumps(report,sort_keys=True,indent=2)+'\n')
+          PY
+      - name: Actual frozen 512/1024/2048 and HF.generate cache on/off
+        run: |
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001e_void_2048_context.py
+      - name: Preserve complete source/runner PASS or FAIL partial evidence
+        if: always()
+        run: |
+          git rev-parse HEAD > runtime/ncr-001/void1-2048-source-commit.txt
+          sha256sum scripts/ncr_001e_void_2048_context.py \
+            scripts/ncr_001e_void_process_guard.py \
+            experiments/ncr-001/protocol.json \
+            experiments/ncr-001/source-pins.json \
+            > runtime/ncr-001/void1-2048-source-hashes.sha256
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: ncr001e-void1-2048-a${{ github.run_attempt }}
+          path: |
+            runtime/ncr-001/void1-2048-*
+            runtime/ncr-001/void-byte-source-audit.json
+          if-no-files-found: warn
+          retention-days: 30
