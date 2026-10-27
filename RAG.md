@@ -40,6 +40,8 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 
 - **[NCR-001B pure PyTorch cellular core](docs/NCR_001_B_CORE.md)** — shared 8×8×4 depth-persistent NCA with explicit per-forward state, frozen toy-backbone gradient proof, reproducible CPU tests and [source-bound synthetic evidence](experiments/ncr-001/core-evidence/core-smoke.json). It is not LM integration, cache conformance or training admission.
 
+- **[NCR-001D frozen Sprocket Chat real-model depth-hook prepass](docs/NCR_001_D_SPROCKET_CHAT.md)** — exact Chat-subfolder 1 GB checkpoint SHA-256, initial logits/no-op parity, nonzero NCA cached causal checks, and [archived raw source receipt](experiments/ncr-001/sprocket-chat-preflight/receipt.json) with [artifact provenance](experiments/ncr-001/sprocket-chat-preflight/provenance.json). Distinct from Sprocket Instruct; Chat role-template semantics and independent #72 still pending.
+
 ## Retrieval rules
 
 1. Prefer primary dataset records over prose summaries when answering questions about exact prompts or outputs.
