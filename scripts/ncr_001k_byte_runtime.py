@@ -228,6 +228,15 @@ def main() -> int:
             "TRAIN-002b concatenated literal tokenizer.eos_token to plain text; "
             "this output records if it produced actual ID 258 or only regular bytes."
     }
+    check("literal_eos_text_is_bytes_not_stop_token",
+          eos_literal == list(b"<eos>") and
+          with_special_text == list(b"done<eos>") and
+          258 not in with_special_text,
+          {"literal_ids": eos_literal,
+           "legacy_train002b_concat_contains_real_eos": 258 in with_special_text})
+    check("actual_eos_must_be_appended_as_integer_id",
+          explicit[-1] == 258 and explicit[:-1] == list(b"done"),
+          {"explicit_ids": explicit, "eos_id": 258})
     check("special_id_conversion",
           tokenizer.convert_tokens_to_ids(tokenizer.eos_token) == 258
           and tokenizer.convert_ids_to_tokens(258) == tokenizer.eos_token)
