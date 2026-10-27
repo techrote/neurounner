@@ -15,7 +15,7 @@ permissions:
 
 concurrency:
   group: ncr001e-chat-generate-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   HF_HOME: /tmp/ncr001e-chat-generate-hf
@@ -30,10 +30,38 @@ jobs:
     name: Exact Chat source/ordinary-role/no-tool-semantics sentinels
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    outputs:
+      run_model: ${{ steps.changed_source.outputs.run_model }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          fetch-depth: 0
           persist-credentials: false
+      - name: Source-matched real Chat model execution required?
+        id: changed_source
+        run: |
+          python3 - <<'PY'
+          import json,os,subprocess
+          event=json.load(open(os.environ['GITHUB_EVENT_PATH']))
+          watched=[
+              '.github/workflows/ncr-001e-sprocket-chat-generate.yml',
+              'scripts/ncr_001e_sprocket_chat_generate_review.py',
+              'tests/test_ncr_001e_sprocket_chat_generate_review.py',
+              'scripts/ncr_001e_sprocket_format.py',
+          ]
+          run=True
+          if event.get('action')=='synchronize' and event.get('before'):
+              diff=subprocess.run(
+                  ['git','diff','--name-only',event['before'],'HEAD','--',*watched],
+                  capture_output=True,text=True)
+              if diff.returncode:
+                  raise RuntimeError('Refusing to infer Chat source diff: '+diff.stderr)
+              run=bool(diff.stdout.strip())
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out:
+              out.write('run_model='+str(run).lower()+'\n')
+          print('CHAT_FROZEN_MODEL_REQUIRED',run)
+          print('Evidence-only changes reuse original 40603226200 model evidence; not a new invocation.')
+          PY
       - name: Refuse Chat/Instruct source substitution and protocol drift
         run: |
           set -euo pipefail
@@ -60,6 +88,7 @@ jobs:
 
   actual-chat:
     needs: source
+    if: needs.source.outputs.run_model == 'true'
     name: Actual original Chat full checkpoint + right-gap + HF GenerationMixin
     runs-on: ubuntu-24.04
     timeout-minutes: 55
