@@ -295,7 +295,33 @@ def verify_original(file_bytes: dict[str, bytes], provenance: dict) -> None:
         "literal observations must remain descriptive and source-matched")
 
 
+def verify_dataset_hash_inventory(folder=FOLDER) -> None:
+    """Verify every durable dataset file except the checksum manifest itself."""
+    index = Path(folder) / "provenance/hashes.sha256"
+    rows = [line for line in index.read_text(encoding="ascii").splitlines()
+            if line.strip()]
+    expected_paths = {
+        "README.md", "manifest.json", "original-text-members.tar.xz.b64",
+        "provenance.json", "provenance/source-artifacts.json",
+    }
+    require(len(rows) == len(expected_paths), "wrong durable file hash count")
+    observed = {}
+    for line in rows:
+        require(len(line) > 66 and line[64:66] == "  ",
+                "malformed SHA256 inventory record")
+        digest, name = line[:64], line[66:]
+        require(len(digest) == 64 and all(c in "0123456789abcdef" for c in digest),
+                "invalid SHA256 inventory hex")
+        require(name in expected_paths and name not in observed,
+                "unexpected or duplicate durable file " + name)
+        require(sha((Path(folder) / name).read_bytes()) == digest,
+                "durable file SHA changed: " + name)
+        observed[name] = digest
+    require(set(observed) == expected_paths, "incomplete durable dataset inventory")
+
+
 def main() -> None:
+    verify_dataset_hash_inventory()
     files, manifest = load_originals()
     verify_original(files, manifest)
     print(json.dumps({
