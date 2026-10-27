@@ -22,6 +22,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 31b052df673ec9fa382cf7a3d7587cdcbeb1707d
+          path: previous
+          persist-credentials: false
+      - name: Independently pin historical reviewer source before negative reproduction
+        run: |
+          test "$(git -C previous rev-parse HEAD)" = "31b052df673ec9fa382cf7a3d7587cdcbeb1707d"
+          test "$(git -C previous hash-object scripts/ncr_001e_pr102_masked_batch_audit.py)" = "2d1fb3eb6e3a30947d52b29d99d63be9fdaa936a"
+          echo 'Historical original archive gate pinned; reproduce negative and verify new refusal'
       - name: Validate unchanged original two JSONs, full source SHA and false admission
         run: |
           python3 -m py_compile scripts/ncr_001e_pr102_masked_batch_audit.py
