@@ -1,0 +1,132 @@
+name: BYTE-EOS-001 future void.1 ID-supervised EOS serialization
+
+on:
+  pull_request:
+    branches: [main, review/ncr-001k-void-byte-runtime-parity]
+    paths:
+      - ".github/workflows/byte-eos-001.yml"
+      - "scripts/byte_eos_001_void_labels.py"
+      - "tests/test_byte_eos_001_void_labels.py"
+      - "scripts/ncr_001k_byte_source_audit.py"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/source-pins.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: byte-eos-001-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  HF_HOME: /tmp/byte-eos-001-reviewed
+  TOKENIZERS_PARALLELISM: "false"
+  HF_HUB_DISABLE_TELEMETRY: "1"
+
+jobs:
+  pure-serializer:
+    name: Offline pure label mask / EOS / no-truncation tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: No dependencies, no model, verify strict label construction
+        run: |
+          python3 -m py_compile scripts/byte_eos_001_void_labels.py \
+            tests/test_byte_eos_001_void_labels.py
+          python3 -m unittest discover -s tests -p "test_byte_eos_001_void_labels.py" -v
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          assert p["train_authorized"] is False
+          assert p["training"]["per_model_sequence_unit_limits"]["void1"] == 1024
+          print("BYTE-EOS-001 future serializer checked; training remains forbidden")
+          PY
+
+  pinned-runtime:
+    name: Actual reviewed pinned ByteTokenizer mask and stop-ID proof
+    needs: pure-serializer
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install minimal pinned HF tokenizer stack
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" "safetensors==0.8.0"
+      - name: Source audit, download and pin tokenizer (no model weights)
+        run: |
+          python3 scripts/ncr_001k_byte_source_audit.py
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          p=json.loads(Path("experiments/ncr-001/source-pins.json").read_text())["models"]["void1"]
+          config=Path(hf_hub_download(p["repo_id"],"config.json",revision=p["revision"]))
+          assert hashlib.sha256(config.read_bytes()).hexdigest()==p["config_sha256"]
+          print("Exact pinned tokenizer source cached; no model weights downloaded")
+          PY
+      - name: Run strict correct EOS-ID labels with exact reviewed tokenizer offline
+        run: |
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python3 - <<'PY'
+          import hashlib,inspect,json
+          from pathlib import Path
+          from transformers import AutoTokenizer
+          from scripts.byte_eos_001_void_labels import (
+              encode_supervised_byte_completion,compare_historical_literal_eos)
+          p=json.loads(Path("experiments/ncr-001/source-pins.json").read_text())["models"]["void1"]
+          tok=AutoTokenizer.from_pretrained(
+              p["repo_id"],revision=p["revision"],
+              trust_remote_code=True,local_files_only=True,use_fast=False)
+          source=Path(inspect.getsourcefile(tok.__class__))
+          sha=hashlib.sha256(source.read_bytes()).hexdigest()
+          assert sha==p["tokenization_byte_py_sha256"]
+          prompt="Task: inspect πΩ/🔧\nOutput JSON:\n"
+          answer='{"trigger":"jam","action":"reverse carefully"}'
+          labels=encode_supervised_byte_completion(tok,prompt,answer,max_units=1024)
+          old=compare_historical_literal_eos(tok,prompt,answer)
+          assert labels["input_ids"][-1]==258
+          assert labels["labels"][-1]==258
+          assert labels["terminal_eos_supervised"] is True
+          assert old["legacy_suffix_ids"]==[60,101,111,115,62]
+          assert old["corrected_suffix_ids"]==[258]
+          assert old["units_saved"]==4
+          assert old["legacy_had_actual_eos"] is False
+          receipt={
+              "experiment":"BYTE-EOS-001",
+              "status":"PASS_CORRECT_FUTURE_EOS_ID_LABELS__NCR_TRAINING_STILL_BLOCKED",
+              "base_revision":p["revision"],
+              "reviewed_source_sha256":sha,
+              "framework":"Transformers 4.57.6, exact pinned offline ByteTokenizer",
+              "new_source_prompt_units":labels["prompt_tokenizer_units"],
+              "new_source_supervised_units":labels["supervised_tokenizer_units"],
+              "new_sequence_units":labels["sequence_tokenizer_units"],
+              "terminal_actual_eos":labels["input_ids"][-1],
+              "terminal_eos_supervised":labels["terminal_eos_supervised"],
+              "historic_literal_tail":old["legacy_suffix_ids"],
+              "legacy_minus_new_units":old["units_saved"],
+              "train002b_original_modified":False,
+              "any_model_weights_loaded":False,
+              "any_model_optimizer_steps":0,
+              "training_authorized":False,
+          }
+          out=Path("runtime/ncr-001/byte-eos-001-label-contract.json")
+          out.parent.mkdir(parents=True,exist_ok=True)
+          out.write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,indent=2))
+          PY
+      - name: Archive future-only deterministic label proof
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: byte-eos-001-future-labels-a${{ github.run_attempt }}
+          path: runtime/ncr-001/byte-eos-001-label-contract.json
+          retention-days: 30
+          if-no-files-found: warn
