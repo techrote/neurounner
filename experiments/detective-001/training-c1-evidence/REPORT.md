@@ -4,8 +4,8 @@ This report is mechanically scored on the post-training, case-family-disjoint su
 
 | Member | Parent policy | Trained policy | Parent protected leaks | Trained protected leaks | Evidence-ID leaks |
 |---|---:|---:|---:|---:|---:|
-| V-G02-A | 3/12 | 6/12 | 1 | 1 | 0 |
-| V-G09-C | 1/12 | 2/12 | 3 | 3 | 0 |
+| V-G02-A | 2/12 | 6/12 | 2 | 2 | 0 |
+| V-G09-C | 1/12 | 4/12 | 3 | 2 | 0 |
 
 Relation-policy improvement gate: **True**.
 Independent 0–4 relevance gate: **UNSCORED**.
