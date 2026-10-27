@@ -277,6 +277,15 @@ def historical_inputs() -> set[str]:
 
 def materialize(g02: Path, g09: Path, out: Path) -> dict:
     cfg, manifest = load_authority()
+    for member, adapter in (("V-G02-A", g02), ("V-G09-C", g09)):
+        if not adapter.is_dir():
+            raise FileNotFoundError(adapter)
+        required = {
+            adapter / "adapter_model.safetensors",
+            adapter / "adapter_config.json",
+        }
+        if any(not path.is_file() for path in required):
+            raise FinalError(member + ": incomplete trained PEFT adapter directory")
     trained = {
         "V-G02-A": directory_hash(g02),
         "V-G09-C": directory_hash(g09),
