@@ -93,7 +93,7 @@ def source_contract(protocol: dict, sources: dict) -> dict:
         tuple(spec["taps"]) == (7, 15, 23),
         pin["repo_id"] == lane["repo_id"] == spec["model_id"],
         pin["revision"] == lane["revision"] == spec["revision"],
-        pin["variant"] == lane["variant"] == "base",
+        pin["variant"] == lane["variant"] == "base_byte",
         pin["hf_weight_file"] == lane["weight_file"] == spec["weight_path"],
         pin["weight_declared_lfs_sha256_not_downloaded"] == spec["weight_sha256"],
         pin["weight_bytes"] == 360622744,
