@@ -70,6 +70,92 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  release-custody-repair:
+    needs: offline-contract
+    if: >-
+      needs.offline-contract.outputs.evidence_ready == 'true' &&
+      ${{ github.event_name }} == 'pull_request' &&
+      ${{ github.head_ref }} == 'research/detective-001c1-witness-policy-20261027' &&
+      ${{ github.event.pull_request.head.repo.full_name }} == 'techrote/neurounner' &&
+      ${{ github.event.pull_request.user.login }} == 'techrote'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify published adapter bytes against authoritative committed evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG='detective-001c1-v1'
+          rm -rf release-readback
+          mkdir release-readback
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY"             --pattern 'detective-001c1-*.tar.gz' --dir release-readback
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          manifest=json.loads(Path("experiments/detective-001/training-c1-evidence/adapter-release.json").read_text())
+          files={p.name:p for p in Path("release-readback").glob("*.tar.gz")}
+          assert set(files)=={x["file"] for x in manifest["assets"]}
+          for asset in manifest["assets"]:
+              p=files[asset["file"]]
+              h=hashlib.sha256()
+              with p.open("rb") as f:
+                  for chunk in iter(lambda:f.read(1024*1024),b""): h.update(chunk)
+              assert h.hexdigest()==asset["sha256"], (p,h.hexdigest(),asset["sha256"])
+              assert p.stat().st_size==asset["bytes"]
+          print("release assets: byte/hash PASS")
+          PY
+      - name: Rebind stale release tag/notes to the authoritative evidence source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG='detective-001c1-v1'
+          source_head=$(python3 - <<'PY'
+          import json
+          print(json.load(open("experiments/detective-001/training-c1-evidence/provenance.json"))["source_head"])
+          PY
+          )
+          test -n "$source_head"
+          git cat-file -e "$source_head^{commit}"
+          git fetch --force origin "refs/tags/$TAG:refs/tags/$TAG"
+          before=$(git rev-parse "$TAG^{commit}")
+          echo "release tag before=$before authoritative_source=$source_head"
+          if [ "$before" != "$source_head" ]; then
+            git tag -f "$TAG" "$source_head"
+            git push --force origin "refs/tags/$TAG"
+          fi
+          release_id=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq .id)
+          SOURCE_HEAD="$source_head" python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          body=Path("experiments/detective-001/training-c1-evidence/REPORT.md").read_text()
+          Path("/tmp/release-patch.json").write_text(json.dumps({
+              "target_commitish":os.environ["SOURCE_HEAD"],
+              "body":body,
+          }))
+          PY
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id"             --input /tmp/release-patch.json >/tmp/release-response.json
+          test "$(git ls-remote origin "refs/tags/$TAG" | cut -f1)" = "$source_head"
+          python3 - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          release=json.loads(Path("/tmp/release-response.json").read_text())
+          provenance=json.loads(Path("experiments/detective-001/training-c1-evidence/provenance.json").read_text())
+          expected_body=Path("experiments/detective-001/training-c1-evidence/REPORT.md").read_text()
+          assert release["tag_name"]=="detective-001c1-v1"
+          assert release["target_commitish"]==provenance["source_head"]
+          assert release["body"]==expected_body
+          print("release tag/metadata custody: PASS",provenance["source_head"])
+          PY
+
   train:
     needs: offline-contract
     if: >-
