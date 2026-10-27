@@ -27,3 +27,26 @@ Cold reload is a new **adapter instance on the same still-live frozen base**, no
 No performance claim, CPU speed comparison or NCA training. No Sprocket Chat/Instruct role or tool-memory formatter checks and no void ByteTokenizer execution. All remaining model-lane #72 requirements remain independently blocked until separately reviewed.
 
 The reviewer-owned source is [scripts/ncr_001e_smol_fresh.py](../scripts/ncr_001e_smol_fresh.py). The bounded four-thread actual-host runner is [.github/workflows/ncr-001e-smol-fresh.yml](../.github/workflows/ncr-001e-smol-fresh.yml). Evidence is staged in runtime/ncr-001/smol-independent-fresh.json and needs durable promotion after the run.
+
+## Actual hosted reviewer result — 27 October 2026
+
+[Actions run 40436942220](https://github.com/techrote/neurounner/actions/runs/40436942220) **PASS** on a four-thread ubuntu-24.04 runner, using the exact independent reviewer and fixed SmolLM2 implementation checkout.
+
+| Source-bound check | Measured result |
+|---|---:|
+| Actual pinned 269 MB model weight SHA-256 | Match |
+| Initial no-op logits, 16/64/128 tokens | Exact |
+| Two-request left/right padding no-op logits | Exact |
+| Five-token greedy generation at initial adapter | Identical |
+| Manually nonzero untrained NCA max logit effect | 0.00621557 |
+| 48-position full vs one-step KV-cached max error | **0.0000638962**, within 0.0005 gate |
+| Future-suffix earlier-logit drift | 0 |
+| A→B→A request-reset output equality | Exact |
+| New adapter instance, same frozen model, cold-load logits | Exact |
+| Corrupted source-revision metadata rejected | Yes |
+| Actual model optimizer steps | 0 |
+| Peak RSS | 1,165,512 KiB |
+
+The complete [original 3,335-byte receipt](../experiments/ncr-001/evidence-review/smolllm2-fresh/receipt.json) SHA-256 **fb337b69d5533585dd93a1788c4236a6e08b14912ef8121b6ecd0c4a0bcab81f** and [source-run provenance](../experiments/ncr-001/evidence-review/smolllm2-fresh/provenance.json) preserve the result and original Actions artifact ZIP digest. Follow-up CI verifies exact receipt byte identity.
+
+**Interpretation:** this adds a genuinely new reviewer-owned actual frozen SmolLM2 run, extending source coverage to 128-token initial parity, 48-token incremental cache, request isolation and adapter cold-load. It is one-model **preliminary** conformance and still lacks separate-process recovery, four-model formatter/byte-tokenizer semantics and learned NCA evaluation. No training admission.
