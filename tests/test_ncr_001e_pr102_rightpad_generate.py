@@ -51,8 +51,7 @@ class RightPaddingSourceTests(unittest.TestCase):
                              [sequences[0][-4+i],sequences[1][-4+i]])
             self.assertEqual(observed["incremental_position_ids"][i],
                              [26+i,12+i])
-        self.assertEqual([row[-1] for row in observed["incremental_tokens"]],
-                         [248, 234] if False else [4,4])
+        self.assertEqual(observed["incremental_tokens"][-1], [4, 4])
 
     def test_reject_unknown_padding_wrong_shape_or_inadequate_source_gap(self):
         cases = [
