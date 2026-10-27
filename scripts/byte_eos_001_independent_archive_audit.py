@@ -142,6 +142,10 @@ def verify_originals(files,p):
             "source-pins bytes changed")
     require(sha(protocol.read_bytes())==report["source"]["protocol_sha256"]==
             BRANCH_PROTOCOL_SHA,"candidate branch protocol changed")
+    require(source["preregistration_commit"] ==
+            report["source"]["preregistration_commit"] ==
+            "a1b41c358d215974ea9ef2748baa13c3872b0fbb",
+            "preregistration commit identity changed")
     require(PREREG.exists() and sha(PREREG.read_bytes())==
             source["preregistration_protocol_sha256"]==
             report["source"]["preregistration_protocol_sha256"]==
