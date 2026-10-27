@@ -53,3 +53,55 @@ Successful reviewer execution **would only add one source-identified, finite rea
 ### Review decision and remaining blocks
 
 **Result: PASS for this finite original frozen Instruct source-wire masked-batch/cache prepass only.** No claim of novel tool/memory competence: all source controls were synthetically host-provided; the publisher's negative memory-learning claims remain intact. **Not final independent #72 admission**, which requires the full frozen four-lane model checklist and the separately controlled gradient/update gate; no optimizer was run because `train_authorized=false`. Unmerged/preregistered model hooks, Chat sibling, SmolLM2, void.1/Byte-EOS and matched-MLP controls retain their independent gates. Neither source/code nor its original sealed holdouts have been altered. All stacked PRs remain draft/unmerged.
+
+## Independent post-run source-custody repair — 27 October 2026
+
+The existing original-source auditor, as committed on reviewer branch head
+`31b052df673ec9fa382cf7a3d7587cdcbeb1707d`, verified the complete frozen
+checkpoint and `config.json` hashes, but did **not** independently bind the
+on-disk `experiments/ncr-001/source-pins.json` bytes or the original
+`tokenizer.json`, `tokenizer_config.json`, and `special_tokens_map.json`
+digests/byte sizes from **both** original Actions JSON reports to the pinned
+inventory. This was a **readback auditor coverage gap**, not evidence that the
+model run or any original source bytes were incorrect.
+
+[Commit `72bfd63`](https://github.com/techrote/neurounner/commit/72bfd63ba4562d9b693a8f2a734b4d7926054e98)
+adds the absent independent five-source SHA-256 and byte-length checks,
+an exact full `source-pins.json` SHA, and separate Chat-root checkpoint and
+four-model inventory refusal. [Commit `9d62b0a`](https://github.com/techrote/neurounner/commit/9d62b0a34eb2e6f1e7432d393bce655a2b02ba84)
+adds negative mutations for **every** original model/prefetch source record
+and a changed on-disk source-pins inventory. Neither changes the original
+read-only evidence or accepts a weakened cache tolerance.
+
+A further historical adversarial reproducer explicitly checks out the
+**prior auditor's exact immutable source** at commit
+`31b052df673ec9fa382cf7a3d7587cdcbeb1707d` (Git blob
+`2d1fb3eb6e3a30947d52b29d99d63be9fdaa936a`). It edits a
+**temporary copy** of the source-pins JSON so the original Instruct tokenizer
+SHA is false, while retaining every original Actions JSON and its checksum
+unchanged. The old auditor **incorrectly accepts** the altered pin file; the
+repaired auditor **rejects** it. This is a reviewer-controlled
+*source-custody negative test*, not new model inference.
+
+- [Commit `c03eac8`](https://github.com/techrote/neurounner/commit/c03eac8e43f48d71a12dc0e8f9152b1215bea1f5):
+  exact old-auditor negative reproducer committed.
+- [Commit `7c76b73`](https://github.com/techrote/neurounner/commit/7c76b738ff5e5a31fce5e633fc655df292a2b20f):
+  CI checks out the exact historical reviewer source and refuses source
+  revision/blob drift before the negative case is executed.
+- [Independent archival Actions 40595754339](https://github.com/techrote/neurounner/actions/runs/40595754339):
+  **PASS, 11 test groups**, including the actual historical
+  original-accepted/repaired-rejected test. [Companion source
+  Actions 40595754284](https://github.com/techrote/neurounner/actions/runs/40595754284):
+  **PASS**; the source job ran and the 1 GB original-model execution was
+  **correctly skipped** on reviewer-audit-only commits.
+- Earlier [40595527851](https://github.com/techrote/neurounner/actions/runs/40595527851)
+  passed the first five-source SHA/mutation gate before adding the exact
+  historical negative proof.
+
+These source-only, repeatable checks strengthen **independent evidence custody
+for the 133/31-token Instruct masked-batch prepass**. They do not strengthen its
+model quality or causal numerical evidence, are **not** a fresh model run and
+do **not** satisfy all requirements for final independent issue #72 admission.
+No source variant, evaluation fixture, frozen checkpoint, generation receipt,
+original model hook, protocol or training flag was modified;
+**`train_authorized=false` remains enforced.**
