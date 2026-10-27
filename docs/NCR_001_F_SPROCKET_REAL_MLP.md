@@ -32,3 +32,25 @@ No cross-checkpoint scores, unseen held-out examples, optimizer updates, draft m
 ## Follow-up custody
 
 Keep draft. On real CI completion, independently download original JSON and artifact ZIP, verify lengths/hashes/runner/runtime/source identities and negative assertions, then commit exact original raw receipt bytes with provenance. Do not mark actual-host qualification PASS from a preliminary summary or claim success for any failed workflow. Independently advance void.1 matched MLP and all remaining #72/model serialization gates.
+
+## Verified real-model Jobs, complete source receipts and independent byte readback — 27 October 2026
+
+The first complete original source-bound [Actions run 40519177555](https://github.com/techrote/neurounner/actions/runs/40519177555) **SUCCESS**: source/refusal job and both genuinely loaded pinned, distinct frozen Sprocket Chat and Instruct HF models passed. The source branch at launch was commit `5538f32f94459bdb8921c2898a44f45f4f5803ed`; Actions checked out its PR synthetic merge `05fefa7842ea79216a1d591d674a00ed92ba7f8a`. The real frozen backbone was 501,090,560 parameters each (complete 1,002,207,984-byte checkpoint each), MLP 658,432 versus NCA reference 658,904. Both used PyTorch 2.14.1+cpu, Transformers 4.57.6, Python 3.12.3, float32 eager attention, four exposed CPU threads, with independent runner CPU identities preserved.
+
+| Source-bound **untrained** MLP observation | Chat subfolder | Root Instruct |
+|---|---:|---:|
+| Active 48-token full-vs-true incremental KV-cache max absolute error | **0.00003910064697265625** | **0.00018787384033203125** |
+| Fixed protocol cache absolute/relative tolerance | 0.0005 / 0.0005 | 0.0005 / 0.0005 |
+| Manual untrained readout max effect on logits | 0.018098831176757812 | 0.03246331214904785 |
+| Source-role 16/64/128 zero-init and masked-batch logit drift | **0 exact** | **0 exact** |
+| Future suffix drift; request A→B→A reset drift; same-process new adapter reload drift | **0 / 0 / 0 exact** | **0 / 0 / 0 exact** |
+| Real-model readout-gradient L1 (one backward, **zero** optimizer steps) | 1849.1005859375 | 3612.0458984375 |
+| Complete in-memory original frozen base before/after SHA equal | **yes** | **yes** |
+| Host CPU | Intel Xeon Platinum 8370C | AMD EPYC 7763 |
+| Peak RSS (KiB; process ru_maxrss) | 3,293,812 | 3,293,464 |
+
+**Original artifact custody:** original [Chat artifact #12740114753](https://github.com/techrote/neurounner/actions/runs/40519177555/artifacts/12740114753) complete ZIP SHA-256 `f05b19116e942701bd045f26952eb5780f6005c458f7e3658ec308b2763a387a` (3,248 bytes); original [Instruct artifact #12739839951](https://github.com/techrote/neurounner/actions/runs/40519177555/artifacts/12739839951) complete ZIP SHA-256 `cf763fc93d9723f9eb08d011051652a1f3bdfdbc927c00dc303010f730e6a182` (3,370 bytes). Each contains its exact original partial/success source-prefetch and actual-model JSON. The four **unaltered uploaded original raw JSON bytes** (total 17,898 bytes) are stored in a deterministic compressed [originals bundle](../experiments/ncr-001/controls-evidence/real-sprocket-mlp/original-jsons.tar.gz.b64), gzip SHA-256 `0760c6daa8ef4d2934069a40a60d8975ed8ed9b3d2cec64af3ca4837872a703e` (3,095 bytes), accompanied by [individual SHA-256/size/source/runner/ZIP provenance](../experiments/ncr-001/controls-evidence/real-sprocket-mlp/provenance.json). No JSON receipt was reconstructed or normalized.
+
+The [separate source-byte readback run 40520745880](https://github.com/techrote/neurounner/actions/runs/40520745880) **SUCCESS**: 10 standard-library tests and independent exact-source [readback script](../scripts/ncr_001f_sprocket_mlp_receipt_audit.py) passed. Mutation sentinels reject internally consistent-looking false success claims, wrong source variant, distorted KV-cache metrics, altered future causality/request isolation, false training admission, lost gradient/frozen-base assertions, changed role-token control IDs, stale Actions identity and raw archive byte tampering. This **checks custody and numeric claims from the original already-executed models**, rather than running a third actual LLM. No original job or original test reported a failure; intermediate superseded pushes that GitHub cancelled are not confused with failed scientific results.
+
+**Admission remains CLOSED:** This proves a source-bound, original frozen Sprocket **MLP** prepass for both distinct variants. The Sprocket independent **NCA** 256-unit fresh-interpreter test in #97 is separate. Neither together nor separately approves tool-result/memory semantics, 2048-token long-context, full per-model #72 acceptance, matched trained quality, or any optimizer update. All four lanes retain `train_authorized=false`; no sealed held-out evaluation, no draft PR merges.
