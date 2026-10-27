@@ -1,0 +1,29 @@
+# NCR-001E — source-pinned Sprocket Instruct tool/result/memory **wire** qualification
+
+**Parent** [#67](https://github.com/techrote/neurounner/issues/67), independent acceptance [#72](https://github.com/techrote/neurounner/issues/72). **Draft stacked on #100 → #97 → #95 → #88 → #77.** Never merge without separate review. `train_authorized=false` remains the source of truth. No optimizer update, held-out evaluation, learned adapter, or comparison is permitted.
+
+## Newly located publisher authority (previous gap)
+
+The pinned Hugging Face Sprocket model card explicitly links the [publisher's training-source repository](https://github.com/kandivault-source/Sprocket-500M), where the independent SFT template **actually defines the missing role and host/model wire contract**:
+
+- [Exact upstream commit `a003767e70d766bc14b40c89792543ee8641c8bc`](https://github.com/kandivault-source/Sprocket-500M/commit/a003767e70d766bc14b40c89792543ee8641c8bc), [SFT data renderer](https://github.com/kandivault-source/Sprocket-500M/blob/a003767e70d766bc14b40c89792543ee8641c8bc/src/train/sft_data.py) Git blob `90bddf8976b9d6410fe7c5c1f084708e1cebab73`. `ChatTemplate.render()` maps host role `tool` to `<|tool_result|>` and host role `memory` to `<|memory_read|>`; the assistant emits tool calls and memory actions **within** its ordinary assistant turn, not as separate roles. Assistant CONTENT and its closing `<|end|>` are trained; all host text and every header are masked out. The inference renderer ends with a dangling `<|assistant|>` header.
+- [Harvest placement validator](https://github.com/kandivault-source/Sprocket-500M/blob/a003767e70d766bc14b40c89792543ee8641c8bc/scripts/harvest_round.py) Git blob `97811aa4245ad3f05f66ce0c2d8aa8c353619267`: tool-call must open the entire assistant action turn (reasoning exception exists); memory-write must start the assistant turn; tool-result must never be assistant-emitted.
+- [Publisher persona battery](https://github.com/kandivault-source/Sprocket-500M/blob/a003767e70d766bc14b40c89792543ee8641c8bc/eval/persona_battery.py) checks a complete tool-call JSON object (`name` + `arguments`), and describes memory writing as a poorly learned behaviour. The released Chat subfolder deliberately **excluded tool/memory fine-tuning**; only the independent root Instruct checkpoint is in scope for these structural action tests.
+
+The HF model-card **link** authenticates provenance *descriptively*, not cryptographically. We have **not** established that upstream repository commit `a003767e...` exactly built the pinned HF revision `eb157d4...` or that its undistributed SFT examples are identical. This source link is stronger than a guessed grammar but still **not a checkpoint training-build attestation**.
+
+## Independent, strictly bounded candidate
+
+- New `scripts/ncr_001e_sprocket_publisher_wire.py` implements *only* this publisher-defined subset, in a new function, without modifying the prior ordinary-message formatter or any source code/fixtures/optimizer.
+- Explicit typed host vs assistant roles, verified dedicated token IDs, source SFT mask ownership, and segmented-vs-whole-text tokenizer parity. Intentionally rejects malformed JSON, duplicate keys, unsupported marker positions, forged host markers, unknown roles, unverified reasoning-block combinations and Chat-as-Instruct.
+- `tests/test_ncr_001e_sprocket_publisher_wire.py` provides offline positive/negative tests including **the same `<|memory_read|>` ID having *masked host* or *assistant-emitted* meaning depending on position**, and source-compatible consecutive user messages.
+- `scripts/ncr_001e_sprocket_publisher_wire_model.py` is an independent original frozen Instruct no-training probe using real pinned root `model.safetensors` SHA-256 `1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864`, original NCA integration source commit `b95c010f9b2ba3cbd9f81317981316bb9c8acd19`, unchanged post-block taps and fixed 5e-4 cache tolerance. It injects **synthetic** complete typed system/memory/user/assistant-tool-call/host-tool-result/assistant-memory-write/assistant-memory-read/host-memory-response turns, verifies zero-NCA frozen logits exact, manually activates one untrained readout scalar and compares genuine one-token cached continuations at each **tool-call, tool-result and memory-write** boundary. Request reset, strict causal suffix and base freezing remain mandatory.
+- `ncr-001e-sprocket-publisher-wire.yml` checks out the *exact immutable upstream publisher commit* and checks Git object IDs, rejects any protocol or four-lane drift, then downloads, hashes and runs the **root Instruct original model offline**. Retains JSON evidence on failures as well as passes.
+
+## Explicit unqualified scope
+
+This is not the independent final #72 PASS and **cannot** assert the model will emit well-formed actions, select tools correctly, ingest tool results accurately, write useful memories, or call an actual tool. All action and tool-return text in the cache test is *host-constructed*. No external action runner exists here, and this test never opens a sealed behavioural fixture. The published Sprocket memory limitation is respected as a **negative** upstream observation, not silently corrected.
+
+Source-only tests and model workflow are separate. A completed green source job proves only string/tokenizer contract; an independently witnessed **actual frozen-model** run is required for runtime cache evidence. Until the workflow has run successfully and its **unaltered JSON and Actions artifact hash are independently preserved and audited in Git**, do not mark even this bounded wire qualification as completed.
+
+**Safety invariants:** no NCA/MLP comparative training; no optimizer; no protocol or held-out fixture changes; Chat and Instruct checkpoints never substituted; all draft PRs unmerged; `train_authorized=false`.
