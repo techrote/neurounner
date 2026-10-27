@@ -1,0 +1,118 @@
+name: NCR-001E Sprocket extended 2048-unit frozen context prepass (no training)
+
+on:
+  pull_request:
+    branches:
+      - review/ncr-001e-sprocket-two-process-restart-20261027
+    paths:
+      - ".github/workflows/ncr-001e-sprocket-extended-context.yml"
+      - "scripts/ncr_001e_sprocket_extended_context.py"
+      - "tests/test_ncr_001e_sprocket_extended_context.py"
+      - "docs/NCR_001_E_SPROCKET_EXTENDED_CONTEXT.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001e-extended-context-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  HF_HOME: /tmp/ncr001e-sprocket-extended-hf
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  real-frozen-context:
+    runs-on: ubuntu-24.04
+    name: Genuine pinned ${{ matrix.variant }} 512/1024/2048 context and raw control IDs
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: chat
+            original_commit: 83a56835a7476f17a17980d28dd1a7c14bb6f2f6
+            weight: chat/model.safetensors
+            config: chat/config.json
+            tokenizer: chat/tokenizer.json
+            tokenizer_config: chat/tokenizer_config.json
+          - variant: instruct
+            original_commit: b95c010f9b2ba3cbd9f81317981316bb9c8acd19
+            weight: model.safetensors
+            config: config.json
+            tokenizer: tokenizer.json
+            tokenizer_config: tokenizer_config.json
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ matrix.original_commit }}
+          path: implementation
+          persist-credentials: false
+      - name: Reject source drift, unauthorized training, or collapsed four-model identities
+        run: |
+          test "$(git -C implementation rev-parse HEAD)" = "${{ matrix.original_commit }}"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("NCR-001E: pinned independent frozen models; training refused")
+          PY
+      - name: Install exact approved actual frozen-host dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Source guards and context-length negative tests, without a model
+        run: |
+          python3 -m py_compile scripts/ncr_001e_sprocket_extended_context.py
+          python3 -m unittest discover -s tests \
+            -p "test_ncr_001e_sprocket_extended_context.py" -v
+      - name: Prefetch exact frozen original weights and source metadata
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          variant="${{ matrix.variant }}"
+          pin=json.load(open("experiments/ncr-001/source-pins.json"))["models"]["sprocket_"+variant]
+          assert pin["repo_id"] == "kandivault/sprocket-500m"
+          assert pin["revision"] == "eb157d4ddddc4619e661d4a2426bb2dd000fc668"
+          assert pin["hf_weight_file"] == "${{ matrix.weight }}"
+          paths=["README.md", "${{ matrix.config }}", "${{ matrix.tokenizer }}",
+                 "${{ matrix.tokenizer_config }}", "${{ matrix.weight }}"]
+          if variant == "instruct": paths.append("special_tokens_map.json")
+          for filename in paths:
+              path=Path(hf_hub_download(pin["repo_id"],filename=filename,revision=pin["revision"]))
+              h=hashlib.sha256()
+              with path.open("rb") as f:
+                  for chunk in iter(lambda:f.read(4*1024*1024),b""): h.update(chunk)
+              digest=h.hexdigest()
+              if filename == pin["hf_weight_file"]:
+                  assert digest == pin["weight_declared_lfs_sha256_not_downloaded"]
+                  assert path.stat().st_size == pin["weight_bytes"] == 1002207984
+              print("ACTUAL_PINNED_SOURCE",variant,filename,digest,path.stat().st_size,flush=True)
+          PY
+      - name: Fresh actual model 512/1024/2048 no-train full vs incremental test
+        run: |
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001e_sprocket_extended_context.py \
+              --variant ${{ matrix.variant }}
+      - name: Preserve PASS/FAIL partial source, numerics, runner and memory receipts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001e-extended-${{ matrix.variant }}-a${{ github.run_attempt }}
+          path: runtime/ncr-001/sprocket-extended-context-${{ matrix.variant }}.json
+          if-no-files-found: warn
+          retention-days: 30
