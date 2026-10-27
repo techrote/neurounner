@@ -126,17 +126,19 @@ The absence of the independent relevance score is enough to block expansion. G09
 
 ## Release custody audit
 
-The two currently published `detective-001c1-v1` asset files match the authoritative archive hashes and byte sizes above. During independent review, however, the GitHub release tag and notes were found to still reference an **earlier successful C1 attempt**, while later workflow recovery had clobbered the assets with the authoritative `40589762919` versions.
+The two published `detective-001c1-v1` asset files match the authoritative archive SHA-256 values and byte sizes above.
 
-This PR therefore includes a **no-retraining release-custody repair**. On an evidence-ready rerun it:
+Independent review found that an earlier recovery run had **clobbered the release assets without moving the original release tag**, so the assets and tag source initially disagreed. The first custody-repair job verified both public assets byte-for-byte and successfully moved the actual Git ref `refs/tags/detective-001c1-v1` from the earlier source `c20668e091b1cba6bf78f7077b1be88efdc85c70` to the authoritative training/evaluation source `b53f580270a17100df19e8bd663616321d7dff33`.
 
-1. downloads both public release assets and verifies them against the current `adapter-release.json`;
-2. reads the authoritative source head from current `provenance.json`;
-3. moves the release tag to that source head if necessary;
-4. refreshes the release notes from the current machine-generated evidence report;
-5. reads the release metadata back and fails if it still disagrees.
+GitHub then returned HTTP 403 when that Actions integration attempted to rewrite the release object's descriptive `target_commitish` and release-note body. Consequently:
 
-Until that job passes, the in-repository provenance and asset digests — not the stale release target/notes — are the source authority.
+- the **actual Git tag ref** is source-correct and is checked by the workflow;
+- both downloadable assets are source/hash-correct and checked against current `adapter-release.json`;
+- the GitHub Release API's creation-time `target_commitish` field and prose notes may still describe the earlier attempt;
+- those creation-time descriptive fields are **not evidence authority** for C1.
+
+The authoritative source chain is the actual tag ref, the current asset digests, and the committed `provenance.json`, `adapter-release.json`, training records, final suite, raw results and hash inventory. The evidence-ready workflow now verifies those properties without rerunning training and no longer requires an API metadata mutation that the integration cannot perform.
+
 
 ## Next training hypothesis
 
