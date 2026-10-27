@@ -27,3 +27,29 @@
 This is **not** a valid #72 PASS, independent new-process cold replay, full 2048-context test, matched trained NCA/MLP comparison, EOS defect effect estimate, historical TRAIN-002b correction, or admission of any training. [BYTE-EOS-001 #92](https://github.com/techrote/neurounner/issues/92) and future-only [PR #94](https://github.com/techrote/neurounner/pull/94) stay separate. Both successful and failed actual frozen-host results must be archived; no test may silently lower causal thresholds. All four model identities and preregistered held-outs remain unchanged. **`train_authorized=false` remains in force.**
 
 **At creation:** script/workflow/source-negative tests are committed for review; actual frozen-model CI numerical results and permanent raw artifact readback must be verified separately before marking any real-host prepass as passed.
+
+## Verified original frozen host and immutable readback — 27 October 2026
+
+**Original actual-host [Actions run 40523446884](https://github.com/techrote/neurounner/actions/runs/40523446884) PASS:** offline source/negative job **122256460886** and original full frozen Qwen3/ByteTokenizer model job **122256966798** both succeeded. Exact checked-out source commit **`35c4eb966f12965c7640d1fd8a0c6d896b075791`**. The model was actually downloaded, SHA-256 verified and loaded against the independent exact reviewed ByteTokenizer implementation—not inferred from an earlier NCA or a synthetic hook.
+
+| No-training genuine void.1 result | Original measurement |
+|---|---:|
+| Frozen checkpoint bytes / SHA-256 | 360,622,744 / `ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3` |
+| Actual frozen model / matched MLP parameters | 90,148,352 / 329,472 (versus 329,944 reference NCA) |
+| Source UTF-8 text length | 1,170 Unicode characters; **1,296 UTF-8 bytes / tokenizer units** |
+| Zero-readout frozen logit parity (16/64/128; left/right two-sample padding) | **0 exact** |
+| Four-unit greedy zero-readout generation parity / actual EOS ID | **exact**, ID **258**; **EOS not generated** |
+| Manually activated, **untrained** MLP maximum logit effect | `0.07457733154296875` |
+| 48-unit full vs 48 genuine one-unit KV-cache forwards maximum absolute error | **`5.3256750106811523e-05`**; fixed gate `atol=rtol=5e-4` |
+| Strict changed-future suffix drift / A→B→A request-state drift / new-adapter same-frozen-model reload drift | **0 / 0 / 0 exact** |
+| Frozen original model before/after tensor SHA | **identical**, `0fedbc1b79f9dd0e781552dcb214a2d3c18fa943a665af337971ef108d2468a3` |
+| Original-model readout-gradient L1 (one backward, no optimizer) | `6682.22705078125`, no base gradients |
+| Host / RSS peak | AMD EPYC 9V74, four CPU threads, peak **730,368 KiB** |
+| Source runtime | Python 3.12.3, PyTorch 2.14.1+cpu, Transformers 4.57.6 |
+| Optimizer updates, learned quality results, held-out data accesses | **0 / none / none** |
+
+**Original evidence custody is complete for this prepass.** [Actions artifact #12741959402](https://github.com/techrote/neurounner/actions/runs/40523446884/artifacts/12741959402) was downloaded in its entirety: exact ZIP SHA-256 **`8e780dc30262d139fccb7c7d00962ab5b702280ef96fd76575f57c41d1435de0`**, 3,508 bytes. Its original `void1-source-prefetch.json` (1,593 bytes, SHA-256 `761b1a350eb3270ea6b6b44e4a3acb640753a1d9149f6580656340081f12266c`) and `void1-real-mlp.json` (8,103 bytes, SHA-256 `f962abde997b0215be51df2210df4d61d5a2a453773d7c1047df0497bfba7c4a`) are stored **without modification** inside [deterministic lossless gzip/base64 originals](../experiments/ncr-001/controls-evidence/real-void1-mlp/original-jsons.tar.gz.b64), compressed-member SHA-256 **`3df298ba523c910a34a4dce1950443850acc65f0964639853316eee515e81352`**. [Provenance](../experiments/ncr-001/controls-evidence/real-void1-mlp/provenance.json) records original Actions checkout, source/runner/artifact identities and individual hashes. Original JSON bytes are verifiable independently of expiring Actions artifacts.
+
+**Independent no-model [readback Actions run 40524940169](https://github.com/techrote/neurounner/actions/runs/40524940169) PASS:** the [standard-library custody auditor](../scripts/ncr_001f_void_mlp_receipt_audit.py) validates the complete gzip/member/original byte hashes, source/runner/checkpoint identity, both prefetch and actual frozen-host numerical and negative results. [Mutation sentinels](../tests/test_ncr_001f_void_mlp_receipt_audit.py) reject altered ZIP provenance, modified source receipts, model/tokenizer substitution, false training/admission/independent process claims, cache tolerance relaxation, future-token drift, mismatched original frozen weights and fabricated EOS ability. This is **archive auditing**, not another source-model evaluation.
+
+**Constrained outcome:** real frozen void.1 nontrained matched-MLP source/cache/gradient **PREPASS PASS**. Along with SmolLM2 #96 and separately tested Sprocket Chat/Instruct #98, all four matched noncellular controls now have independent per-checkpoint preliminary actual frozen-host tests. This **does not** constitute four-model final #72 source/runtime acceptance, a common-host matched learned comparison, distinct-interpreter void cold restart, 2048-byte context acceptance, evidence of historical EOS defect effect, or any scientific quality delta. The deliberately observed failure-to-emit-EOS in a four-unit continuation is kept as **non-evidence about termination rate**, not silently counted as success. No changes to protocol, fixtures, weights, training gates, or upstream experiments; **`train_authorized=false` remains unchanged**.
