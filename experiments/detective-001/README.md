@@ -79,6 +79,8 @@ Future inference/training qualification requires:
 
 The useful end state is a solver where every player interview is interesting even when the NPC is wrong; verified evidence, access permissions and eventual case conclusions still derive only from the game world.
 
+**Conventional structured-control evidence:** [DETECTIVE-001B4 report](REPORT_001B4.md), [raw archive](../../datasets/detective-001-lfm-scripter/). Pinned LFM2.5-1.2B-Instruct produced valid script JSON on all three script cases but **0/2 actionable selections**, instead returning empty programmes; this complements Sprocket's 0/2 action selection via a distinct failure mode.
+
 **Sprocket root-Instruct scripting evidence:** [DETECTIVE-001B3 report](REPORT_001B3.md) and [raw archive](../../datasets/detective-001-sprocket-scripter/). On five publisher-wire fictional evidence tasks the source-pinned root Instruct model achieved 0/2 correct novel detective tool selections, 1/1 no-tool restraint and 2/2 narrow result/denial consumption checks. This supports a future task-specific scripting-continuation experiment, not production hacking or tool authority.
 
 **Followup evidence:** [DETECTIVE-001B2 presentation A/B](REPORT_001B2.md), [preregistered contract](PRESENTATION_001B2.md) and [independently verified original outputs](../../datasets/detective-001-presentation-ab/). On the same two admitted first-turn witness situations and the same three exact models, JSON rendered 4/6 object-prefixed replies; a semantically matched natural-language rendering rendered 0/6. This isolates a plausible model-input-format confound, but does not prove reliable NPC memories or deception.
