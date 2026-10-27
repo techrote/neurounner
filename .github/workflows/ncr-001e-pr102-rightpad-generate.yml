@@ -47,6 +47,7 @@ jobs:
           persist-credentials: false
       - name: Refuse reviewed source/config/drift, distinguish Chat root
         run: |
+          set -euxo pipefail
           test "$(git -C candidate rev-parse HEAD)" = "3592841802d85c442ca2521479b5d8795bee7233"
           test "$(git -C candidate hash-object scripts/ncr_001e_sprocket_publisher_wire.py)" = "4e558ae530a1b79050e22bee587b3caf056e4563"
           test "$(git hash-object scripts/ncr_001e_pr102_masked_batch_review.py)" = "6ade653f0452e58f82c8c78e79d326018c30bcf1a"
