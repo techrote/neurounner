@@ -67,6 +67,10 @@ def verify_receipt(j, p) -> None:
     art = p["original_actions_artifact"]
     require(art["zip_sha256"] == ORIGINAL_ZIP_SHA and art["zip_bytes"] == 2273
             and art["artifact_id"] == 12762719757 and
+            art["original_json_sha256"] == ORIGINAL_JSON_SHA and
+            art["archive_gzip_sha256"] == ORIGINAL_GZIP_SHA and
+            art["original_json_bytes"] == 6816 and
+            art["archive_gzip_bytes"] == 2093 and
             art["zip_archived_in_git"] is False and
             art["lossless_original_json"] is True, "original artifact custody")
     pub = p["publisher"]
