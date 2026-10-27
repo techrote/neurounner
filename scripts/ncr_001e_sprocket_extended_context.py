@@ -110,6 +110,8 @@ def probe(variant: str) -> None:
         source.REPORT["tokens_sha256"] = hashlib.sha256(
             tokens.numpy().tobytes()).hexdigest()
         source.REPORT["context_lengths"] = list(LENGTHS)
+        source.REPORT["prompt_tokenizer_units"] = LENGTHS[-1]
+        source.REPORT["source_verifier_initial_prefix_units"] = 256
         source.REPORT["cache_tail_units"] = TAIL
         source.REPORT["source_checkpoint_sha256"] = pin[
             "weight_declared_lfs_sha256_not_downloaded"]
