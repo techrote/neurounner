@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001D",
+  "qualification_class": "real_model_source_bound_Chat_depth_hook_prepass_not_independent_NCR_001E",
+  "final_status": "PASS_PRELIMINARY_SOURCE_BOUND_SPROCKET_CHAT_HOOK_CONFORMANCE",
+  "source_run": {
+    "workflow_url": "https://github.com/techrote/neurounner/actions/runs/40426220940",
+    "run_id": 40426220940,
+    "tested_source_commit": "4829bc0aec0628cc95a93c9aa4fdc6030f916650",
+    "offline_test_job_id": 121932530048,
+    "real_source_job_id": 121932733173,
+    "artifact_id": 12700295741,
+    "artifact_name": "ncr-001d-sprocket-chat-source-conformance-a1",
+    "artifact_zip_sha256": "14504d2dcf765efdbe4ed21ea7a66ccc3511d6c6b68578f4052da3dc2c5fdb62",
+    "original_report_sha256": "62992ee8a63c40c9cd1ad8101e90131ff957f0fe268440cd06fc253157a3a48f",
+    "original_report_bytes": 4003,
+    "committed_report": "experiments/ncr-001/sprocket-chat-preflight/receipt.json",
+    "original_run_result": "success",
+    "offline_test_count": 7,
+    "protocol_sha256_at_run": "2e294750a17b1bfb3eba448f8a5b55344c72aff700587351bd10da1af38885ab",
+    "source_pins_sha256_at_run": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1",
+    "superseded_prior_run": {
+      "run_id": 40425730187,
+      "result": "success",
+      "issue": "Artifact filename carried inherited SmolLM2/Instruct tokens, whereas JSON model_variant was Chat. Correctly named run above supersedes the earlier receipt; both remain inspectable."
+    }
+  },
+  "model": {
+    "repository": "kandivault/sprocket-500m",
+    "variant": "chat_subfolder_not_root_instruct",
+    "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+    "actual_full_safetensors_sha256": "551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97",
+    "actual_full_safetensors_bytes": 1002207984,
+    "root_instruct_weight_sha256_separate": "1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864",
+    "frozen_base_parameters": 501090560,
+    "nca_trainable_parameters": 658904,
+    "architecture": {
+      "num_hidden_layers": 26,
+      "hidden_size": 1280,
+      "post_block_taps": [
+        7,
+        16,
+        25
+      ]
+    },
+    "source_config_sha256": "557aacbcb7e23a322221ab91b62c4343dd22130388efc3eb4dcdfe1edfd8d1b7",
+    "tokenizer_json_sha256": "178a63d94a7de4aa273a6a9c218180c3b7d1912f5a18a91be34bab252f7277eb",
+    "tokenizer_config_sha256": "1d1c0733848e0c78a2ec48a7f20cd55ec5ee0b4cbcda9785249af9e489823408"
+  },
+  "results": {
+    "zero_init_logits_max_abs": 0,
+    "zero_init_padded_batch_max_abs": 0,
+    "greedy_generation_equal": true,
+    "nontrained_manual_readout_logits_max_abs": 0.007289886474609375,
+    "full_vs_incremental_cache_max_abs": 0.000028133392333984375,
+    "future_suffix_max_abs": 0,
+    "readout_grad_l1": 2592.0615234375,
+    "peak_rss_kib": 3312512,
+    "cpu": "Intel Xeon Platinum 8370C, 4 threads",
+    "torch": "2.14.1+cpu",
+    "transformers": "4.57.6",
+    "actual_optimizer_steps": 0
+  },
+  "limitations": [
+    "Chat prompt role serialization and chat-template semantics unqualified: this prepass used ordinary raw tokenizer text",
+    "Only short prompts tested; independent #72 long-context, request-isolation, cold-reload and reviewer gates missing",
+    "The NCA readout was manually perturbed to check causal dynamics, not trained",
+    "No matched MLP control, held-out quality measurement or speedup claim",
+    "The constructor-supplied verified weight hash alone is not provenance proof; source-bound prepass independently read actual model bytes"
+  ]
+}
