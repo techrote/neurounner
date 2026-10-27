@@ -1209,3 +1209,32 @@ When execution completes, use these records rather than inferring quality from i
 
 A failed usable-village gate is still a completed experiment: failed phenotypes remain registered and are not silently regenerated.
 
+
+---
+
+# 2026-10-27 — DETECTIVE-001C1 two-character witness-policy continuation
+
+**Repository:** `techrote/neurounner`  
+**Authoritative Actions run:** `40589762919`  
+**Source head:** `b53f580270a17100df19e8bd663616321d7dff33`  
+**Bodies:** pinned SmolLM2-135M-Instruct + immutable Village SFT LoRA parents V-G02-A and V-G09-C.
+
+## Measured training
+
+Each parent LoRA was continued for exactly 64 CPU optimizer steps, one epoch over 48 detective-policy rows plus 16 exact parent anchors, LR 1.5e-4, four CPU threads, no GPU/API sweep.
+
+- V-G02-A: loss 1.6513→1.1096; ~79.72 s; 111.09 sequence tok/s; trained adapter directory SHA-256 `f5f5a1b454f4b6ca08aa9ff30c87abe8b1d897d7901db8b872e9747266724450`.
+- V-G09-C: loss 3.6148→1.5582; ~74.68 s; 113.21 sequence tok/s; trained adapter directory SHA-256 `6c1fbb6509bd777b8063a638783e9f0fd69eeb7bc8a8d94701bca9a5eae8d9aa`.
+
+## Measured learner-final behavior
+
+A post-training, hash-bound 12-scenario suite used three case families disjoint from training; exact prompts were generated only after both trained adapter hashes existed.
+
+- V-G02-A parent 2/12 → trained **6/12** locked relation-policy passes; protected-fact leaks 2→2; truncations 3→0.
+- V-G09-C parent 1/12 → trained **4/12**; protected-fact leaks 3→2; truncations 2→0.
+- Both trained lanes: zero canonical evidence-ID leaks.
+- Independent 0–4 old-task relevance judge: **UNSCORED_NO_INDEPENDENT_0_TO_4_JUDGE**.
+
+Observed direction is useful but incomplete. G02-A improved truthful fact use, one contradiction repair and speculation resistance, yet failed both deliberate-lie cases. G09-C learned one deliberate lie but remained weak on correction, withholding and speculation. Neither result authorizes 36-member expansion.
+
+**Disposition:** retain both adapters and failures as controls; next study should use pairwise continuation for one-sided lie commitment/withholding without truth leakage and a preregistered proposition-level evaluator. Do not train on C1's learner-final suite.
