@@ -33,7 +33,7 @@ class PinnedExtendedSourceReadbackTests(unittest.TestCase):
         self.assertEqual(set(result["variants"]), {"chat", "instruct"})
         self.assertIs(result["this_auditor_executed_models"], False)
         self.assertIs(result["final_four_model_conformance"], False)
-        self.assertIs(result["train_authorized"], False)
+        self.assertIs(result["training_authorized"], False)
         self.assertIs(result["tool_memory_semantics_qualified"], False)
         self.assertNotEqual(result["variants"]["chat"]["full_checkpoint_sha256"],
                             result["variants"]["instruct"]["full_checkpoint_sha256"])
