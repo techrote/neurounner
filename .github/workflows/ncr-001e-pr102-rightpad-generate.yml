@@ -15,7 +15,7 @@ permissions:
 
 concurrency:
   group: ncr001e-pr113-rightpad-generate-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
@@ -30,10 +30,37 @@ jobs:
     name: Source plan and right-pad cache gap negative refusals
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    outputs:
+      run_model: ${{ steps.changed_source.outputs.run_model }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          fetch-depth: 0
           persist-credentials: false
+      - name: Source-matched real frozen model run required? Fail closed on bad diff
+        id: changed_source
+        run: |
+          python3 - <<'PY'
+          import json,os,subprocess
+          event=json.load(open(os.environ['GITHUB_EVENT_PATH']))
+          watched=[
+            'scripts/ncr_001e_pr102_rightpad_generate.py',
+            'scripts/ncr_001e_pr102_masked_batch_review.py',
+            'tests/test_ncr_001e_pr102_rightpad_generate.py',
+            '.github/workflows/ncr-001e-pr102-rightpad-generate.yml',
+          ]
+          run=True
+          if event.get('action')=='synchronize' and event.get('before'):
+              result=subprocess.run(['git','diff','--name-only',event['before'],'HEAD','--',*watched],
+                                    capture_output=True,text=True)
+              if result.returncode:
+                  raise RuntimeError('Refusing to infer source-only diff from failed git: '+result.stderr)
+              run=bool(result.stdout.strip())
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out:
+              out.write('run_model='+str(run).lower()+'\n')
+          print('SOURCE_MATCHED_ORIGINAL_FROZEN_MODEL_REQUIRED',run)
+          print('Archive-only changes retain the original 40598034739 real-model result, not a synthetic rerun')
+          PY
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: 3592841802d85c442ca2521479b5d8795bee7233
@@ -75,6 +102,7 @@ jobs:
 
   full-model:
     needs: pure-source
+    if: needs.pure-source.outputs.run_model == 'true'
     name: Actual original root Instruct right-gapped KV and HF GenerationMixin
     runs-on: ubuntu-24.04
     timeout-minutes: 55
