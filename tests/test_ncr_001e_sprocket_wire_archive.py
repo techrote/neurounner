@@ -5,6 +5,7 @@ No model invocation, network, fixture inspection, or optimizer.
 from __future__ import annotations
 
 import copy
+import shutil
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
@@ -13,7 +14,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from ncr_001e_sprocket_wire_archive import (  # noqa: E402
-    ARCHIVE, EXPECTED_CASES, EXHAUSTED, MANIFEST, load_originals, verify_original,
+    ARCHIVE, EXPECTED_CASES, EXHAUSTED, FOLDER, MANIFEST, load_originals,
+    verify_dataset_hash_inventory, verify_original,
 )
 
 
@@ -24,6 +26,15 @@ class OriginalDiagnosticArchiveTests(unittest.TestCase):
 
     def test_exact_positive_original_receipts(self):
         verify_original(copy.deepcopy(self.members), copy.deepcopy(self.manifest))
+
+    def test_dataset_hash_inventory_and_tampered_durable_file_rejected(self):
+        verify_dataset_hash_inventory()
+        with TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "archived"
+            shutil.copytree(FOLDER, dest)
+            (dest / "README.md").write_text("tampered dataset claim", encoding="utf-8")
+            with self.assertRaises(RuntimeError):
+                verify_dataset_hash_inventory(dest)
 
     def test_corrupt_archived_bytes_fail_before_decoding(self):
         original = ARCHIVE.read_text(encoding="ascii")
