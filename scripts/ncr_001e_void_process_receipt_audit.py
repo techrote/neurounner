@@ -107,7 +107,10 @@ def audit(records: dict[str, dict] | None = None) -> dict:
             p["source_protocol_sha256"] == PROTOCOL and
             p["source_pins_sha256"] == PINS,
             "Original immutable Qwen3/ByteTokenizer source provenance changed")
-    for key in FALSE_FLAGS:
+    for key in ("trained_adapter", "train_authorized", "heldout_evaluation",
+                "final_four_model_72_admission",
+                "historical_byte_eos_impact_measured",
+                "full_2048_context_proven"):
         require(p["evidence_limits"][key] is False,
                 "Provenance falsely reports training/final admission: " + key)
     require(p["evidence_limits"]["optimizer_steps"] == 0 and
