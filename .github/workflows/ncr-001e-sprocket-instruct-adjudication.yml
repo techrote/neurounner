@@ -1,0 +1,60 @@
+name: NCR-001E Sprocket Instruct deterministic #72 adjudication (no model, no training)
+
+on:
+  pull_request:
+    branches:
+      - review/ncr001e-pr102-independent-masked-batch-20261027
+    paths:
+      - '.github/workflows/ncr-001e-sprocket-instruct-adjudication.yml'
+      - 'scripts/ncr_001e_sprocket_instruct_adjudication.py'
+      - 'tests/test_ncr_001e_sprocket_instruct_adjudication.py'
+      - 'experiments/ncr-001/adjudication/sprocket-instruct-pretrain.json'
+      - 'experiments/ncr-001/protocol.json'
+      - 'experiments/ncr-001/source-pins.json'
+      - 'experiments/ncr-001/evidence-review/**'
+      - 'datasets/ncr-001-sprocket-wire-diagnostic/provenance.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  adjudicate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Reproduce authoritative source/runtime BLOCKED adjudication
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_sprocket_instruct_adjudication.py
+          python3 scripts/ncr_001e_sprocket_instruct_adjudication.py
+          python3 - <<'PY'
+          import json
+          expected=json.load(open('experiments/ncr-001/adjudication/sprocket-instruct-pretrain.json'))
+          actual=json.load(open('runtime/ncr-001/sprocket-instruct-adjudication.json'))
+          assert actual == expected
+          assert actual['per_model_gate'] is False
+          assert actual['train_authorized'] is False
+          assert actual['optimizer_steps_observed'] == 0
+          assert set(actual['blocking_required_checks']) == {
+              'base_weight_unchanged_after_step',
+              'nonzero_adapter_gradient_after_warmup',
+              'finite_state_and_loss',
+          }
+          print('AUTHORITATIVE_SPROCKET_INSTRUCT_GATE',actual['adjudication'])
+          print('NO_TRAINING final per-model #72 gate remains false')
+          PY
+      - name: Negative/fail-closed adjudication tests
+        run: |
+          python3 -m unittest discover -s tests \
+            -p 'test_ncr_001e_sprocket_instruct_adjudication.py' -v
+      - name: Preserve deterministic report output
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001e-sprocket-instruct-adjudication
+          path: runtime/ncr-001/sprocket-instruct-adjudication.json
+          if-no-files-found: error
+          retention-days: 30
