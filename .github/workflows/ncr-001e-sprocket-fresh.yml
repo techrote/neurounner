@@ -1,0 +1,181 @@
+name: NCR-001E source-anchored Sprocket role + fresh frozen dual-host review
+
+on:
+  pull_request:
+    branches: [main, review/ncr-001e-four-model-prepass-readback]
+    paths:
+      - ".github/workflows/ncr-001e-sprocket-fresh.yml"
+      - "scripts/ncr_001e_sprocket_format.py"
+      - "scripts/ncr_001e_sprocket_source_inventory.py"
+      - "scripts/ncr_001e_sprocket_fresh.py"
+      - "tests/test_ncr_001e_sprocket_format.py"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/source-pins.json"
+      - "docs/NCR_001_E_SPROCKET_FRESH.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001e-sprocket-fresh-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  HF_HOME: /tmp/ncr001e-sprocket-review-hf
+  TOKENIZERS_PARALLELISM: "false"
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  pinned-source-format:
+    name: Model-card authority, real tokenizer IDs and role injection refusals
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned tokenizer-only dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" "safetensors==0.8.0"
+      - name: Compile and check exact source-framing mutation refusals
+        run: |
+          python3 -m py_compile \
+            scripts/ncr_001e_sprocket_format.py \
+            scripts/ncr_001e_sprocket_source_inventory.py \
+            scripts/ncr_001e_sprocket_fresh.py \
+            tests/test_ncr_001e_sprocket_format.py
+          python3 -m unittest discover -s tests \
+            -p "test_ncr_001e_sprocket_format.py" -v
+      - name: Inspect exact pinned source card and both HF source tokenizer variants
+        run: |
+          python3 scripts/ncr_001e_sprocket_source_inventory.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          f=Path("runtime/ncr-001/sprocket-pinned-role-inventory.json")
+          p=json.loads(f.read_text())
+          assert p["status"]=="PASS_PINNED_SPROCKET_ROLE_FORMAT_AND_TOKEN_INVENTORY__BEHAVIOR_BLOCKED"
+          assert set(p["variants"])=={"chat","instruct"}
+          assert p["tool_and_memory_behavior_qualified"] is False
+          assert p["model_weights_downloaded"] is False
+          assert p["training_performed"] is False
+          for variant, source in p["variants"].items():
+              assert source["tokenizer"]["role_markers_dedicated"] is True
+              assert source["tool_and_memory_behavior_qualified"] is False
+          print("Sprocket role source PASS: tool/memory semantics remain BLOCKED")
+          PY
+      - name: Keep source inventory even if later runtime fails
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001e-sprocket-pinned-format-a${{ github.run_attempt }}
+          path: runtime/ncr-001/sprocket-pinned-role-inventory.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  fresh-frozen-variants:
+    name: Actual frozen ${{ matrix.variant }} source, cache and cold adapter
+    needs: pinned-source-format
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: chat
+            original_commit: 83a56835a7476f17a17980d28dd1a7c14bb6f2f6
+            model_file: chat/model.safetensors
+            tokenizer_json: chat/tokenizer.json
+            tokenizer_config: chat/tokenizer_config.json
+            model_config: chat/config.json
+          - variant: instruct
+            original_commit: b95c010f9b2ba3cbd9f81317981316bb9c8acd19
+            model_file: model.safetensors
+            tokenizer_json: tokenizer.json
+            tokenizer_config: tokenizer_config.json
+            model_config: config.json
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Checkout exact original independently produced variant-specific hook
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ matrix.original_commit }}
+          path: implementation
+          persist-credentials: false
+      - name: Refuse replaced hook implementation or bypassed training gate
+        run: |
+          test "$(git -C implementation rev-parse HEAD)" = "${{ matrix.original_commit }}"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("Pinned Sprocket independent reviewer, four-source gate remains CLOSED")
+          PY
+      - name: Install CPU frozen model stack, never any optimizer pipeline
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Fetch actual model source and verify all pinned checkpoint bytes
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          variant="${{ matrix.variant }}"
+          pin=json.load(open("experiments/ncr-001/source-pins.json"))["models"]["sprocket_"+variant]
+          repo=pin["repo_id"]
+          revision=pin["revision"]
+          assert repo=="kandivault/sprocket-500m"
+          assert revision=="eb157d4ddddc4619e661d4a2426bb2dd000fc668"
+          assert pin["hf_weight_file"]=="${{ matrix.model_file }}"
+          source_files=["README.md","${{ matrix.model_config }}",
+                        "${{ matrix.tokenizer_json }}",
+                        "${{ matrix.tokenizer_config }}",
+                        "${{ matrix.model_file }}"]
+          if variant=="instruct": source_files.append("special_tokens_map.json")
+          expected=pin["weight_declared_lfs_sha256_not_downloaded"]
+          for file in source_files:
+              p=Path(hf_hub_download(repo,filename=file,revision=revision))
+              h=hashlib.sha256(p.read_bytes()).hexdigest()
+              if file==pin["hf_weight_file"]:
+                  assert h==expected,(file,h,expected)
+                  assert p.stat().st_size==pin["weight_bytes"]
+              print("Actual pinned upstream source verified:",variant,file,h,p.stat().st_size,flush=True)
+          PY
+      - name: Fresh actual model ordinary-role, 128-token masks and 48-token KV-cache
+        run: |
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001e_sprocket_fresh.py --variant ${{ matrix.variant }}
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          variant="${{ matrix.variant }}"
+          d=json.loads(Path(f"runtime/ncr-001/sprocket-{variant}-fresh.json").read_text())
+          assert d["status"]=="PASS_FRESH_SPROCKET_"+variant.upper()+"_SOURCE_ROLES_CACHE_COLD_PREPASS"
+          assert d["tool_and_memory_behavior_qualified"] is False
+          assert d["actual_model_training"] is False and d["optimizer_steps"]==0
+          assert d["full_four_model_conformance_pass"] is False
+          assert d["checks"]["request_A_B_A_no_field_leak"]["exact"] is True
+          assert d["checks"]["nonzero_role_48_full_vs_incremental_cache"]["close"] is True
+          assert d["checks"]["cold_model_variant_source_refusal"]["rejected"] is True
+          print("Fresh frozen Sprocket reviewer PASS, full conformance still BLOCKED:",variant)
+          PY
+      - name: Save source-bound partial and successful receipts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001e-sprocket-${{ matrix.variant }}-fresh-a${{ github.run_attempt }}
+          path: runtime/ncr-001/sprocket-${{ matrix.variant }}-fresh.json
+          if-no-files-found: warn
+          retention-days: 30
