@@ -40,6 +40,8 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 
 - **[NCR-001E source-bound four-model prepass receipt audit](docs/NCR_001_E_PREPASS_AUDIT.md)** — separate standard-library readback of original SmolLM2, Sprocket Chat/Instruct and void.1 full-weight/hash/logit/cache receipts, [frozen per-model originals](experiments/ncr-001/evidence-review/) and negative tamper/leakage sentinel tests. **No fresh model execution or independent #72 conformance claim; training still prohibited.**
 
+- **[NCR-001E fresh pinned Sprocket Chat/Instruct ordinary-role/cache reviewers](docs/NCR_001_E_SPROCKET_FRESH.md)** — verify source-card user/end/assistant role markers and real tokenizer IDs before separately pinned full frozen Chat/root-Instruct long/cache/A→B→A and cold-adapter source tests. Tool/memory semantics remain unqualified; no trained adapters.
+
 ## Retrieval rules
 
 1. Prefer primary dataset records over prose summaries when answering questions about exact prompts or outputs.
