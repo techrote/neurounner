@@ -109,6 +109,11 @@ def check(variant: str, report: dict, spec: dict, provenance: dict) -> dict:
     require(report["role_ids"] == {
         "<|user|>": [3], "<|end|>": [5], "<|assistant|>": [4]},
         "Publisher ordinary-role tokenizer IDs changed")
+    require(report["tokens_sha256"] ==
+            "0f4094d5e98a558601c281297191bd1bd0bc00acfa5a14472811758f4ae6970c" and
+            report["token_ids_sha256"] ==
+            "845ece67eb9e4930cdc9f5bd72c18c234f7b34ce48d9189151fecfa7ba69af82",
+            "Pinned original source-ordinary-role token sequence changed")
     require(report["control_tokens"] == {
         "<|tool_call|>": 6, "<|tool_result|>": 7,
         "<|memory_read|>": 10, "<|memory_write|>": 11},
@@ -124,7 +129,7 @@ def check(variant: str, report: dict, spec: dict, provenance: dict) -> dict:
             runner["transformers"] == "4.57.6",
             "Original hosted runner/source process identity differs")
     require(report["peak_rss_kib"] > 0 and
-            report["peak_rss_kib"] == provenance["original_json"][variant]["peak_rss_kib"],
+            report["peak_rss_kib"] == provenance["variants"][variant]["peak_rss_kib"],
             "Peak memory measurement missing or unbound")
 
     checks = report["checks"]
