@@ -40,6 +40,8 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 
 - **[NCR-001B pure PyTorch cellular core](docs/NCR_001_B_CORE.md)** — shared 8×8×4 depth-persistent NCA with explicit per-forward state, frozen toy-backbone gradient proof, reproducible CPU tests and [source-bound synthetic evidence](experiments/ncr-001/core-evidence/core-smoke.json). It is not LM integration, cache conformance or training admission.
 
+- **[NCR-001K frozen void.1/Qwen3 depth-hook prepass](docs/NCR_001_K_VOID1.md)** — exact 360 MB checkpoint and pinned ByteTokenizer *source-byte* hash, no execution of downloaded tokenizer Python; short raw-token causal/cache success, [full original receipt](experiments/ncr-001/void1-preflight/receipt.json) and [provenance](experiments/ncr-001/void1-preflight/provenance.json). Byte roundtrip, security review and independent #72 remain pending.
+
 ## Retrieval rules
 
 1. Prefer primary dataset records over prose summaries when answering questions about exact prompts or outputs.
