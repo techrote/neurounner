@@ -26,6 +26,7 @@ VOID_REV = "9c2be5087772867d45961abd11f6b35110617563"
 TOKENIZER_SOURCE_SHA = "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03"
 PAD, BOS, EOS, VOCAB = 256, 257, 258, 259
 MAX_UNITS = 1024
+PREREG_COMMIT = "a1b41c358d215974ea9ef2748baa13c3872b0fbb"
 
 
 def require(ok, reason):
@@ -168,14 +169,30 @@ def main():
         require(m["tokenizer_reference"]["ids"] ==
                 {"pad": PAD, "bos": BOS, "eos": EOS},
                 "void source special token IDs changed")
-        require(protocol["training"]["per_model_sequence_unit_limits"]["void1"] ==
-                MAX_UNITS, "void1 preregistered unit limit is not 1024")
+
+        prereg_root = ROOT / "prereg"
+        require(prereg_root.is_dir()
+                and subprocess.check_output(
+                    ["git", "-C", str(prereg_root), "rev-parse", "HEAD"],
+                    text=True).strip() == PREREG_COMMIT,
+                "exact four-model preregistration checkout missing or changed")
+        authoritative_path = prereg_root / "experiments/ncr-001/protocol.json"
+        authoritative = json.loads(authoritative_path.read_text(encoding="utf-8"))
+        require(authoritative["train_authorized"] is False
+                and authoritative["training"]["per_model_sequence_unit_limits"]["void1"]
+                == MAX_UNITS
+                and authoritative["models"]["void1"]["revision"] == VOID_REV
+                and authoritative["models"]["void1"]["tokenizer_reference"][
+                    "train002b_source_sha256"] == TOKENIZER_SOURCE_SHA,
+                "exact preregistered void unit/source policy changed")
         report["source"] = {
             "repo_id": VOID_REPO,
             "revision": VOID_REV,
             "tokenizer_source_sha256": TOKENIZER_SOURCE_SHA,
             "protocol_sha256": sha256(protocol_path),
             "source_pins_sha256": sha256(pins_path),
+            "preregistration_commit": PREREG_COMMIT,
+            "preregistration_protocol_sha256": sha256(authoritative_path),
             "ids": {"pad": PAD, "bos": BOS, "eos": EOS, "vocab": VOCAB},
             "max_units": MAX_UNITS,
         }
