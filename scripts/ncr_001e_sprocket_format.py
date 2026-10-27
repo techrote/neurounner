@@ -36,11 +36,12 @@ def validate_pinned_card(card: str) -> None:
     for marker in ALL_SOURCE_CONTROL_MARKERS:
         if marker not in card:
             raise RuntimeError("Missing documented source token " + marker)
-    # Distinguish source-described tool-trained root from chat without tools.
-    for phrase in ("Chat build: start here", "Instruct build: the tool-calling one",
-                   "tool-calling and memory examples removed", "### Chat format"):
-        if phrase not in card:
-            raise RuntimeError("Missing pinned source variant claim: " + phrase)
+    # This step deliberately asserts only the literal documented role framing.
+    # Build-level descriptive claims can differ between pinned and latest README
+    # revisions. Record their exact presence separately, never use as a
+    # source-authority substitute for checkpoint identity or tool semantics.
+    if "Chat format" not in card:
+        raise RuntimeError("Pinned source's chat-format section is absent")
 
 
 def _safe_text(content: str) -> str:
