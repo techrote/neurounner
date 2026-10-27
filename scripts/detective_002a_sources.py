@@ -11,6 +11,7 @@ import fnmatch
 import hashlib
 import json
 import re
+import shutil
 import sys
 import urllib.error
 import urllib.parse
@@ -516,13 +517,109 @@ def verify(evidence_path: Path) -> dict:
     }
 
 
+
+def markdown_report(evidence: dict) -> str:
+    lines = [
+        "# DETECTIVE-002A — compact NPC body source qualification",
+        "",
+        "This is source metadata evidence only. No model weight bytes were "
+        "downloaded, no inference was run and no optimizer step was taken.",
+        "",
+        "| Candidate | Class | Resolved revision | License | Parameters | Weight SHA | Stage-B status |",
+        "|---|---|---|---|---:|---|---|",
+    ]
+    for row in evidence["candidates"]:
+        params = row["safetensors_parameters"]
+        if params is None:
+            params = row["nominal_parameters"]
+            params_text = f"~{params:,} nominal"
+        else:
+            params_text = f"{params:,}"
+        weight = row.get("weight") or {}
+        sha = weight.get("lfs_sha256") or "n/a"
+        lines.append(
+            f"| {row['candidate_id']} | {row['admission_class']} | "
+            f"{row['resolved_revision']} | "
+            f"{row.get('license') or 'UNDECLARED'} | {params_text} | "
+            f"{sha} | {row['runtime_eligibility']} |"
+        )
+    lines += [
+        "",
+        "## Guards",
+        "",
+        f"- source gates passed: **{sum(bool(x['source_gate_pass']) for x in evidence['candidates'])}/{len(evidence['candidates'])}**;",
+        "- model weight bytes downloaded: **0**;",
+        "- optimizer steps: **0**;",
+        "- paid API calls: **0**;",
+        "- DETECTIVE-001R1 hidden relevance mapping accessed: **no**;",
+        "- population expansion admitted: **no**.",
+        "",
+        "A source-gate failure is retained as evidence and blocks that body from "
+        "Stage B. Production/game license gates are separate from research "
+        "source qualification and are never silently cleared here.",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def hash_inventory(root: Path) -> list[str]:
+    rows = []
+    for path in sorted(x for x in root.rglob("*") if x.is_file()):
+        rel = path.relative_to(root).as_posix()
+        if rel != "hashes.sha256":
+            rows.append(f"{sha_file(path)}  {rel}")
+    return rows
+
+
+def resolve_archive(root: Path) -> dict:
+    if root.exists():
+        shutil.rmtree(root)
+    root.mkdir(parents=True)
+    evidence = resolve_all(root / "source-evidence.json")
+    (root / "REPORT.md").write_text(
+        markdown_report(evidence), encoding="utf-8")
+    (root / "hashes.sha256").write_text(
+        "\n".join(hash_inventory(root)) + "\n", encoding="utf-8")
+    return evidence
+
+
+def verify_archive(root: Path) -> dict:
+    expected = {"source-evidence.json", "REPORT.md", "hashes.sha256"}
+    present = {
+        p.relative_to(root).as_posix()
+        for p in root.rglob("*") if p.is_file()
+    }
+    if present != expected:
+        raise SourceError("source evidence archive file set mismatch")
+    recorded = (root / "hashes.sha256").read_text(
+        encoding="utf-8").splitlines()
+    if recorded != hash_inventory(root):
+        raise SourceError("source evidence hash inventory mismatch")
+    evidence = json.loads(
+        (root / "source-evidence.json").read_text(encoding="utf-8"))
+    if (root / "REPORT.md").read_text(encoding="utf-8") != markdown_report(evidence):
+        raise SourceError("source evidence report does not replay")
+    return verify(root / "source-evidence.json")
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--resolve", action="store_true")
     ap.add_argument("--out", type=Path)
     ap.add_argument("--verify", type=Path)
+    ap.add_argument("--resolve-dir", type=Path)
+    ap.add_argument("--verify-dir", type=Path)
     args = ap.parse_args()
-    if args.resolve:
+    if args.resolve_dir:
+        doc = resolve_archive(args.resolve_dir)
+        print(json.dumps({
+            "resolved_candidates": len(doc["candidates"]),
+            "archive": str(args.resolve_dir),
+            "weight_bytes_downloaded": 0,
+            "training_steps": 0,
+        }, indent=2, sort_keys=True))
+    elif args.verify_dir:
+        print(json.dumps(
+            verify_archive(args.verify_dir), indent=2, sort_keys=True))
+    elif args.resolve:
         if args.out is None:
             raise SystemExit("--out required with --resolve")
         doc = resolve_all(args.out)
