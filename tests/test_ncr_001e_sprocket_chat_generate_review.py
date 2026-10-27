@@ -40,14 +40,14 @@ class ChatGenerateSourceTests(unittest.TestCase):
             [3] + list(range(200, 214)) + [5, 4],
         ]
         observed = chat.right_gap(seqs)
-        self.assertEqual(observed["valid_prefix_lengths"], [28, 12])
-        self.assertEqual(observed["width"], 28)
-        self.assertEqual(observed["ids"][1][12:], [chat.PAD] * 16)
-        self.assertEqual(observed["mask"][1][12:], [0] * 16)
-        self.assertEqual(observed["positions"][1][12:], [0] * 16)
+        self.assertEqual(observed["valid_prefix_lengths"], [29, 13])
+        self.assertEqual(observed["width"], 29)
+        self.assertEqual(observed["ids"][1][13:], [chat.PAD] * 16)
+        self.assertEqual(observed["mask"][1][13:], [0] * 16)
+        self.assertEqual(observed["positions"][1][13:], [0] * 16)
         self.assertEqual(observed["tail_tokens"][-1],
                          [seqs[0][-1], seqs[1][-1]])
-        self.assertEqual(observed["tail_positions"][-1], [31, 15])
+        self.assertEqual(observed["tail_positions"][-1], [32, 16])
 
     def test_right_gap_rejects_bad_batch_and_inadequate_padding_difference(self):
         bad = (
