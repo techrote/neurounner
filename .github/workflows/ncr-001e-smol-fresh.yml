@@ -52,6 +52,26 @@ jobs:
       - name: Compile independent reviewer script
         run: |
           python3 -m py_compile scripts/ncr_001e_smol_fresh.py
+      - name: Verify prior independently archived original fresh receipt
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path("experiments/ncr-001/evidence-review/smolllm2-fresh")
+          data=root/"receipt.json"
+          evidence=json.loads((root/"provenance.json").read_text())
+          want=evidence["source_run"]["original_report_sha256"]
+          actual=hashlib.sha256(data.read_bytes()).hexdigest()
+          assert actual==want,(actual,want)
+          report=json.loads(data.read_text())
+          assert report["status"]=="PASS_REVIEWER_FRESH_SMOLLM2_FROZEN_CACHE_COLD_ADAPTER_PREPASS"
+          assert report["training_performed"] is False
+          assert report["optimizer_steps"]==0
+          assert report["checks"]["request_A_B_A_isolation"]["exact"] is True
+          assert report["checks"]["cold_checkpoint_variant_refusal"]["rejected"] is True
+          assert report["checks"]["nonzero_48_full_vs_incremental_KV"]["within"] is True
+          print("Source-bound original fresh SmolLM2 receipt byte hash verified",actual)
+          PY
       - name: Install CPU-only frozen host dependencies
         run: |
           python3 -m pip install --disable-pip-version-check \
