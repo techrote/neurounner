@@ -31,3 +31,7 @@ LFM output is inert until strict JSON parses through DETECTIVE-001A and the dete
 - independent standard-library archive replay before persistent promotion.
 
 Interpret results only as a conventional zero-shot reference. Sprocket uses its publisher-native tool wire, so direct model ranking is not justified from five tasks.
+
+## Executed source-bound result
+
+[Actions 40586251820](https://github.com/techrote/neurounner/actions/runs/40586251820) completed after 56/56 offline tests: exact runtime/GGUF SHA verification, five native generations, independent receipt replay and durable archive promotion passed. Measured: **3/3 strict script JSON valid, but 0/2 actionable tool selections; 1/1 empty-action restraint; 1/2 strict result-use checks; 92 generated tokens**. See [REPORT_001B4.md](REPORT_001B4.md) and [raw archive](../../datasets/detective-001-lfm-scripter/). General scripting remains NOT ADMITTED.
