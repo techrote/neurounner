@@ -155,7 +155,7 @@ def audit(evidence: Path = EVIDENCE) -> dict:
     compressed = base64.b64decode(compressed_b64, validate=True)
     refuse(len(compressed) == 6092 and sha(compressed) == COMPRESSED_ARCHIVE_SHA,
            "base64/LZMA raw original archive digest changed")
-    original_zip = lzma.decompress(compressed, memlimit=32*1024*1024)
+    original_zip = lzma.decompress(compressed, memlimit=128*1024*1024)
     refuse(len(original_zip) == 6625 and sha(original_zip) == ORIGINAL_ARCHIVE_SHA,
            "original Actions ZIP bytes differ")
     with zipfile.ZipFile(io.BytesIO(original_zip)) as z:
