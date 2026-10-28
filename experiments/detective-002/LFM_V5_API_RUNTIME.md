@@ -98,3 +98,16 @@ Authoritative run: [Actions 40611095538](https://github.com/techrote/neurounner/
 This confirms the 002C failure was the v5 return-shape harness bug. 002B/002C remain historical evidence. See [REPORT_002D.md](REPORT_002D.md).
 
 The evidence-ready branch must now run verification-only CI; live requalification must be skipped.
+
+
+## Verification-only merge gate
+
+The live 002D result is committed and independently replayable. Final PR-head CI must:
+
+- pass offline DETECTIVE/source-control tests;
+- detect `datasets/detective-002d/manifest.json`;
+- skip `live-requalification`;
+- run `evidence-readback` only;
+- return `DETECTIVE_002D_SOURCE_READBACK_PASS`.
+
+No further package/model/prompt/API change is authorized in this experiment.
