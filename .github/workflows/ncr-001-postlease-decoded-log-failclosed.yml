@@ -37,6 +37,33 @@ jobs:
           assert p["train_authorized"] is False
           assert set(p["models"]) == {"smollm2", "sprocket_chat", "sprocket_instruct", "void1"}
           PY
+      - name: Verify permanently archived original source-only CI job-log provenance
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.ncr_001_postlease_wire_evidence_audit import git_blob_sha
+          d=Path("experiments/ncr-001/controls-evidence/postlease-wire-20261028/hardening-20261028")
+          p=json.loads((d/"provenance.json").read_text(encoding="utf-8"))
+          assert p["original_hardening_source_head"]=="d1e22054d6190efb79735c76192e575ae484f214"
+          assert p["original_workflow_run_id"]==40789812462
+          assert p["original_workflow_job_id"]==123171927007
+          assert p["test_results"]["passed"]==20
+          assert p["negative_evidence"]["train_authorized"] is False
+          assert p["negative_evidence"]["new_model_executed"] is False
+          record=p["original_job_decoded_text_log"]
+          assert record["git_blob_sha"]=="12b51ef71be2003699737d754990de53dbf27d7a"
+          raw=(d/record["path"]).read_bytes()
+          assert git_blob_sha(raw)==record["git_blob_sha"]
+          log=raw.decode("utf-8-sig")
+          assert "Ran 20 tests" in log
+          for needle in ("EXACT ORIGINAL ZIP artifact-12829497410.zip 1083",
+                         "EXACT ORIGINAL ZIP artifact-12828893309.zip 3265",
+                         "EXACT ORIGINAL ZIP artifact-12829691760.zip 1063"):
+              assert needle in log
+          assert "NO MODEL; NO TRAINING; SOURCE CUSTODY ONLY" in log
+          PY
       - name: Assert exact archived ZIPs, all decoded job Git blobs and 20 tests
         run: |
           set -euo pipefail
