@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import unittest
 
@@ -86,7 +87,13 @@ class Detective004ACustodyTests(unittest.TestCase):
         trained = {row["id"]: row["turns"][-1]["content"] for row in rows}
         base = {row["id"]: "unsupported mock baseline" for row in rows}
         result = audit.guarded_admission_gate(rows, trained, base, self.b3)
-        self.assertEqual(result["status"], "research_candidate")
+        self.assertEqual(result["status"], "unverified_score_only")
+        self.assertEqual(result["mechanical_gate_status"], "research_candidate")
+        self.assertTrue(result["mechanical_gate_passed"])
+        self.assertFalse(result["raw_output_execution_verified"])
+        self.assertFalse(result["independent_final_custody_verified"])
+        self.assertFalse(result["stage_b_evaluation_admitted"])
+        self.assertEqual(len(result["claimed_raw_output_ledger"]), 12)
         self.assertFalse(result["production_admission"])
         self.assertFalse(result["population_expansion_admitted"])
 
@@ -278,7 +285,10 @@ class Detective004ACustodyTests(unittest.TestCase):
                    for row in rows}
         root = {row["id"]: "mock root baseline<|end|>" for row in rows}
         scored = audit.guarded_admission_gate(rows, adapted, root, self.b3)
-        self.assertEqual(scored["status"], "research_candidate")
+        self.assertEqual(scored["status"], "unverified_score_only")
+        self.assertEqual(scored["mechanical_gate_status"], "research_candidate")
+        self.assertTrue(scored["mechanical_gate_passed"])
+        self.assertEqual(len(scored["claimed_raw_output_ledger"]), 12)
         self.assertFalse(scored["raw_output_execution_verified"])
         self.assertFalse(scored["independent_final_custody_verified"])
         self.assertFalse(scored["stage_b_evaluation_admitted"])
@@ -369,6 +379,55 @@ class Detective004ACustodyTests(unittest.TestCase):
             other, other_claim, self.b3)
         self.assertEqual(still_untrusted["status"], "claim_consistent_only")
         self.assertFalse(still_untrusted["adapter_source_and_optimizer_receipts_verified"])
+
+
+
+    def test_unverified_score_ledger_binds_exact_claimed_raw_bytes(self):
+        """No genuine model or final: synthetic outputs are only score fixtures."""
+        rows = self.synthetic_gate_fixture()
+        adapted = {row["id"]: row["turns"][-1]["content"] for row in rows}
+        root = {row["id"]: "mock root baseline" for row in rows}
+        scored = audit.guarded_admission_gate(rows, adapted, root, self.b3)
+        self.assertEqual(scored["status"], "unverified_score_only")
+        self.assertEqual(scored["mechanical_gate_status"], "research_candidate")
+        ledger = scored["claimed_raw_output_ledger"]
+        self.assertEqual([entry["task_id"] for entry in ledger],
+                         sorted(row["id"] for row in rows))
+        self.assertEqual(sum(entry["adapted_mechanical_correct"]
+                             for entry in ledger if entry["kind"] == "tool_selection"),
+                         scored["trained_tool_selection"])
+        self.assertEqual(sum(entry["root_mechanical_correct"]
+                             for entry in ledger if entry["kind"] == "tool_selection"),
+                         scored["base_tool_selection"])
+        for entry in ledger:
+            task_id = entry["task_id"]
+            self.assertEqual(entry["adapted_raw_utf8_sha256"],
+                             hashlib.sha256(adapted[task_id].encode("utf-8")).hexdigest())
+            self.assertEqual(entry["root_raw_utf8_sha256"],
+                             hashlib.sha256(root[task_id].encode("utf-8")).hexdigest())
+            self.assertEqual(entry["adapted_mechanical_correct"], True)
+            self.assertEqual(entry["root_mechanical_correct"], False)
+
+    def test_unverified_score_ledger_retains_failing_output_claim(self):
+        rows = self.synthetic_gate_fixture()
+        adapted = {row["id"]: row["turns"][-1]["content"] for row in rows}
+        root = {row["id"]: "mock root baseline" for row in rows}
+        target = next(row["id"] for row in rows if row["kind"] == "tool_selection")
+        original = audit.guarded_admission_gate(rows, adapted, root, self.b3)
+        adapted[target] = "No evidence operation issued."
+        mutated = audit.guarded_admission_gate(rows, adapted, root, self.b3)
+        orig = {item["task_id"]: item for item in original["claimed_raw_output_ledger"]}
+        new = {item["task_id"]: item for item in mutated["claimed_raw_output_ledger"]}
+        self.assertNotEqual(orig[target]["adapted_raw_utf8_sha256"],
+                            new[target]["adapted_raw_utf8_sha256"])
+        self.assertTrue(orig[target]["adapted_mechanical_correct"])
+        self.assertFalse(new[target]["adapted_mechanical_correct"])
+        self.assertEqual(mutated["trained_tool_selection"],
+                         original["trained_tool_selection"] - 1)
+        self.assertEqual(mutated["mechanical_gate_status"], "research_candidate")
+        self.assertEqual(mutated["status"], "unverified_score_only")
+        self.assertFalse(mutated["stage_b_evaluation_admitted"])
+        self.assertFalse(mutated["production_admission"])
 
 
 
