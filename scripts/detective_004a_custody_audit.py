@@ -389,14 +389,40 @@ def audit_raw_native_controls(tasks, outputs, lane):
 
 
 def guarded_admission_gate(tasks, adapted_outputs, base_outputs, b3):
-    """Mechanical score only: NOT independent adapter/final/raw-output custody."""
+    """Unverified mechanical measurement, never a research admission decision.
+
+    The frozen scorer can return `research_candidate` on wholly invented
+    output strings. Preserve its exact mechanical decision and counts without
+    exposing that status as a custody-backed admission to downstream callers.
+    """
+    import hashlib
+
     audit_future_gate_layout(tasks, b3)
     audit_raw_native_controls(tasks, adapted_outputs, "adapted")
     audit_raw_native_controls(tasks, base_outputs, "root")
-    result = protocol.admission_gate(tasks, adapted_outputs, base_outputs, b3)
-    # The caller can supply arbitrary Python strings. Even a passing raw
-    # structural score never authenticates an executed model or sealed final.
-    return {**result, "raw_output_execution_verified": False,
+    measured = protocol.admission_gate(tasks, adapted_outputs, base_outputs, b3)
+    # Hash the exact supplied raw UTF-8 strings and expose per-task booleans,
+    # not just aggregates. These hashes bind *claims*, not executed model
+    # generations. The producer's frozen score rules and thresholds are intact.
+    ledger = []
+    for row in sorted(tasks, key=lambda item: item["id"]):
+        task_id = row["id"]
+        adapted, root = adapted_outputs[task_id], base_outputs[task_id]
+        ledger.append({
+            "task_id": task_id, "kind": row["kind"],
+            "adapted_raw_utf8_sha256": hashlib.sha256(adapted.encode("utf-8")).hexdigest(),
+            "root_raw_utf8_sha256": hashlib.sha256(root.encode("utf-8")).hexdigest(),
+            "adapted_mechanical_correct": protocol.score_output(row, adapted, b3),
+            "root_mechanical_correct": protocol.score_output(row, root, b3),
+        })
+    # A perfectly constructed synthetic gold output can satisfy the numeric
+    # gate. No independent runner, adapter ancestry or final custodian is
+    # attested here, so the public result must *never* say candidate admitted.
+    return {**measured, "status": "unverified_score_only",
+            "mechanical_gate_status": measured["status"],
+            "mechanical_gate_passed": measured["status"] == "research_candidate",
+            "claimed_raw_output_ledger": ledger,
+            "raw_output_execution_verified": False,
             "independent_final_custody_verified": False,
             "stage_b_evaluation_admitted": False}
 
