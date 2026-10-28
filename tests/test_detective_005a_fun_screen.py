@@ -15,6 +15,7 @@ from pathlib import Path
 
 from scripts import detective_005a_fun_screen as screen
 from scripts import detective_005a_live as live
+from scripts import detective_005a_assemble as assemble
 
 
 class Detective005AFunScreenTests(unittest.TestCase):
@@ -301,6 +302,67 @@ class Detective005AFunScreenTests(unittest.TestCase):
             }
             with self.assertRaisesRegex(screen.ScreenError, "unsafe adapter"):
                 live.safe_unpack(archive, root / "unsafe-out", source)
+
+
+    def test_12_lineage_artifacts_assemble_to_144_identity_blind_items(self):
+        rows = self.synthetic_rows()
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            artifacts = root / "artifacts"
+            for g in range(1, 13):
+                lineage = f"G{g:02d}"
+                folder = artifacts / lineage
+                folder.mkdir(parents=True)
+                members = {f"V-{lineage}-{s}" for s in "ABC"}
+                line_rows = [r for r in rows if r["member_id"] in members]
+                results = folder / "results.jsonl"
+                results.write_text(
+                    "".join(screen.canonical(r) + "\n" for r in line_rows),
+                    encoding="utf-8")
+                manifest = {
+                    "schema": "detective-005a-live-lineage-manifest-v1",
+                    "experiment": "DETECTIVE-005A",
+                    "issue": 176,
+                    "lineage": lineage,
+                    "source_plan": live.source_plan(lineage),
+                    "runner_script_sha256": "a" * 64,
+                    "results_jsonl_sha256": screen.sha256_file(results),
+                    "results": 12,
+                    "members": [],
+                    "total_generated_tokens": 12,
+                    "peak_rss_kib": 1,
+                    "optimizer_steps": 0,
+                    "paid_api_calls": 0,
+                    "model_judge_calls": 0,
+                    "production_admission": False,
+                    "population_expansion_admitted": False,
+                }
+                (folder / "manifest.json").write_text(
+                    json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+                    encoding="utf-8")
+            out = root / "dataset"
+            manifest = assemble.assemble(artifacts, out)
+            self.assertEqual(manifest["raw_results"], 144)
+            self.assertEqual(manifest["hard_floor_clean_results"], 144)
+            self.assertFalse(manifest["subjective_fun_ratings_present"])
+            packet = screen.read_json(out / "review" / "fun-packet.json")
+            self.assertEqual(len(packet["items"]), 144)
+            blob = json.dumps(packet, sort_keys=True)
+            self.assertNotIn("V-G01-A", blob)
+            verified = assemble.verify_dataset(out)
+            self.assertEqual(verified["raw_results"], 144)
+            self.assertEqual(verified["packet_items"], 144)
+            self.assertFalse(verified["subjective_fun_ratings_present"])
+            self.assertFalse(verified["production_admission"])
+
+            # A duplicated lineage folder must never be silently selected.
+            duplicate = artifacts / "duplicate" / "G01"
+            duplicate.mkdir(parents=True)
+            for name in ("manifest.json", "results.jsonl"):
+                duplicate.joinpath(name).write_bytes(
+                    (artifacts / "G01" / name).read_bytes())
+            with self.assertRaisesRegex(screen.ScreenError, "duplicate lineage"):
+                assemble.discover_lineages(artifacts)
 
 
 if __name__ == "__main__":
