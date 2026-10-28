@@ -68,6 +68,9 @@ def load_contract() -> dict:
     require(pop["base_model"] == {
         "repo": "HuggingFaceTB/SmolLM2-135M-Instruct",
         "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+        "weights_file": "model.safetensors",
+        "weights_sha256":
+            "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
     }, "base model drift")
     authority = pop["release_manifest"]
     require(authority == {
@@ -184,6 +187,8 @@ def expected_source(cfg: dict, member_id: str) -> dict:
             cfg["source_population"]["release_manifest"]["member_contract_sha256"],
         "base_repo": base["repo"],
         "base_revision": base["revision"],
+        "base_weights_file": base["weights_file"],
+        "base_weights_sha256": base["weights_sha256"],
     }
 
 
