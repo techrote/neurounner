@@ -279,6 +279,8 @@ def run(candidate_id: str, out: Path) -> dict:
             "platform": platform.platform(),
             "cpu_count": os.cpu_count(),
             "cpu_model": cpu_model(),
+            "torch_threads": torch.get_num_threads(),
+            "torch_interop_threads": torch.get_num_interop_threads(),
         },
         "packages": {
             "python": platform.python_version(),
