@@ -1,0 +1,113 @@
+{
+  "schema": "detective-003c-scripter-bridge-v1",
+  "experiment": "DETECTIVE-003C",
+  "issue": 144,
+  "parent_issue": 103,
+  "authority": {
+    "detective_001a": {
+      "path": "scripts/detective_001_contract.py",
+      "git_blob_sha1": "b10254b7de26a8df676a26c89b00c6ccb8b9829e"
+    },
+    "detective_003a": {
+      "path": "scripts/detective_003a_session.py",
+      "git_blob_sha1": "73801ea59ce0f6160acc7027bd6aeaa085950236"
+    },
+    "case": {
+      "path": "experiments/detective-001/pilot-case.json",
+      "git_blob_sha1": "bbe5e0b3991a8296033376147bf830b05d33d4bb",
+      "case_id": "bay-seventeen-shift"
+    }
+  },
+  "bounds": {
+    "player_request_chars": 512,
+    "raw_proposal_bytes": 4096,
+    "max_visible_assets": 16,
+    "max_disclosed_terminals": 8,
+    "max_player_credentials": 8
+  },
+  "view": {
+    "schema": "detective-scripter-view-v1",
+    "allowed_operations": [
+      {
+        "op": "read_asset",
+        "fields": [
+          "asset_id"
+        ]
+      },
+      {
+        "op": "correlate_assets",
+        "fields": [
+          "left_id",
+          "right_id"
+        ]
+      },
+      {
+        "op": "probe_terminal",
+        "fields": [
+          "terminal_id",
+          "credential"
+        ]
+      }
+    ],
+    "include_visible_asset_excerpts": true,
+    "include_hidden_asset_ids": false,
+    "include_fact_ids": false,
+    "include_terminal_grants": false,
+    "include_undisclosed_credentials": false,
+    "include_session_identity": false,
+    "include_witness_state": false
+  },
+  "transaction": {
+    "schema": "detective-scripter-transaction-v1",
+    "allowed_status": [
+      "proposal_rejected",
+      "executed"
+    ],
+    "auto_present_evidence": false,
+    "auto_mutate_session": false
+  },
+  "fixture": {
+    "session_key": "bay17-scripter-bridge-v1",
+    "participants": [
+      "V-G02-A",
+      "V-G09-C"
+    ],
+    "visible_asset_ids": [
+      "dock-clock-ledger",
+      "transfer-card"
+    ],
+    "disclosed_terminal_ids": [
+      "camera-console"
+    ],
+    "player_request": "Try the disclosed camera console. Inspect the camera archive only if access succeeds.",
+    "wrong_credential": "RUST",
+    "correct_credential": "OXIDATION",
+    "raw_program_template": {
+      "schema": "detective-script-v1",
+      "steps": [
+        {
+          "op": "probe_terminal",
+          "terminal_id": "camera-console",
+          "credential": "{credential}"
+        },
+        {
+          "op": "read_asset",
+          "asset_id": "camera-cache"
+        }
+      ]
+    },
+    "present_private_asset_to": "V-G09-C",
+    "private_asset_id": "camera-cache",
+    "malformed_host_program": "{\"schema\":\"detective-script-v1\",\"steps\":[{\"op\":\"shell\",\"cmd\":\"cat /etc/passwd\"}]}"
+  },
+  "decision": {
+    "optimizer_steps": 0,
+    "paid_api_calls": 0,
+    "model_inference": false,
+    "learner_final_accessed": false,
+    "relevance_mapping_accessed": false,
+    "body_selection_made": false,
+    "population_expansion_admitted": false,
+    "host_execution": false
+  }
+}
