@@ -389,7 +389,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
         cases = (
             (b'{"torn":', "unterminated_raw_row"),
             (bytes([255, 10]), "unparseable_raw_row"),
-            (b'null\\n', "non_object_raw_row"),
+            (b'null\n', "non_object_raw_row"),
         )
         for tail, expected_problem in cases:
             with self.subTest(problem=expected_problem):
