@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import copy
 import json
+import shutil
 from pathlib import Path
 import sys
 import tempfile
@@ -39,6 +40,9 @@ class OriginalPostleaseWireEvidenceTests(unittest.TestCase):
         self.assertEqual(result["raw_artifact_members"], 5)
         self.assertFalse(result["tool_memory_semantics_admitted"])
         self.assertFalse(result["training_authorized"])
+        self.assertTrue(result["decoded_git_blob_sha_verified"])
+        self.assertEqual(result["original_decoded_job_logs_verified"], 3)
+        self.assertEqual(result["archival_ci_decoded_job_logs_verified"], 2)
 
     def test_02_falsified_training_admission_rejected(self):
         self.altered(lambda r: r.update(train_authorized=True))
@@ -98,6 +102,48 @@ class OriginalPostleaseWireEvidenceTests(unittest.TestCase):
             path.write_bytes(altered)
             with self.assertRaisesRegex(ValueError, "compressed archive changed"):
                 audit.original_zip_bytes(path)
+
+
+    def test_17_original_decoded_host_log_corruption_rejected(self):
+        with tempfile.TemporaryDirectory() as root:
+            dest = Path(root) / "evidence"
+            shutil.copytree(audit.ROOT / audit.REL, dest)
+            p = dest / "decoded/successful-physical-job-122923916338.log"
+            p.write_bytes(p.read_bytes() + b"\nFORGED POSITIVE RESULT\n")
+            with self.assertRaisesRegex(ValueError, "decoded original GitHub job log bytes changed"):
+                audit.verify_decoded_job_logs(dest)
+
+    def test_18_archival_failed_decoded_log_corruption_rejected(self):
+        with tempfile.TemporaryDirectory() as root:
+            dest = Path(root) / "evidence"
+            shutil.copytree(audit.ROOT / audit.REL, dest)
+            p = dest / "decoded/initial-archive-shallow-checkout-failure-job-122929862963.log"
+            p.write_bytes(p.read_bytes() + b"\nFORGED SUCCESS\n")
+            with self.assertRaisesRegex(ValueError, "decoded original GitHub job log bytes changed"):
+                audit.verify_decoded_job_logs(dest)
+
+    def test_19_manipulated_log_and_recomputed_manifest_rejected(self):
+        with tempfile.TemporaryDirectory() as root:
+            dest = Path(root) / "evidence"
+            shutil.copytree(audit.ROOT / audit.REL, dest)
+            relative = "decoded/initial-source-failure-job-122922594944.log"
+            p = dest / relative
+            p.write_bytes(p.read_bytes() + b"\nFORGED\n")
+            m = dest / "manifest.json"
+            data = json.loads(m.read_text(encoding="utf-8"))
+            data["archive"]["original_decoded_job_logs"][0]["git_blob_sha"] = audit.git_blob_sha(p.read_bytes())
+            m.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "original #162 log manifest Git blob changed"):
+                audit.verify_decoded_job_logs(dest)
+
+    def test_20_missing_original_decoded_log_rejected(self):
+        with tempfile.TemporaryDirectory() as root:
+            dest = Path(root) / "evidence"
+            shutil.copytree(audit.ROOT / audit.REL, dest)
+            (dest / "decoded/successful-source-job-122923377331.log").unlink()
+            with self.assertRaises(FileNotFoundError):
+                audit.verify_decoded_job_logs(dest)
+
 
 
 if __name__ == "__main__":
