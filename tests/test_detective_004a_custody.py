@@ -148,5 +148,55 @@ class Detective004ACustodyTests(unittest.TestCase):
             audit.audit_future_gate_layout(changed, self.b3)
 
 
+    def test_training_archive_native_inference_prefix_has_no_gold(self):
+        for row in self.rows:
+            with self.subTest(id=row["id"]):
+                prompt = audit.model_input_prefix(row, self.b3)
+                self.assertEqual(
+                    prompt, row["rendered"][:row["loss_char_spans"][-1]["start"]])
+                self.assertTrue(prompt.endswith("<|assistant|>"))
+                self.assertNotIn(row["turns"][-1]["content"], prompt)
+                self.assertEqual(
+                    prompt, audit.native.render_text(row["turns"][:-1]))
+                if row["kind"].startswith("result_"):
+                    self.assertIn("<|tool_result|>", prompt)
+                    self.assertIn("<|tool_call|>", prompt)
+                else:
+                    self.assertNotIn("<|tool_result|>", prompt)
+
+    def test_unsealed_synthetic_future_prefix_excludes_target_answer(self):
+        for row in self.synthetic_gate_fixture():
+            with self.subTest(id=row["id"]):
+                prefix = audit.model_input_prefix(row, self.b3)
+                self.assertTrue(prefix.endswith("<|assistant|>"))
+                self.assertNotIn(row["turns"][-1]["content"], prefix)
+                self.assertEqual(prefix, row["rendered"][:row["loss_char_spans"][-1]["start"]])
+
+    def test_inference_prefix_rejects_gold_leak_and_view_substitution(self):
+        restraint = copy.deepcopy(
+            next(r for r in self.rows if r["kind"] == "restraint"))
+        # This is a synthetic adversarial test only. The frozen archive and
+        # the 12-task posthash final remain untouched.
+        restraint["view"]["player_request"] += " " + restraint["turns"][-1]["content"]
+        view = restraint["view"]
+        restraint["turns"][1]["content"] = (
+            "Player request:\n" + view["player_request"] +
+            "\nCurrent fictional game view:\n" + protocol.canonical(view))
+        restraint["rendered"], restraint["loss_char_spans"] = (
+            protocol.render_with_mask(restraint["turns"], self.b3))
+        # Its fields and spans still pass the original producer validator.
+        protocol.validate_example(restraint, self.b3)
+        with self.assertRaisesRegex(protocol.ProtocolError, "gold assistant completion"):
+            audit.model_input_prefix(restraint, self.b3)
+
+        changed = copy.deepcopy(self.rows[0])
+        changed["turns"][1]["content"] += " undisclosed-extra-text"
+        changed["rendered"], changed["loss_char_spans"] = (
+            protocol.render_with_mask(changed["turns"], self.b3))
+        protocol.validate_example(changed, self.b3)
+        with self.assertRaisesRegex(protocol.ProtocolError, "user view differs"):
+            audit.model_input_prefix(changed, self.b3)
+
+
 if __name__ == "__main__":
     unittest.main()
