@@ -78,10 +78,13 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          # On PR runs github.sha is the synthetic merge commit, but GitHub's
+          # artifact API workflow_run.head_sha identifies the PR branch head.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - name: Construct a synthetic one-row interrupted lineage
         env:
-          DETECTIVE_HEAD_SHA: ${{ github.sha }}
+          DETECTIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           python3 - <<'PY'
           import os
@@ -128,6 +131,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          # On PR runs github.sha is the synthetic merge commit, but GitHub's
+          # artifact API workflow_run.head_sha identifies the PR branch head.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - name: Fetch same-run GitHub artifact API identities
         env:
@@ -143,7 +149,7 @@ jobs:
           path: artifacts
       - name: Verify raw-byte transport, API metadata and quarantine-only archive
         env:
-          DETECTIVE_HEAD_SHA: ${{ github.sha }}
+          DETECTIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           python3 scripts/detective_005a_recover.py \
