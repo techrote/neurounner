@@ -22,7 +22,7 @@ import torch
 import transformers
 
 from ncr_001_postlease_sprocket import (
-    ROOT, check_logits, digest, fingerprint_backbone, load_actual,
+    ROOT, digest, fingerprint_backbone, load_actual,
     load_formatter, require, verify_contract,
 )
 
@@ -46,6 +46,22 @@ def save() -> None:
 def checked(key: str, value) -> None:
     REPORT.setdefault("checks", {})[key] = value
     save()
+
+
+def compare(key: str, left, right, *, atol: float, rtol: float,
+            exact: bool = False) -> None:
+    """Report numeric observations, including failures, before refusal."""
+    require(left.shape == right.shape, key + ": tensor shape mismatch")
+    delta = float((left - right).abs().max().item())
+    finite = bool(torch.isfinite(left).all().item()
+                  and torch.isfinite(right).all().item())
+    good = bool(finite and torch.allclose(left, right, atol=atol, rtol=rtol)
+                and (not exact or delta == 0))
+    checked(key, {
+        "pass": good, "max_abs": delta, "atol": atol, "rtol": rtol,
+        "exact_required": exact, "shape": list(left.shape),
+    })
+    require(good, key + ": pinned frozen parity or cache mismatch")
 
 
 def wire_authority():
@@ -256,9 +272,9 @@ def run() -> None:
                            use_cache=False).logits
             disabled = wrapper(input_ids=full, attention_mask=full_mask,
                                use_cache=False, enabled=False).logits
-            check_logits("instruct", "wire", kind+"_zero_vs_original",
+            compare(kind+"_zero_vs_original",
                          raw, zero, atol=0, rtol=0, exact=True)
-            check_logits("instruct", "wire", kind+"_disabled_vs_original",
+            compare(kind+"_disabled_vs_original",
                          raw, disabled, atol=0, rtol=0, exact=True)
             checked(kind+"_zero_disabled_parity", {"pass": True, "exact": True})
             if kind == "nca":
@@ -281,9 +297,9 @@ def run() -> None:
                         use_cache=False).logits
             b = wrapper(input_ids=full, attention_mask=full_mask,
                         use_cache=False).logits
-            check_logits("instruct", "wire", kind+"_left_pad_short",
+            compare(kind+"_left_pad_short",
                          batch[0, offset:], a[0], atol=atol, rtol=rtol)
-            check_logits("instruct", "wire", kind+"_left_pad_long",
+            compare(kind+"_left_pad_long",
                          batch[1], b[0], atol=atol, rtol=rtol)
             checked(kind+"_explicit_left_pad", {"pass": True, "batch":list(ids.shape)})
             # Authentic tool and memory positions, not arbitrary raw control IDs.
