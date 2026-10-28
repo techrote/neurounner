@@ -125,3 +125,58 @@ No actual posthash final is generated, opened, persisted or scored in Stage A.
 The checks do not touch weights, model runtimes, tokenizer labels, hidden
 relevance maps or sealed witness finals. They grant no Stage-B optimizer,
 production or population authority.
+
+## Claimed full-seed binding without adapter attestation
+
+The full Stage-A posthash derivation is SHA-256 over canonical JSON of the
+frozen recipe digest, the verified training manifest digest, a supplied
+adapter-directory SHA-256 and the frozen salt. The existing exact-record
+structural guard checks an internally consistent **10-hex** case suffix, but
+**cannot establish that the suffix came from this posthash derivation**.
+
+The separate offline `audit_untrusted_posthash_claim(tasks, claim, b3)`
+now checks a supplied claim with **exactly** these three 64-hex fields:
+`training_manifest_sha256`, `adapter_dir_sha256`,
+`post_hash_seed_sha256`. It independently reloads the exact frozen
+source/config/B3 authority, re-verifies the *committed* training archive
+byte-for-byte, recomputes the full seed from the pinned recipe, compares the
+claimed 64-hex seed and all 12 case suffixes, and invokes the existing
+full-record frozen-recipe equality guard. It never calls the scorer,
+loads weights, inspects a real adapter or opens/mints a real posthash final.
+
+The function returns **`claim_consistent_only`**, with explicit false flags
+for adapter-source/optimizer receipt verification, independent final custody,
+model input/token-ID verification, independent Stage-A approval, training,
+production and population admission. This is an intentionally *incomplete*
+future-custody primitive. An attacker can supply a mutually consistent fake
+adapter hash and matching synthetic seed; this function detects contradictions
+*between claims*, not dishonest or unverified adapter ancestry.
+
+New offline tests use **made-up adapter digests**, recomputed dummy full seeds
+and 12 **unsealed synthetic unit-test rows**, never the future post-trained
+learner-final. They reject altered training manifests, mismatched adapter-hash
+claims, incorrect/short full seeds and fully coherent final task suites made
+under another prefix. A self-consistent fake claim is deliberately retained
+as a positive demonstration of the strict non-admission result.
+
+### Independent custodian's remaining obligations
+
+Before any future final can count as research evidence, a distinct reviewer
+must verify the *actual frozen model weights* and tokenizer source/checksums,
+confirm the real tokenizer input IDs, source-native masked token labels and
+512-token cap, inspect the real adapter files/PEFT configuration and its
+original frozen-root ancestry plus immutable optimizer receipts, and derive
+the posthash seed using the **measured** adapter directory hash. The reviewer
+must preserve exact raw model-visible prompt bytes, prompt token IDs, generated
+IDs/text, base and adapted outputs, and the 12-task posthash evidence identity.
+Never use a gold training `rendered` string or `target` record as inference
+input. The complete source-native training masks, role delimiters, end token
+and no-host-target rule need independent inspection against the pinned
+publisher SFT implementation before authorizing Stage B.
+
+No independent approval has been obtained, and this author-side hardening
+must not be represented as training or learner-final authorization. Draft
+PR #149 remains review-gated; separate blind relevance issue #121 still blocks
+population expansion. All Stage-A generator/config/source Git blobs, committed
+36-row corpus, manifest, archive hashes and historical model failures remain
+unchanged.
