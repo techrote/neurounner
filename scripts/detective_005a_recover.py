@@ -194,14 +194,59 @@ def metadata_by_name(metadata_path: Path | None) -> dict[str, dict]:
         name = entry.get("name")
         if name and re.fullmatch(r"detective005a-G(0[1-9]|1[0-2])", name):
             screen.require(name not in found, "duplicate artifact API identity")
+            source_run = entry.get("workflow_run")
             found[name] = {
                 "id": entry.get("id"),
                 "name": name,
                 "size_in_bytes": entry.get("size_in_bytes"),
                 "digest": entry.get("digest"),
                 "expired": entry.get("expired"),
+                "workflow_run": {
+                    "id": source_run.get("id"),
+                    "head_sha": source_run.get("head_sha"),
+                    "repository_id": source_run.get("repository_id"),
+                } if isinstance(source_run, dict) else None,
             }
     return found
+
+
+def bind_artifact_api(report: dict, name: str, api: dict[str, dict],
+                      metadata_present: bool, head: str,
+                      run_id: str) -> dict:
+    """Bind artifact ID/digest and prevent foreign/unknown API source admission.
+
+    Keep the original raw files even when API identity fails. A damaged or
+    foreign metadata record is a custody warning, never completed evidence.
+    """
+    entry = api.get(name)
+    report["artifact_name"] = name
+    report["artifact_api"] = entry
+    issues = report["custody_warnings"]
+    if entry is None and report["files"] and metadata_present:
+        issues.append("downloaded_artifact_not_listed")
+    if entry is not None and not report["files"]:
+        issues.append("listed_artifact_not_downloaded")
+    if entry is not None:
+        source = entry.get("workflow_run")
+        if not isinstance(source, dict) or (
+            source.get("id") != int(run_id) or
+            source.get("head_sha") != head
+        ):
+            issues.append("artifact_api_source_run_mismatch")
+        if type(entry.get("id")) is not int or entry["id"] <= 0:
+            issues.append("artifact_api_id_missing")
+        if (type(entry.get("size_in_bytes")) is not int or
+                entry["size_in_bytes"] <= 0):
+            issues.append("artifact_api_size_missing")
+        digest = entry.get("digest")
+        if (not isinstance(digest, str) or
+                re.fullmatch(r"sha256:[0-9a-f]{64}", digest) is None):
+            issues.append("artifact_api_digest_missing")
+        if entry.get("expired") is not False:
+            issues.append("artifact_api_expired_or_unknown")
+    if report["status"] == "complete_lineage_recovered" and issues:
+        report["status"] = "recovery_only"
+    return report
 
 
 def recover(artifacts: Path, out: Path, head: str, run_id: str,
@@ -217,13 +262,9 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
     for lineage in assemble.LINEAGES:
         name = f"detective005a-{lineage}"
         files = artifact_files(artifacts, lineage)
-        report = inspect_artifact(cfg, lineage, files, head, run_id)
-        report["artifact_name"] = name
-        report["artifact_api"] = api.get(name)
-        if name in api and not files:
-            report["custody_warnings"].append("listed_artifact_not_downloaded")
-        if name not in api and metadata_path is not None and files:
-            report["custody_warnings"].append("downloaded_artifact_not_listed")
+        report = bind_artifact_api(
+            inspect_artifact(cfg, lineage, files, head, run_id),
+            name, api, metadata_path is not None, head, run_id)
         staged.append((lineage, files))
         records.append(report)
 
@@ -344,17 +385,14 @@ def verify(path: Path) -> dict:
                            target.stat().st_size == record["bytes"] and
                            screen.sha256_file(target) == record["sha256"],
                            "recovered original artifact bytes drift")
-        refreshed = inspect_artifact(cfg, lineage, actual, head, run_id)
         artifact_name = f"detective005a-{lineage}"
-        screen.require(saved.get("artifact_api") == api.get(artifact_name),
-                       "original GitHub artifact API identity drift")
-        if artifact_name in api and not actual:
-            refreshed["custody_warnings"].append("listed_artifact_not_downloaded")
-        if artifact_name not in api and metadata_path.exists() and actual:
-            refreshed["custody_warnings"].append("downloaded_artifact_not_listed")
+        refreshed = bind_artifact_api(
+            inspect_artifact(cfg, lineage, actual, head, run_id),
+            artifact_name, api, metadata_path.exists(), head, run_id)
         with_artifacts += bool(actual)
         for field in ("lineage", "status", "validated_raw_prefix_rows",
-                      "journal_tail_problem", "custody_warnings", "files"):
+                      "journal_tail_problem", "custody_warnings", "files",
+                      "artifact_name", "artifact_api"):
             screen.require(refreshed[field] == saved[field],
                            "recovery lineage readback drift: " + field)
         total += refreshed["validated_raw_prefix_rows"]
