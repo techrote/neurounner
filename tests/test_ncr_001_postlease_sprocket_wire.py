@@ -45,7 +45,10 @@ class SourceTokenizer:
 class PublisherWireNoModelTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.markers, cls.render_ids_mask, cls.render_text = wire.wire_authority()
+        cls.markers, renderer, text_renderer = wire.wire_authority()
+        # Store functions without instance binding (else unittest passes self).
+        cls.render_ids_mask = staticmethod(renderer)
+        cls.render_text = staticmethod(text_renderer)
         cls.tokenizer = SourceTokenizer(cls.markers)
         cls.turns = wire.synthetic_turns()
 
