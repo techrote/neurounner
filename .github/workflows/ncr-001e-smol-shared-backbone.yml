@@ -1,0 +1,65 @@
+name: NCR-001E SmolLM2 shared frozen-backbone isolation
+
+on:
+  pull_request:
+    branches: [research/ncr-001c-smollm2-hook-conformance]
+    paths:
+      - ".github/workflows/ncr-001e-smol-shared-backbone.yml"
+      - "scripts/ncr_001_smollm2.py"
+      - "tests/test_ncr_001e_smollm2_shared_backbone.py"
+      - "docs/NCR_001_E_SMOL_SHARED_BACKBONE.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001e-smol-shared-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frozen-toy-refusal:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      OMP_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Confirm immutable source fixtures and closed training gate
+        env:
+          NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "dddfb416b765ef6cf23e1cdd326f8834f9f1417c"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("Source and four-model protocol pins unchanged; training forbidden")
+          PY
+      - name: Install pinned CPU-only PyTorch (no models)
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+      - name: Exercise real overlapping synthetic hook-window and negative guards
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p runtime/ncr-001e-smol-shared-backbone
+          python3 -m py_compile scripts/ncr_001_core.py scripts/ncr_001_smollm2.py tests/test_ncr_001e_smollm2_shared_backbone.py
+          python3 -m unittest discover -s tests -p "test_ncr_001e_smollm2_shared_backbone.py" -v 2>&1 | tee runtime/ncr-001e-smol-shared-backbone/tests.log
+      - name: Preserve original test log on success or failure
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr-001e-smol-shared-backbone-a${{ github.run_attempt }}
+          path: runtime/ncr-001e-smol-shared-backbone/tests.log
+          if-no-files-found: warn
+          retention-days: 30
