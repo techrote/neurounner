@@ -58,6 +58,10 @@ class Detective005AFunScreenTests(unittest.TestCase):
         pop = self.cfg["source_population"]
         self.assertEqual(pop["release_tag"], "village-001-sft-v1")
         self.assertEqual(pop["release_id"], 423495298)
+        self.assertEqual(pop["release_manifest"]["git_blob_sha1"],
+                         "29d269f69e30d200ce7c8d61b81b7b7f3865b5aa")
+        self.assertEqual(pop["release_manifest"]["member_contract_sha256"],
+                         "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e")
         self.assertEqual(len(pop["members"]), 36)
         self.assertEqual(
             [m["member_id"] for m in pop["members"]],
@@ -66,6 +70,9 @@ class Detective005AFunScreenTests(unittest.TestCase):
         self.assertEqual(
             pop["members"][0]["asset_sha256"],
             "21aa5d6cb098a47b50764b80f0a331f1e49dc26f822dd6dfe2bf1ad9a1c38409")
+        self.assertEqual(
+            pop["members"][0]["adapter_directory_sha256"],
+            "94268c7de7cd32b73843fab0f3a0c5119089646051b9de61c5c4e7922a19232c")
         self.assertEqual(
             pop["members"][-1]["asset_sha256"],
             "a6c5f2edb74492709a20dca26d3e315d81f858bf9b0c76cb37aea68500839142")
