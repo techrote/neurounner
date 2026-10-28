@@ -46,6 +46,14 @@ def file_sha(path: Path) -> str:
     return h.hexdigest()
 
 
+def git_blob_sha1(path: Path) -> str:
+    data = path.read_bytes()
+    h = hashlib.sha1()
+    h.update(f"blob {len(data)}\0".encode("ascii"))
+    h.update(data)
+    return h.hexdigest()
+
+
 def canonical(value: Any) -> str:
     return json.dumps(
         value, sort_keys=True, ensure_ascii=False,
@@ -77,6 +85,8 @@ def load_contract() -> tuple[dict, dict[str, dict]]:
         or authority["stage_a_merge_commit"]
         != "0993f0dfd859f67e88353bde0eeb2f6f377ccfac"
         or authority["path"] != SOURCE.relative_to(ROOT).as_posix()
+        or authority["git_blob_sha1"] != "a09003d37dd3ef4f2bcd0f6a8aafd1de6457c01c"
+        or git_blob_sha1(SOURCE) != authority["git_blob_sha1"]
         or source.get("schema") != authority["expected_schema"]
         or source.get("experiment") != authority["expected_experiment"]
         or source.get("issue") != 127
