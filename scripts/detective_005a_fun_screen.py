@@ -17,6 +17,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "experiments/detective-005/fun-screen.json"
+VILLAGE_RELEASE_MANIFEST = ROOT / "experiments/village-001/sft-evidence/adapter-release.json"
 REVIEW_SALT = "DETECTIVE-005A-fun-review-v1-20261028"
 MEMBER_RX = re.compile(r"^V-G(0[1-9]|1[0-2])-[ABC]$")
 SHA_RX = re.compile(r"^[0-9a-f]{64}$")
@@ -39,6 +40,11 @@ def canonical(value: Any) -> str:
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
+
+
+def git_blob_sha(path: Path) -> str:
+    data = path.read_bytes()
+    return hashlib.sha1(f"blob {len(data)}\\0".encode("ascii") + data).hexdigest()
 
 def sha256_file(path: Path) -> str:
     return sha256_bytes(path.read_bytes())
@@ -63,6 +69,26 @@ def load_contract() -> dict:
         "repo": "HuggingFaceTB/SmolLM2-135M-Instruct",
         "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
     }, "base model drift")
+    authority = pop["release_manifest"]
+    require(authority == {
+        "path": "experiments/village-001/sft-evidence/adapter-release.json",
+        "git_blob_sha1": "29d269f69e30d200ce7c8d61b81b7b7f3865b5aa",
+        "member_contract_sha256":
+            "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+    }, "release manifest authority drift")
+    require(VILLAGE_RELEASE_MANIFEST.is_file() and
+            git_blob_sha(VILLAGE_RELEASE_MANIFEST) == authority["git_blob_sha1"],
+            "committed VILLAGE release manifest blob drift")
+    release = read_json(VILLAGE_RELEASE_MANIFEST)
+    require(release.get("release_tag") == pop["release_tag"] and
+            release.get("base_model") == pop["base_model"]["repo"] and
+            release.get("base_revision") == pop["base_model"]["revision"] and
+            release.get("member_contract_sha256") ==
+            authority["member_contract_sha256"] and
+            isinstance(release.get("assets"), list) and
+            len(release["assets"]) == 36,
+            "committed VILLAGE release manifest identity drift")
+    release_assets = {x["member_id"]: x for x in release["assets"]}
     members = pop["members"]
     expected_ids = [f"V-G{g:02d}-{s}" for g in range(1, 13) for s in "ABC"]
     require([m["member_id"] for m in members] == expected_ids,
@@ -79,8 +105,20 @@ def load_contract() -> dict:
                 "asset filename/member mismatch")
         require(type(m["asset_id"]) is int and m["asset_id"] > 0 and
                 type(m["asset_bytes"]) is int and m["asset_bytes"] > 0 and
-                SHA_RX.fullmatch(m["asset_sha256"]) is not None,
+                SHA_RX.fullmatch(m["asset_sha256"]) is not None and
+                type(m["adapter_directory_bytes"]) is int and
+                m["adapter_directory_bytes"] > 0 and
+                SHA_RX.fullmatch(m["adapter_directory_sha256"]) is not None,
                 "invalid asset metadata")
+        manifest_asset = release_assets.get(m["member_id"])
+        require(manifest_asset == {
+            "member_id": m["member_id"],
+            "file": m["asset_name"],
+            "sha256": m["asset_sha256"],
+            "bytes": m["asset_bytes"],
+            "adapter_directory_sha256": m["adapter_directory_sha256"],
+            "adapter_directory_bytes": m["adapter_directory_bytes"],
+        }, "release manifest/member source mismatch")
     prompts = cfg["prompts"]
     require([p["id"] for p in prompts] == ["F01", "F02", "F03", "F04"] and
             len({p["user"] for p in prompts}) == 4,
@@ -140,6 +178,10 @@ def expected_source(cfg: dict, member_id: str) -> dict:
         "asset_id": member["asset_id"],
         "asset_bytes": member["asset_bytes"],
         "asset_sha256": member["asset_sha256"],
+        "adapter_directory_sha256": member["adapter_directory_sha256"],
+        "adapter_directory_bytes": member["adapter_directory_bytes"],
+        "member_contract_sha256":
+            cfg["source_population"]["release_manifest"]["member_contract_sha256"],
         "base_repo": base["repo"],
         "base_revision": base["revision"],
     }
