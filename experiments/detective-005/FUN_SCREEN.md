@@ -130,3 +130,42 @@ they must be retrieved and archived under `datasets/` before expiration.
 The 144-response assembler remains strict: no incomplete lineage is accepted,
 no subjective packet is constructed from partial results, and no training,
 model judging or population admission is authorized.
+
+## Failed-workflow durable recovery design (draft; not yet executed)
+
+The proposed `recover-failed-evidence` job is strictly conditional: it runs
+only after a confirmed-main `RUN-144-NO-TRAINING` plan succeeds and the
+lineage matrix or full evidence assembler fails. It does **not** initiate any
+generation or permit a retry. It retrieves already-uploaded, same-run
+`detective005a-G*` artifacts, records their GitHub metadata and copies
+the original bytes into `datasets/detective-005a-recovery-<run-id>/` on an
+isolated new branch `evidence/detective-005a-partial-<run-id>`.
+
+The standard-library `scripts/detective_005a_recover.py`:
+
+- refuses unexpected files, symlinks, unpacked weight directories and
+  duplicate per-lineage filenames;
+- keeps raw `results.partial.jsonl`, `results.jsonl`,
+  `manifest.json` and `interrupted.json` **byte-identical**,
+  including any torn or unparseable tail;
+- validates intact, source-matched rows against exact member/prompt order,
+  adapter/base weight hashes, dispatch commit and Actions run;
+- separately records missing artifacts, absent interruption receipts,
+  malformed rows, identity mismatches and incomplete versus complete lineages;
+- writes a run-specific manifest, source API provenance and full SHA-256
+  inventory, then independently re-verifies the archived bytes before push;
+- never builds a subjective fun packet or grants any admission.
+
+`complete_lineage_recovered` means 12 raw results and a valid lineage
+manifest were preserved from a **failed workflow**, NOT that the whole
+144-response screen passed. Invalid or foreign records stay quarantined as
+raw bytes, never counted as validated results. Artifact IDs/digests are recorded
+only when returned by GitHub; missing downloads are explicitly flagged.
+
+**Operational limits:** cancellation of the entire workflow may also cancel
+the recovery job, and artifact retrieval or branch push can fail. Such red runs
+need manual investigation; a recorded failure is never evidence of successful
+archival. Reruns must await verified durable preservation or a documented
+no-output determination. This design remains behind independent source-review
+and merge gates for PR #180 and its dependent draft and has not processed a
+live run.
