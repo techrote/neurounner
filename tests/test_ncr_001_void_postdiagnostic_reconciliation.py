@@ -1,0 +1,140 @@
+"""No-model, no-network, fail-closed #72 void.1 diagnostic evidence reconciliation.
+
+The archived original-host one-step diagnostic is NOT comparative training or
+an independently accepted scientific model qualification.
+"""
+from __future__ import annotations
+
+import copy
+import json
+from pathlib import Path
+import sys
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+import ncr_001_void_postdiagnostic_reconciliation as check  # noqa: E402
+import ncr_001_void_nca_original_custody as custody  # noqa: E402
+
+
+class PostDiagnosticVoid1ReconciliationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.legacy = check.read(check.LEGACY)
+        cls.original = custody.audit()
+        cls.manifest = check.read(check.MANIFEST)
+        cls.protocol = check.read(check.PROTOCOL)
+
+    def test_source_bound_report_is_reproducible_from_original_archives(self):
+        self.assertEqual(check.build_report(), check.read(check.OUT))
+
+    def test_previous_historical_matrix_is_not_rewritten(self):
+        old = self.legacy
+        self.assertFalse(old["per_model_gate"])
+        self.assertEqual(set(old["blocking_required_checks"]), set(check.THREE))
+        self.assertEqual(old["optimizer_steps_observed"], 0)
+        self.assertFalse(old["backward_executed"])
+        self.assertEqual(old["evidence"]["max_context_generation_records"], 12)
+
+    def test_new_diagnostic_does_not_open_scientific_or_training_gate(self):
+        result = check.build_report()
+        self.assertEqual(result["model_key"], "void1")
+        self.assertTrue(result["source_runtime_pretraining_subgate"])
+        self.assertFalse(result["per_model_gate"])
+        self.assertFalse(result["full_72_conformance_pass"])
+        self.assertFalse(result["train_authorized"])
+        self.assertFalse(result["independent_scientific_review"])
+        self.assertFalse(result["comparative_nca_mlp_training_performed"])
+        self.assertFalse(result["heldouts_opened"])
+        self.assertFalse(result["trained_checkpoint_created"])
+        self.assertEqual(set(result["unaccepted_required_checks"]),
+                         set(check.THREE))
+        self.assertEqual(set(result["candidate_required_check_evidence"]),
+                         set(check.THREE))
+        self.assertTrue(all(value == check.OBSERVED for value in
+                            result["candidate_required_check_evidence"].values()))
+
+    def test_source_and_frozen_original_host_are_distinct_from_old_audit(self):
+        result = check.build_report()
+        self.assertEqual(result["original_physical_run"], 40765025332)
+        self.assertEqual(result["original_custody_ci_run"], 40766551985)
+        self.assertEqual(result["original_source_zip_sha256"],
+                         "b153d177497f15227545bfe6b717a6430219a662f2b0b868e7a68b89682a90d0")
+        self.assertEqual(result["original_host_zip_sha256"],
+                         "8e9152042fb909f18b13589e6e21552c40f3104c4cc292cf9a643c600fbf08b5")
+        self.assertEqual(result["diagnostic_observation"]["terminal_eos_id"], 258)
+        self.assertEqual(result["diagnostic_observation"]["optimizer_steps"], 1)
+        self.assertEqual(result["diagnostic_observation"]["original_source_tests"], 11)
+        self.assertEqual(result["diagnostic_observation"]
+                         ["custody_adversarial_mutations_refused"], 14)
+
+    def test_eos_nonemission_and_unmeasured_legacy_impact_retained(self):
+        result = check.build_report()["byte_eos_negative_results"]
+        self.assertEqual(result["max_context_four_step_no_eos_records"], 12)
+        self.assertFalse(result["learned_eos_stopping_qualified"])
+        self.assertFalse(result["historical_train002b_eos_effect_measured"])
+
+    def test_additional_cross_receipt_mutations_are_refused(self):
+        def wrong_policy(l, r, m, p):
+            p["train_authorized"] = True
+        def collapsed_variants(l, r, m, p):
+            p["models"]["sprocket_chat"] = p["models"]["sprocket_instruct"]
+        def old_pass(l, r, m, p):
+            l["per_model_gate"] = True
+        def old_grad_promotion(l, r, m, p):
+            l["matrix"]["nonzero_adapter_gradient_after_warmup"]["status"] = "PASS"
+        def missing_negative_eos(l, r, m, p):
+            l["evidence"]["max_context_generation_records"] = 0
+        def cross_weight(l, r, m, p):
+            r["actual_source_files"]["model.safetensors"]["sha256"] = "f" * 64
+        def false_scientific_review(l, r, m, p):
+            r["independent_scientific_review"] = True
+        def multiple_steps(l, r, m, p):
+            r["diagnostic_optimizer_steps"] = 2
+        def altered_runner(l, r, m, p):
+            r["runner"]["run_id"] = "40765025333"
+        def corrupted_eos(l, r, m, p):
+            r["synthetic_sample"]["real_eos_id"] = 62
+        def noncausal_supervision(l, r, m, p):
+            r["synthetic_sample"]["supervised_after_shift"] = 22
+        def upstream_gradient_missing(l, r, m, p):
+            r["post_warmup"]["gradient_l1"]["perception.weight"] = 0
+        def readout_not_updated(l, r, m, p):
+            r["warmup"]["readout_after_sha256"] = r["warmup"]["readout_before_sha256"]
+        def nonfinite_loss(l, r, m, p):
+            r["post_warmup"]["native_causal_eos_loss"] = float("nan")
+        def field_reused(l, r, m, p):
+            r["post_warmup"]["ordered_field_trace"][1]["field_sha256"] = (
+                r["post_warmup"]["ordered_field_trace"][0]["field_sha256"])
+        def frozen_base_changed(l, r, m, p):
+            r["backbone_after_sha256"] = "0" * 64
+        def switched_run(l, r, m, p):
+            m["original_run"] = 40765025333
+        def missing_check(l, r, m, p):
+            del r["checks"]["native_shifted_byte_eos_loss"]
+
+        mutations = (
+            wrong_policy, collapsed_variants, old_pass, old_grad_promotion,
+            missing_negative_eos, cross_weight, false_scientific_review,
+            multiple_steps, altered_runner, corrupted_eos, noncausal_supervision,
+            upstream_gradient_missing, readout_not_updated, nonfinite_loss,
+            field_reused, frozen_base_changed, switched_run, missing_check,
+        )
+        for mutate in mutations:
+            with self.subTest(mutation=mutate.__name__):
+                original = [
+                    copy.deepcopy(self.legacy), copy.deepcopy(self.original),
+                    copy.deepcopy(self.manifest), copy.deepcopy(self.protocol),
+                ]
+                mutate(*original)
+                with self.assertRaisesRegex(RuntimeError, "REFUSED"):
+                    check.check_inputs(*original)
+
+    def test_unmodified_archives_pass_cross_receipt_validator(self):
+        check.check_inputs(self.legacy, self.original,
+                           self.manifest, self.protocol)
+
+
+if __name__ == "__main__":
+    unittest.main()
