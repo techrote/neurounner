@@ -123,3 +123,25 @@ A v5 PASS means only that the exact checkpoint is runtime-compatible with this f
 - population expansion.
 
 Any later body decision still requires independent relevance #121 plus prior policy evidence.
+
+
+## Executed outcome — 2026-10-28
+
+Authoritative run: [Actions 40609927745](https://github.com/techrote/neurounner/actions/runs/40609927745), exact pre-evidence source `053ddd90dcae646a647806fc65ca851ae8d85232`.
+
+**Outcome: `tokenizer_incompatible`.**
+
+- exact Transformers 5.20.1 wheel SHA-256 verification PASS;
+- resolved runtime: Python 3.12.15, Torch 2.14.1+cpu, Transformers 5.20.1, huggingface_hub 2.3.0, tokenizers 0.23.3, safetensors 0.8.0;
+- exact frozen config/tokenizer-config/chat-template identities PASS;
+- v5 successfully constructs the frozen tokenizer as **`TokenizersBackend`** with frozen `backend: tokenizers`;
+- rendering the exact merged B01–B04 chat messages then raises **`AttributeError`** with an empty message;
+- rendered prompts: 0;
+- **model weight downloaded: false**;
+- model stage: not entered;
+- optimizer steps/API calls/relevance access: 0/0/false;
+- LFM production/game license gate remains true.
+
+Thus Transformers v5 resolves the original 4.57.6 class-availability failure but does **not** qualify the exact LFM2.5-350M checkpoint/template for the common detective chat runtime. See [REPORT_002C.md](REPORT_002C.md).
+
+This evidence-ready branch must now run verification-only CI; live requalification must be skipped.
