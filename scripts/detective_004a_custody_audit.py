@@ -24,6 +24,42 @@ def require(condition, message):
         raise protocol.ProtocolError("custody audit: " + message)
 
 
+
+def model_input_prefix(row, b3):
+    """Return ONLY the source-native inference prompt, never the target answer.
+
+    The Stage-A row includes its gold last assistant turn for offline audit.
+    Supplying full rendered/turns/target to a later model would leak its answer.
+    This read-only projection uses the frozen B3 source renderer and ends on
+    an assistant cue; it performs NO inference, training or final creation.
+    """
+    protocol.validate_example(row, b3)
+    turns, view = row["turns"], row["view"]
+    require(turns[0] == {"role": "system", "content": native.manifest()},
+            "inference prefix system manifest not source-native")
+    user = ("Player request:\n" + view["player_request"] +
+            "\nCurrent fictional game view:\n" + protocol.canonical(view))
+    require(turns[1] == {"role": "user", "content": user},
+            "inference prefix user view differs from model-visible context")
+    require(turns[-1]["role"] == "assistant", "inference target not assistant")
+    try:
+        prompt = native.render_text(turns[:-1])
+    except (native.ContractError, ValueError, TypeError) as exc:
+        raise protocol.ProtocolError("custody audit: invalid source-native prompt") from exc
+    # Native B3 renderer independently reconstructs the wire from pre-target
+    # turns. The last Stage-A assistant CHARACTER span starts after its header.
+    # This is not a token-ID or loss-label verification.
+    require(prompt == row["rendered"][:row["loss_char_spans"][-1]["start"]],
+            "inference prefix differs from audited pre-target native wire")
+    require(prompt.endswith("<|assistant|>") and
+            not prompt.endswith("<|assistant|><|end|>"),
+            "inference prefix missing dangling assistant cue")
+    completion = turns[-1]["content"]
+    require(isinstance(completion, str) and bool(completion) and
+            completion not in prompt,
+            "gold assistant completion leaked into inference prefix")
+    return prompt
+
 def audit_row(row, b3):
     """Cross-check that the *actual user message* exposes exactly the audited view."""
     protocol.validate_example(row, b3)
@@ -53,6 +89,7 @@ def audit_row(row, b3):
             "publisher wire or assistant character spans differ")
     require(all(replay[span["start"]:span["end"]].endswith("<|end|>")
                 for span in assistant_spans), "assistant yield token untrained")
+    model_input_prefix(row, b3)
 
     if kind == "restraint":
         require(len(turns) == 3 and row["target"] == {"no_tool": True},
@@ -141,6 +178,7 @@ def audit_archive(folder):
             "rows_with_replayed_assistant_char_spans": len(rows),
             "host_owned_result_continuations": kinds["result_success"] + kinds["result_denied"],
             "tool_selection_examples": kinds["tool_selection"],
+            "model_only_prompt_prefixes_verified": len(rows),
             "real_tokenizer_labels_verified": False, "model_inferences": 0,
             "optimizer_steps": 0, "independent_protocol_approval": False}
 
@@ -190,6 +228,7 @@ def audit_future_gate_layout(tasks, b3):
             # The source generator is immutable: do not change its corpus blob
             # just to strengthen later evaluation.
             protocol.validate_example(row, b3)
+            model_input_prefix(row, b3)
             view, turns = row["view"], row["turns"]
             case_id = view.get("case_id")
             match = (re.fullmatch(r"fiction-only-d004a-" + re.escape(family) +
