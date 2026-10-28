@@ -44,7 +44,7 @@ def sha256_bytes(data: bytes) -> str:
 
 def git_blob_sha(path: Path) -> str:
     data = path.read_bytes()
-    return hashlib.sha1(f"blob {len(data)}\\0".encode("ascii") + data).hexdigest()
+    return hashlib.sha1(f"blob {len(data)}\0".encode("ascii") + data).hexdigest()
 
 def sha256_file(path: Path) -> str:
     return sha256_bytes(path.read_bytes())
