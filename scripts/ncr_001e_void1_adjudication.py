@@ -118,8 +118,12 @@ def build_report():
         require(HOOK in json.dumps(obj,sort_keys=True),
                 label+" missing exact original hook commit")
 
-    require_any_value(fresh_prov,"workflow_run_id",40464956343,
-                      "fresh actual-model Actions run changed")
+    # The original archive records this ID under source_run.run_id, not
+    # workflow_run_id. Bind the actual nested field rather than inventing an
+    # absent provenance key or relying on a text occurrence of the run number.
+    require(fresh_prov["source_run"]["run_id"]==40464956343
+            and fresh_prov["source_run"]["run_status"]=="success",
+            "fresh actual-model Actions run/status changed")
     require_any_value(cross,"original_run_id",40549549886,
                       "cross-process actual-model run changed")
     require(maxctx["original_actions"]["run_id"]==40605678381
@@ -128,29 +132,37 @@ def build_report():
 
     # Fresh UTF8 original evidence: exact no-op, padding, 48-cache, causal/reset,
     # cold reload, finite manually activated adapter and zero training.
-    fresh_text=json.dumps(fresh,sort_keys=True)
-    require("FAILED" not in str(fresh.get("status","")).upper(),
-            "fresh receipt is failed")
-    require("2.86102294921875e-05" in fresh_text
-            or "2.86102294921875e-05" in json.dumps(fresh_prov,sort_keys=True),
-            "fresh 48-unit cache metric missing")
-    require("0.062297821044921875" in fresh_text
-            or "0.062297821044921875" in json.dumps(fresh_prov,sort_keys=True),
-            "fresh manual-untrained effect missing")
-    require_any_value(fresh,"optimizer_steps",0,"fresh optimizer steps changed")
-    require_all_bool_if_present(fresh,"actual_model_training",False,
-                                "fresh receipt falsely claims training")
+    require(fresh["status"]==
+            "PASS_REVIEWED_VOID_UTF8_REAL_MODEL_CACHE_COLD_ADAPTER_PREPASS",
+            "fresh receipt is not an actual source-bound prepass PASS")
+    require(fresh["checks"]["nonzero_48_UTF8_full_vs_KV_cache"]["max_abs"]
+            ==2.86102294921875e-05
+            and fresh["checks"]["nonzero_48_UTF8_full_vs_KV_cache"]["within"] is True,
+            "fresh 48-unit cache metric changed")
+    require(fresh["checks"]["manual_nontrained_readout_effect"]["max_abs"]
+            ==0.062297821044921875
+            and fresh["checks"]["manual_nontrained_readout_effect"]["trained"] is False,
+            "fresh manual-untrained effect changed")
+    require(fresh["optimizer_steps"]==0
+            and fresh["model_training_performed"] is False
+            and fresh["comparative_training_admitted"] is False
+            and fresh["full_four_model_conformance_pass"] is False,
+            "fresh receipt falsely claims training/qualification")
     # Archived provenance itself explicitly preserves scope.
     require_any_value(fresh_prov,"optimizer_steps",0,
                       "fresh provenance optimizer boundary changed")
 
     # Separate Python process: exact 256 units / 240+16 cached replay, no leakage.
-    cross_text=json.dumps(cross,sort_keys=True)
-    require("40549549886" in cross_text
-            and "9.5367431640625e-06" in cross_text,
-            "cross-process cache original metric/run missing")
-    require("240" in cross_text and "256" in cross_text,
-            "cross-process source units missing")
+    results=cross["actual_results"]
+    require(cross["original_run_id"]==40549549886
+            and results["producer_max_abs_cached"]==9.5367431640625e-06
+            and results["consumer_max_abs_cached"]==9.5367431640625e-06,
+            "cross-process cache original metric/run changed")
+    require(results["tokenizer_units"]==256
+            and results["prefill_units"]==240
+            and results["cached_incremental_units"]==16
+            and results["producer_pid"]!=results["consumer_pid"],
+            "cross-process source units or independent PIDs changed")
     require_any_value(cross,"optimizer_steps",0,
                       "cross-process optimizer boundary changed")
     require_any_value(cross,"train_authorized",False,
