@@ -148,7 +148,13 @@ def inspect_artifact(cfg: dict, lineage: str, files: dict[str, Path],
                     rows[0]["runner"]["repository_head_sha"] == head and
                     rows[0]["runner"]["actions_run_id"] == run_id,
                     "complete lineage source/run mismatch")
-                if "results.partial.jsonl" in files:
+                # A complete #180 lineage necessarily has the fsynced journal
+                # as well as the identical final copy. A missing journal is a
+                # custody defect: retain the final bytes, but never certify
+                # this artifact as a fully recovered source-bound lineage.
+                if "results.partial.jsonl" not in files:
+                    errors.append("complete_lineage_missing_incremental_journal")
+                else:
                     screen.require(
                         files["results.partial.jsonl"].read_bytes() ==
                         files["results.jsonl"].read_bytes(),

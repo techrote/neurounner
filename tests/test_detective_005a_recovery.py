@@ -153,6 +153,24 @@ class Detective005ARecoveryTests(unittest.TestCase):
             self.assertFalse((out / "review/fun-packet.json").exists())
             self.assertFalse(recover.verify(out)["review_packet_generated"])
 
+            # A source-complete final JSONL without the mandatory fsynced
+            # journal is still preserved, but must not gain complete custody.
+            (src / "results.partial.jsonl").unlink()
+            degraded = root / "archive-missing-journal"
+            degraded_manifest = recover.recover(
+                root / "artifacts", degraded, HEAD, RUN)
+            self.assertEqual(degraded_manifest["validated_raw_prefix_rows"], 12)
+            self.assertEqual(degraded_manifest["complete_lineage_artifacts"], 0)
+            saved = screen.read_json(
+                degraded / "provenance/source-artifacts.json")["lineages"][0]
+            self.assertEqual(saved["status"], "recovery_only")
+            self.assertIn("complete_lineage_missing_incremental_journal",
+                          saved["custody_warnings"])
+            self.assertEqual(
+                (degraded / "raw/G01/results.jsonl").read_bytes(),
+                result_bytes)
+            self.assertFalse(recover.verify(degraded)["review_packet_generated"])
+
     def test_artifact_api_metadata_and_missing_download_are_explicit(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
