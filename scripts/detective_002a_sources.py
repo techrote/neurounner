@@ -186,6 +186,13 @@ def sibling_record(payload: dict, path: str | None) -> dict | None:
     return None
 
 
+def source_has_file(payload: dict, path: str) -> bool:
+    return any(
+        isinstance(item, dict) and item.get("rfilename") == path
+        for item in (payload.get("siblings") or [])
+    )
+
+
 def relevant_checkpoint_files(payload: dict) -> list[dict]:
     rows = []
     for item in payload.get("siblings") or []:
@@ -259,6 +266,11 @@ def resolve_candidate(cid: str, meta: dict, cfg: dict) -> dict:
     config_bytes, config_status = small_file(meta["repo"], revision, "config.json")
     tok_bytes, tok_status = small_file(
         meta["repo"], revision, "tokenizer_config.json")
+    if source_has_file(payload, "chat_template.jinja"):
+        jinja_bytes, jinja_status = small_file(
+            meta["repo"], revision, "chat_template.jinja")
+    else:
+        jinja_bytes, jinja_status = None, "missing"
     config_doc = (
         json.loads(config_bytes) if config_bytes is not None else None)
     tok_doc = json.loads(tok_bytes) if tok_bytes is not None else None
@@ -307,6 +319,15 @@ def resolve_candidate(cid: str, meta: dict, cfg: dict) -> dict:
         meta, observed_params, cfg["parameter_band"])
 
     template = tokenizer_template(payload, tok_doc)
+    template_source = None
+    if template is not None:
+        template_source = "api_or_tokenizer_config"
+    elif jinja_bytes is not None:
+        try:
+            template = jinja_bytes.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise SourceError(cid + ": chat_template.jinja is not UTF-8") from exc
+        template_source = "chat_template.jinja"
     config_meta = payload.get("config") if isinstance(payload.get("config"), dict) else {}
     architectures = None
     model_type = None
@@ -375,6 +396,12 @@ def resolve_candidate(cid: str, meta: dict, cfg: dict) -> dict:
             "bytes": len(tok_bytes) if tok_bytes else 0,
         },
         "has_chat_template": template is not None,
+        "chat_template_source": template_source,
+        "chat_template_file": {
+            "status": jinja_status,
+            "sha256": sha_bytes(jinja_bytes) if jinja_bytes else None,
+            "bytes": len(jinja_bytes) if jinja_bytes else 0,
+        },
         "template_mentions_tools": (
             bool(template) and (
                 "tool_call" in template
