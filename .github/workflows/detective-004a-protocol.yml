@@ -59,9 +59,8 @@ jobs:
         run: |
           cd datasets/detective-004a
           sha256sum README.md manifest.json training.jsonl provenance/source-artifacts.json
-          if test -f provenance/hashes.sha256; then
-            sha256sum -c provenance/hashes.sha256
-          fi
+          test -f provenance/hashes.sha256
+          sha256sum -c provenance/hashes.sha256
       - name: Source and authority boundary sentinels
         run: |
           python3 - <<'PY'
