@@ -6,6 +6,8 @@ on:
     paths:
       - ".github/workflows/ncr-001-sprocket-learning-readback.yml"
       - "scripts/ncr_001_sprocket_learning_artifact_readback.py"
+      - "scripts/ncr_001_sprocket_learning_git_custody.py"
+      - "experiments/ncr-001/controls-evidence/sprocket-learning-20261028/**"
       - "docs/NCR_001_SPROCKET_LEARNING_READBACK.md"
       - "RAG.md"
   workflow_dispatch:
@@ -40,6 +42,13 @@ jobs:
           assert p['train_authorized'] is False
           assert set(p['models']) == {'smollm2', 'sprocket_chat', 'sprocket_instruct', 'void1'}
           PY
+      - name: Independently audit permanently Git-custodied source members and negatives
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-learning-readback
+          python3 -m py_compile scripts/ncr_001_sprocket_learning_git_custody.py
+          python3 scripts/ncr_001_sprocket_learning_git_custody.py 2>&1 | tee runtime/ncr001-learning-readback/git-custody.log
       - name: Download byte-exact original read-only Actions artifacts
         shell: bash
         run: |
