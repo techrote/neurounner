@@ -50,8 +50,21 @@ def check_inputs(legacy: dict, receipt: dict, manifest: dict, policy: dict) -> N
     refuse(policy["experiment"] == "NCR-001"
            and policy["train_authorized"] is False
            and set(policy["models"]) ==
-           {"smollm2", "sprocket_chat", "sprocket_instruct", "void1"},
-           "four-lane protocol or training authorization changed")
+           {"smollm2", "sprocket_chat", "sprocket_instruct", "void1"}
+           and policy["models"]["smollm2"]["repo_id"] ==
+           "HuggingFaceTB/SmolLM2-135M-Instruct"
+           and policy["models"]["sprocket_chat"]["weight_file"] ==
+           "chat/model.safetensors"
+           and policy["models"]["sprocket_chat"]["variant"] == "chat"
+           and policy["models"]["sprocket_instruct"]["weight_file"] ==
+           "model.safetensors"
+           and policy["models"]["sprocket_instruct"]["variant"] == "instruct"
+           and policy["models"]["sprocket_chat"]["repo_id"] ==
+           policy["models"]["sprocket_instruct"]["repo_id"] ==
+           "kandivault/sprocket-500m"
+           and policy["models"]["void1"]["repo_id"] == "dotlabs/void.1"
+           and policy["models"]["void1"]["variant"] == "base_byte",
+           "four-lane protocol/variant/checkpoint or training authorization changed")
     refuse(legacy["model_key"] == "void1"
            and legacy["source_runtime_pretraining_subgate"] is True
            and legacy["per_model_gate"] is False
