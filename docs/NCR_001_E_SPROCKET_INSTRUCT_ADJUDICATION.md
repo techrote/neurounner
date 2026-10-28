@@ -61,6 +61,42 @@ negative failures and archive limitations remain in the stacked
 `experiments/ncr-001/evidence-review/` and
 `datasets/ncr-001-sprocket-wire-diagnostic/` records.
 
+## Additional original-receipt custody gate (28 October 2026)
+
+The initial adjudicator validated summary provenance and source/run fields,
+but did **not** re-open the losslessly archived original Actions JSON bytes
+at adjudication time. A modified or missing raw archive could therefore go
+undetected if its summary `provenance.json` remained unchanged. This was
+a custody-verification gap in the adjudicator, **not** an observed NCA causal
+failure or evidence of model-training progress.
+
+The adjudicator now reuses seven previously committed, standard-library
+source auditors *before* accepting any summary data:
+
+1. Fresh model/role inventory (original run `40469703065`);
+2. Separate-process producer/consumer (run `40515083104`);
+3. 2048-context checkpoint/cache (run `40544384293`);
+4. Publisher-structured frozen-model source wire (run `40567832272`);
+5. Original 21-output diagnostic, including failed/negative cases
+   (run `40573188117`);
+6. Masked-batch and source-isolation reviewer (run `40590487839`);
+7. Right-padded KV gap and actual HF generation reviewer
+   (run `40598034739`).
+
+The original auditors enforce fixed raw JSON/tar/gzip digests, run and
+source identities, numerical/causal boundaries, model-role separation and
+explicit nonqualification of tool/memory competence. The new regression
+sentinels corrupt or remove the original separate-process archive while
+leaving summary provenance intact; the full report must refuse. No original
+receipt or hash, fixture, check tolerance, checkpoint, protocol or report
+classification was modified.
+
+This is **additional source-only evidence custody verification**. Running
+the auditors does not re-execute Sprocket Chat or Instruct; original
+model-host execution remains attributed to its original Actions run.
+The required learning/update/loss blockers and `train_authorized=false`
+are unchanged.
+
 ## Why the lane is still BLOCKED
 
 Issue #72 and `experiments/ncr-001/protocol.json` require **all** required
