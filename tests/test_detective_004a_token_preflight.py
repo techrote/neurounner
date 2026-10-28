@@ -128,7 +128,8 @@ class Detective004ATokenPreflightTests(unittest.TestCase):
         raw = receipt["raw_arrays"]
         self.assertEqual(set(raw), {
             "full_input_ids", "trained_token_mask", "causal_input_ids",
-            "causal_target_labels", "model_only_prompt_ids", "model_only_prompt_utf8"})
+            "causal_target_labels", "model_only_prompt_ids", "model_only_prompt_utf8",
+            "hf_forward_labels", "hf_effective_shift_labels"})
         self.assertEqual(len(raw["full_input_ids"]), len(raw["trained_token_mask"]))
         self.assertEqual(raw["causal_input_ids"], raw["full_input_ids"][:-1])
         self.assertEqual(raw["model_only_prompt_ids"][-1], 4)
@@ -140,7 +141,9 @@ class Detective004ATokenPreflightTests(unittest.TestCase):
                 ("full_input_ids", "token_ids_sha256"),
                 ("trained_token_mask", "train_mask_sha256"),
                 ("causal_target_labels", "shifted_labels_sha256"),
-                ("model_only_prompt_ids", "prompt_ids_sha256")):
+                ("model_only_prompt_ids", "prompt_ids_sha256"),
+                ("hf_forward_labels", "hf_forward_labels_sha256"),
+                ("hf_effective_shift_labels", "hf_effective_shift_labels_sha256")):
             value = protocol.canonical(raw[item]).encode("utf-8")
             self.assertEqual(hashlib.sha256(value).hexdigest(), receipt[digest])
         self.assertEqual(
@@ -315,6 +318,80 @@ class Detective004ATokenPreflightTests(unittest.TestCase):
         self.assertFalse(gap["optimizer_execution_contract_complete"])
         self.assertFalse(gap["stage_b_training_admitted"])
 
+
+
+    def test_hf_llama_forward_labels_match_publisher_mask_after_one_shift(self):
+        # Native GPT.forward has externally shifted labels/-1 ignore; the
+        # source-exported LlamaForCausalLM uses full-width labels/-100 ignore
+        # and shifts internally. This exercises arrays only, never a model.
+        row = next(r for r in self.rows if r["kind"] == "result_success")
+        receipt = preflight.inspect_row(row, self.b3, self.toy, include_arrays=True)
+        raw = receipt["raw_arrays"]
+        ids, mask, regions = preflight.source_role_ids(
+            row["turns"], self.toy, self.b3["special_token_ids"])
+        native_y = raw["causal_target_labels"]
+        hf_labels = raw["hf_forward_labels"]
+        hf_shifted = raw["hf_effective_shift_labels"]
+        self.assertEqual(len(hf_labels), len(ids))
+        self.assertEqual(len(hf_shifted), len(ids))
+        self.assertEqual(hf_labels,
+                         [tid if active else -100 for tid, active in zip(ids, mask)])
+        self.assertEqual(
+            hf_shifted, [(-100 if t == -1 else t) for t in native_y] + [-100])
+        self.assertEqual(sum(t != -100 for t in hf_labels),
+                         receipt["trained_tokens"])
+        self.assertEqual(sum(t != -100 for t in hf_shifted),
+                         receipt["shifted_train_labels"])
+        self.assertEqual(hf_labels[0], -100)  # host header never supervised
+        self.assertEqual(hf_labels[-1], 5)  # model yield trained
+        self.assertEqual(receipt["publisher_ignore_index"], -1)
+        self.assertEqual(receipt["hf_llama_ignore_index"], -100)
+        self.assertTrue(receipt["hf_internal_shift_equivalence_checked"])
+        self.assertEqual(hf_labels[regions[2]["content_start"]], 6)
+        self.assertEqual(hf_labels[regions[3]["header"]], -100)
+        self.assertEqual(hf_labels[regions[4]["header"]], -100)
+
+    def test_untrusted_hf_label_claim_refuses_native_minus_one_and_double_shift(self):
+        row = next(r for r in self.rows if r["kind"] == "tool_selection")
+        ids, mask, _ = preflight.source_role_ids(
+            row["turns"], self.toy, self.b3["special_token_ids"])
+        native_y = [ids[i + 1] if mask[i + 1] else -1
+                    for i in range(len(ids) - 1)]
+        exact, effective = preflight.hf_forward_supervision(ids, mask, native_y)
+        self.assertEqual(
+            preflight.hf_forward_supervision(
+                ids, mask, native_y, claimed_hf_labels=exact), (exact, effective))
+        bad = [
+            native_y + [-1],  # publisher's shifted/ignore=-1 arrays
+            [-100] + native_y,  # double-shifted label vector, wrong ignore values
+            [x if x != -100 else -1 for x in exact],  # native ignore value
+            list(ids),  # accidental training on host/user text
+        ]
+        for labels in bad:
+            with self.subTest(labels=labels[:4]):
+                self.assertNotEqual(labels, exact)
+                with self.assertRaisesRegex(
+                        protocol.ProtocolError, "full-width, unshifted"):
+                    preflight.hf_forward_supervision(
+                        ids, mask, native_y, claimed_hf_labels=labels)
+        wrong_native = native_y.copy()
+        wrong_native[0] = 9999
+        with self.assertRaisesRegex(
+                protocol.ProtocolError, "publisher externally shifted"):
+            preflight.hf_forward_supervision(ids, mask, wrong_native)
+
+    def test_36_step_plan_binds_both_native_and_hf_loss_label_digests(self):
+        plan = preflight.planned_single_example_steps(self.toy)
+        self.assertFalse(plan["loss_backend_selected_and_independently_qualified"])
+        self.assertEqual(len(plan["steps"]), 36)
+        for step in plan["steps"]:
+            self.assertEqual(len(step["shifted_labels_sha256"]), 64)
+            self.assertEqual(len(step["hf_forward_labels_sha256"]), 64)
+            self.assertEqual(len(step["hf_effective_shift_labels_sha256"]), 64)
+        mutation = copy.deepcopy(plan["steps"])
+        mutation[0]["hf_forward_labels_sha256"] = "0" * 64
+        with self.assertRaisesRegex(protocol.ProtocolError, "per-step"):
+            preflight.audit_claimed_training_steps(self.toy, mutation)
 
 
 if __name__ == "__main__":
