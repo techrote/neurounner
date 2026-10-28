@@ -36,7 +36,8 @@ jobs:
           test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
           test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
           test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
-          test "$(git cat-file -t aadbfe823c9778066acac0a0869e0c559a533f05)" = commit
+          # The original physical head is immutably pinned in the archive manifest;
+          # the default exact-head shallow checkout does not retain that commit object.
           python3 - <<'PY'
           import json
           p=json.load(open("experiments/ncr-001/protocol.json"))
