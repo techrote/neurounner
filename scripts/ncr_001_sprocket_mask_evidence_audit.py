@@ -220,7 +220,7 @@ def negative(m: dict, files: dict[str, bytes]) -> int:
         ("chat", lambda r: r.update(train_authorized=True)),
         ("instruct", lambda r: r["source_identity"].update(weight_path="chat/model.safetensors")),
         ("chat", lambda r: r["checks"]["tokenizer_source_mask"].update(naive_id_mask_refused=False)),
-        ("instruct", lambda r: r["checks"]["mlp_enabled_manual_cache_on_off"].update(pass=False)),
+        ("instruct", lambda r: r["checks"]["mlp_enabled_manual_cache_on_off"].update({"pass": False})),
         ("chat", lambda r: r["checks"]["nca_enabled_manual_batch_vs_singles_cached"]["new_tokens"][0].__setitem__(0,999)),
         ("instruct", lambda r: r["checks"]["nca_enabled_zero_batch_vs_singles_uncached"].update(explicit_mask=False)),
         ("chat", lambda r: r["checks"]["nca_enabled_zero_batch_vs_singles_cached"]["new_tokens"].__setitem__(0,[9,9,9])),
