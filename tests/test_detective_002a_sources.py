@@ -271,6 +271,16 @@ class SourceQualificationTests(unittest.TestCase):
         self.assertFalse(row["source_gate_pass"])
         self.assertIn("mismatch", row["weight_gate_reason"])
 
+    def test_named_custom_license_normalizes_other_plus_license_name(self):
+        payload = {
+            "cardData": {
+                "license": "other",
+                "license_name": "LFM1.0",
+            },
+            "tags": [],
+        }
+        self.assertEqual(s.license_from(payload), "lfm1.0")
+
     def test_lfm_license_gate_and_zenyx_mutation_only_cannot_disappear(self):
         lfm = self.cfg["candidates"]["lfm25-350m"]
         self.assertEqual(lfm["expected_license"], "lfm1.0")
