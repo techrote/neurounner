@@ -19,6 +19,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Assert checkout is exact PR head
+        if: github.event_name == 'pull_request'
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
       - name: Check immutable original frozen-source receipts; refuse training claims
         run: |
           python3 scripts/ncr_001_postlease_evidence_audit.py | tee "$RUNNER_TEMP/ncr001-postlease-evidence-audit.json"
