@@ -1,0 +1,28 @@
+name: STORY-001-V2 archive verification
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/story-001-v2-verify.yml'
+      - 'scripts/story_001_v2.py'
+      - 'scripts/verify_story_001_v2.py'
+      - 'experiments/story-001-v2/**'
+      - 'datasets/story-001-v2/**'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify archived STORY-001-V2 evidence
+        run: |
+          python3 -m py_compile scripts/story_001_v2.py scripts/verify_story_001_v2.py
+          python3 scripts/story_001_v2.py --config experiments/story-001-v2/config.json self-test
+          python3 scripts/verify_story_001_v2.py --archive datasets/story-001-v2
