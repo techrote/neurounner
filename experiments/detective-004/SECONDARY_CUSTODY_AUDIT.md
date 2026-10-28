@@ -357,3 +357,41 @@ optimizer receipts, raw inference and posthash final custody are separate
 gates. Witness relevance review #121 still requires independent external
 scores. No training, model inference, sealed learner-final materialization,
 hidden relevance-map access, production admission or population expansion.
+
+## Future 36-step single-example input custody (source-only preparation)
+
+The frozen Stage-B budget specifies **one pass over exactly 36 examples,
+one example/optimizer step, 36 steps total, at most 512 tokens/example**.
+This is **not** interchangeable with the publisher's `pack()` training helper,
+which concatenates conversations with `<|endoftext|>` separators and cuts
+fixed `ctx+1` blocks (possibly placing multiple conversations in a block).
+Silently switching to packed batches could repeat, omit or mix admitted
+examples while still reporting 36 optimizer steps.
+
+The auxiliary `planned_single_example_steps(tok)` now derives 36 ordered
+one-example input claims from the byte-verified committed Stage-A archive and
+the exact selected tokenizer's token/mask/causal-label receipt. Its order must
+match the committed manifest's 36 IDs; every item retains source-native
+untruncated token length, trained label count and SHA-256 of full IDs,
+assistant-only mask, shifted labels and **model-only** prompt IDs.
+`audit_claimed_training_steps(tok, claimed_steps)` fails closed on omitted,
+duplicated or reordered IDs, length drift, different token/mask/label/prompt
+hashes, and any mismatch from the single-row input plan.
+
+The Stage-A regression tests use **only the artificial toy tokenizer**, so
+the positive 36-step plan is a mechanical fixture, not real Sprocket input
+evidence. The helper returns `optimizer_execution_verified=false`,
+`training_admitted=false`; the claimed-steps audit returns
+`actual_optimizer_batches_independently_attested=false`,
+`adapter_ancestry_verified=false` and `stage_b_training_admitted=false`.
+Even a byte-perfect claim can be fabricated. A future independent custodian
+must reconcile these *expected* inputs against separate, immutable **actual
+optimizer step/batch execution receipts**, the verified frozen tokenizer and
+actual adapter/root ancestry before any training or final qualification
+could be considered. This author-side hardening neither invokes an optimizer
+nor authorizes one.
+
+The original 36-row JSONL, manifest, frozen generator/config, exact source
+pins, posthash final recipe, prior raw model evidence and C1/C2/C3 sealed
+witness finals were not modified. No real tokenizer, model, inference,
+training, relevance mappings or population mutation was accessed.
