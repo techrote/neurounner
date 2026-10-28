@@ -233,5 +233,92 @@ class Detective004ACustodyTests(unittest.TestCase):
             audit.audit_future_gate_layout(rows, self.b3)
 
 
+
+    @classmethod
+    def synthetic_untrusted_full_claim_fixture(cls, adapter_sha=None):
+        """Synthetic NOT-AN-ADAPTER hash: no model, optimizer or real final."""
+        adapter_sha = adapter_sha or ("c" * 64)
+        cfg, b3 = protocol.load_contract()
+        manifest_sha = protocol.verify_archive(protocol.DATASET, cfg, b3)
+        seed = protocol.sha256_bytes(protocol.canonical({
+            "recipe_sha": protocol.final_recipe_sha(cfg),
+            "manifest_sha": manifest_sha,
+            "adapter_dir_sha": adapter_sha,
+            "salt": cfg["final_recipe"]["fixed_salt"],
+        }).encode("utf-8"))
+        tasks = []
+        for family, extra in zip(
+                protocol.EXPECTED_FINAL_FAMILIES,
+                ("result_success", "result_denied", "restraint")):
+            case = protocol.family_data(family, seed)
+            for index, op in enumerate(protocol.OPS):
+                tasks.append(protocol.make_example(
+                    family, case, "tool_selection", index, op))
+            tasks.append(protocol.make_example(family, case, extra, 3))
+        for row in tasks:
+            row["rendered"], row["loss_char_spans"] = protocol.render_with_mask(
+                row["turns"], b3)
+        claim = {"training_manifest_sha256": manifest_sha,
+                 "adapter_dir_sha256": adapter_sha,
+                 "post_hash_seed_sha256": seed}
+        return tasks, claim
+
+    def test_untrusted_full_posthash_claim_matches_frozen_recipe_only(self):
+        tasks, claim = self.synthetic_untrusted_full_claim_fixture()
+        result = audit.audit_untrusted_posthash_claim(tasks, claim, self.b3)
+        self.assertEqual(result["status"], "claim_consistent_only")
+        self.assertTrue(result["training_archive_verified"])
+        self.assertTrue(result["full_seed_derivation_from_claims_verified"])
+        self.assertFalse(result["adapter_source_and_optimizer_receipts_verified"])
+        self.assertFalse(result["independent_posthash_final_custody_verified"])
+        self.assertFalse(result["model_inputs_and_token_ids_verified"])
+        self.assertFalse(result["training_admitted"])
+        self.assertFalse(result["production_admission"])
+        self.assertFalse(result["population_expansion_admitted"])
+
+    def test_untrusted_claim_rejects_manifest_seed_and_prefix_substitution(self):
+        tasks, claim = self.synthetic_untrusted_full_claim_fixture()
+        changed = copy.deepcopy(claim)
+        changed["training_manifest_sha256"] = "a" * 64
+        with self.assertRaisesRegex(
+                protocol.ProtocolError, "not the committed archive"):
+            audit.audit_untrusted_posthash_claim(tasks, changed, self.b3)
+
+        changed = copy.deepcopy(claim)
+        changed["adapter_dir_sha256"] = "b" * 64
+        with self.assertRaisesRegex(
+                protocol.ProtocolError, "full posthash seed"):
+            audit.audit_untrusted_posthash_claim(tasks, changed, self.b3)
+
+        changed = copy.deepcopy(claim)
+        changed["post_hash_seed_sha256"] = "d" * 64
+        with self.assertRaisesRegex(
+                protocol.ProtocolError, "full posthash seed"):
+            audit.audit_untrusted_posthash_claim(tasks, changed, self.b3)
+
+        changed = copy.deepcopy(claim)
+        changed["post_hash_seed_sha256"] = "bad"
+        with self.assertRaisesRegex(
+                protocol.ProtocolError, "invalid full SHA-256"):
+            audit.audit_untrusted_posthash_claim(tasks, changed, self.b3)
+
+        # A coherent twelve-task record from another invented prefix passes
+        # the old structural equality mirror, but not the full claimed seed.
+        other, other_claim = self.synthetic_untrusted_full_claim_fixture(
+            adapter_sha="e" * 64)
+        audit.audit_future_gate_layout(other, self.b3)
+        with self.assertRaisesRegex(
+                protocol.ProtocolError, "future case suffix"):
+            audit.audit_untrusted_posthash_claim(other, claim, self.b3)
+
+        # This is deliberately NOT provenance: forged self-consistent claims
+        # remain a structural match, never evidence of a trained adapter.
+        still_untrusted = audit.audit_untrusted_posthash_claim(
+            other, other_claim, self.b3)
+        self.assertEqual(still_untrusted["status"], "claim_consistent_only")
+        self.assertFalse(still_untrusted["adapter_source_and_optimizer_receipts_verified"])
+
+
+
 if __name__ == "__main__":
     unittest.main()
