@@ -188,3 +188,75 @@ jobs:
           git commit -m "DETECTIVE-005A: promote 36-villager raw fun-screen evidence ${GITHUB_RUN_ID}"
           git push origin HEAD:"refs/heads/$TARGET_BRANCH"
           echo "Promoted verified evidence to $TARGET_BRANCH"
+
+recover-failed-evidence:
+    # A failed screen OR a failed full archive must not strand raw responses
+    # in 30-day Actions staging. Deliberately no model/optimizer invocation.
+    if: >-
+      ${{ always() && needs.plan.result == 'success' &&
+          (needs.screen.result != 'success' || needs.assemble.result != 'success') }}
+    needs: [plan, screen, assemble]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    env:
+      SOURCE_HEAD_SHA: ${{ github.sha }}
+      TARGET_BRANCH: evidence/detective-005a-partial-${{ github.run_id }}
+      TARGET_DATASET: datasets/detective-005a-recovery-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Read original same-run Actions artifact identities
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100" \
+            > artifacts-api.json
+      - name: Retrieve surviving lineage artifacts without rewriting raw bytes
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: detective005a-G*
+          path: artifacts
+      - name: Build and read back quarantine-only durable dataset
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          python3 -m py_compile scripts/detective_005a_recover.py
+          python3 scripts/detective_005a_recover.py \
+            --artifacts artifacts \
+            --artifact-metadata artifacts-api.json \
+            --source-head "$SOURCE_HEAD_SHA" \
+            --run-id "$GITHUB_RUN_ID" \
+            --out staged/detective-005a-recovery
+          python3 scripts/detective_005a_recover.py \
+            --verify staged/detective-005a-recovery
+          test ! -e "$TARGET_DATASET"
+          mkdir -p "$TARGET_DATASET"
+          cp -a staged/detective-005a-recovery/. "$TARGET_DATASET/"
+          python3 scripts/detective_005a_recover.py \
+            --verify "$TARGET_DATASET"
+      - name: Promote failure evidence to fresh run-scoped branch only
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$SOURCE_HEAD_SHA" origin/main; then
+            echo "Source head not in main history; refuse evidence promotion."
+            exit 1
+          fi
+          if git ls-remote --exit-code --heads origin "refs/heads/$TARGET_BRANCH" >/dev/null 2>&1; then
+            echo "Recovery evidence branch already exists; refuse overwrite."
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+techrote@users.noreply.github.com'
+          git add "$TARGET_DATASET"
+          git commit -m "DETECTIVE-005A: preserve failed-run raw custody ${GITHUB_RUN_ID}"
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          echo "Archived failed-run evidence at $TARGET_BRANCH/$TARGET_DATASET"
