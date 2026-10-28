@@ -240,7 +240,7 @@ class Detective004ACustodyTests(unittest.TestCase):
         restraint = next(row for row in rows if row["kind"] == "restraint")
         adapted = {row["id"]: row["turns"][-1]["content"] for row in rows}
         root = {row["id"]: "mock root baseline" for row in rows}
-        for rogue in ("<|pad|>", "<|endoftext|>", "A sentence <think>"):
+        for rogue in ("<|pad|>", "<|endoftext|>", "A sentence <|pad|>"):
             with self.subTest(raw=rogue):
                 # The frozen evaluator would count a synthetic control token
                 # as valid no-tool restraint. Never rewrite the manifest-bound
