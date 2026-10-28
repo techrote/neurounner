@@ -16,6 +16,10 @@ on:
       - 'experiments/ncr-001/evidence-review/sprocket-extended-context/**'
       - 'experiments/ncr-001/evidence-review/sprocket-chat-generate/**'
       - 'scripts/ncr_001e_sprocket_chat_generate_audit.py'
+      - 'scripts/ncr_001e_sprocket_receipt_audit.py'
+      - 'scripts/ncr_001e_sprocket_process_receipt_audit.py'
+      - 'scripts/ncr_001e_sprocket_extended_receipt_audit.py'
+      - 'docs/NCR_001_E_SPROCKET_CHAT_ADJUDICATION.md'
   workflow_dispatch:
 
 permissions:
@@ -29,7 +33,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Reproduce authoritative Chat BLOCKED adjudication
+      - name: Recheck original Sprocket archives and reproduce Chat BLOCKED adjudication
         run: |
           set -euo pipefail
           python3 -m py_compile scripts/ncr_001e_sprocket_chat_adjudication.py
