@@ -1,0 +1,98 @@
+name: NCR-001 void1 postlease maxctx original evidence exact-head audit
+
+on:
+  pull_request:
+    branches: [review/ncr001-void-postlease-maxctx-20261028]
+    paths:
+      - ".github/workflows/ncr-001-void-postlease-maxctx-custody-verify.yml"
+      - "scripts/ncr_001_void_postlease_maxctx_original_audit.py"
+      - "tests/test_ncr_001_void_postlease_maxctx_original_audit.py"
+      - "experiments/ncr-001/controls-evidence/void-postlease-maxctx-20261028/**"
+      - "docs/NCR_001_VOID_POSTLEASE_MAXCTX_ORIGINAL_CUSTODY.md"
+      - "RAG.md"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  original-evidence-readback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      EVIDENCE_DIR: experiments/ncr-001/controls-evidence/void-postlease-maxctx-20261028
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Fail closed on exact source, four frozen lanes, and training prohibition
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          m=json.load(open("experiments/ncr-001/controls-evidence/void-postlease-maxctx-20261028/manifest.json"))
+          assert m["original_run"] == 40755894558
+          assert m["original_source_head"] == "1438f45efc0dab8ed669a814b4897fc7a839302f"
+          assert m["original_jobs"] == {"source":123054571007,"qwen":123054647348}
+          assert m["original_artifacts"] == {"source":12844994507,"qwen":12845743165}
+          assert m["training_authorized"] is False and m["optimizer_steps"] == 0
+          assert m["backward_executed"] is False and m["heldout_opened"] is False
+          assert m["comparative_training_performed"] is False
+          assert m["full_72_conformance_pass"] is False
+          assert m["independent_scientific_review"] is False
+          PY
+
+      - name: Decode lossless original ZIPs and verify exact byte hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-void-maxctx-custody
+          base64 -d "$EVIDENCE_DIR/source-original.zip.b64" > runtime/ncr001-void-maxctx-custody/source-original.zip
+          base64 -d "$EVIDENCE_DIR/qwen-original.zip.b64" > runtime/ncr001-void-maxctx-custody/qwen-original.zip
+          test "$(sha256sum runtime/ncr001-void-maxctx-custody/source-original.zip | cut -d ' ' -f 1)" = "37babf3139f3d74deac90b64a8927db4bf697de9a70cbd5633798676ef79a427"
+          test "$(sha256sum runtime/ncr001-void-maxctx-custody/qwen-original.zip | cut -d ' ' -f 1)" = "eb209e2be9ab73615db23b60e5d75cfbe0bb14f9aa05ba81373a2d9231bb9026"
+
+      - name: Offline original-receipt audit and sixteen adversarial refusals
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001_void_postlease_maxctx_original_audit.py
+          python3 scripts/ncr_001_void_postlease_maxctx_original_audit.py             | tee runtime/ncr001-void-maxctx-custody/offline-audit.json
+          python3 -m unittest discover -s tests -p 'test_ncr_001_void_postlease_maxctx_original_audit.py' -v
+
+      - name: Freshly re-download original Actions artifacts and logs and compare to Git custody
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth="Authorization: Bearer $GH_TOKEN"
+          accept="Accept: application/vnd.github+json"
+          curl -fsSL --retry 3 -H "$auth" -H "$accept"             "https://api.github.com/repos/techrote/neurounner/actions/artifacts/12844994507/zip"             -o runtime/ncr001-void-maxctx-custody/source-live.zip
+          curl -fsSL --retry 3 -H "$auth" -H "$accept"             "https://api.github.com/repos/techrote/neurounner/actions/artifacts/12845743165/zip"             -o runtime/ncr001-void-maxctx-custody/qwen-live.zip
+          cmp runtime/ncr001-void-maxctx-custody/source-original.zip runtime/ncr001-void-maxctx-custody/source-live.zip
+          cmp runtime/ncr001-void-maxctx-custody/qwen-original.zip runtime/ncr001-void-maxctx-custody/qwen-live.zip
+          curl -fsSL --retry 3 -H "$auth" -H "$accept"             "https://api.github.com/repos/techrote/neurounner/actions/jobs/123054571007/logs"             -o runtime/ncr001-void-maxctx-custody/source-live-job.log
+          curl -fsSL --retry 3 -H "$auth" -H "$accept"             "https://api.github.com/repos/techrote/neurounner/actions/jobs/123054647348/logs"             -o runtime/ncr001-void-maxctx-custody/qwen-live-job.log
+          cmp "$EVIDENCE_DIR/source-original-job.log" runtime/ncr001-void-maxctx-custody/source-live-job.log
+          cmp "$EVIDENCE_DIR/qwen-original-job.log" runtime/ncr001-void-maxctx-custody/qwen-live-job.log
+          sha256sum runtime/ncr001-void-maxctx-custody/source-live.zip                     runtime/ncr001-void-maxctx-custody/qwen-live.zip                     runtime/ncr001-void-maxctx-custody/source-live-job.log                     runtime/ncr001-void-maxctx-custody/qwen-live-job.log
+
+      - name: Preserve audit/readback result
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-void-postlease-maxctx-custody-readback-a${{ github.run_attempt }}
+          path: runtime/ncr001-void-maxctx-custody/
+          if-no-files-found: warn
+          retention-days: 30
