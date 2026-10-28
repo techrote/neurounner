@@ -41,6 +41,17 @@ The publisher's pinned `src/train/sft_data.py` declares:
 
 Future Stage B **must re-tokenize with the frozen checkpoint tokenizer and compare publisher token-label behavior to this role contract before training**. It must assert each example fits the frozen 512-token maximum; do not silently truncate prompts or drop the trained closing token. No tokenizer/model download, token-count inference or optimization occurs in Stage A.
 
+An author-side [source-native token-supervision preflight](../../scripts/detective_004a_token_preflight.py)
+is prepared separately from the frozen generator. It replays the pinned
+publisher's per-turn content encoding and assistant-only token-label/causal
+shift rules, checks B3 whole-wire prompt-ID equivalence and refuses any
+example over 512 tokens. Its Stage-A CI coverage uses **only an artificial
+tokenizer**, so actual checkpoint tokenizer labels, prompt IDs and length
+bounds are still **unverified**. The local-only real-tokenizer command and
+remaining independent custody requirements are described in
+[SECONDARY_CUSTODY_AUDIT.md](SECONDARY_CUSTODY_AUDIT.md). This is neither
+independent Stage-A approval nor permission to run Stage-B optimization.
+
 ## Final custody
 
 The recipe in the frozen config defines **three other case families** and exactly **12** final tasks: three per detective tool, one restraint, one success-result and one denied-result continuation. No final tasks or output files should exist at Stage A.
