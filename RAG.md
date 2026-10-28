@@ -42,6 +42,7 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 
 - **[NCR-001F four-model gated MLP controls and sealed-split preplan](docs/NCR_001_F_MATCHED_CONTROLS.md)** — conventional noncellular zero-init adapter parameter-matched within 0.16% of NCA, deterministic 192-example schedules and no-leakage validation. [Hosted source-run provenance](experiments/ncr-001/controls-evidence/provenance.json) proves 10 tests and exact archived plan checksum. **No model training or quality/effectiveness result**; #72 conformance and training gate pending.
 
+- **[NCR-001 decoder-root lease composition and original CI custody](docs/NCR_001_SHARED_DECODER_LEASE.md)** — four independently pinned NCA wrappers and their matched MLP controls share one in-process frozen-decoder ownership lock. Synthetic adversarial hook-window tests and complete original CI logs/runner receipts archived under [cross-decoder-lease](experiments/ncr-001/controls-evidence/cross-decoder-lease/). **No new original-model qualification, supervised learning, independent #72 admission or training authorization.**
 - **[NCR-001F pinned frozen MLP hook prepass](docs/NCR_001_F_FROZEN_MLP_HOOKS.md)** — four independently source-identified no-training matched-control transformer post-block wrappers with synthetic hook/variant refusals and a separately pinned actual SmolLM2 frozen-model KV-cache/gradient-only source runner. **Real Sprocket/void MLP hosts, #72 independent acceptance and training admission remain outstanding.**
 
 ## Retrieval rules

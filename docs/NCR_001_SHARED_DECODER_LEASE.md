@@ -49,3 +49,33 @@ do not consume held-out or natural-language evaluation fixtures.
 
 PR and workflow test result links belong in a later exact-head evidence
 checkpoint; green pre-existing #151/#153 CI cannot validate this new source.
+
+## Promoted source-only Actions evidence (28 October 2026)
+
+The original successful [run 40673634722](https://github.com/techrote/neurounner/actions/runs/40673634722)
+tested exact source `4096aa1238ba65851eae78106417131b377d8d82`,
+job `122766480553`: ten synthetic cross-wrapper refusal tests, 10/10
+PASS on Ubuntu 24.04 (runner `GitHub Actions 1000046432`). The original
+artifact ZIP #12808873895 reports SHA-256
+`6ad8c0a33e229c02019b203a9e82e743a8c720a4621f8a7ddedc396f039f82b5`.
+
+The superseded [run 40673587828](https://github.com/techrote/neurounner/actions/runs/40673587828)
+at exact source `ec9327c892e0655a8ce9464ff34a4ae22ebbbb11`
+was **CANCELLED** by the later workflow edit, even though its job's ten
+synthetic tests and upload steps were successful. Do not reinterpret it as
+a successful completed run. Both full decoded job logs, timestamp-stripped
+source-emitted JSON receipts, original workflow snapshot, runner identity,
+Git blob hashes, artifact ZIP digests and cancellation status are archived
+in [cross-decoder-lease evidence](../experiments/ncr-001/controls-evidence/cross-decoder-lease/).
+The ZIP artifacts remain under Actions retention; their member bytes were
+**not** independently extracted and compared. The complete job logs themselves
+are promoted into Git, and the JSON receipts are deterministically recovered
+from the original source-emitted log lines, not silently synthesized from
+success claims.
+
+The offline `scripts/ncr_001_cross_decoder_archive.py` verifies original
+log/receipt Git blob identities, source SHA-256s, distinct runner/source
+heads, ten distinct successful tests, exact four-lane protocol admission and
+the original workflow snapshot. The companion adversarial tests refuse
+altered original logs, changed source head, false success after cancellation,
+fabricated runner and falsified `train_authorized` claims.

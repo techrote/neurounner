@@ -12,6 +12,8 @@ on:
       - "scripts/ncr_001_void1.py"
       - "scripts/ncr_001f_frozen_hooks.py"
       - "tests/test_ncr_001_cross_decoder_lease.py"
+      - "tests/test_ncr_001_cross_decoder_archive.py"
+      - "scripts/ncr_001_cross_decoder_archive.py"
       - "docs/NCR_001_SHARED_DECODER_LEASE.md"
       - "experiments/ncr-001/controls-evidence/cross-decoder-lease/**"
   workflow_dispatch:
@@ -62,9 +64,16 @@ jobs:
           python3 -m py_compile scripts/ncr_001_backbone_lease.py scripts/ncr_001_smollm2.py \
             scripts/ncr_001_sprocket_chat.py scripts/ncr_001_sprocket_instruct.py \
             scripts/ncr_001_void1.py scripts/ncr_001f_frozen_hooks.py \
-            tests/test_ncr_001_cross_decoder_lease.py
+            tests/test_ncr_001_cross_decoder_lease.py scripts/ncr_001_cross_decoder_archive.py tests/test_ncr_001_cross_decoder_archive.py
           python3 -m unittest discover -s tests -p "test_ncr_001_cross_decoder_lease.py" -v 2>&1 \
             | tee runtime/ncr001-cross-decoder/tests.log
+      - name: Independent original run archive integrity and adversarial refusals (no model)
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 scripts/ncr_001_cross_decoder_archive.py | tee runtime/ncr001-cross-decoder/original-archive-check.json
+          python3 -m unittest discover -s tests -p "test_ncr_001_cross_decoder_archive.py" -v 2>&1 \
+            | tee runtime/ncr001-cross-decoder/archive-tests.log
       - name: Record exact-source, runner and negative-test evidence
         if: always()
         run: |

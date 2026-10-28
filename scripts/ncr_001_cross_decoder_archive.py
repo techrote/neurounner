@@ -13,8 +13,8 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "experiments/ncr-001/controls-evidence/cross-decoder-lease"
-LOG_PREFIX = re.compile(r"^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d+Z ")
-CASE = re.compile(r"^test_[a-z_]+ \\(test_ncr_001_cross_decoder_lease\\.CrossAdapterLeaseTests\\.test_[a-z_]+\\) \\.\\.\\. ok$")
+LOG_PREFIX = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z ")
+CASE = re.compile(r"^test_[a-z_]+ \(test_ncr_001_cross_decoder_lease\.CrossAdapterLeaseTests\.test_[a-z_]+\) \.\.\. ok$")
 
 EXPECTED = {
     "success": {
@@ -44,10 +44,10 @@ EXPECTED = {
 }
 
 def git_blob_sha(raw: bytes) -> str:
-    return hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\\0" + raw).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\0" + raw).hexdigest()
 
 def unstamp(log: str) -> list[str]:
-    return [LOG_PREFIX.sub("", line) for line in log.lstrip("\\ufeff").splitlines()]
+    return [LOG_PREFIX.sub("", line) for line in log.lstrip("\ufeff").splitlines()]
 
 def original_receipt_from_log(log: str) -> dict:
     lines = unstamp(log)
@@ -57,7 +57,7 @@ def original_receipt_from_log(log: str) -> dict:
         for stop in range(i + 3, min(len(lines), i + 100)):
             if lines[stop] == "}":
                 try:
-                    return json.loads("\\n".join(lines[i:stop + 1]))
+                    return json.loads("\n".join(lines[i:stop + 1]))
                 except json.JSONDecodeError:
                     continue
     raise AssertionError("Original complete producer JSON is absent from job log")
@@ -76,7 +76,7 @@ def verify_run(tag: str, meta: dict, *, log_data: bytes | None = None, receipt_d
     assert git_blob_sha(receipt_raw) == fixed["receipt_git_blob"], f"{tag} source-emitted receipt changed"
     log_text = log_raw.decode("utf-8-sig")
     parsed = original_receipt_from_log(log_text)
-    assert receipt_raw == (json.dumps(parsed, sort_keys=True, indent=2) + "\\n").encode(), f"{tag} receipt not verbatim source-emitted JSON"
+    assert receipt_raw == (json.dumps(parsed, sort_keys=True, indent=2) + "\n").encode(), f"{tag} receipt not verbatim source-emitted JSON"
     assert parsed["run_id"] == str(fixed["run_id"])
     assert parsed["head_sha"] == fixed["head_sha"]
     assert parsed["runner_name"] == fixed["runner"]
