@@ -83,8 +83,15 @@ def audit(*, record: dict | None = None, raw_log: bytes | None = None) -> dict:
         require(name in log and (name + " (") in log,
                 "original negative/refusal case missing: " + name)
 
+    # This workflow was necessarily extended *after* the original run to
+    # audit the archived log; read the original workflow's exact bytes from
+    # the immutable snapshot instead of requiring the extended workflow to
+    # have the old Git blob identity.
+    original_workflow = ".github/workflows/ncr-001f-shared-backbone-ownership.yml"
     for rel, expected in p["source_git_blobs_sha1"].items():
-        require(git_blob_sha1(ROOT / rel) == expected,
+        source = (ARCHIVE / "original-tested-workflow.yml"
+                  if rel == original_workflow else ROOT / rel)
+        require(git_blob_sha1(source) == expected,
                 "source file differs from original tested source: " + rel)
     require(p["source_git_blobs_sha1"]["experiments/ncr-001/protocol.json"]
             == "14ce5fbaa38f8806c8c8738f19c01b91385eebaf",
