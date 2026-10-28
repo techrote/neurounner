@@ -79,3 +79,26 @@ heads, ten distinct successful tests, exact four-lane protocol admission and
 the original workflow snapshot. The companion adversarial tests refuse
 altered original logs, changed source head, false success after cancellation,
 fabricated runner and falsified `train_authorized` claims.
+
+## Independent archival verifier negative and repair
+
+[Exact-source CI #40674293265](https://github.com/techrote/neurounner/actions/runs/40674293265)
+at `2ab083fc7b07a1782ccb8edde5242e12ab42baa9` **FAILED** after
+10/10 synthetic hook-refusal tests passed: the newly added archival auditor
+expected `log_git_blob` while its manifest supplied `blob`
+(`KeyError: 'log_git_blob'`). Its runner was GitHub Actions 1000046435
+(ubuntu-24.04/eastus), artifact #12808349780 SHA-256
+`c8ddc3d5cfc226107cfb2eac3793501d85286f8f1a92f77e7288e47f894b7138`.
+No physical frozen model executed.
+
+The corrected schema [exact-head run #40674371744](https://github.com/techrote/neurounner/actions/runs/40674371744)
+at `78d3daf47872eb1edbba3ebe373e96eef6cf56d1` **PASSED**:
+10 cross-adapter tests + 6 independent archive-integrity/negative tests.
+Its runner was GitHub Actions 1000046437 (ubuntu-24.04/northcentralus),
+artifact #12809926725 SHA-256
+`4ec5954df77c3dc55b898ba795135acc4cce227e37ea5c2b67338ec4f5741afd`.
+Both full original decoded job logs are preserved under the evidence folder
+with exact Git blob SHAs and [follow-up CI provenance](../experiments/ncr-001/controls-evidence/cross-decoder-lease/review-ci-provenance.json).
+An additional offline test refuses relabelling the failed archive check as
+a successful run. The repaired CI verifies archival integrity, **not** new
+actual-host #72 acceptance.
