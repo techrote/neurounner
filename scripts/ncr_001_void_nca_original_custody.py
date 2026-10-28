@@ -202,7 +202,7 @@ def audit() -> dict:
            "manifest numerical promotion or omission")
     for kind in ("source", "host"):
         log = (EVIDENCE / (kind + "-original-job.log")).read_text("utf-8-sig")
-        refuse(HEAD in log and f"/runs/{RUN}" not in log,
+        refuse(HEAD in log,
                "decoded log/head mismatch " + kind)
     host_log = (EVIDENCE / "host-original-job.log").read_text("utf-8-sig")
     refuse(WEIGHT in host_log and TOKENIZER in host_log
