@@ -115,3 +115,23 @@ A separate PR may download only the frozen promoted direct/near-band bodies and 
 Mutation-only bodies get a separate base-completion protocol and are never compared as if they were instruction models.
 
 No detective fine-tuning or population rollout is authorized while #121 remains independently unrated.
+
+
+## Executed Stage A outcome
+
+The source-freeze run resolved and archived all nine candidates. **9/9 source gates passed**.
+
+Stage-B classes from the frozen evidence:
+
+- `stage_b_candidate`: SmolLM2-135M, SmolLM2-360M, Sprocket Chat, Sprocket Instruct, Qwen2.5-0.5B-Instruct, Qwen3-0.6B near-band, LFM2.5-350M;
+- `stage_b_reference`: LFM2.5-VL-450M Q4 text-core runtime reference;
+- `mutation_protocol_only`: Zenyx-MCEN-Delta-Mamba.
+
+The evidence corrected two provisional metadata assumptions before merge:
+
+1. Sprocket source metadata declares **Apache-2.0**; Chat and Instruct remain distinct weights at the same pinned revision.
+2. LFM2.5-350M and Sprocket expose standalone `chat_template.jinja` files, now hashed and retained by the resolver.
+
+Qwen3-0.6B remains an explicit near-band exception at **751,632,384** API-reported parameters. LFM350 remains production/game-license gated under `lfm1.0`.
+
+No weight bytes, inference, training or relevance mapping were accessed. The exact resolved revisions and LFS hashes in `source-evidence/` are now the only permitted Stage-B source authority.
