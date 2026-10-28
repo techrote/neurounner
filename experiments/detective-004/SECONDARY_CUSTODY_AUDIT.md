@@ -287,3 +287,70 @@ approval, actual tokenizer/mask/length and adapter/final custody must
 separately pass before optimization or final interpretation. Independent
 DETECTIVE-001R1 opaque relevance ratings are still required for any
 population expansion.
+
+
+## Publisher-native token supervision preflight (prepared, not executed with weights)
+
+A source-level readback of the exact publisher SFT implementation,
+[kandivault-source/Sprocket-500M \`src/train/sft_data.py\` at commit
+\`a003767e70d766bc14b40c89792543ee8641c8bc\`](https://github.com/kandivault-source/Sprocket-500M/blob/a003767e70d766bc14b40c89792543ee8641c8bc/src/train/sft_data.py),
+confirmed Git blob \`90bddf8976b9d6410fe7c5c1f084708e1cebab73\`.
+Its \`ChatTemplate.render\` inserts each role header and each closing
+\`<|end|>\` as pinned **individual special-token IDs**, while tokenizing
+*each turn's content separately*. Only assistant content and assistant yield
+\`<|end|>\` are supervised. The publisher's shifted causal target is the token
+**after** the input position, with host/header positions ignored. A byte-perfect
+character-span audit does **not** prove that this mask survives actual
+tokenization or that a concatenated native inference prompt yields the same
+token IDs as separate-turn publisher rendering.
+
+New separate \`scripts/detective_004a_token_preflight.py\` implements an
+explicit, **read-only** check for this future pre-optimizer requirement:
+
+- Source-bound regeneration and custody audit of all **36 committed** training
+  rows, without opening or generating any posthash final.
+- Pinned 12 special token IDs; source-native **per-turn** content encoding,
+  assistant-header/host masking, trained assistant content and closing yield;
+  native tool-call ID 6 trained and host tool-result ID 7 masked.
+- Explicit shifted next-token labels; exact **512-token** limit per row, with
+  refusal rather than silent truncation.
+- Bit-exact equality between the future B3 **whole-wire** inference-token IDs
+  and the publisher's turnwise prompt-token IDs, including the final dangling
+  assistant cue; mismatches fail closed rather than being called model behavior.
+- Deterministic per-row hashes of claimed token IDs, token mask, causal labels
+  and prompt IDs. Hashes alone cannot replace raw token-ID receipt custody.
+
+The Stage-A CI exercises these functions **only with a deliberately artificial
+toy tokenizer**. The toy is NOT Sprocket, is NOT a verified model input, and
+cannot establish the 512-token bound for the actual checkpoint. It tests the
+preflight machinery, including deliberate wrong special IDs, incompatible
+whole-wire encoding, oversize input and wrong on-disk tokenizer hashes. No
+tokenizer is downloaded or model/optimizer invoked in this Stage-A work.
+
+**Future explicitly authorized local-only check, not an instruction to start
+training:**
+
+\`\`\`sh
+python3 scripts/detective_004a_token_preflight.py \
+  --tokenizer-dir /path/to/already-local/root-instruct-tokenizer \
+  --output /new/custody/location/frozen-token-preflight.json
+\`\`\`
+
+The optional command refuses unless an already-local \`tokenizer.json\`,
+\`tokenizer_config.json\` and \`special_tokens_map.json\` have the exact three
+B3-pinned SHA-256 values, and the native \`tokenizers\` library is installed.
+It never downloads weights or tokenizers, imports a model, or starts an
+optimizer; an existing receipt cannot be overwritten. Actual results from
+this command **have not been run or published here**. A later independent
+custodian must preserve exact local source identities, raw token IDs,
+loss-label arrays, runtime/library version and output receipts before an
+optimizer may be authorized.
+
+**This is preparatory implementation, not Stage-A approval or Stage-B
+qualification.** PR #149 still needs an independent reviewer before merging.
+Actual frozen-tokenizer loss labels and 512-token measurement remain
+unverified until a genuine pinned-tokenizer run; source/adapter ancestry,
+optimizer receipts, raw inference and posthash final custody are separate
+gates. Witness relevance review #121 still requires independent external
+scores. No training, model inference, sealed learner-final materialization,
+hidden relevance-map access, production admission or population expansion.
