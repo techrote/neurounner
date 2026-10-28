@@ -118,7 +118,7 @@ class Detective004ACustodyTests(unittest.TestCase):
         # The producer's verifier still checks the detached view, not
         # that it matches the actual prompt. Guard checks both.
         protocol.validate_example(changed[0], self.b3)
-        with self.assertRaisesRegex(protocol.ProtocolError, "projection"):
+        with self.assertRaisesRegex(protocol.ProtocolError, "user view differs"):
             audit.audit_future_gate_layout(changed, self.b3)
 
     def test_future_gate_guard_rejects_forged_receipts_and_seed_mix(self):
