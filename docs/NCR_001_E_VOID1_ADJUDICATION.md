@@ -77,3 +77,46 @@ untrained and cannot substitute for a gradient/optimizer test.
 
 Do not weaken #72, set the per-model gate true, or infer training permission
 from green inference CI. All parent PRs remain draft/unmerged.
+
+
+## Deterministic adjudication CI history and negative evidence
+
+This is **source-only audit CI**, not another physical Qwen3 run. The
+three immutable physical frozen-model executions remain
+[40464956343](https://github.com/techrote/neurounner/actions/runs/40464956343),
+[40549549886](https://github.com/techrote/neurounner/actions/runs/40549549886)
+and [40605678381](https://github.com/techrote/neurounner/actions/runs/40605678381).
+
+- **Failed audit preserved:** original draft head
+  `052a87b51e846bdc551eb299e2eef2659f8778d4`,
+  [run 40607677379](https://github.com/techrote/neurounner/actions/runs/40607677379),
+  job `122551132187`, `ubuntu-24.04` image `20261012.334.1`.
+  The first reproducibility step refused with
+  `fresh actual-model Actions run changed` because the adjudicator
+  incorrectly queried the non-existent provenance key `workflow_run_id`;
+  the immutable receipt actually binds `source_run.run_id=40464956343`.
+  Negative tests and artifact publication were skipped. **This was an
+  auditor schema bug**, not a new frozen-model failure. The failed job
+  remains linked; no successful evidence was silently substituted.
+- **Source-binding repair:** commit
+  [`6623dcb1c5928ed862c335b83c34fbdffe3a47bc`](https://github.com/techrote/neurounner/commit/6623dcb1c5928ed862c335b83c34fbdffe3a47bc)
+  binds the actual nested run/status, real receipt check keys, numeric
+  48-unit and 240+16 cache measurements and distinct process PIDs,
+  rather than doing substring searches. Source-only
+  [run 40616672551](https://github.com/techrote/neurounner/actions/runs/40616672551),
+  job `122580667150`, **PASS**; report artifact `12785935427`.
+- **Independent negative regression:** commit
+  [`4b9b0a61a50b12250be8e5f1ce8f8951d740ed1c`](https://github.com/techrote/neurounner/commit/4b9b0a61a50b12250be8e5f1ce8f8951d740ed1c)
+  adds in-memory source-record substitution tests: a forged Actions run
+  ID and a tampered consumer cache result must both be rejected.
+  Exact-head [run 40616731297](https://github.com/techrote/neurounner/actions/runs/40616731297),
+  job `122580853908`, **PASS, 10/10 tests**; report artifact
+  `12785352076`. The regenerated report exactly matches the committed
+  `void1-pretrain.json`, with `per_model_gate=false`.
+
+All audited original evidence bytes and pinned protocol/cache tolerances
+were left unchanged. The Source/runtime pretraining subgate is supported;
+three protocol-required learning checks still block final #72 PASS.
+`train_authorized=false`; no optimizer, heldouts, comparative controls,
+future EOS serializer integration, merge or model rerun occurred in this
+repair.
