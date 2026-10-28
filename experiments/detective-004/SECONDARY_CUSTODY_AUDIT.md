@@ -93,3 +93,35 @@ and tokenizer IDs, and must never consume the final record's `target`,
 `rendered`, `loss_char_spans` or last assistant turn as input. An independent
 custodian must validate the actual executed inputs and adapter provenance;
 this author-side addition supplies no training or final-admission authority.
+
+## Full frozen-recipe task equality (synthetic structural check)
+
+The previous future-final layout guard established 12 unique IDs, expected
+categories/families, exact user projection, source-native character spans and
+certain host receipts. It did **not** establish that the supplied task records
+were exactly those the frozen Stage-A recipe would generate. A substituted
+visible asset and matching assistant/tool target, or a rewritten no-tool
+reference answer, could pass those internal-consistency checks and change the
+effective evaluation without changing the recorded final slots.
+
+The author-side guard now reconstructs **only an expected in-memory mirror
+of supplied records** using the pinned Stage-A \`family_data\`,
+\`make_example\` and \`render_with_mask\` source. It derives the common
+10-character hexadecimal case suffix already validated across the supplied
+rows, then requires full object equality for each expected record, including
+the exact user request, case evidence, credential, tool argument, host receipt,
+reference completion, target labels, source wire and character spans. Two
+unsealed synthetic adversarial tests show that internally consistent swapped
+assets and substituted restraint labels now refuse. The test also retains its
+complete 12-row synthetic positive control.
+
+This closes a **structural recipe-substitution** gap only. A caller could
+fabricate a coherent 12-row suite under another ten-character suffix; that
+suffix is not proof of the actual adapter-derived posthash seed. **Stage B
+must independently authenticate the full 64-hex posthash seed against the
+frozen recipe, committed training manifest, actual signed-off adapter directory
+and optimizer receipts, and must attest the executed raw model-only inputs.**
+No actual posthash final is generated, opened, persisted or scored in Stage A.
+The checks do not touch weights, model runtimes, tokenizer labels, hidden
+relevance maps or sealed witness finals. They grant no Stage-B optimizer,
+production or population authority.
