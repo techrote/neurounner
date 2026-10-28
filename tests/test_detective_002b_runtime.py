@@ -15,6 +15,16 @@ class RuntimeContractTests(unittest.TestCase):
     def setUp(self):
         self.cfg,self.candidates=r.load_contract()
 
+    def test_stage_a_source_blob_is_pinned(self):
+        self.assertEqual(
+            self.cfg["source_authority"]["git_blob_sha1"],
+            "a09003d37dd3ef4f2bcd0f6a8aafd1de6457c01c",
+        )
+        self.assertEqual(
+            r.git_blob_sha1(r.SOURCE),
+            self.cfg["source_authority"]["git_blob_sha1"],
+        )
+
     def test_frozen_cohort_and_zero_training_boundary(self):
         self.assertEqual(len(self.cfg["cohort"]),7)
         self.assertEqual(self.cfg["runtime"]["threads"],4)
