@@ -9,10 +9,12 @@ from __future__ import annotations
 import copy
 import json
 import tempfile
+import tarfile
 import unittest
 from pathlib import Path
 
 from scripts import detective_005a_fun_screen as screen
+from scripts import detective_005a_live as live
 
 
 class Detective005AFunScreenTests(unittest.TestCase):
@@ -235,6 +237,70 @@ class Detective005AFunScreenTests(unittest.TestCase):
             self.assertEqual(
                 loaded["packet_sha256"],
                 screen.sha256_file(packet_path))
+
+
+    def test_live_lineage_plan_is_three_exact_siblings_and_zero_training(self):
+        for g in range(1, 13):
+            lineage = f"G{g:02d}"
+            plan = live.source_plan(lineage)
+            self.assertEqual(
+                plan["member_ids"],
+                [f"V-{lineage}-{s}" for s in "ABC"])
+            self.assertEqual(plan["expected_results"], 12)
+            self.assertEqual(plan["optimizer_steps"], 0)
+            self.assertEqual(plan["paid_api_calls"], 0)
+            self.assertTrue(plan["subjective_fun_is_ranking_signal"])
+            self.assertIsNone(plan["objective_relevance_threshold"])
+        with self.assertRaisesRegex(screen.ScreenError, "G01..G12"):
+            live.source_plan("G13")
+
+    def test_safe_adapter_unpack_requires_archive_and_directory_identity(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src = root / "src"
+            src.mkdir()
+            (src / "adapter_model.safetensors").write_bytes(b"fake-safetensors")
+            (src / "adapter_config.json").write_text(
+                '{"peft_type":"LORA"}\n', encoding="utf-8")
+            archive = root / "adapter.tar.gz"
+            with tarfile.open(archive, "w:gz") as tf:
+                tf.add(src / "adapter_model.safetensors",
+                       arcname="adapter_model.safetensors")
+                tf.add(src / "adapter_config.json",
+                       arcname="adapter_config.json")
+            source = {
+                "asset_bytes": archive.stat().st_size,
+                "asset_sha256": live.file_sha(archive),
+                "adapter_directory_sha256": live.directory_hash(src),
+                "adapter_directory_bytes": live.directory_bytes(src),
+            }
+            dest = root / "unpacked"
+            live.safe_unpack(archive, dest, source)
+            self.assertEqual(live.directory_hash(dest),
+                             source["adapter_directory_sha256"])
+            bad = dict(source)
+            bad["asset_sha256"] = "0" * 64
+            with self.assertRaisesRegex(screen.ScreenError, "archive byte/hash"):
+                live.safe_unpack(archive, root / "bad", bad)
+
+    def test_safe_adapter_unpack_rejects_path_traversal(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            payload = root / "payload"
+            payload.write_text("x", encoding="utf-8")
+            archive = root / "unsafe.tar.gz"
+            with tarfile.open(archive, "w:gz") as tf:
+                tf.add(payload, arcname="../adapter_model.safetensors")
+                tf.add(payload, arcname="adapter_config.json")
+            # Directory identity is irrelevant: traversal must fail first.
+            source = {
+                "asset_bytes": archive.stat().st_size,
+                "asset_sha256": live.file_sha(archive),
+                "adapter_directory_sha256": "0" * 64,
+                "adapter_directory_bytes": 1,
+            }
+            with self.assertRaisesRegex(screen.ScreenError, "unsafe adapter"):
+                live.safe_unpack(archive, root / "unsafe-out", source)
 
 
 if __name__ == "__main__":
