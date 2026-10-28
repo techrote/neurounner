@@ -147,7 +147,7 @@ def write_interrupted_receipt(lineage: str, out: Path, error: Exception) -> dict
     return receipt
 
 
-def lineage_member_ids(cfg: dict, lineage: str) -> list[str>:
+def lineage_member_ids(cfg: dict, lineage: str) -> list[str]:
     screen.require(LINEAGE_RX.fullmatch(lineage) is not None,
                    "lineage must be G01..G12")
     ids = [m["member_id"] for m in cfg["source_population"]["members"]
