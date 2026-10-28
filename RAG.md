@@ -44,6 +44,8 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 
 - **[BYTE-EOS-001 future void.1 ID-correct supervised labels](docs/BYTE_EOS_001_FUTURE_LABELS.md)** — bug #92: historical text-appended `<eos>` encoded as five UTF-8 bytes rather than real EOS 258; new future-only strict masked-label serializer and [source-bound exact offline proof](experiments/ncr-001/byte-eos-001/receipt.json) with [provenance](experiments/ncr-001/byte-eos-001/provenance.json). Original TRAIN-002b evidence unchanged, no NCR training admitted.
 
+- **[BYTE-EOS-001 causal-shift correction and full original CI custody](docs/BYTE_EOS_001_CAUSAL_EVIDENCE.md)** — future-only strict label builder now refuses empty prompt because decoder-only shifted CE would lose the first supervised target. Distinct [source-only negative tests](tests/test_byte_eos_001_causal_shift.py), [full original Actions ZIP + decoded job log archive](experiments/ncr-001/byte-eos-001/causal-shift-evidence/manifest.json), and [offline byte auditor](scripts/byte_eos_001_causal_evidence_audit.py) keep the original mistaken merge-SHA receipt as a negative. No Qwen3 model execution, training or #72 acceptance.
+
 ## Retrieval rules
 
 1. Prefer primary dataset records over prose summaries when answering questions about exact prompts or outputs.
