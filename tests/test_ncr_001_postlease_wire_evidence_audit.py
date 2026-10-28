@@ -96,7 +96,7 @@ class OriginalPostleaseWireEvidenceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             path = Path(root) / "bad.b64"
             path.write_bytes(altered)
-            with self.assertRaises((ValueError, Exception)):
+            with self.assertRaisesRegex(ValueError, "compressed archive changed"):
                 audit.original_zip_bytes(path)
 
 
