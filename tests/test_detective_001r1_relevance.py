@@ -162,5 +162,30 @@ class RelevanceReviewTests(unittest.TestCase):
             self.assertNotIn(forbidden,source)
 
 
+    def test_external_user_supplied_ratings_20261028(self):
+        # External human-supplied scores, copied without changing any rating.
+        # This test never scores a model or admits population expansion.
+        root=r.ROOT/"experiments/detective-001/independent-relevance-review"
+        c2=root/"c2-ratings.json";c3=root/"c3-ratings.json"
+        self.assertEqual(r.sha_file(c2),
+            "d5285982eee8f232a1ced9e04ad712230a3a5c72ff581e29019ae7ce45509d67")
+        self.assertEqual(r.sha_file(c3),
+            "da0c8ae93e574d52bf34293571e0010ab707dd5b95d72421d7ee1af322f917f7")
+        a=r.read(c2);b=r.read(c3)
+        self.assertEqual([row["score_0_to_4"] for row in a["ratings"]],
+            [4,3,4,2,4,4,4,4,4,2,4,4,4,4,4,0])
+        self.assertEqual([row["score_0_to_4"] for row in b["ratings"]],
+            [2,3,3,4,3,4,4,4])
+        # Calls the exact repository validator and post-rating mapping.
+        result=r.aggregate(c2,c3)
+        self.assertEqual(r.read(root/"relevance-summary.json"),result)
+        self.assertEqual(result["g02"]["c3_minus_original_c1"],-0.5)
+        self.assertTrue(result["g02"]["cumulative_nonregression_pass"])
+        self.assertEqual(result["g09"]["c2_minus_original_c1"],-1.5)
+        self.assertFalse(result["g09"]["nonregression_pass"])
+        self.assertFalse(result["candidate_set_relevance_gate"])
+        self.assertFalse(result["population_expansion_admitted_by_this_review"])
+
+
 if __name__=="__main__":
     unittest.main()
