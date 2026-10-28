@@ -368,11 +368,11 @@ class Detective005AFunScreenTests(unittest.TestCase):
             bad_provenance = copy.deepcopy(provenance)
             bad_provenance["source_artifacts"][0][
                 "results_jsonl_sha256"] = "0" * 64
-            screen.write_json(provenance_path, bad_provenance)
+            assemble.write_json(provenance_path, bad_provenance)
             with self.assertRaisesRegex(
                     screen.ScreenError, "source-artifact manifest/hash"):
                 assemble.verify_dataset(out)
-            screen.write_json(provenance_path, provenance)
+            assemble.write_json(provenance_path, provenance)
 
             # A substituted runner hash must fail readback.
             first = artifacts / "G01" / "manifest.json"
