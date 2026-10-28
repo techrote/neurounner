@@ -234,6 +234,58 @@ class Detective004ACustodyTests(unittest.TestCase):
 
 
 
+
+    def test_guard_rejects_padded_or_endoftext_only_restraint(self):
+        rows = self.synthetic_gate_fixture()
+        restraint = next(row for row in rows if row["kind"] == "restraint")
+        adapted = {row["id"]: row["turns"][-1]["content"] for row in rows}
+        root = {row["id"]: "mock root baseline" for row in rows}
+        for rogue in ("<|pad|>", "<|endoftext|>", "A sentence <think>"):
+            with self.subTest(raw=rogue):
+                # The frozen evaluator would count a synthetic control token
+                # as valid no-tool restraint. Never rewrite the manifest-bound
+                # protocol source to fix it after archive promotion.
+                self.assertTrue(protocol.score_output(restraint, rogue, self.b3))
+                contaminated = dict(adapted)
+                contaminated[restraint["id"]] = rogue
+                with self.assertRaisesRegex(
+                        protocol.ProtocolError, "adapted unexpected native control"):
+                    audit.guarded_admission_gate(rows, contaminated, root, self.b3)
+
+    def test_guard_rejects_result_control_and_root_baseline_contamination(self):
+        rows = self.synthetic_gate_fixture()
+        success = next(row for row in rows if row["kind"] == "result_success")
+        adapted = {row["id"]: row["turns"][-1]["content"] for row in rows}
+        root = {row["id"]: "mock root baseline" for row in rows}
+        leaked = adapted[success["id"]] + "<|endoftext|>"
+        self.assertTrue(protocol.score_output(success, leaked, self.b3))
+        changed = dict(adapted)
+        changed[success["id"]] = leaked
+        with self.assertRaisesRegex(
+                protocol.ProtocolError, "adapted unexpected native control"):
+            audit.guarded_admission_gate(rows, changed, root, self.b3)
+
+        # Root must be checked too: a tainted control baseline can otherwise
+        # distort the required >=4/9 research improvement comparison.
+        root[success["id"]] = "mock root baseline<|pad|>"
+        with self.assertRaisesRegex(
+                protocol.ProtocolError, "root unexpected native control"):
+            audit.guarded_admission_gate(rows, adapted, root, self.b3)
+
+    def test_guard_accepts_single_terminal_yield_without_custody_claim(self):
+        rows = self.synthetic_gate_fixture()
+        adapted = {row["id"]: row["turns"][-1]["content"] + "<|end|>"
+                   for row in rows}
+        root = {row["id"]: "mock root baseline<|end|>" for row in rows}
+        scored = audit.guarded_admission_gate(rows, adapted, root, self.b3)
+        self.assertEqual(scored["status"], "research_candidate")
+        self.assertFalse(scored["raw_output_execution_verified"])
+        self.assertFalse(scored["independent_final_custody_verified"])
+        self.assertFalse(scored["stage_b_evaluation_admitted"])
+        self.assertFalse(scored["production_admission"])
+        self.assertFalse(scored["population_expansion_admitted"])
+
+
     @classmethod
     def synthetic_untrusted_full_claim_fixture(cls, adapter_sha=None):
         """Synthetic NOT-AN-ADAPTER hash: no model, optimizer or real final."""
