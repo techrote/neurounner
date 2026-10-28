@@ -219,7 +219,10 @@ def audit_optimizer_preregistration(cfg=None):
     frozen, _ = protocol.load_contract()
     if cfg is None:
         cfg = frozen
-    source_exact = type(cfg) is dict and protocol.canonical(cfg) == protocol.canonical(frozen)
+    try:
+        source_exact = type(cfg) is dict and protocol.canonical(cfg) == protocol.canonical(frozen)
+    except (TypeError, ValueError):
+        source_exact = False  # malformed untrusted claim cannot spoof a source pin
     future = cfg.get('future_training', {}) if type(cfg) is dict else {}
     require(type(future) is dict, 'malformed future-training claim')
     missing = [name for name in REQUIRED_OPTIMIZER_PREREG_FIELDS
