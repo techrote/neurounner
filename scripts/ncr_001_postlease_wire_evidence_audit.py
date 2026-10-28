@@ -55,6 +55,17 @@ CHAT = "551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97"
 RENDERER_BLOB = "4e558ae530a1b79050e22bee587b3caf056e4563"
 WIRE_HEAD = "3592841802d85c442ca2521479b5d8795bee7233"
 MAX_TOL = 0.0005
+# Historical #162 manifest + all five decoded complete job logs are immutable.
+# These Git-blob IDs are separately pinned; altering BOTH a decoded log and
+# its manifest entry must not make the primary auditor accept rewritten evidence.
+ORIGINAL_MANIFEST_GIT_BLOB = "6e11a7215b9c3618269693572ee57a5281e48286"
+EXPECTED_DECODED_JOB_LOGS = {
+    "decoded/initial-source-failure-job-122922594944.log": "719a2d4a5f6ccc78f0507a6e1f7102265723f9ba",
+    "decoded/successful-source-job-122923377331.log": "2b4b86a588b1e96eb5c84ca52a18a050b30efe33",
+    "decoded/successful-physical-job-122923916338.log": "c3844762d58047c4801a1db5e442fb00cea37893",
+    "decoded/initial-archive-shallow-checkout-failure-job-122929862963.log": "55f3364d47721053b7e65758c354d6fdb7f6e003",
+    "decoded/successful-original-git-actions-byte-audit-job-122930173324.log": "11a2e312154e4c667f6543601887a12ff6570e67",
+}
 
 
 def demand(ok: bool, message: str) -> None:
@@ -214,6 +225,49 @@ def verify_original_host(receipt: dict) -> dict:
     }
 
 
+
+def git_blob_sha(data: bytes) -> str:
+    """Git SHA-1 blob identity over *raw bytes*, not a decoded/normalized log."""
+    return hashlib.sha1(b"blob " + str(len(data)).encode("ascii")
+                        + b"\\0".replace(b"\\\\0", b"\\0") + data).hexdigest()
+
+
+def verify_decoded_job_logs(evidence_dir: Path = ROOT / REL) -> dict:
+    """Independently fail closed on committed complete job logs and manifest.
+
+    The immutable original ZIP member hashes cannot guard separately committed
+    decoded GitHub job logs. Validate both positive and FAILED run originals;
+    never regenerate a pin from whatever happens to be in the working tree.
+    """
+    manifest_bytes = (evidence_dir / "manifest.json").read_bytes()
+    demand(git_blob_sha(manifest_bytes) == ORIGINAL_MANIFEST_GIT_BLOB,
+           "original #162 log manifest Git blob changed")
+    manifest = json.loads(manifest_bytes)
+    archive = manifest["archive"]
+    original = archive["original_decoded_job_logs"]
+    earlier_ci = archive["independent_readback_history"]
+    demand(len(original) == 3 and len(earlier_ci) == 2,
+           "failed/successful original and archival log inventory changed")
+    listed = [(item["path"], item["git_blob_sha"]) for item in original]
+    listed += [(item["full_decoded_job_log"], item["git_blob_sha"])
+               for item in earlier_ci]
+    demand(len(set(path for path, _ in listed)) == len(EXPECTED_DECODED_JOB_LOGS)
+           and set(path for path, _ in listed) == set(EXPECTED_DECODED_JOB_LOGS),
+           "original decoded-log inventory or paths changed")
+    for relative, manifest_blob in listed:
+        pinned_blob = EXPECTED_DECODED_JOB_LOGS[relative]
+        demand(manifest_blob == pinned_blob,
+               "manifest changed historical decoded-log Git blob: " + relative)
+        raw = (evidence_dir / relative).read_bytes()
+        demand(git_blob_sha(raw) == pinned_blob,
+               "decoded original GitHub job log bytes changed: " + relative)
+    return {
+        "original_decoded_job_logs_verified": len(original),
+        "archival_ci_decoded_job_logs_verified": len(earlier_ci),
+        "decoded_git_blob_sha_verified": True,
+    }
+
+
 def audit() -> dict:
     zips = original_zip_bytes()
     members = {name: raw_zip_members(zips[name], meta)
@@ -234,6 +288,7 @@ def audit() -> dict:
            "original source-matched physical log not preserved")
     receipt = json.loads(host["receipt.json"])
     result = verify_original_host(receipt)
+    result.update(verify_decoded_job_logs())
     result["original_zip_sha256"] = {
         name: meta["sha256"] for name, meta in ORIGINAL_ZIPS.items()}
     result["original_failed_source_run"] = int(FIRST_FAILED_RUN)
