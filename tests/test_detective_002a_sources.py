@@ -255,6 +255,34 @@ class SourceQualificationTests(unittest.TestCase):
         self.assertEqual(row["weight_bytes_downloaded"], 0)
         self.assertEqual(row["training_steps"], 0)
 
+    def test_standalone_chat_template_file_is_detected(self):
+        meta = self.cfg["candidates"]["lfm25-350m"]
+        payload = self.fake_payload(meta)
+        payload["config"]["tokenizer_config"].pop("chat_template", None)
+        payload["siblings"].append({
+            "rfilename": "chat_template.jinja",
+            "blobId": "9" * 40,
+            "size": 64,
+        })
+        config_bytes = b'{"architectures":["LfmForCausalLM"],"model_type":"lfm2"}'
+        tok_bytes = b'{"eos_token":"<|endoftext|>"}'
+        jinja_bytes = b"{{ messages }} {% if tools %}<tool_call>{% endif %}"
+        with patch.object(s, "http_json", return_value=payload), patch.object(
+            s, "small_file",
+            side_effect=[
+                (config_bytes, "present"),
+                (tok_bytes, "present"),
+                (jinja_bytes, "present"),
+            ],
+        ):
+            row = s.resolve_candidate("lfm25-350m", meta, self.cfg)
+        self.assertTrue(row["has_chat_template"])
+        self.assertEqual(row["chat_template_source"], "chat_template.jinja")
+        self.assertEqual(
+            row["chat_template_file"]["sha256"],
+            s.sha_bytes(jinja_bytes))
+        self.assertTrue(row["template_mentions_tools"])
+
     def test_known_weight_hash_mismatch_is_retained_as_source_failure(self):
         meta = self.cfg["candidates"]["smollm2-135m-instruct"]
         payload = self.fake_payload(meta, weight_sha="0" * 64)
@@ -302,9 +330,10 @@ class SourceQualificationTests(unittest.TestCase):
         self.assertEqual(result["training_steps"], 0)
         self.assertEqual(result["weight_bytes_downloaded"], 0)
         self.assertFalse(result["population_expansion_admitted"])
-        self.assertIn("sprocket-500m-chat", result["unresolved_licenses"])
-        self.assertIn("sprocket-500m-instruct",
-                      result["unresolved_licenses"])
+        self.assertNotIn("sprocket-500m-chat",
+                         result["unresolved_licenses"])
+        self.assertNotIn("sprocket-500m-instruct",
+                         result["unresolved_licenses"])
 
     def test_known_weight_tamper_refuses_readback(self):
         evidence = self.fake_evidence()
