@@ -15,11 +15,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: ncr001-sprocket-wire-shift-${ github.event.pull_request.number || github.ref }}
+  group: ncr001-sprocket-wire-shift-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
-  NCR_EXPECTED_HEAD: ${ github.event.pull_request.head.sha || github.sha }}
+  NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
   EXPECTED_PARENT_HEAD: 8ca28b8aa8c43f97795d1149a7563bee9444763b
   HF_HOME: /tmp/ncr001-sprocket-wire-shifted-tokenizer
   HF_HUB_DISABLE_TELEMETRY: "1"
@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
           fetch-depth: 0
       - name: Exact-head stacked source, immutable four-model pins, no-training gate
@@ -43,7 +43,7 @@ jobs:
           test "$GITHUB_EVENT_NAME" = pull_request
           test "$GITHUB_BASE_REF" = review/ncr001-sprocket-wire-fullmask-custody-20261028
           test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
-          test "${ github.event.pull_request.base.sha }}" = "$EXPECTED_PARENT_HEAD"
+          test "${{ github.event.pull_request.base.sha }}" = "$EXPECTED_PARENT_HEAD"
           git merge-base --is-ancestor "$EXPECTED_PARENT_HEAD" "$NCR_EXPECTED_HEAD"
           test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
           test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
@@ -85,7 +85,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: ncr001-wire-shifted-loss-a${ github.run_attempt }}
+          name: ncr001-wire-shifted-loss-a${{ github.run_attempt }}
           path: runtime/ncr001-sprocket-wire-shifted-loss/
           if-no-files-found: warn
           retention-days: 30
