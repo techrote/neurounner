@@ -122,6 +122,31 @@ class Detective004ATokenPreflightTests(unittest.TestCase):
         with self.assertRaisesRegex(protocol.ProtocolError, "exceeds 512 tokens"):
             preflight.inspect_row(self.rows[0], self.b3, wrong)
 
+    def test_opt_in_raw_array_receipt_is_complete_but_not_real_model_evidence(self):
+        row = next(r for r in self.rows if r["kind"] == "result_success")
+        receipt = preflight.inspect_row(row, self.b3, self.toy, include_arrays=True)
+        raw = receipt["raw_arrays"]
+        self.assertEqual(set(raw), {
+            "full_input_ids", "trained_token_mask", "causal_input_ids",
+            "causal_target_labels", "model_only_prompt_ids", "model_only_prompt_utf8"})
+        self.assertEqual(len(raw["full_input_ids"]), len(raw["trained_token_mask"]))
+        self.assertEqual(raw["causal_input_ids"], raw["full_input_ids"][:-1])
+        self.assertEqual(raw["model_only_prompt_ids"][-1], 4)
+        self.assertTrue(raw["trained_token_mask"][-1])
+        self.assertEqual(raw["full_input_ids"][-1], 5)
+        self.assertIn("<|tool_result|>", raw["model_only_prompt_utf8"])
+        self.assertNotIn(row["turns"][-1]["content"], raw["model_only_prompt_utf8"])
+        for item, digest in (
+                ("full_input_ids", "token_ids_sha256"),
+                ("trained_token_mask", "train_mask_sha256"),
+                ("causal_target_labels", "shifted_labels_sha256"),
+                ("model_only_prompt_ids", "prompt_ids_sha256")):
+            value = protocol.canonical(raw[item]).encode("utf-8")
+            self.assertEqual(hashlib.sha256(value).hexdigest(), receipt[digest])
+        self.assertEqual(
+            hashlib.sha256(raw["model_only_prompt_utf8"].encode("utf-8")).hexdigest(),
+            receipt["prompt_utf8_sha256"])
+
     def test_non_local_or_wrong_hash_tokenizer_refused_before_import(self):
         with tempfile.TemporaryDirectory() as temp:
             folder = Path(temp)
