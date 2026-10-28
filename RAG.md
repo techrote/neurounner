@@ -26,6 +26,8 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 - **[Second hosted experiments](docs/SECOND_EXPERIMENTS.md)**
 - **[Eight-runner startup smoke](docs/STARTUP8_2026-10-24.md)**
 
+- **[NCR-001E frozen SmolLM2 2048/cold-process source evidence](docs/NCR_001_E_SMOL_2048_RESULT.md)** — exact-head original pinned 512/1024/2048 cache + HF.generate, same-host separate-Python cold reload; original producer/consumer JSON bytes, artifact/source SHA custody and no-model negative audit archived under [experiments/ncr-001/evidence-review/smolllm2-2048](experiments/ncr-001/evidence-review/smolllm2-2048). Physical PRETRAIN PASS only; final #72 learning checks blocked, `train_authorized=false`; draft PR #150.
+
 ## Training
 
 - **[TRAIN-001 CPU LoRA proof](docs/TRAIN_001_CPU_LORA.md)** — 135M CPU LoRA, cross-run checkpoint/resume and measured throughput.
