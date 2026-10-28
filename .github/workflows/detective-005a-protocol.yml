@@ -171,6 +171,9 @@ jobs:
           assert record["custody_warnings"] == [], record
           assert record["artifact_api"]["id"] is not None, record
           assert record["artifact_api"]["name"] == "detective005a-G01", record
+          assert record["artifact_api"]["workflow_run"]["id"] == int(__import__("os").environ["GITHUB_RUN_ID"]), record
+          assert record["artifact_api"]["workflow_run"]["head_sha"] == __import__("os").environ["DETECTIVE_HEAD_SHA"], record
+          assert record["artifact_api"]["digest"].startswith("sha256:"), record
           assert manifest["lineages_with_artifacts"] == 1, manifest
           assert manifest["validated_raw_prefix_rows"] == 1, manifest
           assert manifest["complete_lineage_artifacts"] == 0, manifest
