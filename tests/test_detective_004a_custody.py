@@ -406,7 +406,10 @@ class Detective004ACustodyTests(unittest.TestCase):
             self.assertEqual(entry["root_raw_utf8_sha256"],
                              hashlib.sha256(root[task_id].encode("utf-8")).hexdigest())
             self.assertEqual(entry["adapted_mechanical_correct"], True)
-            self.assertEqual(entry["root_mechanical_correct"], False)
+            # Nonempty no-action prose is correctly sufficient for a
+            # restraint task, even for this deliberately weak mock baseline.
+            self.assertEqual(entry["root_mechanical_correct"],
+                             entry["kind"] == "restraint")
 
     def test_unverified_score_ledger_retains_failing_output_claim(self):
         rows = self.synthetic_gate_fixture()
