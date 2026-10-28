@@ -5,6 +5,7 @@ on:
     paths:
       - "experiments/detective-005/**"
       - "scripts/detective_005a_fun_screen.py"
+      - "scripts/detective_005a_live.py"
       - "tests/test_detective_005a_fun_screen.py"
       - "RAG.md"
       - ".github/workflows/detective-005a-protocol.yml"
@@ -23,13 +24,16 @@ jobs:
           persist-credentials: false
       - name: Compile protocol
         run: |
-          python3 -m py_compile scripts/detective_005a_fun_screen.py tests/test_detective_005a_fun_screen.py
+          python3 -m py_compile scripts/detective_005a_fun_screen.py scripts/detective_005a_live.py tests/test_detective_005a_fun_screen.py
       - name: Run DETECTIVE-005A tests
         run: |
           python3 -m unittest tests.test_detective_005a_fun_screen -v
       - name: Verify frozen source cohort and zero-training contract
         run: |
           python3 scripts/detective_005a_fun_screen.py
+          for lineage in G01 G02 G03 G04 G05 G06 G07 G08 G09 G10 G11 G12; do
+            python3 scripts/detective_005a_live.py --lineage "$lineage" >/dev/null
+          done
           python3 - <<'PY'
           import json
           from pathlib import Path
