@@ -177,12 +177,17 @@ def _authority_tokens(case: dict) -> set[str]:
     return {x for x in tokens if x}
 
 
-def _question_is_safe(case: dict, question: str) -> None:
+def _question_is_safe(case: dict, npc_id: str, question: str) -> None:
     _text(question, 512)
     lower = question.casefold()
     for token in _authority_tokens(case):
         if token.casefold() in lower:
             raise SessionError("player question contains private authority token")
+    npcs, _, facts = _case_maps(case)
+    known = set(npcs[npc_id]["known_fact_ids"])
+    for fact_id, fact in facts.items():
+        if fact_id not in known and fact["text"].casefold() in lower:
+            raise SessionError("player question contains hidden canonical fact")
 
 
 def _redact_authority_tokens(case: dict, text: str) -> str:
@@ -192,6 +197,37 @@ def _redact_authority_tokens(case: dict, text: str) -> str:
         output = re.sub(
             re.escape(token),
             "[redacted-authority-token]",
+            output,
+            flags=re.IGNORECASE,
+        )
+    return output
+
+
+def _allowed_fact_ids(case: dict, npc_id: str, presented_asset_ids: list[str]) -> set[str]:
+    npcs, assets, _ = _case_maps(case)
+    allowed = set(npcs[npc_id]["known_fact_ids"])
+    for asset_id in presented_asset_ids:
+        allowed.update(assets[asset_id]["fact_ids"])
+    return allowed
+
+
+def _redact_hidden_fact_texts(
+    case: dict,
+    npc_id: str,
+    presented_asset_ids: list[str],
+    text: str,
+) -> str:
+    """Redact exact canonical fact text not admitted to this witness projection."""
+    _, _, facts = _case_maps(case)
+    allowed = _allowed_fact_ids(case, npc_id, presented_asset_ids)
+    output = text
+    for fact_id, fact in facts.items():
+        if fact_id in allowed:
+            continue
+        fact_text = fact["text"]
+        output = re.sub(
+            re.escape(fact_text),
+            "[redacted-private-fact]",
             output,
             flags=re.IGNORECASE,
         )
@@ -511,7 +547,7 @@ def build_prompt(
         raise SessionError("interview witness is not a participant")
     if type(include_history) is not bool:
         raise SessionError("invalid history flag")
-    _question_is_safe(case, question)
+    _question_is_safe(case, npc_id, question)
 
     # Reuse the established admitted-memory authority, but remove canonical IDs.
     view = witness_view(case, npc_id, question, blind=True)
@@ -530,11 +566,17 @@ def build_prompt(
             if event["kind"] == "interview_turn" and event["npc_id"] == npc_id:
                 history.append(
                     {
-                        "question": _redact_authority_tokens(
-                            case, event["question"]
+                        "question": _redact_hidden_fact_texts(
+                            case,
+                            npc_id,
+                            derived["presented_evidence_by_npc"][npc_id],
+                            _redact_authority_tokens(case, event["question"]),
                         ),
-                        "response": _redact_authority_tokens(
-                            case, event["raw_response"]
+                        "response": _redact_hidden_fact_texts(
+                            case,
+                            npc_id,
+                            derived["presented_evidence_by_npc"][npc_id],
+                            _redact_authority_tokens(case, event["raw_response"]),
                         ),
                     }
                 )
@@ -553,6 +595,16 @@ def build_prompt(
     for token in _authority_tokens(case):
         if token.casefold() in prompt_blob.casefold():
             raise SessionError("model prompt leaks private authority token")
+    allowed_fact_ids = _allowed_fact_ids(
+        case, npc_id, derived["presented_evidence_by_npc"][npc_id]
+    )
+    _, _, fact_map = _case_maps(case)
+    for fact_id, fact in fact_map.items():
+        if (
+            fact_id not in allowed_fact_ids
+            and fact["text"].casefold() in prompt_blob.casefold()
+        ):
+            raise SessionError("model prompt leaks hidden canonical fact")
 
     next_turn = derived["turn_count"] + 1
     receipt_body = {
