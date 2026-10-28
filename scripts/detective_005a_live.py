@@ -128,7 +128,7 @@ def intact_partial_raw_rows(path: Path) -> tuple[int, str | None]:
     count = 0
     with path.open("rb") as fh:
         for line in fh:
-            if not line.endswith(b"\\n"):
+            if not line.endswith(b"\n"):
                 return count, "unterminated_raw_row"
             try:
                 row = json.loads(line.decode("utf-8"))
