@@ -300,7 +300,15 @@ jobs:
           git config user.name "neurounner experiment bot"
           git config user.email "261801702+techrote@users.noreply.github.com"
           git add             "datasets/$DATASET_ID"             datasets/README.md             RAG.md
-          git diff --cached --check
+          # Raw provider text is immutable evidence and may legitimately contain
+          # trailing whitespace. Check only the generated metadata/signposts.
+          git diff --cached --check -- \
+            RAG.md \
+            datasets/README.md \
+            "datasets/$DATASET_ID/README.md" \
+            "datasets/$DATASET_ID/manifest.json" \
+            "datasets/$DATASET_ID/provenance/source-artifacts.json" \
+            "datasets/$DATASET_ID/provenance/hashes.sha256"
           git commit -m "Archive failed V-G08-C preference evidence from run $SOURCE_RUN_ID"
           git pull --rebase origin main
           git push origin HEAD:main
