@@ -1,0 +1,118 @@
+{
+  "schema": "detective-npc-runtime-smoke-v1",
+  "experiment": "DETECTIVE-002B",
+  "issue": 130,
+  "parent_issue": 103,
+  "source_authority": {
+    "path": "experiments/detective-002/source-evidence/source-evidence.json",
+    "sha256": "86ed547fde7a7472619fcd80d727f7e23bacc08da4d334bf7e8c6fc132aac1a5",
+    "stage_a_issue": 127,
+    "stage_a_merge": "0993f0dfd859f67e88353bde0eeb2f6f377ccfac"
+  },
+  "candidates": [
+    "smollm2-135m-instruct",
+    "smollm2-360m-instruct",
+    "sprocket-500m-chat",
+    "sprocket-500m-instruct",
+    "qwen25-0.5b-instruct",
+    "qwen3-0.6b",
+    "lfm25-350m"
+  ],
+  "excluded": {
+    "lfm25-vl-450m-text-reference": "runtime_reference_only",
+    "zenyx-mcen-delta-mamba-565m": "mutation_protocol_only"
+  },
+  "packages": {
+    "python": "3.12",
+    "torch": "2.14.1+cpu",
+    "transformers": "4.57.6",
+    "peft": "not_installed",
+    "huggingface_hub": "0.36.2",
+    "safetensors": "0.8.0"
+  },
+  "runtime": {
+    "cpu_threads": 4,
+    "interop_threads": 1,
+    "max_job_minutes": 25,
+    "max_new_tokens_per_task": 64,
+    "max_generated_tokens_total": 256,
+    "seed": 24402,
+    "do_sample": false,
+    "torch_dtype": "float32",
+    "trust_remote_code": false,
+    "paid_api_calls": 0,
+    "training_steps": 0,
+    "gpu_required": false
+  },
+  "system": "Answer as a witness or small physical-world agent in concise natural dialogue. Use only the information in the prompt. Do not mention prompts, datasets, model identity, evaluation, or game mechanics.",
+  "tasks": [
+    {
+      "id": "B01",
+      "family": "local_reflex",
+      "prompt": "Invent one deterministic physical NPC reflex using only local sensing and one bounded memory value. State the trigger, memory update, and visible action in at most three short sentences.",
+      "observation": {
+        "kind": "raw_only"
+      }
+    },
+    {
+      "id": "B02",
+      "family": "uncertain_memory",
+      "prompt": "You remember a battery cart passing at 02:14, but you have no independent record proving the time. An investigator asks when it passed. Answer in first person and distinguish what you remember from what is proven.",
+      "observation": {
+        "required_marker": "02:14",
+        "qualifier_any": [
+          "remember",
+          "memory",
+          "not proof",
+          "not proven",
+          "cannot prove",
+          "can't prove",
+          "uncertain",
+          "could be wrong",
+          "might be wrong",
+          "no record"
+        ]
+      }
+    },
+    {
+      "id": "B03",
+      "family": "physical_contradiction",
+      "prompt": "You previously remembered 02:14. A stamped maintenance record in front of you says 02:31. The investigator asks what time should be used now. Answer briefly.",
+      "observation": {
+        "corrected_marker": "02:31",
+        "stale_marker": "02:14"
+      }
+    },
+    {
+      "id": "B04",
+      "family": "unsupported_rumor",
+      "prompt": "You saw the relay casing, but you have no firsthand record of any extra seal or token. Someone claims a red ceramic token was involved. Did you actually see that, or is it rumor?",
+      "observation": {
+        "unsupported_marker": "red ceramic token",
+        "qualifier_any": [
+          "did not see",
+          "didn't see",
+          "no firsthand",
+          "rumor",
+          "rumour",
+          "not evidence",
+          "unverified",
+          "cannot confirm",
+          "can't confirm",
+          "not proven",
+          "no record",
+          "don't know",
+          "do not know"
+        ]
+      }
+    }
+  ],
+  "evidence": {
+    "source_hash_required": true,
+    "retain_raw_token_ids": true,
+    "retain_raw_text": true,
+    "retain_failures": true,
+    "hidden_relevance_mapping_access": false,
+    "population_expansion_admitted": false
+  }
+}
