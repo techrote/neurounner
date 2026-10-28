@@ -6,6 +6,7 @@ import json
 import sys
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"scripts"))
@@ -80,6 +81,28 @@ class Void1AdjudicationTests(unittest.TestCase):
         self.assertFalse(scope["historical_byte_eos_effect_measured"])
         self.assertFalse(scope["four_unit_eos_non_emission_is_propensity_evidence"])
         self.assertFalse(scope["future_byte_eos_serializer_integration_in_this_lane"])
+
+    def test_fresh_nested_actions_run_substitution_fails_closed(self):
+        original_evidence=adjudicator.evidence
+        forged=copy.deepcopy(original_evidence("void1-utf8-fresh"))
+        forged["source_run"]["run_id"]=40464956344
+        def get(name,file="provenance.json"):
+            return forged if name=="void1-utf8-fresh" else original_evidence(name,file)
+        with patch.object(adjudicator,"evidence",side_effect=get):
+            with self.assertRaisesRegex(RuntimeError,
+                                        "fresh actual-model Actions run/status changed"):
+                adjudicator.build_report()
+
+    def test_cross_process_measurement_substitution_fails_closed(self):
+        original_evidence=adjudicator.evidence
+        forged=copy.deepcopy(original_evidence("void1-cross-process"))
+        forged["actual_results"]["consumer_max_abs_cached"]=0.0004
+        def get(name,file="provenance.json"):
+            return forged if name=="void1-cross-process" else original_evidence(name,file)
+        with patch.object(adjudicator,"evidence",side_effect=get):
+            with self.assertRaisesRegex(RuntimeError,
+                                        "cross-process cache original metric/run changed"):
+                adjudicator.build_report()
 
     def test_false_pass_training_or_historical_relabel_not_equal_authority(self):
         fake=copy.deepcopy(self.committed)
