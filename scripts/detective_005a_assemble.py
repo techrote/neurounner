@@ -11,8 +11,11 @@ import argparse
 import json
 import re
 import shutil
+import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 from scripts import detective_005a_fun_screen as screen
 from scripts import detective_005a_live as live
 
