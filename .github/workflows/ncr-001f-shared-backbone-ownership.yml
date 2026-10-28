@@ -7,6 +7,9 @@ on:
       - ".github/workflows/ncr-001f-shared-backbone-ownership.yml"
       - "scripts/ncr_001f_frozen_hooks.py"
       - "tests/test_ncr_001f_shared_backbone_ownership.py"
+      - "tests/test_ncr_001f_shared_backbone_archive.py"
+      - "scripts/ncr_001f_shared_backbone_archive.py"
+      - "experiments/ncr-001/controls-evidence/shared-backbone-ownership/**"
       - "tests/test_ncr_001f_frozen_hooks.py"
       - "docs/NCR_001_F_FROZEN_MLP_HOOKS.md"
   workflow_dispatch:
@@ -47,3 +50,7 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_ncr_001f_frozen_hooks.py' -v
       - name: New cross-wrapper/disabled-path refusal tests (synthetic only)
         run: python3 -m unittest discover -s tests -p 'test_ncr_001f_shared_backbone_ownership.py' -v
+      - name: Offline exact-source original CI log, runner and refusal-claim audit
+        run: |
+          python3 scripts/ncr_001f_shared_backbone_archive.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001f_shared_backbone_archive.py' -v
