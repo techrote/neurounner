@@ -1,0 +1,124 @@
+name: BYTE-EOS-001 original frozen Qwen3 forward loss (no training)
+
+on:
+  pull_request:
+    branches: [review/byte-eos-001-causal-readback-20261028]
+    paths:
+      - '.github/workflows/byte-eos-001-frozen-qwen-forward.yml'
+      - 'scripts/byte_eos_001_frozen_qwen_loss.py'
+      - 'tests/test_byte_eos_001_frozen_qwen_loss.py'
+      - 'scripts/byte_eos_001_void_labels.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: byte-eos-frozen-qwen-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  HF_HOME: /tmp/byte-eos-001-frozen-qwen
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+  EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  exact-source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact immutable source and no-training protocol
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "dddfb416b765ef6cf23e1cdd326f8834f9f1417c"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git hash-object scripts/byte_eos_001_void_labels.py)" = "4c00c78b6776ade6901a99eee9a42e7ca61c698b"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("SOURCE_ONLY_TESTS: four model variants distinct; training denied")
+          PY
+          python3 -m py_compile scripts/byte_eos_001_frozen_qwen_loss.py
+          python3 -m unittest discover -s tests -p 'test_byte_eos_001_*.py' -v
+
+  original-qwen3:
+    needs: exact-source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Record exact tested source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr-001
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git rev-parse HEAD > runtime/ncr-001/byte-eos-source-head.txt
+          sha256sum scripts/byte_eos_001_frozen_qwen_loss.py scripts/byte_eos_001_void_labels.py experiments/ncr-001/protocol.json experiments/ncr-001/source-pins.json > runtime/ncr-001/byte-eos-source-sha256.txt
+      - name: Install previously qualified CPU Qwen3 runtime
+        shell: bash
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub==0.36.2' 'safetensors==0.8.0' 'sentencepiece>=0.2,<1'
+          python3 -m pip freeze > runtime/ncr-001/byte-eos-packages.txt
+      - name: Review pinned external tokenizer source before executing it
+        run: |
+          python3 scripts/ncr_001k_byte_source_audit.py
+      - name: Download and verify complete source files before offline run
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' | tee runtime/ncr-001/byte-eos-prefetch.log
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          p=json.load(open('experiments/ncr-001/source-pins.json'))['models']['void1']
+          for filename,key in (
+              ('model.safetensors','weight_declared_lfs_sha256_not_downloaded'),
+              ('config.json','config_sha256'),
+              ('tokenization_byte.py','tokenization_byte_py_sha256'),
+              ('byte_vocab.json','byte_vocab_sha256'),
+              ('tokenizer_config.json','tokenizer_config_sha256'),
+              ('special_tokens_map.json','special_tokens_map_sha256')):
+              path=Path(hf_hub_download(p['repo_id'],filename=filename,revision=p['revision']))
+              h=hashlib.sha256(path.read_bytes()).hexdigest()
+              assert h==p[key],(filename,h,p[key])
+              if filename=='model.safetensors': assert path.stat().st_size==360622744
+              print('PINNED_FILE',filename,h,path.stat().st_size,flush=True)
+          PY
+      - name: Execute frozen Qwen3 forward-only corrected EOS supervision
+        shell: bash
+        run: |
+          set -euo pipefail
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python3 scripts/byte_eos_001_frozen_qwen_loss.py 2>&1 | tee runtime/ncr-001/byte-eos-frozen-qwen-console.log
+      - name: Preserve exact source and all partial evidence even on failure
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p runtime/ncr-001
+          git rev-parse HEAD > runtime/ncr-001/byte-eos-source-head.txt
+          sha256sum scripts/byte_eos_001_frozen_qwen_loss.py scripts/byte_eos_001_void_labels.py experiments/ncr-001/protocol.json experiments/ncr-001/source-pins.json > runtime/ncr-001/byte-eos-source-sha256.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: byte-eos-001-original-qwen-forward-a${{ github.run_attempt }}
+          path: |
+            runtime/ncr-001/byte-eos-*
+            runtime/ncr-001/void-byte-source-audit.json
+          retention-days: 30
+          if-no-files-found: warn
