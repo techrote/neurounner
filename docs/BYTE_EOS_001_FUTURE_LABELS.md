@@ -37,3 +37,32 @@ For the fixed test example, the corrected sequence has 84 byte-tokenizer units: 
 This is a **future serializer candidate, not a switched-on training path**. The code does not change original train/eval logic, create checkpoints or enable any optimizer. It remains to be integrated into void-specific NCR-001 training only after frozen protocol review and independent #72 real-host/text/cache/cold-source approval.
 
 **No measured model-quality or EOS generation-rate improvement, no MLP/NCA comparative training, and train_authorized=false throughout.**
+
+
+## Additional causal-shift safety (follow-up draft; no training)
+
+A focused review found that the first future-only #94 serializer accepted an empty
+prompt. That falsely counted an unprefixed completion (including the single
+EOS-only example) as supervised. Standard decoder-only causal language-model
+loss uses shifted targets `labels[..., 1:]`: for a one-token EOS-only input
+there are **zero** actual target positions, while an unprefixed longer
+completion loses supervision for its first byte. Checking only
+`labels[-1] == 258` did not catch this.
+
+The follow-up candidate fails closed on a zero-byte prompt rather than
+silently adding BOS=257 or changing a predeclared sample. A nonempty prompt
+with a zero-byte completion remains valid: the single EOS=258 target is
+predicted from the final prompt position. The serializer now verifies the
+*post-shift* supervised unit count and exposes
+`causal_shift_supervised_units` for provenance. Dedicated offline negative
+tests cover zero-prefix, empty completion, Unicode, literal EOS text and
+the no-truncation boundary; exact-head source-only CI records runner/source
+identities and both positive and failure logs.
+
+This is a **future-only correctness restriction**, not a rewritten historical
+TRAIN-002b experiment, admission of a new BOS convention, physical void.1
+model run, or revision of sealed evaluation fixtures. The original #94 real
+ByteTokenizer source receipt is immutable; it does not prove model-level
+shifted-loss correctness. Real frozen-Qwen3 host learning/cache/adapter
+qualification, independently reviewed serialization admission and #72
+acceptance remain separate requirements. `train_authorized=false`.
