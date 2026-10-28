@@ -1,0 +1,97 @@
+name: NCR-001 void1 original one-step diagnostic evidence exact-head custody
+
+on:
+  pull_request:
+    branches: [review/ncr001-void-postlease-nca-learning-20261028]
+    paths:
+      - ".github/workflows/ncr-001-void-nca-original-custody.yml"
+      - "scripts/ncr_001_void_nca_original_custody.py"
+      - "tests/test_ncr_001_void_nca_original_custody.py"
+      - "experiments/ncr-001/controls-evidence/void-nca-learning-20261028/**"
+      - "docs/NCR_001_VOID_NCA_ORIGINAL_CUSTODY.md"
+      - "RAG.md"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  original-artifact-custody:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      EVIDENCE: experiments/ncr-001/controls-evidence/void-nca-learning-20261028
+      OUT: runtime/ncr001-void-nca-original-custody
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Fail-closed exact-head, pinned frozen four lanes, unchanged no-train policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          m=json.load(open("experiments/ncr-001/controls-evidence/void-nca-learning-20261028/manifest.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          assert m["original_run"] == 40765025332
+          assert m["original_head"] == "2810e800ef890f0c99f9ea44adca29f879b5d0ea"
+          assert m["original_artifacts"] == {"source":12850046593,"host":12850675205}
+          assert m["original_jobs"] == {"source":123086735654,"host":123087080911}
+          assert m["boundary"]["train_authorized"] is False
+          assert m["boundary"]["full_72_conformance_pass"] is False
+          assert m["boundary"]["independent_scientific_review"] is False
+          assert m["boundary"]["comparative_training_performed"] is False
+          PY
+      - name: Decode original Git evidence and offline byte/semantic/adversarial audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$OUT"
+          base64 -d "$EVIDENCE/source-original.zip.b64" > "$OUT/source-original.zip"
+          base64 -d "$EVIDENCE/host-original.zip.b64" > "$OUT/host-original.zip"
+          test "$(sha256sum "$OUT/source-original.zip" | awk '{print $1}')" = "b153d177497f15227545bfe6b717a6430219a662f2b0b868e7a68b89682a90d0"
+          test "$(sha256sum "$OUT/host-original.zip" | awk '{print $1}')" = "8e9152042fb909f18b13589e6e21552c40f3104c4cc292cf9a643c600fbf08b5"
+          python3 -m py_compile scripts/ncr_001_void_nca_original_custody.py tests/test_ncr_001_void_nca_original_custody.py
+          python3 scripts/ncr_001_void_nca_original_custody.py | tee "$OUT/original-audit.json"
+          python3 -m unittest discover -s tests -p "test_ncr_001_void_nca_original_custody.py" -v 2>&1 | tee "$OUT/tests.log"
+      - name: Independently re-download original Actions ZIPs and complete logs for byte equality
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth="Authorization: Bearer $GH_TOKEN"
+          accept="Accept: application/vnd.github+json"
+          curl -fsSL --retry 3 -H "$auth" -H "$accept" \
+            "https://api.github.com/repos/techrote/neurounner/actions/artifacts/12850046593/zip" \
+            -o "$OUT/source-live.zip"
+          curl -fsSL --retry 3 -H "$auth" -H "$accept" \
+            "https://api.github.com/repos/techrote/neurounner/actions/artifacts/12850675205/zip" \
+            -o "$OUT/host-live.zip"
+          cmp "$OUT/source-original.zip" "$OUT/source-live.zip"
+          cmp "$OUT/host-original.zip" "$OUT/host-live.zip"
+          curl -fsSL --retry 3 -H "$auth" -H "$accept" \
+            "https://api.github.com/repos/techrote/neurounner/actions/jobs/123086735654/logs" \
+            -o "$OUT/source-live-job.log"
+          curl -fsSL --retry 3 -H "$auth" -H "$accept" \
+            "https://api.github.com/repos/techrote/neurounner/actions/jobs/123087080911/logs" \
+            -o "$OUT/host-live-job.log"
+          cmp "$EVIDENCE/source-original-job.log" "$OUT/source-live-job.log"
+          cmp "$EVIDENCE/host-original-job.log" "$OUT/host-live-job.log"
+          sha256sum "$OUT/source-live.zip" "$OUT/host-live.zip" "$OUT/source-live-job.log" "$OUT/host-live-job.log"
+      - name: Preserve readback result including failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-void-nca-original-custody-a${{ github.run_attempt }}
+          path: runtime/ncr001-void-nca-original-custody/
+          if-no-files-found: warn
+          retention-days: 30
