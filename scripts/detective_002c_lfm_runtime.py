@@ -368,13 +368,17 @@ def tokenizer_stage(cfg: dict, candidate: dict, battery: dict, stage: Path) -> d
         }
 
     class_name = type(tok).__name__
-    backend = getattr(tok, "backend", None)
-    # Some implementations expose the backend enum/object rather than a plain string.
-    backend_text = (
-        backend if isinstance(backend, str)
-        else getattr(backend, "value", None) or type(backend).__name__
-        if backend is not None else None
-    )
+    tokenizer_cfg = read_json(stage / "tokenizer_config.json")
+    declared_backend = tokenizer_cfg.get("backend")
+    declared_class = tokenizer_cfg.get("tokenizer_class")
+    if (
+        declared_backend != cfg["stages"]["require_tokenizer_backend"]
+        or declared_class != cfg["stages"]["expected_tokenizer_class"]
+    ):
+        raise SourceIntegrityError(
+            "frozen tokenizer backend/class declaration differs from 002C contract"
+        )
+    backend_text = declared_backend
     if class_name != cfg["stages"]["expected_tokenizer_class"]:
         return {
             "status": "tokenizer_incompatible",
@@ -457,6 +461,9 @@ def run(out: Path) -> dict:
 
     import torch
     import transformers
+    import huggingface_hub
+    import safetensors
+    import tokenizers
     from transformers import AutoModelForCausalLM
 
     if transformers.__version__ != cfg["runtime"]["transformers"]:
@@ -483,6 +490,14 @@ def run(out: Path) -> dict:
         "model": cfg["model"],
         "runtime_contract": cfg["runtime"],
         "historical_control": cfg["historical_control"],
+        "resolved_packages": {
+            "python": platform.python_version(),
+            "torch": torch.__version__,
+            "transformers": transformers.__version__,
+            "huggingface_hub": huggingface_hub.__version__,
+            "tokenizers": tokenizers.__version__,
+            "safetensors": safetensors.__version__,
+        },
         "relevance_mapping_accessed": False,
         "optimizer_steps": 0,
         "paid_api_calls": 0,
