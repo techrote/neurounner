@@ -151,11 +151,20 @@ def small_file(repo: str, revision: str, path: str) -> tuple[bytes | None, str]:
 
 def license_from(payload: dict) -> str | None:
     card = payload.get("cardData")
-    if isinstance(card, dict) and isinstance(card.get("license"), str):
-        return card["license"].casefold()
+    if isinstance(card, dict):
+        raw = card.get("license")
+        named = card.get("license_name")
+        # Hugging Face custom licenses are commonly represented in cardData
+        # as license="other" plus a human-readable license_name, while the UI
+        # renders the named license. Preserve that named identity.
+        if (isinstance(raw, str) and raw.casefold() == "other"
+                and isinstance(named, str) and named.strip()):
+            return named.strip().casefold()
+        if isinstance(raw, str) and raw.strip():
+            return raw.strip().casefold()
     for tag in payload.get("tags") or []:
         if isinstance(tag, str) and tag.startswith("license:"):
-            return tag.split(":", 1)[1].casefold()
+            return tag.split(":", 1)[1].strip().casefold()
     return None
 
 
