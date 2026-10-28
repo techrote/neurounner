@@ -6,8 +6,10 @@ on:
       - "experiments/detective-004/**"
       - "scripts/detective_004a_protocol.py"
       - "scripts/detective_004a_custody_audit.py"
+      - "scripts/detective_004a_token_preflight.py"
       - "tests/test_detective_004a_protocol.py"
       - "tests/test_detective_004a_custody.py"
+      - "tests/test_detective_004a_token_preflight.py"
       - "datasets/detective-004a/**"
       - "scripts/detective_001b3_sprocket.py"
       - "experiments/detective-001/sprocket-scripter.json"
@@ -28,7 +30,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Compile pinned protocol and adversarial tests
-        run: python3 -m py_compile scripts/detective_004a_protocol.py scripts/detective_004a_custody_audit.py tests/test_detective_004a_protocol.py tests/test_detective_004a_custody.py
+        run: python3 -m py_compile scripts/detective_004a_protocol.py scripts/detective_004a_custody_audit.py scripts/detective_004a_token_preflight.py tests/test_detective_004a_protocol.py tests/test_detective_004a_custody.py tests/test_detective_004a_token_preflight.py
       - name: Run complete offline DETECTIVE regression suite
         run: python3 -m unittest discover -s tests -p 'test_detective_*.py' -v
       - name: Generate corpus twice and compare byte-for-byte
@@ -70,7 +72,8 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           src=(Path("scripts/detective_004a_protocol.py").read_text() +
-               Path("scripts/detective_004a_custody_audit.py").read_text())
+               Path("scripts/detective_004a_custody_audit.py").read_text() +
+               Path("scripts/detective_004a_token_preflight.py").read_text())
           # These modules are not permitted to infer, optimize or expose scoring custody.
           for denied in (
               "import torch", "import transformers", "import peft",
