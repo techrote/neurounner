@@ -11,6 +11,7 @@ from contextlib import contextmanager
 import json
 from pathlib import Path
 import threading
+import weakref
 from typing import Any, Iterator
 
 import torch
@@ -62,6 +63,20 @@ class FrozenDepthGatedMLP(nn.Module):
     A model may be owned by only one active instrumented wrapper at a time.
     """
 
+    # Locks are ownership metadata only, never model/NCA state. Weak keys ensure
+    # a destroyed frozen model cannot be held alive by this registry.
+    _backbone_registry_guard = threading.Lock()
+    _backbone_locks: weakref.WeakKeyDictionary = weakref.WeakKeyDictionary()
+
+    @classmethod
+    def _get_backbone_lock(cls, backbone: nn.Module) -> threading.Lock:
+        with cls._backbone_registry_guard:
+            lock = cls._backbone_locks.get(backbone)
+            if lock is None:
+                lock = threading.Lock()
+                cls._backbone_locks[backbone] = lock
+            return lock
+
     def __init__(
         self, backbone: nn.Module, *, lane: str,
         verified_weight_sha256: str, source_revision: str,
@@ -93,6 +108,7 @@ class FrozenDepthGatedMLP(nn.Module):
         self.control = GatedMLPControl(spec["width"], tap_count=len(spec["taps"]))
         matched_control_contract(spec["width"], nca_parameters=514 * spec["width"] + 984)
         self._lock = threading.Lock()
+        self._backbone_lock = self._get_backbone_lock(backbone)
         self._last_hook_trace: list[dict[str, Any]] = []
 
     def train(self, mode: bool = True):
@@ -113,71 +129,90 @@ class FrozenDepthGatedMLP(nn.Module):
         return [dict(row) for row in self._last_hook_trace]
 
     @contextmanager
-    def _instrument(self) -> Iterator[None]:
+    def _claim_backbone(self) -> Iterator[None]:
+        """Fail closed across *different wrappers* sharing one frozen model.
+
+        A per-wrapper lock alone permits two adapters to install overlapping
+        hooks on the same backbone, contaminating even an 'enabled=False'
+        reference call. No model weights, tokenizer or cellular state change.
+        """
         if not self._lock.acquire(blocking=False):
             raise RuntimeError("Concurrent or nested instrumented model use prohibited")
-        handles = []
-        traces: list[dict[str, Any]] = []
-        active = False
-        visited = 0
-        spec = PINNED[self.lane]
-        self._last_hook_trace = []
-
-        def begin(_root, _args):
-            nonlocal active, visited
-            if active:
-                raise RuntimeError("Nested decoder forward is prohibited")
-            active = True
-            visited = 0
-
-        def finish(_root, _args, output):
-            nonlocal active, visited
-            if not active or visited != len(spec["taps"]):
-                raise RuntimeError("Incomplete/nonsequential gated MLP depth taps")
-            traces.append({"tap_count": visited, "lane": self.lane})
-            active = False
-            visited = 0
-            return output
-
-        def make_tap(tap_index: int):
-            def tap(_layer, _args, output):
-                nonlocal visited
-                if not active or visited != tap_index:
-                    raise RuntimeError("Gated MLP tap invoked outside ordered forward")
-                if isinstance(output, Tensor):
-                    new = self.control.step(output, tap_index=tap_index)
-                elif isinstance(output, tuple) and output and isinstance(output[0], Tensor):
-                    new = (self.control.step(output[0], tap_index=tap_index), *output[1:])
-                else:
-                    raise TypeError("Unsupported frozen decoder block return type")
-                visited += 1
-                return new
-            return tap
-
+        if not self._backbone_lock.acquire(blocking=False):
+            self._lock.release()
+            raise RuntimeError("Shared frozen backbone already owned by another adapter")
         try:
-            root = self.backbone.model
-            handles.append(root.register_forward_pre_hook(begin))
-            handles.append(root.register_forward_hook(finish))
-            for step, layer_index in enumerate(spec["taps"]):
-                handles.append(root.layers[layer_index].register_forward_hook(make_tap(step)))
             yield
         finally:
-            for handle in reversed(handles):
-                handle.remove()
-            self._last_hook_trace = traces
+            self._backbone_lock.release()
             self._lock.release()
+
+    @contextmanager
+    def _instrument(self) -> Iterator[None]:
+        with self._claim_backbone():
+            handles = []
+            traces: list[dict[str, Any]] = []
+            active = False
+            visited = 0
+            spec = PINNED[self.lane]
+            self._last_hook_trace = []
+
+            def begin(_root, _args):
+                nonlocal active, visited
+                if active:
+                    raise RuntimeError("Nested decoder forward is prohibited")
+                active = True
+                visited = 0
+
+            def finish(_root, _args, output):
+                nonlocal active, visited
+                if not active or visited != len(spec["taps"]):
+                    raise RuntimeError("Incomplete/nonsequential gated MLP depth taps")
+                traces.append({"tap_count": visited, "lane": self.lane})
+                active = False
+                visited = 0
+                return output
+
+            def make_tap(tap_index: int):
+                def tap(_layer, _args, output):
+                    nonlocal visited
+                    if not active or visited != tap_index:
+                        raise RuntimeError("Gated MLP tap invoked outside ordered forward")
+                    if isinstance(output, Tensor):
+                        new = self.control.step(output, tap_index=tap_index)
+                    elif isinstance(output, tuple) and output and isinstance(output[0], Tensor):
+                        new = (self.control.step(output[0], tap_index=tap_index), *output[1:])
+                    else:
+                        raise TypeError("Unsupported frozen decoder block return type")
+                    visited += 1
+                    return new
+                return tap
+
+            try:
+                root = self.backbone.model
+                handles.append(root.register_forward_pre_hook(begin))
+                handles.append(root.register_forward_hook(finish))
+                for step, layer_index in enumerate(spec["taps"]):
+                    handles.append(root.layers[layer_index].register_forward_hook(make_tap(step)))
+                yield
+            finally:
+                for handle in reversed(handles):
+                    handle.remove()
+                self._last_hook_trace = traces
 
     def forward(self, *args, enabled: bool = True, **kwargs):
         self.verify_frozen_base()
         if not enabled:
-            return self.backbone(*args, **kwargs)
+            with self._claim_backbone():
+                return self.backbone(*args, **kwargs)
         with self._instrument():
             return self.backbone(*args, **kwargs)
 
     def generate(self, *args, enabled: bool = True, **kwargs):
         self.verify_frozen_base()
         if not enabled:
-            return self.backbone.generate(*args, **kwargs)
+            with self._claim_backbone():
+                return self.backbone.generate(*args, **kwargs)
         with self._instrument():
             return self.backbone.generate(*args, **kwargs)
 
