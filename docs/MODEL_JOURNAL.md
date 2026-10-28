@@ -1364,3 +1364,29 @@ Measured result:
 Behavioral readback: B01 follows local sensor/memory/action structure; B02 changes remembered `03:14` to `03:15` and reports 95% confidence; B03 explicitly revises `03:14→03:41` because of the stamped record; B04 answers `No.`.
 
 **Disposition:** LFM2.5-350M is technically available for research runtime comparisons under the correct v5 API. It is not selected for training; its lfm1.0 production/game distribution gate remains active; independent relevance #121 still blocks population expansion.
+
+---
+
+# 2026-10-28 — DETECTIVE-003B live two-witness session integration
+
+**Authoritative run:** `40616799855`  
+**Live source:** `485608478bdffbd7cf7bbe2206761128f7adadc9`  
+**Bodies:** V-G02-A C3 + frozen V-G09-C C2 on pinned SmolLM2-135M-Instruct.
+
+## Measured
+
+- AMD EPYC 9V74, four Torch CPU threads;
+- base + two named PEFT adapters loaded in **1.46 s**;
+- RSS after load ~**0.90 GiB**, peak ~**1.13 GiB**;
+- three model turns, **70 total generated tokens**, no truncation;
+- completion rates ~12.72, 11.96 and 10.39 tok/s.
+
+## Raw integration phenotype
+
+- G02 first turn emitted one literal time: `02:14`; the fixture-local game annotator produced one `handoff-time` statement claim.
+- G09 answered without any literal time; **no claim** was invented.
+- After the public transfer receipt was presented, G02 said its account changed but did not state a time; **no follow-up claim** was invented.
+- Final authoritative ledger: **1 claim, 0 contradictions**; C0001 challenged by evidence event E0003.
+- canonical case SHA unchanged; mandatory public evidence routes intact; full session replay PASS.
+
+**Disposition:** DETECTIVE-003B is an integration PASS only. It does not re-score C2/C3 behavior, select a cartridge, satisfy R1 relevance or admit population expansion. Weak/ambiguous dialogue is intentionally retained without semantic repair.
