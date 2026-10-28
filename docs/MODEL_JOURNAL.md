@@ -1315,3 +1315,27 @@ The narrow coexistence hypothesis is supported: explicit sincere false memory an
 **Observed behavior:** Smol135 was fastest but drifted from "account" into invented customer-account fields on the contradiction probe. Smol360 was concise but often repeated supplied facts without an explicit epistemic update. Sprocket Chat looped and hit every decode cap; root Instruct was more structured but invented unsupported scene detail. Qwen2.5 changed supplied memory `03:14` to `03:25` and expressed high certainty, then correctly preferred the stamped `03:41` on the next probe. Qwen3 gave the cleanest explicit memory-vs-proof qualifier in B02 but then said the physical contradiction caused no change. LFM350's exact source verified but tokenizer construction failed under the frozen Transformers 4.57.6 stack.
 
 **Disposition:** runtime characterization only. No body selection/training/population admission. LFM runtime compatibility requires a separate preregistered stack study if pursued. Cross-host Sprocket throughput is not a precise checkpoint comparison.
+
+---
+
+# 2026-10-28 — DETECTIVE-002C LFM2.5-350M Transformers-v5 compatibility
+
+**Actions run:** `40609927745`  
+**Source:** `053ddd90dcae646a647806fc65ca851ae8d85232`  
+**Model:** exact frozen LiquidAI/LFM2.5-350M revision `9e6c6ccf47cd318696e137d381a7ded8fe4df09f`.
+
+DETECTIVE-002B under Transformers 4.57.6 could not construct the declared `TokenizersBackend`. 002C preregistered Transformers **5.20.1** and verified the PyPI wheel SHA before installation.
+
+Measured v5 result:
+
+- `TokenizersBackend` construction: **PASS**;
+- frozen backend declaration `tokenizers`: PASS;
+- config/tokenizer/chat-template hashes: PASS;
+- exact matched chat rendering: **FAIL**, `AttributeError` with empty message;
+- model weight download: **NO**;
+- model inference: **NO**;
+- outcome: **tokenizer_incompatible**.
+
+Resolved packages: Python 3.12.15, Torch 2.14.1+cpu, Transformers 5.20.1, huggingface_hub 2.3.0, tokenizers 0.23.3, safetensors 0.8.0.
+
+**Interpretation:** v5 fixes the specific tokenizer-class availability defect but not the complete frozen chat-template/runtime path. Any next diagnostic should instrument template rendering only, without downloading model weights. LFM remains unselected and its lfm1.0 production/game license gate remains active.
