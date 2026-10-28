@@ -5,6 +5,8 @@ import copy
 import json
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -117,6 +119,26 @@ class SprocketInstructAdjudicationTests(unittest.TestCase):
         fake["adjudication"] = "PASS"
         fake["blocking_required_checks"] = []
         self.assertNotEqual(fake, adjudicator.build_report())
+
+    def test_raw_cross_process_archive_corruption_refuses_final_adjudication(self):
+        # The original metadata can still look valid; corrupt one actual
+        # lossless Actions archive and prove source provenance alone is not enough.
+        import ncr_001e_sprocket_process_receipt_audit as process_audit
+        original = process_audit.ARCHIVE.read_text(encoding="ascii")
+        with TemporaryDirectory() as dirname:
+            corrupted = Path(dirname) / "original-jsons.tar.gz.b64"
+            corrupted.write_text("!" + original[1:], encoding="ascii")
+            with patch.object(process_audit, "ARCHIVE", corrupted):
+                with self.assertRaises((RuntimeError, ValueError, OSError)):
+                    adjudicator.build_report()
+
+    def test_missing_original_cross_process_archive_refuses_adjudication(self):
+        import ncr_001e_sprocket_process_receipt_audit as process_audit
+        with TemporaryDirectory() as dirname:
+            absent = Path(dirname) / "missing-original-actions-archive.b64"
+            with patch.object(process_audit, "ARCHIVE", absent):
+                with self.assertRaises(FileNotFoundError):
+                    adjudicator.build_report()
 
 
 if __name__ == "__main__":
