@@ -317,8 +317,11 @@ explicit, **read-only** check for this future pre-optimizer requirement:
 - Bit-exact equality between the future B3 **whole-wire** inference-token IDs
   and the publisher's turnwise prompt-token IDs, including the final dangling
   assistant cue; mismatches fail closed rather than being called model behavior.
-- Deterministic per-row hashes of claimed token IDs, token mask, causal labels
-  and prompt IDs. Hashes alone cannot replace raw token-ID receipt custody.
+- Deterministic per-row hashes of token IDs, token mask, causal labels,
+  exact model-only prompt bytes and prompt IDs. The future explicit local
+  invocation also preserves the **complete raw arrays** (input IDs, train mask,
+  causally shifted inputs/labels and prompt IDs/text) in its receipt; hashes
+  alone cannot replace raw token-ID receipt custody.
 
 The Stage-A CI exercises these functions **only with a deliberately artificial
 toy tokenizer**. The toy is NOT Sprocket, is NOT a verified model input, and
