@@ -2,15 +2,21 @@
 
 Issue: [#121](https://github.com/techrote/neurounner/issues/121); parent: [#103](https://github.com/techrote/neurounner/issues/103).
 
-## Review status — withdrawn
+## Review status — reclassified as subjective gameplay-reaction evidence
 
-**This 2026-10-28 submission is no longer a valid DETECTIVE-001R1 relevance review.**
+**The 2026-10-28 scores remain useful evidence, but they are not an objective DETECTIVE-001R1 relevance review.**
 
-After the initial aggregation, the reviewer explicitly corrected the review methodology: the submitted numbers were influenced by an imagined in-game reaction, including penalizing boring-but-correct responses and rewarding wrong-but-funny responses. That is incompatible with the frozen relevance-only rubric, which asks only whether each response addresses its prompt.
+After the initial aggregation, the reviewer clarified the intended meaning of the numbers: they reflected an imagined in-game reaction, including lower scores for boring-but-correct responses and higher scores for wrong-but-funny responses. That makes them useful descriptive evidence about character/gameplay reaction, but not measurements of the frozen relevance-only rubric.
 
-The two original rating files and their derived aggregate are preserved **unchanged as historical evidence**. They must not be edited in place, silently discarded, or used as a current relevance gate. See `review-status.json` for the machine-readable withdrawal record.
+The two original rating files are preserved **unchanged**. They must not be edited in place or silently discarded. `gameplay-reaction-summary.json` preserves their descriptive character/gameplay interpretation; `review-status.json` records that they have no relevance-gate authority.
 
-**Current valid external relevance review: none.** A corrected replacement must be scored from the opaque packets against the frozen relevance rubric, without using the now-revealed hidden mapping to choose or adjust individual scores. Until a valid replacement is durably frozen and qualified, DETECTIVE-001R1 remains incomplete and population expansion remains blocked.
+**Current objective relevance qualification: unresolved.** These scores do not decide it. Population expansion therefore remains blocked by the separate relevance gate, while the subjective reaction evidence can still inform character-design work.
+
+## Subjective gameplay-reaction interpretation
+
+The same unchanged 24 integers are also summarized in [`gameplay-reaction-summary.json`](gameplay-reaction-summary.json) as a **descriptive, non-gating** signal. This captures the reviewer's clarified criterion: how each answer felt as an imagined in-game response, where entertainingly wrong or characterful answers could rate better than dull but correct ones.
+
+That signal may be useful for NPC character design, comic value and player-facing response preference. It has **no relevance, proposition, training, production or population-admission authority**.
 
 ## Source and custody
 
@@ -37,7 +43,7 @@ python3 -m unittest tests.test_detective_001r1_relevance -v
 
 The committed `relevance-summary.json` is required by the dedicated regression test to equal the **exact** Python aggregator output, including packet hashes, rating-file hashes, group means and gates. The `--out` command writes a derived output only; it does not edit any score or frozen source.
 
-## Historical aggregate of the withdrawn scores (0–4 relevance)
+## Mechanical aggregation of the reclassified scores
 
 | Candidate | Original C1 baseline | Latest candidate | Delta | Cumulative gate |
 | --- | ---: | ---: | ---: | --- |
@@ -46,6 +52,6 @@ The committed `relevance-summary.json` is required by the dedicated regression t
 
 G02's local regenerated C2-parent → C3 delta is `−0.25` (3.50 → 3.25); its C2 continuation mean was 3.50. G09 exceeds the maximum allowed regression (`0.5`) by `1.0`.
 
-**Historical aggregation of the withdrawn submission: candidate-set relevance = FAIL.** This is **not a current qualification verdict**, because the reviewer withdrew the scoring methodology as rubric-invalid. **Population expansion remains NOT ADMITTED**. A relevance result cannot override proposition/leakage controls or source/lineage requirements; existing C1/C2/C3 learner-finals remain sealed. No training, fresh inference, label adjustment, hidden relevance access before rating freeze, or automatic model judging was performed here.
+**If interpreted through the relevance aggregator, these reclassified scores mechanically produce candidate-set FAIL. That is not a current relevance qualification verdict.** Their intended interpretation is the separate subjective gameplay-reaction summary. **Population expansion remains NOT ADMITTED** because objective relevance is unresolved. A relevance result cannot override proposition/leakage controls or source/lineage requirements; existing C1/C2/C3 learner-finals remain sealed. No training, fresh inference, label adjustment, hidden relevance access before rating freeze, or automatic model judging was performed here.
 
-Reviewing this PR is distinct from asserting human independence or rubric compliance. Source-matched CI qualifies only the executable aggregation/custody. It cannot make the withdrawn human scores valid.
+Reviewing this PR is distinct from asserting objective relevance or rubric compliance. Source-matched CI qualifies the executable aggregation/custody and preserves the subjective reaction evidence; it does not convert those scores into relevance judgments.
