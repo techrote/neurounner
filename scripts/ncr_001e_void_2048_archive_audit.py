@@ -189,9 +189,15 @@ def verify_originals(files,p):
     require(static["status"]==
             "PASS_SOURCE_HASH_AND_AST_INVENTORY_ONLY__RUNTIME_BLOCKED"
             and static["source"]["repo_id"]=="dotlabs/void.1"
-            and static["runtime"]["dynamic_import_executed"] is False
-            and static["limits"]["model_weights_loaded"] is False
-            and static["limits"]["optimizer_steps"]==0,
+            and static["source"]["protocol_sha256"]==PROTOCOL_SHA
+            and static["source"]["source_pins_sha256"]==PINS_SHA
+            and static["source_ast"]["dynamic_execution_not_performed"] is True
+            and static["remote_python_executed"] is False
+            and static["no_model_weights_downloaded"] is True
+            and static["model_training_performed"] is False
+            and static["training_authorized"] is False
+            and static["tokenizer_runtime_qualified"] is False
+            and static["byte_tokenizer_behavior_qualified"] is False,
             "original static ByteTokenizer source audit reinterpreted")
     require(report["reviewed_tokenizer_shape"]["class"]=="ByteTokenizer"
             and report["reviewed_tokenizer_shape"]["methods"]==
