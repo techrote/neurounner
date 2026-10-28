@@ -44,3 +44,12 @@ The post-lease gated MLP is source/runtime qualified alongside the NCA for the s
 Do **not** set `void1_conformance_pass=true`. Do **not** open the sealed evaluation fixtures or launch comparative NCA/MLP training. `experiments/ncr-001/protocol.json: train_authorized=false` remains authoritative.
 
 This adjudication is deterministic and source-only. The CI regenerates the machine-readable report from committed original evidence, re-runs the underlying byte/semantic auditors, and refuses false PASS/training/EOS claims. Independent scientific review and stacked dependency reconciliation remain outstanding.
+
+## Adjudication CI negative record
+
+Two exact-head adjudication attempts failed **before the adjudicator executed** and are retained verbatim under `experiments/ncr-001/adjudication/`:
+
+- [40762083896](https://github.com/techrote/neurounner/actions/runs/40762083896), job `123076382167`: shell redirection targeted `runtime/ncr-001/void1-postlease-adjudication.stdout.json` before the parent directory existed. No Python adjudication code ran.
+- [40762357199](https://github.com/techrote/neurounner/actions/runs/40762357199), job `123077341445`: the attempted workflow repair accidentally committed a literal `\\n` inside the shell command, so the same pre-execution directory failure remained. No Python adjudication code ran.
+
+The workflow-only correction creates `runtime/ncr-001` with a real shell newline before redirecting output. [Run 40762474121](https://github.com/techrote/neurounner/actions/runs/40762474121) then re-audited the original evidence, regenerated the committed decision exactly and passed all seven fail-closed adjudication tests. Neither failed attempt changed source evidence, tolerances, the machine-readable decision, model identities, or training policy.
