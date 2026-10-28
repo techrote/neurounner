@@ -210,5 +210,62 @@ class Detective004ATokenPreflightTests(unittest.TestCase):
 
 
 
+    def test_frozen_optimizer_preregistration_gap_is_explicit_and_blocking(self):
+        gap = preflight.audit_optimizer_preregistration(self.cfg)
+        self.assertEqual(
+            gap["missing_preregistered_fields"],
+            list(preflight.REQUIRED_OPTIMIZER_PREREG_FIELDS))
+        self.assertFalse(gap["optimizer_execution_contract_complete"])
+        self.assertEqual(gap["frozen_optimizer"], "AdamW")
+        self.assertEqual(gap["frozen_learning_rate"], 0.0002)
+        self.assertEqual(gap["frozen_optimizer_steps"], 36)
+        self.assertEqual(gap["frozen_epochs"], 1)
+        self.assertEqual(gap["frozen_rank"], 8)
+        self.assertEqual(gap["frozen_target_modules"], ["q_proj", "v_proj"])
+        self.assertFalse(gap["values_independently_reviewed"])
+        self.assertFalse(gap["optimizer_execution_verified"])
+        self.assertFalse(gap["stage_b_training_admitted"])
+        self.assertFalse(gap["population_expansion_admitted"])
+
+    def test_36_step_plan_carries_optimizer_preregistration_blocker(self):
+        plan = preflight.planned_single_example_steps(self.toy)
+        self.assertFalse(plan["optimizer_preregistration_complete"])
+        self.assertEqual(
+            plan["missing_optimizer_preregistered_fields"],
+            list(preflight.REQUIRED_OPTIMIZER_PREREG_FIELDS))
+        receipt = preflight.audit_claimed_training_steps(
+            self.toy, copy.deepcopy(plan["steps"]))
+        self.assertFalse(receipt["optimizer_preregistration_complete"])
+        self.assertEqual(
+            receipt["missing_optimizer_preregistered_fields"],
+            list(preflight.REQUIRED_OPTIMIZER_PREREG_FIELDS))
+        self.assertFalse(receipt["stage_b_training_admitted"])
+
+    def test_field_presence_alone_never_authorizes_optimizer(self):
+        cfg = copy.deepcopy(self.cfg)
+        # Synthetic placeholders only: this test proves that even a structurally
+        # complete field set is not an independent semantic review or authority.
+        placeholders = {
+            "training_seed": 0,
+            "batch_size": 1,
+            "gradient_accumulation_steps": 1,
+            "adam_beta1": 0.0,
+            "adam_beta2": 0.0,
+            "adam_epsilon": 0.0,
+            "weight_decay": 0.0,
+            "lr_scheduler": "synthetic-test-only",
+            "warmup_steps": 0,
+        }
+        cfg["future_training"].update(placeholders)
+        gap = preflight.audit_optimizer_preregistration(cfg)
+        self.assertEqual(gap["missing_preregistered_fields"], [])
+        self.assertTrue(gap["optimizer_execution_contract_complete"])
+        self.assertFalse(gap["values_independently_reviewed"])
+        self.assertFalse(gap["optimizer_execution_verified"])
+        self.assertFalse(gap["adapter_ancestry_verified"])
+        self.assertFalse(gap["stage_b_training_admitted"])
+        self.assertFalse(gap["production_admission"])
+
+
 if __name__ == "__main__":
     unittest.main()
