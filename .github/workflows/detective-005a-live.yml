@@ -20,7 +20,7 @@ jobs:
   plan:
     if: >-
       ${{ inputs.confirm == 'RUN-144-NO-TRAINING' &&
-          github.ref == 'refs/heads/research/detective-005a-fun-screen-20261028' }}
+          github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     outputs:
@@ -136,8 +136,8 @@ jobs:
       contents: write
       actions: read
     env:
-      SCREEN_HEAD_SHA: ${{ github.sha }}
-      TARGET_BRANCH: research/detective-005a-fun-screen-20261028
+      SOURCE_HEAD_SHA: ${{ github.sha }}
+      TARGET_BRANCH: evidence/detective-005a-${{ github.run_id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -163,12 +163,16 @@ jobs:
           path: staged/detective-005a
           if-no-files-found: error
           retention-days: 30
-      - name: Promote verified raw evidence to the research branch
+      - name: Promote verified raw evidence to a run-specific evidence branch
         run: |
           set -euo pipefail
-          remote_sha=$(git ls-remote --heads origin "refs/heads/$TARGET_BRANCH" | cut -f 1)
-          if [ "$remote_sha" != "$SCREEN_HEAD_SHA" ]; then
-            echo "Research branch moved during live screen; refusing stale promotion."
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$SOURCE_HEAD_SHA" origin/main; then
+            echo "Source commit is no longer in main history; refusing evidence promotion."
+            exit 1
+          fi
+          if git ls-remote --exit-code --heads origin "refs/heads/$TARGET_BRANCH" >/dev/null 2>&1; then
+            echo "Evidence branch already exists; refusing overwrite."
             exit 1
           fi
           test ! -e datasets/detective-005a
@@ -177,7 +181,8 @@ jobs:
           python3 scripts/detective_005a_assemble.py \
             --verify datasets/detective-005a
           git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.email '41898282+techrote@users.noreply.github.com'
           git add datasets/detective-005a
-          git commit -m "DETECTIVE-005A: promote 36-villager raw fun-screen evidence"
+          git commit -m "DETECTIVE-005A: promote 36-villager raw fun-screen evidence ${GITHUB_RUN_ID}"
           git push origin HEAD:"refs/heads/$TARGET_BRANCH"
+          echo "Promoted verified evidence to $TARGET_BRANCH"
