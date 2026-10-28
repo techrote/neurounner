@@ -66,7 +66,7 @@ jobs:
         run: |
           mkdir -p runtime/byte-eos-001-causal
           python3 - <<'PY'
-          import hashlib,json,os,platform
+          import hashlib,json,os,platform,subprocess
           from pathlib import Path
           root=Path("runtime/byte-eos-001-causal")
           def sha(path):
@@ -76,7 +76,9 @@ jobs:
               "stage":"BYTE-EOS-001 causal loss shift source check",
               "classification":"OFFLINE_SERIALIZER_ONLY__NO_REAL_MODEL_OR_TRAINING_ADMISSION",
               "result":os.environ.get("GATE_OUTCOME"),
-              "head_sha":os.environ.get("GITHUB_SHA"),
+              # GITHUB_SHA is GitHub's synthetic PR merge commit, not checkout HEAD.
+              "head_sha":subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip(),
+              "event_merge_sha":os.environ.get("GITHUB_SHA"),
               "expected_pr_head":os.environ.get("EXPECTED_HEAD"),
               "run_id":os.environ.get("GITHUB_RUN_ID"),
               "run_attempt":os.environ.get("GITHUB_RUN_ATTEMPT"),
@@ -100,6 +102,7 @@ jobs:
                   "original_receipt":sha("experiments/ncr-001/byte-eos-001/receipt.json")
               },
           }
+          assert data["head_sha"] == data["expected_pr_head"], "Receipt must bind checked-out PR source"
           (root/"receipt.json").write_text(json.dumps(data,indent=2,sort_keys=True)+"\n")
           print(json.dumps(data,indent=2,sort_keys=True))
           PY
