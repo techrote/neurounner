@@ -1,0 +1,53 @@
+name: NCR-001E SmolLM2 original 2048 archive integrity (no model)
+
+on:
+  pull_request:
+    branches: [review/ncr-001e-smollm2-fresh-cold-cache]
+    paths:
+      - ".github/workflows/ncr-001e-smol-2048-archive.yml"
+      - "scripts/ncr_001e_smol_2048_archive_audit.py"
+      - "tests/test_ncr_001e_smol_2048_archive_audit.py"
+      - "experiments/ncr-001/evidence-review/smolllm2-2048/**"
+      - "RAG.md"
+      - "docs/NCR_001_E_SMOL_2048_RESULT.md"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/source-pins.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001e-smol-2048-audit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  original-receipt-audit:
+    name: Strict original-byte/source/numerical/cold-process audit; no weight download
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Exact PR checkout (do not test synthetic merge)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Refuse unexpected checkout/protocol authorization
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          assert p["conformance"]["full_vs_cached_prefill_atol"] == 0.0005
+          assert p["conformance"]["full_vs_cached_prefill_rtol"] == 0.0005
+          PY
+      - name: Compile the two no-model source files
+        run: |
+          python3 -m py_compile scripts/ncr_001e_smol_2048_archive_audit.py
+          python3 -m py_compile tests/test_ncr_001e_smol_2048_archive_audit.py
+      - name: Recheck original receipt SHA and numerical/variant/causal/authorization evidence
+        run: python3 scripts/ncr_001e_smol_2048_archive_audit.py
+      - name: Negative source/receipt mutations and false-PASS sentinels (no physical model)
+        run: python3 -m unittest discover -s tests -p 'test_ncr_001e_smol_2048_archive_audit.py' -v
