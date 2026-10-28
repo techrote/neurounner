@@ -364,6 +364,15 @@ class Detective005AFunScreenTests(unittest.TestCase):
             self.assertEqual(len(provenance["source_artifacts"]), 12)
             self.assertEqual(provenance["repository_head_sha"], "1" * 40)
             self.assertEqual(provenance["actions_run_id"], "123456")
+            provenance_path = out / "provenance" / "source-artifacts.json"
+            bad_provenance = copy.deepcopy(provenance)
+            bad_provenance["source_artifacts"][0][
+                "results_jsonl_sha256"] = "0" * 64
+            screen.write_json(provenance_path, bad_provenance)
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "source-artifact manifest/hash"):
+                assemble.verify_dataset(out)
+            screen.write_json(provenance_path, provenance)
 
             # A substituted runner hash must fail readback.
             first = artifacts / "G01" / "manifest.json"
