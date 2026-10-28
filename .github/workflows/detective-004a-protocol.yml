@@ -50,6 +50,18 @@ jobs:
           assert m["optimizer_steps"]==0 and m["provider_calls"]==0
           print("DETECTIVE-004A ARCHIVE: DETERMINISTIC / NO FINAL / NO TRAINING")
           PY
+      - name: Verify durable training corpus against fresh generator output
+        run: |
+          python3 scripts/detective_004a_protocol.py --verify-training datasets/detective-004a
+          cmp datasets/detective-004a/training.jsonl runtime/detective-004a/a/training.jsonl
+          cmp datasets/detective-004a/manifest.json runtime/detective-004a/a/manifest.json
+      - name: Publish durable SHA-256 inventory for provenance
+        run: |
+          cd datasets/detective-004a
+          sha256sum README.md manifest.json training.jsonl provenance/source-artifacts.json
+          if test -f provenance/hashes.sha256; then
+            sha256sum -c provenance/hashes.sha256
+          fi
       - name: Source and authority boundary sentinels
         run: |
           python3 - <<'PY'
@@ -66,20 +78,7 @@ jobs:
           assert not any(Path("experiments/detective-004").glob("*final*.jsonl"))
           print("DETECTIVE-004A NO MODEL / NO HIDDEN RELEVANCE / NO MATERIALIZED FINAL: PASS")
           PY
-      - name: Expose synthetic corpus bytes for durable source promotion
-        run: |
-          python3 - <<'PY'
-          import base64
-          from pathlib import Path
-          folder=Path("runtime/detective-004a/a")
-          for name,tag in (("training.jsonl","TRAINING"),("manifest.json","MANIFEST")):
-              payload=base64.b64encode((folder/name).read_bytes()).decode("ascii")
-              print("DETECTIVE004A_BEGIN_"+tag)
-              for offset in range(0,len(payload),120):
-                  print("DETECTIVE004A_DATA_"+tag+" "+payload[offset:offset+120])
-              print("DETECTIVE004A_END_"+tag)
-          PY
-      - name: Upload deterministic unpromoted training archive
+      - name: Retain deterministic generated archive as auxiliary evidence
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: detective-004a-stage-a-training-unpromoted
