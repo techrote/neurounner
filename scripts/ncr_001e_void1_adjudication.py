@@ -152,6 +152,21 @@ def build_report():
     require_any_value(fresh_prov,"optimizer_steps",0,
                       "fresh provenance optimizer boundary changed")
 
+    # Require byte-exact original Actions producer/consumer receipts, not just
+    # their editable source provenance summary. No Qwen3/tokenizer execution.
+    sys.path.insert(0,str(ROOT/"scripts"))
+    import ncr_001e_void_process_receipt_audit as process_audit
+    original_process = process_audit.audit()
+    require(original_process["status"] == process_audit.STATUS
+            and original_process["original_actual_model_run_id"] == 40549549886
+            and original_process["full_original_receipts_verified"] == 5
+            and original_process["original_actual_frozen_processes"] == 2
+            and original_process["actual_cached_tail_error"] == 9.5367431640625e-06
+            and original_process["train_authorized"] is False
+            and original_process["optimizer_steps"] == 0
+            and original_process["original_model_reexecuted"] is False,
+            "original process archive/runner source audit failed")
+
     # Separate Python process: exact 256 units / 240+16 cached replay, no leakage.
     results=cross["actual_results"]
     require(cross["original_run_id"]==40549549886
