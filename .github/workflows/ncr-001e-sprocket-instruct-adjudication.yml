@@ -12,7 +12,15 @@ on:
       - 'experiments/ncr-001/protocol.json'
       - 'experiments/ncr-001/source-pins.json'
       - 'experiments/ncr-001/evidence-review/**'
-      - 'datasets/ncr-001-sprocket-wire-diagnostic/provenance.json'
+      - 'datasets/ncr-001-sprocket-wire-diagnostic/**'
+      - 'docs/NCR_001_E_SPROCKET_INSTRUCT_ADJUDICATION.md'
+      - 'scripts/ncr_001e_sprocket_receipt_audit.py'
+      - 'scripts/ncr_001e_sprocket_process_receipt_audit.py'
+      - 'scripts/ncr_001e_sprocket_extended_receipt_audit.py'
+      - 'scripts/ncr_001e_sprocket_publisher_receipt_audit.py'
+      - 'scripts/ncr_001e_sprocket_wire_archive.py'
+      - 'scripts/ncr_001e_pr102_masked_batch_audit.py'
+      - 'scripts/ncr_001e_pr113_rightpad_receipt_audit.py'
   workflow_dispatch:
 
 permissions:
@@ -26,7 +34,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Reproduce authoritative source/runtime BLOCKED adjudication
+      - name: Verify seven original Actions archives and reproduce BLOCKED adjudication
         run: |
           set -euo pipefail
           python3 -m py_compile scripts/ncr_001e_sprocket_instruct_adjudication.py
