@@ -88,21 +88,7 @@ def main() -> None:
               d[variant]["host.log"], "Original physical producer log failed")
     receipts = {variant: json.loads(d[variant]["receipt.json"])
                 for variant in WEIGHTS}
-    # Three additional custody negatives: manifest corruption, source substitution
-    # and altered original receipt bytes that still decode as well-formed JSON.
-    bad = copy.deepcopy(m)
-    bad["archive_gzip_sha256"] = "0" * 64
-    check(bad["archive_gzip_sha256"] != EXPECTED_GZIP_SHA,
-          "Negative manifest digest was not corrupted")
-    bad = copy.deepcopy(m)
-    bad["original_actions_artifacts"]["chat"]["members"]["receipt.json"]["sha256"] = "0" * 64
-    check(bad["original_actions_artifacts"]["chat"]["members"]["receipt.json"]["sha256"] !=
-          ARTIFACTS["chat"][1]["receipt.json"][0],
-          "Negative receipt identity was not corrupted")
-    bad = copy.deepcopy(m)
-    bad["original_source_head"] = "0" * 40
-    check(bad["original_source_head"] != HEAD,
-          "Negative original source head was not corrupted")
+    # The twelve semantic mutations call the same receipt validator, not mere value comparisons.
     report = {
         "classification": "ORIGINAL_SPROCKET_NCA_DIAGNOSTIC_GIT_BYTE_CUSTODY_PASS__FINAL_72_BLOCKED",
         "original_source_head": HEAD,
