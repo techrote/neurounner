@@ -395,3 +395,52 @@ The original 36-row JSONL, manifest, frozen generator/config, exact source
 pins, posthash final recipe, prior raw model evidence and C1/C2/C3 sealed
 witness finals were not modified. No real tokenizer, model, inference,
 training, relevance mappings or population mutation was accessed.
+
+## Frozen optimizer preregistration gap — explicit blocker, no guessed defaults
+
+A further source-level review of the frozen Stage-B resource budget found that
+it is **not yet a complete reproducible optimizer execution contract**. The
+current `future_training` object fixes the root weight, LoRA rank/alpha/dropout,
+`q_proj`/`v_proj`, one epoch / 36 optimizer steps, learning rate `2e-4`,
+`AdamW`, gradient clip `1.0`, four CPU threads and the resource envelope. It
+does **not** freeze several semantics that can materially change a short LoRA
+run:
+
+- training RNG seed;
+- batch size;
+- gradient-accumulation steps;
+- AdamW beta1 / beta2;
+- AdamW epsilon;
+- weight decay;
+- learning-rate scheduler;
+- warmup steps.
+
+These omissions must **not** be silently filled from whichever PyTorch,
+Transformers, PEFT or training helper defaults happen to be installed later.
+The Stage-A config, generator and durable training manifest are intentionally
+left byte-identical here; choosing values is a protocol decision for the
+required independent review / subsequent explicitly frozen execution contract,
+not an author-side cleanup.
+
+`scripts/detective_004a_token_preflight.py` now exposes
+`audit_optimizer_preregistration()`. It mechanically reports the missing
+fields and keeps all execution, adapter, production and population authority
+false. `planned_single_example_steps()` and
+`audit_claimed_training_steps()` propagate the same blocker, so a perfect
+36-row token/mask/input claim cannot be mistaken for optimizer readiness.
+
+Three synthetic/offline regression methods verify:
+
+1. the current frozen config is reported incomplete with the exact missing
+   field list;
+2. the 36-step input plan and a structurally exact claimed-step ledger retain
+   the optimizer-preregistration blocker; and
+3. even a **synthetic test-only** object containing all field names receives
+   no independent-review, optimizer-execution, adapter or training authority.
+
+This finding does **not** retroactively alter the 36-row corpus, manifest,
+source hashes, historical model evidence, sealed witness finals or posthash
+final recipe. It does not select optimizer defaults and does not start Stage B.
+Before any optimizer invocation, an independently reviewed execution contract
+must resolve these semantics, the real frozen tokenizer/mask/512-token check
+must pass, and actual root/adapter/optimizer custody must be established.
