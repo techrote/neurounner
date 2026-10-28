@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RUN_ID = "40710171622"
 HEAD = "df8479aae34550cba014d910a73e30e59cd493e2"
 REV = "eb157d4ddddc4619e661d4a2426bb2dd000fc668"
-FORMAT_SHA = "1ca6cfde8b4144e6f56fdfb61fb075e31fdc9b4ebc68c57c01128c363b"
+FORMAT_SHA = "1ca6cfde8b4144e6f56fdfb61fb075e31fdc9b4ebc68ceeb68c57c01128c363b"
 ARTIFACTS = {
     "source": ("c66706d3e541925638e901d37232f204c480f0016aba393023fa925c67a61242",
                {"source-tests.log": ("6e93487ad1984eec8bb80c5a5e55534cc303acc878ec0a14acd5577ba3465a35", 1729),
