@@ -259,12 +259,62 @@ class Detective004ATokenPreflightTests(unittest.TestCase):
         cfg["future_training"].update(placeholders)
         gap = preflight.audit_optimizer_preregistration(cfg)
         self.assertEqual(gap["missing_preregistered_fields"], [])
-        self.assertTrue(gap["optimizer_execution_contract_complete"])
+        self.assertEqual(gap["invalid_claimed_fields"], ["adam_epsilon"])
+        self.assertFalse(gap["claimed_field_set_structurally_valid"])
+        self.assertFalse(gap["frozen_config_exact_match"])
+        self.assertTrue(gap["untrusted_config_override"])
+        self.assertFalse(gap["optimizer_execution_contract_complete"])
         self.assertFalse(gap["values_independently_reviewed"])
         self.assertFalse(gap["optimizer_execution_verified"])
         self.assertFalse(gap["adapter_ancestry_verified"])
         self.assertFalse(gap["stage_b_training_admitted"])
         self.assertFalse(gap["production_admission"])
+
+    def test_valid_synthetic_parameter_values_cannot_spoof_frozen_preregistration(self):
+        cfg = copy.deepcopy(self.cfg)
+        # These are illustrative test-only values, NOT preregistered choices.
+        cfg["future_training"].update({
+            "training_seed": 14836,
+            "batch_size": 1,
+            "gradient_accumulation_steps": 1,
+            "adam_beta1": 0.9,
+            "adam_beta2": 0.999,
+            "adam_epsilon": 1e-8,
+            "weight_decay": 0.01,
+            "lr_scheduler": "constant",
+            "warmup_steps": 0,
+        })
+        gap = preflight.audit_optimizer_preregistration(cfg)
+        self.assertEqual(gap["missing_preregistered_fields"], [])
+        self.assertEqual(gap["invalid_claimed_fields"], [])
+        self.assertTrue(gap["claimed_field_set_structurally_valid"])
+        self.assertFalse(gap["frozen_config_exact_match"])
+        self.assertFalse(gap["optimizer_execution_contract_complete"])
+        self.assertFalse(gap["values_independently_reviewed"])
+        self.assertFalse(gap["stage_b_training_admitted"])
+
+    def test_invalid_synthetic_optimizer_claims_fail_closed(self):
+        cfg = copy.deepcopy(self.cfg)
+        values = {
+            "training_seed": True,     # bool must not count as an integer seed
+            "batch_size": 2,           # violates 36 single-example steps
+            "gradient_accumulation_steps": 2,
+            "adam_beta1": float("inf"),
+            "adam_beta2": -0.5,
+            "adam_epsilon": 0,
+            "weight_decay": -0.01,
+            "lr_scheduler": "",
+            "warmup_steps": 37,
+        }
+        cfg["future_training"].update(values)
+        gap = preflight.audit_optimizer_preregistration(cfg)
+        self.assertEqual(gap["missing_preregistered_fields"], [])
+        self.assertEqual(gap["invalid_claimed_fields"],
+                         list(preflight.REQUIRED_OPTIMIZER_PREREG_FIELDS))
+        self.assertFalse(gap["claimed_field_set_structurally_valid"])
+        self.assertFalse(gap["optimizer_execution_contract_complete"])
+        self.assertFalse(gap["stage_b_training_admitted"])
+
 
 
 if __name__ == "__main__":
