@@ -444,3 +444,56 @@ final recipe. It does not select optimizer defaults and does not start Stage B.
 Before any optimizer invocation, an independently reviewed execution contract
 must resolve these semantics, the real frozen tokenizer/mask/512-token check
 must pass, and actual root/adapter/optimizer custody must be established.
+
+## Source-export LoRA projection mapping and untrusted optimizer-claim hardening
+
+An exact-read of the independently pinned publisher source commit
+[`a003767e70d766bc14b40c89792543ee8641c8bc`](https://github.com/kandivault-source/Sprocket-500M/tree/a003767e70d766bc14b40c89792543ee8641c8bc)
+resolved a material naming ambiguity in the frozen LoRA budget:
+
+- Native [`src/model/model.py`](https://github.com/kandivault-source/Sprocket-500M/blob/a003767e70d766bc14b40c89792543ee8641c8bc/src/model/model.py)
+  (Git blob `0e3aa3af55d75ec0c02c8abd9e6e5628df659101`) names its attention
+  linear projections `attn.wq` and `attn.wv`, **not** `q_proj`/`v_proj`.
+- The same commit's [`scripts/export_hf.py`](https://github.com/kandivault-source/Sprocket-500M/blob/a003767e70d766bc14b40c89792543ee8641c8bc/scripts/export_hf.py)
+  (Git blob `2f4f3c712b7e12ddab97e4755d92252f634c31c6`) explicitly maps
+  `blocks.{i}.attn.wq.weight` to
+  `model.layers.{i}.self_attn.q_proj.weight` and
+  `blocks.{i}.attn.wv.weight` to
+  `model.layers.{i}.self_attn.v_proj.weight`, then exports
+  `LlamaForCausalLM` for Transformers. Thus the Stage-A
+  `target_modules=[q_proj,v_proj]` are **source-compatible with the HF export**
+  used by the B3 `AutoModelForCausalLM` load path, rather than with the
+  native unexported GPT class.
+
+**Limit:** neither public publisher file proves which exact exporter built the
+pinned root `model.safetensors`, which module names actually occur in that
+source-frozen loaded checkpoint, or whether a specific PEFT version attaches
+rank-8 adapters only to the intended Q/V projections. The publisher already
+labels its code as not a checkpoint build attestation. Those checks require
+a later exact-weight, read-only runtime module-name/config inventory and
+independent review before an optimizer step. No weight or tokenizer was
+downloaded for this source audit.
+
+The previous auxiliary optimizer-gap reporter also accepted a caller-mutated,
+syntactically filled `future_training` dictionary and returned
+`optimizer_execution_contract_complete=true` despite the immutable on-disk
+Stage-A config remaining incomplete. That positive field could mislead later
+automated consumers even though all admission flags were false. It now
+**compares the entire candidate config to the verified frozen contract**;
+only that exact immutable source can possibly be marked contract-complete.
+It additionally reports invalid numeric/batch/scheduler parameter claims
+separately from missing field names, requiring single-example batch size
+and accumulation of one under the 36-example/36-step constraint.
+Malformed/noncanonical supplied dictionaries fail closed to an untrusted
+override report, rather than becoming evidence that the source was amended.
+
+Two additional purely synthetic regression tests verify a plausible but
+source-unbound filled configuration still returns incomplete and a list of
+invalid values (including nonfinite beta, zero epsilon, negative weight
+decay, bad batch/accumulation and out-of-range warmup) cannot pass domain
+checks. The previously existing synthetic test is updated to refuse
+`optimizer_execution_contract_complete=true`. No optimizer defaults were
+chosen; independently reviewed Stage-A approval and a separately frozen
+Stage-B execution contract are still mandatory. Corpus and source pins,
+raw historical model evidence, final recipe and sealed witness-finals
+remain untouched.
