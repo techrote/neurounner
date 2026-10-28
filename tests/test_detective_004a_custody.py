@@ -61,5 +61,92 @@ class Detective004ACustodyTests(unittest.TestCase):
             audit.audit_row(row, self.b3)
 
 
+    @classmethod
+    def synthetic_gate_fixture(cls):
+        """Unsealed unit-test tasks; no adapter, no posthash final material."""
+        cfg, b3 = protocol.load_contract()
+        seed = "0123456789abcdef" * 4
+        rows = []
+        extra = ("result_success", "result_denied", "restraint")
+        for family, extra_kind in zip(protocol.EXPECTED_FINAL_FAMILIES, extra):
+            case = protocol.family_data(family, seed)
+            for index, op in enumerate(protocol.OPS):
+                rows.append(protocol.make_example(
+                    family, case, "tool_selection", index, op))
+            rows.append(protocol.make_example(family, case, extra_kind, 3))
+        for row in rows:
+            row["rendered"], row["loss_char_spans"] = protocol.render_with_mask(
+                row["turns"], b3)
+        return rows
+
+    def test_future_gate_guard_accepts_only_complete_synthetic_fixture(self):
+        rows = self.synthetic_gate_fixture()
+        audit.audit_future_gate_layout(rows, self.b3)
+        # Unit-test outputs, not model generations or evidence of admission.
+        trained = {row["id"]: row["turns"][-1]["content"] for row in rows}
+        base = {row["id"]: "unsupported mock baseline" for row in rows}
+        result = audit.guarded_admission_gate(rows, trained, base, self.b3)
+        self.assertEqual(result["status"], "research_candidate")
+        self.assertFalse(result["production_admission"])
+        self.assertFalse(result["population_expansion_admitted"])
+
+    def test_future_gate_guard_rejects_duplicate_replayed_tasks(self):
+        rows = self.synthetic_gate_fixture()
+        forged = copy.deepcopy(rows)
+        forged[0] = copy.deepcopy(rows[4])
+        trained = {row["id"]: row["turns"][-1]["content"] for row in forged}
+        base = {row["id"]: "unsupported mock baseline" for row in forged}
+        # The original frozen evaluator counts the repeated successful task.
+        # Keep the generator/blob stable; the future guarded entry point refuses.
+        self.assertEqual(
+            protocol.admission_gate(forged, trained, base, self.b3)["status"],
+            "research_candidate")
+        with self.assertRaisesRegex(protocol.ProtocolError, "duplicate"):
+            audit.guarded_admission_gate(forged, trained, base, self.b3)
+
+    def test_future_gate_guard_rejects_category_and_visible_view_drift(self):
+        rows = self.synthetic_gate_fixture()
+        changed = copy.deepcopy(rows)
+        changed[-1]["kind"] = "result_success"
+        with self.assertRaisesRegex(protocol.ProtocolError, "denominator"):
+            audit.audit_future_gate_layout(changed, self.b3)
+
+        changed = copy.deepcopy(rows)
+        changed[0]["view"]["visible_assets"].append({
+            "asset_id": "not-visible-to-model", "excerpt": "fabricated"
+        })
+        # The producer's verifier still checks the detached view, not
+        # that it matches the actual prompt. Guard checks both.
+        protocol.validate_example(changed[0], self.b3)
+        with self.assertRaisesRegex(protocol.ProtocolError, "projection"):
+            audit.audit_future_gate_layout(changed, self.b3)
+
+    def test_future_gate_guard_rejects_forged_receipts_and_seed_mix(self):
+        rows = self.synthetic_gate_fixture()
+        changed = copy.deepcopy(rows)
+        success = next(r for r in changed if r["kind"] == "result_success")
+        success["turns"][3]["content"] = protocol.canonical({
+            "status": "OK", "marker": "confirmed:elsewhere:3",
+            "excerpt": "Synthetic receipt confirmed:elsewhere:3"
+        })
+        success["rendered"], success["loss_char_spans"] = (
+            protocol.render_with_mask(success["turns"], self.b3))
+        with self.assertRaisesRegex(protocol.ProtocolError, "receipt changed"):
+            audit.audit_future_gate_layout(changed, self.b3)
+
+        changed = copy.deepcopy(rows)
+        for row in changed:
+            if row["case_family"] == protocol.EXPECTED_FINAL_FAMILIES[0]:
+                row["view"]["case_id"] = "fiction-only-d004a-ravel-gate-aaaaaaaaaa"
+                view = row["view"]
+                row["turns"][1]["content"] = (
+                    "Player request:\n" + view["player_request"] +
+                    "\nCurrent fictional game view:\n" + protocol.canonical(view))
+                row["rendered"], row["loss_char_spans"] = (
+                    protocol.render_with_mask(row["turns"], self.b3))
+        with self.assertRaisesRegex(protocol.ProtocolError, "seed prefixes"):
+            audit.audit_future_gate_layout(changed, self.b3)
+
+
 if __name__ == "__main__":
     unittest.main()
