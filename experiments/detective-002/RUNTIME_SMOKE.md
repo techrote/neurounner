@@ -111,3 +111,20 @@ This experiment cannot:
 - turn mechanical marker hits into a quality ranking.
 
 Any later body-selection decision must reconcile this runtime evidence with #121 relevance and the C1/C2/C3 policy evidence.
+
+
+## Executed outcome — 2026-10-28
+
+Authoritative model run: [Actions 40608478076](https://github.com/techrote/neurounner/actions/runs/40608478076), exact pre-evidence source `16aacece5ca129439d0475492b8980207bfe3ba4`.
+
+- **6/7 runtime PASS**: SmolLM2-135M, SmolLM2-360M, Sprocket Chat, Sprocket root Instruct, Qwen2.5-0.5B-Instruct and Qwen3-0.6B.
+- **1/7 runtime FAIL**: LFM2.5-350M. Frozen source/weight verification passed, then tokenizer loading failed under the preregistered Transformers 4.57.6 stack with `Tokenizer class TokenizersBackend does not exist or is not currently imported`.
+- No protocol-specialization result was required for the six passing bodies.
+- No model was trained or selected; relevance mappings were not accessed; population expansion remains false.
+- Same-host EPYC-7763 completion-wall throughput: Smol135 **17.78 tok/s**, Smol360 9.48, Qwen2.5 7.66, Qwen3 6.57. Qwen3 had the largest peak RSS at **4.74 GiB**; Smol135 the smallest at **1.20 GiB**.
+- Sprocket Chat/Instruct both passed but used different GitHub host CPU models, so their 6.80/7.55 tok/s figures are not a precise checkpoint A/B.
+- Mechanical behavior observations include Qwen2.5 inventing `03:25` from a supplied `03:14` memory, Qwen3 explicitly qualifying memory uncertainty but refusing the stamped-record correction, and Sprocket producing substantially longer/truncated output.
+
+Durable raw evidence: [datasets/detective-002b](../../datasets/detective-002b/). Human interpretation: [REPORT_002B.md](REPORT_002B.md).
+
+This evidence-ready branch must now run **verification only**: rebuild no model outputs, replay the committed archive, and skip all seven body matrix jobs.
