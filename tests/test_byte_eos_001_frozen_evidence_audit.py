@@ -66,6 +66,10 @@ class EvidenceAudit(unittest.TestCase):
             with self.assertRaises((ValueError,Exception)):
                 audit(dest)
 
+    def test_failed_audit_run_history_must_be_retained(self):
+        self.mutate_manifest(lambda d:d["custody_ci"]["failed_readback"].__setitem__("conclusion","success"))
+        self.mutate_manifest(lambda d:d["custody_ci"]["fixed_readback"].__setitem__("tests_passed",8))
+
     def test_original_receipt_false_qualification_rejected(self):
         report={"status":"PASS_FROZEN_QWEN3_CAUSAL_EOS_FORWARD_ONLY__72_BLOCKED",
                 "run_id":"40738222796","source_head":"06b858a70d7019398cdc7a3f205ae24423f57c67",

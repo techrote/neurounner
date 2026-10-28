@@ -56,3 +56,11 @@ comparative training, no sealed heldout, no change to preregistered protocol.
 This forward-only result is **not final #72 conformance PASS**. Independent
 scientific review and the four separately qualified model lanes remain
 outstanding. All parents and this PR stay draft, and **train_authorized=false**.
+
+## Archived source-bound audit execution (28 October 2026)
+
+The initial offline archive-audit Actions [run 40739674307](https://github.com/techrote/neurounner/actions/runs/40739674307) **failed** after exact source checkout when the bounded XZ decoder had only 32MiB of memory allowance for the original preset-9 LZMA dictionary. This was a custody-harness limitation, **not** a physical-model or source/numerical failure. The complete original failed job log is retained in Git.
+
+A strict change to the offline decoder cap, **32MiB to 128MiB**, preserved the original compressed ZIP and every member byte, the original physical source/test head and all scientific thresholds. At source commit c1307934facddcb0974a540905f45d12399bd713, [run 40739776401](https://github.com/techrote/neurounner/actions/runs/40739776401) **passed** the original-archive offline audit and **7/7 adversarial/audit tests**, rejecting false training admission and source/ZIP/log/measurement mutations. Its complete successful job log is also in Git. The final manifest and offline auditor now cross-check both historical CI log Git identities. Subsequent exact-head audit CI must also pass to accept the expanded archival index.
+
+No physical Qwen3 was rerun, no optimizer/heldouts were involved, and neither archival CI outcome constitutes distinct independent scientific reviewer approval.

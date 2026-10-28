@@ -192,6 +192,28 @@ def audit(evidence: Path = EVIDENCE) -> dict:
                actual["loss"] == expected[3] and
                actual["logits_sha256"] == expected[5],
                "model receipt and manifest disagree")
+    # Source-bound archival CI failure remains evidence, not silently discarded.
+    custody = m["custody_ci"]
+    failed, passed = custody["failed_readback"], custody["fixed_readback"]
+    refuse(failed["run_id"] == 40739674307 and
+           failed["job_id"] == 122997549932 and
+           failed["source_head"] == "72c7d7089f37dad06a1a4d9615f46260b99e7c7c" and
+           failed["conclusion"] == "failure" and
+           failed["log_git_blob"] == "8d009df397ce2e53b7971904c6669617e84a149a" and
+           passed["run_id"] == 40739776401 and
+           passed["job_id"] == 122997918388 and
+           passed["source_head"] == "c1307934facddcb0974a540905f45d12399bd713" and
+           passed["conclusion"] == "success" and
+           passed["tests_passed"] == 7 and
+           passed["log_git_blob"] == "5d11be52b1ed5a44931d2012dc01b98c13101e32",
+           "archival CI failure or corrected CI identity lost")
+    for item, witness in ((failed, "Memory usage limit exceeded"),
+                          (passed, "Ran 7 tests in")):
+        p = evidence / Path(item["log_path"]).name
+        raw_log = p.read_bytes()
+        refuse(blobsha(raw_log) == item["log_git_blob"] and
+               witness in raw_log.decode("utf-8-sig"),
+               "retained failed/successful CI job log was altered")
     return {
         "status": "PASS_ORIGINAL_BYTES_AND_SOURCE_ONLY_FORWARD_LOSS__72_BLOCKED",
         "source_head": SOURCE_HEAD, "run": 40738222796,
