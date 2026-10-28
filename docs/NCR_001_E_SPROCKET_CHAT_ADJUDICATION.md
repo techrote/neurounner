@@ -77,6 +77,37 @@ Only original physical model executions are listed as runtime evidence:
 
 Archive-only workflows are never counted as additional model executions.
 
+## Independent original-receipt custody check — 28 October 2026
+
+The first Chat adjudicator already checked the actual frozen **Chat** HF
+`generate()` original archive byte-for-byte. Its other three source/runtime
+runs, however, were accepted from mutable `provenance.json` summaries without
+reopening the original lossless Actions receipts. That was a verification gap,
+not a new source-model failure.
+
+The adjudicator now calls three existing SHA-anchored, standard-library
+readback auditors **before** accepting summary fields:
+
+- **40469703065** — exact pinned ordinary roles and both distinct Chat/root
+  Instruct source checkpoint receipts (with original package/run identity).
+- **40515083104** — original independent Python producer/consumer receipts
+  for true 240+16 KV-cache and separate-process cold replay.
+- **40544384293** — both variants' original 2048-context and control-ID
+  transport receipts, including recorded source identity and negative limits.
+
+The previously present `ncr_001e_sprocket_chat_generate_audit` continues to
+recheck the original **40603226200** Chat-only HF-generation/right-gap
+evidence. New tests deliberately corrupt or remove the shared cross-process
+Actions archive while leaving the explanatory provenance unchanged; both
+must cause immediate refusal.
+
+All four source-specific Actions runs remain **historical actual-host
+executions**. This new CI only rechecks their exact archived bytes,
+provenance, false-claim sentinels and previously frozen tolerances. It is not
+another model execution, a Chat tool/memory capability assessment or a final
+#72 conformance pass. Neither checkpoint variant, original receipt, protocol,
+held-out suite, numeric threshold nor `train_authorized=false` was changed.
+
 ## Why final Sprocket Chat #72 is still BLOCKED
 
 The frozen protocol requires every item in
