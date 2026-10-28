@@ -34,6 +34,8 @@ LOCAL_TOKENIZER_FILES = (
     ("special_tokens_map.json", "special_tokens_map_sha256"),
 )
 MAX_STAGE_B_TOKENS = 512
+PUBLISHER_IGNORE_INDEX = -1
+HF_LLAMA_IGNORE_INDEX = -100
 
 # Stage A froze a bounded optimizer budget but not enough semantics to make
 # a short LoRA run reproducible. Do NOT silently inherit library defaults.
@@ -108,6 +110,45 @@ def source_role_ids(turns, tok, special):
     return ids, mask, regions
 
 
+def hf_forward_supervision(ids, mask, publisher_causal_labels,
+                           claimed_hf_labels=None):
+    """Source-only compatibility of TWO distinct causal-loss call contracts.
+
+    Pinned native GPT.forward consumes ids[:-1] and targets already shifted
+    by one, using ignore_index=-1. The exported Hugging Face LlamaForCausalLM
+    consumes FULL input_ids and FULL aligned labels, shifts once internally,
+    and uses ignore_index=-100 (verified upstream v4.57.6 source).
+    Passing the native shifted/-1 targets to HF would double shift or make
+    masked targets invalid. This never imports/executes either model.
+    """
+    require(type(ids) is list and len(ids) >= 2 and
+            type(mask) is list and len(mask) == len(ids) and
+            all(type(x) is int and x >= 0 for x in ids) and
+            all(type(x) is bool for x in mask),
+            "invalid full-width source-token/mask arrays")
+    expected_publisher = [
+        ids[i + 1] if mask[i + 1] else PUBLISHER_IGNORE_INDEX
+        for i in range(len(ids) - 1)
+    ]
+    require(type(publisher_causal_labels) is list and
+            publisher_causal_labels == expected_publisher,
+            "publisher externally shifted labels do not match mask")
+    labels = [token if supervised else HF_LLAMA_IGNORE_INDEX
+              for token, supervised in zip(ids, mask)]
+    if claimed_hf_labels is not None:
+        require(type(claimed_hf_labels) is list and
+                claimed_hf_labels == labels,
+                "HF forward labels must be full-width, unshifted and use -100 masks")
+    hf_effective_shift = labels[1:] + [HF_LLAMA_IGNORE_INDEX]
+    expected_effective_shift = [
+        HF_LLAMA_IGNORE_INDEX if x == PUBLISHER_IGNORE_INDEX else x
+        for x in publisher_causal_labels
+    ] + [HF_LLAMA_IGNORE_INDEX]
+    require(hf_effective_shift == expected_effective_shift,
+            "HF internal shift differs from publisher next-token supervision")
+    return labels, hf_effective_shift
+
+
 def inspect_row(row, b3, tok, include_arrays=False):
     # The committed row must match the frozen source/actual user projection.
     custody.audit_row(row, b3)
@@ -160,6 +201,7 @@ def inspect_row(row, b3, tok, include_arrays=False):
             "causal shift or ignored token mismatch")
     require(sum(label != -1 for label in y) == sum(mask[1:]),
             "trained label count changed after causal shift")
+    hf_labels, hf_effective_shift = hf_forward_supervision(ids, mask, y)
     canonical = protocol.canonical
     h = lambda value: hashlib.sha256(canonical(value).encode("utf-8")).hexdigest()
     summary = {
@@ -170,6 +212,11 @@ def inspect_row(row, b3, tok, include_arrays=False):
         "train_mask_sha256": h(mask), "shifted_labels_sha256": h(y),
         "prompt_ids_sha256": h(prompt_ids),
         "prompt_utf8_sha256": hashlib.sha256(wire_prompt.encode("utf-8")).hexdigest(),
+        "publisher_ignore_index": PUBLISHER_IGNORE_INDEX,
+        "hf_llama_ignore_index": HF_LLAMA_IGNORE_INDEX,
+        "hf_forward_labels_sha256": h(hf_labels),
+        "hf_effective_shift_labels_sha256": h(hf_effective_shift),
+        "hf_internal_shift_equivalence_checked": True,
     }
     if include_arrays:
         # Real-tokenizer receipts must preserve the original token arrays, not
@@ -179,6 +226,8 @@ def inspect_row(row, b3, tok, include_arrays=False):
             "causal_input_ids": x, "causal_target_labels": y,
             "model_only_prompt_ids": prompt_ids,
             "model_only_prompt_utf8": wire_prompt,
+            "hf_forward_labels": hf_labels,
+            "hf_effective_shift_labels": hf_effective_shift,
         }
     return summary
 
@@ -200,6 +249,8 @@ def inspect_archive_with_tokenizer(tok, include_arrays=False):
         "max_tokens_seen": max(item["num_tokens"] for item in ledger),
         "max_allowed_tokens": MAX_STAGE_B_TOKENS,
         "assistant_only_mask_and_yield_structurally_checked": True,
+        "native_and_hf_loss_label_alignment_checked": True,
+        "hf_loss_runtime_source_version_verified": False,
         "real_frozen_tokenizer_identity_verified": False,
         "independent_stage_a_review_verified": False,
         "optimizer_steps": 0, "model_inferences": 0,
@@ -308,6 +359,8 @@ def planned_single_example_steps(tok):
             "token_ids_sha256": entry["token_ids_sha256"],
             "train_mask_sha256": entry["train_mask_sha256"],
             "shifted_labels_sha256": entry["shifted_labels_sha256"],
+            "hf_forward_labels_sha256": entry["hf_forward_labels_sha256"],
+            "hf_effective_shift_labels_sha256": entry["hf_effective_shift_labels_sha256"],
             "prompt_ids_sha256": entry["prompt_ids_sha256"],
         })
     optimizer_gap = audit_optimizer_preregistration()
@@ -316,6 +369,7 @@ def planned_single_example_steps(tok):
         "training_manifest_sha256": report["training_manifest_sha256"],
         "steps": steps,
         "no_packing_or_truncation": True,
+        "loss_backend_selected_and_independently_qualified": False,
         "real_frozen_tokenizer_identity_verified":
             report["real_frozen_tokenizer_identity_verified"],
         "optimizer_preregistration_complete":
