@@ -1,0 +1,75 @@
+name: DETECTIVE-004A source-native specialization Stage A (offline)
+
+on:
+  pull_request:
+    paths:
+      - "experiments/detective-004/**"
+      - "scripts/detective_004a_protocol.py"
+      - "tests/test_detective_004a_protocol.py"
+      - "datasets/detective-004a/**"
+      - "scripts/detective_001b3_sprocket.py"
+      - "experiments/detective-001/sprocket-scripter.json"
+      - "experiments/detective-003/scripter-bridge.json"
+      - "RAG.md"
+      - ".github/workflows/detective-004a-protocol.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-stage-a:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile pinned protocol and adversarial tests
+        run: python3 -m py_compile scripts/detective_004a_protocol.py tests/test_detective_004a_protocol.py
+      - name: Run complete offline DETECTIVE regression suite
+        run: python3 -m unittest discover -s tests -p 'test_detective_*.py' -v
+      - name: Generate corpus twice and compare byte-for-byte
+        run: |
+          mkdir -p runtime/detective-004a/a runtime/detective-004a/b
+          python3 scripts/detective_004a_protocol.py --write-training runtime/detective-004a/a
+          python3 scripts/detective_004a_protocol.py --write-training runtime/detective-004a/b
+          cmp runtime/detective-004a/a/training.jsonl runtime/detective-004a/b/training.jsonl
+          cmp runtime/detective-004a/a/manifest.json runtime/detective-004a/b/manifest.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from collections import Counter
+          p=Path("runtime/detective-004a/a")
+          rows=[json.loads(x) for x in (p/"training.jsonl").read_text().splitlines()]
+          m=json.loads((p/"manifest.json").read_text())
+          assert len(rows)==36
+          assert Counter(r["kind"] for r in rows)==Counter(
+              {"tool_selection":24,"restraint":6,"result_success":3,"result_denied":3})
+          assert m["learner_final_material"] is False
+          assert m["optimizer_steps"]==0 and m["provider_calls"]==0
+          print("DETECTIVE-004A ARCHIVE: DETERMINISTIC / NO FINAL / NO TRAINING")
+          PY
+      - name: Source and authority boundary sentinels
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path("scripts/detective_004a_protocol.py").read_text()
+          # These modules are not permitted to infer, optimize or expose scoring custody.
+          for denied in (
+              "import torch", "import transformers", "import peft",
+              "huggingface_hub", "optimizer.step", "loss.backward",
+              "subprocess.run", "os.system(", "openai.chat", "nvidia_api",
+              "relevance-packet.json", "identity_mapping.json",
+          ):
+              assert denied not in src, denied
+          assert not any(Path("experiments/detective-004").glob("*final*.jsonl"))
+          print("DETECTIVE-004A NO MODEL / NO HIDDEN RELEVANCE / NO MATERIALIZED FINAL: PASS")
+          PY
+      - name: Upload deterministic unpromoted training archive
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective-004a-stage-a-training-unpromoted
+          path: runtime/detective-004a/a/
+          if-no-files-found: error
+          retention-days: 30
