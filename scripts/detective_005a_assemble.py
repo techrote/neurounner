@@ -245,11 +245,33 @@ def verify_dataset(path: Path) -> dict:
     screen.require(
         provenance.get("schema") == "detective-005a-source-artifacts-v1" and
         provenance.get("repository_head_sha") == head and
-        provenance.get("actions_run_id") == run_id and
-        [x.get("artifact_name") for x in
-         provenance.get("source_artifacts", [])] ==
-        [f"detective005a-{lineage}" for lineage in LINEAGES],
+        provenance.get("actions_run_id") == run_id,
         "dataset source-artifact provenance drift")
+    expected_artifacts = []
+    for lineage in LINEAGES:
+        lineage_manifest = screen.read_json(
+            path / "raw" / "lineage-manifests" / f"{lineage}.json")
+        lineage_rows = [r for r in results
+                        if r["member_id"].split("-")[1] == lineage]
+        recreated_sha = screen.sha256_bytes(
+            "".join(screen.canonical(r) + "\n"
+                    for r in lineage_rows).encode("utf-8"))
+        screen.require(
+            len(lineage_rows) == 12 and
+            lineage_manifest.get("lineage") == lineage and
+            lineage_manifest.get("source_plan") == live.source_plan(lineage) and
+            lineage_manifest.get("results_jsonl_sha256") == recreated_sha,
+            "archived lineage raw/source digest drift")
+        expected_artifacts.append({
+            "lineage": lineage,
+            "artifact_name": f"detective005a-{lineage}",
+            "results_jsonl_sha256": recreated_sha,
+            "runner_script_sha256":
+                lineage_manifest["runner_script_sha256"],
+        })
+    screen.require(
+        provenance.get("source_artifacts") == expected_artifacts,
+        "dataset source-artifact manifest/hash drift")
     packet, _ = screen.build_review_packet(cfg, results)
     screen.require(screen.read_json(path / "review" / "fun-packet.json") ==
                    packet, "committed fun packet drift")
