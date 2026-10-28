@@ -197,33 +197,35 @@ jobs:
               json.dumps(source,indent=2,sort_keys=True)+"\n"
           )
 
-          readme=f"""# VILLAGE-001D V-G08-C failed-run recovery evidence
-
-This standalone durable dataset preserves the exact textual contents of GitHub
-Actions artifact **{os.environ['SOURCE_ARTIFACT_NAME']}** from failed
-VILLAGE-001D run **{os.environ['SOURCE_RUN_ID']}**.
-
-The artifact contains a valid **40/60** preference-pair partial plus its raw
-compiler/critic request-response history. The terminal blocker was repeated
-HTTP-success critic output with the syntactically valid but empty payload
-`{{"reviews":[]}}` during targeted repair of chunk 3.
-
-It is archived separately because the subsequent recovery run copies this
-partial and then makes fresh provider calls using the same stable labels.
-Those fresh calls may replace files inside the copied working directory. The
-source run remains historical authority for the failure, and this dataset
-makes that authority durable after Actions artifact expiry.
-
-- Source commit: `{os.environ['SOURCE_HEAD_SHA']}`
-- Source artifact ID: `{os.environ['SOURCE_ARTIFACT_ID']}`
-- Member: `V-G08-C`
-- Accepted partial pairs: 40
-- Expected terminal pairs: 60
-- Raw files: `raw/`
-- Machine-readable provenance: `provenance/source-artifacts.json`
-
-No repaired or resumed output is substituted for these raw records.
-"""
+          readme="\\n".join([
+              "# VILLAGE-001D V-G08-C failed-run recovery evidence",
+              "",
+              "This standalone durable dataset preserves the exact textual contents of GitHub",
+              f"Actions artifact **{os.environ['SOURCE_ARTIFACT_NAME']}** from failed",
+              f"VILLAGE-001D run **{os.environ['SOURCE_RUN_ID']}**.",
+              "",
+              "The artifact contains a valid **40/60** preference-pair partial plus its raw",
+              "compiler/critic request-response history. The terminal blocker was repeated",
+              "HTTP-success critic output with the syntactically valid but empty payload",
+              "`{\\\"reviews\\\":[]}` during targeted repair of chunk 3.",
+              "",
+              "It is archived separately because the subsequent recovery run copies this",
+              "partial and then makes fresh provider calls using the same stable labels.",
+              "Those fresh calls may replace files inside the copied working directory. The",
+              "source run remains historical authority for the failure, and this dataset",
+              "makes that authority durable after Actions artifact expiry.",
+              "",
+              f"- Source commit: `{os.environ['SOURCE_HEAD_SHA']}`",
+              f"- Source artifact ID: `{os.environ['SOURCE_ARTIFACT_ID']}`",
+              "- Member: `V-G08-C`",
+              "- Accepted partial pairs: 40",
+              "- Expected terminal pairs: 60",
+              "- Raw files: `raw/`",
+              "- Machine-readable provenance: `provenance/source-artifacts.json`",
+              "",
+              "No repaired or resumed output is substituted for these raw records.",
+              "",
+          ])
           (root/"README.md").write_text(readme)
 
           hashes=[]
