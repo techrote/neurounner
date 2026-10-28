@@ -78,3 +78,36 @@ qualified here. Four checkpoint identities remain separate and
 The archive is durable **on this unmerged review branch**; permanent
 availability on main depends on the normal independent review and authorized
 integration sequence. No source-only PASS can waive independent model gates.
+
+
+## Independent readback qualification checkpoint — 28 October 2026
+
+The first original evidence-workflow run
+[40730382950](https://github.com/techrote/neurounner/actions/runs/40730382950)
+**FAILED** at the adversarial test harness only: the actual auditor correctly
+rejected `optimizer_steps=1` using "Nonzero optimizer steps in source receipt",
+but one test had expected only "False scientific". No scientific threshold,
+model observation, actual original ZIP or protocol was changed. Its
+[complete decoded failed job log](../experiments/ncr-001/byte-eos-001/causal-shift-evidence/readback-run-40730382950-failed-job.log)
+is permanently retained before the assertion text was broadened.
+
+The follow-up original successful run
+[40730479431](https://github.com/techrote/neurounner/actions/runs/40730479431)
+at exact candidate checkout
+`613fb1b3dd74c55e732cf5e1f855ea30a7617c59`
+**PASSED** the offline original ZIP/member/log audit,
+**8/8** adversarial evidence tests and **both fresh GitHub Actions
+download comparisons byte-for-byte**. Its
+[complete decoded successful job log](../experiments/ncr-001/byte-eos-001/causal-shift-evidence/readback-run-40730479431-success-job.log)
+and [original source-bound receipt](../experiments/ncr-001/byte-eos-001/causal-shift-evidence/readback-run-40730479431-original-receipt.json)
+are permanently retained. The original readback artifact was
+[ID 12835221091](https://github.com/techrote/neurounner/actions/runs/40730479431/artifacts/12835221091);
+its complete container SHA-256 was
+`3794ffdf9b8c2d70fa543d525e7c04486f6d7a19fa3cb5db36af75454a2ffdad`.
+The archived original receipt has SHA-256
+`e0c9ff5d9f6b198379152d05e2d709a4afb8095f793a7ae56e17cc388d7a74ea`.
+This remains **evidence/serializer qualification only**, with no Qwen3
+model execution and no training admission.
+
+Any subsequent commits to this review branch require their own fresh
+exact-head CI. Earlier successful runs do not prove an unexecuted later head.
