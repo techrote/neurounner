@@ -6,6 +6,9 @@ on:
     paths:
       - '.github/workflows/village-001d-preserve-g08c-failed-evidence.yml'
   workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/village-001d-preserve-g08c-failed-evidence.yml'
 
 permissions:
   contents: write
@@ -290,6 +293,7 @@ No repaired or resumed output is substituted for these raw records.
           PY
 
       - name: Commit durable failed-run evidence
+        if: ${{ github.event_name != 'pull_request' }}
         run: |
           git config user.name "neurounner experiment bot"
           git config user.email "261801702+techrote@users.noreply.github.com"
