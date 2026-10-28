@@ -497,3 +497,61 @@ chosen; independently reviewed Stage-A approval and a separately frozen
 Stage-B execution contract are still mandatory. Corpus and source pins,
 raw historical model evidence, final recipe and sealed witness-finals
 remain untouched.
+
+## Native GPT versus exported HF Llama causal-loss custody
+
+**Additional concrete incompatibility discovered in the frozen source.**
+The publisher's native SFT example arrays and the export-target Hugging Face
+Llama loss API do **not** accept interchangeable target tensors, even if
+publisher role masks and token IDs are otherwise correct:
+
+- Pinned publisher [`src/train/sft_data.py`](https://github.com/kandivault-source/Sprocket-500M/blob/a003767e70d766bc14b40c89792543ee8641c8bc/src/train/sft_data.py)
+  (Git blob `90bddf8976b9d6410fe7c5c1f084708e1cebab73`) packs/externally
+  shifts labels: `X=ids[:-1]` and `Y[i]=ids[i+1]` for supervised next
+  tokens, otherwise **`-1`**. Pinned native
+  [`GPT.forward`](https://github.com/kandivault-source/Sprocket-500M/blob/a003767e70d766bc14b40c89792543ee8641c8bc/src/model/model.py)
+  (Git blob `0e3aa3af55d75ec0c02c8abd9e6e5628df659101`) consumes these
+  externally shifted labels with `cross_entropy(ignore_index=-1)`.
+- The same publisher's pinned
+  [`scripts/export_hf.py`](https://github.com/kandivault-source/Sprocket-500M/blob/a003767e70d766bc14b40c89792543ee8641c8bc/scripts/export_hf.py)
+  (Git blob `2f4f3c712b7e12ddab97e4755d92252f634c31c6`) exports
+  **`LlamaForCausalLM`**, and frozen B3 uses
+  **`AutoModelForCausalLM`**. In upstream Transformers
+  [v4.57.6 `ForCausalLMLoss`](https://github.com/huggingface/transformers/blob/v4.57.6/src/transformers/loss/loss_utils.py)
+  (Git blob `5db1c3f3e9fde23567c0e67c9d9fcb9bd5b9d1b2`), the default
+  ignore index is **`-100`**, and the loss function performs the
+  next-token shift **internally**; the tagged
+  [Llama forward](https://github.com/huggingface/transformers/blob/v4.57.6/src/transformers/models/llama/modeling_llama.py)
+  (Git blob `f43a5fc9b5237b852cbc0db5bc333711797eaa97`) dispatches its
+  supplied labels to that loss function.
+- Therefore feeding the publisher's native `Y` vector into HF Llama
+  `forward(input_ids=..., labels=...)` could **double shift** supervision
+  and incorrectly use **`-1` instead of `-100`** on masked targets.
+  The HF contract needs **full, unshifted input IDs** and an equal-length
+  aligned label vector: token ID at supervised positions, otherwise `-100`.
+  Its internal one-position shift must then equal the rebased native
+  next-token targets, with a final ignored position.
+
+A new **offline, read-only** `hf_forward_supervision()` in
+`scripts/detective_004a_token_preflight.py` constructs the HF-form label
+array from the same source-native role mask and mechanically checks that its
+internal effective shift agrees with the publisher's causal targets. A caller
+can supply claimed HF labels, which fail closed on wrong masks, native `-1`,
+already shifted vectors and host-role training. `inspect_row` preserves
+**both raw label representations** and their separate canonical SHA-256
+receipts. Future 36-step input claims also bind the HF forward-label and
+effective-shift hashes; a single `shifted_labels_sha256` is insufficient to
+qualify the HF optimizer interface.
+
+**Scope/authority:** Three additional regression methods use only the
+artificial tokenizer and do not execute either GPT or Llama. Upstream tagged
+source is a reference, **not a receipt of the actual loaded Transformers
+version or loss path**. The exact Stage-B optimizer interface/backend,
+real tokenizer, 512-token bounds and executed tensor/loss receipts must
+still be independently approved/attested. This work does not choose the
+backend or settle the previously recorded incomplete optimizer parameters.
+It leaves the frozen 36-example archive, manifest/config/generator Git blobs,
+posthash-final recipe, raw historical evidence and sealed learner-finals
+unchanged. No training, inference, adapter, final, hidden relevance map or
+population access was performed.
+
