@@ -304,6 +304,64 @@ def audit_future_gate_layout(tasks, b3):
 
 
 
+
+def audit_untrusted_posthash_claim(tasks, claim, b3):
+    """Check a supplied final against the *claimed* full posthash derivation.
+
+    NO adapter is opened here: a claimed adapter SHA is NOT authenticated model
+    provenance. This author-side offline gate cannot admit a learner final,
+    train a model, authorize a population, or replace an independent custodian.
+    Never call the evaluator based on this check alone.
+    """
+    import re
+
+    cfg, frozen_b3 = protocol.load_contract()
+    require(b3 == frozen_b3, "claimed final uses non-frozen B3 authority")
+    expected_keys = {"training_manifest_sha256", "adapter_dir_sha256",
+                     "post_hash_seed_sha256"}
+    require(isinstance(claim, dict) and set(claim) == expected_keys,
+            "posthash claim fields missing or expanded")
+    for key in expected_keys:
+        require(isinstance(claim[key], str) and
+                re.fullmatch(r"[0-9a-f]{64}", claim[key]) is not None,
+                "invalid full SHA-256 for " + key)
+
+    # Read-only verification of the *committed* Stage-A dataset. This binds
+    # generator/config Git blobs and byte-equal training + manifest contents.
+    manifest_sha = protocol.verify_archive(protocol.DATASET, cfg, frozen_b3)
+    require(claim["training_manifest_sha256"] == manifest_sha,
+            "posthash claim training manifest is not the committed archive")
+    expected_seed = protocol.sha256_bytes(protocol.canonical({
+        "recipe_sha": protocol.final_recipe_sha(cfg),
+        "manifest_sha": manifest_sha,
+        "adapter_dir_sha": claim["adapter_dir_sha256"],
+        "salt": cfg["final_recipe"]["fixed_salt"],
+    }).encode("utf-8"))
+    require(claim["post_hash_seed_sha256"] == expected_seed,
+            "claimed full posthash seed does not match frozen derivation")
+
+    # A coherent 10-digit prefix by itself was previously enough to pass
+    # audit_future_gate_layout. Compare that exact suffix to the full seed
+    # recomputed from claims, after checking the entire frozen recipe.
+    audit_future_gate_layout(tasks, frozen_b3)
+    for row in tasks:
+        require(row["view"]["case_id"] ==
+                "fiction-only-d004a-" + row["case_family"] + "-" + expected_seed[:10],
+                "future case suffix not bound to claimed full posthash seed")
+    return {
+        "status": "claim_consistent_only",
+        "training_archive_verified": True,
+        "full_seed_derivation_from_claims_verified": True,
+        "adapter_source_and_optimizer_receipts_verified": False,
+        "independent_posthash_final_custody_verified": False,
+        "model_inputs_and_token_ids_verified": False,
+        "independent_stage_a_approval": False,
+        "training_admitted": False,
+        "production_admission": False,
+        "population_expansion_admitted": False,
+    }
+
+
 def guarded_admission_gate(tasks, adapted_outputs, base_outputs, b3):
     """Never treat this structural guard as independent final/adaptor custody."""
     audit_future_gate_layout(tasks, b3)
