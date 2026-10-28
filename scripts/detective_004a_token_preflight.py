@@ -192,6 +192,90 @@ def inspect_archive_with_tokenizer(tok, include_arrays=False):
     }
 
 
+
+def planned_single_example_steps(tok):
+    """Source-bound future 36-step plan; no optimizer and no packed examples.
+
+    This is a proposed per-example INPUT ledger, not proof that any optimizer
+    consumed the data. Actual token identity and provenance remain separate
+    gates; Stage-A tests use only a synthetic tokenizer.
+    """
+    report = inspect_archive_with_tokenizer(tok)
+    _, b3 = protocol.load_contract()
+    manifest = json.loads((protocol.DATASET / "manifest.json").read_text(encoding="utf-8"))
+    expected_ids = manifest["example_ids"]
+    ledger = report["ledger"]
+    require(len(expected_ids) == 36 and
+            len(set(expected_ids)) == 36 and
+            [entry["id"] for entry in ledger] == expected_ids,
+            "planned step order does not match committed archive")
+    steps = []
+    for index, entry in enumerate(ledger, 1):
+        # A single untruncated rendered row, not publisher SFT's packed
+        # ctx+1-block concatenation or a batch of multiple examples.
+        require(entry["num_tokens"] <= MAX_STAGE_B_TOKENS and
+                entry["trained_tokens"] == entry["shifted_train_labels"] and
+                entry["trained_tokens"] > 0,
+                "planned step has invalid supervision/length")
+        steps.append({
+            "step_1based": index,
+            "row_id": entry["id"],
+            "num_tokens": entry["num_tokens"],
+            "trained_tokens": entry["trained_tokens"],
+            "token_ids_sha256": entry["token_ids_sha256"],
+            "train_mask_sha256": entry["train_mask_sha256"],
+            "shifted_labels_sha256": entry["shifted_labels_sha256"],
+            "prompt_ids_sha256": entry["prompt_ids_sha256"],
+        })
+    return {
+        "schema": "detective-004a-single-example-step-plan-v1",
+        "training_manifest_sha256": report["training_manifest_sha256"],
+        "steps": steps,
+        "no_packing_or_truncation": True,
+        "real_frozen_tokenizer_identity_verified":
+            report["real_frozen_tokenizer_identity_verified"],
+        "optimizer_execution_verified": False,
+        "training_admitted": False,
+    }
+
+
+def audit_claimed_training_steps(tok, claimed_steps):
+    """Reject claimed 36-step duplication, reordering, packing or label drift.
+
+    Exactly matching hashes are still only SELF-CONSISTENT CLAIMS: they do not
+    attest an optimizer, learned adapter, actual batch inputs, or review gate.
+    """
+    plan = planned_single_example_steps(tok)
+    expected = plan["steps"]
+    require(type(claimed_steps) is list and len(claimed_steps) == 36,
+            "exactly 36 single-example step claims required")
+    require(all(type(step) is dict for step in claimed_steps),
+            "malformed step claim")
+    require([step.get("row_id") for step in claimed_steps] ==
+            [step["row_id"] for step in expected] and
+            [step.get("step_1based") for step in claimed_steps] ==
+            list(range(1, 37)),
+            "duplicate, missing or reordered step")
+    require(all(step == exp for step, exp in zip(claimed_steps, expected)),
+            "per-step token IDs, mask, label, prompt hash or length changed")
+    digest = hashlib.sha256(
+        protocol.canonical(claimed_steps).encode("utf-8")).hexdigest()
+    return {
+        "schema": "detective-004a-claimed-step-audit-v1",
+        "training_manifest_sha256": plan["training_manifest_sha256"],
+        "claimed_step_ledger_sha256": digest,
+        "claimed_step_count": len(claimed_steps),
+        "structurally_exact_single_example_steps": True,
+        "real_frozen_tokenizer_identity_verified":
+            plan["real_frozen_tokenizer_identity_verified"],
+        "actual_optimizer_batches_independently_attested": False,
+        "adapter_ancestry_verified": False,
+        "stage_b_training_admitted": False,
+        "production_admission": False,
+        "population_expansion_admitted": False,
+    }
+
+
 def inspect_local_frozen_tokenizer(folder):
     """Opt-in post-review read-only validation; NO download or model import."""
     folder = Path(folder)
