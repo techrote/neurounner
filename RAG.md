@@ -62,3 +62,5 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 - **[NCR-001A read-only preflight](scripts/ncr_001_protocol.py)** — verify local protocol & fixed corpus without network, or inspect exact pinned HF model/tokenizer/config metadata without downloading model weights. Do not interpret metadata-preflight success as causal conformance or training authorization.
 
 - **[BYTE-EOS-001 original frozen Qwen3 forward-only causal labels](docs/BYTE_EOS_001_FROZEN_QWEN_FORWARD.md)** — future-only serializer plus real original void.1 causal-loss check; no optimizer, held-out material, adapter comparison, final #72 admission or train authorization.
+
+- **[BYTE-EOS-001 original frozen-Qwen forward evidence custody](docs/BYTE_EOS_001_FROZEN_QWEN_EVIDENCE.md)** — complete original 40738222796 Actions ZIP and decoded logs, source-bound offline byte/semantic audit; forward-only finite EOS-loss, no NCA/MLP training admission.
