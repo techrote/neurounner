@@ -145,3 +145,16 @@ Authoritative run: [Actions 40609927745](https://github.com/techrote/neurounner/
 Thus Transformers v5 resolves the original 4.57.6 class-availability failure but does **not** qualify the exact LFM2.5-350M checkpoint/template for the common detective chat runtime. See [REPORT_002C.md](REPORT_002C.md).
 
 This evidence-ready branch must now run verification-only CI; live requalification must be skipped.
+
+
+## Verification-only merge gate
+
+The live result is already committed and independently replayable. The final PR-head CI run must therefore:
+
+- pass the offline DETECTIVE/source contracts;
+- detect `datasets/detective-002c/manifest.json`;
+- **skip `live-requalification`**;
+- run `evidence-readback` only;
+- return `DETECTIVE_002C_SOURCE_READBACK_PASS`.
+
+No further runtime/package/model change is authorized in this experiment.
