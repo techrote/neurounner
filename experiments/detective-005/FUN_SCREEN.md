@@ -169,3 +169,33 @@ archival. Reruns must await verified durable preservation or a documented
 no-output determination. This design remains behind independent source-review
 and merge gates for PR #180 and its dependent draft and has not processed a
 live run.
+
+## GitHub Actions synthetic transport qualification (NOT a live model run)
+
+A separate pair of no-model jobs in the DETECTIVE-005A offline protocol
+exercises the **real pinned** `actions/upload-artifact` and
+`actions/download-artifact` actions using exactly the live workflow's positive
+path, exclusion glob and `detective005a-G*` naming scheme. It constructs one
+synthetic, source-contract-shaped response, appends a deliberately torn JSONL
+tail and writes an interruption receipt. A second GitHub-hosted job independently
+reads the same-run artifact API, downloads the ZIP, verifies byte equality of
+both files and runs the recovery/archive SHA-inventory verifier. The synthetic
+`work/` file must be excluded. No model files, inference or training are used,
+and CI transport artifacts are **never** promoted as live research evidence.
+
+The GitHub artifact API includes `workflow_run.id` and
+`workflow_run.head_sha`. Both are checked against the source-run identity;
+invalid/missing artifact ID, SHA-256 digest, size or expiry metadata remain
+explicit warnings, and a would-be complete lineage is demoted to
+`recovery_only` rather than silently admitted. Raw bytes are still preserved.
+A `pull_request` Actions event uses a synthetic merge SHA for `github.sha`
+while the artifact API reports the PR branch HEAD, so this **synthetic-only**
+test pins checkout and receipt to `github.event.pull_request.head.sha`. The
+actual DETECTIVE live workflow continues to require `workflow_dispatch` on
+`main`, where the dispatch SHA is the verified source head. Do not relax that
+rule.
+
+Successful synthetic upload/download/readback establishes GitHub Actions
+artifact *transport* compatibility, not the success of a real failed-run
+recovery job, not guaranteed handling of entire-workflow cancellation, and not
+the durable promotion of any of the 144 future model responses.
