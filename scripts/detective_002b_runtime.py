@@ -61,6 +61,16 @@ def canonical(value: Any) -> str:
     )
 
 
+def current_rss_kib() -> int | None:
+    try:
+        for line in Path("/proc/self/status").read_text(errors="replace").splitlines():
+            if line.startswith("VmRSS:"):
+                return int(line.split()[1])
+    except OSError:
+        pass
+    return None
+
+
 def cpu_model() -> str:
     try:
         for line in Path("/proc/cpuinfo").read_text(errors="replace").splitlines():
@@ -388,7 +398,8 @@ def run(candidate_id: str, out: Path) -> dict:
             model.config.use_cache = True
             model.eval()
             model_load = time.monotonic() - t0
-            rss_after_load = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+            rss_after_load = current_rss_kib()
+            peak_after_load = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
 
             record["environment"] = {
                 "platform": platform.platform(),
@@ -403,6 +414,7 @@ def run(candidate_id: str, out: Path) -> dict:
                 "tokenizer_load_seconds": tokenizer_load,
                 "model_load_seconds": model_load,
                 "rss_after_load_kib": rss_after_load,
+                "peak_rss_after_load_kib": peak_after_load,
             }
             save_partial(out, record)
 
