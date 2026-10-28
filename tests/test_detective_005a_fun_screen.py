@@ -384,6 +384,33 @@ class Detective005AFunScreenTests(unittest.TestCase):
             self.assertEqual(
                 screen.read_json(out / "interrupted.json"), receipt)
 
+    def test_interrupted_receipt_keeps_torn_or_corrupt_raw_bytes(self):
+        row = self.synthetic_rows()[0]
+        cases = (
+            (b'{"torn":', "unterminated_raw_row"),
+            (bytes([255, 10]), "unparseable_raw_row"),
+            (b'null\\n', "non_object_raw_row"),
+        )
+        for tail, expected_problem in cases:
+            with self.subTest(problem=expected_problem):
+                with tempfile.TemporaryDirectory() as td:
+                    out = Path(td)
+                    partial = out / "results.partial.jsonl"
+                    live.append_completed_raw(partial, row)
+                    with partial.open("ab") as fh:
+                        fh.write(tail)
+                    original = partial.read_bytes()
+                    receipt = live.write_interrupted_receipt(
+                        "G01", out, RuntimeError("synthetic interruption"))
+                    self.assertEqual(receipt["completed_raw_results"], 1)
+                    self.assertEqual(receipt["partial_journal_problem"],
+                                     expected_problem)
+                    self.assertEqual(receipt["partial_results_sha256"],
+                                     screen.sha256_file(partial))
+                    self.assertEqual(partial.read_bytes(), original)
+                    self.assertEqual(screen.read_json(out / "interrupted.json"),
+                                     receipt)
+
     def test_live_workflow_is_manual_confirmed_main_only_and_isolated(self):
         workflow = (
             screen.ROOT / ".github/workflows/detective-005a-live.yml"
