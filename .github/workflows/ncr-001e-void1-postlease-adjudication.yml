@@ -58,7 +58,8 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m py_compile             scripts/ncr_001_void_postlease_original_audit.py             scripts/ncr_001_void_postlease_maxctx_original_audit.py             scripts/ncr_001e_void1_postlease_adjudication.py
-          mkdir -p runtime/ncr-001\n          python3 scripts/ncr_001e_void1_postlease_adjudication.py             > runtime/ncr-001/void1-postlease-adjudication.stdout.json
+          mkdir -p runtime/ncr-001
+          python3 scripts/ncr_001e_void1_postlease_adjudication.py             > runtime/ncr-001/void1-postlease-adjudication.stdout.json
 
       - name: Require exact machine-readable decision and seven fail-closed tests
         shell: bash
