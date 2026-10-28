@@ -41,6 +41,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
                         self.cfg, prompt["id"]),
                     "response": {
                         "text": text,
+                        "raw_with_special_tokens": text,
                         "token_ids": [1000 + mi * 4 + pi],
                         "finish_reason": "length",
                         "prompt_tokens": 32,
