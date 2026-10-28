@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import sys
@@ -21,6 +22,33 @@ from scripts import detective_005a_live as live
 
 LINEAGES = [f"G{i:02d}" for i in range(1, 13)]
 SHA_RX = re.compile(r"^[0-9a-f]{64}$")
+HEAD_RX = re.compile(r"^[0-9a-f]{40}$")
+RUN_RX = re.compile(r"^[0-9]+$")
+
+
+def source_run_identity(rows: list[dict]) -> tuple[str, str]:
+    """Reject mixed, unpinned, or foreign Actions-run responses."""
+    identities = set()
+    for row in rows:
+        runner = row.get("runner", {})
+        head = runner.get("repository_head_sha")
+        run_id = runner.get("actions_run_id")
+        screen.require(
+            isinstance(head, str) and HEAD_RX.fullmatch(head) is not None and
+            isinstance(run_id, str) and RUN_RX.fullmatch(run_id) is not None,
+            "source/run identity missing or malformed in raw response")
+        identities.add((head, run_id))
+    screen.require(len(identities) == 1, "mixed source heads or Actions runs")
+    head, run_id = next(iter(identities))
+    expected_head = os.environ.get("SOURCE_HEAD_SHA")
+    if expected_head:
+        screen.require(head == expected_head,
+                       "raw response head differs from workflow dispatch")
+        expected_run = os.environ.get("GITHUB_RUN_ID")
+        if expected_run:
+            screen.require(run_id == expected_run,
+                           "raw response run differs from workflow execution")
+    return head, run_id
 
 
 def discover_lineages(root: Path) -> dict[str, Path]:
@@ -54,9 +82,9 @@ def read_lineage(cfg: dict, lineage: str, folder: Path) -> tuple[dict, list[dict
                    "lineage manifest identity drift")
     screen.require(manifest.get("source_plan") == live.source_plan(lineage),
                    "lineage source plan drift")
-    screen.require(SHA_RX.fullmatch(
-        manifest.get("runner_script_sha256", "")) is not None,
-        "missing runner source hash")
+    screen.require(manifest.get("runner_script_sha256") ==
+                   screen.sha256_file(Path(live.__file__)),
+                   "lineage runner source hash differs from checked-out code")
     screen.require(manifest.get("results_jsonl_sha256") ==
                    screen.sha256_file(results_path),
                    "lineage raw-results hash mismatch")
@@ -106,6 +134,7 @@ def assemble(artifacts: Path, out: Path) -> dict:
         manifests[lineage] = manifest
         rows.extend(lineage_rows)
     observations = screen.validate_complete_results(cfg, rows)
+    source_head, run_id = source_run_identity(rows)
 
     member_order = {m["member_id"]: i for i, m in enumerate(
         cfg["source_population"]["members"])}
@@ -129,6 +158,23 @@ def assemble(artifacts: Path, out: Path) -> dict:
                    f"{lineage}.json", manifests[lineage])
     write_json(out / "review" / "fun-packet.json", packet)
     write_json(out / "review" / "fun-ratings-template.json", template)
+    write_json(out / "provenance" / "source-artifacts.json", {
+        "schema": "detective-005a-source-artifacts-v1",
+        "repository_head_sha": source_head,
+        "actions_run_id": run_id,
+        "actions_run_url":
+            f"https://github.com/techrote/neurounner/actions/runs/{run_id}",
+        "source_artifacts": [
+            {
+                "lineage": lineage,
+                "artifact_name": f"detective005a-{lineage}",
+                "results_jsonl_sha256": manifests[lineage]["results_jsonl_sha256"],
+                "runner_script_sha256": manifests[lineage]["runner_script_sha256"],
+            }
+            for lineage in LINEAGES
+        ],
+        "artifact_ids_unavailable_at_assembly": True,
+    })
 
     floor_failures = [
         {"member_id": x["member_id"], "prompt_id": x["prompt_id"],
@@ -141,6 +187,8 @@ def assemble(artifacts: Path, out: Path) -> dict:
         "schema": "detective-005a-dataset-manifest-v1",
         "experiment": "DETECTIVE-005A",
         "issue": 176,
+        "repository_head_sha": source_head,
+        "actions_run_id": run_id,
         "source_config_sha256": screen.sha256_file(screen.CONFIG),
         "release_tag": cfg["source_population"]["release_tag"],
         "release_manifest_git_blob_sha1":
@@ -188,6 +236,20 @@ def verify_dataset(path: Path) -> dict:
                    "wrong dataset manifest")
     results = screen.read_results(path / "raw" / "results.jsonl")
     screen.validate_complete_results(cfg, results)
+    head, run_id = source_run_identity(results)
+    screen.require(
+        (manifest.get("repository_head_sha"),
+         manifest.get("actions_run_id")) == (head, run_id),
+        "dataset source/run identity drift")
+    provenance = screen.read_json(path / "provenance" / "source-artifacts.json")
+    screen.require(
+        provenance.get("schema") == "detective-005a-source-artifacts-v1" and
+        provenance.get("repository_head_sha") == head and
+        provenance.get("actions_run_id") == run_id and
+        [x.get("artifact_name") for x in
+         provenance.get("source_artifacts", [])] ==
+        [f"detective005a-{lineage}" for lineage in LINEAGES],
+        "dataset source-artifact provenance drift")
     packet, _ = screen.build_review_packet(cfg, results)
     screen.require(screen.read_json(path / "review" / "fun-packet.json") ==
                    packet, "committed fun packet drift")
