@@ -246,6 +246,7 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
             f"https://github.com/techrote/neurounner/actions/runs/{run_id}",
         "source_config_sha256": screen.sha256_file(screen.CONFIG),
         "runner_script_sha256": screen.sha256_file(Path(live.__file__)),
+        "recovery_script_sha256": screen.sha256_file(Path(__file__)),
         "lineages_reported": len(records),
         "lineages_with_artifacts":
             sum(bool(r["files"]) for r in records),
@@ -301,7 +302,9 @@ def verify(path: Path) -> dict:
     screen.require(manifest.get("source_config_sha256") ==
                    screen.sha256_file(screen.CONFIG) and
                    manifest.get("runner_script_sha256") ==
-                   screen.sha256_file(Path(live.__file__)),
+                   screen.sha256_file(Path(live.__file__)) and
+                   manifest.get("recovery_script_sha256") ==
+                   screen.sha256_file(Path(__file__)),
                    "recovery source hash mismatch")
     provenance = screen.read_json(path / "provenance" / "source-artifacts.json")
     screen.require(provenance.get("schema") ==
