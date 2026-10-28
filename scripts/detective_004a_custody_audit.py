@@ -145,6 +145,102 @@ def audit_archive(folder):
             "optimizer_steps": 0, "independent_protocol_approval": False}
 
 
+
+def audit_future_gate_layout(tasks, b3):
+    """Pure structural guard for *supplied* posthash tasks; never opens or creates a final.
+
+    This checks that a future 12-task submission is not a partial, duplicated,
+    reordered-label or cross-case substitute. It cannot authenticate an adapter
+    or prove final custody; a separate independent custodian must do that.
+    """
+    import re
+
+    require(isinstance(tasks, list) and len(tasks) == 12,
+            "future gate requires exactly 12 tasks")
+    require(all(isinstance(t, dict) and isinstance(t.get("id"), str) for t in tasks),
+            "future gate task shape invalid")
+    require(len({t["id"] for t in tasks}) == 12,
+            "duplicate future gate task ID")
+    require(Counter(t.get("kind") for t in tasks) == Counter({
+        "tool_selection": 9, "restraint": 1,
+        "result_success": 1, "result_denied": 1,
+    }), "future gate category denominator changed")
+    require({t.get("case_family") for t in tasks} ==
+            set(protocol.EXPECTED_FINAL_FAMILIES),
+            "future gate case families changed")
+
+    extra_kinds = ("result_success", "result_denied", "restraint")
+    seed_prefixes = set()
+    for family, extra_kind in zip(protocol.EXPECTED_FINAL_FAMILIES, extra_kinds):
+        cohort = [t for t in tasks if t["case_family"] == family]
+        require(len(cohort) == 4, "future gate family cardinality changed")
+        expected_ids = {
+            f"{family}-tool_selection-{index:02}" for index in range(3)
+        } | {f"{family}-{extra_kind}-03"}
+        require({t["id"] for t in cohort} == expected_ids,
+                "future gate family/operation slot changed")
+
+        for index, op in enumerate(protocol.OPS):
+            row = next(t for t in cohort if t["id"] ==
+                       f"{family}-tool_selection-{index:02}")
+            require(row["target"].get("tool") == op,
+                    "future gate tool family changed")
+
+        for row in cohort:
+            # The source generator is immutable: do not change its corpus blob
+            # just to strengthen later evaluation.
+            protocol.validate_example(row, b3)
+            view, turns = row["view"], row["turns"]
+            case_id = view.get("case_id")
+            match = (re.fullmatch(r"fiction-only-d004a-" + re.escape(family) +
+                                  r"-([0-9a-f]{10})", case_id)
+                     if isinstance(case_id, str) else None)
+            require(match is not None, "future gate case ID not posthash-shaped")
+            seed_prefixes.add(match.group(1))
+            require(turns[0] == {"role": "system", "content": native.manifest()},
+                    "future gate system manifest changed")
+            expected_user = ("Player request:\n" + view["player_request"] +
+                             "\nCurrent fictional game view:\n" + protocol.canonical(view))
+            require(turns[1] == {"role": "user", "content": expected_user},
+                    "future gate actual user projection mismatches audited view")
+
+            if row["kind"] not in ("result_success", "result_denied"):
+                continue
+            try:
+                receipt = json.loads(turns[3]["content"])
+            except (ValueError, TypeError) as exc:
+                raise protocol.ProtocolError("future gate host receipt invalid") from exc
+            require(turns[3]["content"] == protocol.canonical(receipt),
+                    "future gate host receipt not canonical")
+            target = row["target"]
+            require(target.get("forbidden_markers") ==
+                    ["classified", "unknown-package"],
+                    "future gate forbidden markers changed")
+            if row["kind"] == "result_success":
+                marker = f"confirmed:{family}:3"
+                require(receipt == {"status": "OK", "marker": marker,
+                                    "excerpt": "Synthetic receipt " + marker},
+                        "future gate successful host receipt changed")
+                require(target.get("expected_markers") == [marker] and
+                        marker in turns[4]["content"] and
+                        marker not in turns[1]["content"],
+                        "future gate returned marker not host-owned")
+            else:
+                require(receipt == {"status": "ACCESS_DENIED", "evidence": None},
+                        "future gate denial receipt changed")
+                require(target.get("expected_markers") == ["access denied"] and
+                        "access denied" in turns[4]["content"].casefold(),
+                        "future gate denial continuation not grounded")
+
+    require(len(seed_prefixes) == 1,
+            "future gate families have inconsistent posthash seed prefixes")
+
+
+def guarded_admission_gate(tasks, adapted_outputs, base_outputs, b3):
+    """Never treat this structural guard as independent final/adaptor custody."""
+    audit_future_gate_layout(tasks, b3)
+    return protocol.admission_gate(tasks, adapted_outputs, base_outputs, b3)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--archive", type=Path, default=protocol.DATASET)
