@@ -5,6 +5,8 @@ import copy
 import json
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -95,6 +97,24 @@ class ChatAdjudicationTests(unittest.TestCase):
         fake["train_authorized"]=True
         fake["blocking_required_checks"]=[]
         self.assertNotEqual(fake,adjudicator.build_report())
+
+    def test_tampered_original_producer_consumer_archive_refuses_chat_gate(self):
+        import ncr_001e_sprocket_process_receipt_audit as process_audit
+        raw = process_audit.ARCHIVE.read_text(encoding="ascii")
+        with TemporaryDirectory() as dirname:
+            altered = Path(dirname) / "tampered-originals.b64"
+            altered.write_text("!" + raw[1:], encoding="ascii")
+            with patch.object(process_audit, "ARCHIVE", altered):
+                with self.assertRaises((RuntimeError, ValueError, OSError)):
+                    adjudicator.build_report()
+
+    def test_missing_original_producer_consumer_archive_refuses_chat_gate(self):
+        import ncr_001e_sprocket_process_receipt_audit as process_audit
+        with TemporaryDirectory() as dirname:
+            missing = Path(dirname) / "missing-originals.b64"
+            with patch.object(process_audit, "ARCHIVE", missing):
+                with self.assertRaises(FileNotFoundError):
+                    adjudicator.build_report()
 
 
 if __name__=="__main__":
