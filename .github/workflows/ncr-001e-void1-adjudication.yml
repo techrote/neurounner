@@ -16,6 +16,7 @@ on:
       - 'experiments/ncr-001/evidence-review/void1-cross-process/**'
       - 'experiments/ncr-001/evidence-review/void1-2048/**'
       - 'scripts/ncr_001e_void_2048_archive_audit.py'
+      - 'scripts/ncr_001e_void_process_receipt_audit.py'
   workflow_dispatch:
 
 permissions:
@@ -29,7 +30,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - name: Reproduce authoritative void BLOCKED adjudication
+      - name: Verify original void process bytes and reproduce BLOCKED adjudication
         run: |
           set -euo pipefail
           python3 -m py_compile scripts/ncr_001e_void1_adjudication.py
