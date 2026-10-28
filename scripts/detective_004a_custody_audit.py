@@ -9,9 +9,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections import Counter
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 from scripts import detective_001b3_sprocket as native
 from scripts import detective_004a_protocol as protocol
 
