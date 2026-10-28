@@ -311,8 +311,14 @@ def verify(path: Path) -> dict:
                    len(provenance.get("lineages", [])) == 12,
                    "recovery provenance drift")
     cfg = screen.load_contract()
+    metadata_path = path / "provenance" / "actions-artifacts-api.json"
+    screen.require(
+        metadata_path.exists() == provenance.get("metadata_available"),
+        "original artifact API availability drift")
+    api = metadata_by_name(metadata_path) if metadata_path.exists() else {}
     total = 0
     complete = 0
+    with_artifacts = 0
     for lineage, saved in zip(assemble.LINEAGES, provenance["lineages"]):
         raw_dir = path / "raw" / lineage
         names = saved["files"]
@@ -330,6 +336,14 @@ def verify(path: Path) -> dict:
                            screen.sha256_file(target) == record["sha256"],
                            "recovered original artifact bytes drift")
         refreshed = inspect_artifact(cfg, lineage, actual, head, run_id)
+        artifact_name = f"detective005a-{lineage}"
+        screen.require(saved.get("artifact_api") == api.get(artifact_name),
+                       "original GitHub artifact API identity drift")
+        if artifact_name in api and not actual:
+            refreshed["custody_warnings"].append("listed_artifact_not_downloaded")
+        if artifact_name not in api and metadata_path.exists() and actual:
+            refreshed["custody_warnings"].append("downloaded_artifact_not_listed")
+        with_artifacts += bool(actual)
         for field in ("lineage", "status", "validated_raw_prefix_rows",
                       "journal_tail_problem", "custody_warnings", "files"):
             screen.require(refreshed[field] == saved[field],
@@ -337,7 +351,8 @@ def verify(path: Path) -> dict:
         total += refreshed["validated_raw_prefix_rows"]
         complete += refreshed["status"] == "complete_lineage_recovered"
     screen.require(total == manifest["validated_raw_prefix_rows"] and
-                   complete == manifest["complete_lineage_artifacts"],
+                   complete == manifest["complete_lineage_artifacts"] and
+                   with_artifacts == manifest["lineages_with_artifacts"],
                    "recovery aggregate row/count drift")
     inventory = (path / "provenance" / "hashes.sha256").read_text(
         encoding="utf-8")
