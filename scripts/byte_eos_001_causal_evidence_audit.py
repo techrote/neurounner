@@ -7,8 +7,12 @@ The two original Actions ZIPs remain tracked by digest but are not yet in Git.
 """
 from __future__ import annotations
 
+import base64
 import hashlib
+import io
 import json
+import tarfile
+import zipfile
 from pathlib import Path
 import sys
 
@@ -47,8 +51,27 @@ def audit(evidence: Path = EVIDENCE) -> dict:
     custody = manifest["evidence_storage"]
     refuse(custody["decoded_original_job_logs_committed"] is True and
            custody["raw_zip_contents_independently_sha256_verified"] is True and
-           custody["raw_zip_bytes_committed"] is False,
-           "Unexpected/unsupported original ZIP custody assertion")
+           custody["raw_zip_bytes_committed"] is True,
+           "Missing permanent original ZIP custody assertion")
+    archive_path = evidence / "original-actions-zipset.tar.xz.base64"
+    compressed = base64.b64decode(archive_path.read_text(encoding="ascii").strip(),
+                                  validate=True)
+    refuse(len(compressed) == custody["zipset_decoded_tar_xz_bytes"] and
+           hashlib.sha256(compressed).hexdigest() == custody["zipset_decoded_tar_xz_sha256"],
+           "Original raw ZIP-set TAR/XZ archive bytes changed")
+    raw_zips = {}
+    with tarfile.open(fileobj=io.BytesIO(compressed), mode="r:xz") as bundle:
+        for member in bundle:
+            refuse(member.isfile() and not member.name.startswith("/") and
+                   ".." not in member.name and member.size < 100000,
+                   "Unsafe original ZIP archive member")
+            refuse(member.name not in raw_zips, "Duplicate original ZIP container")
+            raw_zips[member.name] = bundle.extractfile(member).read()
+    expected_names = {
+        f"byte-eos-001-causal-shift-run{n}.zip" for n in EXPECTED_RUNS
+    }
+    refuse(set(raw_zips) == expected_names,
+           "Original raw ZIP container identity/count changed")
     runs = manifest["original_runs"]
     refuse(tuple(x["run_id"] for x in runs) == EXPECTED_RUNS,
            "Original runner identities/order changed")
@@ -65,6 +88,27 @@ def audit(evidence: Path = EVIDENCE) -> dict:
             refuse(witness in log, f'Original job {run["run_id"]} missing source witness: {witness}')
         refuse(run["tests_passed"] == 16 and run["result"] == "success",
                "Original tests no longer a bounded positive witness")
+        zip_bytes = raw_zips[f'byte-eos-001-causal-shift-run{run["run_id"]}.zip']
+        refuse(hashlib.sha256(zip_bytes).hexdigest() == run["artifact_sha256"],
+               "Original GitHub Actions ZIP byte digest mismatch")
+        with zipfile.ZipFile(io.BytesIO(zip_bytes)) as z:
+            refuse(sorted(z.namelist()) == ["receipt.json", "test.log"],
+                   "Unexpected original ZIP contents")
+            member_log = z.read("test.log")
+            member_receipt = z.read("receipt.json")
+        refuse(hashlib.sha256(member_log).hexdigest() == run["test_log_sha256"] and
+               hashlib.sha256(member_receipt).hexdigest() == run["artifact_receipt_sha256"],
+               "Raw original ZIP member changed or tampered")
+        original = json.loads(member_receipt)
+        refuse(original["run_id"] == str(run["run_id"]) and
+               original["runner_name"] == run["runner"] and
+               original["expected_pr_head"] == run["source_head"] and
+               original["result"] == "success" and
+               original["train_authorized"] is False and
+               original["optimizer_steps"] == 0 and
+               original["full_72_conformance_pass"] is False and
+               original["sha256"]["test_log"] == run["test_log_sha256"],
+               "Original raw Actions receipt false-admission or identity mismatch")
         refuse(len(run["artifact_sha256"]) == 64 and
                len(run["artifact_receipt_sha256"]) == 64 and
                len(run["test_log_sha256"]) == 64,
@@ -85,13 +129,13 @@ def audit(evidence: Path = EVIDENCE) -> dict:
                    f'"expected_pr_head": "{SOURCE_HEAD}"' in log,
                    "Corrected exact-source head not present")
     return {
-        "status": "PASS_ORIGINAL_JOB_LOG_READBACK__ZIP_BYTES_STAGING_ONLY",
+        "status": "PASS_ORIGINAL_LOG_AND_RAW_ZIP_BYTE_READBACK__NO_MODEL",
         "source_pr": 163,
         "original_source_head": SOURCE_HEAD,
         "original_runs": list(EXPECTED_RUNS),
         "all_16_test_checks_each_run": True,
         "historical_provenance_anomaly_preserved": True,
-        "raw_actions_zip_bytes_in_git": False,
+        "raw_actions_zip_bytes_in_git": True,
         "final_72_conformance_pass": False,
         "train_authorized": False,
     }
