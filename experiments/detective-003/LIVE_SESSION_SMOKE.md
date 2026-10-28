@@ -141,3 +141,26 @@ After independently verified evidence is committed under `datasets/detective-003
 - unlock non-public evidence from dialogue.
 
 The useful result is solely whether real generated dialogue can flow through the authoritative interview-session machinery without crossing the game/model authority boundary.
+
+
+## Executed outcome — 2026-10-28
+
+Authoritative source-bound execution: [Actions 40616799855](https://github.com/techrote/neurounner/actions/runs/40616799855), exact live source `485608478bdffbd7cf7bbe2206761128f7adadc9`.
+
+- exact G02-C3 and G09-C2 adapters plus pinned SmolLM2 base verified and loaded;
+- all three bounded generations completed;
+- **70 total generated tokens**, zero truncations;
+- literal-time annotations: G02 initial = `02:14` statement, G09 = `no_time`, G02 post-evidence = `no_time`;
+- final ledger = **1 claim, 0 contradictions**;
+- public transfer receipt challenged `C0001` through evidence event `E0003`;
+- final session SHA `ae2357a11cc4cee09ee077b8bdd3c193c2b5ecb9103b3a3e588812702df6a85e`;
+- canonical case before/after SHA remained identical;
+- mandatory public clue routes remained intact;
+- independent reconstruction now passes from durable raw evidence;
+- zero optimizer steps, zero paid APIs, no relevance-map or learner-final access, no body selection, no population expansion.
+
+The first source-bound model execution actually succeeded; its initial workflow failure was only the standalone verifier's missing repository-path bootstrap. The verifier was fixed without changing any live-source/config/model/session file, and the rerun produced the same session hash and was independently promoted.
+
+See [REPORT_003B.md](REPORT_003B.md) and [datasets/detective-003b](../../datasets/detective-003b/).
+
+This is **infrastructure integration PASS only**. G09's non-answer and G02's non-time follow-up remain raw weak behaviors; the harness does not invent claims for them. C2/C3 policy verdicts and DETECTIVE-001R1 remain unchanged.
