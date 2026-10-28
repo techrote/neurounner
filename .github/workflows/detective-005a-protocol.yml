@@ -1,0 +1,61 @@
+name: DETECTIVE-005A fun-first screen protocol (offline)
+
+on:
+  pull_request:
+    paths:
+      - "experiments/detective-005/**"
+      - "scripts/detective_005a_fun_screen.py"
+      - "tests/test_detective_005a_fun_screen.py"
+      - "RAG.md"
+      - ".github/workflows/detective-005a-protocol.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-protocol:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile protocol
+        run: |
+          python3 -m py_compile scripts/detective_005a_fun_screen.py tests/test_detective_005a_fun_screen.py
+      - name: Run DETECTIVE-005A tests
+        run: |
+          python3 -m unittest tests.test_detective_005a_fun_screen -v
+      - name: Verify frozen source cohort and zero-training contract
+        run: |
+          python3 scripts/detective_005a_fun_screen.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          cfg=json.loads(Path("experiments/detective-005/fun-screen.json").read_text())
+          members=cfg["source_population"]["members"]
+          assert len(members)==36
+          assert len({x["member_id"] for x in members})==36
+          assert len({x["asset_sha256"] for x in members})==36
+          assert cfg["limits"]["total_generations"]==144
+          assert cfg["limits"]["optimizer_steps"]==0
+          assert cfg["outcome"]["objective_relevance_threshold"] is None
+          assert cfg["subjective_review"]["model_judge"] is False
+          print("DETECTIVE-005A 36 SOURCE ASSETS / SUBJECTIVE FUN / ZERO TRAINING: PASS")
+          PY
+      - name: Authority boundary sentinels
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path("scripts/detective_005a_fun_screen.py").read_text()
+          for forbidden in (
+              "import torch","transformers","peft","huggingface_hub",
+              "optimizer.step","loss.backward","openai","anthropic","nvidia_api",
+              "training-c2-evidence/relevance-packet",
+              "training-c3-evidence/relevance-packet",
+          ):
+              assert forbidden not in src, forbidden
+          assert not any(Path("experiments/detective-005").glob("*final*.jsonl"))
+          print("DETECTIVE-005A NO MODEL / NO TRAINING / NO SEALED FINAL: PASS")
+          PY
