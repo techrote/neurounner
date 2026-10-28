@@ -229,10 +229,11 @@ def validate_result(cfg: dict, row: dict) -> dict:
             "model-visible request/decode drift")
     response = row["response"]
     require(set(response) == {
-        "text", "token_ids", "finish_reason",
+        "text", "raw_with_special_tokens", "token_ids", "finish_reason",
         "prompt_tokens", "completion_tokens", "elapsed_seconds",
     }, "response field drift")
     require(isinstance(response["text"], str) and
+            isinstance(response["raw_with_special_tokens"], str) and
             isinstance(response["token_ids"], list) and
             all(type(x) is int and x >= 0 for x in response["token_ids"]) and
             type(response["prompt_tokens"]) is int and response["prompt_tokens"] > 0 and
@@ -244,8 +245,7 @@ def validate_result(cfg: dict, row: dict) -> dict:
             response["elapsed_seconds"] >= 0,
             "invalid raw response record")
     require(isinstance(row["runner"], dict), "runner receipt required")
-    obs = mechanical_observations(cfg, response["text"])
-    return {
+    obs = mechanical_observations(\n        cfg, response["text"] + "\\n" + response["raw_with_special_tokens"])\n    return {
         "member_id": member_id, "prompt_id": prompt_id,
         "response_sha256": sha256_bytes(response["text"].encode("utf-8")),
         **obs,
