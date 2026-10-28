@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -209,33 +210,60 @@ def inspect_archive_with_tokenizer(tok, include_arrays=False):
 
 
 def audit_optimizer_preregistration(cfg=None):
-    """Expose unresolved Stage-B optimizer semantics; never choose defaults.
+    """Report a SOURCE-BOUND Stage-B contract gap, never guessed defaults.
 
-    Green Stage-A tests, a valid tokenizer ledger or a 36-row input plan are
-    not authorization to train. A 36-step LoRA is sensitive to initialization,
-    AdamW defaults and scheduler/batch semantics; the frozen config currently
-    omits these fields. This audit makes that omission machine-visible instead
-    of guessing values from whichever library version later executes the run.
+    The optional cfg argument supports synthetic adversarial tests only. A
+    caller-supplied mutated cfg cannot transform a frozen protocol gap into
+    a verified execution contract. No optimizer or adapter is reached here.
     """
+    frozen, _ = protocol.load_contract()
     if cfg is None:
-        cfg, _ = protocol.load_contract()
-    future = cfg["future_training"]
+        cfg = frozen
+    source_exact = type(cfg) is dict and protocol.canonical(cfg) == protocol.canonical(frozen)
+    future = cfg.get('future_training', {}) if type(cfg) is dict else {}
+    require(type(future) is dict, 'malformed future-training claim')
     missing = [name for name in REQUIRED_OPTIMIZER_PREREG_FIELDS
                if name not in future]
+    invalid = []
+    def finite_numeric(value):
+        return type(value) in (int, float) and math.isfinite(value)
+
+    # The existing 36 distinct examples / 36 optimizer steps are expressly
+    # SINGLE-example steps. These checks validate possible future claims,
+    # not selection of missing seed/AdamW/scheduler values.
+    checks = (
+        ('training_seed', lambda v: type(v) is int and v >= 0),
+        ('batch_size', lambda v: type(v) is int and v == 1),
+        ('gradient_accumulation_steps', lambda v: type(v) is int and v == 1),
+        ('adam_beta1', lambda v: finite_numeric(v) and 0 <= v < 1),
+        ('adam_beta2', lambda v: finite_numeric(v) and 0 <= v < 1),
+        ('adam_epsilon', lambda v: finite_numeric(v) and v > 0),
+        ('weight_decay', lambda v: finite_numeric(v) and v >= 0),
+        ('lr_scheduler', lambda v: type(v) is str and bool(v.strip())),
+        ('warmup_steps', lambda v: type(v) is int and 0 <= v <= 36),
+    )
+    for name, predicate in checks:
+        if name in future and not predicate(future[name]):
+            invalid.append(name)
+    structurally_valid = not missing and not invalid
     return {
         "schema": "detective-004a-optimizer-preregistration-gap-v1",
-        "experiment": cfg["experiment"],
-        "frozen_optimizer": future.get("optimizer"),
-        "frozen_learning_rate": future.get("learning_rate"),
-        "frozen_optimizer_steps": future.get("optimizer_steps"),
-        "frozen_epochs": future.get("epochs"),
-        "frozen_gradient_clip": future.get("gradient_clip"),
-        "frozen_target_modules": future.get("target_modules"),
-        "frozen_rank": future.get("rank"),
-        "frozen_alpha": future.get("alpha"),
-        "frozen_dropout": future.get("dropout"),
+        "experiment": cfg.get("experiment") if type(cfg) is dict else None,
+        "frozen_config_exact_match": source_exact,
+        "untrusted_config_override": not source_exact,
+        "frozen_optimizer": frozen["future_training"].get("optimizer"),
+        "frozen_learning_rate": frozen["future_training"].get("learning_rate"),
+        "frozen_optimizer_steps": frozen["future_training"].get("optimizer_steps"),
+        "frozen_epochs": frozen["future_training"].get("epochs"),
+        "frozen_gradient_clip": frozen["future_training"].get("gradient_clip"),
+        "frozen_target_modules": frozen["future_training"].get("target_modules"),
+        "frozen_rank": frozen["future_training"].get("rank"),
+        "frozen_alpha": frozen["future_training"].get("alpha"),
+        "frozen_dropout": frozen["future_training"].get("dropout"),
         "missing_preregistered_fields": missing,
-        "optimizer_execution_contract_complete": len(missing) == 0,
+        "invalid_claimed_fields": invalid,
+        "claimed_field_set_structurally_valid": structurally_valid,
+        "optimizer_execution_contract_complete": structurally_valid and source_exact,
         "values_independently_reviewed": False,
         "real_frozen_tokenizer_identity_verified": False,
         "optimizer_execution_verified": False,
@@ -244,7 +272,6 @@ def audit_optimizer_preregistration(cfg=None):
         "production_admission": False,
         "population_expansion_admitted": False,
     }
-
 
 def planned_single_example_steps(tok):
     """Source-bound future 36-step plan; no optimizer and no packed examples.
