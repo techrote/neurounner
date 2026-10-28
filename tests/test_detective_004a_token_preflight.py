@@ -158,5 +158,57 @@ class Detective004ATokenPreflightTests(unittest.TestCase):
                 preflight.inspect_local_frozen_tokenizer(folder / "not-found")
 
 
+    def test_single_example_step_plan_covers_frozen_36_without_packing(self):
+        plan = preflight.planned_single_example_steps(self.toy)
+        steps = plan["steps"]
+        self.assertEqual(len(steps), 36)
+        self.assertEqual([item["step_1based"] for item in steps],
+                         list(range(1, 37)))
+        self.assertEqual([item["row_id"] for item in steps],
+                         [row["id"] for row in self.rows])
+        self.assertEqual(len({item["row_id"] for item in steps}), 36)
+        self.assertTrue(plan["no_packing_or_truncation"])
+        self.assertFalse(plan["real_frozen_tokenizer_identity_verified"])
+        self.assertFalse(plan["optimizer_execution_verified"])
+        self.assertFalse(plan["training_admitted"])
+        self.assertTrue(all(0 < item["trained_tokens"] < item["num_tokens"] <= 512
+                            for item in steps))
+
+    def test_claimed_36_step_ledger_is_only_structural_evidence(self):
+        steps = preflight.planned_single_example_steps(self.toy)["steps"]
+        receipt = preflight.audit_claimed_training_steps(self.toy, steps)
+        self.assertEqual(receipt["claimed_step_count"], 36)
+        self.assertEqual(len(receipt["claimed_step_ledger_sha256"]), 64)
+        self.assertTrue(receipt["structurally_exact_single_example_steps"])
+        self.assertFalse(receipt["real_frozen_tokenizer_identity_verified"])
+        self.assertFalse(receipt["actual_optimizer_batches_independently_attested"])
+        self.assertFalse(receipt["adapter_ancestry_verified"])
+        self.assertFalse(receipt["stage_b_training_admitted"])
+        self.assertFalse(receipt["population_expansion_admitted"])
+
+    def test_claimed_step_ledger_refuses_duplicates_order_drift_and_packing(self):
+        original = preflight.planned_single_example_steps(self.toy)["steps"]
+        for name, transform, message in (
+                ("missing", lambda x: x.pop(), "exactly 36"),
+                ("duplicate", lambda x: x.__setitem__(1, copy.deepcopy(x[0])),
+                 "duplicate, missing or reordered"),
+                ("reordered", lambda x: x.reverse(), "duplicate, missing or reordered"),
+                ("mask drift", lambda x: x[0].update(train_mask_sha256="0" * 64),
+                 "per-step"),
+                ("label drift", lambda x: x[0].update(shifted_labels_sha256="f" * 64),
+                 "per-step"),
+                ("packed row", lambda x: x[0].update(num_tokens=x[0]["num_tokens"] + 17),
+                 "per-step"),
+                ("prompt drift", lambda x: x[0].update(prompt_ids_sha256="b" * 64),
+                 "per-step"),
+        ):
+            with self.subTest(name=name):
+                claim = copy.deepcopy(original)
+                transform(claim)
+                with self.assertRaisesRegex(protocol.ProtocolError, message):
+                    preflight.audit_claimed_training_steps(self.toy, claim)
+
+
+
 if __name__ == "__main__":
     unittest.main()
