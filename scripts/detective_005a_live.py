@@ -18,8 +18,11 @@ import re
 import resource
 import tarfile
 import time
+import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 from scripts import detective_005a_fun_screen as screen
 
 LINEAGE_RX = re.compile(r"^G(0[1-9]|1[0-2])$")
