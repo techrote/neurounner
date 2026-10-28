@@ -316,7 +316,7 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
     })
     (out / "README.md").write_text(
         "# DETECTIVE-005A failed-run raw custody\n\n"
-        f"Source commit: \`{head}\`. GitHub Actions run: \`{run_id}\`.\n\n"
+        f"Source commit: `{head}`. GitHub Actions run: `{run_id}`.\n\n"
         "This is a **recovery archive, not a complete experiment**. "
         "Each available lineage artifact is copied byte-for-byte, including "
         "torn JSONL suffixes, error receipts and successful full lineages. "
