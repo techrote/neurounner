@@ -138,6 +138,7 @@ def load_contract()->tuple[dict,dict,dict]:
     if battery.get("experiment")!="DETECTIVE-002B" or len(battery["battery"])!=4:
         raise SourceIntegrityError("002D battery authority drift")
     if cfg["runtime"]!={
+        "os":"ubuntu-24.04",
         "python":"3.12","torch_cpu":"2.14.1+cpu",
         "transformers":"5.20.1",
         "transformers_wheel_sha256":
