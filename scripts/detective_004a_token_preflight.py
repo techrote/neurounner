@@ -34,6 +34,21 @@ LOCAL_TOKENIZER_FILES = (
 )
 MAX_STAGE_B_TOKENS = 512
 
+# Stage A froze a bounded optimizer budget but not enough semantics to make
+# a short LoRA run reproducible. Do NOT silently inherit library defaults.
+# These are FIELD REQUIREMENTS only; this module does not choose values.
+REQUIRED_OPTIMIZER_PREREG_FIELDS = (
+    "training_seed",
+    "batch_size",
+    "gradient_accumulation_steps",
+    "adam_beta1",
+    "adam_beta2",
+    "adam_epsilon",
+    "weight_decay",
+    "lr_scheduler",
+    "warmup_steps",
+)
+
 
 def require(ok, why):
     if not ok:
@@ -193,6 +208,44 @@ def inspect_archive_with_tokenizer(tok, include_arrays=False):
 
 
 
+def audit_optimizer_preregistration(cfg=None):
+    """Expose unresolved Stage-B optimizer semantics; never choose defaults.
+
+    Green Stage-A tests, a valid tokenizer ledger or a 36-row input plan are
+    not authorization to train. A 36-step LoRA is sensitive to initialization,
+    AdamW defaults and scheduler/batch semantics; the frozen config currently
+    omits these fields. This audit makes that omission machine-visible instead
+    of guessing values from whichever library version later executes the run.
+    """
+    if cfg is None:
+        cfg, _ = protocol.load_contract()
+    future = cfg["future_training"]
+    missing = [name for name in REQUIRED_OPTIMIZER_PREREG_FIELDS
+               if name not in future]
+    return {
+        "schema": "detective-004a-optimizer-preregistration-gap-v1",
+        "experiment": cfg["experiment"],
+        "frozen_optimizer": future.get("optimizer"),
+        "frozen_learning_rate": future.get("learning_rate"),
+        "frozen_optimizer_steps": future.get("optimizer_steps"),
+        "frozen_epochs": future.get("epochs"),
+        "frozen_gradient_clip": future.get("gradient_clip"),
+        "frozen_target_modules": future.get("target_modules"),
+        "frozen_rank": future.get("rank"),
+        "frozen_alpha": future.get("alpha"),
+        "frozen_dropout": future.get("dropout"),
+        "missing_preregistered_fields": missing,
+        "optimizer_execution_contract_complete": len(missing) == 0,
+        "values_independently_reviewed": False,
+        "real_frozen_tokenizer_identity_verified": False,
+        "optimizer_execution_verified": False,
+        "adapter_ancestry_verified": False,
+        "stage_b_training_admitted": False,
+        "production_admission": False,
+        "population_expansion_admitted": False,
+    }
+
+
 def planned_single_example_steps(tok):
     """Source-bound future 36-step plan; no optimizer and no packed examples.
 
@@ -227,6 +280,7 @@ def planned_single_example_steps(tok):
             "shifted_labels_sha256": entry["shifted_labels_sha256"],
             "prompt_ids_sha256": entry["prompt_ids_sha256"],
         })
+    optimizer_gap = audit_optimizer_preregistration()
     return {
         "schema": "detective-004a-single-example-step-plan-v1",
         "training_manifest_sha256": report["training_manifest_sha256"],
@@ -234,6 +288,10 @@ def planned_single_example_steps(tok):
         "no_packing_or_truncation": True,
         "real_frozen_tokenizer_identity_verified":
             report["real_frozen_tokenizer_identity_verified"],
+        "optimizer_preregistration_complete":
+            optimizer_gap["optimizer_execution_contract_complete"],
+        "missing_optimizer_preregistered_fields":
+            optimizer_gap["missing_preregistered_fields"],
         "optimizer_execution_verified": False,
         "training_admitted": False,
     }
@@ -266,6 +324,10 @@ def audit_claimed_training_steps(tok, claimed_steps):
         "claimed_step_ledger_sha256": digest,
         "claimed_step_count": len(claimed_steps),
         "structurally_exact_single_example_steps": True,
+        "optimizer_preregistration_complete":
+            plan["optimizer_preregistration_complete"],
+        "missing_optimizer_preregistered_fields":
+            plan["missing_optimizer_preregistered_fields"],
         "real_frozen_tokenizer_identity_verified":
             plan["real_frozen_tokenizer_identity_verified"],
         "actual_optimizer_batches_independently_attested": False,
