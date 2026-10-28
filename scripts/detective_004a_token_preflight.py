@@ -67,7 +67,7 @@ def source_role_ids(turns, tok, special):
     the FINAL assistant completion. The first assistant tool call, if any,
     remains included as trusted historical context in result-use examples.
     """
-    require(isinstance(turns, list) and len(turns) in (3, 5),
+    require(isinstance(turns, list) and len(turns) in (2, 3, 4, 5),
             "unexpected source-native turn count")
     ids, mask, regions = [], [], []
     for turn in turns:
@@ -124,8 +124,8 @@ def inspect_row(row, b3, tok):
     prior_turns = row["turns"][:-1]
     prior_ids, prior_mask, _ = source_role_ids(prior_turns, tok, special)
     prompt_ids = prior_ids + [special["<|assistant|>"]]
-    require(not any(prior_mask[-1:]) if not prior_turns[-1]["role"] == "assistant" else True,
-            "invalid historical prompt mask")  # host result is never a target
+    require(prior_turns[-1]["role"] != "assistant" and prior_mask[-1] is False,
+            "model-only prompt must end after a masked host turn")
     require(prompt_ids[-1] == special["<|assistant|>"] and
             len(prompt_ids) < len(ids) and
             prompt_ids == ids[:len(prompt_ids)],
