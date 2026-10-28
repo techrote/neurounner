@@ -92,7 +92,7 @@ def source_role_ids(turns, tok, special):
     return ids, mask, regions
 
 
-def inspect_row(row, b3, tok):
+def inspect_row(row, b3, tok, include_arrays=False):
     # The committed row must match the frozen source/actual user projection.
     custody.audit_row(row, b3)
     special = b3["special_token_ids"]
@@ -146,17 +146,28 @@ def inspect_row(row, b3, tok):
             "trained label count changed after causal shift")
     canonical = protocol.canonical
     h = lambda value: hashlib.sha256(canonical(value).encode("utf-8")).hexdigest()
-    return {
+    summary = {
         "id": row["id"], "kind": row["kind"], "num_tokens": len(ids),
         "trained_tokens": sum(mask), "shifted_train_labels": sum(y_i != -1 for y_i in y),
         "assistant_turns": sum(x["role"] == "assistant" for x in regions),
         "prompt_tokens": len(prompt_ids), "token_ids_sha256": h(ids),
         "train_mask_sha256": h(mask), "shifted_labels_sha256": h(y),
         "prompt_ids_sha256": h(prompt_ids),
+        "prompt_utf8_sha256": hashlib.sha256(wire_prompt.encode("utf-8")).hexdigest(),
     }
+    if include_arrays:
+        # Real-tokenizer receipts must preserve the original token arrays, not
+        # only irreversible digests. This never loads weights or final tasks.
+        summary["raw_arrays"] = {
+            "full_input_ids": ids, "trained_token_mask": mask,
+            "causal_input_ids": x, "causal_target_labels": y,
+            "model_only_prompt_ids": prompt_ids,
+            "model_only_prompt_utf8": wire_prompt,
+        }
+    return summary
 
 
-def inspect_archive_with_tokenizer(tok):
+def inspect_archive_with_tokenizer(tok, include_arrays=False):
     """Read only committed Stage-A training; no future final tasks or models."""
     cfg, b3 = protocol.load_contract()
     manifest_sha = protocol.verify_archive(protocol.DATASET, cfg, b3)
@@ -165,7 +176,7 @@ def inspect_archive_with_tokenizer(tok):
             (protocol.DATASET / "training.jsonl").read_text(encoding="utf-8").splitlines()]
     require(len(rows) == 36 and len({r["id"] for r in rows}) == 36,
             "committed training cardinality/uniqueness changed")
-    ledger = [inspect_row(row, b3, tok) for row in rows]
+    ledger = [inspect_row(row, b3, tok, include_arrays=include_arrays) for row in rows]
     return {
         "schema": "detective-004a-token-supervision-preflight-v1",
         "training_manifest_sha256": manifest_sha,
@@ -202,7 +213,7 @@ def inspect_local_frozen_tokenizer(folder):
         raise protocol.ProtocolError(
             "token preflight: local tokenizers package required; no downloads attempted") from exc
     tok = Tokenizer.from_file(str(folder / "tokenizer.json"))
-    report = inspect_archive_with_tokenizer(tok)
+    report = inspect_archive_with_tokenizer(tok, include_arrays=True)
     report["real_frozen_tokenizer_identity_verified"] = True
     report["local_tokenizer_file_sha256"] = checks
     # This token-level readback is one PRE-OPTIMIZER gate, NOT Stage-A review,
