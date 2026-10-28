@@ -10,12 +10,14 @@ The earlier `datasets/story-001/` archive is preserved unchanged as superseded e
 - standalone `I`: **64** (2.094%)
 - variant separator lines: **0**
 - duplicate paragraphs: **0**
-- final SHA-256: `ee163eb4ec14d0bb64edf6cd14c96edc143a583f19683d7f038ccf5d7dbb432a`
+- final SHA-256: `e9f010b40d81ab55e0a65c2b331284e5245c272f4142e4bb9558f467135d570f`
 - provider: NVIDIA API (remote backend identity remains unpinned)
 - synthesis/review: `nvidia/nemotron-3.5-bolt-e4b`
 - draft/edit: `nvidia/nemotron-3.5-super-vl-120b-a12b` / `nvidia/nemotron-3.5-super-vl-120b-a12b`
 
 The story is creative fiction, not historical Sprocket canon.
+
+**Hash correction:** review found that the earlier recorded digest `ee163eb4ec14d0bb64edf6cd14c96edc143a583f19683d7f038ccf5d7dbb432a` did not match the committed `compiled/story.md` bytes. The canonical file SHA-256 is `e9f010b40d81ab55e0a65c2b331284e5245c272f4142e4bb9558f467135d570f`. Story text was not changed by this correction.
 
 ## Post-qualification semantic audit
 

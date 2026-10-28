@@ -6,7 +6,7 @@
 **PR:** #44  
 **Successful NVIDIA production run:** [40247262042](https://github.com/techrote/neurounner/actions/runs/40247262042)  
 **Provider archive commit:** `059e9cc72763fae8643d0c5faaee325e5238e0cc`  
-**Accepted post-audit story SHA-256:** `ee163eb4ec14d0bb64edf6cd14c96edc143a583f19683d7f038ccf5d7dbb432a`
+**Accepted post-audit story SHA-256:** `e9f010b40d81ab55e0a65c2b331284e5245c272f4142e4bb9558f467135d570f`
 
 ## Corrective pipeline
 
@@ -31,7 +31,7 @@
 - anchor reset phrase count: **0**
 - exact duplicate paragraphs: **0**
 - paragraph pairs at Jaccard similarity >= 0.28 after semantic audit: **0**
-- final SHA-256: `ee163eb4ec14d0bb64edf6cd14c96edc143a583f19683d7f038ccf5d7dbb432a`
+- final SHA-256: `e9f010b40d81ab55e0a65c2b331284e5245c272f4142e4bb9558f467135d570f`
 
 ## NVIDIA identities
 
@@ -50,5 +50,6 @@
 - Post-qualification semantic audit detected a near-verbatim rescue repetition (maximum paragraph-pair Jaccard 0.966) that the exact-duplicate gate missed.
 - `provenance/post-qualification-audit.json` records the exact three deleted paragraphs, before/after hashes and similarity evidence.
 - No new prose was introduced during the semantic correction.
+- Review on 2026-10-28 found that the previously recorded accepted-story digest `ee163eb4ec14d0bb64edf6cd14c96edc143a583f19683d7f038ccf5d7dbb432a` did not match the committed bytes; the canonical `compiled/story.md` SHA-256 is `e9f010b40d81ab55e0a65c2b331284e5245c272f4142e4bb9558f467135d570f`. This was a bookkeeping correction only; story text did not change.
 
 The incident remains fictional character memory, not historical Sprocket canon.
