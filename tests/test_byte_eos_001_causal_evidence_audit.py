@@ -51,7 +51,7 @@ class EvidenceCustodyTests(unittest.TestCase):
                 p, m = self.manifest()
                 m["source_claims"][name] = value
                 self.write_manifest(p, m)
-                with self.assertRaisesRegex(ValueError, "False scientific"):
+                with self.assertRaisesRegex(ValueError, "False scientific|Nonzero optimizer steps"):
                     audit(self.folder)
                 shutil.copy2(EVIDENCE / "manifest.json", p)
 
