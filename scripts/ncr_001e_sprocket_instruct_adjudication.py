@@ -75,6 +75,55 @@ def check_common_source(record: dict, *, weight_path: tuple[str, ...],
     require(value == HOOK_SHA, "evidence hook SHA differs: " + "/".join(hook_path))
 
 
+def verify_original_receipt_custody() -> None:
+    """Re-audit original Actions bytes before trusting any summary provenance.
+
+    These existing standard-library auditors bind the lossless raw archives to
+    independent fixed file hashes, source revisions, run/job/runner identity,
+    numerical checks and negative diagnostic outcomes. Merely re-reading
+    provenance.json would not detect a modified or missing original receipt.
+    No model, tokenizer, network, heldout fixture or training is invoked.
+    """
+    import ncr_001e_sprocket_receipt_audit as fresh_audit
+    import ncr_001e_sprocket_process_receipt_audit as process_audit
+    import ncr_001e_sprocket_extended_receipt_audit as extended_audit
+    import ncr_001e_sprocket_publisher_receipt_audit as publisher_audit
+    import ncr_001e_sprocket_wire_archive as wire_audit
+    import ncr_001e_pr102_masked_batch_audit as batch_audit
+    import ncr_001e_pr113_rightpad_receipt_audit as right_audit
+
+    fresh = fresh_audit.audit()
+    require(fresh["status"] ==
+            "PASS_ORIGINAL_TRIPLE_SPROCKET_RECEIPT_BYTE_HASH_AND_NUMERIC_READBACK"
+            and fresh["training_authorized"] is False
+            and fresh["source_run_id"] == 40469703065,
+            "fresh model/role original-byte audit did not pass")
+    process = process_audit.audit()
+    require(process["status"] == process_audit.READBACK_STATUS
+            and process["source_integrity_readback_pass"] is True
+            and process["train_authorized"] is False
+            and process["source_run_id"] == 40515083104,
+            "separate-process original-byte audit did not pass")
+    extended = extended_audit.audit()
+    require(extended["status"] == extended_audit.STATUS
+            and extended["training_authorized"] is False
+            and extended["original_real_model_run_id"] == 40544384293,
+            "2048-context original-byte audit did not pass")
+
+    published, publisher_provenance = publisher_audit.load_archive()
+    publisher_audit.verify_receipt(published, publisher_provenance)
+
+    wire_audit.verify_dataset_hash_inventory()
+    wire_files, wire_provenance = wire_audit.load_originals()
+    wire_audit.verify_original(wire_files, wire_provenance)
+
+    batch_files, batch_provenance = batch_audit.load_originals()
+    batch_audit.verify_originals(batch_files, batch_provenance)
+
+    right_files, right_provenance = right_audit.load_originals()
+    right_audit.verify_originals(right_files, right_provenance)
+
+
 def build_report() -> dict:
     protocol = load(PROTOCOL)
     pins = load(PINS)
@@ -110,6 +159,9 @@ def build_report() -> dict:
     batch = load(evidence_path("pr102-masked-batch"))
     right = load(evidence_path("pr113-rightpad-generation"))
     diagnostic = load(DATASET_WIRE)
+
+    # Fail closed on byte-level original custody, not just editable summaries.
+    verify_original_receipt_custody()
 
     # Exact immutable source identity across independent runs.
     check_common_source(fresh,
