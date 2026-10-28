@@ -362,10 +362,43 @@ def audit_untrusted_posthash_claim(tasks, claim, b3):
     }
 
 
+def audit_raw_native_controls(tasks, outputs, lane):
+    """Reject hidden publisher control tokens before any score is interpreted.
+
+    The original frozen scorer allows <|pad|> and <|endoftext|> in prose/result
+    outputs. That can make padding-only restraint count as correct, or let
+    result text carry untrusted control tokens. Use the *pinned* B3 native
+    CONTROL_RX to verify exact placement; never edit the frozen generator.
+    """
+    require(isinstance(outputs, dict) and
+            set(outputs) == {row["id"] for row in tasks},
+            lane + " output IDs incomplete or changed")
+    for row in tasks:
+        task_id, kind = row["id"], row["kind"]
+        raw = outputs[task_id]
+        require(isinstance(raw, str), lane + " raw output is not text: " + task_id)
+        controls = [(match.group(), match.start(), match.end())
+                    for match in native.CONTROL_RX.finditer(raw)]
+        expected = []
+        if kind == "tool_selection" and raw.startswith("<|tool_call|>"):
+            expected.append(("<|tool_call|>", 0, len("<|tool_call|>")))
+        if raw.endswith("<|end|>"):
+            expected.append(("<|end|>", len(raw) - len("<|end|>"), len(raw)))
+        require(controls == expected,
+                lane + " unexpected native control placement: " + task_id)
+
+
 def guarded_admission_gate(tasks, adapted_outputs, base_outputs, b3):
-    """Never treat this structural guard as independent final/adaptor custody."""
+    """Mechanical score only: NOT independent adapter/final/raw-output custody."""
     audit_future_gate_layout(tasks, b3)
-    return protocol.admission_gate(tasks, adapted_outputs, base_outputs, b3)
+    audit_raw_native_controls(tasks, adapted_outputs, "adapted")
+    audit_raw_native_controls(tasks, base_outputs, "root")
+    result = protocol.admission_gate(tasks, adapted_outputs, base_outputs, b3)
+    # The caller can supply arbitrary Python strings. Even a passing raw
+    # structural score never authenticates an executed model or sealed final.
+    return {**result, "raw_output_execution_verified": False,
+            "independent_final_custody_verified": False,
+            "stage_b_evaluation_admitted": False}
 
 def main():
     parser = argparse.ArgumentParser()
