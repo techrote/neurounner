@@ -1,0 +1,103 @@
+name: NCR-001E SmolLM2 2048 source/cache and two-interpreter review
+
+on:
+  pull_request:
+    branches: [review/ncr-001e-smollm2-fresh-cold-cache]
+    paths:
+      - ".github/workflows/ncr-001e-smol-maxctx.yml"
+      - "scripts/ncr_001e_smol_maxctx.py"
+      - "docs/NCR_001_E_SMOL_2048_COLD_GENERATE.md"
+      - "tests/test_ncr_001e_smol_maxctx_source.py"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/source-pins.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001e-smol-maxctx-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  TOKENIZERS_PARALLELISM: "false"
+  HF_HOME: /tmp/ncr001e-smol-maxctx-hf
+  PYTHONDONTWRITEBYTECODE: "1"
+  NCR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  source-and-frozen-host:
+    name: Exact SmolLM2 pinned 2048 cache, HF.generate, two actual Python processes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - name: Check out exact PR head (not synthetic merge)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Check out immutable original SmolLM2 hook PR 83
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ec0d4a80e15f203a06c26ee9c23858f78976370b
+          path: implementation
+          persist-credentials: false
+      - name: Refuse protocol/model/source divergence and syntax errors
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$NCR_HEAD_SHA"
+          test "$(git -C implementation rev-parse HEAD)" = "ec0d4a80e15f203a06c26ee9c23858f78976370b"
+          python3 -m py_compile scripts/ncr_001e_smol_maxctx.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_smol_maxctx_source.py' -v
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          assert p["conformance"]["full_vs_cached_prefill_atol"]==0.0005
+          assert p["conformance"]["full_vs_cached_prefill_rtol"]==0.0005
+          PY
+      - name: Install exact CPU environment
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Producer — fresh original full checkpoint, 512/1024/2048 cache and HF.generate
+        run: python3 scripts/ncr_001e_smol_maxctx.py --phase producer
+      - name: Consumer — DIFFERENT Python interpreter, fresh checkpoint and adapter replay
+        run: python3 scripts/ncr_001e_smol_maxctx.py --phase consumer
+      - name: Cross-validate original phase identities, no-training policy and complete results
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("runtime/ncr-001/smol-maxctx")
+          a=json.loads((root/"producer.json").read_text())
+          b=json.loads((root/"consumer.json").read_text())
+          assert a["status"]==b["status"]=="PASS_PRETRAIN_ONLY"
+          assert a["process"]["pid"]!=b["process"]["pid"]
+          assert a["source"]==b["source"]
+          assert a["source"]["actual_full_weight_sha256"]=="5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
+          assert all(not x["training_authorized"] and not x["training_performed"] and not x["per_model_gate"] for x in (a,b))
+          assert all(x["optimizer_steps"]==0 and not x["heldout_evaluation"] for x in (a,b))
+          for n in (512,1024,2048):
+              assert a["checks"][f"zero_noop_{n}"]["exact"]
+              assert a["checks"][f"active_tail_{n}_prefill_{n-16}_plus_16"]["within"]
+          assert a["checks"]["future_suffix_256"]["max_abs"]==0
+          assert a["checks"]["request_A_B_A_exact"]
+          assert b["checks"]["separate_process_reloaded_active_adapter_exact"]["max_abs"]==0
+          assert b["checks"]["wrong_revision_cold_load_refused"]
+          print("All required exact-source frozen-host pretraining checks PASS; final #72 blocked")
+          PY
+      - name: Retain complete results, model/runner identities, handoff and failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001e-smol-2048-cold-generation-a${{ github.run_attempt }}
+          path: runtime/ncr-001/smol-maxctx/
+          if-no-files-found: warn
+          retention-days: 30
