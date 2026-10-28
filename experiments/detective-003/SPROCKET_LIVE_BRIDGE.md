@@ -189,3 +189,32 @@ After promotion, later CI uses a verifier-only fast path and skips model inferen
 No training, no prompt repair after observing output, no host shell/filesystem/network action, no hidden relevance or learner-final access, no body/model selection and no population expansion.
 
 003D cannot change the historical B3 competence result or admit Sprocket as a production scripter.
+
+
+## Executed outcome — 2026-10-28
+
+Authoritative live run: [Actions 40618669330](https://github.com/techrote/neurounner/actions/runs/40618669330), exact model source `6a2274568a63219211b1e50b70f4bb341f860917`.
+
+Sprocket produced valid publisher-native control syntax but selected an unadmitted tool:
+
+```text
+<|tool_call|>{"name":"get_database","arguments":{"query":"fictitious native tools for the player's terminal"}}<|end|>
+```
+
+Measured outcome:
+
+- 35 generated tokens;
+- native parser: **parsed**;
+- one-call detective normalization: **rejected** (`tool not admitted by game`);
+- exact intended `probe_terminal(camera-console, OXIDATION)`: **false**;
+- 003C transaction: **none**;
+- access grant: **false**;
+- evidence application: **false**;
+- final interview session remained unchanged;
+- outcome `native_or_normalization_rejected`.
+
+This is an **integration PASS under model failure**, not scripter competence. It reproduces the historical B3 pattern where Sprocket retains publisher tool-call syntax but generalizes poorly to unfamiliar detective tool vocabulary.
+
+See [REPORT_003D.md](REPORT_003D.md) and [datasets/detective-003d](../../datasets/detective-003d/).
+
+No training, prompt repair, host execution, hidden relevance/learner-final access, body selection or population expansion occurred.
