@@ -365,7 +365,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
                 assemble.discover_lineages(artifacts)
 
 
-    def test_live_workflow_is_manual_confirmed_and_branch_locked(self):
+    def test_live_workflow_is_manual_confirmed_main_only_and_isolated(self):
         workflow = (
             screen.ROOT / ".github/workflows/detective-005a-live.yml"
         ).read_text(encoding="utf-8")
@@ -373,12 +373,13 @@ class Detective005AFunScreenTests(unittest.TestCase):
         self.assertNotIn("pull_request:", workflow)
         self.assertNotIn("\npush:", workflow)
         self.assertIn("RUN-144-NO-TRAINING", workflow)
-        self.assertIn(
-            "refs/heads/research/detective-005a-fun-screen-20261028",
-            workflow)
+        self.assertIn("refs/heads/main", workflow)
         self.assertIn("max-parallel: 6", workflow)
         self.assertIn("pattern: detective005a-G*", workflow)
-        self.assertIn("refusing stale promotion", workflow.casefold())
+        self.assertIn("TARGET_BRANCH: evidence/detective-005a-${{ github.run_id }}", workflow)
+        self.assertIn("git merge-base --is-ancestor", workflow)
+        self.assertIn("Evidence branch already exists; refusing overwrite.", workflow)
+        self.assertNotIn("TARGET_BRANCH: research/detective-005a-fun-screen-20261028", workflow)
 
 
 if __name__ == "__main__":
