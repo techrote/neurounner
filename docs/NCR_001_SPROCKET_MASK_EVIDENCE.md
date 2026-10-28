@@ -45,3 +45,12 @@ The two initial source-branch Actions executions [40698646280](https://github.co
 ## Gates explicitly still closed
 
 **This is not final #72 acceptance.** Supervised finite loss, post-warmup NCA gradient paths, post-optimizer unchanged frozen base, independent scientific reviewer approval and source-authoritative tool/result/memory argument grammar are still unqualified. No comparison of Sprocket Chat vs Instruct task capability is authorized, and no held-out datasets or evaluation suite were touched. SmolLM2 and void.1 remain independent lanes; BYTE-EOS-001 #92 remains separate. All PRs remain draft. **`train_authorized=false` remains unchanged.**
+
+
+## Archived complete decoded Actions job logs and independent readback CI
+
+All three **complete decoded GitHub Actions job logs** for the original successful frozen-host run, and the initial failed and corrected archival audit job logs, are now stored unabridged under [actions-decoded](../experiments/ncr-001/controls-evidence/sprocket-explicit-mask-20261028/actions-decoded/). The complete original job logs include source download SHA verification, runner and package installation, and artifact custody in addition to the six original raw ZIP members. Each log is its own tracked Git blob; no altered pass/fail verdict was substituted.
+
+The first archival-only [CI #40700438530](https://github.com/techrote/neurounner/actions/runs/40700438530) **failed** before executing its auditor because a new Python negative-test fixture used the reserved keyword `pass` as a named argument. It has an exact decoded failure log committed. Commit [`3688d85db0ebf9cc3ef51cafcb1132c45d4fdfdb`](https://github.com/techrote/neurounner/commit/3688d85db0ebf9cc3ef51cafcb1132c45d4fdfdb) corrected only the fixture syntax; the original six raw physical files, archive SHA, protocol, gates and source-matched original execution were not changed.
+
+The corrected, exact-head [CI #40700518582](https://github.com/techrote/neurounner/actions/runs/40700518582) **PASS**: all six original members hash-verified and audited; 21/21 actual frozen-host mask/generation checks per checkpoint; **13 adversarial receipt-corruption/false-admission mutations rejected**; original source tests 6/6 and shared-decoder lease regressions 10/10 read back. Its full decoded success log is also committed. This is **independent offline evidence readback**, not an independent scientific reviewer judgment, optimizer-based conformance, or a new model run.
