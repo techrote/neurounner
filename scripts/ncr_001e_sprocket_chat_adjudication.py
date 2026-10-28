@@ -60,6 +60,37 @@ def evidence(name: str) -> dict:
     return load(EVIDENCE / name / "provenance.json")
 
 
+def verify_original_shared_sprocket_custody() -> None:
+    """Require byte-exact original Sprocket Chat/Instruct archives, not summaries.
+
+    Original run/runner/model SHA, fail-closed numeric controls and unchanged
+    receipt bytes are revalidated using the existing independent auditors.
+    The Chat-only HF.generate original-byte audit also runs below. No model,
+    tokenizer, sealed fixtures, optimizer or network are invoked here.
+    """
+    import ncr_001e_sprocket_receipt_audit as fresh_audit
+    import ncr_001e_sprocket_process_receipt_audit as process_audit
+    import ncr_001e_sprocket_extended_receipt_audit as extended_audit
+
+    fresh = fresh_audit.audit()
+    require(fresh["status"] ==
+            "PASS_ORIGINAL_TRIPLE_SPROCKET_RECEIPT_BYTE_HASH_AND_NUMERIC_READBACK"
+            and fresh["source_run_id"] == 40469703065
+            and fresh["training_authorized"] is False,
+            "source-fresh original receipt custody failed")
+    process = process_audit.audit()
+    require(process["status"] == process_audit.READBACK_STATUS
+            and process["source_integrity_readback_pass"] is True
+            and process["source_run_id"] == 40515083104
+            and process["train_authorized"] is False,
+            "source cross-process original receipt custody failed")
+    extended = extended_audit.audit()
+    require(extended["status"] == extended_audit.STATUS
+            and extended["original_real_model_run_id"] == 40544384293
+            and extended["training_authorized"] is False,
+            "2048-context original receipt custody failed")
+
+
 def build_report() -> dict:
     protocol = load(PROTOCOL)
     pins = load(PINS)
@@ -89,6 +120,8 @@ def build_report() -> dict:
             and instruct["weight_declared_lfs_sha256_not_downloaded"] == INSTRUCT_SHA
             and WEIGHT_SHA != INSTRUCT_SHA,
             "Chat/Instruct checkpoint distinction changed")
+
+    verify_original_shared_sprocket_custody()
 
     fresh = evidence("sprocket-fresh")
     cross = evidence("sprocket-cross-process")
