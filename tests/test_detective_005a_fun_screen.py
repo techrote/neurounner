@@ -365,6 +365,25 @@ class Detective005AFunScreenTests(unittest.TestCase):
                 assemble.discover_lineages(artifacts)
 
 
+    def test_live_incremental_raw_and_failure_receipt_are_custodied(self):
+        rows = self.synthetic_rows()[:2]
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td)
+            partial = out / "results.partial.jsonl"
+            for row in rows:
+                live.append_completed_raw(partial, row)
+            self.assertEqual(screen.read_results(partial), rows)
+            receipt = live.write_interrupted_receipt(
+                "G01", out, RuntimeError("synthetic failure"))
+            self.assertEqual(receipt["completed_raw_results"], 2)
+            self.assertEqual(receipt["partial_results_sha256"],
+                             screen.sha256_file(partial))
+            self.assertEqual(receipt["status"], "incomplete_artifact_only")
+            self.assertFalse(receipt["durably_promoted"])
+            self.assertFalse(receipt["population_expansion_admitted"])
+            self.assertEqual(
+                screen.read_json(out / "interrupted.json"), receipt)
+
     def test_live_workflow_is_manual_confirmed_main_only_and_isolated(self):
         workflow = (
             screen.ROOT / ".github/workflows/detective-005a-live.yml"
@@ -375,6 +394,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
         self.assertIn("RUN-144-NO-TRAINING", workflow)
         self.assertIn("refs/heads/main", workflow)
         self.assertIn("max-parallel: 6", workflow)
+        self.assertIn("!out/${{ matrix.lineage }}/work/**", workflow)
         self.assertIn("pattern: detective005a-G*", workflow)
         self.assertIn("TARGET_BRANCH: evidence/detective-005a-${{ github.run_id }}", workflow)
         self.assertIn("git merge-base --is-ancestor", workflow)
