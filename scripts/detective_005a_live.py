@@ -116,11 +116,35 @@ def append_completed_raw(path: Path, row: dict) -> None:
         os.fsync(fh.fileno())
 
 
+def intact_partial_raw_rows(path: Path) -> tuple[int, str | None]:
+    """Count the complete JSONL prefix without rewriting an interrupted journal.
+
+    A torn final append must not suppress the failure receipt or cause the
+    already-fsynced raw bytes to be discarded. The SHA covers *all* original
+    bytes, including a corrupt tail; counts exclude any incomplete record.
+    """
+    if not path.is_file():
+        return 0, None
+    count = 0
+    with path.open("rb") as fh:
+        for line in fh:
+            if not line.endswith(b"\\n"):
+                return count, "unterminated_raw_row"
+            try:
+                row = json.loads(line.decode("utf-8"))
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                return count, "unparseable_raw_row"
+            if not isinstance(row, dict):
+                return count, "non_object_raw_row"
+            count += 1
+    return count, None
+
+
 def write_interrupted_receipt(lineage: str, out: Path, error: Exception) -> dict:
     """Make a failed model/load run visible in the always-uploaded artifact."""
     out.mkdir(parents=True, exist_ok=True)
     partial = out / "results.partial.jsonl"
-    preserved = screen.read_results(partial) if partial.is_file() else []
+    preserved_count, journal_problem = intact_partial_raw_rows(partial)
     receipt = {
         "schema": "detective-005a-interrupted-lineage-v1",
         "experiment": "DETECTIVE-005A",
@@ -131,9 +155,10 @@ def write_interrupted_receipt(lineage: str, out: Path, error: Exception) -> dict
             or os.environ.get("GITHUB_SHA")
             or "local"),
         "actions_run_id": os.environ.get("GITHUB_RUN_ID"),
-        "completed_raw_results": len(preserved),
+        "completed_raw_results": preserved_count,
         "partial_results_sha256": (
             file_sha(partial) if partial.is_file() else None),
+        "partial_journal_problem": journal_problem,
         "error_type": type(error).__name__,
         "error_detail": str(error)[:300],
         "optimizer_steps": 0,
