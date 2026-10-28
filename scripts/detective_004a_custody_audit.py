@@ -274,6 +274,35 @@ def audit_future_gate_layout(tasks, b3):
     require(len(seed_prefixes) == 1,
             "future gate families have inconsistent posthash seed prefixes")
 
+    # A plausible 12-row layout is NOT the frozen recipe. A caller could
+    # substitute a different visible evidence asset, request, credential,
+    # expected target or restraint prose while keeping all fields internally
+    # consistent. Reconstruct the *expected* records from the pinned Stage-A
+    # generator with the supplied case IDs' shared 10-hex seed prefix.
+    # This is an in-memory comparison only; it does not derive, materialize
+    # or authenticate an actual adapter-bound final. The independent custodian
+    # must separately prove that this prefix came from the real posthash seed.
+    prefix = next(iter(seed_prefixes))
+    for family, extra_kind in zip(protocol.EXPECTED_FINAL_FAMILIES, extra_kinds):
+        case = protocol.family_data(family, prefix)
+        expected = []
+        for index, op in enumerate(protocol.OPS):
+            expected.append(protocol.make_example(
+                family, case, "tool_selection", index, op))
+        expected.append(protocol.make_example(
+            family, case, extra_kind, 3))
+        for reference in expected:
+            reference["rendered"], reference["loss_char_spans"] = (
+                protocol.render_with_mask(reference["turns"], b3))
+        actual_by_id = {
+            row["id"]: row for row in tasks if row["case_family"] == family
+        }
+        for reference in expected:
+            require(actual_by_id[reference["id"]] == reference,
+                    "future gate task deviates from frozen recipe at " +
+                    reference["id"])
+
+
 
 def guarded_admission_gate(tasks, adapted_outputs, base_outputs, b3):
     """Never treat this structural guard as independent final/adaptor custody."""
