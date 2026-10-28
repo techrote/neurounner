@@ -180,3 +180,44 @@ PR #149 remains review-gated; separate blind relevance issue #121 still blocks
 population expansion. All Stage-A generator/config/source Git blobs, committed
 36-row corpus, manifest, archive hashes and historical model failures remain
 unchanged.
+
+## Native control-token completion boundary (future raw scoring)
+
+A further pre-admission evaluator weakness was found in the frozen Stage-A
+`protocol.score_output`: non-tool restraint and result-continuation checks
+reject a hand-written subset of role/action markers but **do not reject**
+the publisher's native `<|pad|>` or `<|endoftext|>` control tokens.
+Consequently, a raw `<|pad|>` response can count as **1/1 restraint**
+despite containing no meaningful answer; a valid-looking result continuation
+can append `<|endoftext|>` without invalidating its score. The frozen evaluator
+is left byte-identical because its Git blob is bound to the committed Stage-A
+archive, and its historical raw/scoring record must not be rewritten.
+
+The **separate** read-only `audit_raw_native_controls` now checks raw
+completions in **both adapted and exact root-control cohorts** using the
+pinned B3 `native.CONTROL_RX`, not a duplicate informal token list.
+For tool-selection outputs it permits one leading `<|tool_call|>`; for
+all output kinds it permits one terminal `<|end|>`, only in its final
+position. Any unexpected `<|pad|>`, `<|endoftext|>`, duplicated
+yield, hidden role marker or misplaced native control refuses the entire
+`guarded_admission_gate` call **before scoring**. The existing strict
+B3 parser and unchanged source-bound research thresholds remain authoritative
+for actual action semantics.
+
+Three synthetic adversarial test methods demonstrate the historical
+restraint/result false-positive behavior, rejection by the new guard for
+both adapted and root baselines, and acceptance of legitimate trailing
+yield tokens. These cases use only the explicitly **unsealed synthetic**
+test fixture; they never load an adapter, construct a real posthash learner
+final or score actual model generations.
+
+The guarded scorer's return now explicitly marks
+`raw_output_execution_verified=false`,
+`independent_final_custody_verified=false` and
+`stage_b_evaluation_admitted=false`, including when synthetic outputs
+produce `status=research_candidate`. Neither these booleans nor syntactic
+raw control checks authenticate the executed prompts/token IDs or the
+actual frozen-root / trained-adapter lineage. Independent Stage-A review
+and subsequent Stage-B token/runtime/optimizer/final custody gates remain
+mandatory. No optimizer, inference, hidden relevance access or population
+expansion is authorized here.
