@@ -1,0 +1,65 @@
+name: NCR-001E void.1 deterministic #72 adjudication (no model, no training)
+
+on:
+  pull_request:
+    branches:
+      - review/ncr001e-void1-2048-context-20261027
+    paths:
+      - '.github/workflows/ncr-001e-void1-adjudication.yml'
+      - 'scripts/ncr_001e_void1_adjudication.py'
+      - 'tests/test_ncr_001e_void1_adjudication.py'
+      - 'experiments/ncr-001/adjudication/void1-pretrain.json'
+      - 'experiments/ncr-001/protocol.json'
+      - 'experiments/ncr-001/source-pins.json'
+      - 'experiments/ncr-001/evidence-review/void1-utf8-fresh/**'
+      - 'experiments/ncr-001/evidence-review/void1-cross-process/**'
+      - 'experiments/ncr-001/evidence-review/void1-2048/**'
+      - 'scripts/ncr_001e_void_2048_archive_audit.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  adjudicate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Reproduce authoritative void BLOCKED adjudication
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_void1_adjudication.py
+          python3 scripts/ncr_001e_void1_adjudication.py
+          python3 - <<'PY'
+          import json
+          expected=json.load(open('experiments/ncr-001/adjudication/void1-pretrain.json'))
+          actual=json.load(open('runtime/ncr-001/void1-adjudication.json'))
+          assert actual == expected
+          assert actual['per_model_gate'] is False
+          assert actual['source_runtime_pretraining_subgate'] is True
+          assert actual['train_authorized'] is False
+          assert actual['optimizer_steps_observed'] == 0
+          assert actual['byte_tokenizer_scope']['full_2048_context_proven'] is True
+          assert actual['byte_tokenizer_scope']['historical_byte_eos_effect_measured'] is False
+          assert set(actual['blocking_required_checks']) == {
+              'base_weight_unchanged_after_step',
+              'nonzero_adapter_gradient_after_warmup',
+              'finite_state_and_loss',
+          }
+          print('AUTHORITATIVE_VOID1_GATE',actual['adjudication'])
+          print('FULL_2048_SOURCE_RUNTIME_PASS; learning gate blocked; no training')
+          PY
+      - name: Negative false-PASS and EOS reinterpretation tests
+        run: |
+          python3 -m unittest discover -s tests \
+            -p 'test_ncr_001e_void1_adjudication.py' -v
+      - name: Retain deterministic report
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001e-void1-adjudication
+          path: runtime/ncr-001/void1-adjudication.json
+          if-no-files-found: error
+          retention-days: 30
