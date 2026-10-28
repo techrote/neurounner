@@ -1,0 +1,183 @@
+name: DETECTIVE-005A live 36-villager fun screen
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type RUN-144-NO-TRAINING to execute the 36×4 source-bound screen'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: detective-005a-live-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    if: >-
+      ${{ inputs.confirm == 'RUN-144-NO-TRAINING' &&
+          github.ref == 'refs/heads/research/detective-005a-fun-screen-20261028' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    outputs:
+      lineages: ${{ steps.matrix.outputs.lineages }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Reverify exact source protocol
+        run: |
+          python3 -m py_compile \
+            scripts/detective_005a_fun_screen.py \
+            scripts/detective_005a_live.py \
+            scripts/detective_005a_assemble.py
+          python3 scripts/detective_005a_fun_screen.py
+          python3 -m unittest tests.test_detective_005a_fun_screen -v
+      - name: Compile 12-lineage matrix
+        id: matrix
+        run: |
+          python3 - <<'PY'
+          import json,os,subprocess
+          lineages=[f"G{i:02d}" for i in range(1,13)]
+          for lineage in lineages:
+              subprocess.run(
+                  ["python3","scripts/detective_005a_live.py",
+                   "--lineage",lineage],
+                  check=True,stdout=subprocess.DEVNULL)
+          with open(os.environ["GITHUB_OUTPUT"],"a") as fh:
+              fh.write("lineages="+json.dumps(lineages,separators=(",",":"))+"\n")
+          print("DETECTIVE-005A lineages:",",".join(lineages))
+          PY
+
+  screen:
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        lineage: ${{ fromJSON(needs.plan.outputs.lineages) }}
+    env:
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
+      TOKENIZERS_PARALLELISM: "false"
+      DETECTIVE_HEAD_SHA: ${{ github.sha }}
+      LINEAGE: ${{ matrix.lineage }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install proven CPU inference stack
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu \
+            "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" \
+            "peft==0.21.2" \
+            "huggingface_hub==0.36.0"
+      - name: Download exactly three frozen SFT siblings
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "downloads/$LINEAGE"
+          gh release download village-001-sft-v1 \
+            --repo techrote/neurounner \
+            --pattern "village-001-sft-V-$LINEAGE-*-smollm2-135m-lora.tar.gz" \
+            --dir "downloads/$LINEAGE"
+          test "$(find "downloads/$LINEAGE" -maxdepth 1 -name '*.tar.gz' -type f | wc -l)" -eq 3
+      - name: Run three source-matched villagers on four prompts each
+        run: |
+          python3 scripts/detective_005a_live.py \
+            --lineage "$LINEAGE" \
+            --run \
+            --out "out/$LINEAGE" \
+            --download-dir "downloads/$LINEAGE"
+      - name: Independent lineage artifact readback
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from scripts import detective_005a_fun_screen as screen
+          from scripts import detective_005a_assemble as assemble
+          lineage=os.environ["LINEAGE"]
+          cfg=screen.load_contract()
+          manifest,rows=assemble.read_lineage(cfg,lineage,Path("out")/lineage)
+          assert len(rows)==12
+          assert manifest["optimizer_steps"]==0
+          assert manifest["model_judge_calls"]==0
+          print(lineage,"raw results:",len(rows))
+          PY
+      - name: Preserve every lineage result
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective005a-${{ matrix.lineage }}
+          path: out/${{ matrix.lineage }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  assemble:
+    needs: [plan, screen]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    env:
+      SCREEN_HEAD_SHA: ${{ github.sha }}
+      TARGET_BRANCH: research/detective-005a-fun-screen-20261028
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: detective005a-G*
+          path: artifacts
+      - name: Assemble all 144 raw outputs and blank fun packet
+        run: |
+          rm -rf staged/detective-005a
+          python3 scripts/detective_005a_assemble.py \
+            --artifacts artifacts \
+            --out staged/detective-005a
+          python3 scripts/detective_005a_assemble.py \
+            --verify staged/detective-005a
+      - name: Preserve complete assembled evidence as artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective005a-complete-${{ github.run_id }}
+          path: staged/detective-005a
+          if-no-files-found: error
+          retention-days: 30
+      - name: Promote verified raw evidence to the research branch
+        run: |
+          set -euo pipefail
+          remote_sha=$(git ls-remote --heads origin "refs/heads/$TARGET_BRANCH" | cut -f 1)
+          if [ "$remote_sha" != "$SCREEN_HEAD_SHA" ]; then
+            echo "Research branch moved during live screen; refusing stale promotion."
+            exit 1
+          fi
+          test ! -e datasets/detective-005a
+          mkdir -p datasets/detective-005a
+          cp -a staged/detective-005a/. datasets/detective-005a/
+          python3 scripts/detective_005a_assemble.py \
+            --verify datasets/detective-005a
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add datasets/detective-005a
+          git commit -m "DETECTIVE-005A: promote 36-villager raw fun-screen evidence"
+          git push origin HEAD:"refs/heads/$TARGET_BRANCH"
