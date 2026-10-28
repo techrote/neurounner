@@ -6,6 +6,7 @@ on:
       - "experiments/detective-005/**"
       - "scripts/detective_005a_fun_screen.py"
       - "scripts/detective_005a_live.py"
+      - "scripts/detective_005a_assemble.py"
       - "tests/test_detective_005a_fun_screen.py"
       - "RAG.md"
       - ".github/workflows/detective-005a-protocol.yml"
@@ -24,7 +25,7 @@ jobs:
           persist-credentials: false
       - name: Compile protocol
         run: |
-          python3 -m py_compile scripts/detective_005a_fun_screen.py scripts/detective_005a_live.py tests/test_detective_005a_fun_screen.py
+          python3 -m py_compile scripts/detective_005a_fun_screen.py scripts/detective_005a_live.py scripts/detective_005a_assemble.py tests/test_detective_005a_fun_screen.py
       - name: Run DETECTIVE-005A tests
         run: |
           python3 -m unittest tests.test_detective_005a_fun_screen -v
