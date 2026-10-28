@@ -169,15 +169,20 @@ def load_actual(variant: str, spec: dict, pin: dict, formatter):
                                     revision=spec["revision"],
                                     local_files_only=True))
         actual = digest(path)
-        key = name.rsplit("/", 1)[-1].replace(".", "_")
+        key = {
+            "config.json": "config_sha256",
+            "tokenizer.json": "tokenizer_sha256",
+            "tokenizer_config.json": "tokenizer_config_sha256",
+            "special_tokens_map.json": "special_tokens_map_sha256",
+        }.get(name.rsplit("/", 1)[-1])
         if name == "README.md":
             expected = CARD_SHA256
         elif name == weight:
             expected = spec["weight_sha256"]
         elif variant == "chat":
-            expected = pin["chat_" + key + "_sha256"]
+            expected = pin["chat_" + key]
         else:
-            expected = pin[key + "_sha256"]
+            expected = pin[key]
         hashes[name] = {"sha256": actual, "bytes": path.stat().st_size}
         require(actual == expected, "Pinned HF file hash mismatch: " + name)
         if name == weight:
