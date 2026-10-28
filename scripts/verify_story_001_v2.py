@@ -27,22 +27,22 @@ def sha256_text_without_outer_ws(path: Path) -> str:
 
 
 def word_count(text: str) -> int:
-    return len(re.findall(r"\\b[\\w’'-]+\\b", text, flags=re.UNICODE))
+    return len(re.findall(r"\b[\w’'-]+\b", text, flags=re.UNICODE))
 
 
 def standalone_i_count(text: str) -> int:
-    return len(re.findall(r"(?<![\\w’'])I(?![\\w’'])", text))
+    return len(re.findall(r"(?<![\w’'])I(?![\w’'])", text))
 
 
 def paragraph_list(text: str) -> list[str]:
-    return [p.strip() for p in re.split(r"\\n\\s*\\n", text) if p.strip()]
+    return [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
 
 
 def duplicate_paragraph_count(text: str) -> int:
     seen: set[str] = set()
     duplicates = 0
     for paragraph in paragraph_list(text):
-        normalized = re.sub(r"\\s+", " ", paragraph).lower()
+        normalized = re.sub(r"\s+", " ", paragraph).lower()
         if normalized.startswith("#") and len(normalized.split()) < 12:
             continue
         if normalized in seen:
@@ -53,7 +53,7 @@ def duplicate_paragraph_count(text: str) -> int:
 
 
 def jaccard_tokens(paragraph: str) -> set[str]:
-    return set(re.findall(r"[\\w’'-]+", paragraph.lower(), flags=re.UNICODE))
+    return set(re.findall(r"[\w’'-]+", paragraph.lower(), flags=re.UNICODE))
 
 
 def near_duplicate_pairs(text: str, threshold: float) -> list[dict]:
@@ -170,7 +170,7 @@ def verify_archive(archive: Path) -> None:
 
     words = word_count(story)
     i_count = standalone_i_count(story)
-    separators = len(re.findall(r"(?m)^\\s*---+\\s*$", story))
+    separators = len(re.findall(r"(?m)^\s*---+\s*$", story))
     anchor_resets = len(re.findall(r"the smell hit me first", story, flags=re.I))
     duplicates = duplicate_paragraph_count(story)
     acceptance = config["acceptance"]
