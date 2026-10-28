@@ -1,0 +1,150 @@
+name: BYTE-EOS-001 original causal-shift evidence audit (no model)
+
+on:
+  pull_request:
+    branches: [review/byte-eos-001-causal-label-shift-20261028]
+    paths:
+      - ".github/workflows/byte-eos-001-causal-evidence-readback.yml"
+      - "scripts/byte_eos_001_causal_evidence_audit.py"
+      - "tests/test_byte_eos_001_causal_evidence_audit.py"
+      - "experiments/ncr-001/byte-eos-001/causal-shift-evidence/**"
+      - "docs/BYTE_EOS_001_CAUSAL_EVIDENCE.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: byte-eos-causal-original-readback-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  exact-original-source-evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Audit immutable original logs, original ZIP bytes and false-admission sentinels
+        id: audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/byte-eos-001-causal-readback
+          {
+            echo "PR_HEAD=$(git rev-parse HEAD)"
+            test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+            test "$(git hash-object experiments/ncr-001/protocol.json)" = "dddfb416b765ef6cf23e1cdd326f8834f9f1417c"
+            test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+            test "$(sha256sum experiments/ncr-001/byte-eos-001/receipt.json | cut -d' ' -f1)" = "6c611bdc0f021f6d9e2fa39d91b7e141d937844f2b849f9ae437151254572922"
+            python3 -m py_compile scripts/byte_eos_001_causal_evidence_audit.py tests/test_byte_eos_001_causal_evidence_audit.py
+            python3 scripts/byte_eos_001_causal_evidence_audit.py
+            python3 -m unittest discover -s tests -p 'test_byte_eos_001_causal_evidence_audit.py' -v
+          } 2>&1 | tee runtime/byte-eos-001-causal-readback/offline-original-audit.log
+
+      - name: Fresh independent download of both original Actions ZIP containers
+        id: github
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/byte-eos-001-causal-readback/fresh
+          for id in 12834486813 12833498055; do
+            curl --fail --silent --show-error --location --retry 2 --connect-timeout 20 \
+              --header "Authorization: Bearer ${GH_TOKEN}" \
+              --header "Accept: application/vnd.github+json" \
+              --header "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${id}/zip" \
+              --output "runtime/byte-eos-001-causal-readback/fresh/artifact-${id}.zip"
+            test -s "runtime/byte-eos-001-causal-readback/fresh/artifact-${id}.zip"
+          done
+          python3 - <<'PY' 2>&1 | tee runtime/byte-eos-001-causal-readback/actions-byte-compare.log
+          import base64, hashlib, io, json, tarfile
+          from pathlib import Path
+          from scripts.byte_eos_001_causal_evidence_audit import audit, EVIDENCE
+          m=json.loads((EVIDENCE/"manifest.json").read_text())
+          bundle=base64.b64decode(
+              (EVIDENCE/"original-actions-zipset.tar.xz.base64").read_text().strip(),
+              validate=True)
+          fresh=Path("runtime/byte-eos-001-causal-readback/fresh")
+          mapping={12834486813:40728812489,12833498055:40728952524}
+          with tarfile.open(fileobj=io.BytesIO(bundle),mode="r:xz") as t:
+              for artifact_id,run_id in mapping.items():
+                  name=f"byte-eos-001-causal-shift-run{run_id}.zip"
+                  archive=t.extractfile(name).read()
+                  current=(fresh/f"artifact-{artifact_id}.zip").read_bytes()
+                  expected=next(r["artifact_sha256"] for r in m["original_runs"]
+                                if r["run_id"]==run_id)
+                  assert current==archive,(artifact_id,"Git ZIP != Actions ZIP")
+                  assert hashlib.sha256(current).hexdigest()==expected
+                  print("EXACT_ORIGINAL_ACTIONS_AND_GIT_ZIP",run_id,
+                        artifact_id,len(current),expected)
+          out=audit()
+          assert out["train_authorized"] is False
+          assert out["final_72_conformance_pass"] is False
+          print("FRESH_READBACK_PASS__NO_MODEL_OR_TRAINING")
+          PY
+
+      - name: Create final or failed exact-source readback receipt
+        if: always()
+        env:
+          OFFLINE_OUTCOME: ${{ steps.audit.outcome }}
+          LIVE_OUTCOME: ${{ steps.github.outcome }}
+        shell: bash
+        run: |
+          mkdir -p runtime/byte-eos-001-causal-readback
+          python3 - <<'PY'
+          import hashlib,json,os,platform,subprocess
+          from pathlib import Path
+          root=Path("runtime/byte-eos-001-causal-readback")
+          def sha(path):
+              p=Path(path)
+              return hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else None
+          head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          assert head==os.environ["EXPECTED_HEAD"]
+          receipt={
+              "schema":"byte-eos-001-causal-original-run-readback-v1",
+              "status":"SOURCE_ONLY_READBACK__NO_SCIENTIFIC_ADMISSION",
+              "offline_outcome":os.environ.get("OFFLINE_OUTCOME"),
+              "fresh_actions_outcome":os.environ.get("LIVE_OUTCOME"),
+              "source_checkout_head":head,
+              "synthetic_event_merge_sha":os.environ.get("GITHUB_SHA"),
+              "run_id":os.environ.get("GITHUB_RUN_ID"),
+              "run_attempt":os.environ.get("GITHUB_RUN_ATTEMPT"),
+              "runner_name":os.environ.get("RUNNER_NAME"),
+              "runner_os":os.environ.get("RUNNER_OS"),
+              "python":platform.python_version(),
+              "processor":platform.processor(),
+              "optimizer_steps":0,
+              "model_executed":False,
+              "train_authorized":False,
+              "heldout_opened":False,
+              "comparative_training_performed":False,
+              "full_72_conformance_pass":False,
+              "sha256":{
+                  "original_git_manifest":sha("experiments/ncr-001/byte-eos-001/causal-shift-evidence/manifest.json"),
+                  "original_zipset_base64":sha("experiments/ncr-001/byte-eos-001/causal-shift-evidence/original-actions-zipset.tar.xz.base64"),
+                  "offline_audit_log":sha(root/"offline-original-audit.log"),
+                  "fresh_actions_compare_log":sha(root/"actions-byte-compare.log"),
+                  "auditor":sha("scripts/byte_eos_001_causal_evidence_audit.py"),
+              },
+          }
+          (root/"readback-receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,indent=2,sort_keys=True))
+          PY
+      - name: Archive successes, failures and downloaded original ZIPs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: byte-eos-001-causal-original-readback-a${{ github.run_attempt }}
+          path: runtime/byte-eos-001-causal-readback/
+          retention-days: 30
+          if-no-files-found: warn
