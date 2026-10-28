@@ -73,3 +73,28 @@ Any frozen-source, wheel, or weight mismatch is a hard CI failure.
 A PASS would show that 002C's failure was the harness/API return-shape handling. It would not erase 002B or 002C; all three remain historical evidence for their frozen harnesses.
 
 Durable evidence target: `datasets/detective-002d/`, with independent standard-library readback and an evidence-ready no-rerun fast path.
+
+
+## Executed outcome — 2026-10-28
+
+Authoritative run: [Actions 40611095538](https://github.com/techrote/neurounner/actions/runs/40611095538), exact pre-evidence source `0fd994ea8af148c5cc5ba26503313632dfa4cea9`.
+
+**Outcome: `runtime_compatibility_pass`.**
+
+- exact Transformers 5.20.1 wheel SHA PASS;
+- text render PASS for B01–B04;
+- explicit `return_dict=True` tokenization PASS, mapping type `BatchEncoding`, keys `attention_mask` + `input_ids`;
+- frozen model weight SHA/bytes PASS;
+- native float32 model load PASS;
+- all four prompts completed, 74 generated tokens total, no truncation;
+- AMD EPYC 7763, four CPU threads, model load 0.512 s, ~1.89 GiB current RSS after load, ~2.54 GiB peak RSS;
+- mean completion-wall throughput ~9.08 tok/s;
+- B02 mutated supplied `03:14` memory to `03:15` with 95% confidence;
+- B03 correctly changed `03:14` to stamped-record `03:41`;
+- B04 answered simply `No.`;
+- optimizer/API/relevance access: 0/0/false;
+- body selection/license clearance/population expansion: false/false/false.
+
+This confirms the 002C failure was the v5 return-shape harness bug. 002B/002C remain historical evidence. See [REPORT_002D.md](REPORT_002D.md).
+
+The evidence-ready branch must now run verification-only CI; live requalification must be skipped.
