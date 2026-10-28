@@ -151,7 +151,7 @@ class RelevanceReviewTests(unittest.TestCase):
         # Direct equality is the core custody check; don't mutate repository.
         self.assertNotEqual(changed["items"],packet["items"])
 
-    def test_no_repo_rating_file_or_self_scoring_exists(self):
+    def test_reserved_blind_workspace_has_no_filled_ratings_or_self_scoring(self):
         review_root=r.ROOT/"experiments/detective-001/relevance-review"
         if review_root.exists():
             names={p.name for p in review_root.iterdir() if p.is_file()}
@@ -162,7 +162,7 @@ class RelevanceReviewTests(unittest.TestCase):
             self.assertNotIn(forbidden,source)
 
 
-    def test_external_user_supplied_ratings_20261028(self):
+    def test_withdrawn_external_user_supplied_ratings_20261028(self):
         # External human-supplied scores, copied without changing any rating.
         # This test never scores a model or admits population expansion.
         root=r.ROOT/"experiments/detective-001/independent-relevance-review"
@@ -185,6 +185,21 @@ class RelevanceReviewTests(unittest.TestCase):
         self.assertFalse(result["g09"]["nonregression_pass"])
         self.assertFalse(result["candidate_set_relevance_gate"])
         self.assertFalse(result["population_expansion_admitted_by_this_review"])
+        status=r.read(root/"review-status.json")
+        self.assertEqual(status["status"],"withdrawn")
+        self.assertEqual(status["reason_code"],"reviewer-rubric-misapplication")
+        self.assertFalse(status["current_valid_external_relevance_review"])
+        self.assertFalse(status["corrected_scores_present"])
+        self.assertTrue(status["hidden_mapping_may_not_be_used_to_fill_replacement_scores"])
+        self.assertEqual(status["original_rating_file_sha256"]["C2"],r.sha_file(c2))
+        self.assertEqual(status["original_rating_file_sha256"]["C3"],r.sha_file(c3))
+        self.assertFalse(status["population_expansion_admitted"])
+        self.assertFalse(status["training_admitted"])
+        self.assertFalse(status["new_inference_performed"])
+        names=sorted(p.name for p in root.iterdir() if p.is_file())
+        self.assertEqual(names,[
+            "README.md","c2-ratings.json","c3-ratings.json",
+            "relevance-summary.json","review-status.json"])
 
 
 if __name__=="__main__":
