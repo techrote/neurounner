@@ -6,6 +6,7 @@ This file is the first retrieval/signposting document for agents, RAG systems an
 
 - **[Dataset filing system](docs/DATASET_FILING_SYSTEM.md)** — mandatory rules for preserving prompts, raw generations, provider responses, lineage, repairs, hashes and Actions-artifact promotion.
 - **[Dataset index](datasets/README.md)** — durable corpora currently committed to the repository.
+- **[DETECTIVE-004A training archive](datasets/detective-004a/README.md)** — 36 deterministic synthetic source-native Sprocket detective-scripter examples with exact 28 October 2026 offline CI/promoted raw records and SHA inventory; no training, final materialization, or production admission.
 - **[BABBLE-001 archive](datasets/babble-001/README.md)** — first fully filed babble/personality dataset: guides, 48 Sprocket histories, NVIDIA compiler history and 12 derived packets.
 - **[BABBLE-002 archive](datasets/babble-002/README.md)** — 1,200 expanded personality-training examples across 12 personas, paired generic negatives, trait lineage and raw NVIDIA expansion history.
 - **[TRAIN-003 corpus](datasets/train-003/README.md)** — 896 reviewed semantic mechanical-compiler examples with balanced four-way decisions and family-disjoint held-out cases.
