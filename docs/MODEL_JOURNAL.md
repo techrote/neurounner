@@ -1293,3 +1293,25 @@ A preceding run completed optimizer work but failed during post-training provena
 The narrow coexistence hypothesis is supported: explicit sincere false memory and protective deliberate lying coexist in one 135M cartridge. However the repair redistributed an error from corrupted-memory retention into speculation resistance rather than improving the total.
 
 **Disposition:** locked C3 gate **FAIL** because `total_improved` is false. Stop training; do not relax the gate. Next bottleneck is independent old-task relevance, not another immediate continuation.
+
+---
+
+# 2026-10-28 — DETECTIVE-002B compact-body matched runtime smoke
+
+**Authoritative run:** `40608478076`  
+**Source:** `16aacece5ca129439d0475492b8980207bfe3ba4`  
+**Shape:** seven independent Ubuntu runners, four Torch CPU threads/body, native float32 weights, four fixed <=64-token dialogue probes, no training.
+
+| Body | Host | Completion tok/s | Peak RSS GiB | Truncation | Runtime |
+|---|---|---:|---:|---:|---|
+| SmolLM2-135M-Instruct | EPYC 7763 | 17.78 | 1.20 | 3/4 | PASS |
+| SmolLM2-360M-Instruct | EPYC 7763 | 9.48 | 2.39 | 0/4 | PASS |
+| Sprocket-500M Chat | EPYC 9V74 | 6.80 | 3.24 | 4/4 | PASS |
+| Sprocket-500M Instruct | EPYC 9V45 | 7.55 | 3.25 | 3/4 | PASS |
+| Qwen2.5-0.5B-Instruct | EPYC 7763 | 7.66 | 3.27 | 0/4 | PASS |
+| Qwen3-0.6B | EPYC 7763 | 6.57 | 4.74 | 0/4 | PASS |
+| LFM2.5-350M | pre-load | — | 0.53 process peak | — | FAIL |
+
+**Observed behavior:** Smol135 was fastest but drifted from "account" into invented customer-account fields on the contradiction probe. Smol360 was concise but often repeated supplied facts without an explicit epistemic update. Sprocket Chat looped and hit every decode cap; root Instruct was more structured but invented unsupported scene detail. Qwen2.5 changed supplied memory `03:14` to `03:25` and expressed high certainty, then correctly preferred the stamped `03:41` on the next probe. Qwen3 gave the cleanest explicit memory-vs-proof qualifier in B02 but then said the physical contradiction caused no change. LFM350's exact source verified but tokenizer construction failed under the frozen Transformers 4.57.6 stack.
+
+**Disposition:** runtime characterization only. No body selection/training/population admission. LFM runtime compatibility requires a separate preregistered stack study if pursued. Cross-host Sprocket throughput is not a precise checkpoint comparison.
