@@ -87,7 +87,7 @@ class Smol2048OriginalReceiptTests(unittest.TestCase):
 
     def test_false_cross_process_or_provenance_refuses(self):
         for path,value in (
-            (("process","pid"),self.cons["process"]["pid"]),
+            (("process","pid"),self.prod["process"]["pid"]),
             (("source","hook_commit"),"wrong_hook"),
             (("source","actual_full_weight_sha256"),"chat-not-smol"),
             (("checks","wrong_revision_cold_load_refused"),False),
