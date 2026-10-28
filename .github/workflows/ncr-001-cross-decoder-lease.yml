@@ -94,7 +94,7 @@ jobs:
                "test_log_has_OK":("OK" in log and "Ran 10 tests in" in log),
                "limits":["not an original frozen HF execution","no optimizer or held-out",
                          "direct unwrapped model use and cross-process calls not protected"]}
-          (root/"receipt.json").write_text(json.dumps(obj,indent=2,sort_keys=True)+"\\n")
+          (root/"receipt.json").write_text(json.dumps(obj,indent=2,sort_keys=True)+chr(10))
           print(json.dumps(obj,indent=2,sort_keys=True))
           PY
       - name: Preserve source-bound synthetic evidence on success/failure
