@@ -29,16 +29,16 @@ DETECTIVE-001R1 #121 remains separately reviewer-blocked: no opaque relevance ra
 ## Future Stage-B scoring-layout guard (no final opened)
 
 A distinct pre-admission failure mode was identified in the **frozen** Stage-A
-\`protocol.admission_gate\` helper: \`len(final_tasks) == 12\` together with
+`protocol.admission_gate` helper: `len(final_tasks) == 12` together with
 matching output-key *sets* does **not** imply 12 unique task IDs. A repeated
 successful tool task can be counted twice while its omitted counterpart is not
 detected. The existing helper is retained unchanged because its Git blob is
 recorded in the durable training manifest; modifying it would invalidate the
 source-bound 36-row archive.
 
-The secondary \`scripts/detective_004a_custody_audit.py\` now exposes
-\`audit_future_gate_layout(tasks, b3)\` and
-\`guarded_admission_gate(tasks, adapted_outputs, base_outputs, b3)\`.
+The secondary `scripts/detective_004a_custody_audit.py` now exposes
+`audit_future_gate_layout(tasks, b3)` and
+`guarded_admission_gate(tasks, adapted_outputs, base_outputs, b3)`.
 The guard checks exactly 12 distinct IDs, the 9/1/1/1 task-kind counts, the
 three frozen final families, the per-family operation/extra-task slots, the
 same 10-hex-character posthash case prefix across families, the model-visible
