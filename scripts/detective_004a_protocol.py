@@ -247,7 +247,6 @@ def make_example(family, case, kind, index, op=None):
         target = {"expected_markers": expected, "forbidden_markers": forbidden}
     else:
         raise ProtocolError("invalid task kind")
-    b3 = load_contract()[1] if False else None  # validated by caller's render
     return {"id": family + "-" + kind + "-" + str(index).zfill(2),
             "case_family": family, "kind": kind, "view": view,
             "turns": turns, "target": target}
@@ -345,8 +344,13 @@ def write_archive(folder, cfg, b3):
 
 def verify_archive(folder, cfg, b3):
     payload, manifest = training_archive(cfg, b3)
-    assert_exact((folder / "training.jsonl").read_bytes() == payload, "training archive drift")
-    assert_exact((folder / "manifest.json").read_bytes() == manifest, "training manifest drift")
+    try:
+        train_bytes = (folder / "training.jsonl").read_bytes()
+        manifest_bytes = (folder / "manifest.json").read_bytes()
+    except OSError as exc:
+        raise ProtocolError("training archive absent or unreadable") from exc
+    assert_exact(train_bytes == payload, "training archive drift")
+    assert_exact(manifest_bytes == manifest, "training manifest drift")
     return sha256_bytes(manifest)
 
 
