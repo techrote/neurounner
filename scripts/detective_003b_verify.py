@@ -6,10 +6,12 @@ import argparse
 import hashlib
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 from scripts import detective_003a_session as session_api
 from scripts import detective_003b_live_session as live
