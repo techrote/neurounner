@@ -245,7 +245,9 @@ def validate_result(cfg: dict, row: dict) -> dict:
             response["elapsed_seconds"] >= 0,
             "invalid raw response record")
     require(isinstance(row["runner"], dict), "runner receipt required")
-    obs = mechanical_observations(\n        cfg, response["text"] + "\\n" + response["raw_with_special_tokens"])\n    return {
+    obs = mechanical_observations(
+        cfg, response["text"] + "\n" + response["raw_with_special_tokens"])
+    return {
         "member_id": member_id, "prompt_id": prompt_id,
         "response_sha256": sha256_bytes(response["text"].encode("utf-8")),
         **obs,
