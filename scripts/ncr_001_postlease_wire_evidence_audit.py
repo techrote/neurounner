@@ -229,7 +229,7 @@ def verify_original_host(receipt: dict) -> dict:
 def git_blob_sha(data: bytes) -> str:
     """Git SHA-1 blob identity over *raw bytes*, not a decoded/normalized log."""
     return hashlib.sha1(b"blob " + str(len(data)).encode("ascii")
-                        + b"\\0".replace(b"\\\\0", b"\\0") + data).hexdigest()
+                        + b"\x00" + data).hexdigest()
 
 
 def verify_decoded_job_logs(evidence_dir: Path = ROOT / REL) -> dict:
