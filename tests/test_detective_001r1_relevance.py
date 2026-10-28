@@ -206,10 +206,20 @@ class RelevanceReviewTests(unittest.TestCase):
         self.assertFalse(reaction["training_admitted"])
         self.assertFalse(reaction["population_expansion_admitted"])
         self.assertFalse(reaction["scores_modified"])
+        policy=r.read(root/"policy-decision.json")
+        self.assertEqual(policy["r1_gate_status"],"retired")
+        self.assertFalse(policy["r1_blocks_population_expansion"])
+        self.assertFalse(policy["population_expansion_admitted_by_this_decision"])
+        self.assertTrue(policy["historical_r1_aggregator_preserved"])
+        self.assertTrue(policy["historical_scores_preserved"])
+        self.assertEqual(policy["historical_scores_reclassified_as"],"subjective_gameplay_reaction")
+        self.assertIn("source_and_lineage_custody",policy["remaining_authoritative_gates"])
+        self.assertIn("protected_fact_and_evidence_leakage",policy["remaining_authoritative_gates"])
         names=sorted(p.name for p in root.iterdir() if p.is_file())
         self.assertEqual(names,[
             "README.md","c2-ratings.json","c3-ratings.json",
-            "gameplay-reaction-summary.json","relevance-summary.json","review-status.json"])
+            "gameplay-reaction-summary.json","policy-decision.json",
+            "relevance-summary.json","review-status.json"])
 
 
 if __name__=="__main__":
