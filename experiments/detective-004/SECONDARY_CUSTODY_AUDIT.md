@@ -61,3 +61,35 @@ and must use the guarded entry point before considering any evaluator result.
 A standalone score from the unguarded helper is insufficient. Independent
 Stage-A approval remains missing; no training or population expansion is
 authorized by this addition.
+
+## Source-native model-only prompt projection (answer contamination guard)
+
+The Stage-A row intentionally retains the gold final assistant content, the full
+`rendered` supervised training wire, and `target` labels. **None of those
+artifacts is a valid inference prompt for a future held-out evaluation.**
+Passing an entire final-task object or its `rendered` field directly to the
+model would expose the correct answer before scoring.
+
+The new read-only `model_input_prefix(row, b3)` derives the **model-only prompt**
+from `turns[:-1]` using the exact pinned DETECTIVE-001B3
+`native.render_text` implementation. It insists that the prompt ends with
+the publisher's dangling `<|assistant|>` cue; equals the full audited wire
+only up to the **last assistant character span start**; embeds the exact
+game-visible user projection and pinned system manifest; and contains
+**none of the target assistant completion**. Result-continuation tasks
+deliberately include the earlier synthetic assistant tool call followed by
+the host-owned tool result, but never the subsequent expected assistant reply.
+
+Archive readback applies this check to all 36 immutable training rows. Additional
+unit tests check all 36 training projections, 12 **unsealed synthetic test
+objects** (not a real adapter-derived final), and adversarial earlier-user
+gold-answer/view substitution. These checks cover character-level prompt
+separation only; they do not establish the real frozen tokenizer's prompt IDs,
+supervision labels, 512-token maximum or a valid Stage-B evaluation.
+
+**Future Stage-B rule, if separately authorized:** the model runner must
+consume only this projected prompt, record its exact raw UTF-8 bytes/hash
+and tokenizer IDs, and must never consume the final record's `target`,
+`rendered`, `loss_char_spans` or last assistant turn as input. An independent
+custodian must validate the actual executed inputs and adapter provenance;
+this author-side addition supplies no training or final-admission authority.
