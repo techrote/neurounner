@@ -11,13 +11,13 @@ from contextlib import contextmanager
 import json
 from pathlib import Path
 import threading
-import weakref
 from typing import Any, Iterator
 
 import torch
 from torch import Tensor, nn
 
 from ncr_001f_controls import GatedMLPControl, matched_control_contract
+from ncr_001_backbone_lease import shared_decoder_lock
 
 
 # The SHA values below were independently checked against actual checkpoint
@@ -63,19 +63,10 @@ class FrozenDepthGatedMLP(nn.Module):
     A model may be owned by only one active instrumented wrapper at a time.
     """
 
-    # Locks are ownership metadata only, never model/NCA state. Weak keys ensure
-    # a destroyed frozen model cannot be held alive by this registry.
-    _backbone_registry_guard = threading.Lock()
-    _backbone_locks: weakref.WeakKeyDictionary = weakref.WeakKeyDictionary()
-
     @classmethod
     def _get_backbone_lock(cls, backbone: nn.Module) -> threading.Lock:
-        with cls._backbone_registry_guard:
-            lock = cls._backbone_locks.get(backbone)
-            if lock is None:
-                lock = threading.Lock()
-                cls._backbone_locks[backbone] = lock
-            return lock
+        """A single source-owned decoder-root lease for NCA and MLP."""
+        return shared_decoder_lock(backbone)
 
     def __init__(
         self, backbone: nn.Module, *, lane: str,
