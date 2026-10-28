@@ -1,6 +1,7 @@
 """Offline custody qualification for DETECTIVE-005A failed-run recovery."""
 from __future__ import annotations
 
+import copy
 import json
 import os
 import tempfile
@@ -171,6 +172,45 @@ class Detective005ARecoveryTests(unittest.TestCase):
                 result_bytes)
             self.assertFalse(recover.verify(degraded)["review_packet_generated"])
 
+            # A matching GitHub API response can qualify complete custody,
+            # but a foreign Actions-run identity must demote, not discard it.
+            (src / "results.partial.jsonl").write_bytes(result_bytes)
+            metadata = root / "source-api.json"
+            original_api = {"artifacts": [{
+                "name": "detective005a-G01", "id": 712,
+                "digest": "sha256:" + "f" * 64,
+                "size_in_bytes": 1200,
+                "expired": False,
+                "workflow_run": {
+                    "id": int(RUN), "head_sha": HEAD,
+                    "repository_id": 1432134981,
+                },
+            }]}
+            metadata.write_text(json.dumps(original_api), encoding="utf-8")
+            valid_archive = root / "archive-api"
+            qualified = recover.recover(root / "artifacts", valid_archive,
+                                        HEAD, RUN, metadata)
+            self.assertEqual(qualified["complete_lineage_artifacts"], 1)
+            recover.verify(valid_archive)
+            foreign_api = copy.deepcopy(original_api)
+            foreign_api["artifacts"][0]["workflow_run"]["head_sha"] = "2" * 40
+            metadata.write_text(json.dumps(foreign_api), encoding="utf-8")
+            foreign_archive = root / "archive-foreign"
+            quarantined = recover.recover(root / "artifacts", foreign_archive,
+                                           HEAD, RUN, metadata)
+            self.assertEqual(quarantined["validated_raw_prefix_rows"], 12)
+            self.assertEqual(quarantined["complete_lineage_artifacts"], 0)
+            record = screen.read_json(
+                foreign_archive / "provenance/source-artifacts.json"
+            )["lineages"][0]
+            self.assertEqual(record["status"], "recovery_only")
+            self.assertIn("artifact_api_source_run_mismatch",
+                          record["custody_warnings"])
+            self.assertEqual(
+                (foreign_archive / "raw/G01/results.jsonl").read_bytes(),
+                result_bytes)
+            recover.verify(foreign_archive)
+
     def test_artifact_api_metadata_and_missing_download_are_explicit(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -182,7 +222,9 @@ class Detective005ARecoveryTests(unittest.TestCase):
             metadata.write_text(json.dumps({"artifacts": [
                 {"name": "detective005a-G02", "id": 711, "digest":
                  "sha256:" + "2" * 64, "size_in_bytes": 10,
-                 "expired": False},
+                 "expired": False, "workflow_run": {
+                    "id": int(RUN), "head_sha": HEAD,
+                    "repository_id": 1432134981}},
             ]}), encoding="utf-8")
             out = root / "archive"
             recover.recover(root / "artifacts", out, HEAD, RUN, metadata)
