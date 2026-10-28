@@ -122,7 +122,7 @@ class LearningGateSentinels(unittest.TestCase):
                     torch.tensor(-1.0, requires_grad=True),
                     torch.tensor(2.0),
                     torch.ones(2, requires_grad=True)):
-            with self.assertRaisesRegex(RuntimeError, "Supervised loss"):
+            with self.assertRaisesRegex(RuntimeError, "(?i)supervised loss"):
                 finite_supervised_loss(bad)
 
     def test_four_lane_protocol_and_no_comparative_runner(self):
@@ -134,7 +134,7 @@ class LearningGateSentinels(unittest.TestCase):
         self.assertIn('"comparative_training_performed": False', src)
         self.assertIn('"full_72_conformance_pass": False', src)
         self.assertIn('"tool_memory_semantics_qualified": False', src)
-        self.assertIn('"diagnostic_optimizer_steps": 1', src)
+        self.assertIn('REPORT["diagnostic_optimizer_steps"] = 1', src)
         self.assertNotIn("heldout.json", src)
         self.assertNotIn("eval-final", src)
 
