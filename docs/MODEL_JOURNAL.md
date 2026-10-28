@@ -1390,3 +1390,27 @@ Behavioral readback: B01 follows local sensor/memory/action structure; B02 chang
 - canonical case SHA unchanged; mandatory public evidence routes intact; full session replay PASS.
 
 **Disposition:** DETECTIVE-003B is an integration PASS only. It does not re-score C2/C3 behavior, select a cartridge, satisfy R1 relevance or admit population expansion. Weak/ambiguous dialogue is intentionally retained without semantic repair.
+
+---
+
+# 2026-10-28 — DETECTIVE-003D source-native Sprocket live scripter bridge
+
+**Authoritative run:** `40618669330`  
+**Exact root Instruct source:** `kandivault/sprocket-500m@eb157d4ddddc4619e661d4a2426bb2dd000fc668/model.safetensors`.
+
+## Measured runtime
+
+- AMD EPYC 7763, 4 Torch CPU threads;
+- model load **0.327 s**;
+- RSS after load ~**2.28 GiB**, peak ~**3.17 GiB**;
+- 35 generated tokens / 8.32 s = **4.21 tok/s**.
+
+## Raw behavior
+
+Generated publisher-native control syntax:
+
+`<|tool_call|>{"name":"get_database","arguments":{"query":"fictitious native tools for the player's terminal"}}<|end|>`
+
+Native syntax parsed, but `get_database` is not an admitted detective tool. Strict normalization rejected it; no typed programme, 003C transaction, access grant or evidence presentation occurred.
+
+**Disposition:** integration containment PASS, zero-shot detective scripting FAIL/NOT ADMITTED. This independently echoes B3's invented-tool/fabricated-ID transfer failures and strengthens the case for task-specific scripting specialization rather than prompt-time repair.
