@@ -198,5 +198,40 @@ class Detective004ACustodyTests(unittest.TestCase):
             audit.model_input_prefix(changed, self.b3)
 
 
+
+    def test_future_recipe_guard_rejects_coherent_asset_substitution(self):
+        # Full self-consistent native rows used to pass the original shape
+        # checks, while changing the preregistered expected answer.
+        rows = self.synthetic_gate_fixture()
+        family = protocol.EXPECTED_FINAL_FAMILIES[0]
+        case = protocol.family_data(family, "0123456789abcdef" * 4)
+        case["assets"][0]["asset_id"] += "-alternate"
+        changed = protocol.make_example(
+            family, case, "tool_selection", 0, protocol.OPS[0])
+        changed["rendered"], changed["loss_char_spans"] = (
+            protocol.render_with_mask(changed["turns"], self.b3))
+        protocol.validate_example(changed, self.b3)
+        audit.model_input_prefix(changed, self.b3)
+        rows[0] = changed
+        with self.assertRaisesRegex(
+                protocol.ProtocolError, "deviates from frozen recipe"):
+            audit.audit_future_gate_layout(rows, self.b3)
+
+    def test_future_recipe_guard_rejects_coherent_restraint_label_swap(self):
+        rows = self.synthetic_gate_fixture()
+        changed = copy.deepcopy(rows[-1])
+        self.assertEqual(changed["kind"], "restraint")
+        changed["turns"][-1]["content"] = (
+            "A generic harmless but different answer to this request.")
+        changed["rendered"], changed["loss_char_spans"] = (
+            protocol.render_with_mask(changed["turns"], self.b3))
+        protocol.validate_example(changed, self.b3)
+        audit.model_input_prefix(changed, self.b3)
+        rows[-1] = changed
+        with self.assertRaisesRegex(
+                protocol.ProtocolError, "deviates from frozen recipe"):
+            audit.audit_future_gate_layout(rows, self.b3)
+
+
 if __name__ == "__main__":
     unittest.main()
