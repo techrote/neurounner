@@ -1,0 +1,32 @@
+name: NCR-001 post-lease Sprocket raw evidence audit (no train)
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/ncr_001_postlease_evidence_audit.py'
+      - 'experiments/ncr-001/controls-evidence/postlease-sprocket-20261028/**'
+      - '.github/workflows/ncr001-postlease-evidence-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  archived-originals-offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Check immutable original frozen-source receipts; refuse training claims
+        run: |
+          python3 scripts/ncr_001_postlease_evidence_audit.py | tee "$RUNNER_TEMP/ncr001-postlease-evidence-audit.json"
+      - name: Preserve readback output even on failure
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-postlease-receipt-audit
+          path: ${{ runner.temp }}/ncr001-postlease-evidence-audit.json
+          retention-days: 30
+          if-no-files-found: warn
