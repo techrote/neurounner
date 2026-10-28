@@ -111,6 +111,19 @@ partial record count and partial-file SHA-256. The unconditional lineage
 artifact upload retains these records (while excluding temporary unpacked
 adapter weights).
 
+A torn/malformed final JSONL append cannot suppress the interruption receipt:
+the runner counts only intact, newline-terminated JSON object rows, records
+`partial_journal_problem` where needed and retains the **original partial
+file bytes and full SHA-256**, including the damaged tail. Never replace those
+bytes with a repaired version or mistake the intact-row count for a complete
+lineage.
+
+Complete-lineage assembly now rejects substituted runner-script hashes,
+cross-lineage/mixed Actions run IDs and mismatched exact source heads. The
+dataset carries the verified dispatch SHA, Actions run ID and a
+`provenance/source-artifacts.json` name/hash inventory. Artifact IDs are
+explicitly unavailable to the assembler; they must not be fabricated.
+
 This is a failure-recovery measure, **not a claim of durable promotion**.
 Partial files are transient Actions artifacts with a 30-day retention window;
 they must be retrieved and archived under `datasets/` before expiration.
