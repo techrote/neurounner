@@ -69,6 +69,29 @@ This adjudication does not claim:
 
 Historical BYTE-EOS effect remains **UNMEASURED**.
 
+
+## Original separate-process receipt custody correction — 28 October 2026
+
+Earlier source-bound adjudication correctly pinned the 256-unit/240+16
+original process measurements and process identities in provenance, but
+did not re-open the underlying archived producer and consumer Actions
+JSON bytes during formal adjudication. It now invokes the existing
+`ncr_001e_void_process_receipt_audit.py` original-byte auditor **before**
+accepting that process summary. This verifies five SHA-anchored raw members,
+the original Actions run/ZIP digests, distinct Python process IDs,
+frozen-model/ByteTokenizer source pins, exact 9.5367431640625e-06 cache
+measurement, and original nontraining/negative limits.
+
+Two fail-closed tests corrupt or remove the original cross-process archive
+while leaving its provenance summary unchanged; the adjudicator must refuse
+both. The existing fresh UTF-8 receipt direct SHA check and 2048-context
+source archive auditor remain in force.
+
+This is a read-only **custody verification**, not a second physical model
+execution or new tokenizer test. The original evidence/fixtures/thresholds
+are unchanged, the BYTE-EOS historical effect stays **UNMEASURED**, and
+`train_authorized=false` / `per_model_gate=false` remain mandatory.
+
 ## Final boundary
 
 Exactly three learning/update/loss checks remain blocked because
