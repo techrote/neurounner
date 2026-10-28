@@ -1,0 +1,113 @@
+name: BYTE-EOS-001 causal label-shift regression (no model)
+
+on:
+  pull_request:
+    branches: [research/byte-eos-001-strict-void-labels]
+    paths:
+      - ".github/workflows/byte-eos-001-causal-shift.yml"
+      - "scripts/byte_eos_001_void_labels.py"
+      - "tests/test_byte_eos_001_void_labels.py"
+      - "tests/test_byte_eos_001_causal_shift.py"
+      - "docs/BYTE_EOS_001_FUTURE_LABELS.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: byte-eos-causal-shift-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  offline-causal-loss-sentinels:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Test causal-shift invariants, old EOS receipt and frozen training gate
+        id: sentinels
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/byte-eos-001-causal
+          {
+            echo "HEAD=$(git rev-parse HEAD)"
+            test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+            test "$(git hash-object experiments/ncr-001/protocol.json)" = "dddfb416b765ef6cf23e1cdd326f8834f9f1417c"
+            test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+            test "$(sha256sum experiments/ncr-001/byte-eos-001/receipt.json | cut -d' ' -f1)" = "6c611bdc0f021f6d9e2fa39d91b7e141d937844f2b849f9ae437151254572922"
+            python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          assert p["models"]["void1"]["tokenizer_reference"]["ids"]["eos"] == 258
+          r=json.loads(Path("experiments/ncr-001/byte-eos-001/receipt.json").read_text())
+          assert r["any_model_optimizer_steps"] == 0 and r["training_authorized"] is False
+          print("Locked protocol, sources and original receipt: verified; train_authorized=false")
+          PY
+            python3 -m py_compile scripts/byte_eos_001_void_labels.py tests/test_byte_eos_001_void_labels.py tests/test_byte_eos_001_causal_shift.py
+            python3 -m unittest discover -s tests -p 'test_byte_eos_001_*.py' -v
+          } 2>&1 | tee runtime/byte-eos-001-causal/test.log
+      - name: Preserve source-and-run evidence even if tests fail
+        if: always()
+        env:
+          GATE_OUTCOME: ${{ steps.sentinels.outcome }}
+        shell: bash
+        run: |
+          mkdir -p runtime/byte-eos-001-causal
+          python3 - <<'PY'
+          import hashlib,json,os,platform
+          from pathlib import Path
+          root=Path("runtime/byte-eos-001-causal")
+          def sha(path):
+              p=Path(path)
+              return hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else None
+          data={
+              "stage":"BYTE-EOS-001 causal loss shift source check",
+              "classification":"OFFLINE_SERIALIZER_ONLY__NO_REAL_MODEL_OR_TRAINING_ADMISSION",
+              "result":os.environ.get("GATE_OUTCOME"),
+              "head_sha":os.environ.get("GITHUB_SHA"),
+              "expected_pr_head":os.environ.get("EXPECTED_HEAD"),
+              "run_id":os.environ.get("GITHUB_RUN_ID"),
+              "run_attempt":os.environ.get("GITHUB_RUN_ATTEMPT"),
+              "runner_name":os.environ.get("RUNNER_NAME"),
+              "runner_os":os.environ.get("RUNNER_OS"),
+              "python":platform.python_version(),
+              "processor":platform.processor(),
+              "model_executed":False,
+              "tokenizer_remote_source_executed":False,
+              "optimizer_steps":0,
+              "train_authorized":False,
+              "heldout_opened":False,
+              "comparative_training_performed":False,
+              "full_72_conformance_pass":False,
+              "sha256":{
+                  "test_log":sha(root/"test.log"),
+                  "serializer":sha("scripts/byte_eos_001_void_labels.py"),
+                  "tests":sha("tests/test_byte_eos_001_causal_shift.py"),
+                  "protocol":sha("experiments/ncr-001/protocol.json"),
+                  "source_pins":sha("experiments/ncr-001/source-pins.json"),
+                  "original_receipt":sha("experiments/ncr-001/byte-eos-001/receipt.json")
+              },
+          }
+          (root/"receipt.json").write_text(json.dumps(data,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(data,indent=2,sort_keys=True))
+          PY
+      - name: Upload success/failure log and receipt
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: byte-eos-001-causal-shift-a${{ github.run_attempt }}
+          path: runtime/byte-eos-001-causal/
+          retention-days: 30
+          if-no-files-found: warn
