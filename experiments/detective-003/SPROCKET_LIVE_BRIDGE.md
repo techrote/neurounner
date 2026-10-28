@@ -218,3 +218,5 @@ This is an **integration PASS under model failure**, not scripter competence. It
 See [REPORT_003D.md](REPORT_003D.md) and [datasets/detective-003d](../../datasets/detective-003d/).
 
 No training, prompt repair, host execution, hidden relevance/learner-final access, body selection or population expansion occurred.
+
+Current retrieval/model-journal signposts are interpretation-only; durable raw evidence and model-free replay remain the authority.
