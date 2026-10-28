@@ -5,6 +5,7 @@ import copy
 import json
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
@@ -112,6 +113,24 @@ class Void1AdjudicationTests(unittest.TestCase):
         fake["blocking_required_checks"]=[]
         fake["byte_tokenizer_scope"]["historical_byte_eos_effect_measured"]=True
         self.assertNotEqual(fake,adjudicator.build_report())
+
+    def test_original_cross_process_archive_corruption_refuses_adjudication(self):
+        import ncr_001e_void_process_receipt_audit as process_audit
+        raw=process_audit.ARCHIVE.read_text(encoding="ascii")
+        with TemporaryDirectory() as d:
+            altered=Path(d)/"corrupted-cross-process.b64"
+            altered.write_text("!"+raw[1:],encoding="ascii")
+            with patch.object(process_audit,"ARCHIVE",altered):
+                with self.assertRaises((ValueError,RuntimeError,OSError)):
+                    adjudicator.build_report()
+
+    def test_original_cross_process_archive_missing_refuses_adjudication(self):
+        import ncr_001e_void_process_receipt_audit as process_audit
+        with TemporaryDirectory() as d:
+            missing=Path(d)/"missing-cross-process.b64"
+            with patch.object(process_audit,"ARCHIVE",missing):
+                with self.assertRaises(FileNotFoundError):
+                    adjudicator.build_report()
 
 
 if __name__=="__main__":
