@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001",
+  "purpose": "byte-exact original Actions evidence custody, not independent scientific admission",
+  "physical_source_head": "df8479aae34550cba014d910a73e30e59cd493e2",
+  "original_success_run_id": 40710171622,
+  "original_failed_run_id": 40709934406,
+  "train_authorized": false,
+  "comparative_training_performed": false,
+  "heldout_opened": false,
+  "final_72_admission": false,
+  "archives": {
+    "negative_source": {
+      "file": "original-source-negative-40709934406.zip",
+      "run_id": 40709934406,
+      "job_id": 122892128534,
+      "artifact_id": 12824644592,
+      "artifact_name": "ncr001-learning-source-a1",
+      "bytes": 5182,
+      "sha256": "c597e65b9bc095af3382646b76b7663693cd91838df36174df15c79bf3634cc2",
+      "members": {
+        "source-tests.log": {
+          "bytes": 17018,
+          "sha256": "37c4189aa92f28822491ab5b118e3a25a26c6de2561fffea59991fbecaaa03ee"
+        }
+      },
+      "expected_job_conclusion": "failure",
+      "note": "2 test-assertion mismatch failures; no model job executed"
+    },
+    "positive_source": {
+      "file": "original-source-positive-40710171622.zip",
+      "run_id": 40710171622,
+      "job_id": 122892989282,
+      "artifact_id": 12826525345,
+      "artifact_name": "ncr001-learning-source-a1",
+      "bytes": 1024,
+      "sha256": "c66706d3e541925638e901d37232f204c480f0016aba393023fa925c67a61242",
+      "members": {
+        "source-tests.log": {
+          "bytes": 1729,
+          "sha256": "6e93487ad1984eec8bb80c5a5e55534cc303acc878ec0a14acd5577ba3465a35"
+        },
+        "lease-tests.log": {
+          "bytes": 1883,
+          "sha256": "f6fadaaac9cf97dcf63c39f2dcbb14b42cb08ad6a285903bacf2fd50234eb70d"
+        }
+      },
+      "expected_job_conclusion": "success",
+      "note": "10/10 source sentinels and 10/10 shared lease tests"
+    },
+    "sprocket_chat": {
+      "file": "original-chat-40710171622.zip",
+      "run_id": 40710171622,
+      "job_id": 122893504080,
+      "artifact_id": 12826246889,
+      "artifact_name": "ncr001-learning-chat-a1",
+      "bytes": 2955,
+      "sha256": "e040e1ce982a1c0f0c5e99e014cada04cc41b334f1755d60cf37fd0bb909a05b",
+      "members": {
+        "receipt.json": {
+          "bytes": 5978,
+          "sha256": "27a0a2890d427f39b8214cf0d16a2a4530f9965d597708133be74df87157e3b5"
+        },
+        "host.log": {
+          "bytes": 237,
+          "sha256": "24bc76df7bbf527ce16ac679c9be346827d02945979c9bfffb009a76333b5ed1"
+        }
+      },
+      "expected_job_conclusion": "success",
+      "weight_sha256": "551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97"
+    },
+    "sprocket_instruct": {
+      "file": "original-instruct-40710171622.zip",
+      "run_id": 40710171622,
+      "job_id": 122893504180,
+      "artifact_id": 12825942600,
+      "artifact_name": "ncr001-learning-instruct-a1",
+      "bytes": 3008,
+      "sha256": "9656ff3f8019f497cff62d816276f44bdc33f149c07072357bd5cfd9c90d0f93",
+      "members": {
+        "receipt.json": {
+          "bytes": 6097,
+          "sha256": "3dd6c391137dc1e6561360a0587b84c9cf55b4d4a7872d73c089eacdbda31b9a"
+        },
+        "host.log": {
+          "bytes": 241,
+          "sha256": "2960eb4eb8a173fd4756be6a4d9563408c573ba2fc84b38f9b582228eeac4f66"
+        }
+      },
+      "expected_job_conclusion": "success",
+      "weight_sha256": "1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864"
+    }
+  },
+  "complete_actions_job_logs": {
+    "negative_source": {
+      "file": "original-negative-source-job-122892128534.log",
+      "blob_sha": "075b561207de99c3187d4b2e4a8eb057cc7f6790",
+      "job_id": 122892128534
+    },
+    "positive_source": {
+      "file": "original-positive-source-job-122892989282.log",
+      "blob_sha": "9c968cbed65ceaef92127d12dec8aaba74b7f181",
+      "job_id": 122892989282
+    },
+    "sprocket_chat": {
+      "file": "original-chat-job-122893504080.log",
+      "blob_sha": "20dd75820ed8fe7bb491a229321bc8b9d18fe9cf",
+      "job_id": 122893504080
+    },
+    "sprocket_instruct": {
+      "file": "original-instruct-job-122893504180.log",
+      "blob_sha": "a1bb8e45dcdeaf9f2fc8d984feed5de679231ef7",
+      "job_id": 122893504180
+    }
+  },
+  "expected_checks": {
+    "synthetic_assistant_eos_id": 5,
+    "diagnostic_optimizer_steps": 1,
+    "nca_required_gradients": [
+      "observe.weight",
+      "perception.weight",
+      "rule.weight",
+      "readout.weight"
+    ],
+    "depth_tap_indices": [
+      0,
+      1,
+      2
+    ],
+    "both_variants_final_72_pass": false
+  }
+}
