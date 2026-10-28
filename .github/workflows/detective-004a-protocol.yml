@@ -5,7 +5,9 @@ on:
     paths:
       - "experiments/detective-004/**"
       - "scripts/detective_004a_protocol.py"
+      - "scripts/detective_004a_custody_audit.py"
       - "tests/test_detective_004a_protocol.py"
+      - "tests/test_detective_004a_custody.py"
       - "datasets/detective-004a/**"
       - "scripts/detective_001b3_sprocket.py"
       - "experiments/detective-001/sprocket-scripter.json"
@@ -26,7 +28,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Compile pinned protocol and adversarial tests
-        run: python3 -m py_compile scripts/detective_004a_protocol.py tests/test_detective_004a_protocol.py
+        run: python3 -m py_compile scripts/detective_004a_protocol.py scripts/detective_004a_custody_audit.py tests/test_detective_004a_protocol.py tests/test_detective_004a_custody.py
       - name: Run complete offline DETECTIVE regression suite
         run: python3 -m unittest discover -s tests -p 'test_detective_*.py' -v
       - name: Generate corpus twice and compare byte-for-byte
@@ -55,6 +57,8 @@ jobs:
           python3 scripts/detective_004a_protocol.py --verify-training datasets/detective-004a
           cmp datasets/detective-004a/training.jsonl runtime/detective-004a/a/training.jsonl
           cmp datasets/detective-004a/manifest.json runtime/detective-004a/a/manifest.json
+      - name: Cross-audit the exact model-visible view and host-owned receipts
+        run: python3 scripts/detective_004a_custody_audit.py --archive datasets/detective-004a
       - name: Publish durable SHA-256 inventory for provenance
         run: |
           cd datasets/detective-004a
@@ -65,7 +69,8 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          src=Path("scripts/detective_004a_protocol.py").read_text()
+          src=(Path("scripts/detective_004a_protocol.py").read_text() +
+               Path("scripts/detective_004a_custody_audit.py").read_text())
           # These modules are not permitted to infer, optimize or expose scoring custody.
           for denied in (
               "import torch", "import transformers", "import peft",
