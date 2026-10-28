@@ -54,6 +54,8 @@ class Detective005AFunScreenTests(unittest.TestCase):
                     "runner": {
                         "synthetic_test_only": True,
                         "cpu": "none",
+                        "repository_head_sha": "1" * 40,
+                        "actions_run_id": "123456",
                     },
                 })
         return rows
@@ -325,7 +327,8 @@ class Detective005AFunScreenTests(unittest.TestCase):
                     "issue": 176,
                     "lineage": lineage,
                     "source_plan": live.source_plan(lineage),
-                    "runner_script_sha256": "a" * 64,
+                    "runner_script_sha256":
+                        screen.sha256_file(Path(live.__file__)),
                     "results_jsonl_sha256": screen.sha256_file(results),
                     "results": 12,
                     "members": [],
@@ -354,6 +357,21 @@ class Detective005AFunScreenTests(unittest.TestCase):
             self.assertEqual(verified["packet_items"], 144)
             self.assertFalse(verified["subjective_fun_ratings_present"])
             self.assertFalse(verified["production_admission"])
+            self.assertEqual(manifest["repository_head_sha"], "1" * 40)
+            self.assertEqual(manifest["actions_run_id"], "123456")
+            provenance = screen.read_json(
+                out / "provenance" / "source-artifacts.json")
+            self.assertEqual(len(provenance["source_artifacts"]), 12)
+            self.assertEqual(provenance["repository_head_sha"], "1" * 40)
+            self.assertEqual(provenance["actions_run_id"], "123456")
+
+            # A substituted runner hash must fail readback.
+            first = artifacts / "G01" / "manifest.json"
+            altered = screen.read_json(first)
+            altered["runner_script_sha256"] = "a" * 64
+            first.write_text(json.dumps(altered), encoding="utf-8")
+            with self.assertRaisesRegex(screen.ScreenError, "runner source hash"):
+                assemble.read_lineage(self.cfg, "G01", first.parent)
 
             # A duplicated lineage folder must never be silently selected.
             duplicate = artifacts / "duplicate" / "G01"
@@ -364,6 +382,23 @@ class Detective005AFunScreenTests(unittest.TestCase):
             with self.assertRaisesRegex(screen.ScreenError, "duplicate lineage"):
                 assemble.discover_lineages(artifacts)
 
+
+    def test_assembled_source_run_identity_refuses_mixed_receipts(self):
+        rows = self.synthetic_rows()
+        self.assertEqual(assemble.source_run_identity(rows),
+                         ("1" * 40, "123456"))
+        bad = copy.deepcopy(rows)
+        bad[0]["runner"]["repository_head_sha"] = "2" * 40
+        with self.assertRaisesRegex(screen.ScreenError, "mixed source heads"):
+            assemble.source_run_identity(bad)
+        bad = copy.deepcopy(rows)
+        bad[0]["runner"]["actions_run_id"] = "123457"
+        with self.assertRaisesRegex(screen.ScreenError, "mixed source heads"):
+            assemble.source_run_identity(bad)
+        bad = copy.deepcopy(rows)
+        del bad[0]["runner"]["actions_run_id"]
+        with self.assertRaisesRegex(screen.ScreenError, "identity missing"):
+            assemble.source_run_identity(bad)
 
     def test_live_incremental_raw_and_failure_receipt_are_custodied(self):
         rows = self.synthetic_rows()[:2]
