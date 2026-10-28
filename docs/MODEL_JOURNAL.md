@@ -1339,3 +1339,28 @@ Measured v5 result:
 Resolved packages: Python 3.12.15, Torch 2.14.1+cpu, Transformers 5.20.1, huggingface_hub 2.3.0, tokenizers 0.23.3, safetensors 0.8.0.
 
 **Interpretation:** v5 fixes the specific tokenizer-class availability defect but not the complete frozen chat-template/runtime path. Any next diagnostic should instrument template rendering only, without downloading model weights. LFM remains unselected and its lfm1.0 production/game license gate remains active.
+
+---
+
+# 2026-10-28 — DETECTIVE-002D LFM2.5-350M explicit v5 chat API runtime
+
+**Run:** `40611095538`  
+**Source:** `0fd994ea8af148c5cc5ba26503313632dfa4cea9`  
+**Model:** exact frozen LFM2.5-350M from DETECTIVE-002A.  
+**Runtime:** Python 3.12.15, Torch 2.14.1+cpu, Transformers 5.20.1, tokenizers 0.23.3, four EPYC 7763 CPU threads.
+
+002C's empty `AttributeError` was confirmed as a v5 chat-template return-shape harness problem. 002D explicitly rendered text with `return_dict=False`, then tokenized with `return_dict=True` and used `BatchEncoding["input_ids"]`.
+
+Measured result:
+
+- text + tokenized B01–B04 render: PASS;
+- exact 708,984,464-byte weight verification: PASS;
+- model load: 0.512 s;
+- RSS after load: ~1.89 GiB; peak ~2.54 GiB;
+- total generated: 74 tokens; no truncation;
+- mean completion-wall throughput: ~9.08 tok/s;
+- final outcome: **runtime_compatibility_pass**.
+
+Behavioral readback: B01 follows local sensor/memory/action structure; B02 changes remembered `03:14` to `03:15` and reports 95% confidence; B03 explicitly revises `03:14→03:41` because of the stamped record; B04 answers `No.`.
+
+**Disposition:** LFM2.5-350M is technically available for research runtime comparisons under the correct v5 API. It is not selected for training; its lfm1.0 production/game distribution gate remains active; independent relevance #121 still blocks population expansion.
