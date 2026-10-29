@@ -14,7 +14,7 @@ from scripts import detective_005a_assemble as assemble
 from scripts import detective_005a_blind as blind
 from scripts import detective_005a_fun_screen as screen
 from scripts import detective_005a_live as live
-from tests.test_detective_005a_fun_screen import Detective005AFunScreenTests
+from tests import test_detective_005a_fun_screen as fixtures
 
 
 class Detective005ABlindCustodyTests(unittest.TestCase):
@@ -23,7 +23,7 @@ class Detective005ABlindCustodyTests(unittest.TestCase):
         cls.cfg = screen.load_contract()
 
     def make_dataset(self, root: Path) -> Path:
-        fixture = Detective005AFunScreenTests()
+        fixture = fixtures.Detective005AFunScreenTests()
         fixture.cfg = self.cfg
         rows = fixture.synthetic_rows()
         artifacts = root / "artifacts"
@@ -76,7 +76,7 @@ class Detective005ABlindCustodyTests(unittest.TestCase):
         return ratings
 
     def test_public_fixed_salt_cannot_reconstruct_known_roster(self):
-        fixture = Detective005AFunScreenTests()
+        fixture = fixtures.Detective005AFunScreenTests()
         fixture.cfg = self.cfg
         rows = fixture.synthetic_rows()
         with self.assertRaisesRegex(screen.ScreenError,
@@ -245,6 +245,10 @@ class Detective005ABlindCustodyTests(unittest.TestCase):
             self.assertFalse((root / "custody").exists())
             with self.assertRaisesRegex(screen.ScreenError, "disjoint"):
                 blind.prepare(dataset, root / "same", root / "same")
+            with self.assertRaisesRegex(screen.ScreenError, "disjoint"):
+                blind.prepare(dataset, root / "reviewer", dataset / "secret")
+            with self.assertRaisesRegex(screen.ScreenError, "disjoint"):
+                blind.prepare(dataset, dataset / "reviewer", root / "secret")
 
     def test_public_archive_fails_closed_if_review_packet_added(self):
         with tempfile.TemporaryDirectory() as td:
