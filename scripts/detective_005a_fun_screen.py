@@ -246,6 +246,18 @@ def validate_result(cfg: dict, row: dict) -> dict:
             "invalid raw response record")
     runner = row["runner"]
     require(isinstance(runner, dict), "runner receipt required")
+    # Source labels alone are not weight provenance. Every raw result must
+    # carry the exact hashes actually checked by the live frozen-model loader;
+    # never accept an unverified or substituted adapter as frozen village SFT.
+    source = row["source"]
+    require(
+        runner.get("base_weights_sha256_verified") ==
+            source["base_weights_sha256"] and
+        runner.get("adapter_archive_sha256_verified") ==
+            source["asset_sha256"] and
+        runner.get("adapter_directory_sha256_verified") ==
+            source["adapter_directory_sha256"],
+        "missing or mismatched base/adapter verification receipt")
     # Public raw evidence must not carry arbitrary runner metadata: an
     # attacker could forge canonical JSONL plus its SHA inventory while
     # inserting a private blinding key or rating mapping as an extra key.
@@ -291,18 +303,6 @@ def validate_result(cfg: dict, row: dict) -> dict:
     else:
         require("cpu" not in runner or runner["cpu"] == "none",
                 "synthetic-only runner receipt drift")
-    # Source labels alone are not weight provenance. Every raw result must
-    # carry the exact hashes actually checked by the live frozen-model loader;
-    # never accept an unverified or substituted adapter as frozen village SFT.
-    source = row["source"]
-    require(
-        runner.get("base_weights_sha256_verified") ==
-            source["base_weights_sha256"] and
-        runner.get("adapter_archive_sha256_verified") ==
-            source["asset_sha256"] and
-        runner.get("adapter_directory_sha256_verified") ==
-            source["adapter_directory_sha256"],
-        "missing or mismatched base/adapter verification receipt")
     obs = mechanical_observations(
         cfg, response["text"] + "\n" + response["raw_with_special_tokens"])
     return {
