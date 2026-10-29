@@ -21,134 +21,78 @@ env:
   TOKENIZERS_PARALLELISM: "false"
   OMP_NUM_THREADS: "4"
   MKL_NUM_THREADS: "4"
-  BASE_SHA: d7317379a3de925c3be3a2758f5da85fc2b80f1d
+  BASE_SHA: 5fb718e146fd547d47e4c3bc0787cc25aa4b2f5a
 
 jobs:
   integration:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - name: Read exact current-main baseline and public Git history
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: d7317379a3de925c3be3a2758f5da85fc2b80f1d
+          ref: 5fb718e146fd547d47e4c3bc0787cc25aa4b2f5a
           fetch-depth: 0
           persist-credentials: false
-
-      - name: Bind current main, original PR heads, reviews and source snapshot
+      - name: Install repository-pinned CPU test dependency, no model libraries
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+          python3 -c 'import torch; assert torch.__version__ == "2.14.1+cpu"; assert not torch.cuda.is_available(); print(torch.__version__)'
+      - name: Verify live heads and test each merged tree without publishing
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          out="$RUNNER_TEMP/merge-down-source"
-          mkdir -p "$out"
-          test "$(git rev-parse HEAD)" = "$BASE_SHA"
-          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$BASE_SHA"
-          python3 - <<'PY'
-          import json, os, pathlib, urllib.request
-          out = pathlib.Path(os.environ['RUNNER_TEMP']) / 'merge-down-source'
-          root = 'https://api.github.com/repos/techrote/neurounner'
-          def read(path):
-              request = urllib.request.Request(root + path, headers={
-                  'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
-                  'Accept': 'application/vnd.github+json',
-                  'X-GitHub-Api-Version': '2022-11-28',
-              })
-              with urllib.request.urlopen(request, timeout=45) as response:
-                  return json.load(response)
-          plan = [(77, 'a1b41c358d215974ea9ef2748baa13c3872b0fbb'),
-                  (82, '815dadd101a66e07fb6c3df5bf65af7bfe30ceef')]
-          main = read('/branches/main')
-          assert main['commit']['sha'] == os.environ['BASE_SHA'], 'Main moved; re-audit'
-          (out / 'main-before.json').write_text(json.dumps(main, indent=2) + '\n')
-          opened = []
-          page = 1
-          while True:
-              rows = read(f'/pulls?state=open&per_page=100&page={page}')
-              opened.extend(rows)
-              if len(rows) < 100:
-                  break
-              page += 1
-          (out / 'open-pulls.json').write_text(json.dumps(opened, indent=2) + '\n')
-          for number, expected in plan:
-              pr = read(f'/pulls/{number}')
-              assert pr['state'] == 'open' and pr['head']['sha'] == expected, (number, pr['head']['sha'])
-              (out / f'pr-{number}.json').write_text(json.dumps(pr, indent=2) + '\n')
-              for suffix in ('reviews', 'comments'):
-                  rows = []
-                  page = 1
-                  while True:
-                      batch = read(f'/pulls/{number}/{suffix}?per_page=100&page={page}')
-                      rows.extend(batch)
-                      if len(batch) < 100:
-                          break
-                      page += 1
-                  (out / f'pr-{number}-{suffix}.json').write_text(json.dumps(rows, indent=2) + '\n')
-          (out / 'plan.json').write_text(json.dumps({'base': os.environ['BASE_SHA'], 'heads': plan,
-              'repository_writes': False, 'model_loading': False, 'scientific_admission': False}, indent=2) + '\n')
-          print('Frozen integration plan:', plan, 'open PRs:', len(opened))
-          PY
-          git for-each-ref --format='%(refname) %(objectname)' > "$out/refs.txt"
-          git bundle create "$out/source.bundle" --all HEAD
-          git bundle verify "$out/source.bundle"
-          (cd "$out" && sha256sum source.bundle > SHA256SUMS)
-
-      - name: Export source for same-run independent source inspection
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: merge-down-source-${{ github.run_id }}
-          path: ${{ runner.temp }}/merge-down-source
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Install existing pinned synthetic CPU test dependency (no models)
-        run: |
-          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
-          python3 -c 'import torch; assert torch.__version__ == "2.14.1+cpu"; assert not torch.cuda.is_available(); print(torch.__version__)'
-
-      - name: Merge existing foundations locally and test each resulting tree
-        run: |
-          set -euo pipefail
-          out="$RUNNER_TEMP/merge-down-validation"
-          mkdir -p "$out"
           git config user.name 'Read-only integration validation'
           git config user.email 'integration-validation@example.invalid'
           python3 - <<'PY'
-          import hashlib, json, os, pathlib, subprocess, sys
+          import hashlib, json, os, pathlib, subprocess, sys, urllib.request
           out = pathlib.Path(os.environ['RUNNER_TEMP']) / 'merge-down-validation'
-          plan = json.loads((pathlib.Path(os.environ['RUNNER_TEMP']) / 'merge-down-source/plan.json').read_text())
+          out.mkdir()
           def run(args, name):
-              result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-              (out / name).write_text(result.stdout)
-              print(result.stdout, flush=True)
-              if result.returncode:
-                  raise RuntimeError(f'{name}: exit {result.returncode}')
-              return result.stdout.strip()
+              p = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+              (out / name).write_text(p.stdout)
+              print(p.stdout, flush=True)
+              if p.returncode:
+                  raise RuntimeError(f'{name}: exit {p.returncode}')
+              return p.stdout.strip()
+          def read(path):
+              r = urllib.request.Request('https://api.github.com/repos/techrote/neurounner' + path,
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
+              with urllib.request.urlopen(r, timeout=45) as response:
+                  return json.load(response)
+          plan = [(87, 'c09d5739049f706914605de3245801cf13bcc4c0', '72e5f1a7e55c26a95163fc0e0fbf35a0ae0c6066'),
+                  (88, '4ea247e72ea88564b552e63effb558d753f9e770', 'c3ff138acb587b1dde152da320df1cdf9ced8399')]
+          main = read('/branches/main')
+          assert main['commit']['sha'] == os.environ['BASE_SHA'], 'Main moved: re-audit'
+          (out / 'main-before.json').write_text(json.dumps(main, indent=2) + '\n')
           stages = []
-          try:
-              for number, head in plan['heads']:
-                  run(['git', 'merge', '--no-ff', '--no-edit', head], f'{number}-merge.log')
-                  tree = run(['git', 'rev-parse', 'HEAD^{tree}'], f'{number}-tree.txt')
-                  run(['git', 'diff', '--check', 'HEAD^1', 'HEAD'], f'{number}-diff-check.log')
-                  run([sys.executable, 'scripts/ncr_001_protocol.py', 'validate'], f'{number}-protocol.json')
-                  run([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_ncr_001_protocol.py', '-v'], f'{number}-protocol-tests.log')
-                  if number == 82:
-                      run([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_ncr_001_core.py', '-v'], f'{number}-core-tests.log')
-                  source = {}
-                  for name in ('experiments/ncr-001/protocol.json', 'experiments/ncr-001/source-pins.json', 'scripts/ncr_001_protocol.py', 'scripts/ncr_001_core.py'):
-                      path = pathlib.Path(name)
-                      if path.exists():
-                          source[name] = hashlib.sha256(path.read_bytes()).hexdigest()
-                  stages.append({'pr': number, 'original_head': head, 'integration_tree': tree, 'passed': True, 'sha256': source})
-                  (out / 'stages.json').write_text(json.dumps(stages, indent=2) + '\n')
-          except Exception:
-              (out / 'failure-status.txt').write_text(subprocess.run(['git', 'status', '--porcelain'], capture_output=True, text=True).stdout)
-              (out / 'failure-diff.txt').write_text(subprocess.run(['git', 'diff', '--cc'], capture_output=True, text=True).stdout)
-              raise
-          print('SOURCE INTEGRATION ONLY; no model loading, heldout evaluation, comparative training, or scientific admission.')
+          for number, head, expected_tree in plan:
+              pr = read(f'/pulls/{number}')
+              assert pr['state'] == 'open' and pr['head']['sha'] == head, 'PR moved: re-audit'
+              (out / f'{number}-pr.json').write_text(json.dumps(pr, indent=2) + '\n')
+              run(['git', 'merge', '--no-ff', '--no-edit', head], f'{number}-merge.log')
+              tree = run(['git', 'rev-parse', 'HEAD^{tree}'], f'{number}-tree.txt')
+              assert tree == expected_tree, (tree, expected_tree)
+              run(['git', 'diff', '--check', 'HEAD^1', 'HEAD'], f'{number}-diff-check.log')
+              run([sys.executable, 'scripts/ncr_001_protocol.py', 'validate'], f'{number}-protocol.json')
+              run([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_ncr_001*.py', '-v'], f'{number}-tests.log')
+              run([sys.executable, 'scripts/ncr_001f_plan.py', '--out', str(out / f'{number}-control-plan.json')], f'{number}-plan.log')
+              checks = [(out / f'{number}-control-plan.json', pathlib.Path('experiments/ncr-001/controls-evidence/provenance.json'))]
+              if number == 88:
+                  run([sys.executable, 'scripts/ncr_001e_readback.py', '--out', str(out / '88-readback.json')], '88-readback.log')
+                  checks.append((out / '88-readback.json', pathlib.Path('experiments/ncr-001/evidence-review/audit-provenance.json')))
+              hashes = {}
+              for report, source in checks:
+                  got = hashlib.sha256(report.read_bytes()).hexdigest()
+                  expected = json.loads(source.read_text())['source']['original_uncompressed_report_sha256']
+                  assert got == expected, (report, got, expected)
+                  hashes[report.name] = got
+              stages.append({'pr': number, 'head': head, 'integration_tree': tree, 'passed': True, 'original_report_sha256': hashes})
+              (out / 'stages.json').write_text(json.dumps(stages, indent=2) + '\n')
+          assert json.loads(pathlib.Path('experiments/ncr-001/protocol.json').read_text())['train_authorized'] is False
+          print('No model loading, heldout evaluation, comparative training, repository writes or scientific admission.')
           PY
-
-      - name: Retain integration success or failure diagnostics
+      - name: Preserve success and failure logs
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
