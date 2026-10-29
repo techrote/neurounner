@@ -70,6 +70,8 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 - **[NCR-001 decoder-root lease composition and original CI custody](docs/NCR_001_SHARED_DECODER_LEASE.md)** — four independently pinned NCA wrappers and their matched MLP controls share one in-process frozen-decoder ownership lock. Synthetic adversarial hook-window tests and complete original CI logs/runner receipts archived under [cross-decoder-lease](experiments/ncr-001/controls-evidence/cross-decoder-lease/). **No new original-model qualification, supervised learning, independent #72 admission or training authorization.**
 - **[NCR-001F pinned frozen MLP hook prepass](docs/NCR_001_F_FROZEN_MLP_HOOKS.md)** — four independently source-identified no-training matched-control transformer post-block wrappers with synthetic hook/variant refusals and a separately pinned actual SmolLM2 frozen-model KV-cache/gradient-only source runner. **Real Sprocket/void MLP hosts, #72 independent acceptance and training admission remain outstanding.**
 
+- **[NCR-001E fresh actual frozen SmolLM2 reviewer run](docs/NCR_001_E_SMOL_FRESH.md)** — source-pinned PR #83 implementation re-executed on a separate runner; 128-token initial parity, left/right masked padding, 48-token one-step KV-cache, A→B→A reset and same-base cold adapter reload. [Raw receipt](experiments/ncr-001/evidence-review/smolllm2-fresh/receipt.json) and [source-bound provenance](experiments/ncr-001/evidence-review/smolllm2-fresh/provenance.json) retained. **SmolLM2-only prepass; not full #72 or training admission.**
+
 ## Retrieval rules
 
 1. Prefer primary dataset records over prose summaries when answering questions about exact prompts or outputs.
