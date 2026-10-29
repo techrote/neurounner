@@ -142,12 +142,10 @@ def assemble(artifacts: Path, out: Path) -> dict:
     rows.sort(key=lambda r: (
         member_order[r["member_id"]], prompt_order[r["prompt_id"]]))
 
-    packet, mapping = screen.build_review_packet(cfg, rows)
-    screen.require(len(mapping) == 144, "review mapping cardinality drift")
-    template = screen.rating_template(packet)
-
+    # Public evidence archival must NEVER issue an identity-bearing or
+    # publicly reconstructible review packet. A private custodian prepares
+    # the blinded packet only after complete, independently verified rows.
     (out / "raw" / "lineage-manifests").mkdir(parents=True)
-    (out / "review").mkdir(parents=True)
     (out / "provenance").mkdir(parents=True)
     results_path = out / "raw" / "results.jsonl"
     results_path.write_text(
@@ -156,8 +154,6 @@ def assemble(artifacts: Path, out: Path) -> dict:
     for lineage in LINEAGES:
         write_json(out / "raw" / "lineage-manifests" /
                    f"{lineage}.json", manifests[lineage])
-    write_json(out / "review" / "fun-packet.json", packet)
-    write_json(out / "review" / "fun-ratings-template.json", template)
     write_json(out / "provenance" / "source-artifacts.json", {
         "schema": "detective-005a-source-artifacts-v1",
         "repository_head_sha": source_head,
@@ -200,7 +196,9 @@ def assemble(artifacts: Path, out: Path) -> dict:
         "prompts_per_member": 4,
         "raw_results": 144,
         "raw_results_sha256": screen.sha256_file(results_path),
-        "review_packet_sha256": template["packet_sha256"],
+        "review_packet_sha256": None,
+        "private_blind_review_status": "not_prepared_outside_repository",
+        "review_packet_generated": False,
         "hard_floor_failures": floor_failures,
         "hard_floor_clean_results": 144 - len(floor_failures),
         "objective_relevance_threshold": None,
@@ -216,12 +214,15 @@ def assemble(artifacts: Path, out: Path) -> dict:
         "# DETECTIVE-005A raw fun-first cast screen\n\n"
         "Complete source-bound raw outputs for the 36 VILLAGE-001C SFT "
         "villagers on four matched detective gameplay prompts. This archive "
-        "contains no subjective scores yet. The review packet deliberately "
-        "hides member identity; the separately generated rating template asks "
-        "how much the reviewer wants the NPC to remain in the game. Wrong or "
-        "incoherent answers are not automatically bad. Hard authority/leakage "
-        "floors are recorded separately and cannot be overridden by a high fun "
-        "score. No training, model judge or production admission occurs here.\n",
+        "contains no subjective scores and NO review packet. The old public "
+        "fixed-salt item ordering was reconstructible. A separate private "
+        "custodian must prepare a random-key blinded packet outside the "
+        "repository, retain mapping/key in private custody, freeze all human "
+        "ratings, and only then authorize identity unblinding. Never hand "
+        "this raw archive to a supposedly blind reviewer. Wrong or incoherent "
+        "answers are not automatically bad. Mechanical hard authority/leakage "
+        "floors remain separate from subjective fun. No training, model judge "
+        "or production admission occurs here.\n",
         encoding="utf-8")
     (out / "provenance" / "hashes.sha256").write_text(
         hash_inventory(out), encoding="utf-8")
@@ -272,18 +273,16 @@ def verify_dataset(path: Path) -> dict:
     screen.require(
         provenance.get("source_artifacts") == expected_artifacts,
         "dataset source-artifact manifest/hash drift")
-    packet, _ = screen.build_review_packet(cfg, results)
-    screen.require(screen.read_json(path / "review" / "fun-packet.json") ==
-                   packet, "committed fun packet drift")
-    screen.require(screen.read_json(
-        path / "review" / "fun-ratings-template.json") ==
-        screen.rating_template(packet), "rating template drift")
+    screen.require(
+        manifest.get("review_packet_generated") is False and
+        manifest.get("review_packet_sha256") is None and
+        manifest.get("private_blind_review_status") ==
+            "not_prepared_outside_repository" and
+        not (path / "review").exists(),
+        "public dataset must not include a review packet or secret mapping")
     screen.require(manifest["raw_results_sha256"] ==
                    screen.sha256_file(path / "raw" / "results.jsonl"),
                    "dataset raw hash drift")
-    screen.require(manifest["review_packet_sha256"] ==
-                   screen.rating_template(packet)["packet_sha256"],
-                   "dataset packet hash drift")
     inventory = {}
     for line in (path / "provenance" / "hashes.sha256").read_text(
             encoding="utf-8").splitlines():
@@ -303,7 +302,8 @@ def verify_dataset(path: Path) -> dict:
                        "hash inventory mismatch: " + rel)
     return {
         "raw_results": len(results),
-        "packet_items": len(packet["items"]),
+        "packet_items": 0,
+        "review_packet_generated": False,
         "hard_floor_failures": len(manifest["hard_floor_failures"]),
         "subjective_fun_ratings_present":
             manifest["subjective_fun_ratings_present"],
