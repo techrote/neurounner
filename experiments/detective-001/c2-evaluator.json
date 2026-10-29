@@ -1,0 +1,79 @@
+{
+  "schema": "detective-c2-evaluator-v1",
+  "experiment": "DETECTIVE-001C2-A",
+  "issue": 115,
+  "parent_issue": 103,
+  "source": {
+    "c1_evidence_root": "experiments/detective-001/training-c1-evidence",
+    "c1_final_suite_sha256": "31159eaffecc36d78473c8ade6a4e336590834bea1dba746d60d3230cab47a9c",
+    "c1_raw_results_sha256": "cf47d2a5ec14c9b9ff1392f80675d91476843d58f7715f427306dff385f6af2f",
+    "c1_summary_sha256": "b95497e1caa873bb53f9a332ee2643a0dac04e5be469cd16c70034eef46eb207",
+    "c1_release_tag": "detective-001c1-v1",
+    "members": {
+      "V-G02-A": {
+        "archive_sha256": "8ff8cd387d3f54c42b119a91976a6b7d42468b14d5fc2d6071e57e2ff65cd8e9",
+        "directory_sha256": "f5f5a1b454f4b6ca08aa9ff30c87abe8b1d897d7901db8b872e9747266724450"
+      },
+      "V-G09-C": {
+        "archive_sha256": "e94d030c6873699ef1516bd26a46be2ca60e093298a74b34815c20ec68fe3e12",
+        "directory_sha256": "6c1fbb6509bd777b8063a638783e9f0fd69eeb7bc8a8d94701bca9a5eae8d9aa"
+      }
+    }
+  },
+  "proposition_scorer": {
+    "schema": "detective-proposition-score-v2",
+    "min_words": 1,
+    "max_words": 128,
+    "evidence_id_regex": "\\bF-[A-Z0-9_-]+\\b",
+    "speculation_qualifiers": [
+      "did not see",
+      "didn't see",
+      "do not know",
+      "don't know",
+      "no firsthand",
+      "rumor",
+      "rumour",
+      "not evidence",
+      "unverified",
+      "cannot confirm",
+      "can't confirm",
+      "not proven",
+      "not a proven fact",
+      "not sure",
+      "no record"
+    ],
+    "relations": [
+      "truthful_known_fact",
+      "corrupted_belief",
+      "intentional_lie",
+      "withheld_fact",
+      "contradiction_repair",
+      "uninformed_speculation"
+    ],
+    "withholding_requires_magic_phrase": false
+  },
+  "blind_relevance": {
+    "source": "C1 reference_responses only",
+    "expected_items": 16,
+    "packet_schema": "detective-blind-relevance-v1",
+    "rating_schema": "detective-blind-relevance-ratings-v1",
+    "ordering": "lexicographic canonical prompt+response+hidden source identity, then opaque R001..R016",
+    "identity_mapping_committed": false,
+    "score_min": 0,
+    "score_max": 4,
+    "rubric": {
+      "0": "No meaningful answer to the prompt, or wholly unrelated/unusable.",
+      "1": "Touches the prompt but misses the core request or is dominated by incoherence/non sequitur.",
+      "2": "Partially addresses the request with a material relevance, contradiction, or repetition problem.",
+      "3": "Answers the request appropriately with only minor irrelevant or awkward material.",
+      "4": "Direct, relevant, self-contained answer with no material distraction."
+    },
+    "reviewer_instruction": "Judge response relevance to the prompt, not factual truth or preferred character style. Do not infer model/lane identity. Scores must be supplied independently; repository generation leaves every score null."
+  },
+  "gates": {
+    "no_optimizer_in_stage_a": true,
+    "no_self_filled_relevance_scores": true,
+    "c1_final_never_training_data": true,
+    "larger_cast_admitted": false
+  }
+}
