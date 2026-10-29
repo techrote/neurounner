@@ -78,6 +78,23 @@ jobs:
             assert r["frozen_model_inference_executed"] is False
           print("ORIGINAL-RAW-ACTIONS-ZIP-GIT-CUSTODY-VERIFIED__FULL_HOST_NOT_RUN")
           PY
+      - name: Independently replay custody auditor and eight adversarial source tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001f_sprocket_adapter_cpu_custody.py tests/test_ncr_001f_sprocket_adapter_cpu_custody.py
+          python3 -m unittest discover -s tests -p test_ncr_001f_sprocket_adapter_cpu_custody.py -v 2>&1 | tee runtime/ncr001f-original-zip-readonly/tests.log
+          python3 scripts/ncr_001f_sprocket_adapter_cpu_custody.py | tee runtime/ncr001f-original-zip-readonly/audit.json
+          python3 - <<'PY'
+          import json
+          r=json.load(open("runtime/ncr001f-original-zip-readonly/audit.json"))
+          assert r["original_run"] == 40867677298 and r["original_member_count"] == 7
+          assert r["original_zip_git_blob"] == "38a428b1a0fae2c7b9163f200a2b83f37f369add"
+          assert r["status"] == "PASS_ORIGINAL_COMPLETE_CPU_ADAPTER_ZIP_IN_GIT__FROZEN_HOST_UNMEASURED"
+          assert r["train_authorized"] is False and r["full_72_conformance_pass"] is False
+          assert r["actual_matched_frozen_host_budget_pass"] is False
+          print("EXACT_ORIGINAL_ZIP_CUSTODIED__CPU_ADAPTER_ONLY__NO_MODEL_NO_TRAIN")
+          PY
       - name: Retain read-only original evidence verifier log and partial failures
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
