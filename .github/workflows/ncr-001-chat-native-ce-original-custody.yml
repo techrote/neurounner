@@ -8,9 +8,10 @@ on:
       - "tests/test_ncr_001_chat_native_ce_original_custody.py"
       - "experiments/ncr-001/controls-evidence/chat-native-ce-20261029/**"
       - "docs/NCR_001_CHAT_NATIVE_CE_ORIGINAL_CUSTODY.md"
+      - "RAG.md"
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
   actions: read
 concurrency:
   group: ncr001-chat-native-archive-${{ github.event.pull_request.number || github.ref }}
@@ -29,7 +30,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-          persist-credentials: true
+          persist-credentials: false
           fetch-depth: 0
       - name: Verify exact original PR source, distinct Chat/root model pins and closed training
         shell: bash
@@ -78,28 +79,16 @@ jobs:
             2>&1 | tee runtime/ncr001-chat-native-original-custody/negative-tests.log
           python3 scripts/ncr_001_chat_native_ce_original_custody.py \
             2>&1 | tee runtime/ncr001-chat-native-original-custody/immutable-readback.json
-      - name: Commit only the original ZIP base64 and immutable manifest on this descendant draft
+      - name: Assert committed original ZIP and manifest are unchanged (READ ONLY)
         shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
-          git add -- "$EVIDENCE/original-actions-zip.base64" "$EVIDENCE/manifest.json"
-          python3 - <<'PY'
-          import subprocess
-          files=subprocess.check_output(["git","diff","--cached","--name-only"],text=True).splitlines()
-          assert set(files)<={
-            "experiments/ncr-001/controls-evidence/chat-native-ce-20261029/original-actions-zip.base64",
-            "experiments/ncr-001/controls-evidence/chat-native-ce-20261029/manifest.json",
-          },files
-          PY
-          if git diff --cached --quiet; then
-            echo "ORIGINAL_CHAT_ZIP_ALREADY_COMMITTED_NO_MUTATION"
-          else
-            git -c user.name="github-actions[bot]" \
-                -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-                commit -m "NCR-001E: permanently preserve original Chat frozen native-CE ZIP"
-            git push origin HEAD:refs/heads/review/ncr001-chat-native-ce-original-custody-20261029
-          fi
+          git ls-files --error-unmatch -- "$EVIDENCE/original-actions-zip.base64" "$EVIDENCE/manifest.json" >/dev/null
+          test -z "$(git status --porcelain -- "$EVIDENCE/original-actions-zip.base64" "$EVIDENCE/manifest.json")"
+          test "$(git hash-object "$EVIDENCE/original-actions-zip.base64")" = daac05623ff4c8360ef89a040ec7a536e58b2286
+          test "$(git hash-object "$EVIDENCE/manifest.json")" = 1640210cf26e4c5cc3f6d3bc3b952f6830e565ec
+          echo "IMMUTABLE_ORIGINAL_CHAT_ARCHIVE__READ_ONLY"
       - name: Retain complete original staging, hashes, tests and failures
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
