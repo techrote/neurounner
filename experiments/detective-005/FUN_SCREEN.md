@@ -181,6 +181,16 @@ completion, model-output accuracy claim or guarantee that a cancelled job
 ran its recovery path. Invalid or foreign rows remain quarantined and can
 never be counted as accepted results.
 
+**Push-failure fallback (source-only, not live-qualified):** after the
+recovery dataset passes local readback, the workflow attempts a separate
+`detective005a-recovery-fallback-<run-id>` Actions upload **before** the
+non-overwriting Git push. Its 30-day staging retention may preserve an
+additional copy if the evidence-branch push fails; upload failure does not
+prevent the durable push attempt. Neither this transient fallback nor a
+passing offline test proves successful branch promotion, verifies the
+original Actions ZIP bytes, or permits lineage reruns. Confirm a durable
+archive (or independently establish no output) before any retry.
+
 **Operational limits:** cancellation of the entire workflow may also cancel
 the recovery job, and artifact retrieval or branch push can fail. Such red runs
 need manual investigation; a recorded failure is never evidence of successful
