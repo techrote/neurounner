@@ -301,6 +301,63 @@ class Detective005ARecoveryTests(unittest.TestCase):
                                         "incomplete original lineage"):
                 recover.require_complete_transport(missing_api)
 
+    def test_malformed_artifact_api_keeps_original_partial_and_api_bytes(self):
+        """API truncation/schema failure cannot erase surviving model output."""
+        cases = (
+            ("truncated", b'{"artifacts": ['),
+            ("wrong_shape", b'{"artifacts": {"wrong": "type"}}'),
+            ("null_entry", b'{"artifacts": [null]}'),
+            ("duplicate", json.dumps({"artifacts": [
+                {"name": "detective005a-G01"},
+                {"name": "detective005a-G01"}]}).encode()),
+        )
+        for label, original_api in cases:
+            with self.subTest(case=label), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                source = root / "artifacts" / "detective005a-G01"
+                source.mkdir(parents=True)
+                original_raw = (screen.canonical(self.row()).encode("utf-8")
+                                + b"\n" + b'{"torn":')
+                (source / "results.partial.jsonl").write_bytes(original_raw)
+                with mock.patch.dict(os.environ, {
+                        "DETECTIVE_HEAD_SHA": HEAD, "GITHUB_RUN_ID": RUN}):
+                    live.write_interrupted_receipt(
+                        "G01", source, RuntimeError("synthetic failure"))
+                metadata = root / "original-api.json"
+                metadata.write_bytes(original_api)
+                out = root / "recovery"
+                manifest = recover.recover(
+                    root / "artifacts", out, HEAD, RUN, metadata,
+                    "success", "success")
+                self.assertEqual(manifest["validated_raw_prefix_rows"], 1)
+                self.assertTrue(manifest["artifact_api_metadata_invalid"])
+                self.assertFalse(manifest["artifact_transport_complete"])
+                self.assertEqual(
+                    (out / "raw/G01/results.partial.jsonl").read_bytes(),
+                    original_raw)
+                archived_api = out / "provenance/actions-artifacts-api.json"
+                self.assertEqual(archived_api.read_bytes(), original_api)
+                provenance = screen.read_json(
+                    out / "provenance/source-artifacts.json")
+                self.assertTrue(provenance["artifact_api_metadata_invalid"])
+                record = provenance["lineages"][0]
+                self.assertEqual(record["status"], "recovery_only")
+                self.assertIn("artifact_api_metadata_invalid",
+                              record["custody_warnings"])
+                self.assertNotIn("downloaded_artifact_not_listed",
+                                 record["custody_warnings"])
+                self.assertEqual(record["validated_raw_prefix_rows"], 1)
+                self.assertFalse(recover.verify(out)["artifact_transport_complete"])
+                with self.assertRaisesRegex(
+                        screen.ScreenError, "incomplete original lineage"):
+                    recover.require_complete_transport(out)
+
+                # Original malformed API bytes are included in SHA inventory.
+                archived_api.write_bytes(original_api + b"tampered")
+                with self.assertRaisesRegex(
+                        screen.ScreenError, "hash inventory"):
+                    recover.verify(out)
+
     def test_no_artifacts_never_claims_work_or_review(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
