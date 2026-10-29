@@ -1,0 +1,27 @@
+name: DETECTIVE-001 offline contract
+
+on:
+  pull_request:
+    paths:
+      - "scripts/detective_001_contract.py"
+      - "tests/test_detective_001_contract.py"
+      - "experiments/detective-001/**"
+      - ".github/workflows/detective-001-contract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-case-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile contract
+        run: python -m py_compile scripts/detective_001_contract.py tests/test_detective_001_contract.py
+      - name: Verify case and scripter contracts (no model downloads)
+        run: python -m unittest discover -s tests -p 'test_detective_001_contract.py' -v

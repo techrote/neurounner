@@ -205,5 +205,39 @@ class ProtocolGuards(unittest.TestCase):
                             for blocker in result["blockers"]))
 
 
+    def test_frozen_optimizer_and_cell_update_knobs_cannot_drift(self):
+        reference = ncr.json_load(ncr.PROTOCOL)
+        variants = [
+            ("training", "optimizer_lr", 0.0004),
+            ("training", "optimizer_betas", [0.9, 0.999]),
+            ("training", "weight_decay", 0.1),
+            ("architecture", "observation_gain_after_first_tap", 0.5),
+            ("architecture", "update_gain", 0.4),
+        ]
+        for section, field, bad in variants:
+            altered = json.loads(json.dumps(reference))
+            altered[section][field] = bad
+            with tempfile.TemporaryDirectory() as td:
+                path = Path(td) / "protocol.json"
+                path.write_text(json.dumps(altered), encoding="utf-8")
+                with patch.object(ncr, "PROTOCOL", path):
+                    with self.assertRaises(AssertionError, msg=f"{section}.{field}"):
+                        ncr.validate()
+
+
+    def test_model_probe_sha256_mismatch_fails_closed(self):
+        reference = ncr.json_load(ncr.PROTOCOL)
+        for key in ("sprocket_chat_probes", "sprocket_instruct_probes",
+                    "void_byte_probes"):
+            altered = json.loads(json.dumps(reference))
+            altered["datasets"][key]["sha256"] = "0" * 64
+            with tempfile.TemporaryDirectory() as td:
+                path = Path(td) / "protocol.json"
+                path.write_text(json.dumps(altered), encoding="utf-8")
+                with patch.object(ncr, "PROTOCOL", path):
+                    with self.assertRaises(AssertionError, msg=key):
+                        ncr.validate()
+
+
 if __name__ == "__main__":
     unittest.main()
