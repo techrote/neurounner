@@ -363,6 +363,29 @@ class Detective005ARecoveryTests(unittest.TestCase):
         self.assertIn("RUN-144-NO-TRAINING", workflow)
         self.assertIn("refs/heads/main", workflow)
 
+    def test_push_failure_keeps_a_transient_recovery_fallback(self):
+        """Source guard: retained stage precedes git push and final red gate."""
+        workflow = (screen.ROOT / ".github/workflows/detective-005a-live.yml").read_text(
+            encoding="utf-8")
+        recovery = workflow.split("  recover-failed-evidence:\n", 1)[1]
+        fallback_name = "      - name: Upload verified recovery staging as transient push-failure fallback"
+        push_name = "      - name: Promote failure evidence to fresh run-scoped branch only"
+        final_name = "      - name: Fail recovery gate when original artifact custody is incomplete"
+        self.assertEqual(recovery.count(fallback_name), 1)
+        self.assertLess(recovery.index("      - name: Build and read back quarantine-only durable dataset"),
+                        recovery.index(fallback_name))
+        self.assertLess(recovery.index(fallback_name), recovery.index(push_name))
+        self.assertLess(recovery.index(push_name), recovery.index(final_name))
+        fallback = recovery.split(fallback_name, 1)[1].split(push_name, 1)[0]
+        self.assertIn("continue-on-error: true", fallback)
+        self.assertIn("actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9", fallback)
+        self.assertIn("name: detective005a-recovery-fallback-${{ github.run_id }}", fallback)
+        self.assertIn("path: staged/detective-005a-recovery", fallback)
+        self.assertIn("if-no-files-found: error", fallback)
+        self.assertIn("retention-days: 30", fallback)
+        self.assertIn("--require-complete-transport", recovery.split(final_name, 1)[1])
+
+
 
 if __name__ == "__main__":
     unittest.main()
