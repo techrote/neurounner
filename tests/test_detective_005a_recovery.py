@@ -89,6 +89,79 @@ class Detective005ARecoveryTests(unittest.TestCase):
                 (out / "raw/G01/results.partial.jsonl").read_bytes(), original)
             self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 1)
 
+    def test_rehashed_duplicate_key_and_noncanonical_jsonl_never_gain_custody(self):
+        # Duplicate JSON keys are accepted by json.loads (last value wins).
+        # The original byte stream can hold data that validation cannot see,
+        # even if an adversary recomputes every claimed SHA-256 receipt.
+        base = screen.canonical(self.row())
+        duplicate = base.replace(
+            '"prompt_id":"F01"',
+            '"prompt_id":"F99","prompt_id":"F01"', 1)
+        self.assertNotEqual(duplicate, base)
+        for name, forged in (
+                ("duplicate-key", duplicate + "\\n"),
+                ("trailing-space", base + " \\n")):
+            with self.subTest(case=name), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                src = root / "artifacts" / "detective005a-G01"
+                src.mkdir(parents=True)
+                raw = forged.encode("utf-8")
+                (src / "results.partial.jsonl").write_bytes(raw)
+                archive = root / "archive"
+                receipt = recover.recover(
+                    root / "artifacts", archive, HEAD, RUN)
+                self.assertEqual(receipt["validated_raw_prefix_rows"], 0)
+                saved = screen.read_json(
+                    archive / "provenance/source-artifacts.json")["lineages"][0]
+                self.assertIn(
+                    "invalid_response_1:ScreenError",
+                    saved["custody_warnings"])
+                self.assertEqual(
+                    (archive / "raw/G01/results.partial.jsonl").read_bytes(),
+                    raw)
+                self.assertFalse(recover.verify(archive)[
+                    "artifact_transport_complete"])
+
+        # A forged complete lineage with final and incremental journals
+        # identical and a freshly computed SHA must also fail admission.
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "G01"
+            source.mkdir()
+            rows = [self.row(f"V-G01-{s}", p["id"])
+                    for s in "ABC" for p in self.cfg["prompts"]]
+            original = "".join(
+                screen.canonical(row) + "\\n" for row in rows).encode("utf-8")
+            forged = original.replace(
+                b'"prompt_id":"F01"',
+                b'"prompt_id":"F99","prompt_id":"F01"', 1)
+            self.assertNotEqual(original, forged)
+            (source / "results.partial.jsonl").write_bytes(forged)
+            (source / "results.jsonl").write_bytes(forged)
+            members, total = assemble.lineage_member_receipts(
+                self.cfg, "G01", rows)
+            assemble.write_json(source / "manifest.json", {
+                "schema": "detective-005a-live-lineage-manifest-v1",
+                "experiment": "DETECTIVE-005A",
+                "issue": 176,
+                "lineage": "G01",
+                "source_plan": live.source_plan("G01"),
+                "runner_script_sha256":
+                    screen.sha256_file(Path(live.__file__)),
+                "results_jsonl_sha256": screen.sha256_bytes(forged),
+                "results": 12,
+                "members": members,
+                "total_generated_tokens": total,
+                "peak_rss_kib": 1,
+                "optimizer_steps": 0,
+                "paid_api_calls": 0,
+                "model_judge_calls": 0,
+                "production_admission": False,
+                "population_expansion_admitted": False,
+            })
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "noncanonical or duplicate"):
+                assemble.read_lineage(self.cfg, "G01", source)
+
     def test_unauthorized_source_run_row_is_quarantined_not_discarded(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
