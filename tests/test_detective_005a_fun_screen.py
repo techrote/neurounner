@@ -210,6 +210,22 @@ class Detective005AFunScreenTests(unittest.TestCase):
                         screen.ScreenError, "source-bound native runner"):
                     screen.validate_result(self.cfg, forged)
 
+    def test_native_prompt_digest_exact_int64_little_endian_wire(self):
+        """Reference signed int64 packing and one-token tamper regression."""
+        import hashlib
+        import struct
+        ids = [1, 256, 65536, (1 << 31) + 1]
+        native_bytes = struct.pack("<4q", *ids)
+        self.assertEqual(
+            screen.prompt_ids_sha256(ids),
+            hashlib.sha256(native_bytes).hexdigest())
+        self.assertNotEqual(screen.prompt_ids_sha256(ids),
+                            screen.prompt_ids_sha256([2, *ids[1:]]))
+        for bad in ([True], [-1], [1 << 63], [2.5]):
+            with self.subTest(rejected=bad), self.assertRaisesRegex(
+                    screen.ScreenError, "invalid int64 prompt token IDs"):
+                screen.prompt_ids_sha256(bad)
+
     def test_review_packet_is_identity_blind_and_reconstructible(self):
         rows = self.synthetic_rows()
         packet, mapping = screen.build_review_packet(self.cfg, rows, self.TEST_SECRET)
