@@ -434,5 +434,22 @@ class Detective004ACustodyTests(unittest.TestCase):
 
 
 
+    def test_stage_a_policy_supersedes_retired_r1_gate(self):
+        # Only documentation may change; hash-bound corpus and source remain.
+        root=Path(__file__).resolve().parents[1]
+        stage=(root/"experiments/detective-004/STAGE_A.md").read_text(encoding="utf-8")
+        audit=(root/"experiments/detective-004/SECONDARY_CUSTODY_AUDIT.md").read_text(encoding="utf-8")
+        for doc in (stage,audit):
+            self.assertIn("objective relevance nonregression as a population-expansion gate",doc)
+            self.assertIn("subjective gameplay-reaction evidence",doc)
+            self.assertIn("stage_b_approved_only_after_merge",doc)
+        self.assertIn("necessary, never sufficient",stage)
+        self.assertIn("not a positive optimizer-authorization flag",audit)
+        self.assertNotIn("#121 still requires completely independent external blind relevance ratings",stage)
+        self.assertNotIn("no opaque relevance ratings, no population expansion",audit)
+        self.assertNotIn("still requires independent external\\nscores",audit)
+        self.assertIn("No population expansion is admitted",audit)
+
+
 if __name__ == "__main__":
     unittest.main()
