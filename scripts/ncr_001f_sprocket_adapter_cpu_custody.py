@@ -70,9 +70,11 @@ def audit_zip(raw: bytes) -> dict:
         runner_log = z.read("runner.log").decode("utf-8")
     refuse(source_head == (SOURCE_HEAD + "\n").encode(),
            "source Git head member changed")
+    # The original runner.log contains a real PyTorch missing-NumPy warning,
+    # not the workflow's later success sentinel. Preserve that negative as-is.
     refuse("Ran 7 tests" in tests_log and "\nOK" in tests_log
-           and "ADAPTER_ONLY_MEASURED__REAL_MODEL_BUDGET_UNQUALIFIED__NO_TRAIN" in runner_log,
-           "historical source/test observations changed")
+           and "Failed to initialize NumPy: No module named 'numpy'" in runner_log,
+           "original tests or runner warning changed")
     refuse(report["status"] == "ADAPTER_ONLY_CPU_FORWARD_MICROBENCH__FROZEN_HOST_NOT_EXECUTED__NO_TRAIN"
            and report["experiment"] == "NCR-001F" and report["issue"] == 73
            and report["seed"] == 20261029 and report["optimizer_steps"] == 0
