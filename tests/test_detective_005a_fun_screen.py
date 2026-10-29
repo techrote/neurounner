@@ -526,7 +526,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
                     self.assertIn('  "schema": ', original_text)
                     injected = original_text.replace(
                         '  "schema": ',
-                        '  "schema": "synthetic-private-material",\\n  "schema": ',
+                        '  "schema": "synthetic-private-material",\n  "schema": ',
                         1)
                     metadata_path.write_text(injected, encoding="utf-8")
                     inventory_path.write_text(assemble.hash_inventory(out),
@@ -540,7 +540,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
             readme_path = out / "README.md"
             original_readme_bytes = readme_path.read_bytes()
             readme_path.write_bytes(original_readme_bytes +
-                                    b"Private reviewer mapping: fake-secret\\n")
+                                    b"Private reviewer mapping: fake-secret\n")
             inventory_path.write_text(assemble.hash_inventory(out),
                                       encoding="utf-8")
             with self.assertRaisesRegex(screen.ScreenError,
