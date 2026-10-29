@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import copy
 import json
+import sys
 import tempfile
 import tarfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from scripts import detective_005a_fun_screen as screen
 from scripts import detective_005a_live as live
@@ -321,6 +323,9 @@ class Detective005AFunScreenTests(unittest.TestCase):
                 results.write_text(
                     "".join(screen.canonical(r) + "\n" for r in line_rows),
                     encoding="utf-8")
+                # Real workers fsync this identical incremental file first.
+                (folder / "results.partial.jsonl").write_bytes(
+                    results.read_bytes())
                 manifest = {
                     "schema": "detective-005a-live-lineage-manifest-v1",
                     "experiment": "DETECTIVE-005A",
@@ -364,6 +369,13 @@ class Detective005AFunScreenTests(unittest.TestCase):
             self.assertEqual(len(provenance["source_artifacts"]), 12)
             self.assertEqual(provenance["repository_head_sha"], "1" * 40)
             self.assertEqual(provenance["actions_run_id"], "123456")
+            journal = out / "raw" / "lineage-journals" / "G01.jsonl"
+            self.assertEqual(
+                journal.read_bytes(),
+                (artifacts / "G01" / "results.partial.jsonl").read_bytes())
+            self.assertEqual(
+                provenance["source_artifacts"][0]["incremental_journal_sha256"],
+                screen.sha256_file(journal))
             provenance_path = out / "provenance" / "source-artifacts.json"
             bad_provenance = copy.deepcopy(provenance)
             bad_provenance["source_artifacts"][0][
@@ -408,6 +420,107 @@ class Detective005AFunScreenTests(unittest.TestCase):
         del bad[0]["runner"]["actions_run_id"]
         with self.assertRaisesRegex(screen.ScreenError, "identity missing"):
             assemble.source_run_identity(bad)
+
+    def test_lineage_readback_rejects_missing_or_mismatched_fsynced_journal(self):
+        with tempfile.TemporaryDirectory() as td:
+            folder = Path(td) / "G01"
+            folder.mkdir()
+            line_rows = [r for r in self.synthetic_rows()
+                         if r["member_id"].split("-")[1] == "G01"]
+            raw = folder / "results.jsonl"
+            raw.write_text(
+                "".join(screen.canonical(r) + "\n" for r in line_rows),
+                encoding="utf-8")
+            manifest = {
+                "schema": "detective-005a-live-lineage-manifest-v1",
+                "experiment": "DETECTIVE-005A",
+                "issue": 176,
+                "lineage": "G01",
+                "source_plan": live.source_plan("G01"),
+                "runner_script_sha256":
+                    screen.sha256_file(Path(live.__file__)),
+                "results_jsonl_sha256": screen.sha256_file(raw),
+                "results": 12,
+                "optimizer_steps": 0,
+                "paid_api_calls": 0,
+                "model_judge_calls": 0,
+                "production_admission": False,
+                "population_expansion_admitted": False,
+            }
+            (folder / "manifest.json").write_text(
+                json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "fsynced journal missing"):
+                assemble.read_lineage(self.cfg, "G01", folder)
+            journal = folder / "results.partial.jsonl"
+            journal.write_bytes(raw.read_bytes()[:-1])
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "journal/final bytes mismatch"):
+                assemble.read_lineage(self.cfg, "G01", folder)
+            journal.write_bytes(raw.read_bytes())
+            result_manifest, observed = assemble.read_lineage(
+                self.cfg, "G01", folder)
+            self.assertEqual(len(observed), 12)
+            self.assertEqual(result_manifest["lineage"], "G01")
+
+    def test_refused_rerun_preserves_old_receipts_and_work_bytes(self):
+        cases = ("receipt_only", "work_only", "complete")
+        for case in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as td:
+                out = Path(td) / "lineage"
+                out.mkdir()
+                if case == "receipt_only":
+                    (out / "interrupted.json").write_bytes(
+                        b'{"old":"failure-original"}\n')
+                elif case == "work_only":
+                    work = out / "work" / "V-G01-A"
+                    work.mkdir(parents=True)
+                    (work / "adapter_model.safetensors").write_bytes(b"original")
+                else:
+                    for name in ("manifest.json", "results.jsonl",
+                                 "results.partial.jsonl", "interrupted.json"):
+                        (out / name).write_bytes(
+                            ("ORIGINAL " + name).encode("utf-8"))
+                before = {str(p.relative_to(out)): p.read_bytes()
+                          for p in out.rglob("*") if p.is_file()}
+                with mock.patch.object(sys, "argv", [
+                    "live.py", "--run", "--lineage", "G01",
+                    "--out", str(out)]), mock.patch.object(
+                        live, "run_lineage",
+                        side_effect=AssertionError("must not enter model path")
+                    ) as model:
+                    with self.assertRaisesRegex(
+                            live.PreexistingLineageEvidence, "refuse"):
+                        live.main()
+                    model.assert_not_called()
+                after = {str(p.relative_to(out)): p.read_bytes()
+                         for p in out.rglob("*") if p.is_file()}
+                self.assertEqual(before, after)
+
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "first-failure"
+            with mock.patch.object(sys, "argv", [
+                "live.py", "--run", "--lineage", "G01",
+                "--out", str(out)]), mock.patch.object(
+                    live, "run_lineage", side_effect=RuntimeError("first-error")
+                    ):
+                with self.assertRaisesRegex(RuntimeError, "first-error"):
+                    live.main()
+            receipt_path = out / "interrupted.json"
+            original = receipt_path.read_bytes()
+            with mock.patch.object(sys, "argv", [
+                "live.py", "--run", "--lineage", "G01",
+                "--out", str(out)]), mock.patch.object(
+                    live, "run_lineage",
+                    side_effect=AssertionError("must not rerun")) as model:
+                with self.assertRaises(live.PreexistingLineageEvidence):
+                    live.main()
+                model.assert_not_called()
+            self.assertEqual(receipt_path.read_bytes(), original)
+            with self.assertRaises(FileExistsError):
+                live.write_interrupted_receipt(
+                    "G01", out, RuntimeError("second-error"))
+            self.assertEqual(receipt_path.read_bytes(), original)
 
     def test_live_incremental_raw_and_failure_receipt_are_custodied(self):
         rows = self.synthetic_rows()[:2]
