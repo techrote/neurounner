@@ -84,7 +84,11 @@ def salvage_artifact_files(root: Path, lineage: str) -> tuple[dict[str, Path], l
             continue
         if path.is_dir():
             continue
-        if not path.is_file() or path.name not in ALLOWED or path.name in found:
+        # The upload contract puts each permitted file at the artifact root.
+        # Never flatten a nested impostor into the canonical raw filename;
+        # preserve unaffected root-level siblings and mark transport incomplete.
+        if (rel.parts != (path.name,) or not path.is_file() or
+                path.name not in ALLOWED or path.name in found):
             unsafe = True
             continue
         found[path.name] = path
@@ -553,6 +557,24 @@ def verify(path: Path) -> dict:
     screen.require(
         metadata_path.exists() == provenance.get("metadata_available"),
         "original artifact API availability drift")
+    # Git's SHA inventory alone cannot distinguish an unauthorized extra
+    # file from a legitimate one if both the file and inventory are changed.
+    # Reconstruct the strictly permitted archive paths from source provenance.
+    expected_files = {
+        "README.md", "manifest.json",
+        "provenance/source-artifacts.json", "provenance/hashes.sha256",
+    }
+    if metadata_path.exists():
+        expected_files.add("provenance/actions-artifacts-api.json")
+    for saved in provenance["lineages"]:
+        for item in saved["files"]:
+            expected_files.add(f'raw/{saved["lineage"]}/{item["name"]}')
+    actual_files = {
+        item.relative_to(path).as_posix()
+        for item in path.rglob("*") if item.is_file()
+    }
+    screen.require(actual_files == expected_files,
+                   "recovery archive contains unregistered or missing files")
     api, metadata_invalid = load_api_for_custody(
         metadata_path if metadata_path.exists() else None)
     screen.require(
