@@ -28,6 +28,8 @@ ORIGINAL_BUNDLE_GIT_BLOB = "daac05623ff4c8360ef89a040ec7a536e58b2286"
 ORIGINAL_MANIFEST_GIT_BLOB = "1640210cf26e4c5cc3f6d3bc3b952f6830e565ec"
 ORIGINAL_CUSTODY_BOOTSTRAP_LOG = "original-custody-bootstrap-job-123204676106.log"
 ORIGINAL_CUSTODY_BOOTSTRAP_GIT_BLOB = "5a7273716360ca3ab988206e316b9d0d8a417546"
+ORIGINAL_READONLY_LOG = "original-readonly-job-123205777828.log"
+ORIGINAL_READONLY_LOG_GIT_BLOB = "fc71281fa1fbc5ed4ecaeb52f69ab9616b4e4e1b"
 ORIGINAL_PR = 191
 ORIGINAL_HEAD = "6ae912c02c8f9a44bde606b5daa2c73ff8f70567"
 ORIGINAL_RUN = 40798938605
@@ -240,6 +242,12 @@ def audit(evidence: Path = EVIDENCE) -> dict:
            and b"Ran 14 tests" in bootstrap
            and b"PASS_ORIGINAL_CHAT_FULL_ZIP_AND_JOB_LOG_CUSTODY__72_BLOCKED" in bootstrap,
            "original exact-head archive promotion job-log bytes changed")
+    previous_readonly = (evidence / ORIGINAL_READONLY_LOG).read_bytes()
+    refuse(gitblob(previous_readonly) == ORIGINAL_READONLY_LOG_GIT_BLOB
+           and b"Ran 16 tests" in previous_readonly
+           and b"IMMUTABLE_ORIGINAL_CHAT_ARCHIVE__READ_ONLY" in previous_readonly
+           and b"PASS_ORIGINAL_CHAT_FULL_ZIP_AND_JOB_LOG_CUSTODY__72_BLOCKED" in previous_readonly,
+           "complete earlier exact-head read-only CI log bytes or checks changed")
     try:
         raw_bundle = (evidence / BUNDLE).read_bytes()
         refuse(gitblob(raw_bundle) == ORIGINAL_BUNDLE_GIT_BLOB,
@@ -251,6 +259,7 @@ def audit(evidence: Path = EVIDENCE) -> dict:
     return {"status": "PASS_ORIGINAL_CHAT_FULL_ZIP_AND_JOB_LOG_CUSTODY__72_BLOCKED",
             "original": result, "decoded_job_git_blob": JOB_BLOB,
             "original_bootstrap_job_git_blob": ORIGINAL_CUSTODY_BOOTSTRAP_GIT_BLOB,
+            "original_readonly_job_git_blob": ORIGINAL_READONLY_LOG_GIT_BLOB,
             "original_raw_zip_archive_git_blob": ORIGINAL_BUNDLE_GIT_BLOB,
             "original_manifest_git_blob": ORIGINAL_MANIFEST_GIT_BLOB,
             "train_authorized": False, "full_72_conformance_pass": False,
