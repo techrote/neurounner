@@ -61,6 +61,8 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 - **[DETECTIVE-005A private human-blind review custody](scripts/detective_005a_blind.py)** — merged #189 source-only issue #187 resolution: a complete source-verified raw archive precedes private reviewer delivery; a private 256-bit HMAC key holds member ordering outside the repository, and 144 human scores must be hashed/frozen before explicit unblinding. No complete 144-response dataset or private packet has been produced. Reviewer access to original identities/raw archive voids operational blinding; no model/training/cast admission.
 - Training datasets must follow the dataset filing-system contract before they are treated as durable evidence.
 
+- **[NCR-001B pure PyTorch cellular core](docs/NCR_001_B_CORE.md)** — shared 8×8×4 depth-persistent NCA with explicit per-forward state, frozen toy-backbone gradient proof, reproducible CPU tests and [source-bound synthetic evidence](experiments/ncr-001/core-evidence/core-smoke.json). It is not LM integration, cache conformance or training admission.
+
 ## Retrieval rules
 
 1. Prefer primary dataset records over prose summaries when answering questions about exact prompts or outputs.
