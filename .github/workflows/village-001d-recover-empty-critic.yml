@@ -1,0 +1,110 @@
+name: Recover VILLAGE-001D after empty critic repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/village-001d-recover-empty-critic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: neurounner-village-001d-empty-critic-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      SOURCE_RUN_ID: '40240732988'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Require exact terminal source run and complete artifact custody
+        run: |
+          read -r status conclusion head_sha < <(
+            gh run view "$SOURCE_RUN_ID"               --repo "$GITHUB_REPOSITORY"               --json status,conclusion,headSha               --jq '[.status, (.conclusion // ""), .headSha] | @tsv'
+          )
+          echo "source: status=$status conclusion=$conclusion head=$head_sha"
+          test "$status" = "completed"
+          test "$conclusion" = "failure"
+          test "$head_sha" = "b0734d52b2524ffef57faa932434c4c5e87e12cc"
+
+          feedback_count=$(gh api             "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100"             --jq '[.artifacts[].name | select(startswith("village001d-feedback-"))] | length')
+          pair_count=$(gh api             "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100"             --jq '[.artifacts[].name | select(startswith("village001d-pairs-"))] | length')
+
+          echo "feedback artifacts: $feedback_count"
+          echo "pair artifacts: $pair_count"
+          test "$feedback_count" -eq 36
+          test "$pair_count" -eq 36
+
+      - name: Verify preserved V-G08-C partial is the failed critic lane
+        run: |
+          rm -rf source-vg08c
+          mkdir -p source-vg08c
+          gh run download "$SOURCE_RUN_ID"             --repo "$GITHUB_REPOSITORY"             --name village001d-pairs-V-G08-C             --dir source-vg08c
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          root=Path("source-vg08c")
+          partial=root/"pairs.partial.jsonl"
+          assert partial.is_file()
+          assert not (root/"pairs.jsonl").exists()
+          rows=[
+              json.loads(line)
+              for line in partial.read_text().splitlines()
+              if line.strip()
+          ]
+          assert len(rows)==40,len(rows)
+          assert len({row["pair_id"] for row in rows})==40
+
+          critic=json.loads((root/"quality/critic.partial.json").read_text())
+          assert len(critic)==40,len(critic)
+          assert not json.loads((root/"quality/adjudicator.partial.json").read_text())
+
+          empty_repairs=[]
+          for path in sorted((root/"provider").glob(
+              "V-G08-C-pairs-chunk03-critic-r0-targeted-repair*-content.txt"
+          )):
+              if path.read_text().strip()=='{"reviews":[]}':
+                  empty_repairs.append(path.name)
+          assert len(empty_repairs)>=3,empty_repairs
+          print("V-G08-C preserved partial: 40/60; empty critic repairs:", empty_repairs)
+          PY
+
+      - name: Require no active VILLAGE-001D run
+        run: |
+          active=$(gh run list             --repo "$GITHUB_REPOSITORY"             --workflow "village-001d-preference.yml"             --branch main             --limit 30             --json databaseId,status             --jq '[.[] | select(.status != "completed")] | length')
+          echo "active D runs: $active"
+          test "$active" -eq 0
+
+      - name: Verify empty-critic hardening is on main
+        env:
+          PYTHONPATH: scripts
+        run: |
+          python3 - <<'PY'
+          from village_001d_compile_pairs import critic_repair_batch_size
+
+          assert [critic_repair_batch_size(x) for x in (1,2,3)] == [10,5,1]
+          try:
+              critic_repair_batch_size(4)
+          except ValueError:
+              pass
+          else:
+              raise AssertionError("unbounded critic repair round accepted")
+          print("empty-critic hardening: PASS")
+          PY
+
+      - name: Dispatch recovered D campaign
+        run: |
+          gh workflow run village-001d-preference.yml             --repo "$GITHUB_REPOSITORY"             --ref main             -f resume_run_id="$SOURCE_RUN_ID"
+          echo "Dispatched D recovery from run $SOURCE_RUN_ID."

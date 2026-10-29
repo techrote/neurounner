@@ -1,0 +1,81 @@
+name: NCR-001E four-model original source receipt readback
+
+on:
+  pull_request:
+    branches: [main, research/ncr-001a-protocol-preflight]
+    paths:
+      - ".github/workflows/ncr-001e-readback.yml"
+      - "scripts/ncr_001e_readback.py"
+      - "tests/test_ncr_001e_readback.py"
+      - "experiments/ncr-001/evidence-review/**"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/source-pins.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001e-readback-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  independent-readback:
+    name: Four source receipts + causal/leakage negative sentinel controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile pure standard-library reviewer (no model runtime)
+        run: |
+          python3 -m py_compile scripts/ncr_001e_readback.py tests/test_ncr_001e_readback.py
+      - name: Fail-closed original receipt and provenance verification
+        run: |
+          python3 -m unittest discover -s tests -p "test_ncr_001e_readback.py" -v
+      - name: Archive strictly preliminary four-source audit
+        run: |
+          python3 scripts/ncr_001e_readback.py \
+            --out runtime/ncr-001/four-model-prepass-readback.json
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          path=Path("runtime/ncr-001/four-model-prepass-readback.json")
+          report=json.loads(path.read_text())
+          assert report["source_integrity_readback_pass"] is True
+          assert report["independent_runtime_conformance_pass"] is False
+          assert report["any_model_training_admitted"] is False
+          assert not report["study_quality_or_speed_result"]
+          assert len(report["model_lanes"])==4
+          assert all(not m["training_admitted"] for m in report["model_lanes"].values())
+          print("Exact source-bound audit SHA-256:",hashlib.sha256(path.read_bytes()).hexdigest())
+          PY
+      - name: Independently regenerate and verify original auditor report SHA-256
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          path=Path("runtime/ncr-001/four-model-prepass-readback.json")
+          p=json.loads(Path("experiments/ncr-001/evidence-review/audit-provenance.json").read_text())
+          want=p["source"]["original_uncompressed_report_sha256"]
+          got=hashlib.sha256(path.read_bytes()).hexdigest()
+          assert got==want,(got,want)
+          data=json.loads(path.read_text())
+          assert data["source_integrity_readback_pass"] is True
+          assert data["independent_runtime_conformance_pass"] is False
+          assert data["any_model_training_admitted"] is False
+          assert all(not m["training_admitted"] for m in data["model_lanes"].values())
+          print("Four-source original audit reproduced:",got)
+          PY
+      - name: Save ephemeral audit report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr-001e-preliminary-source-readback-a${{ github.run_attempt }}
+          path: runtime/ncr-001/four-model-prepass-readback.json
+          retention-days: 30
+          if-no-files-found: warn

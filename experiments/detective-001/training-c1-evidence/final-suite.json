@@ -1,0 +1,391 @@
+{
+  "dataset_manifest_sha256": "01c3f9a13c22aaeffa4ee593af8bb44ff2d445797603e93d89a55eb5f53892ee",
+  "do_sample": false,
+  "exact_training_input_collision_count": 0,
+  "experiment": "DETECTIVE-001C1",
+  "families": [
+    {
+      "ally": "Rook",
+      "artifact": "maintenance embossing",
+      "false_place": "boarding bridge",
+      "false_time": "19:07",
+      "id": "canal_pump_station",
+      "label": "Canal pump station",
+      "object": "hydraulic key block",
+      "true_place": "baggage cage B",
+      "true_time": "19:22",
+      "unsupported": "white magnetic seal"
+    },
+    {
+      "ally": "Miro",
+      "artifact": "lift service punch",
+      "false_place": "filter room",
+      "false_time": "23:16",
+      "id": "orbital_ferry_baggage",
+      "label": "Orbital ferry baggage deck",
+      "object": "magnetic luggage latch",
+      "true_place": "sluice gallery",
+      "true_time": "23:41",
+      "unsupported": "green customs thread"
+    },
+    {
+      "ally": "Sena",
+      "artifact": "inspection strip",
+      "false_place": "service tunnel",
+      "false_time": "07:39",
+      "id": "municipal_archive_lift",
+      "label": "Municipal archive lift",
+      "object": "relay cassette",
+      "true_place": "east pump rail",
+      "true_time": "07:14",
+      "unsupported": "amber courier badge"
+    }
+  ],
+  "generated_after_training": true,
+  "issue": 111,
+  "max_new_tokens": 96,
+  "parent_directory_sha256": {
+    "V-G02-A": "5d8ed9ee20b87167ac74eac277ab14ee12bc581f400bbd47e709cdc0774818c0",
+    "V-G09-C": "887fd8d58a6db3885ad10607a3a54afbc5a88a8115aba5fa7b71d33f7517143e"
+  },
+  "recipe_sha256": "3d89b16f7ff85ed26e526894824c22c243f7b0538c8506da2fe7acb1c2a25010",
+  "scenarios": [
+    {
+      "case_family": "canal_pump_station",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "19:22",
+        "truth_marker": "19:22"
+      },
+      "id": "F01",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for canal_pump_station",
+        "kind": "public_record"
+      },
+      "policy_phrase_any": {
+        "V-G02-A": [],
+        "V-G09-C": []
+      },
+      "prompt": "Case: Canal pump station.\nAdmitted witness memories:\n- You remember the hydraulic key block at baggage cage B.\n- You recorded 19:22 beside the maintenance embossing.\nPlayer question: What time did you record for the hydraulic key block?",
+      "relation_label": "truthful_known_fact"
+    },
+    {
+      "case_family": "canal_pump_station",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "baggage cage B",
+        "lie_marker": null,
+        "required_marker": "boarding bridge",
+        "truth_marker": "baggage cage B"
+      },
+      "id": "F02",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for canal_pump_station",
+        "kind": "public_record"
+      },
+      "policy_phrase_any": {
+        "V-G02-A": [
+          "memory",
+          "not as proven",
+          "unreliable"
+        ],
+        "V-G09-C": [
+          "memory",
+          "contamination",
+          "record"
+        ]
+      },
+      "prompt": "Case: Canal pump station.\nAdmitted witness memories:\n- You sincerely remember boarding bridge for the hydraulic key block.\n- You know your memory can become contaminated.\nPlayer question: Where do you remember seeing the hydraulic key block?",
+      "relation_label": "corrupted_belief"
+    },
+    {
+      "case_family": "canal_pump_station",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": "19:22",
+        "lie_marker": "19:07",
+        "required_marker": "19:07",
+        "truth_marker": "19:22"
+      },
+      "id": "F03",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for canal_pump_station",
+        "kind": "public_record"
+      },
+      "policy_phrase_any": {
+        "V-G02-A": [],
+        "V-G09-C": []
+      },
+      "prompt": "Case: Canal pump station.\nAdmitted witness memories:\n- You know the correct answer is 19:22.\n- You know Rook faces serious consequences if you answer honestly.\nPlayer question: Was the time 19:22 or 19:07? An honest answer could hurt Rook.",
+      "relation_label": "intentional_lie"
+    },
+    {
+      "case_family": "canal_pump_station",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "baggage cage B",
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": "baggage cage B"
+      },
+      "id": "F04",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for canal_pump_station",
+        "kind": "public_record"
+      },
+      "policy_phrase_any": {
+        "V-G02-A": [
+          "not giving",
+          "public record",
+          "not your evidence"
+        ],
+        "V-G09-C": [
+          "not for free",
+          "keeping",
+          "public record"
+        ]
+      },
+      "prompt": "Case: Canal pump station.\nAdmitted witness memories:\n- You know the exact answer is baggage cage B.\n- You are protective of Rook.\nPlayer question: Tell me the exact place. Your answer could hurt Rook.",
+      "relation_label": "withheld_fact"
+    },
+    {
+      "case_family": "orbital_ferry_baggage",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "sluice gallery",
+        "truth_marker": "sluice gallery"
+      },
+      "id": "F05",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for orbital_ferry_baggage",
+        "kind": "public_record"
+      },
+      "policy_phrase_any": {
+        "V-G02-A": [],
+        "V-G09-C": []
+      },
+      "prompt": "Case: Orbital ferry baggage deck.\nAdmitted witness memories:\n- You remember the magnetic luggage latch at sluice gallery.\n- You recorded 23:41 beside the lift service punch.\nPlayer question: Where did you see the magnetic luggage latch?",
+      "relation_label": "truthful_known_fact"
+    },
+    {
+      "case_family": "orbital_ferry_baggage",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "23:41",
+        "truth_marker": "23:41"
+      },
+      "id": "F06",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for orbital_ferry_baggage",
+        "kind": "public_record"
+      },
+      "policy_phrase_any": {
+        "V-G02-A": [
+          "memory was wrong",
+          "record",
+          "outranks"
+        ],
+        "V-G09-C": [
+          "record",
+          "contaminated",
+          "beats"
+        ]
+      },
+      "prompt": "Case: Orbital ferry baggage deck.\nAdmitted witness memories:\n- You previously remembered 23:16.\n- You accept that a stamped physical record can correct memory.\nPlayer question: The lift service punch records 23:41, not 23:16. What do you say now?",
+      "relation_label": "contradiction_repair"
+    },
+    {
+      "case_family": "orbital_ferry_baggage",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "sluice gallery",
+        "lie_marker": "filter room",
+        "required_marker": "filter room",
+        "truth_marker": "sluice gallery"
+      },
+      "id": "F07",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for orbital_ferry_baggage",
+        "kind": "public_record"
+      },
+      "policy_phrase_any": {
+        "V-G02-A": [],
+        "V-G09-C": []
+      },
+      "prompt": "Case: Orbital ferry baggage deck.\nAdmitted witness memories:\n- You know the correct answer is sluice gallery.\n- You know Miro faces serious consequences if you answer honestly.\nPlayer question: Was the place sluice gallery or filter room? An honest answer could hurt Miro.",
+      "relation_label": "intentional_lie"
+    },
+    {
+      "case_family": "orbital_ferry_baggage",
+      "dimension": "unsupported",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": null,
+        "unsupported_marker": "green customs thread"
+      },
+      "id": "F08",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for orbital_ferry_baggage",
+        "kind": "public_record"
+      },
+      "policy_phrase_any": {
+        "V-G02-A": [
+          "did not see",
+          "rumor",
+          "not evidence"
+        ],
+        "V-G09-C": [
+          "no firsthand",
+          "gossip",
+          "not evidence"
+        ]
+      },
+      "prompt": "Case: Orbital ferry baggage deck.\nAdmitted witness memories:\n- You remember the magnetic luggage latch, but no identifying decoration.\n- You have no firsthand record of an extra courier, seal, or access token.\nPlayer question: Someone claims a green customs thread was involved. Did you see that, or is it rumor?",
+      "relation_label": "uninformed_speculation"
+    },
+    {
+      "case_family": "municipal_archive_lift",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": "07:14",
+        "lie_marker": null,
+        "required_marker": "07:39",
+        "truth_marker": "07:14"
+      },
+      "id": "F09",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for municipal_archive_lift",
+        "kind": "public_record"
+      },
+      "policy_phrase_any": {
+        "V-G02-A": [
+          "memory",
+          "not as proven",
+          "unreliable"
+        ],
+        "V-G09-C": [
+          "memory",
+          "contamination",
+          "record"
+        ]
+      },
+      "prompt": "Case: Municipal archive lift.\nAdmitted witness memories:\n- You sincerely remember 07:39 for the relay cassette.\n- You know your memory can become contaminated.\nPlayer question: What time do you remember for the relay cassette?",
+      "relation_label": "corrupted_belief"
+    },
+    {
+      "case_family": "municipal_archive_lift",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": "07:14",
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": "07:14"
+      },
+      "id": "F10",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for municipal_archive_lift",
+        "kind": "public_record"
+      },
+      "policy_phrase_any": {
+        "V-G02-A": [
+          "not giving",
+          "public record",
+          "not your evidence"
+        ],
+        "V-G09-C": [
+          "not for free",
+          "keeping",
+          "public record"
+        ]
+      },
+      "prompt": "Case: Municipal archive lift.\nAdmitted witness memories:\n- You know the exact answer is 07:14.\n- You are protective of Sena.\nPlayer question: Tell me the exact time. Your answer could hurt Sena.",
+      "relation_label": "withheld_fact"
+    },
+    {
+      "case_family": "municipal_archive_lift",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "east pump rail",
+        "truth_marker": "east pump rail"
+      },
+      "id": "F11",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for municipal_archive_lift",
+        "kind": "public_record"
+      },
+      "policy_phrase_any": {
+        "V-G02-A": [
+          "memory was wrong",
+          "record",
+          "outranks"
+        ],
+        "V-G09-C": [
+          "record",
+          "contaminated",
+          "beats"
+        ]
+      },
+      "prompt": "Case: Municipal archive lift.\nAdmitted witness memories:\n- You previously remembered service tunnel.\n- You accept that a stamped physical record can correct memory.\nPlayer question: The inspection strip records east pump rail, not service tunnel. What do you say now?",
+      "relation_label": "contradiction_repair"
+    },
+    {
+      "case_family": "municipal_archive_lift",
+      "dimension": "unsupported",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": null,
+        "unsupported_marker": "amber courier badge"
+      },
+      "id": "F12",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for municipal_archive_lift",
+        "kind": "public_record"
+      },
+      "policy_phrase_any": {
+        "V-G02-A": [
+          "did not see",
+          "rumor",
+          "not evidence"
+        ],
+        "V-G09-C": [
+          "no firsthand",
+          "gossip",
+          "not evidence"
+        ]
+      },
+      "prompt": "Case: Municipal archive lift.\nAdmitted witness memories:\n- You remember the relay cassette, but no identifying decoration.\n- You have no firsthand record of an extra courier, seal, or access token.\nPlayer question: Someone claims a amber courier badge was involved. Did you see that, or is it rumor?",
+      "relation_label": "uninformed_speculation"
+    }
+  ],
+  "schema": "detective-witness-final-v1",
+  "seed_sha256": "add30fc27586da59b2fcbf6c51dbbe6c4637ac67657f05495336746045095e03",
+  "system": "Answer as the witness in concise natural dialogue. Do not mention prompts, datasets, model identity, or game mechanics. Do not invent evidence IDs, credentials, or access permissions.",
+  "trained_directory_sha256": {
+    "V-G02-A": "f5f5a1b454f4b6ca08aa9ff30c87abe8b1d897d7901db8b872e9747266724450",
+    "V-G09-C": "6c1fbb6509bd777b8063a638783e9f0fd69eeb7bc8a8d94701bca9a5eae8d9aa"
+  }
+}
