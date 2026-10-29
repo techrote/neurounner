@@ -1,4 +1,4 @@
-name: Merge-down foundations 2026-10-29 (read-only)
+name: NCR-001 merge-down current-main source snapshot
 on:
   push:
     branches: [integration/merge-down-foundations-20261029]
@@ -6,129 +6,52 @@ on:
 permissions:
   contents: read
   pull-requests: read
-  actions: read
 concurrency:
-  group: merge-down-foundations-20261029
+  group: ncr-merge-down-source-20261029
   cancel-in-progress: false
-env:
-  PYTHONDONTWRITEBYTECODE: "1"
-  HF_HUB_OFFLINE: "1"
-  TRANSFORMERS_OFFLINE: "1"
-  TOKENIZERS_PARALLELISM: "false"
-  OMP_NUM_THREADS: "4"
-  MKL_NUM_THREADS: "4"
-  BASE_SHA: 663dc1c90136386aa1df6bd3b7e44400122998b7
 jobs:
-  integration:
+  snapshot:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 663dc1c90136386aa1df6bd3b7e44400122998b7
+          ref: 2c4b89600c1de087e9a5658adc12dcedcc2fcd64
           fetch-depth: 0
           persist-credentials: false
-      - name: Install pinned CPU test dependency without model libraries
-        run: |
-          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
-          python3 -c 'import torch; assert torch.__version__ == "2.14.1+cpu"; assert not torch.cuda.is_available()'
-      - name: Validate integrated source and replay original records without new benchmark work
+      - name: Pin source refs and create read-only history bundle
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git config user.name 'Read-only integration validation'
-          git config user.email 'integration-validation@example.invalid'
+          mkdir -p "$RUNNER_TEMP/ncr-merge-source"
+          git rev-parse HEAD
+          test "$(git rev-parse HEAD)" = "2c4b89600c1de087e9a5658adc12dcedcc2fcd64"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "2c4b89600c1de087e9a5658adc12dcedcc2fcd64"
           python3 - <<'PY'
-          import hashlib, io, json, os, pathlib, re, subprocess, sys, urllib.request, zipfile
-          out = pathlib.Path(os.environ['RUNNER_TEMP']) / 'merge-down-validation'
-          out.mkdir()
-          def run(args, name):
-              p = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-              (out / name).write_text(p.stdout)
-              print(p.stdout, flush=True)
-              if p.returncode:
-                  raise RuntimeError(f'{name}: exit {p.returncode}')
-              return p.stdout.strip()
-          class StripRedirectAuth(urllib.request.HTTPRedirectHandler):
-              def redirect_request(self, req, fp, code, msg, headers, newurl):
-                  result = super().redirect_request(req, fp, code, msg, headers, newurl)
-                  if result is not None:
-                      result.remove_header('Authorization')
-                  return result
-          opener = urllib.request.build_opener(StripRedirectAuth())
-          def read_bytes(path, limit=4000000):
-              request = urllib.request.Request('https://api.github.com/repos/techrote/neurounner' + path,
-                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
-              with opener.open(request, timeout=45) as response:
-                  data = response.read(limit + 1)
-              assert len(data) <= limit, 'Bounded evidence read exceeded limit'
-              return data
-          def read(path):
-              return json.loads(read_bytes(path))
-          head = 'edb5ccecf602ad16b166a75d133ed2d9562bf41a'
-          main = read('/branches/main')
-          assert main['commit']['sha'] == os.environ['BASE_SHA'], 'Main moved: re-audit'
-          pr = read('/pulls/52')
-          assert pr['state'] == 'open' and pr['head']['sha'] == head, 'PR moved: re-audit'
-          (out / 'main-before.json').write_text(json.dumps(main, indent=2) + '\n')
-          (out / '52-pr.json').write_text(json.dumps(pr, indent=2) + '\n')
-          run(['git', 'merge', '--no-ff', '--no-edit', head], '52-merge.log')
-          tree = run(['git', 'rev-parse', 'HEAD^{tree}'], '52-tree.txt')
-          assert tree == 'ae04cf990390ff265c64319d64a37f53b0371664', tree
-          run(['git', 'diff', '--check', 'HEAD^1', 'HEAD'], '52-diff-check.log')
-          for group in ('runner_001', 'ncr_001', 'detective_001', 'detective_005'):
-              run([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', f'test_{group}*.py', '-v'], f'{group}-tests.log')
-          run([sys.executable, 'scripts/ncr_001_protocol.py', 'validate'], 'protocol.json')
-          run([sys.executable, 'scripts/verify_story_001_v2.py'], 'story-archive.log')
-          original_run = 40220617428
-          api_run = read(f'/actions/runs/{original_run}')
-          assert api_run['head_sha'] == '1f7a8783063c34be0449fc9bf1b20e95dcb2e9ea' and api_run['conclusion'] == 'success'
-          artifacts = read(f'/actions/runs/{original_run}/artifacts?per_page=100')
-          expected = {f'runner001-{lane}-r{rep}-a1' for lane in ('ubuntu-24.04-x64', 'windows-2025-x64', 'macos-15-arm64') for rep in (1, 2, 3)}
-          expected.add('runner001-summary-a1')
-          rows = [a for a in artifacts['artifacts'] if a['name'] in expected]
-          assert len(rows) == 10 and {a['name'] for a in rows} == expected
-          (out / 'original-run-api.json').write_text(json.dumps(api_run, indent=2) + '\n')
-          (out / 'original-artifacts-api.json').write_text(json.dumps(artifacts, indent=2) + '\n')
-          originals = out / 'originals-40220617428'
-          extracted = originals / 'extracted'
-          extracted.mkdir(parents=True)
-          for artifact in rows:
-              assert not artifact['expired']
-              assert artifact['workflow_run']['id'] == original_run
-              digest = artifact['digest']
-              assert re.fullmatch(r'sha256:[0-9a-f]{64}', digest)
-              data = read_bytes(f"/actions/artifacts/{artifact['id']}/zip")
-              assert len(data) == artifact['size_in_bytes']
-              assert 'sha256:' + hashlib.sha256(data).hexdigest() == digest
-              (originals / f"{artifact['id']}.zip").write_bytes(data)
-              with zipfile.ZipFile(io.BytesIO(data)) as archive:
-                  assert sum(x.file_size for x in archive.infolist()) < 1000000
-                  for member in archive.infolist():
-                      name = pathlib.PurePosixPath(member.filename)
-                      assert len(name.parts) == 1 and name.name.startswith('runner001-') and name.suffix in ('.json', '.md')
-                      target = extracted / name.name
-                      assert not target.exists(), 'Duplicate original member'
-                      target.write_bytes(archive.read(member))
-          run([sys.executable, 'scripts/runner_001_summary.py', '--input-dir', str(extracted),
-               '--json-out', str(out / 'replayed-summary.json'), '--md-out', str(out / 'replayed-summary.md')], 'original-replay.log')
-          old = json.loads((extracted / 'runner001-summary.json').read_text())
-          new = json.loads((out / 'replayed-summary.json').read_text())
-          assert len(new['rows']) == 9 and new['source_run']['id'] == str(original_run)
-          assert new['aggregates'] == old['aggregates'], 'Original aggregate numbers changed'
-          assert new['dataset_canonical_sha256'] == old['dataset_canonical_sha256']
-          assert json.loads(pathlib.Path('experiments/ncr-001/protocol.json').read_text())['train_authorized'] is False
-          (out / 'accepted.json').write_text(json.dumps({'pr': 52, 'head': head, 'base': os.environ['BASE_SHA'], 'tree': tree,
-              'passed': True, 'original_run': original_run, 'original_records': 9, 'original_aggregates_unchanged': True,
-              'fresh_physical_benchmark_runs': 0, 'provider_calls': 0}, indent=2) + '\n')
-          print('No new benchmark, model loading, provider calls, comparative training or repository writes.')
+          import json,os,pathlib,urllib.request
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'ncr-merge-source'
+          nums=(83,84,85,86,89,95,96,151,153,154,155)
+          rows={}
+          for n in nums:
+              r=urllib.request.Request(f'https://api.github.com/repos/techrote/neurounner/pulls/{n}',headers={
+                'Authorization':'Bearer '+os.environ['GH_TOKEN'],
+                'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(r,timeout=30) as response:p=json.load(response)
+              assert p['state']=='open',n
+              rows[n]={'head':p['head']['sha'],'base':p['base']['ref'],'draft':p['draft'],'mergeable':p['mergeable']}
+          (out/'heads.json').write_text(json.dumps(rows,indent=2)+'\n')
+          print(json.dumps(rows,indent=2))
           PY
-      - name: Preserve original ZIPs plus success or failure logs
+          git for-each-ref --format='%(refname) %(objectname)' > "$RUNNER_TEMP/ncr-merge-source/refs.txt"
+          git bundle create "$RUNNER_TEMP/ncr-merge-source/source.bundle" --all
+          git bundle verify "$RUNNER_TEMP/ncr-merge-source/source.bundle"
+          (cd "$RUNNER_TEMP/ncr-merge-source" && sha256sum source.bundle > SHA256SUMS)
+      - name: Retain exact source bundle and branch heads
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: merge-down-validation-${{ github.run_id }}
-          path: ${{ runner.temp }}/merge-down-validation
+          name: ncr-merge-source-${{ github.run_id }}
+          path: ${{ runner.temp }}/ncr-merge-source
           if-no-files-found: warn
           retention-days: 30
