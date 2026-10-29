@@ -481,3 +481,47 @@ custody; it does not establish that a model actually produced the text.
 The synthetic adversarial fixture checks both duplicate-key and trailing-space
 cases, and a forged complete 12-row lineage with matching journal, final file,
 and recomputed manifest digest. No original archived evidence is rewritten.
+
+### Independent source review #5703653661 — correction pending acceptance (PR #196)
+
+The submitted independent `COMMENTED` review of literal head
+`492847b3c412763e284370b887afb2fa2c6c2860` identified four blocking
+gaps in otherwise passing **no-model** synthetic CI. The following are
+source-only corrections requiring new exact-head CI and distinct correction
+acceptance before any merge:
+
+- The original combined `raw/results.jsonl` archive must match its canonical
+  144-row JSONL+LF serialization byte-for-byte. Rehashing a duplicate key,
+  injected blank row, or other noncanonical aggregate does not authorize
+  complete-screen admission, even if unchanged lineage journals still match
+  the parsed values.
+- Production `read_lineage`, `assemble`, and fetched `verify_dataset`
+  require native runner receipts. Explicit `synthetic_test_only` rows are
+  valid **only when a Python unit test expressly passes**
+  `allow_synthetic_test_only=True`; there is no command-line or live-workflow
+  override, and the blind custodian's normal verifier remains native-only.
+  Synthetic rows in failed-run archives may still be retained as original
+  evidence but cannot qualify a completed lineage or a real 144/144 screen.
+- Native `prompt_ids_sha256` is recomputed over the full `prompt_token_ids`
+  array, serialized as **little-endian signed int64** (the frozen x86_64
+  PyTorch/NumPy input-ID layout). The verifier refuses a well-formed but
+  incorrect digest, and an offline tamper test alters one token while
+  preserving the recorded hash.
+- A **self-rehashed public recovery archive cannot prove whether unsafe
+  downloaded source entries were omitted**. A standalone `verify` returns
+  `artifact_transport_claimed` separately from the independently qualified
+  `artifact_transport_complete` (false without fresh originals). A
+  positive `--require-complete-transport` gate now requires *both* the
+  separately supplied original downloaded tree
+  (`--original-artifacts artifacts`) and its original GitHub Actions API
+  response (`--original-artifact-api artifacts-api.json`), and rechecks
+  the source structure warning state, expected file bytes, and API bytes.
+  A forged cleared warning list, even with a recomputed SHA inventory,
+  cannot pass against the original unsafe source. If originals are lost or
+  expire, **the positive transport gate is unqualified**, not silently
+  reconstructed from the published archive.
+
+These measures do not prove independent original model execution, a successful
+remote GitHub branch push, a cancelled-workflow recovery, or human-rating
+independence. No 144-generation inference, training, scoring, private mapping
+disclosure, or population admission is authorized by this correction.
