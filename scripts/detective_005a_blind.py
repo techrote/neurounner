@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import secrets
 import sys
 from pathlib import Path
@@ -38,14 +39,60 @@ def disjoint(a: Path, b: Path) -> None:
                    "private and reviewer outputs must be disjoint")
 
 
-def secure_custody_available() -> bool:
-    """POSIX file modes are verified here; NTFS ACL handling is not implemented."""
-    return os.name == "posix"
+# Fail closed on Windows-backed and network filesystems even under WSL:
+# os.name == "posix" does not imply that chmod controls NTFS/DrvFs access.
+LOCAL_LINUX_FILESYSTEMS = frozenset({
+    "ext2", "ext3", "ext4", "xfs", "btrfs", "zfs", "f2fs",
+    "tmpfs", "ramfs", "overlay",
+})
+
+
+def _linux_mount_type(path: Path) -> str | None:
+    """Find the most-specific Linux mount covering a future custody path."""
+    try:
+        mountinfo = Path("/proc/self/mountinfo").read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return None
+    target = path.resolve()
+    best: tuple[int, str] | None = None
+    for line in mountinfo.splitlines():
+        if " - " not in line:
+            continue
+        left, right = line.split(" - ", 1)
+        before, after = left.split(), right.split()
+        if len(before) < 5 or not after:
+            continue
+        mount_name = re.sub(
+            r"\\([0-7]{3})",
+            lambda match: chr(int(match.group(1), 8)),
+            before[4],
+        )
+        mount_path = Path(mount_name)
+        if not mount_path.is_absolute() or not target.is_relative_to(mount_path):
+            continue
+        depth = len(mount_path.parts)
+        if best is None or depth > best[0]:
+            best = (depth, after[0].lower())
+    return best[1] if best is not None else None
+
+
+def secure_custody_available(path: Path) -> bool:
+    """Require private POSIX modes on a vetted local filesystem.
+
+    Linux /proc mountinfo must identify ext4 or another local POSIX filesystem.
+    WSL DrvFs (typically 9p), NTFS, FUSE and network mounts fail closed.
+    """
+    if os.name != "posix":
+        return False
+    if sys.platform.startswith("linux"):
+        return _linux_mount_type(path) in LOCAL_LINUX_FILESYSTEMS
+    # Native macOS/BSD POSIX filesystems are not classified via /proc.
+    return True
 
 
 def new_private_dir(path: Path) -> None:
-    screen.require(secure_custody_available(),
-                   "private custody requires POSIX permissions; use WSL/Linux")
+    screen.require(secure_custody_available(path),
+                   "private custody requires POSIX permissions on a vetted local filesystem")
     screen.require(not path.exists() and not path.is_symlink(),
                    "refuse overwrite of sealed review custody")
     outside_repo(path)
