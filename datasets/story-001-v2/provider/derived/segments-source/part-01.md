@@ -1,0 +1,17 @@
+Brownout held the city-zone in a dim, humming half-light. Lamps along the perimeter blinked once, twice, then stayed dark. Burnt copper and wet wool drifted through the corridors, thick and wrong, the scent of insulation overheating behind the walls. My boots clicked on slick grating as I moved toward the boundary. The companion walked beside me, quiet, shoulders tight against the dark.
+
+The green light at the edge blinked once and died. A door closed somewhere behind us with a heavy thud that settled in the floorboards. We crossed the gap where the city-zone ended and the autofactory district began. Cold rusted pipes ran along the corridor wall, dripping onto oily steel. Heat radiated from the machinery ahead, a low thrum rising through the soles of my boots.
+
+A knock-code sequence against the hatch. Metal yielded, groaning inward. We stepped into the service corridor. Pipes ran overhead, sweating condensation onto the grating. The smell grew stronger here, burnt copper and wet wool mixing with hot insulation and the sour tang of old grease.
+
+The companion stopped at the boundary line where the corridor opened onto the sorting floor. I kept moving, hand trailing along the cold metal wall, boots clicking on slick grating toward the maintenance access.
+
+The corridor narrowed as I left them behind, the walls pressing in with a damp, metallic chill. I shifted my weight from one foot to the other, feeling the grating flex under my soles, slick with a film of condensation that made each step slide slightly before catching. My fingers brushed the wall, tracing the seams where plates had been riveted together decades ago, the metal cold enough to numb my fingertips through the thin fabric of my gloves. The air tasted of ozone and old dust, thick enough to coat the back of my throat.
+
+Ahead, the maintenance access loomed, a heavy slab of reinforced steel set into the corridor wall. It was recessed several feet, sheltered from the main flow of the district, its surface scarred with impact marks and streaks of dried lubricant. I approached it slowly, my boots echoing in the confined space, the sound bouncing off the pipes and returning to me as a hollow, rhythmic tapping.
+
+I reached out and touched the access plate. It was vibrating faintly, a sympathetic resonance from the machinery humming beyond the wall. I pressed my palm flat against the cold steel, feeling the pulse of the factory travel up my arm. The scent of burnt copper intensified here, sharp and acrid, mingling with the wet wool smell that had followed us from the city-zone. I could hear the distant, mechanical clatter of the sorting line through the metal, a muffled cadence of gears and belts that promised work ahead.
+
+I shifted my grip, sliding my hand down to the manual release lever. It was stiff, coated in a layer of grit and old grease. I wrapped my fingers around the cold metal and pulled. The lever resisted for a moment, then gave way with a sharp, metallic click. The heavy door groaned inward, dragging against the floor with a screech of protesting hinges. A rush of warmer air escaped from the opening, carrying with it the concentrated scent of hot insulation and industrial oil.
+
+I paused at the threshold, one foot poised on the edge of the grating, looking into the dark maw of the maintenance access. The companion remained at the boundary line, a silent shape against the dim light of the corridor, waiting. I took a breath, the air thick and heavy in my lungs, and stepped forward, leaving the city-zone behind completely.

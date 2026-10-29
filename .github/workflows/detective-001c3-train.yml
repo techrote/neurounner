@@ -1,0 +1,266 @@
+name: DETECTIVE-001C3 G02 interference repair
+
+on:
+  pull_request:
+    paths:
+      - "experiments/detective-001/training-c3.json"
+      - "experiments/detective-001/C3_INTERFERENCE.md"
+      - "scripts/detective_001c3_*.py"
+      - "tests/test_detective_001c3_*.py"
+      - "datasets/detective-001c3/**"
+      - "experiments/detective-001/training-c3-evidence/**"
+      - ".github/workflows/detective-001c3-train.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: detective-001c3-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    outputs:
+      evidence_ready: ${{ steps.evidence.outputs.ready }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile C3 source and run all detective tests
+        run: |
+          python3 -m py_compile scripts/detective_001c3_dataset.py scripts/detective_001c3_train.py scripts/detective_001c3_final.py scripts/detective_001c3_evaluate.py scripts/detective_001c3_assemble.py scripts/detective_001c3_verify.py tests/test_detective_001c3_dataset.py tests/test_detective_001c3_final.py
+          python3 -m unittest discover -s tests -p 'test_detective_001*.py' -v
+      - name: Build deterministic 28-pair corpus and prove no final exists
+        run: |
+          rm -rf runtime/detective-001c3
+          python3 scripts/detective_001c3_dataset.py --out runtime/detective-001c3
+          python3 scripts/detective_001c3_dataset.py --out runtime/detective-001c3 --check
+          test ! -e runtime/detective-001c3/final-suite.json
+          if [ -e datasets/detective-001c3/manifest.json ]; then diff -ru datasets/detective-001c3 runtime/detective-001c3; fi
+      - name: Revalidate committed evidence if present
+        id: evidence
+        run: |
+          if [ -e experiments/detective-001/training-c3-evidence/campaign-summary.json ]; then
+            test -e datasets/detective-001c3/manifest.json
+            python3 scripts/detective_001c3_verify.py --dataset-root datasets/detective-001c3 --evidence experiments/detective-001/training-c3-evidence
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective001c3-pairs
+          path: runtime/detective-001c3
+          if-no-files-found: error
+          retention-days: 30
+
+  release-custody:
+    needs: offline-contract
+    if: ${{ needs.offline-contract.outputs.evidence_ready == 'true' && github.event_name == 'pull_request' && github.head_ref == 'research/detective-001c3-g02-interference-20261027' && github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.user.login == 'techrote' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify single public C3 release asset and source tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG='detective-001c3-g02-v1'
+          rm -rf release-readback && mkdir release-readback
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern 'detective-001c3-*.tar.gz' --dir release-readback
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          m=json.loads(Path("experiments/detective-001/training-c3-evidence/adapter-release.json").read_text())
+          assert len(m["assets"])==1
+          a=m["assets"][0];p=Path("release-readback")/a["file"]
+          h=hashlib.sha256()
+          with p.open("rb") as f:
+              for c in iter(lambda:f.read(1024*1024),b""): h.update(c)
+          assert h.hexdigest()==a["sha256"] and p.stat().st_size==a["bytes"]
+          print("C3 release asset: PASS")
+          PY
+          source_head=$(python3 - <<'PY'
+          import json
+          print(json.load(open("experiments/detective-001/training-c3-evidence/provenance.json"))["source_head"])
+          PY
+          )
+          test "$(git ls-remote origin "refs/tags/$TAG" | cut -f1)" = "$source_head"
+
+  train:
+    needs: offline-contract
+    if: ${{ needs.offline-contract.outputs.evidence_ready != 'true' && github.event_name == 'pull_request' && github.head_ref == 'research/detective-001c3-g02-interference-20261027' && github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.user.login == 'techrote' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
+      TOKENIZERS_PARALLELISM: "false"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: detective001c3-pairs
+          path: datasets/detective-001c3
+      - name: Verify exact pair corpus before model work
+        run: python3 scripts/detective_001c3_dataset.py --out datasets/detective-001c3 --check
+      - name: Install pinned CPU LoRA stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "peft==0.21.2" "huggingface_hub==0.36.2" "safetensors==0.8.0"
+      - name: Retrieve exact C2 G02 parent only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p downloads parents
+          gh release download detective-001c2-v1 --repo techrote/neurounner --pattern 'detective-001c2-V-G02-A-smollm2-135m-lora.tar.gz' --dir downloads
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.detective_001b_pilot import unpack_adapter
+          m=json.loads(Path("experiments/detective-001/training-c2-evidence/adapter-release.json").read_text())
+          a=next(x for x in m["assets"] if x["member_id"]=="V-G02-A")
+          unpack_adapter(Path("downloads")/a["file"],Path("parents/V-G02-A"),a)
+          print(a["adapter_directory_sha256"])
+          PY
+      - name: Run exact 28-step C3 continuation
+        run: python3 scripts/detective_001c3_train.py --dataset-root datasets/detective-001c3 --parent-adapter parents/V-G02-A --out out/V-G02-A
+      - name: Verify one trained member and frozen G09 declaration
+        run: |
+          python3 - <<'PY'
+          import json,re
+          r=json.load(open("out/V-G02-A/result.json"))
+          assert r["experiment"]=="DETECTIVE-001C3"
+          assert r["member_id"]=="V-G02-A"
+          assert r["training"]["optimizer_steps"]==28
+          assert len(r["training"]["losses"])==28
+          assert r["model"]["only_lora_parameters_trainable"] is True
+          assert r["frozen_control"]["member_id"]=="V-G09-C"
+          assert r["frozen_control"]["optimizer_steps"]==0
+          assert re.fullmatch(r"[0-9a-f]{64}",r["adapter"]["directory_sha256"])
+          print(r["preference_before"]["mean_margin_nats_per_token"],"->",r["preference_after"]["mean_margin_nats_per_token"])
+          print(r["adapter"]["directory_sha256"])
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: detective001c3-trained-V-G02-A
+          path: out/V-G02-A
+          if-no-files-found: warn
+          retention-days: 30
+
+  evaluate-and-publish:
+    needs: [offline-contract, train]
+    if: ${{ needs.offline-contract.outputs.evidence_ready != 'true' && github.event_name == 'pull_request' && github.head_ref == 'research/detective-001c3-g02-interference-20261027' && github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.user.login == 'techrote' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: write
+    env:
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
+      TOKENIZERS_PARALLELISM: "false"
+      DETECTIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: detective001c3-pairs
+          path: datasets/detective-001c3
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: detective001c3-trained-V-G02-A
+          path: artifacts/V-G02-A
+      - name: Install pinned CPU evaluation stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "peft==0.21.2" "huggingface_hub==0.36.2" "safetensors==0.8.0"
+      - name: Retrieve exact C2 G02 parent and frozen G09 control
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p downloads controls
+          for member in V-G02-A V-G09-C; do
+            gh release download detective-001c2-v1 --repo techrote/neurounner --pattern "detective-001c2-$member-smollm2-135m-lora.tar.gz" --dir downloads
+            MEMBER="$member" python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          from scripts.detective_001b_pilot import unpack_adapter
+          member=os.environ["MEMBER"]
+          m=json.loads(Path("experiments/detective-001/training-c2-evidence/adapter-release.json").read_text())
+          a=next(x for x in m["assets"] if x["member_id"]==member)
+          unpack_adapter(Path("downloads")/a["file"],Path("controls")/member,a)
+          PY
+          done
+      - name: Materialize post-hash C3 final and evaluate parent/candidate/control
+        run: python3 scripts/detective_001c3_evaluate.py --dataset-root datasets/detective-001c3 --g02-parent controls/V-G02-A --g02-trained artifacts/V-G02-A/adapter --g09-control controls/V-G09-C --trained-result artifacts/V-G02-A/result.json --out runtime/c3-evaluation
+      - name: Assemble and independently verify C3 evidence
+        run: |
+          rm -rf experiments/detective-001/training-c3-evidence release-assets
+          python3 scripts/detective_001c3_assemble.py --dataset-root datasets/detective-001c3 --trained-root artifacts/V-G02-A --evaluation runtime/c3-evaluation --evidence-out experiments/detective-001/training-c3-evidence --release-out release-assets --source-head "$DETECTIVE_HEAD_SHA" --run-id "$GITHUB_RUN_ID" --run-url "https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          python3 scripts/detective_001c3_verify.py --dataset-root datasets/detective-001c3 --evidence experiments/detective-001/training-c3-evidence
+          test "$(find release-assets -maxdepth 1 -name '*.tar.gz' -type f | wc -l)" -eq 1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective001c3-complete-${{ github.run_id }}
+          path: |
+            datasets/detective-001c3
+            experiments/detective-001/training-c3-evidence
+            release-assets
+          if-no-files-found: error
+          retention-days: 30
+      - name: Refuse stale source before publication
+        run: |
+          remote_sha=$(git ls-remote --heads origin refs/heads/research/detective-001c3-g02-interference-20261027 | cut -f1)
+          test "$remote_sha" = "$DETECTIVE_HEAD_SHA"
+      - name: Publish or verify neutral C3 G02 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG='detective-001c3-g02-v1'
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            rm -rf existing && mkdir existing
+            gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern 'detective-001c3-*.tar.gz' --dir existing
+            python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          m=json.loads(Path("experiments/detective-001/training-c3-evidence/adapter-release.json").read_text())
+          assert len(m["assets"])==1
+          a=m["assets"][0];p=Path("existing")/a["file"];h=hashlib.sha256()
+          with p.open("rb") as f:
+              for c in iter(lambda:f.read(1024*1024),b""):h.update(c)
+          assert h.hexdigest()==a["sha256"] and p.stat().st_size==a["bytes"]
+          PY
+            test "$(git ls-remote origin "refs/tags/$TAG" | cut -f1)" = "$DETECTIVE_HEAD_SHA"
+          else
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$DETECTIVE_HEAD_SHA" --title "DETECTIVE-001C3 G02 interference repair" --notes-file experiments/detective-001/training-c3-evidence/REPORT.md release-assets/*.tar.gz
+          fi
+      - name: Commit durable C3 corpus/evidence to PR branch
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add datasets/detective-001c3 experiments/detective-001/training-c3-evidence
+          git diff --cached --quiet && { echo "expected C3 evidence"; exit 1; }
+          git commit -m "DETECTIVE-001C3: record G02 interference-repair evidence"
+          git push origin HEAD:research/detective-001c3-g02-interference-20261027

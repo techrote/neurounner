@@ -1,0 +1,139 @@
+{
+  "schema": "detective-003d-sprocket-live-bridge-v1",
+  "experiment": "DETECTIVE-003D",
+  "issue": 146,
+  "parent_issue": 103,
+  "authority": {
+    "b3_spec": {
+      "path": "experiments/detective-001/sprocket-scripter.json",
+      "git_blob_sha1": "b2a4eaff9194160d2afd5455c6d658d9434d90b0"
+    },
+    "b3_native_wire": {
+      "path": "scripts/detective_001b3_sprocket.py",
+      "git_blob_sha1": "214c16301075113b51123db4afeca550b4226fb9"
+    },
+    "bridge_config": {
+      "path": "experiments/detective-003/scripter-bridge.json",
+      "git_blob_sha1": "31af5060cc66230c2f4740af5f5c35400d7e99cc"
+    },
+    "bridge_module": {
+      "path": "scripts/detective_003c_scripter_bridge.py",
+      "git_blob_sha1": "3d97971a07f19cadf4f2c88ddfe105919331d5ad"
+    },
+    "session_module": {
+      "path": "scripts/detective_003a_session.py",
+      "git_blob_sha1": "73801ea59ce0f6160acc7027bd6aeaa085950236"
+    },
+    "case": {
+      "path": "experiments/detective-001/pilot-case.json",
+      "git_blob_sha1": "bbe5e0b3991a8296033376147bf830b05d33d4bb",
+      "case_id": "bay-seventeen-shift"
+    }
+  },
+  "model": {
+    "repo": "kandivault/sprocket-500m",
+    "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+    "variant": "root-instruct",
+    "weight_file": "model.safetensors",
+    "weight_bytes": 1002207984,
+    "weight_sha256": "1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864",
+    "tokenizer_sha256": "178a63d94a7de4aa273a6a9c218180c3b7d1912f5a18a91be34bab252f7277eb",
+    "tokenizer_config_sha256": "1d1c0733848e0c78a2ec48a7f20cd55ec5ee0b4cbcda9785249af9e489823408",
+    "special_tokens_map_sha256": "c575235775a1998faf1256ea0b6f791116ea9d89cc34238ea3bd532b8190773b",
+    "chat_checkpoint_forbidden": "chat/model.safetensors",
+    "context": 2048
+  },
+  "publisher": {
+    "repo": "kandivault-source/Sprocket-500M",
+    "commit": "a003767e70d766bc14b40c89792543ee8641c8bc",
+    "sft_path": "src/train/sft_data.py",
+    "sft_git_blob": "90bddf8976b9d6410fe7c5c1f084708e1cebab73",
+    "harvest_path": "scripts/harvest_round.py",
+    "harvest_git_blob": "97811aa4245ad3f05f66ce0c2d8aa8c353619267"
+  },
+  "special_token_ids": {
+    "<|endoftext|>": 0,
+    "<|pad|>": 1,
+    "<|system|>": 2,
+    "<|user|>": 3,
+    "<|assistant|>": 4,
+    "<|end|>": 5,
+    "<|tool_call|>": 6,
+    "<|tool_result|>": 7,
+    "<think>": 8,
+    "</think>": 9,
+    "<|memory_read|>": 10,
+    "<|memory_write|>": 11
+  },
+  "session": {
+    "participants": [
+      "V-G02-A",
+      "V-G09-C"
+    ],
+    "session_key": "bay17-sprocket-live-scripter-v1"
+  },
+  "game_request": {
+    "visible_asset_ids": [
+      "dock-clock-ledger",
+      "transfer-card"
+    ],
+    "disclosed_terminal_ids": [
+      "camera-console"
+    ],
+    "player_known_credentials": {
+      "camera-console": "OXIDATION"
+    },
+    "player_request": "Use the disclosed credential on the disclosed terminal. If access grants new evidence, stop and let the game inspect the receipt."
+  },
+  "prompt": {
+    "instruction": "Return exactly one publisher-native tool call. Use only the fictional tools, IDs and player-known credentials in the supplied game view. Do not invent host/file/network tools. Stop after one call.",
+    "max_prompt_tokens": 768,
+    "max_new_tokens": 96,
+    "seed": 30304,
+    "do_sample": false,
+    "eos_token_id": 5
+  },
+  "normalization": {
+    "one_native_call_only": true,
+    "admitted_tools": [
+      "read_asset",
+      "correlate_assets",
+      "probe_terminal"
+    ],
+    "textual_repair": false,
+    "fuzzy_mapping": false,
+    "argument_repair": false
+  },
+  "application": {
+    "private_asset_id": "camera-cache",
+    "witness_id": "V-G09-C",
+    "apply_if_visible": true
+  },
+  "runtime": {
+    "os": "ubuntu-24.04",
+    "python": "3.12",
+    "torch_cpu": "2.14.1+cpu",
+    "transformers": "4.57.6",
+    "huggingface_hub": "0.36.2",
+    "safetensors": "0.8.0",
+    "threads": 4,
+    "max_job_minutes": 20,
+    "paid_api_calls": 0,
+    "optimizer_steps": 0,
+    "gpu_required": false
+  },
+  "acceptance": {
+    "correct_tool_selection_required": false,
+    "access_grant_required": false,
+    "evidence_application_required": false,
+    "one_generation_required": true,
+    "exact_raw_output_required": true,
+    "deterministic_replay_required": true,
+    "host_execution": false,
+    "training_admitted": false,
+    "body_selection_made": false,
+    "relevance_mapping_accessed": false,
+    "learner_final_accessed": false,
+    "population_expansion_admitted": false
+  }
+}
