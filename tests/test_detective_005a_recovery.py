@@ -462,7 +462,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
             root = Path(td)
             source = root / "artifacts/detective005a-G01"
             source.mkdir(parents=True)
-            original = screen.canonical(self.row()).encode() + b"\\n"
+            original = screen.canonical(self.row()).encode() + bytes([10])
             (source / "results.partial.jsonl").write_bytes(original)
             nested = source / "nested"
             nested.mkdir()
