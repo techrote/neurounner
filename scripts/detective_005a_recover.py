@@ -56,6 +56,50 @@ def artifact_files(root: Path, lineage: str) -> dict[str, Path]:
         result[path.name] = path
     return result
 
+# Source artifacts are untrusted ZIP extractions. Structural defects must not
+# strand unrelated valid lineage bytes in expiring Actions artifacts.
+STRUCTURE_WARNING = "unarchived_unsafe_artifact_entries"
+
+
+def salvage_artifact_files(root: Path, lineage: str) -> tuple[dict[str, Path], list[str]]:
+    """Copy only known raw files; fail custody closed on everything excluded.
+
+    Strict artifact_files() remains available for input-validation callers.
+    This best-effort path preserves a valid sibling or raw journal when another
+    file, symlink, duplicate, or unexpected unpacked weight must be excluded.
+    Excluded bytes are *not* claimed as archived; inspect the original artifact
+    before any retry or expiry.
+    """
+    source = root / f"detective005a-{lineage}"
+    if source.is_symlink() or (source.exists() and not source.is_dir()):
+        return {}, [STRUCTURE_WARNING]
+    if not source.exists():
+        return {}, []
+    found: dict[str, Path] = {}
+    unsafe = False
+    for path in sorted(source.rglob("*")):
+        rel = path.relative_to(source)
+        if path.is_symlink() or "work" in rel.parts:
+            unsafe = True
+            continue
+        if path.is_dir():
+            continue
+        if not path.is_file() or path.name not in ALLOWED or path.name in found:
+            unsafe = True
+            continue
+        found[path.name] = path
+    return found, ([STRUCTURE_WARNING] if unsafe else [])
+
+
+def apply_structure_warnings(report: dict, warnings: list[str]) -> dict:
+    screen.require(warnings in ([], [STRUCTURE_WARNING]),
+                   "invalid source-structure custody flags")
+    report["source_structure_warnings"] = warnings
+    report["custody_warnings"].extend(warnings)
+    if warnings and report["status"] == "complete_lineage_recovered":
+        report["status"] = "recovery_only"
+    return report
+
 
 def inspect_raw(cfg: dict, lineage: str, source: Path,
                 head: str, run_id: str) -> tuple[int, str | None, list[str]]:
@@ -310,6 +354,7 @@ TRANSPORT_CUSTODY_WARNINGS = frozenset({
     "artifact_api_expired_or_unknown",
     "artifact_api_metadata_unavailable",
     "artifact_api_metadata_invalid",
+    STRUCTURE_WARNING,
 })
 
 
@@ -345,9 +390,11 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
     staged: list[tuple[str, dict[str, Path]]] = []
     for lineage in assemble.LINEAGES:
         name = f"detective005a-{lineage}"
-        files = artifact_files(artifacts, lineage)
+        files, structure_warnings = salvage_artifact_files(artifacts, lineage)
         report = bind_artifact_api(
-            inspect_artifact(cfg, lineage, files, head, run_id),
+            apply_structure_warnings(
+                inspect_artifact(cfg, lineage, files, head, run_id),
+                structure_warnings),
             name, api, metadata_path is not None, head, run_id,
             metadata_invalid=metadata_invalid)
         staged.append((lineage, files))
@@ -413,7 +460,7 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
         "# DETECTIVE-005A failed-run raw custody\n\n"
         f"Source commit: `{head}`. GitHub Actions run: `{run_id}`.\n\n"
         "This is a **recovery archive, not a complete experiment**. "
-        "Each available lineage artifact is copied byte-for-byte, including "
+        "Each available permitted raw file is copied byte-for-byte, including "
         "torn JSONL suffixes, error receipts and successful full lineages. "
         "Missing artifacts or invalid rows are identified without fabricating "
         "outputs or altering original bytes. Incomplete data never produces "
@@ -426,7 +473,11 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
         "before any retry. Unexpected artifact paths or API names are " 
         "recorded but NOT copied because they may contain private data; " 
         "inspect original artifacts separately before retry or expiry. " 
-        "Entire-workflow cancellation may prevent this "
+        "Unexpected files, symlinks, duplicated raw names and unpacked "
+        "weight directories are NOT archived: source_structure_warnings "
+        "blocks transport completion and requires separate inspection of "
+        "the expiring original artifact even when safe sibling raw files "
+        "were preserved. Entire-workflow cancellation may prevent this "
         "job from starting; inspect the original Actions artifacts.\n",
         encoding="utf-8")
     (out / "provenance" / "hashes.sha256").write_text(
@@ -515,13 +566,16 @@ def verify(path: Path) -> dict:
                            "recovered original artifact bytes drift")
         artifact_name = f"detective005a-{lineage}"
         refreshed = bind_artifact_api(
-            inspect_artifact(cfg, lineage, actual, head, run_id),
+            apply_structure_warnings(
+                inspect_artifact(cfg, lineage, actual, head, run_id),
+                saved.get("source_structure_warnings")),
             artifact_name, api, metadata_path.exists(), head, run_id,
             metadata_invalid=metadata_invalid)
         with_artifacts += bool(actual)
         for field in ("lineage", "status", "validated_raw_prefix_rows",
                       "journal_tail_problem", "custody_warnings", "files",
-                      "artifact_name", "artifact_api"):
+                      "artifact_name", "artifact_api",
+                      "source_structure_warnings"):
             screen.require(refreshed[field] == saved[field],
                            "recovery lineage readback drift: " + field)
         total += refreshed["validated_raw_prefix_rows"]
