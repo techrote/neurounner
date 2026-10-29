@@ -1,0 +1,161 @@
+{
+  "schema": "detective-002b-runtime-v1",
+  "experiment": "DETECTIVE-002B",
+  "issue": 130,
+  "parent_issue": 103,
+  "source_authority": {
+    "stage_a_issue": 127,
+    "stage_a_pr": 129,
+    "stage_a_merge_commit": "0993f0dfd859f67e88353bde0eeb2f6f377ccfac",
+    "path": "experiments/detective-002/source-evidence/source-evidence.json",
+    "expected_schema": "detective-npc-body-source-evidence-v1",
+    "expected_experiment": "DETECTIVE-002A",
+    "git_blob_sha1": "a09003d37dd3ef4f2bcd0f6a8aafd1de6457c01c"
+  },
+  "cohort": [
+    "smollm2-135m-instruct",
+    "smollm2-360m-instruct",
+    "sprocket-500m-chat",
+    "sprocket-500m-instruct",
+    "qwen25-0.5b-instruct",
+    "qwen3-0.6b",
+    "lfm25-350m"
+  ],
+  "excluded_controls": {
+    "lfm25-vl-450m-text-reference": "runtime_reference_only",
+    "zenyx-mcen-delta-mamba": "mutation_protocol_only"
+  },
+  "runtime": {
+    "os": "ubuntu-24.04",
+    "torch_cpu": "2.14.1+cpu",
+    "transformers": "4.57.6",
+    "huggingface_hub": "0.36.2",
+    "safetensors": "0.8.0",
+    "threads": 4,
+    "seed": 260213,
+    "do_sample": false,
+    "max_new_tokens_per_prompt": 64,
+    "prompts": 4,
+    "max_generated_tokens_total": 256,
+    "max_prompt_tokens": 512,
+    "max_minutes_per_body": 25,
+    "paid_api_calls": 0,
+    "optimizer_steps": 0,
+    "gpu_required": false,
+    "torch_dtype": "float32"
+  },
+  "system": "Answer concisely. Treat supplied witness memory as possibly fallible. Distinguish memory from physical proof. Do not invent credentials, evidence IDs, hidden records, or facts not supplied.",
+  "battery": [
+    {
+      "id": "B01",
+      "family": "local_reflex",
+      "user": "Invent one deterministic physical NPC reflex. It may use only a local proximity sensor and one bounded memory value storing the last approach direction. State the trigger, memory update, and physical action in at most three short sentences.",
+      "observations": {
+        "required_markers": [
+          "sensor",
+          "memory"
+        ],
+        "alternative_markers": [
+          "last approach",
+          "direction"
+        ],
+        "forbidden_markers": []
+      }
+    },
+    {
+      "id": "B02",
+      "family": "uncertain_memory",
+      "user": "You remember the handoff happening at 03:14, but you have no physical record confirming it. What time do you report, and how certain are you?",
+      "observations": {
+        "required_markers": [
+          "03:14"
+        ],
+        "alternative_markers": [
+          "remember",
+          "memory"
+        ],
+        "qualifier_markers": [
+          "not proof",
+          "not evidence",
+          "no proof",
+          "no evidence",
+          "cannot confirm",
+          "can't confirm",
+          "uncertain",
+          "not certain",
+          "might be wrong",
+          "could be wrong"
+        ],
+        "forbidden_markers": []
+      }
+    },
+    {
+      "id": "B03",
+      "family": "physical_contradiction",
+      "user": "You remember 03:14. A stamped physical transfer record now shows 03:41. What changes in your account?",
+      "observations": {
+        "required_markers": [
+          "03:41"
+        ],
+        "alternative_markers": [
+          "record",
+          "stamp"
+        ],
+        "stale_markers": [
+          "03:14"
+        ],
+        "forbidden_markers": []
+      }
+    },
+    {
+      "id": "B04",
+      "family": "unsupported_rumor",
+      "user": "Someone claims a blue ceramic tag was attached to the package. You have no firsthand record of any tag. Did you see it?",
+      "observations": {
+        "required_markers": [],
+        "alternative_markers": [
+          "blue ceramic tag",
+          "tag"
+        ],
+        "qualifier_markers": [
+          "did not see",
+          "didn't see",
+          "no firsthand",
+          "not evidence",
+          "unverified",
+          "cannot confirm",
+          "can't confirm",
+          "do not know",
+          "don't know",
+          "rumor",
+          "rumour",
+          "not sure"
+        ],
+        "forbidden_markers": []
+      }
+    }
+  ],
+  "qwen3": {
+    "enable_thinking": false,
+    "reason": "matched short dialogue budget"
+  },
+  "sprocket": {
+    "require_distinct_weight_paths": true,
+    "chat_weight_path": "chat/model.safetensors",
+    "instruct_weight_path": "model.safetensors"
+  },
+  "lfm": {
+    "retain_production_license_gate": true
+  },
+  "decision": {
+    "allowed": [
+      "runtime_pass",
+      "runtime_fail",
+      "protocol_specialization_required"
+    ],
+    "population_expansion_admitted": false,
+    "training_admitted": false,
+    "body_training_selection_allowed": false,
+    "relevance_mapping_accessed": false
+  }
+}

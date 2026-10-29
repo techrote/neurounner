@@ -1,0 +1,153 @@
+name: RUNNER-001 cross-platform benchmark
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - runner-001-cross-platform
+    paths:
+      - ".github/workflows/runner-001.yml"
+      - "scripts/runner_001.py"
+      - "scripts/runner_001_summary.py"
+      - "tests/test_runner_001_summary.py"
+      - "docs/RUNNER_001.md"
+      - "experiments/train-001/kernel_compiler_dataset.json"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/runner-001.yml"
+      - "scripts/runner_001.py"
+      - "scripts/runner_001_summary.py"
+      - "tests/test_runner_001_summary.py"
+      - "docs/RUNNER_001.md"
+      - "experiments/train-001/kernel_compiler_dataset.json"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: neurounner-runner-001-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  TOKENIZERS_PARALLELISM: "false"
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  RUNNER001_LOCAL_MODEL: HuggingFaceTB/SmolLM2-135M-Instruct
+  RUNNER001_LOCAL_REVISION: 12fd25f77366fa6b3b4b768ec3050bf629380bac
+
+jobs:
+  source-checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile source and reject malformed synthetic result records
+        run: |
+          python3 -m py_compile scripts/runner_001.py scripts/runner_001_summary.py
+          python3 -m unittest discover -s tests -p 'test_runner_001_summary.py' -v
+
+  benchmark:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: source-checks
+    name: ${{ matrix.runner.lane }} r${{ matrix.replicate }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - lane: ubuntu-24.04-x64
+            image: ubuntu-24.04
+          - lane: windows-2025-x64
+            image: windows-2025
+          - lane: macos-15-arm64
+            image: macos-15
+        replicate: [1, 2, 3]
+    runs-on: ${{ matrix.runner.image }}
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+
+      - name: Install benchmark stack
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --upgrade pip
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            python -m pip install "torch==2.14.1"
+          else
+            python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          fi
+          python -m pip install \
+            "transformers==4.57.6" \
+            "peft==0.21.2" \
+            "huggingface_hub==0.36.2" \
+            "psutil==7.2.2" \
+            "safetensors==0.8.0"
+          python -m py_compile scripts/runner_001.py scripts/runner_001_summary.py
+
+      - name: Run source-identical benchmark
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p results
+          python scripts/runner_001.py \
+            --lane "${{ matrix.runner.lane }}" \
+            --replicate "${{ matrix.replicate }}" \
+            --local-model "$RUNNER001_LOCAL_MODEL" \
+            --local-revision "$RUNNER001_LOCAL_REVISION" \
+            --output "results/runner001-${{ matrix.runner.lane }}-r${{ matrix.replicate }}.json"
+          cat "results/runner001-${{ matrix.runner.lane }}-r${{ matrix.replicate }}.json"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: runner001-${{ matrix.runner.lane }}-r${{ matrix.replicate }}-a${{ github.run_attempt }}
+          path: results/runner001-${{ matrix.runner.lane }}-r${{ matrix.replicate }}.json
+          if-no-files-found: error
+          retention-days: 30
+
+  summary:
+    name: Aggregate cross-platform comparison
+    needs: benchmark
+    if: ${{ always() && needs.benchmark.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: runner001-*-r*-a${{ github.run_attempt }}
+          path: collected
+          merge-multiple: true
+
+      - name: Build comparison
+        run: |
+          mkdir -p results
+          python scripts/runner_001_summary.py \
+            --input-dir collected \
+            --json-out results/runner001-summary.json \
+            --md-out results/runner001-summary.md
+          cat results/runner001-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: runner001-summary-a${{ github.run_attempt }}
+          path: |
+            results/runner001-summary.json
+            results/runner001-summary.md
+          if-no-files-found: error
+          retention-days: 30
