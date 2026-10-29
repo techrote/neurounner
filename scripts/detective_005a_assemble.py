@@ -100,6 +100,13 @@ def read_lineage(cfg: dict, lineage: str, folder: Path) -> tuple[dict, list[dict
                    manifest.get("population_expansion_admitted") is False,
                    "lineage authority/resource drift")
     rows = screen.read_results(results_path)
+    # A checksum of the original JSONL does not disambiguate duplicate keys:
+    # json.loads silently accepts the last value. The live fsynced writer
+    # emits exactly canonical JSON + LF, so demand those same original bytes.
+    screen.require(
+        results_path.read_bytes() ==
+        "".join(screen.canonical(row) + "\n" for row in rows).encode("utf-8"),
+        "lineage raw JSONL noncanonical or duplicate keys")
     screen.require(len(rows) == 12, "lineage raw result count drift")
     expected_members = live.lineage_member_ids(cfg, lineage)
     screen.require(
