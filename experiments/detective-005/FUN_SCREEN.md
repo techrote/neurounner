@@ -150,6 +150,16 @@ and original API response bytes are preserved, but `artifact_transport_complete`
 remains false and the final custody gate RED. Unlisted originals require
 independent retrieval before retry; this is not live cancellation/push proof.
 
+**Artifact identity uniqueness (source-only):** GitHub Actions artifact IDs must
+be positive, non-boolean integers and unique across the *entire* returned API
+page, not merely unique within one expected lineage name. Two different
+lineage artifact names sharing an ID cannot establish two original sources;
+that listing is quarantined as invalid and the transport gate remains RED.
+This rule preserves all safely recovered raw siblings and the unmodified API
+response for later review. The adversarial no-model test exercises both the
+collision refusal and a valid distinct-ID control. It does not prove a real
+failed/cancelled workflow or successful remote evidence-branch promotion.
+
 The proposed `recover-failed-evidence` job is strictly conditional: it runs
 only after a confirmed-main `RUN-144-NO-TRAINING` plan succeeds and the
 lineage matrix or full evidence assembler fails. It does **not** initiate any
