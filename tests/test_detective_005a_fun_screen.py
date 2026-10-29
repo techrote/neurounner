@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import copy
 import json
+import sys
 import tempfile
 import tarfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from scripts import detective_005a_fun_screen as screen
 from scripts import detective_005a_live as live
@@ -54,6 +56,8 @@ class Detective005AFunScreenTests(unittest.TestCase):
                     "runner": {
                         "synthetic_test_only": True,
                         "cpu": "none",
+                        "repository_head_sha": "1" * 40,
+                        "actions_run_id": "123456",
                     },
                 })
         return rows
@@ -319,13 +323,17 @@ class Detective005AFunScreenTests(unittest.TestCase):
                 results.write_text(
                     "".join(screen.canonical(r) + "\n" for r in line_rows),
                     encoding="utf-8")
+                # Real workers fsync this identical incremental file first.
+                (folder / "results.partial.jsonl").write_bytes(
+                    results.read_bytes())
                 manifest = {
                     "schema": "detective-005a-live-lineage-manifest-v1",
                     "experiment": "DETECTIVE-005A",
                     "issue": 176,
                     "lineage": lineage,
                     "source_plan": live.source_plan(lineage),
-                    "runner_script_sha256": "a" * 64,
+                    "runner_script_sha256":
+                        screen.sha256_file(Path(live.__file__)),
                     "results_jsonl_sha256": screen.sha256_file(results),
                     "results": 12,
                     "members": [],
@@ -354,6 +362,37 @@ class Detective005AFunScreenTests(unittest.TestCase):
             self.assertEqual(verified["packet_items"], 144)
             self.assertFalse(verified["subjective_fun_ratings_present"])
             self.assertFalse(verified["production_admission"])
+            self.assertEqual(manifest["repository_head_sha"], "1" * 40)
+            self.assertEqual(manifest["actions_run_id"], "123456")
+            provenance = screen.read_json(
+                out / "provenance" / "source-artifacts.json")
+            self.assertEqual(len(provenance["source_artifacts"]), 12)
+            self.assertEqual(provenance["repository_head_sha"], "1" * 40)
+            self.assertEqual(provenance["actions_run_id"], "123456")
+            journal = out / "raw" / "lineage-journals" / "G01.jsonl"
+            self.assertEqual(
+                journal.read_bytes(),
+                (artifacts / "G01" / "results.partial.jsonl").read_bytes())
+            self.assertEqual(
+                provenance["source_artifacts"][0]["incremental_journal_sha256"],
+                screen.sha256_file(journal))
+            provenance_path = out / "provenance" / "source-artifacts.json"
+            bad_provenance = copy.deepcopy(provenance)
+            bad_provenance["source_artifacts"][0][
+                "results_jsonl_sha256"] = "0" * 64
+            assemble.write_json(provenance_path, bad_provenance)
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "source-artifact manifest/hash"):
+                assemble.verify_dataset(out)
+            assemble.write_json(provenance_path, provenance)
+
+            # A substituted runner hash must fail readback.
+            first = artifacts / "G01" / "manifest.json"
+            altered = screen.read_json(first)
+            altered["runner_script_sha256"] = "a" * 64
+            first.write_text(json.dumps(altered), encoding="utf-8")
+            with self.assertRaisesRegex(screen.ScreenError, "runner source hash"):
+                assemble.read_lineage(self.cfg, "G01", first.parent)
 
             # A duplicated lineage folder must never be silently selected.
             duplicate = artifacts / "duplicate" / "G01"
@@ -365,6 +404,209 @@ class Detective005AFunScreenTests(unittest.TestCase):
                 assemble.discover_lineages(artifacts)
 
 
+    def test_assembled_source_run_identity_refuses_mixed_receipts(self):
+        rows = self.synthetic_rows()
+        self.assertEqual(assemble.source_run_identity(rows),
+                         ("1" * 40, "123456"))
+        bad = copy.deepcopy(rows)
+        bad[0]["runner"]["repository_head_sha"] = "2" * 40
+        with self.assertRaisesRegex(screen.ScreenError, "mixed source heads"):
+            assemble.source_run_identity(bad)
+        bad = copy.deepcopy(rows)
+        bad[0]["runner"]["actions_run_id"] = "123457"
+        with self.assertRaisesRegex(screen.ScreenError, "mixed source heads"):
+            assemble.source_run_identity(bad)
+        bad = copy.deepcopy(rows)
+        del bad[0]["runner"]["actions_run_id"]
+        with self.assertRaisesRegex(screen.ScreenError, "identity missing"):
+            assemble.source_run_identity(bad)
+
+    def test_lineage_readback_rejects_missing_or_mismatched_fsynced_journal(self):
+        with tempfile.TemporaryDirectory() as td:
+            folder = Path(td) / "G01"
+            folder.mkdir()
+            line_rows = [r for r in self.synthetic_rows()
+                         if r["member_id"].split("-")[1] == "G01"]
+            raw = folder / "results.jsonl"
+            raw.write_text(
+                "".join(screen.canonical(r) + "\n" for r in line_rows),
+                encoding="utf-8")
+            manifest = {
+                "schema": "detective-005a-live-lineage-manifest-v1",
+                "experiment": "DETECTIVE-005A",
+                "issue": 176,
+                "lineage": "G01",
+                "source_plan": live.source_plan("G01"),
+                "runner_script_sha256":
+                    screen.sha256_file(Path(live.__file__)),
+                "results_jsonl_sha256": screen.sha256_file(raw),
+                "results": 12,
+                "optimizer_steps": 0,
+                "paid_api_calls": 0,
+                "model_judge_calls": 0,
+                "production_admission": False,
+                "population_expansion_admitted": False,
+            }
+            (folder / "manifest.json").write_text(
+                json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "fsynced journal missing"):
+                assemble.read_lineage(self.cfg, "G01", folder)
+            journal = folder / "results.partial.jsonl"
+            journal.write_bytes(raw.read_bytes()[:-1])
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "journal/final bytes mismatch"):
+                assemble.read_lineage(self.cfg, "G01", folder)
+            journal.write_bytes(raw.read_bytes())
+            result_manifest, observed = assemble.read_lineage(
+                self.cfg, "G01", folder)
+            self.assertEqual(len(observed), 12)
+            self.assertEqual(result_manifest["lineage"], "G01")
+
+    def test_refused_rerun_preserves_old_receipts_and_work_bytes(self):
+        cases = ("receipt_only", "work_only", "complete")
+        for case in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as td:
+                out = Path(td) / "lineage"
+                out.mkdir()
+                if case == "receipt_only":
+                    (out / "interrupted.json").write_bytes(
+                        b'{"old":"failure-original"}\n')
+                elif case == "work_only":
+                    work = out / "work" / "V-G01-A"
+                    work.mkdir(parents=True)
+                    (work / "adapter_model.safetensors").write_bytes(b"original")
+                else:
+                    for name in ("manifest.json", "results.jsonl",
+                                 "results.partial.jsonl", "interrupted.json"):
+                        (out / name).write_bytes(
+                            ("ORIGINAL " + name).encode("utf-8"))
+                before = {str(p.relative_to(out)): p.read_bytes()
+                          for p in out.rglob("*") if p.is_file()}
+                with mock.patch.object(sys, "argv", [
+                    "live.py", "--run", "--lineage", "G01",
+                    "--out", str(out)]), mock.patch.object(
+                        live, "run_lineage",
+                        side_effect=AssertionError("must not enter model path")
+                    ) as model:
+                    with self.assertRaisesRegex(
+                            live.PreexistingLineageEvidence, "refuse"):
+                        live.main()
+                    model.assert_not_called()
+                after = {str(p.relative_to(out)): p.read_bytes()
+                         for p in out.rglob("*") if p.is_file()}
+                self.assertEqual(before, after)
+
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "first-failure"
+            with mock.patch.object(sys, "argv", [
+                "live.py", "--run", "--lineage", "G01",
+                "--out", str(out)]), mock.patch.object(
+                    live, "run_lineage", side_effect=RuntimeError("first-error")
+                    ):
+                with self.assertRaisesRegex(RuntimeError, "first-error"):
+                    live.main()
+            receipt_path = out / "interrupted.json"
+            original = receipt_path.read_bytes()
+            with mock.patch.object(sys, "argv", [
+                "live.py", "--run", "--lineage", "G01",
+                "--out", str(out)]), mock.patch.object(
+                    live, "run_lineage",
+                    side_effect=AssertionError("must not rerun")) as model:
+                with self.assertRaises(live.PreexistingLineageEvidence):
+                    live.main()
+                model.assert_not_called()
+            self.assertEqual(receipt_path.read_bytes(), original)
+            with self.assertRaises(FileExistsError):
+                live.write_interrupted_receipt(
+                    "G01", out, RuntimeError("second-error"))
+            self.assertEqual(receipt_path.read_bytes(), original)
+
+    def test_atomic_lineage_claim_refuses_empty_and_interleaved_reruns(self):
+        """One writer owns the output even when both preflights see it absent."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            empty = root / "empty-existing-output"
+            empty.mkdir()
+            with self.assertRaisesRegex(
+                    live.PreexistingLineageEvidence, "pre-existing"):
+                live.run_lineage("G01", empty, root / "downloads")
+            self.assertEqual(list(empty.iterdir()), [])
+
+            # Deterministic interleaving: main() preflight saw an absent
+            # target, then another process created its directory/receipt just
+            # before run_lineage() attempts the exclusive mkdir. No inference,
+            # receipt overwrite, or partial append is permitted.
+            raced = root / "interleaved"
+            original = b'{"owner":"first-worker","error":"original"}\n'
+            passes = []
+
+            def simulate_competitor(path):
+                passes.append(path)
+                if len(passes) == 2:
+                    path.mkdir(parents=True, exist_ok=False)
+                    (path / "interrupted.json").write_bytes(original)
+
+            with mock.patch.object(
+                    live, "refuse_existing_lineage_evidence",
+                    side_effect=simulate_competitor), mock.patch.object(
+                    sys, "argv", [
+                        "live.py", "--run", "--lineage", "G01",
+                        "--out", str(raced)]):
+                with self.assertRaisesRegex(
+                        live.PreexistingLineageEvidence, "concurrent"):
+                    live.main()
+            self.assertEqual(len(passes), 2)
+            self.assertEqual((raced / "interrupted.json").read_bytes(), original)
+            self.assertEqual(
+                [p.name for p in raced.iterdir()], ["interrupted.json"])
+
+    def test_live_incremental_raw_and_failure_receipt_are_custodied(self):
+        rows = self.synthetic_rows()[:2]
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td)
+            partial = out / "results.partial.jsonl"
+            for row in rows:
+                live.append_completed_raw(partial, row)
+            self.assertEqual(screen.read_results(partial), rows)
+            receipt = live.write_interrupted_receipt(
+                "G01", out, RuntimeError("synthetic failure"))
+            self.assertEqual(receipt["completed_raw_results"], 2)
+            self.assertEqual(receipt["partial_results_sha256"],
+                             screen.sha256_file(partial))
+            self.assertEqual(receipt["status"], "incomplete_artifact_only")
+            self.assertFalse(receipt["durably_promoted"])
+            self.assertFalse(receipt["population_expansion_admitted"])
+            self.assertEqual(
+                screen.read_json(out / "interrupted.json"), receipt)
+
+    def test_interrupted_receipt_keeps_torn_or_corrupt_raw_bytes(self):
+        row = self.synthetic_rows()[0]
+        cases = (
+            (b'{"torn":', "unterminated_raw_row"),
+            (bytes([255, 10]), "unparseable_raw_row"),
+            (b'null\n', "non_object_raw_row"),
+        )
+        for tail, expected_problem in cases:
+            with self.subTest(problem=expected_problem):
+                with tempfile.TemporaryDirectory() as td:
+                    out = Path(td)
+                    partial = out / "results.partial.jsonl"
+                    live.append_completed_raw(partial, row)
+                    with partial.open("ab") as fh:
+                        fh.write(tail)
+                    original = partial.read_bytes()
+                    receipt = live.write_interrupted_receipt(
+                        "G01", out, RuntimeError("synthetic interruption"))
+                    self.assertEqual(receipt["completed_raw_results"], 1)
+                    self.assertEqual(receipt["partial_journal_problem"],
+                                     expected_problem)
+                    self.assertEqual(receipt["partial_results_sha256"],
+                                     screen.sha256_file(partial))
+                    self.assertEqual(partial.read_bytes(), original)
+                    self.assertEqual(screen.read_json(out / "interrupted.json"),
+                                     receipt)
+
     def test_live_workflow_is_manual_confirmed_main_only_and_isolated(self):
         workflow = (
             screen.ROOT / ".github/workflows/detective-005a-live.yml"
@@ -375,6 +617,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
         self.assertIn("RUN-144-NO-TRAINING", workflow)
         self.assertIn("refs/heads/main", workflow)
         self.assertIn("max-parallel: 6", workflow)
+        self.assertIn("!out/${{ matrix.lineage }}/work/**", workflow)
         self.assertIn("pattern: detective005a-G*", workflow)
         self.assertIn("TARGET_BRANCH: evidence/detective-005a-${{ github.run_id }}", workflow)
         self.assertIn("git merge-base --is-ancestor", workflow)

@@ -103,6 +103,96 @@ def safe_unpack(archive: Path, destination: Path, source: dict) -> None:
         "unpacked adapter directory identity mismatch")
 
 
+def append_completed_raw(path: Path, row: dict) -> None:
+    """Fsync a validated response before the next inference begins.
+
+    The complete 12-row results.jsonl is still the only assemblable lineage
+    evidence; partial records remain recovery evidence, never admission.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8", newline="\n") as fh:
+        fh.write(screen.canonical(row) + "\n")
+        fh.flush()
+        os.fsync(fh.fileno())
+
+
+def intact_partial_raw_rows(path: Path) -> tuple[int, str | None]:
+    """Count the complete JSONL prefix without rewriting an interrupted journal.
+
+    A torn final append must not suppress the failure receipt or cause the
+    already-fsynced raw bytes to be discarded. The SHA covers *all* original
+    bytes, including a corrupt tail; counts exclude any incomplete record.
+    """
+    if not path.is_file():
+        return 0, None
+    count = 0
+    with path.open("rb") as fh:
+        for line in fh:
+            if not line.endswith(b"\n"):
+                return count, "unterminated_raw_row"
+            try:
+                row = json.loads(line.decode("utf-8"))
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                return count, "unparseable_raw_row"
+            if not isinstance(row, dict):
+                return count, "non_object_raw_row"
+            count += 1
+    return count, None
+
+
+class PreexistingLineageEvidence(screen.ScreenError):
+    """Refused rerun: absolutely no output bytes may be changed."""
+
+
+def refuse_existing_lineage_evidence(out: Path) -> None:
+    """Refuse *any* existing target, including an empty directory.
+
+    A prior run may own an empty directory before its first response. A
+    separate atomic mkdir in run_lineage() closes the check/create race.
+    """
+    if out.is_symlink() or out.exists():
+        raise PreexistingLineageEvidence(
+            "refuse to reuse pre-existing lineage output")
+
+
+def write_interrupted_receipt(lineage: str, out: Path, error: Exception) -> dict:
+    """Make a failed model/load run visible in the always-uploaded artifact."""
+    out.mkdir(parents=True, exist_ok=True)
+    partial = out / "results.partial.jsonl"
+    preserved_count, journal_problem = intact_partial_raw_rows(partial)
+    receipt = {
+        "schema": "detective-005a-interrupted-lineage-v1",
+        "experiment": "DETECTIVE-005A",
+        "issue": 176,
+        "lineage": lineage,
+        "repository_head_sha": (
+            os.environ.get("DETECTIVE_HEAD_SHA")
+            or os.environ.get("GITHUB_SHA")
+            or "local"),
+        "actions_run_id": os.environ.get("GITHUB_RUN_ID"),
+        "completed_raw_results": preserved_count,
+        "partial_results_sha256": (
+            file_sha(partial) if partial.is_file() else None),
+        "partial_journal_problem": journal_problem,
+        "error_type": type(error).__name__,
+        "error_detail": str(error)[:300],
+        "optimizer_steps": 0,
+        "model_judge_calls": 0,
+        "production_admission": False,
+        "population_expansion_admitted": False,
+        "durably_promoted": False,
+        "status": "incomplete_artifact_only",
+    }
+    # Exclusive creation: never replace the original failure identity, even
+    # if another process races a writer between preflight and exception.
+    with (out / "interrupted.json").open("x", encoding="utf-8") as fh:
+        fh.write(json.dumps(receipt, indent=2, sort_keys=True,
+                            ensure_ascii=False) + "\n")
+        fh.flush()
+        os.fsync(fh.fileno())
+    return receipt
+
+
 def lineage_member_ids(cfg: dict, lineage: str) -> list[str]:
     screen.require(LINEAGE_RX.fullmatch(lineage) is not None,
                    "lineage must be G01..G12")
@@ -149,6 +239,16 @@ def run_lineage(lineage: str, out: Path, download_dir: Path) -> dict:
     cfg = screen.load_contract()
     plan = source_plan(lineage)
     member_ids = plan["member_ids"]
+    refuse_existing_lineage_evidence(out)
+    # Exclusive directory creation is the ownership claim: concurrent callers
+    # can both pass preflight but only one can create this exact output path.
+    # Treat the losing attempt as a read-only collision, never a new receipt.
+    try:
+        out.mkdir(parents=True, exist_ok=False)
+    except FileExistsError as exc:
+        raise PreexistingLineageEvidence(
+            "refuse concurrent lineage output claim") from exc
+    partial_path = out / "results.partial.jsonl"
 
     from huggingface_hub import snapshot_download
     from peft import PeftModel
@@ -279,6 +379,7 @@ def run_lineage(lineage: str, out: Path, download_dir: Path) -> dict:
                 },
             }
             observation = screen.validate_result(cfg, row)
+            append_completed_raw(partial_path, row)
             rows.append(row)
             member_rows.append(observation)
 
@@ -307,6 +408,8 @@ def run_lineage(lineage: str, out: Path, download_dir: Path) -> dict:
     results_path.write_text(
         "".join(screen.canonical(row) + "\n" for row in rows),
         encoding="utf-8")
+    screen.require(results_path.read_bytes() == partial_path.read_bytes(),
+                   "incremental raw archive disagrees with final results")
     manifest = {
         "schema": "detective-005a-live-lineage-manifest-v1",
         "experiment": "DETECTIVE-005A",
@@ -346,9 +449,18 @@ def main() -> None:
                     default=Path("downloads/detective-005a"))
     args = ap.parse_args()
     if args.run:
-        print(json.dumps(run_lineage(
-            args.lineage, args.out, args.download_dir),
-            indent=2, sort_keys=True))
+        # This first guard is OUTSIDE the receipt-writing handler: any old
+        # failure receipt or unpacked work must remain strictly read-only.
+        refuse_existing_lineage_evidence(args.out)
+        try:
+            result = run_lineage(args.lineage, args.out, args.download_dir)
+        except PreexistingLineageEvidence:
+            # A concurrent collision must also never write a new receipt.
+            raise
+        except Exception as exc:
+            write_interrupted_receipt(args.lineage, args.out, exc)
+            raise
+        print(json.dumps(result, indent=2, sort_keys=True))
     else:
         print(json.dumps(source_plan(args.lineage),
                          indent=2, sort_keys=True))

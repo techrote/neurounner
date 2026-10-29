@@ -100,3 +100,41 @@ Current Stage A consists only of:
 It downloads no weights or adapters, performs no inference/training, opens no sealed C1/C2/C3 finals and accesses no hidden R1 identity mapping.
 
 A later source-matched live workflow may consume the exact release assets and produce the 144 raw outputs. Those outputs must be promoted durably before any transient Actions artifacts expire.
+
+## Interrupted live-run custody
+
+The source-bound live runner now journals **each validated raw response immediately**
+to `out/<lineage>/results.partial.jsonl` and flushes it to disk before
+starting the next generation. On a Python exception, it writes an
+`interrupted.json` receipt naming the error class, exact source head, run ID,
+partial record count and partial-file SHA-256. The unconditional lineage
+artifact upload retains these records (while excluding temporary unpacked
+adapter weights).
+
+Before loading models, the runner now **exclusively creates** its lineage
+output directory. Even an already-existing *empty* directory is treated as an
+owned or ambiguous output and refused. An interleaved competing creator
+cannot be bypassed between preflight and output creation: the loser raises a
+read-only collision without writing another interruption receipt. This is
+local output ownership, not a distributed runner lease or proof of artifact
+promotion.
+
+A torn/malformed final JSONL append cannot suppress the interruption receipt:
+the runner counts only intact, newline-terminated JSON object rows, records
+`partial_journal_problem` where needed and retains the **original partial
+file bytes and full SHA-256**, including the damaged tail. Never replace those
+bytes with a repaired version or mistake the intact-row count for a complete
+lineage.
+
+Complete-lineage assembly now rejects substituted runner-script hashes,
+cross-lineage/mixed Actions run IDs and mismatched exact source heads. The
+dataset carries the verified dispatch SHA, Actions run ID and a
+`provenance/source-artifacts.json` name/hash inventory. Artifact IDs are
+explicitly unavailable to the assembler; they must not be fabricated.
+
+This is a failure-recovery measure, **not a claim of durable promotion**.
+Partial files are transient Actions artifacts with a 30-day retention window;
+they must be retrieved and archived under `datasets/` before expiration.
+The 144-response assembler remains strict: no incomplete lineage is accepted,
+no subjective packet is constructed from partial results, and no training,
+model judging or population admission is authorized.
