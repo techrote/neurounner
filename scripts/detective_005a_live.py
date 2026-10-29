@@ -371,8 +371,8 @@ def run_lineage(lineage: str, out: Path, download_dir: Path) -> dict:
                 "runner": {
                     **common_runner,
                     "prompt_token_ids": ids[0].tolist(),
-                    "prompt_ids_sha256": hashlib.sha256(
-                        ids.numpy().tobytes()).hexdigest(),
+                    "prompt_ids_sha256": screen.prompt_ids_sha256(
+                        ids[0].tolist()),
                     "adapter_archive_sha256_verified": file_sha(archive),
                     "adapter_directory_sha256_verified":
                         directory_hash(adapter_dir),
