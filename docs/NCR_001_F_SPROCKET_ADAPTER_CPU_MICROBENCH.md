@@ -29,3 +29,29 @@ Read-only workflow: .github/workflows/ncr-001f-sprocket-adapter-cpu-microbench.y
 The machine result explicitly keeps train_authorized=false, full_72_conformance_pass=false, actual_matched_frozen_host_budget_pass=false and optimizer_steps=0.
 
 **Next:** independently source-matched full frozen-host NCA versus MLP CPU wall-time/RSS and causal/cache/cold-process qualification, with original raw evidence placed under permanent Git custody. Comparative learning remains prohibited until per-lane #72 scientific admission.
+
+
+## Hosted measurement, immutable raw custody and retained negatives — 29 October 2026
+
+Original source head: 1f44c775c392cea430457c86253c1f00deea4e70.
+[Original real PyTorch adapter-only CPU run #40867677298](https://github.com/techrote/neurounner/actions/runs/40867677298), job 123426590154, passed 7/7 offline tests. No original frozen model, tokenizer or held-out data was executed. Runner: AMD EPYC 7763, four PyTorch threads, Python 3.12.3, CPU PyTorch 2.14.1+cpu, Linux.
+
+**Synthetic three-tap forward-only adapter median times** (milliseconds; five alternating timed samples/adapter after two warmup rounds):
+
+| Synthetic T | NCA, 3 steps/tap | MLP, 1 map/tap | NCA / MLP |
+|---|---:|---:|---:|
+| 1 | 1.414813 | 0.491455 | 2.878825 |
+| 16 | 4.353953 | 1.188241 | 3.664200 |
+| 64 | 8.081541 | 3.143590 | 2.570800 |
+
+Original process peak RSS was 245,156 KiB (whole process, NOT adapter-only incremental RSS). The source proxy 1.20625x counts selected dense/convolution MACs, but is not a wall-time ratio; these kernel timings are NOT either actual frozen checkpoint's throughput, optimizer cost or matched training compute budget.
+
+The original runner.log contains a real PyTorch warning, **Failed to initialize NumPy: No module named 'numpy'**. Preserve it, without reclassifying as model failure or erasing it because original tests passed. The separate complete original decoded GitHub Actions job log includes the actual workflow-level success sentinel.
+
+**Permanent original Git custody:** artifact 12895070216 is the actual 5,589-byte compressed GitHub ZIP (SHA256 d5bad11d2e28a6b40aa9717046464f9436a5e07ef800559f8044e494c826eea0), all seven original raw member bytes verified and preserved unchanged. Committed archive path: experiments/ncr-001/controls-evidence/sprocket-adapter-cpu-microbench-20261029/original-actions-40867677298.zip (Git blob 38a428b1a0fae2c7b9163f200a2b83f37f369add). Member types: report.json, tests.log, runner.log, pip-freeze.txt, lscpu.txt, source-head.txt and uname.txt. Complete GitHub-decoded original job log in the same directory is original-job-123426590154.log (Git blob 7ec9f8443bb69ce69330088457c3e31bee19d512). This is GitHub-decoded log text, not original compressed HTTP transfer bytes. Temporary Actions expiry: 28 November 2026; Git custody does not expire with it.
+
+[One-time bootstrap Actions #40868897801](https://github.com/techrote/neurounner/actions/runs/40868897801) verified and committed **only the original ZIP**, commit 51b09a48c7365e4d88e2190110f64c7cd9202f18. Temporary workflow write and persisted-credential access were removed in commit 055cf5beb9d8cf451d6faeab6516c5ac5b35dadd. The final read-only auditor re-downloads original ZIP and byte-compares the committed exact container, checks all seven member hashes and the decoded complete job Git blob, executes ten positive/adversarial tests, and preserves partial failure receipts.
+
+**Retained negative CI:** [read-only Actions #40869267829](https://github.com/techrote/neurounner/actions/runs/40869267829) failed three positive tests because its auditor wrongly required the later workflow success marker inside the original runner.log (which only contains the real NumPy warning). Commit 8cbe610768574aa99edf9b83f18af00115f7bcd8 corrected the auditor assumption, NOT original evidence; keep the failure receipt.
+
+No scientific #72 PASS, matched frozen-host actual compute-budget PASS, comparative learning, held-out access or merge follows from this source-custody and synthetic adapter measurement. The original incomplete six-token root-Instruct tool-call prefix remains negative, and void.1 historical EOS-258 impact remains UNMEASURED.
