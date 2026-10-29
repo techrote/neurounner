@@ -74,7 +74,7 @@ jobs:
                   pathlib.Path('RAG.md').write_text(ours.rstrip()+'\n'+unique[0]+'\n')
                   run(['git','add','RAG.md'],f'{n}-rag-resolution.log')
               elif conflicts or p.returncode:raise RuntimeError(f'Unreviewed merge conflict #{n}: {conflicts}')
-              run(['git','diff','--cached','--check','--','.',':(exclude,glob)**/*.md'],f'{n}-nonmarkdown-diff-check.log')
+              run(['git','diff','--cached','--check','--','.',':(exclude,glob)**/*.md',':(exclude,glob)**/*.log'],f'{n}-code-json-workflow-diff-check.log')
               run(['git','commit','--no-edit'],f'{n}-merge.log')
               tree=run(['git','rev-parse','HEAD^{tree}'],f'{n}-tree.txt').stdout.strip()
               (out/f'{n}-RAG.md').write_bytes(pathlib.Path('RAG.md').read_bytes())
