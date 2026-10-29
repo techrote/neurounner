@@ -81,6 +81,36 @@ class SprocketAdapterOnlyCPUTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, "REFUSED"):
                         m.run((1,), 1, 2)
 
+    def test_validation_is_outside_timed_adapter_samples(self):
+        nca, mlp = m.make_modules()
+        actual_three_taps = m.three_taps
+        calls = []
+
+        def watched(kind, module, depths, *, validate=True):
+            calls.append((kind, validate))
+            return actual_three_taps(kind, module, depths, validate=validate)
+
+        with patch.object(m, "three_taps", side_effect=watched):
+            row = m.measured_case(nca, mlp, length=1, warmups=1, repeats=2)
+        self.assertEqual(calls, [
+            ("nca", True), ("mlp", True),
+            ("nca", False), ("mlp", False),
+            ("mlp", False), ("nca", False),
+            ("nca", True), ("mlp", True),
+        ])
+        self.assertIs(row["timed_interval_includes_noop_or_finite_checks"], False)
+        self.assertIs(row["warmup_and_postflight_noop_state_checks"], True)
+
+    def test_corrupt_noop_is_still_refused_before_measurement(self):
+        nca, _ = m.make_modules()
+
+        class BadMLP:
+            def step(self, hidden, *, tap_index):
+                return hidden + 1
+
+        with self.assertRaisesRegex(ValueError, "no-op parity"):
+            m.measured_case(nca, BadMLP(), length=1, warmups=1, repeats=2)
+
     def test_bounded_cpu_samples_do_not_promote_science(self):
         report = m.run((1,), 1, 2)
         self.assertEqual(report["status"], m.STATUS)

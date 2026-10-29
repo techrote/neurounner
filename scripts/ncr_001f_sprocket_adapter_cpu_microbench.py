@@ -88,7 +88,8 @@ def synthetic_hidden(length: int) -> tuple[torch.Tensor, ...]:
                  for _ in range(3))
 
 
-def three_taps(kind: str, module, depths: tuple[torch.Tensor, ...]) -> torch.Tensor:
+def three_taps(kind: str, module, depths: tuple[torch.Tensor, ...], *,
+               validate: bool = True) -> torch.Tensor:
     refuse(kind in ("nca", "mlp") and len(depths) == 3,
            "invalid adapter identity or missing depth activation")
     state = None
@@ -100,9 +101,10 @@ def three_taps(kind: str, module, depths: tuple[torch.Tensor, ...]) -> torch.Ten
                 output = module.step(hidden, tap_index=tap)
             # Both modules have zero-initialized readouts. Any nonidentity
             # indicates corrupted initialization or a changed implementation.
-            refuse(torch.equal(output, hidden),
-                   "zero-readout no-op parity failed at depth tap")
-        if kind == "nca":
+            if validate:
+                refuse(torch.equal(output, hidden),
+                       "zero-readout no-op parity failed at depth tap")
+        if kind == "nca" and validate:
             refuse(state is not None and state.next_tap == 3
                    and bool(torch.isfinite(state.field).all()),
                    "cell field nonfinite or depth state did not reach tap 3")
@@ -122,10 +124,14 @@ def measured_case(nca, mlp, length: int, warmups: int, repeats: int) -> dict:
         order = ("nca", "mlp") if i % 2 == 0 else ("mlp", "nca")
         for kind in order:
             start = time.perf_counter_ns()
-            three_taps(kind, modules[kind], depths)
+            # Timed work is module forwards only, not torch.equal/isfinite assertions.
+            three_taps(kind, modules[kind], depths, validate=False)
             elapsed_ms = (time.perf_counter_ns() - start) / 1_000_000
             refuse(elapsed_ms > 0, "nonpositive monotonic CPU measurement")
             times[kind].append(round(elapsed_ms, 6))
+    # Fail closed after timing, too. Checks remain mandatory but outside samples.
+    for kind in ("nca", "mlp"):
+        three_taps(kind, modules[kind], depths)
     med = {k: statistics.median(t) for k, t in times.items()}
     return {
         "synthetic_shape": [1, length, 1280],
@@ -137,6 +143,8 @@ def measured_case(nca, mlp, length: int, warmups: int, repeats: int) -> dict:
         "median_nca_over_mlp_wall_ratio": round(med["nca"] / med["mlp"], 6),
         "includes_frozen_transformer": False,
         "includes_backward_or_optimizer": False,
+        "timed_interval_includes_noop_or_finite_checks": False,
+        "warmup_and_postflight_noop_state_checks": True,
     }
 
 
