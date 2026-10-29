@@ -1,0 +1,99 @@
+name: NCR-001F same-runner adapter-only CPU forward microbenchmark (NO MODEL/NO TRAIN)
+on:
+  push:
+    branches: [review/ncr-001f-sprocket-real-mlp-20261027]
+    paths:
+      - ".github/workflows/ncr-001f-sprocket-adapter-cpu-microbench.yml"
+      - "scripts/ncr_001f_sprocket_adapter_cpu_microbench.py"
+      - "tests/test_ncr_001f_sprocket_adapter_cpu_microbench.py"
+      - "docs/NCR_001_F_SPROCKET_ADAPTER_CPU_MICROBENCH.md"
+      - "scripts/ncr_001f_sprocket_mac_proxy.py"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/source-pins.json"
+      - "RAG.md"
+permissions:
+  contents: read
+concurrency:
+  group: ncr001f-adapter-cpu-microbench
+  cancel-in-progress: true
+jobs:
+  adapter-only-no-model:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
+      OPENBLAS_NUM_THREADS: "4"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify exact source checkout and branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$GITHUB_REF_NAME" = "review/ncr-001f-sprocket-real-mlp-20261027"
+          test -f experiments/ncr-001/protocol.json
+          test -f experiments/ncr-001/source-pins.json
+          mkdir -p runtime/ncr001f-adapter-microbench
+      - name: Install pinned PyTorch CPU build (no model dependencies or downloads)
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 - <<'PY'
+          import torch
+          assert torch.__version__ == "2.14.1+cpu", torch.__version__
+          print("Pinned PyTorch CPU build verified",torch.__version__)
+          PY
+      - name: Run exact-source negative tests; preserve stdout
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            scripts/ncr_001f_sprocket_adapter_cpu_microbench.py \
+            tests/test_ncr_001f_sprocket_adapter_cpu_microbench.py
+          python3 -m unittest discover -s tests \
+            -p test_ncr_001f_sprocket_adapter_cpu_microbench.py -v \
+            2>&1 | tee runtime/ncr001f-adapter-microbench/tests.log
+      - name: Measure only pinned unfitted NCA/MLP PyTorch adapter CPU forward
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/ncr_001f_sprocket_adapter_cpu_microbench.py \
+            --out runtime/ncr001f-adapter-microbench/report.json \
+            2>&1 | tee runtime/ncr001f-adapter-microbench/runner.log
+          python3 - <<'PY'
+          import json
+          r=json.load(open("runtime/ncr001f-adapter-microbench/report.json"))
+          assert r["status"]=="ADAPTER_ONLY_CPU_FORWARD_MICROBENCH__FROZEN_HOST_NOT_EXECUTED__NO_TRAIN"
+          assert r["runner"]["torch"]=="2.14.1+cpu"
+          assert set(r["source_variants_verified_not_executed"])=={"sprocket_chat","sprocket_instruct"}
+          assert len(r["synthetic_cases"])==3
+          assert [x["synthetic_shape"][1] for x in r["synthetic_cases"]]==[1,16,64]
+          assert all(not r[k] for k in ("frozen_model_weights_downloaded",
+            "frozen_model_inference_executed","tokenizers_executed","heldouts_opened",
+            "train_authorized","training_performed","full_72_conformance_pass",
+            "actual_matched_frozen_host_budget_pass"))
+          assert r["optimizer_steps"]==0
+          assert r["model_free_shared_geometry"]["nca_over_mlp_mac_ratio"]==1.20625
+          print("ADAPTER_ONLY_MEASURED__REAL_MODEL_BUDGET_UNQUALIFIED__NO_TRAIN")
+          PY
+      - name: Capture full runner and package environment, including failures
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p runtime/ncr001f-adapter-microbench
+          python3 -m pip freeze > runtime/ncr001f-adapter-microbench/pip-freeze.txt || true
+          uname -a > runtime/ncr001f-adapter-microbench/uname.txt || true
+          lscpu > runtime/ncr001f-adapter-microbench/lscpu.txt || true
+          git rev-parse HEAD > runtime/ncr001f-adapter-microbench/source-head.txt || true
+      - name: Preserve raw timings, package/runner identity and partial failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001f-sprocket-adapter-only-cpu-microbench
+          path: runtime/ncr001f-adapter-microbench/
+          if-no-files-found: warn
+          retention-days: 30
