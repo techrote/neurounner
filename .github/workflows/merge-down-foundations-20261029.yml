@@ -1,4 +1,4 @@
-name: NCR-001 dependency-ordered merge-down integration qualification
+name: NCR ByteTokenizer source/runtime merge-down qualification
 on:
   push:
     branches: [integration/merge-down-foundations-20261029]
@@ -7,114 +7,102 @@ permissions:
   contents: read
   pull-requests: read
 concurrency:
-  group: ncr-merge-down-validation-20261029
+  group: ncr-byte-merge-down-20261029
   cancel-in-progress: false
 env:
   PYTHONDONTWRITEBYTECODE: "1"
-  HF_HUB_OFFLINE: "1"
-  TRANSFORMERS_OFFLINE: "1"
+  HF_HOME: /tmp/ncr-byte-merge-down-20261029
+  HF_HUB_DISABLE_TELEMETRY: "1"
   TOKENIZERS_PARALLELISM: "false"
   OMP_NUM_THREADS: "2"
   MKL_NUM_THREADS: "2"
-  BASE_SHA: 2c4b89600c1de087e9a5658adc12dcedcc2fcd64
+  BASE_SHA: 79b43d8cd1d69097df5b0b3579f549a87d1a9b64
 jobs:
-  integration:
+  audit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 2c4b89600c1de087e9a5658adc12dcedcc2fcd64
+          ref: 79b43d8cd1d69097df5b0b3579f549a87d1a9b64
           fetch-depth: 0
           persist-credentials: false
-      - name: Install source-only torch CPU fixture (not model weights)
+      - name: Install exact pinned source/tokenizer and CPU-test dependencies
         run: |
+          python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "huggingface_hub==0.36.2" "safetensors==0.8.0"
           python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
-          python3 -c 'import torch; assert torch.__version__=="2.14.1+cpu" and not torch.cuda.is_available();print(torch.__version__)'
-      - name: Reconstruct every original PR ancestry and corrected shared-decoder source
+          python3 -c 'import torch,transformers; assert torch.__version__=="2.14.1+cpu" and transformers.__version__=="4.57.6"; assert not torch.cuda.is_available()'
+      - name: Current-main two-stage reconstruction and source-runtime gate
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git config user.name 'Read-only integration verifier'
-          git config user.email 'integration-verifier@example.invalid'
+          git config user.name 'Read-only ByteTokenizer integration'
+          git config user.email 'integration-only@example.invalid'
+          mkdir -p "$RUNNER_TEMP/ncr-byte-merge-down"
           python3 - <<'PY'
-          import os, pathlib, subprocess, json, urllib.request
-          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'ncr-merge-down'
-          out.mkdir()
-          plan=[
-            (83,'ec0d4a80e15f203a06c26ee9c23858f78976370b'),
-            (153,'004164931dba6dfa4d3c5f27041b6c573f2965b2'),
-            (84,'b95c010f9b2ba3cbd9f81317981316bb9c8acd19'),
-            (85,'5fa3dc8c0de153098d1800f7b0c809819620aef4'),
-            (86,'83a56835a7476f17a17980d28dd1a7c14bb6f2f6'),
-            (96,'f4f4b5becaebf17d89f11dc8db0952c31cbe451f'),
-            (151,'d02d549b95665b6974fd37d66b3586c7348a4d8b'),
-            (154,'4093ba067ca5f8a7bc9c4eee1290ead03905c8ed'),
-          ]
-          def call(args,fail=True):
-            p=subprocess.run(args,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-            print('>',*args,'\n',p.stdout,flush=True)
-            if fail and p.returncode:raise RuntimeError(f'{args}: status={p.returncode}')
-            return p
-          def g(*args,fail=True):return call(['git',*args],fail=fail)
-          base=g('rev-parse','HEAD').stdout.strip()
-          assert base==os.environ['BASE_SHA'],base
-          assert g('ls-remote','origin','refs/heads/main').stdout.split()[0]==base,'main has advanced'
-          for number,sha in plan:
-            request=urllib.request.Request(f'https://api.github.com/repos/techrote/neurounner/pulls/{number}',
-              headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
-            with urllib.request.urlopen(request,timeout=35) as r:p=json.load(r)
-            assert p['state']=='open' and p['head']['sha']==sha,(number,p['head']['sha'])
+          import json,os,pathlib,subprocess,sys,urllib.request
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'ncr-byte-merge-down'
+          def run(argv,label):
+              p=subprocess.run(argv,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+              (out/label).write_text(p.stdout)
+              print(label,p.returncode,p.stdout,flush=True)
+              if p.returncode:raise RuntimeError(f'{label}: {p.returncode}')
+              return p.stdout.strip()
+          def api(path):
+              req=urllib.request.Request('https://api.github.com/repos/techrote/neurounner'+path,
+                  headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(req,timeout=40) as r:return json.load(r)
+          plan=[(90,'ebdb6bfe301dda826deaa87b32c233ddbf4e5f9e'),
+                (91,'1fdc2e7e5c7b7b77923dbc4b47dcafa132aef47a')]
+          source=api('/branches/main')
+          assert source['commit']['sha']==os.environ['BASE_SHA'], 'main changed'
+          assert run(['git','rev-parse','HEAD'],'starting-head.txt')==os.environ['BASE_SHA']
           stages=[]
-          for number,sha in plan:
-            result=g('merge','--no-ff','--no-commit',sha,fail=False)
-            conflicts=g('diff','--name-only','--diff-filter=U').stdout.splitlines()
-            if conflicts==['RAG.md']:
-              ours=g('show','HEAD:RAG.md').stdout
-              theirs=g('show','MERGE_HEAD:RAG.md').stdout
-              unique=[line for line in theirs.splitlines() if line.startswith('- **[NCR-') and line not in ours]
-              assert unique,f'RAG conflict without new NCR link on {number}'
-              pathlib.Path('RAG.md').write_text(ours.rstrip()+'\n'+'\n'.join(unique)+'\n')
-              g('add','RAG.md')
-            elif number==154 and set(conflicts)=={
-                'scripts/ncr_001_smollm2.py','scripts/ncr_001_sprocket_chat.py',
-                'scripts/ncr_001_sprocket_instruct.py','scripts/ncr_001_void1.py'}:
-              # Exact reviewed lease-owner source supersedes intentionally unguarded sibling additions.
-              for path in conflicts:
-                g('checkout','--theirs','--',path)
-                g('add','--',path)
-                assert g('hash-object',path).stdout.strip()==g('rev-parse',f'{sha}:{path}').stdout.strip(),path
-            elif conflicts:
-              raise RuntimeError(f'New unreviewed merge conflict {number}: {conflicts}')
-            elif result.returncode:
-              raise RuntimeError(f'Merge {number} failed without tracked conflicts')
-            g('diff','--cached','--check','--',
-              ':(glob)**/*.py',':(glob)**/*.yml',':(glob)**/*.json','RAG.md')
-            g('commit','--no-edit')
-            tree=g('rev-parse','HEAD^{tree}').stdout.strip()
-            stages.append({'pr':number,'original_head':sha,'integration_tree':tree,'source_resolution':('lease-authoritative' if number==154 else 'RAG-link-only')})
-            (out/'stages.json').write_text(json.dumps(stages,indent=2)+'\n')
+          for n,sha in plan:
+              pr=api('/pulls/'+str(n))
+              assert pr['state']=='open' and pr['head']['sha']==sha,(n,pr['head']['sha'])
+              (out/f'{n}-source-metadata.json').write_text(json.dumps({'head':sha,'base':pr['base']['ref'],'draft':pr['draft']},indent=2)+'\n')
+              run(['git','merge','--no-ff','--no-edit',sha],f'{n}-merge.log')
+              tree=run(['git','rev-parse','HEAD^{tree}'],f'{n}-tree.txt')
+              run(['git','diff','--check','HEAD^1','HEAD','--',':(exclude,glob)**/*.md'],f'{n}-diff-check.log')
+              run([sys.executable,'scripts/ncr_001_protocol.py','validate'],f'{n}-protocol.json')
+              run([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001_protocol.py','-v'],f'{n}-protocol-tests.log')
+              run([sys.executable,'scripts/ncr_001k_byte_source_audit.py'],f'{n}-source-audit.log')
+              report=json.loads(pathlib.Path('runtime/ncr-001/void-byte-source-audit.json').read_text())
+              assert report['status']=='PASS_SOURCE_HASH_AND_AST_INVENTORY_ONLY__RUNTIME_BLOCKED'
+              assert report['remote_python_executed'] is False and report['model_training_performed'] is False
+              (out/f'{n}-source-audit.json').write_text(json.dumps(report,indent=2)+'\n')
+              if n==91:
+                  # Prefetch config by pinned hash BEFORE disabling network.
+                  from huggingface_hub import hf_hub_download
+                  import hashlib
+                  pin=json.loads(pathlib.Path('experiments/ncr-001/source-pins.json').read_text())['models']['void1']
+                  config=pathlib.Path(hf_hub_download(pin['repo_id'],'config.json',revision=pin['revision']))
+                  assert hashlib.sha256(config.read_bytes()).hexdigest()==pin['config_sha256']
+                  env=dict(os.environ,HF_HUB_OFFLINE='1',TRANSFORMERS_OFFLINE='1')
+                  p=subprocess.run([sys.executable,'scripts/ncr_001k_byte_runtime.py'],env=env,
+                       text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+                  (out/'91-runtime.log').write_text(p.stdout)
+                  print('91 runtime',p.returncode,p.stdout,flush=True)
+                  if p.returncode:raise RuntimeError('Reviewed offline tokenizer runtime failed')
+                  d=json.loads(pathlib.Path('runtime/ncr-001/void-byte-runtime.json').read_text())
+                  assert d['status']=='PASS_REVIEWED_VOID_BYTE_TOKENIZER_RUNTIME_SEMANTICS__MODEL_CONFORMANCE_BLOCKED'
+                  assert d['byte_semantics_qualified'] is True
+                  assert d['model_training_performed'] is False and d['model_weights_loaded'] is False
+                  assert d['optimizer_steps']==0 and d['remaining_full_void1_conformance'] is True
+                  (out/'91-runtime.json').write_text(json.dumps(d,indent=2,ensure_ascii=False)+'\n')
+              stages.append({'pr':n,'original_head':sha,'integrated_tree':tree,'status':'PASS','model_weights_loaded':False,'training_authorized':False})
+              (out/'stages.json').write_text(json.dumps(stages,indent=2)+'\n')
+          run([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001*.py','-v'],'full-ncr-tests.log')
           assert json.loads(pathlib.Path('experiments/ncr-001/protocol.json').read_text())['train_authorized'] is False
-          (out/'final-tree.txt').write_text(stages[-1]['integration_tree']+'\n')
-          print('FINAL INTEGRATED TREE',stages[-1]['integration_tree'])
+          print('FINAL TREE',stages[-1]['integrated_tree'],'NO MODEL WEIGHTS / OPTIMIZER')
           PY
-      - name: Full relevant offline regressions and exact original archive readback
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/ncr-merge-down"
-          export PYTHONPATH="$GITHUB_WORKSPACE/scripts"
-          python3 -m unittest discover -s tests -p 'test_ncr_001*.py' -v 2>&1 | tee "$RUNNER_TEMP/ncr-merge-down/ncr-tests.log"
-          python3 scripts/ncr_001f_shared_backbone_archive.py | tee "$RUNNER_TEMP/ncr-merge-down/original-151-audit.json"
-          python3 scripts/ncr_001_cross_decoder_archive.py | tee "$RUNNER_TEMP/ncr-merge-down/original-154-audit.json"
-          python3 scripts/ncr_001_protocol.py validate | tee "$RUNNER_TEMP/ncr-merge-down/protocol.json"
-          python3 -m unittest discover -s tests -p 'test_runner_001_summary.py' -v 2>&1 | tee "$RUNNER_TEMP/ncr-merge-down/runner-tests.log"
-          python3 scripts/verify_story_001_v2.py | tee "$RUNNER_TEMP/ncr-merge-down/story-archive.log"
-      - name: Retain tested source/tree and original negative evidence
+      - name: Preserve source, runtime, host and failure evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: ncr-merge-down-validation-${{ github.run_id }}
-          path: ${{ runner.temp }}/ncr-merge-down/
-          if-no-files-found: warn
+          name: ncr-byte-merge-down-${{ github.run_id }}
+          path: ${{ runner.temp }}/ncr-byte-merge-down/
           retention-days: 30
+          if-no-files-found: warn
