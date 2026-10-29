@@ -1,0 +1,863 @@
+﻿2026-10-27T22:52:30.1927454Z Current runner version: '2.338.0'
+2026-10-27T22:52:30.1952705Z ##[group]Runner Image Provisioner
+2026-10-27T22:52:30.1953582Z Hosted Compute Agent
+2026-10-27T22:52:30.1954223Z Version: 20261021.618
+2026-10-27T22:52:30.1954920Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-27T22:52:30.1955660Z Build Date: 2026-10-21T00:45:21Z
+2026-10-27T22:52:30.1956403Z Worker ID: {5cc0b021-2abf-48c5-b768-dc496482bfbb}
+2026-10-27T22:52:30.1957145Z Region: westus2
+2026-10-27T22:52:30.1957728Z Cloud: Azure
+2026-10-27T22:52:30.1958311Z ##[endgroup]
+2026-10-27T22:52:30.1959783Z ##[group]Operating System
+2026-10-27T22:52:30.1960418Z Ubuntu
+2026-10-27T22:52:30.1961350Z 24.04.5
+2026-10-27T22:52:30.1961909Z LTS
+2026-10-27T22:52:30.1962486Z ##[endgroup]
+2026-10-27T22:52:30.1963061Z ##[group]Runner Image
+2026-10-27T22:52:30.1963712Z Image: ubuntu-24.04
+2026-10-27T22:52:30.1964344Z Version: 20261012.334.1
+2026-10-27T22:52:30.1965704Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-27T22:52:30.1967318Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+2026-10-27T22:52:30.1968328Z ##[endgroup]
+2026-10-27T22:52:30.1969471Z ##[group]GITHUB_TOKEN Permissions
+2026-10-27T22:52:30.1971732Z Contents: read
+2026-10-27T22:52:30.1972465Z Metadata: read
+2026-10-27T22:52:30.1973039Z ##[endgroup]
+2026-10-27T22:52:30.1975188Z Secret source: Actions
+2026-10-27T22:52:30.1976228Z Cache mode: write
+2026-10-27T22:52:30.1976960Z Prepare workflow directory
+2026-10-27T22:52:30.2379216Z Prepare all required actions
+2026-10-27T22:52:30.2427334Z Getting action download info
+2026-10-27T22:52:30.5847091Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-27T22:52:30.7104954Z Download action repository 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-27T22:52:31.0644990Z Complete job name: Actual original root Instruct right-gapped KV and HF GenerationMixin
+2026-10-27T22:52:31.1570836Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-27T22:52:31.1572238Z with:
+2026-10-27T22:52:31.1572898Z   persist-credentials: false
+2026-10-27T22:52:31.1573536Z   repository: techrote/neurounner
+2026-10-27T22:52:31.1577774Z   token: ***
+2026-10-27T22:52:31.1578377Z   ssh-strict: true
+2026-10-27T22:52:31.1578999Z   ssh-user: git
+2026-10-27T22:52:31.1579651Z   clean: true
+2026-10-27T22:52:31.1580252Z   sparse-checkout-cone-mode: true
+2026-10-27T22:52:31.1581118Z   fetch-depth: 1
+2026-10-27T22:52:31.1581784Z   fetch-tags: false
+2026-10-27T22:52:31.1582448Z   show-progress: true
+2026-10-27T22:52:31.1583044Z   lfs: false
+2026-10-27T22:52:31.1583693Z   submodules: false
+2026-10-27T22:52:31.1584219Z   set-safe-directory: true
+2026-10-27T22:52:31.1585133Z   allow-unsafe-pr-checkout: false
+2026-10-27T22:52:31.1586613Z env:
+2026-10-27T22:52:31.1587672Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:52:31.1588971Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:52:31.1590352Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:52:31.1591838Z   OMP_NUM_THREADS: 4
+2026-10-27T22:52:31.1592819Z   MKL_NUM_THREADS: 4
+2026-10-27T22:52:31.1593954Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:52:31.1595076Z ##[endgroup]
+2026-10-27T22:52:31.4999715Z Syncing repository: techrote/neurounner
+2026-10-27T22:52:31.5002704Z ##[group]Getting Git version info
+2026-10-27T22:52:31.5003859Z Working directory is '/home/runner/work/neurounner/neurounner'
+2026-10-27T22:52:31.5005503Z [command]/usr/bin/git version
+2026-10-27T22:52:31.5016297Z git version 2.55.0
+2026-10-27T22:52:31.5042563Z ##[endgroup]
+2026-10-27T22:52:31.5055903Z Temporarily overriding HOME='/home/runner/work/_temp/202c74be-77b6-4a13-8655-7066d459e345' before making global git config changes
+2026-10-27T22:52:31.5057582Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:52:31.5067011Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner
+2026-10-27T22:52:31.5130303Z Deleting the contents of '/home/runner/work/neurounner/neurounner'
+2026-10-27T22:52:31.5133713Z ##[group]Determining repository object format
+2026-10-27T22:52:31.5135404Z ##[endgroup]
+2026-10-27T22:52:31.5136700Z ##[group]Initializing the repository
+2026-10-27T22:52:31.5138119Z [command]/usr/bin/git init /home/runner/work/neurounner/neurounner
+2026-10-27T22:52:31.5278012Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-27T22:52:31.5279748Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-27T22:52:31.5282619Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-27T22:52:31.5284446Z hint: call:
+2026-10-27T22:52:31.5285549Z hint:
+2026-10-27T22:52:31.5286529Z hint: 	git config --global init.defaultBranch <name>
+2026-10-27T22:52:31.5287605Z hint:
+2026-10-27T22:52:31.5288582Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-27T22:52:31.5290165Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-27T22:52:31.5291616Z hint:
+2026-10-27T22:52:31.5292325Z hint: 	git branch -m <name>
+2026-10-27T22:52:31.5293131Z hint:
+2026-10-27T22:52:31.5294199Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-27T22:52:31.5295857Z Initialized empty Git repository in /home/runner/work/neurounner/neurounner/.git/
+2026-10-27T22:52:31.5298232Z [command]/usr/bin/git remote add origin https://github.com/techrote/neurounner
+2026-10-27T22:52:31.5352375Z ##[endgroup]
+2026-10-27T22:52:31.5353627Z ##[group]Disabling automatic garbage collection
+2026-10-27T22:52:31.5355507Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-27T22:52:31.5394282Z ##[endgroup]
+2026-10-27T22:52:31.5395871Z ##[group]Setting up auth
+2026-10-27T22:52:31.5397045Z Removing SSH command configuration
+2026-10-27T22:52:31.5399064Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:31.5436173Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:31.5852987Z Removing HTTP extra header
+2026-10-27T22:52:31.5858727Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:31.5897882Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:31.6130164Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:31.6136566Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:31.6173519Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:31.6406231Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-b5525541-1dac-4b44-bc67-2fe296777df0.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-27T22:52:31.6447476Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/.git.path /home/runner/work/_temp/git-credentials-b5525541-1dac-4b44-bc67-2fe296777df0.config
+2026-10-27T22:52:31.6482965Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-b5525541-1dac-4b44-bc67-2fe296777df0.config
+2026-10-27T22:52:31.6523865Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-b5525541-1dac-4b44-bc67-2fe296777df0.config
+2026-10-27T22:52:31.6560070Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-b5525541-1dac-4b44-bc67-2fe296777df0.config
+2026-10-27T22:52:31.6592451Z ##[endgroup]
+2026-10-27T22:52:31.6593235Z ##[group]Fetching the repository
+2026-10-27T22:52:31.6598911Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4470f3070abdee1a6b31d82b27663a8bfe0fdd41:refs/remotes/pull/113/merge
+2026-10-27T22:52:32.3533247Z From https://github.com/techrote/neurounner
+2026-10-27T22:52:32.3535637Z  * [new ref]         4470f3070abdee1a6b31d82b27663a8bfe0fdd41 -> pull/113/merge
+2026-10-27T22:52:32.3541299Z ##[endgroup]
+2026-10-27T22:52:32.3543247Z ##[group]Determining the checkout info
+2026-10-27T22:52:32.3545398Z ##[endgroup]
+2026-10-27T22:52:32.3546962Z [command]/usr/bin/git sparse-checkout disable
+2026-10-27T22:52:32.3607644Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-27T22:52:32.3649808Z ##[group]Checking out the ref
+2026-10-27T22:52:32.3654039Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/113/merge
+2026-10-27T22:52:32.5732890Z Note: switching to 'refs/remotes/pull/113/merge'.
+2026-10-27T22:52:32.5733744Z 
+2026-10-27T22:52:32.5734315Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-27T22:52:32.5735661Z changes and commit them, and you can discard any commits you make in this
+2026-10-27T22:52:32.5737019Z state without impacting any branches by switching back to a branch.
+2026-10-27T22:52:32.5737804Z 
+2026-10-27T22:52:32.5738386Z If you want to create a new branch to retain commits you create, you may
+2026-10-27T22:52:32.5739759Z do so (now or later) by using -c with the switch command. Example:
+2026-10-27T22:52:32.5740899Z 
+2026-10-27T22:52:32.5741301Z   git switch -c <new-branch-name>
+2026-10-27T22:52:32.5741911Z 
+2026-10-27T22:52:32.5742276Z Or undo this operation with:
+2026-10-27T22:52:32.5742825Z 
+2026-10-27T22:52:32.5743143Z   git switch -
+2026-10-27T22:52:32.5743569Z 
+2026-10-27T22:52:32.5744336Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-27T22:52:32.5745416Z 
+2026-10-27T22:52:32.5746823Z HEAD is now at 4470f30 Merge d727640e36ec9f7915aa208d69d9b78e4448f0c6 into 3592841802d85c442ca2521479b5d8795bee7233
+2026-10-27T22:52:32.5752644Z ##[endgroup]
+2026-10-27T22:52:32.5804107Z [command]/usr/bin/git log -1 --format=%H
+2026-10-27T22:52:32.5833907Z 4470f3070abdee1a6b31d82b27663a8bfe0fdd41
+2026-10-27T22:52:32.5843244Z ##[group]Removing auth
+2026-10-27T22:52:32.5844221Z Removing SSH command configuration
+2026-10-27T22:52:32.5847071Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:32.5883711Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:32.6112196Z Removing HTTP extra header
+2026-10-27T22:52:32.6116405Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:32.6159028Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:32.6385613Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:32.6389153Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:32.6421441Z includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path
+2026-10-27T22:52:32.6424247Z includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path
+2026-10-27T22:52:32.6426469Z includeif.gitdir:/github/workspace/.git.path
+2026-10-27T22:52:32.6428232Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-27T22:52:32.6434073Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path
+2026-10-27T22:52:32.6457878Z /home/runner/work/_temp/git-credentials-b5525541-1dac-4b44-bc67-2fe296777df0.config
+2026-10-27T22:52:32.6471906Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-b5525541\-1dac\-4b44\-bc67\-2fe296777df0\.config
+2026-10-27T22:52:32.6515246Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path
+2026-10-27T22:52:32.6541472Z /home/runner/work/_temp/git-credentials-b5525541-1dac-4b44-bc67-2fe296777df0.config
+2026-10-27T22:52:32.6551041Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-b5525541\-1dac\-4b44\-bc67\-2fe296777df0\.config
+2026-10-27T22:52:32.6586754Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-27T22:52:32.6616001Z /github/runner_temp/git-credentials-b5525541-1dac-4b44-bc67-2fe296777df0.config
+2026-10-27T22:52:32.6627495Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-b5525541\-1dac\-4b44\-bc67\-2fe296777df0\.config
+2026-10-27T22:52:32.6665280Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-27T22:52:32.6692710Z /github/runner_temp/git-credentials-b5525541-1dac-4b44-bc67-2fe296777df0.config
+2026-10-27T22:52:32.6703753Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-b5525541\-1dac\-4b44\-bc67\-2fe296777df0\.config
+2026-10-27T22:52:32.6742011Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:32.6968700Z Removing credentials config '/home/runner/work/_temp/git-credentials-b5525541-1dac-4b44-bc67-2fe296777df0.config'
+2026-10-27T22:52:32.6977308Z ##[endgroup]
+2026-10-27T22:52:32.7406511Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-27T22:52:32.7407919Z with:
+2026-10-27T22:52:32.7408799Z   ref: 3592841802d85c442ca2521479b5d8795bee7233
+2026-10-27T22:52:32.7409925Z   path: candidate
+2026-10-27T22:52:32.7411078Z   persist-credentials: false
+2026-10-27T22:52:32.7412122Z   repository: techrote/neurounner
+2026-10-27T22:52:32.7421315Z   token: ***
+2026-10-27T22:52:32.7422176Z   ssh-strict: true
+2026-10-27T22:52:32.7423045Z   ssh-user: git
+2026-10-27T22:52:32.7423891Z   clean: true
+2026-10-27T22:52:32.7424789Z   sparse-checkout-cone-mode: true
+2026-10-27T22:52:32.7425843Z   fetch-depth: 1
+2026-10-27T22:52:32.7426713Z   fetch-tags: false
+2026-10-27T22:52:32.7427606Z   show-progress: true
+2026-10-27T22:52:32.7428508Z   lfs: false
+2026-10-27T22:52:32.7429333Z   submodules: false
+2026-10-27T22:52:32.7430460Z   set-safe-directory: true
+2026-10-27T22:52:32.7431627Z   allow-unsafe-pr-checkout: false
+2026-10-27T22:52:32.7432652Z env:
+2026-10-27T22:52:32.7433578Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:52:32.7434702Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:52:32.7435715Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:52:32.7436721Z   OMP_NUM_THREADS: 4
+2026-10-27T22:52:32.7437667Z   MKL_NUM_THREADS: 4
+2026-10-27T22:52:32.7438596Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:52:32.7439558Z ##[endgroup]
+2026-10-27T22:52:32.8309286Z Syncing repository: techrote/neurounner
+2026-10-27T22:52:32.8314670Z ##[group]Getting Git version info
+2026-10-27T22:52:32.8317179Z Working directory is '/home/runner/work/neurounner/neurounner/candidate'
+2026-10-27T22:52:32.8358586Z [command]/usr/bin/git version
+2026-10-27T22:52:32.8404330Z git version 2.55.0
+2026-10-27T22:52:32.8459385Z ##[endgroup]
+2026-10-27T22:52:32.8473738Z Temporarily overriding HOME='/home/runner/work/_temp/d19f0420-6539-4649-a3a5-92b6780f1f42' before making global git config changes
+2026-10-27T22:52:32.8478559Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:52:32.8483590Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner/candidate
+2026-10-27T22:52:32.8512440Z ##[group]Determining repository object format
+2026-10-27T22:52:32.8515590Z ##[endgroup]
+2026-10-27T22:52:32.8518038Z ##[group]Initializing the repository
+2026-10-27T22:52:32.8523264Z [command]/usr/bin/git init /home/runner/work/neurounner/neurounner/candidate
+2026-10-27T22:52:32.8569963Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-27T22:52:32.8576042Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-27T22:52:32.8579448Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-27T22:52:32.8582304Z hint: call:
+2026-10-27T22:52:32.8583921Z hint:
+2026-10-27T22:52:32.8585751Z hint: 	git config --global init.defaultBranch <name>
+2026-10-27T22:52:32.8588262Z hint:
+2026-10-27T22:52:32.8590796Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-27T22:52:32.8594270Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-27T22:52:32.8597056Z hint:
+2026-10-27T22:52:32.8598932Z hint: 	git branch -m <name>
+2026-10-27T22:52:32.8601060Z hint:
+2026-10-27T22:52:32.8603564Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-27T22:52:32.8607249Z Initialized empty Git repository in /home/runner/work/neurounner/neurounner/candidate/.git/
+2026-10-27T22:52:32.8614560Z [command]/usr/bin/git remote add origin https://github.com/techrote/neurounner
+2026-10-27T22:52:32.8622457Z ##[endgroup]
+2026-10-27T22:52:32.8625189Z ##[group]Disabling automatic garbage collection
+2026-10-27T22:52:32.8627657Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-27T22:52:32.8673005Z ##[endgroup]
+2026-10-27T22:52:32.8675713Z ##[group]Setting up auth
+2026-10-27T22:52:32.8677812Z Removing SSH command configuration
+2026-10-27T22:52:32.8681235Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:32.8721960Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:32.8982072Z Removing HTTP extra header
+2026-10-27T22:52:32.8984906Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:32.9057027Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:32.9331484Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:32.9335657Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:32.9373881Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:32.9604997Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-600444a8-3984-4201-aa2f-b722e70fe0e9.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-27T22:52:32.9648210Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git.path /home/runner/work/_temp/git-credentials-600444a8-3984-4201-aa2f-b722e70fe0e9.config
+2026-10-27T22:52:32.9684453Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-600444a8-3984-4201-aa2f-b722e70fe0e9.config
+2026-10-27T22:52:32.9718948Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/candidate/.git.path /github/runner_temp/git-credentials-600444a8-3984-4201-aa2f-b722e70fe0e9.config
+2026-10-27T22:52:32.9754802Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/candidate/.git/worktrees/*.path /github/runner_temp/git-credentials-600444a8-3984-4201-aa2f-b722e70fe0e9.config
+2026-10-27T22:52:32.9788178Z ##[endgroup]
+2026-10-27T22:52:32.9789809Z ##[group]Fetching the repository
+2026-10-27T22:52:32.9794839Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin 3592841802d85c442ca2521479b5d8795bee7233
+2026-10-27T22:52:33.6261463Z From https://github.com/techrote/neurounner
+2026-10-27T22:52:33.6262460Z  * branch            3592841802d85c442ca2521479b5d8795bee7233 -> FETCH_HEAD
+2026-10-27T22:52:33.6271680Z [command]/usr/bin/git rev-parse --verify --quiet 3592841802d85c442ca2521479b5d8795bee7233^{object}
+2026-10-27T22:52:33.6301469Z 3592841802d85c442ca2521479b5d8795bee7233
+2026-10-27T22:52:33.6306680Z ##[endgroup]
+2026-10-27T22:52:33.6307924Z ##[group]Determining the checkout info
+2026-10-27T22:52:33.6309002Z ##[endgroup]
+2026-10-27T22:52:33.6314911Z [command]/usr/bin/git sparse-checkout disable
+2026-10-27T22:52:33.6364536Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-27T22:52:33.6399484Z ##[group]Checking out the ref
+2026-10-27T22:52:33.6404395Z [command]/usr/bin/git checkout --progress --force 3592841802d85c442ca2521479b5d8795bee7233
+2026-10-27T22:52:33.8466547Z Note: switching to '3592841802d85c442ca2521479b5d8795bee7233'.
+2026-10-27T22:52:33.8467704Z 
+2026-10-27T22:52:33.8468099Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-27T22:52:33.8468778Z changes and commit them, and you can discard any commits you make in this
+2026-10-27T22:52:33.8469401Z state without impacting any branches by switching back to a branch.
+2026-10-27T22:52:33.8469782Z 
+2026-10-27T22:52:33.8470012Z If you want to create a new branch to retain commits you create, you may
+2026-10-27T22:52:33.8470839Z do so (now or later) by using -c with the switch command. Example:
+2026-10-27T22:52:33.8471202Z 
+2026-10-27T22:52:33.8471351Z   git switch -c <new-branch-name>
+2026-10-27T22:52:33.8471668Z 
+2026-10-27T22:52:33.8472162Z Or undo this operation with:
+2026-10-27T22:52:33.8472389Z 
+2026-10-27T22:52:33.8472545Z   git switch -
+2026-10-27T22:52:33.8472703Z 
+2026-10-27T22:52:33.8472964Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-27T22:52:33.8473380Z 
+2026-10-27T22:52:33.8473857Z HEAD is now at 3592841 NCR-001E: record independent archived 21-generation evidence, failed gate sentinel and green follow-up
+2026-10-27T22:52:33.8481673Z ##[endgroup]
+2026-10-27T22:52:33.8526480Z [command]/usr/bin/git log -1 --format=%H
+2026-10-27T22:52:33.8555392Z 3592841802d85c442ca2521479b5d8795bee7233
+2026-10-27T22:52:33.8564355Z ##[group]Removing auth
+2026-10-27T22:52:33.8564958Z Removing SSH command configuration
+2026-10-27T22:52:33.8568864Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:33.8605225Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:33.8833324Z Removing HTTP extra header
+2026-10-27T22:52:33.8838359Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:33.8874324Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:33.9097984Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:33.9102093Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:33.9129699Z includeif.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git.path
+2026-10-27T22:52:33.9131143Z includeif.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git/worktrees/*.path
+2026-10-27T22:52:33.9132152Z includeif.gitdir:/github/workspace/candidate/.git.path
+2026-10-27T22:52:33.9133517Z includeif.gitdir:/github/workspace/candidate/.git/worktrees/*.path
+2026-10-27T22:52:33.9141491Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git.path
+2026-10-27T22:52:33.9173572Z /home/runner/work/_temp/git-credentials-600444a8-3984-4201-aa2f-b722e70fe0e9.config
+2026-10-27T22:52:33.9184710Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-600444a8\-3984\-4201\-aa2f\-b722e70fe0e9\.config
+2026-10-27T22:52:33.9222736Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git/worktrees/*.path
+2026-10-27T22:52:33.9248501Z /home/runner/work/_temp/git-credentials-600444a8-3984-4201-aa2f-b722e70fe0e9.config
+2026-10-27T22:52:33.9258272Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-600444a8\-3984\-4201\-aa2f\-b722e70fe0e9\.config
+2026-10-27T22:52:33.9298908Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/candidate/.git.path
+2026-10-27T22:52:33.9325642Z /github/runner_temp/git-credentials-600444a8-3984-4201-aa2f-b722e70fe0e9.config
+2026-10-27T22:52:33.9334194Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/candidate/.git.path \/github\/runner_temp\/git\-credentials\-600444a8\-3984\-4201\-aa2f\-b722e70fe0e9\.config
+2026-10-27T22:52:33.9372132Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/candidate/.git/worktrees/*.path
+2026-10-27T22:52:33.9397644Z /github/runner_temp/git-credentials-600444a8-3984-4201-aa2f-b722e70fe0e9.config
+2026-10-27T22:52:33.9406474Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/candidate/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-600444a8\-3984\-4201\-aa2f\-b722e70fe0e9\.config
+2026-10-27T22:52:33.9443849Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:33.9669642Z Removing credentials config '/home/runner/work/_temp/git-credentials-600444a8-3984-4201-aa2f-b722e70fe0e9.config'
+2026-10-27T22:52:33.9691487Z ##[endgroup]
+2026-10-27T22:52:33.9932175Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-27T22:52:33.9932598Z with:
+2026-10-27T22:52:33.9932834Z   ref: b95c010f9b2ba3cbd9f81317981316bb9c8acd19
+2026-10-27T22:52:33.9933132Z   path: implementation
+2026-10-27T22:52:33.9933374Z   persist-credentials: false
+2026-10-27T22:52:33.9933645Z   repository: techrote/neurounner
+2026-10-27T22:52:33.9936425Z   token: ***
+2026-10-27T22:52:33.9936643Z   ssh-strict: true
+2026-10-27T22:52:33.9936856Z   ssh-user: git
+2026-10-27T22:52:33.9937052Z   clean: true
+2026-10-27T22:52:33.9937271Z   sparse-checkout-cone-mode: true
+2026-10-27T22:52:33.9937808Z   fetch-depth: 1
+2026-10-27T22:52:33.9961912Z   fetch-tags: false
+2026-10-27T22:52:33.9962183Z   show-progress: true
+2026-10-27T22:52:33.9962420Z   lfs: false
+2026-10-27T22:52:33.9962621Z   submodules: false
+2026-10-27T22:52:33.9962842Z   set-safe-directory: true
+2026-10-27T22:52:33.9963105Z   allow-unsafe-pr-checkout: false
+2026-10-27T22:52:33.9963377Z env:
+2026-10-27T22:52:33.9963657Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:52:33.9963965Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:52:33.9964220Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:52:33.9964465Z   OMP_NUM_THREADS: 4
+2026-10-27T22:52:33.9964677Z   MKL_NUM_THREADS: 4
+2026-10-27T22:52:33.9964899Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:52:33.9965152Z ##[endgroup]
+2026-10-27T22:52:34.0806162Z Syncing repository: techrote/neurounner
+2026-10-27T22:52:34.0813455Z ##[group]Getting Git version info
+2026-10-27T22:52:34.0814833Z Working directory is '/home/runner/work/neurounner/neurounner/implementation'
+2026-10-27T22:52:34.0854352Z [command]/usr/bin/git version
+2026-10-27T22:52:34.0898657Z git version 2.55.0
+2026-10-27T22:52:34.0920278Z ##[endgroup]
+2026-10-27T22:52:34.0931351Z Temporarily overriding HOME='/home/runner/work/_temp/d4904fc6-c161-4128-b501-a08d8a061715' before making global git config changes
+2026-10-27T22:52:34.0932782Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:52:34.0938088Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner/implementation
+2026-10-27T22:52:34.0972826Z ##[group]Determining repository object format
+2026-10-27T22:52:34.0975050Z ##[endgroup]
+2026-10-27T22:52:34.0975854Z ##[group]Initializing the repository
+2026-10-27T22:52:34.0982534Z [command]/usr/bin/git init /home/runner/work/neurounner/neurounner/implementation
+2026-10-27T22:52:34.1038809Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-27T22:52:34.1040106Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-27T22:52:34.1041747Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-27T22:52:34.1042911Z hint: call:
+2026-10-27T22:52:34.1043569Z hint:
+2026-10-27T22:52:34.1044305Z hint: 	git config --global init.defaultBranch <name>
+2026-10-27T22:52:34.1045232Z hint:
+2026-10-27T22:52:34.1046090Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-27T22:52:34.1047276Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-27T22:52:34.1048256Z hint:
+2026-10-27T22:52:34.1048848Z hint: 	git branch -m <name>
+2026-10-27T22:52:34.1049499Z hint:
+2026-10-27T22:52:34.1050296Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-27T22:52:34.1051888Z Initialized empty Git repository in /home/runner/work/neurounner/neurounner/implementation/.git/
+2026-10-27T22:52:34.1055999Z [command]/usr/bin/git remote add origin https://github.com/techrote/neurounner
+2026-10-27T22:52:34.1115317Z ##[endgroup]
+2026-10-27T22:52:34.1116285Z ##[group]Disabling automatic garbage collection
+2026-10-27T22:52:34.1117078Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-27T22:52:34.1142475Z ##[endgroup]
+2026-10-27T22:52:34.1143171Z ##[group]Setting up auth
+2026-10-27T22:52:34.1143650Z Removing SSH command configuration
+2026-10-27T22:52:34.1151930Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:34.1187772Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:34.1434634Z Removing HTTP extra header
+2026-10-27T22:52:34.1441416Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:34.1486629Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:34.1745762Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:34.1752282Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:34.1791064Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:34.2022332Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-9ad161bf-7afe-409b-94ae-4a3998796c23.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-27T22:52:34.2064588Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/implementation/.git.path /home/runner/work/_temp/git-credentials-9ad161bf-7afe-409b-94ae-4a3998796c23.config
+2026-10-27T22:52:34.2100190Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/implementation/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-9ad161bf-7afe-409b-94ae-4a3998796c23.config
+2026-10-27T22:52:34.2136752Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/implementation/.git.path /github/runner_temp/git-credentials-9ad161bf-7afe-409b-94ae-4a3998796c23.config
+2026-10-27T22:52:34.2173848Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/implementation/.git/worktrees/*.path /github/runner_temp/git-credentials-9ad161bf-7afe-409b-94ae-4a3998796c23.config
+2026-10-27T22:52:34.2206218Z ##[endgroup]
+2026-10-27T22:52:34.2206691Z ##[group]Fetching the repository
+2026-10-27T22:52:34.2213053Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin b95c010f9b2ba3cbd9f81317981316bb9c8acd19
+2026-10-27T22:52:34.8621722Z From https://github.com/techrote/neurounner
+2026-10-27T22:52:34.8622392Z  * branch            b95c010f9b2ba3cbd9f81317981316bb9c8acd19 -> FETCH_HEAD
+2026-10-27T22:52:34.8631728Z [command]/usr/bin/git rev-parse --verify --quiet b95c010f9b2ba3cbd9f81317981316bb9c8acd19^{object}
+2026-10-27T22:52:34.8660514Z b95c010f9b2ba3cbd9f81317981316bb9c8acd19
+2026-10-27T22:52:34.8665358Z ##[endgroup]
+2026-10-27T22:52:34.8665972Z ##[group]Determining the checkout info
+2026-10-27T22:52:34.8666740Z ##[endgroup]
+2026-10-27T22:52:34.8671433Z [command]/usr/bin/git sparse-checkout disable
+2026-10-27T22:52:34.8717145Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-27T22:52:34.8751759Z ##[group]Checking out the ref
+2026-10-27T22:52:34.8756439Z [command]/usr/bin/git checkout --progress --force b95c010f9b2ba3cbd9f81317981316bb9c8acd19
+2026-10-27T22:52:35.0779677Z Note: switching to 'b95c010f9b2ba3cbd9f81317981316bb9c8acd19'.
+2026-10-27T22:52:35.0780132Z 
+2026-10-27T22:52:35.0781079Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-27T22:52:35.0781704Z changes and commit them, and you can discard any commits you make in this
+2026-10-27T22:52:35.0782318Z state without impacting any branches by switching back to a branch.
+2026-10-27T22:52:35.0782662Z 
+2026-10-27T22:52:35.0782889Z If you want to create a new branch to retain commits you create, you may
+2026-10-27T22:52:35.0783429Z do so (now or later) by using -c with the switch command. Example:
+2026-10-27T22:52:35.0783741Z 
+2026-10-27T22:52:35.0784102Z   git switch -c <new-branch-name>
+2026-10-27T22:52:35.0784316Z 
+2026-10-27T22:52:35.0784429Z Or undo this operation with:
+2026-10-27T22:52:35.0784619Z 
+2026-10-27T22:52:35.0784715Z   git switch -
+2026-10-27T22:52:35.0784861Z 
+2026-10-27T22:52:35.0785113Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-27T22:52:35.0785482Z 
+2026-10-27T22:52:35.0785979Z HEAD is now at b95c010 NCR-001J: verify exact promoted Sprocket Instruct source receipt hash on hosted CI
+2026-10-27T22:52:35.0795739Z ##[endgroup]
+2026-10-27T22:52:35.0842291Z [command]/usr/bin/git log -1 --format=%H
+2026-10-27T22:52:35.0873778Z b95c010f9b2ba3cbd9f81317981316bb9c8acd19
+2026-10-27T22:52:35.0882108Z ##[group]Removing auth
+2026-10-27T22:52:35.0882875Z Removing SSH command configuration
+2026-10-27T22:52:35.0887329Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:35.0927571Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:35.1158329Z Removing HTTP extra header
+2026-10-27T22:52:35.1163197Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:35.1200387Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:35.1428240Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:35.1432353Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:35.1461327Z includeif.gitdir:/home/runner/work/neurounner/neurounner/implementation/.git.path
+2026-10-27T22:52:35.1462353Z includeif.gitdir:/home/runner/work/neurounner/neurounner/implementation/.git/worktrees/*.path
+2026-10-27T22:52:35.1463393Z includeif.gitdir:/github/workspace/implementation/.git.path
+2026-10-27T22:52:35.1464260Z includeif.gitdir:/github/workspace/implementation/.git/worktrees/*.path
+2026-10-27T22:52:35.1473023Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/implementation/.git.path
+2026-10-27T22:52:35.1505971Z /home/runner/work/_temp/git-credentials-9ad161bf-7afe-409b-94ae-4a3998796c23.config
+2026-10-27T22:52:35.1516060Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/implementation/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-9ad161bf\-7afe\-409b\-94ae\-4a3998796c23\.config
+2026-10-27T22:52:35.1555927Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/implementation/.git/worktrees/*.path
+2026-10-27T22:52:35.1582171Z /home/runner/work/_temp/git-credentials-9ad161bf-7afe-409b-94ae-4a3998796c23.config
+2026-10-27T22:52:35.1590506Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/implementation/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-9ad161bf\-7afe\-409b\-94ae\-4a3998796c23\.config
+2026-10-27T22:52:35.1631647Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/implementation/.git.path
+2026-10-27T22:52:35.1658067Z /github/runner_temp/git-credentials-9ad161bf-7afe-409b-94ae-4a3998796c23.config
+2026-10-27T22:52:35.1666696Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/implementation/.git.path \/github\/runner_temp\/git\-credentials\-9ad161bf\-7afe\-409b\-94ae\-4a3998796c23\.config
+2026-10-27T22:52:35.1704848Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/implementation/.git/worktrees/*.path
+2026-10-27T22:52:35.1731369Z /github/runner_temp/git-credentials-9ad161bf-7afe-409b-94ae-4a3998796c23.config
+2026-10-27T22:52:35.1739344Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/implementation/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-9ad161bf\-7afe\-409b\-94ae\-4a3998796c23\.config
+2026-10-27T22:52:35.1775894Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:35.2000468Z Removing credentials config '/home/runner/work/_temp/git-credentials-9ad161bf-7afe-409b-94ae-4a3998796c23.config'
+2026-10-27T22:52:35.2014350Z ##[endgroup]
+2026-10-27T22:52:35.2168341Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-27T22:52:35.2168737Z with:
+2026-10-27T22:52:35.2168969Z   repository: kandivault-source/Sprocket-500M
+2026-10-27T22:52:35.2169312Z   ref: a003767e70d766bc14b40c89792543ee8641c8bc
+2026-10-27T22:52:35.2169598Z   path: publisher
+2026-10-27T22:52:35.2169825Z   persist-credentials: false
+2026-10-27T22:52:35.2172906Z   token: ***
+2026-10-27T22:52:35.2173118Z   ssh-strict: true
+2026-10-27T22:52:35.2173325Z   ssh-user: git
+2026-10-27T22:52:35.2173515Z   clean: true
+2026-10-27T22:52:35.2173728Z   sparse-checkout-cone-mode: true
+2026-10-27T22:52:35.2173985Z   fetch-depth: 1
+2026-10-27T22:52:35.2174184Z   fetch-tags: false
+2026-10-27T22:52:35.2174397Z   show-progress: true
+2026-10-27T22:52:35.2174606Z   lfs: false
+2026-10-27T22:52:35.2174798Z   submodules: false
+2026-10-27T22:52:35.2175017Z   set-safe-directory: true
+2026-10-27T22:52:35.2175264Z   allow-unsafe-pr-checkout: false
+2026-10-27T22:52:35.2175506Z env:
+2026-10-27T22:52:35.2175745Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:52:35.2176027Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:52:35.2176274Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:52:35.2176698Z   OMP_NUM_THREADS: 4
+2026-10-27T22:52:35.2176904Z   MKL_NUM_THREADS: 4
+2026-10-27T22:52:35.2177120Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:52:35.2177354Z ##[endgroup]
+2026-10-27T22:52:35.3027906Z Syncing repository: kandivault-source/Sprocket-500M
+2026-10-27T22:52:35.3029106Z ##[group]Getting Git version info
+2026-10-27T22:52:35.3030065Z Working directory is '/home/runner/work/neurounner/neurounner/publisher'
+2026-10-27T22:52:35.3067888Z [command]/usr/bin/git version
+2026-10-27T22:52:35.3109377Z git version 2.55.0
+2026-10-27T22:52:35.3132544Z ##[endgroup]
+2026-10-27T22:52:35.3142100Z Temporarily overriding HOME='/home/runner/work/_temp/c037d27e-db4d-4a23-b6b0-cfd8815dc552' before making global git config changes
+2026-10-27T22:52:35.3143830Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:52:35.3148472Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner/publisher
+2026-10-27T22:52:35.3182941Z ##[group]Determining repository object format
+2026-10-27T22:52:35.3184981Z ##[endgroup]
+2026-10-27T22:52:35.3185644Z ##[group]Initializing the repository
+2026-10-27T22:52:35.3191652Z [command]/usr/bin/git init /home/runner/work/neurounner/neurounner/publisher
+2026-10-27T22:52:35.3235368Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-27T22:52:35.3236712Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-27T22:52:35.3238216Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-27T22:52:35.3239253Z hint: call:
+2026-10-27T22:52:35.3239899Z hint:
+2026-10-27T22:52:35.3240825Z hint: 	git config --global init.defaultBranch <name>
+2026-10-27T22:52:35.3241800Z hint:
+2026-10-27T22:52:35.3242627Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-27T22:52:35.3244806Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-27T22:52:35.3245791Z hint:
+2026-10-27T22:52:35.3246396Z hint: 	git branch -m <name>
+2026-10-27T22:52:35.3247183Z hint:
+2026-10-27T22:52:35.3248130Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-27T22:52:35.3249422Z Initialized empty Git repository in /home/runner/work/neurounner/neurounner/publisher/.git/
+2026-10-27T22:52:35.3251824Z [command]/usr/bin/git remote add origin https://github.com/kandivault-source/Sprocket-500M
+2026-10-27T22:52:35.3285845Z ##[endgroup]
+2026-10-27T22:52:35.3286550Z ##[group]Disabling automatic garbage collection
+2026-10-27T22:52:35.3292124Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-27T22:52:35.3324931Z ##[endgroup]
+2026-10-27T22:52:35.3325657Z ##[group]Setting up auth
+2026-10-27T22:52:35.3326071Z Removing SSH command configuration
+2026-10-27T22:52:35.3331556Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:35.3374180Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:35.3617153Z Removing HTTP extra header
+2026-10-27T22:52:35.3622939Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:35.3666563Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:35.3926750Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:35.3933489Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:35.3972593Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:35.4201805Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-4f8dc5df-1142-4ace-a995-bf6f711cde93.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-27T22:52:35.4244636Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git.path /home/runner/work/_temp/git-credentials-4f8dc5df-1142-4ace-a995-bf6f711cde93.config
+2026-10-27T22:52:35.4279331Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-4f8dc5df-1142-4ace-a995-bf6f711cde93.config
+2026-10-27T22:52:35.4313852Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/publisher/.git.path /github/runner_temp/git-credentials-4f8dc5df-1142-4ace-a995-bf6f711cde93.config
+2026-10-27T22:52:35.4349449Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/publisher/.git/worktrees/*.path /github/runner_temp/git-credentials-4f8dc5df-1142-4ace-a995-bf6f711cde93.config
+2026-10-27T22:52:35.4382170Z ##[endgroup]
+2026-10-27T22:52:35.4382798Z ##[group]Fetching the repository
+2026-10-27T22:52:35.4388807Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin a003767e70d766bc14b40c89792543ee8641c8bc
+2026-10-27T22:52:36.8646478Z From https://github.com/kandivault-source/Sprocket-500M
+2026-10-27T22:52:36.8647293Z  * branch            a003767e70d766bc14b40c89792543ee8641c8bc -> FETCH_HEAD
+2026-10-27T22:52:36.8657740Z [command]/usr/bin/git rev-parse --verify --quiet a003767e70d766bc14b40c89792543ee8641c8bc^{object}
+2026-10-27T22:52:36.8685780Z a003767e70d766bc14b40c89792543ee8641c8bc
+2026-10-27T22:52:36.8690926Z ##[endgroup]
+2026-10-27T22:52:36.8691722Z ##[group]Determining the checkout info
+2026-10-27T22:52:36.8701446Z ##[endgroup]
+2026-10-27T22:52:36.8710267Z [command]/usr/bin/git sparse-checkout disable
+2026-10-27T22:52:36.8748715Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-27T22:52:36.8783506Z ##[group]Checking out the ref
+2026-10-27T22:52:36.8788098Z [command]/usr/bin/git checkout --progress --force a003767e70d766bc14b40c89792543ee8641c8bc
+2026-10-27T22:52:36.9054153Z Note: switching to 'a003767e70d766bc14b40c89792543ee8641c8bc'.
+2026-10-27T22:52:36.9054792Z 
+2026-10-27T22:52:36.9055307Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-27T22:52:36.9056155Z changes and commit them, and you can discard any commits you make in this
+2026-10-27T22:52:36.9056977Z state without impacting any branches by switching back to a branch.
+2026-10-27T22:52:36.9057469Z 
+2026-10-27T22:52:36.9057783Z If you want to create a new branch to retain commits you create, you may
+2026-10-27T22:52:36.9058545Z do so (now or later) by using -c with the switch command. Example:
+2026-10-27T22:52:36.9059003Z 
+2026-10-27T22:52:36.9059334Z   git switch -c <new-branch-name>
+2026-10-27T22:52:36.9059531Z 
+2026-10-27T22:52:36.9059638Z Or undo this operation with:
+2026-10-27T22:52:36.9059792Z 
+2026-10-27T22:52:36.9059882Z   git switch -
+2026-10-27T22:52:36.9060019Z 
+2026-10-27T22:52:36.9060239Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-27T22:52:36.9060835Z 
+2026-10-27T22:52:36.9061122Z HEAD is now at a003767 docs: remove em dashes from the model card
+2026-10-27T22:52:36.9067402Z ##[endgroup]
+2026-10-27T22:52:36.9106332Z [command]/usr/bin/git log -1 --format=%H
+2026-10-27T22:52:36.9135444Z a003767e70d766bc14b40c89792543ee8641c8bc
+2026-10-27T22:52:36.9143816Z ##[group]Removing auth
+2026-10-27T22:52:36.9144288Z Removing SSH command configuration
+2026-10-27T22:52:36.9148025Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:36.9184825Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:36.9409131Z Removing HTTP extra header
+2026-10-27T22:52:36.9412664Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:36.9449909Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:36.9681950Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:36.9686808Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:36.9716575Z includeif.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git.path
+2026-10-27T22:52:36.9717544Z includeif.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git/worktrees/*.path
+2026-10-27T22:52:36.9718080Z includeif.gitdir:/github/workspace/publisher/.git.path
+2026-10-27T22:52:36.9718643Z includeif.gitdir:/github/workspace/publisher/.git/worktrees/*.path
+2026-10-27T22:52:36.9729927Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git.path
+2026-10-27T22:52:36.9758760Z /home/runner/work/_temp/git-credentials-4f8dc5df-1142-4ace-a995-bf6f711cde93.config
+2026-10-27T22:52:36.9769535Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-4f8dc5df\-1142\-4ace\-a995\-bf6f711cde93\.config
+2026-10-27T22:52:36.9807097Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git/worktrees/*.path
+2026-10-27T22:52:36.9832479Z /home/runner/work/_temp/git-credentials-4f8dc5df-1142-4ace-a995-bf6f711cde93.config
+2026-10-27T22:52:36.9841375Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-4f8dc5df\-1142\-4ace\-a995\-bf6f711cde93\.config
+2026-10-27T22:52:36.9880086Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/publisher/.git.path
+2026-10-27T22:52:36.9905533Z /github/runner_temp/git-credentials-4f8dc5df-1142-4ace-a995-bf6f711cde93.config
+2026-10-27T22:52:36.9914661Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/publisher/.git.path \/github\/runner_temp\/git\-credentials\-4f8dc5df\-1142\-4ace\-a995\-bf6f711cde93\.config
+2026-10-27T22:52:36.9952338Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/publisher/.git/worktrees/*.path
+2026-10-27T22:52:36.9977596Z /github/runner_temp/git-credentials-4f8dc5df-1142-4ace-a995-bf6f711cde93.config
+2026-10-27T22:52:36.9986370Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/publisher/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-4f8dc5df\-1142\-4ace\-a995\-bf6f711cde93\.config
+2026-10-27T22:52:37.0025015Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:37.0249052Z Removing credentials config '/home/runner/work/_temp/git-credentials-4f8dc5df-1142-4ace-a995-bf6f711cde93.config'
+2026-10-27T22:52:37.0262207Z ##[endgroup]
+2026-10-27T22:52:37.0388592Z ##[group]Run test "$(git -C candidate rev-parse HEAD)" = "3592841802d85c442ca2521479b5d8795bee7233"
+2026-10-27T22:52:37.0389344Z [36;1mtest "$(git -C candidate rev-parse HEAD)" = "3592841802d85c442ca2521479b5d8795bee7233"[0m
+2026-10-27T22:52:37.0389997Z [36;1mtest "$(git -C implementation rev-parse HEAD)" = "b95c010f9b2ba3cbd9f81317981316bb9c8acd19"[0m
+2026-10-27T22:52:37.0390923Z [36;1mtest "$(git -C publisher rev-parse HEAD)" = "a003767e70d766bc14b40c89792543ee8641c8bc"[0m
+2026-10-27T22:52:37.0391676Z [36;1mtest "$(git hash-object scripts/ncr_001e_pr102_masked_batch_review.py)" = "6ade653f0452e58f82c8c78e79d326018c30bcf1"[0m
+2026-10-27T22:52:37.0392213Z [36;1mpython3 - <<'PY'[0m
+2026-10-27T22:52:37.0392459Z [36;1mimport json[0m
+2026-10-27T22:52:37.0392688Z [36;1mfrom pathlib import Path[0m
+2026-10-27T22:52:37.0393316Z [36;1mp=json.loads(Path("candidate/experiments/ncr-001/protocol.json").read_text())[0m
+2026-10-27T22:52:37.0393995Z [36;1massert p['train_authorized'] is False[0m
+2026-10-27T22:52:37.0394618Z [36;1massert p['models']['sprocket_instruct']['weight_file'] == 'model.safetensors'[0m
+2026-10-27T22:52:37.0395276Z [36;1massert p['models']['sprocket_chat']['weight_file'] == 'chat/model.safetensors'[0m
+2026-10-27T22:52:37.0395945Z [36;1massert set(p['models']) == {'smollm2','sprocket_chat','sprocket_instruct','void1'}[0m
+2026-10-27T22:52:37.0396635Z [36;1mprint('PINNED_FROZEN_ORIGINAL_HOOK_CONTEXT gates unchanged no training')[0m
+2026-10-27T22:52:37.0397164Z [36;1mPY[0m
+2026-10-27T22:52:37.0674604Z shell: /usr/bin/bash -e {0}
+2026-10-27T22:52:37.0675025Z env:
+2026-10-27T22:52:37.0675516Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:52:37.0676032Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:52:37.0676500Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:52:37.0676940Z   OMP_NUM_THREADS: 4
+2026-10-27T22:52:37.0691777Z   MKL_NUM_THREADS: 4
+2026-10-27T22:52:37.0692040Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:52:37.0692303Z ##[endgroup]
+2026-10-27T22:52:37.1096190Z PINNED_FROZEN_ORIGINAL_HOOK_CONTEXT gates unchanged no training
+2026-10-27T22:52:37.1174535Z ##[group]Run python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+2026-10-27T22:52:37.1175552Z [36;1mpython3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'[0m
+2026-10-27T22:52:37.1176508Z [36;1mpython3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub==0.36.2' 'safetensors==0.8.0' 'sentencepiece>=0.2,<1'[0m
+2026-10-27T22:52:37.1177149Z [36;1mmkdir -p runtime/ncr-001[0m
+2026-10-27T22:52:37.1177534Z [36;1mpython3 -m pip freeze > runtime/ncr-001/pr113-rightpad-packages.txt[0m
+2026-10-27T22:52:37.1242632Z shell: /usr/bin/bash -e {0}
+2026-10-27T22:52:37.1242887Z env:
+2026-10-27T22:52:37.1243118Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:52:37.1243416Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:52:37.1243675Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:52:37.1243920Z   OMP_NUM_THREADS: 4
+2026-10-27T22:52:37.1244147Z   MKL_NUM_THREADS: 4
+2026-10-27T22:52:37.1244370Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:52:37.1244607Z ##[endgroup]
+2026-10-27T22:52:38.2736056Z Defaulting to user installation because normal site-packages is not writeable
+2026-10-27T22:52:38.9803934Z Looking in indexes: https://download.pytorch.org/whl/cpu
+2026-10-27T22:52:39.2077157Z Collecting torch==2.14.1+cpu
+2026-10-27T22:52:39.2651222Z   Downloading https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl.metadata (37 kB)
+2026-10-27T22:52:39.2791658Z Requirement already satisfied: filelock in /usr/local/lib/python3.12/dist-packages (from torch==2.14.1+cpu) (4.1.1)
+2026-10-27T22:52:39.2801126Z Requirement already satisfied: typing-extensions>=4.10.0 in /usr/lib/python3/dist-packages (from torch==2.14.1+cpu) (4.10.0)
+2026-10-27T22:52:39.2996037Z Collecting setuptools>=77.0.3 (from torch==2.14.1+cpu)
+2026-10-27T22:52:39.3105839Z   Downloading https://download.pytorch.org/whl/setuptools-78.1.0-py3-none-any.whl.metadata (6.6 kB)
+2026-10-27T22:52:39.3467461Z Collecting sympy>=1.13.3 (from torch==2.14.1+cpu)
+2026-10-27T22:52:39.3885914Z   Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+2026-10-27T22:52:39.4362909Z Collecting networkx>=2.5.1 (from torch==2.14.1+cpu)
+2026-10-27T22:52:39.4433072Z   Downloading networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+2026-10-27T22:52:39.4475787Z Requirement already satisfied: jinja2 in /usr/lib/python3/dist-packages (from torch==2.14.1+cpu) (3.1.2)
+2026-10-27T22:52:39.4920161Z Collecting fsspec>=0.8.5 (from torch==2.14.1+cpu)
+2026-10-27T22:52:39.4990284Z   Downloading fsspec-2026.7.0-py3-none-any.whl.metadata (10 kB)
+2026-10-27T22:52:39.6401508Z Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch==2.14.1+cpu)
+2026-10-27T22:52:39.6474330Z   Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+2026-10-27T22:52:39.6789045Z Downloading https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl (196.3 MB)
+2026-10-27T22:52:40.9237883Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 196.3/196.3 MB 24.8 MB/s eta 0:00:00
+2026-10-27T22:52:40.9330871Z Downloading fsspec-2026.7.0-py3-none-any.whl (206 kB)
+2026-10-27T22:52:40.9507227Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 206.6/206.6 kB 12.4 MB/s eta 0:00:00
+2026-10-27T22:52:40.9575245Z Downloading networkx-3.6.1-py3-none-any.whl (2.1 MB)
+2026-10-27T22:52:40.9929547Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 61.2 MB/s eta 0:00:00
+2026-10-27T22:52:41.0038203Z Downloading https://download.pytorch.org/whl/setuptools-78.1.0-py3-none-any.whl (1.3 MB)
+2026-10-27T22:52:41.0354486Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 42.0 MB/s eta 0:00:00
+2026-10-27T22:52:41.0431014Z Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+2026-10-27T22:52:41.0833139Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 164.1 MB/s eta 0:00:00
+2026-10-27T22:52:41.0902955Z Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+2026-10-27T22:52:41.0965577Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 120.4 MB/s eta 0:00:00
+2026-10-27T22:52:41.8463541Z Installing collected packages: mpmath, sympy, setuptools, networkx, fsspec, torch
+2026-10-27T22:53:00.2623923Z Successfully installed fsspec-2026.7.0 mpmath-1.3.0 networkx-3.6.1 setuptools-78.1.0 sympy-1.14.0 torch-2.14.1+cpu
+2026-10-27T22:53:00.6267430Z Defaulting to user installation because normal site-packages is not writeable
+2026-10-27T22:53:00.8540807Z Collecting transformers==4.57.6
+2026-10-27T22:53:00.8952898Z   Downloading transformers-4.57.6-py3-none-any.whl.metadata (43 kB)
+2026-10-27T22:53:00.9064234Z      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.0/44.0 kB 3.8 MB/s eta 0:00:00
+2026-10-27T22:53:01.0094269Z Collecting huggingface_hub==0.36.2
+2026-10-27T22:53:01.0169401Z   Downloading huggingface_hub-0.36.2-py3-none-any.whl.metadata (15 kB)
+2026-10-27T22:53:01.1708445Z Collecting safetensors==0.8.0
+2026-10-27T22:53:01.1783329Z   Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.2 kB)
+2026-10-27T22:53:01.2448950Z Collecting sentencepiece<1,>=0.2
+2026-10-27T22:53:01.2531982Z   Downloading sentencepiece-0.2.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (33 kB)
+2026-10-27T22:53:01.5273469Z Requirement already satisfied: filelock in /usr/local/lib/python3.12/dist-packages (from transformers==4.57.6) (4.1.1)
+2026-10-27T22:53:01.8196518Z Collecting numpy>=1.17 (from transformers==4.57.6)
+2026-10-27T22:53:01.8273950Z   Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+2026-10-27T22:53:01.8320164Z Requirement already satisfied: packaging>=20.0 in /usr/lib/python3/dist-packages (from transformers==4.57.6) (24.0)
+2026-10-27T22:53:01.8328899Z Requirement already satisfied: pyyaml>=5.1 in /usr/lib/python3/dist-packages (from transformers==4.57.6) (6.0.1)
+2026-10-27T22:53:02.2901808Z Collecting regex!=2019.12.17 (from transformers==4.57.6)
+2026-10-27T22:53:02.2977212Z   Downloading regex-2026.9.29-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+2026-10-27T22:53:02.3017637Z      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.6/40.6 kB 14.1 MB/s eta 0:00:00
+2026-10-27T22:53:02.3052865Z Requirement already satisfied: requests in /usr/lib/python3/dist-packages (from transformers==4.57.6) (2.31.0)
+2026-10-27T22:53:02.4685444Z Collecting tokenizers<=0.23.0,>=0.22.0 (from transformers==4.57.6)
+2026-10-27T22:53:02.4762387Z   Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+2026-10-27T22:53:02.5849733Z Collecting tqdm>=4.27 (from transformers==4.57.6)
+2026-10-27T22:53:02.5926785Z   Downloading tqdm-4.70.1-py3-none-any.whl.metadata (57 kB)
+2026-10-27T22:53:02.5980132Z      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 57.4/57.4 kB 14.1 MB/s eta 0:00:00
+2026-10-27T22:53:02.6764793Z Requirement already satisfied: fsspec>=2023.5.0 in /home/runner/.local/lib/python3.12/site-packages (from huggingface_hub==0.36.2) (2026.7.0)
+2026-10-27T22:53:02.7368190Z Collecting hf-xet<2.0.0,>=1.1.3 (from huggingface_hub==0.36.2)
+2026-10-27T22:53:02.7439586Z   Downloading hf_xet-1.7.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+2026-10-27T22:53:02.7617098Z Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/lib/python3/dist-packages (from huggingface_hub==0.36.2) (4.10.0)
+2026-10-27T22:53:02.8981431Z Downloading transformers-4.57.6-py3-none-any.whl (12.0 MB)
+2026-10-27T22:53:03.1477166Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.0/12.0 MB 60.8 MB/s eta 0:00:00
+2026-10-27T22:53:03.1548472Z Downloading huggingface_hub-0.36.2-py3-none-any.whl (566 kB)
+2026-10-27T22:53:03.1615354Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 566.4/566.4 kB 118.0 MB/s eta 0:00:00
+2026-10-27T22:53:03.1688127Z Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (516 kB)
+2026-10-27T22:53:03.1752587Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 516.0/516.0 kB 109.9 MB/s eta 0:00:00
+2026-10-27T22:53:03.1821557Z Downloading sentencepiece-0.2.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (1.4 MB)
+2026-10-27T22:53:03.1970336Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 105.4 MB/s eta 0:00:00
+2026-10-27T22:53:03.2038686Z Downloading hf_xet-1.7.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.2 MB)
+2026-10-27T22:53:03.2398927Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.2/4.2 MB 123.0 MB/s eta 0:00:00
+2026-10-27T22:53:03.2472222Z Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
+2026-10-27T22:53:03.3443732Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 162.6 MB/s eta 0:00:00
+2026-10-27T22:53:03.3516312Z Downloading regex-2026.9.29-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+2026-10-27T22:53:03.3591213Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 807.8/807.8 kB 142.6 MB/s eta 0:00:00
+2026-10-27T22:53:03.3662899Z Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.3 MB)
+2026-10-27T22:53:03.3867439Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 174.2 MB/s eta 0:00:00
+2026-10-27T22:53:03.3938778Z Downloading tqdm-4.70.1-py3-none-any.whl (80 kB)
+2026-10-27T22:53:03.3981185Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 80.2/80.2 kB 27.2 MB/s eta 0:00:00
+2026-10-27T22:53:04.1952280Z Installing collected packages: tqdm, sentencepiece, safetensors, regex, numpy, hf-xet, huggingface_hub, tokenizers, transformers
+2026-10-27T22:53:12.8959463Z Successfully installed hf-xet-1.7.0 huggingface_hub-0.36.2 numpy-2.5.4 regex-2026.9.29 safetensors-0.8.0 sentencepiece-0.2.2 tokenizers-0.22.2 tqdm-4.70.1 transformers-4.57.6
+2026-10-27T22:53:13.6212252Z ##[group]Run python3 - <<'PY'
+2026-10-27T22:53:13.6212778Z [36;1mpython3 - <<'PY'[0m
+2026-10-27T22:53:13.6213041Z [36;1mimport hashlib,json,os,platform[0m
+2026-10-27T22:53:13.6213326Z [36;1mfrom pathlib import Path[0m
+2026-10-27T22:53:13.6213622Z [36;1mfrom huggingface_hub import hf_hub_download[0m
+2026-10-27T22:53:13.6214204Z [36;1mpin=json.loads(Path('candidate/experiments/ncr-001/source-pins.json').read_text())['models']['sprocket_instruct'][0m
+2026-10-27T22:53:13.6214803Z [36;1massert pin['hf_weight_file']=='model.safetensors'[0m
+2026-10-27T22:53:13.6215265Z [36;1mreport={'status':'RUNNING','train_authorized':False,'optimizer_steps':0,[0m
+2026-10-27T22:53:13.6215842Z [36;1m        'runner':{'github_run_id':os.getenv('GITHUB_RUN_ID'),'github_sha':os.getenv('GITHUB_SHA'),[0m
+2026-10-27T22:53:13.6216445Z [36;1m                  'python':platform.python_version(),'runner_name':os.getenv('RUNNER_NAME')},[0m
+2026-10-27T22:53:13.6216966Z [36;1m        'variant':'sprocket_instruct','source':{},'files':{}}[0m
+2026-10-27T22:53:13.6217381Z [36;1mout=Path('runtime/ncr-001/pr113-rightpad-prefetch.json')[0m
+2026-10-27T22:53:13.6217831Z [36;1mout.write_text(json.dumps(report,sort_keys=True,indent=2)+'\n')[0m
+2026-10-27T22:53:13.6218188Z [36;1mtry:[0m
+2026-10-27T22:53:13.6218389Z [36;1m    for name,key in [[0m
+2026-10-27T22:53:13.6218750Z [36;1m        ('model.safetensors','weight_declared_lfs_sha256_not_downloaded'),[0m
+2026-10-27T22:53:13.6219256Z [36;1m        ('config.json','config_sha256'),('tokenizer.json','tokenizer_sha256'),[0m
+2026-10-27T22:53:13.6219705Z [36;1m        ('tokenizer_config.json','tokenizer_config_sha256'),[0m
+2026-10-27T22:53:13.6220117Z [36;1m        ('special_tokens_map.json','special_tokens_map_sha256')]:[0m
+2026-10-27T22:53:13.6220899Z [36;1m        path=Path(hf_hub_download(pin['repo_id'],name,revision=pin['revision']))[0m
+2026-10-27T22:53:13.6221382Z [36;1m        h=hashlib.sha256()[0m
+2026-10-27T22:53:13.6221679Z [36;1m        with path.open('rb') as fp:[0m
+2026-10-27T22:53:13.6222068Z [36;1m            for chunk in iter(lambda:fp.read(4*1024*1024),b''):h.update(chunk)[0m
+2026-10-27T22:53:13.6222452Z [36;1m        digest=h.hexdigest()[0m
+2026-10-27T22:53:13.6222820Z [36;1m        assert digest==pin[key],f'pinned original source SHA changed: {name}'[0m
+2026-10-27T22:53:13.6223313Z [36;1m        if name=='model.safetensors': assert path.stat().st_size==1002207984[0m
+2026-10-27T22:53:13.6223788Z [36;1m        report['files'][name]={'sha256':digest,'bytes':path.stat().st_size}[0m
+2026-10-27T22:53:13.6224258Z [36;1m        out.write_text(json.dumps(report,sort_keys=True,indent=2)+'\n')[0m
+2026-10-27T22:53:13.6224780Z [36;1m        print('SOURCE_ORIGINAL_INSTRUCT',name,digest,path.stat().st_size,flush=True)[0m
+2026-10-27T22:53:13.6225268Z [36;1m    report['status']='PASS_EXACT_FULL_SOURCE_PREFETCH'[0m
+2026-10-27T22:53:13.6225600Z [36;1mexcept BaseException as exc:[0m
+2026-10-27T22:53:13.6225912Z [36;1m    report['status']='FAIL_EXACT_FULL_SOURCE_PREFETCH'[0m
+2026-10-27T22:53:13.6226272Z [36;1m    report['error']=type(exc).__name__+': '+str(exc)[0m
+2026-10-27T22:53:13.6226582Z [36;1m    raise[0m
+2026-10-27T22:53:13.6226780Z [36;1mfinally:[0m
+2026-10-27T22:53:13.6227081Z [36;1m    out.write_text(json.dumps(report,sort_keys=True,indent=2)+'\n')[0m
+2026-10-27T22:53:13.6227432Z [36;1mPY[0m
+2026-10-27T22:53:13.6291550Z shell: /usr/bin/bash -e {0}
+2026-10-27T22:53:13.6291793Z env:
+2026-10-27T22:53:13.6292007Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:53:13.6292294Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:53:13.6292549Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:53:13.6292787Z   OMP_NUM_THREADS: 4
+2026-10-27T22:53:13.6293001Z   MKL_NUM_THREADS: 4
+2026-10-27T22:53:13.6293214Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:53:13.6293447Z ##[endgroup]
+2026-10-27T22:53:19.6870137Z SOURCE_ORIGINAL_INSTRUCT model.safetensors 1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864 1002207984
+2026-10-27T22:53:19.8146404Z SOURCE_ORIGINAL_INSTRUCT config.json 557aacbcb7e23a322221ab91b62c4343dd22130388efc3eb4dcdfe1edfd8d1b7 689
+2026-10-27T22:53:19.9812920Z SOURCE_ORIGINAL_INSTRUCT tokenizer.json 178a63d94a7de4aa273a6a9c218180c3b7d1912f5a18a91be34bab252f7277eb 2269469
+2026-10-27T22:53:20.1058888Z SOURCE_ORIGINAL_INSTRUCT tokenizer_config.json 1d1c0733848e0c78a2ec48a7f20cd55ec5ee0b4cbcda9785249af9e489823408 3325
+2026-10-27T22:53:20.2344078Z SOURCE_ORIGINAL_INSTRUCT special_tokens_map.json c575235775a1998faf1256ea0b6f791116ea9d89cc34238ea3bd532b8190773b 333
+2026-10-27T22:53:20.2663106Z ##[group]Run HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python3 scripts/ncr_001e_pr102_rightpad_generate.py
+2026-10-27T22:53:20.2663857Z [36;1mHF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python3 scripts/ncr_001e_pr102_rightpad_generate.py[0m
+2026-10-27T22:53:20.2727780Z shell: /usr/bin/bash -e {0}
+2026-10-27T22:53:20.2728036Z env:
+2026-10-27T22:53:20.2728262Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:53:20.2728563Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:53:20.2728820Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:53:20.2729087Z   OMP_NUM_THREADS: 4
+2026-10-27T22:53:20.2729293Z   MKL_NUM_THREADS: 4
+2026-10-27T22:53:20.2729519Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:53:20.2729761Z ##[endgroup]
+2026-10-27T22:53:24.8395217Z `torch_dtype` is deprecated! Use `dtype` instead!
+2026-10-27T22:53:57.5391920Z {"checks": {"frozen_original_zero_control_context": {"atol": 0, "exact_required": true, "max_abs": 0.0, "pass": true, "rtol": 0}, "frozen_original_zero_unrelated_request": {"atol": 0, "exact_required": true, "max_abs": 0.0, "pass": true, "rtol": 0}, "generate_full_vs_cache_active_untrained_step_0": {"atol": 0.0005, "exact_required": false, "finite_logits": 31999, "max_abs_finite": 0.0, "nonfinite_logits": 1, "pass": true, "rtol": 0.0005}, "generate_full_vs_cache_active_untrained_step_1": {"atol": 0.0005, "exact_required": false, "finite_logits": 31999, "max_abs_finite": 1.537799835205078e-05, "nonfinite_logits": 1, "pass": true, "rtol": 0.0005}, "generate_full_vs_cache_active_untrained_step_2": {"atol": 0.0005, "exact_required": false, "finite_logits": 31999, "max_abs_finite": 1.4781951904296875e-05, "nonfinite_logits": 1, "pass": true, "rtol": 0.0005}, "generate_full_vs_cache_active_untrained_step_3": {"atol": 0.0005, "exact_required": false, "finite_logits": 31999, "max_abs_finite": 2.765655517578125e-05, "nonfinite_logits": 1, "pass": true, "rtol": 0.0005}, "generate_full_vs_cache_disabled_step_0": {"atol": 0.0005, "exact_required": false, "finite_logits": 31999, "max_abs_finite": 0.0, "nonfinite_logits": 1, "pass": true, "rtol": 0.0005}, "generate_full_vs_cache_disabled_step_1": {"atol": 0.0005, "exact_required": false, "finite_logits": 31999, "max_abs_finite": 1.239776611328125e-05, "nonfinite_logits": 1, "pass": true, "rtol": 0.0005}, "generate_full_vs_cache_disabled_step_2": {"atol": 0.0005, "exact_required": false, "finite_logits": 31999, "max_abs_finite": 1.6689300537109375e-05, "nonfinite_logits": 1, "pass": true, "rtol": 0.0005}, "generate_full_vs_cache_disabled_step_3": {"atol": 0.0005, "exact_required": false, "finite_logits": 31999, "max_abs_finite": 3.528594970703125e-05, "nonfinite_logits": 1, "pass": true, "rtol": 0.0005}, "generate_full_vs_cache_zero_step_0": {"atol": 0.0005, "exact_required": false, "finite_logits": 31999, "max_abs_finite": 0.0, "nonfinite_logits": 1, "pass": true, "rtol": 0.0005}, "generate_full_vs_cache_zero_step_1": {"atol": 0.0005, "exact_required": false, "finite_logits": 31999, "max_abs_finite": 1.239776611328125e-05, "nonfinite_logits": 1, "pass": true, "rtol": 0.0005}, "generate_full_vs_cache_zero_step_2": {"atol": 0.0005, "exact_required": false, "finite_logits": 31999, "max_abs_finite": 1.6689300537109375e-05, "nonfinite_logits": 1, "pass": true, "rtol": 0.0005}, "generate_full_vs_cache_zero_step_3": {"atol": 0.0005, "exact_required": false, "finite_logits": 31999, "max_abs_finite": 3.528594970703125e-05, "nonfinite_logits": 1, "pass": true, "rtol": 0.0005}, "generate_zero_original_exact_cache_False_step_0": {"atol": 0, "exact_required": true, "finite_logits": 31999, "max_abs_finite": 0.0, "nonfinite_logits": 1, "pass": true, "rtol": 0}, "generate_zero_original_exact_cache_False_step_1": {"atol": 0, "exact_required": true, "finite_logits": 31999, "max_abs_finite": 0.0, "nonfinite_logits": 1, "pass": true, "rtol": 0}, "generate_zero_original_exact_cache_False_step_2": {"atol": 0, "exact_required": true, "finite_logits": 31999, "max_abs_finite": 0.0, "nonfinite_logits": 1, "pass": true, "rtol": 0}, "generate_zero_original_exact_cache_False_step_3": {"atol": 0, "exact_required": true, "finite_logits": 31999, "max_abs_finite": 0.0, "nonfinite_logits": 1, "pass": true, "rtol": 0}, "generate_zero_original_exact_cache_True_step_0": {"atol": 0, "exact_required": true, "finite_logits": 31999, "max_abs_finite": 0.0, "nonfinite_logits": 1, "pass": true, "rtol": 0}, "generate_zero_original_exact_cache_True_step_1": {"atol": 0, "exact_required": true, "finite_logits": 31999, "max_abs_finite": 0.0, "nonfinite_logits": 1, "pass": true, "rtol": 0}, "generate_zero_original_exact_cache_True_step_2": {"atol": 0, "exact_required": true, "finite_logits": 31999, "max_abs_finite": 0.0, "nonfinite_logits": 1, "pass": true, "rtol": 0}, "generate_zero_original_exact_cache_True_step_3": {"atol": 0, "exact_required": true, "finite_logits": 31999, "max_abs_finite": 0.0, "nonfinite_logits": 1, "pass": true, "rtol": 0}, "generation_followed_by_fresh_A_B_A_exact": {"atol": 0, "exact_required": true, "max_abs": 0.0, "pass": true, "rtol": 0}, "manual_nontrained_effect": {"max_abs": 0.03652691841125488, "pass": true, "trained": false}, "rightpad_KV_gap_vs_unpadded_control_context": {"atol": 0.0005, "exact_required": false, "max_abs": 4.920363426208496e-05, "pass": true, "rtol": 0.0005}, "rightpad_KV_gap_vs_unpadded_unrelated_request": {"atol": 0.0005, "exact_required": false, "max_abs": 2.6702880859375e-05, "pass": true, "rtol": 0.0005}, "rightpad_masked_tool_result_no_effect": {"atol": 0, "exact_required": true, "max_abs": 0.0, "pass": true, "rtol": 0}, "unmasked_rightpad_negative_detected": {"expected_difference": true, "max_abs": 11.143782615661621, "pass": true}}, "status": "PASS_RIGHTPAD_GAPPED_KV_AND_ORIGINAL_HF_GENERATE_ONLY", "train_authorized": false}
+2026-10-27T22:53:58.1012004Z ##[group]Run mkdir -p runtime/ncr-001
+2026-10-27T22:53:58.1012355Z [36;1mmkdir -p runtime/ncr-001[0m
+2026-10-27T22:53:58.1012769Z [36;1mgit rev-parse HEAD > runtime/ncr-001/pr113-rightpad-source-commit.txt[0m
+2026-10-27T22:53:58.1013253Z [36;1msha256sum scripts/ncr_001e_pr102_rightpad_generate.py \[0m
+2026-10-27T22:53:58.1013654Z [36;1m  scripts/ncr_001e_pr102_masked_batch_review.py \[0m
+2026-10-27T22:53:58.1014019Z [36;1m  candidate/experiments/ncr-001/protocol.json \[0m
+2026-10-27T22:53:58.1014563Z [36;1m  candidate/experiments/ncr-001/source-pins.json > runtime/ncr-001/pr113-rightpad-source-hashes.sha256[0m
+2026-10-27T22:53:58.1077377Z shell: /usr/bin/bash -e {0}
+2026-10-27T22:53:58.1077625Z env:
+2026-10-27T22:53:58.1077843Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:53:58.1078140Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:53:58.1078416Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:53:58.1078662Z   OMP_NUM_THREADS: 4
+2026-10-27T22:53:58.1078885Z   MKL_NUM_THREADS: 4
+2026-10-27T22:53:58.1079105Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:53:58.1079343Z ##[endgroup]
+2026-10-27T22:53:58.1279017Z ##[group]Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+2026-10-27T22:53:58.1279441Z with:
+2026-10-27T22:53:58.1279678Z   name: ncr001e-pr113-rightpad-generate-a1
+2026-10-27T22:53:58.1280005Z   path: runtime/ncr-001/pr113-rightpad-*
+2026-10-27T22:53:58.1280284Z   if-no-files-found: warn
+2026-10-27T22:53:58.1280514Z   retention-days: 30
+2026-10-27T22:53:58.1281024Z   compression-level: 6
+2026-10-27T22:53:58.1281242Z   overwrite: false
+2026-10-27T22:53:58.1281456Z   include-hidden-files: false
+2026-10-27T22:53:58.1281687Z   archive: true
+2026-10-27T22:53:58.1281873Z env:
+2026-10-27T22:53:58.1282212Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:53:58.1296362Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:53:58.1296926Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:53:58.1297190Z   OMP_NUM_THREADS: 4
+2026-10-27T22:53:58.1297408Z   MKL_NUM_THREADS: 4
+2026-10-27T22:53:58.1297637Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:53:58.1297907Z ##[endgroup]
+2026-10-27T22:53:58.2783602Z With the provided path, there will be 5 files uploaded
+2026-10-27T22:53:58.2789893Z Artifact name is valid!
+2026-10-27T22:53:58.2790424Z Root directory input is valid!
+2026-10-27T22:53:58.6534132Z Uploading artifact: ncr001e-pr113-rightpad-generate-a1.zip
+2026-10-27T22:53:58.6574891Z Beginning upload of artifact content to blob storage
+2026-10-27T22:53:58.9896065Z Uploaded bytes 5754
+2026-10-27T22:53:59.0646409Z Finished uploading artifact content to blob storage!
+2026-10-27T22:53:59.0647465Z SHA256 digest of uploaded artifact is 30bc7fa3231047561b5ab0142b59b7012e7e1ee4e72329198f7d778b65be9a1e
+2026-10-27T22:53:59.0648384Z Finalizing artifact upload
+2026-10-27T22:53:59.6934229Z Artifact ncr001e-pr113-rightpad-generate-a1 successfully finalized. Artifact ID 12777685787
+2026-10-27T22:53:59.6936023Z Artifact ncr001e-pr113-rightpad-generate-a1 has been successfully uploaded! Final size is 5754 bytes. Artifact ID is 12777685787
+2026-10-27T22:53:59.6939503Z Artifact download URL: https://github.com/techrote/neurounner/actions/runs/40598034739/artifacts/12777685787
+2026-10-27T22:53:59.7126398Z Post job cleanup.
+2026-10-27T22:53:59.8008063Z [command]/usr/bin/git version
+2026-10-27T22:53:59.8052948Z git version 2.55.0
+2026-10-27T22:53:59.8092399Z Temporarily overriding HOME='/home/runner/work/_temp/b19ac574-8bdd-4291-9b56-5de992785e2a' before making global git config changes
+2026-10-27T22:53:59.8093754Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:53:59.8097738Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner/publisher
+2026-10-27T22:53:59.8131141Z Removing SSH command configuration
+2026-10-27T22:53:59.8137917Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:53:59.8183314Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:53:59.8419476Z Removing HTTP extra header
+2026-10-27T22:53:59.8425410Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:53:59.8460815Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:53:59.8710392Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:53:59.8721147Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:53:59.8761443Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:53:59.9173676Z Post job cleanup.
+2026-10-27T22:54:00.0022221Z [command]/usr/bin/git version
+2026-10-27T22:54:00.0069183Z git version 2.55.0
+2026-10-27T22:54:00.0112091Z Temporarily overriding HOME='/home/runner/work/_temp/5a352184-4a6f-4b2c-8362-0094011839c0' before making global git config changes
+2026-10-27T22:54:00.0113511Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:54:00.0118174Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner/implementation
+2026-10-27T22:54:00.0158033Z Removing SSH command configuration
+2026-10-27T22:54:00.0181838Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:54:00.0225790Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:54:00.0595711Z Removing HTTP extra header
+2026-10-27T22:54:00.0604452Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:54:00.0659098Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:54:00.1010206Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:54:00.1016922Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:54:00.1078884Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:54:00.1460742Z Post job cleanup.
+2026-10-27T22:54:00.2315281Z [command]/usr/bin/git version
+2026-10-27T22:54:00.2364429Z git version 2.55.0
+2026-10-27T22:54:00.2408002Z Temporarily overriding HOME='/home/runner/work/_temp/a05e93d9-7861-4469-bc69-d8bc5a1cd54e' before making global git config changes
+2026-10-27T22:54:00.2409395Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:54:00.2414619Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner/candidate
+2026-10-27T22:54:00.2449158Z Removing SSH command configuration
+2026-10-27T22:54:00.2456651Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:54:00.2496830Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:54:00.2767698Z Removing HTTP extra header
+2026-10-27T22:54:00.2774538Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:54:00.2820158Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:54:00.3073349Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:54:00.3083346Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:54:00.3146869Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:54:00.3618455Z Post job cleanup.
+2026-10-27T22:54:00.4515596Z [command]/usr/bin/git version
+2026-10-27T22:54:00.4563030Z git version 2.55.0
+2026-10-27T22:54:00.4600870Z Temporarily overriding HOME='/home/runner/work/_temp/8cef29ab-2249-451b-96cc-4cb40ce82bdd' before making global git config changes
+2026-10-27T22:54:00.4602394Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:54:00.4606169Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner
+2026-10-27T22:54:00.4639716Z Removing SSH command configuration
+2026-10-27T22:54:00.4646740Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:54:00.4683729Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:54:00.4946258Z Removing HTTP extra header
+2026-10-27T22:54:00.4963198Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:54:00.5037388Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:54:00.5299658Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:54:00.5309000Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:54:00.5347129Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:54:00.5755391Z Cleaning up orphan processes

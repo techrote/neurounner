@@ -1,0 +1,550 @@
+﻿2026-10-27T22:52:17.1896091Z Current runner version: '2.338.0'
+2026-10-27T22:52:17.1920643Z ##[group]Runner Image Provisioner
+2026-10-27T22:52:17.1921839Z Hosted Compute Agent
+2026-10-27T22:52:17.1922535Z Version: 20261021.618
+2026-10-27T22:52:17.1923181Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-27T22:52:17.1923915Z Build Date: 2026-10-21T00:45:21Z
+2026-10-27T22:52:17.1924822Z Worker ID: {05da4a08-adf9-4bc2-9ba3-9009fadc604f}
+2026-10-27T22:52:17.1925705Z Region: westus
+2026-10-27T22:52:17.1926349Z Cloud: Azure
+2026-10-27T22:52:17.1926901Z ##[endgroup]
+2026-10-27T22:52:17.1928366Z ##[group]Operating System
+2026-10-27T22:52:17.1929155Z Ubuntu
+2026-10-27T22:52:17.1929741Z 24.04.5
+2026-10-27T22:52:17.1930294Z LTS
+2026-10-27T22:52:17.1930848Z ##[endgroup]
+2026-10-27T22:52:17.1931664Z ##[group]Runner Image
+2026-10-27T22:52:17.1932369Z Image: ubuntu-24.04
+2026-10-27T22:52:17.1932989Z Version: 20261025.353.1
+2026-10-27T22:52:17.1934316Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261025.353/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-27T22:52:17.1935900Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261025.353
+2026-10-27T22:52:17.1936930Z ##[endgroup]
+2026-10-27T22:52:17.1938082Z ##[group]GITHUB_TOKEN Permissions
+2026-10-27T22:52:17.1940008Z Contents: read
+2026-10-27T22:52:17.1940666Z Metadata: read
+2026-10-27T22:52:17.1941528Z ##[endgroup]
+2026-10-27T22:52:17.1943715Z Secret source: Actions
+2026-10-27T22:52:17.1944640Z Cache mode: write
+2026-10-27T22:52:17.1945524Z Prepare workflow directory
+2026-10-27T22:52:17.2408521Z Prepare all required actions
+2026-10-27T22:52:17.2461845Z Getting action download info
+2026-10-27T22:52:17.5769601Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-27T22:52:17.8269598Z Complete job name: Source plan and right-pad cache gap negative refusals
+2026-10-27T22:52:17.9148997Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-27T22:52:17.9150085Z with:
+2026-10-27T22:52:17.9150521Z   persist-credentials: false
+2026-10-27T22:52:17.9151042Z   repository: techrote/neurounner
+2026-10-27T22:52:17.9155019Z   token: ***
+2026-10-27T22:52:17.9155455Z   ssh-strict: true
+2026-10-27T22:52:17.9155884Z   ssh-user: git
+2026-10-27T22:52:17.9156295Z   clean: true
+2026-10-27T22:52:17.9156741Z   sparse-checkout-cone-mode: true
+2026-10-27T22:52:17.9157257Z   fetch-depth: 1
+2026-10-27T22:52:17.9157680Z   fetch-tags: false
+2026-10-27T22:52:17.9158122Z   show-progress: true
+2026-10-27T22:52:17.9158571Z   lfs: false
+2026-10-27T22:52:17.9158979Z   submodules: false
+2026-10-27T22:52:17.9159427Z   set-safe-directory: true
+2026-10-27T22:52:17.9159935Z   allow-unsafe-pr-checkout: false
+2026-10-27T22:52:17.9160720Z env:
+2026-10-27T22:52:17.9161375Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:52:17.9162001Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:52:17.9162552Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:52:17.9163055Z   OMP_NUM_THREADS: 4
+2026-10-27T22:52:17.9163497Z   MKL_NUM_THREADS: 4
+2026-10-27T22:52:17.9163959Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:52:17.9164445Z ##[endgroup]
+2026-10-27T22:52:18.2382338Z Syncing repository: techrote/neurounner
+2026-10-27T22:52:18.2384739Z ##[group]Getting Git version info
+2026-10-27T22:52:18.2385514Z Working directory is '/home/runner/work/neurounner/neurounner'
+2026-10-27T22:52:18.2386658Z [command]/usr/bin/git version
+2026-10-27T22:52:18.2506688Z git version 2.56.0
+2026-10-27T22:52:18.2534248Z ##[endgroup]
+2026-10-27T22:52:18.2550370Z Temporarily overriding HOME='/home/runner/work/_temp/a5c557e0-37e2-48c0-ae67-5bd66860cefb' before making global git config changes
+2026-10-27T22:52:18.2553512Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:52:18.2560723Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner
+2026-10-27T22:52:18.2638614Z Deleting the contents of '/home/runner/work/neurounner/neurounner'
+2026-10-27T22:52:18.2646726Z ##[group]Determining repository object format
+2026-10-27T22:52:18.2649353Z ##[endgroup]
+2026-10-27T22:52:18.2651445Z ##[group]Initializing the repository
+2026-10-27T22:52:18.2666085Z [command]/usr/bin/git init /home/runner/work/neurounner/neurounner
+2026-10-27T22:52:18.2784919Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-27T22:52:18.2786179Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-27T22:52:18.2790516Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-27T22:52:18.2793235Z hint: call:
+2026-10-27T22:52:18.2794676Z hint:
+2026-10-27T22:52:18.2795549Z hint: 	git config --global init.defaultBranch <name>
+2026-10-27T22:52:18.2796364Z hint:
+2026-10-27T22:52:18.2797992Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-27T22:52:18.2799464Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-27T22:52:18.2800336Z hint:
+2026-10-27T22:52:18.2800860Z hint: 	git branch -m <name>
+2026-10-27T22:52:18.2802378Z hint:
+2026-10-27T22:52:18.2803729Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-27T22:52:18.2808055Z Initialized empty Git repository in /home/runner/work/neurounner/neurounner/.git/
+2026-10-27T22:52:18.2822064Z [command]/usr/bin/git remote add origin https://github.com/techrote/neurounner
+2026-10-27T22:52:18.2884631Z ##[endgroup]
+2026-10-27T22:52:18.2885834Z ##[group]Disabling automatic garbage collection
+2026-10-27T22:52:18.2886812Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-27T22:52:18.2946235Z ##[endgroup]
+2026-10-27T22:52:18.2948117Z ##[group]Setting up auth
+2026-10-27T22:52:18.2949026Z Removing SSH command configuration
+2026-10-27T22:52:18.2950250Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:18.3019791Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:18.3508624Z Removing HTTP extra header
+2026-10-27T22:52:18.3514837Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:18.3566098Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:18.3815664Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:18.3822038Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:18.3869817Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:18.4127269Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-ef4fe52d-f2cc-4c96-8052-4e0044683c81.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-27T22:52:18.4184075Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/.git.path /home/runner/work/_temp/git-credentials-ef4fe52d-f2cc-4c96-8052-4e0044683c81.config
+2026-10-27T22:52:18.4228079Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-ef4fe52d-f2cc-4c96-8052-4e0044683c81.config
+2026-10-27T22:52:18.4274411Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-ef4fe52d-f2cc-4c96-8052-4e0044683c81.config
+2026-10-27T22:52:18.4322841Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-ef4fe52d-f2cc-4c96-8052-4e0044683c81.config
+2026-10-27T22:52:18.4367230Z ##[endgroup]
+2026-10-27T22:52:18.4368724Z ##[group]Fetching the repository
+2026-10-27T22:52:18.4376702Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4470f3070abdee1a6b31d82b27663a8bfe0fdd41:refs/remotes/pull/113/merge
+2026-10-27T22:52:19.2549287Z From https://github.com/techrote/neurounner
+2026-10-27T22:52:19.2551886Z  * [new ref]         4470f3070abdee1a6b31d82b27663a8bfe0fdd41 -> pull/113/merge
+2026-10-27T22:52:19.2572839Z ##[endgroup]
+2026-10-27T22:52:19.2573639Z ##[group]Determining the checkout info
+2026-10-27T22:52:19.2574495Z ##[endgroup]
+2026-10-27T22:52:19.2575026Z [command]/usr/bin/git sparse-checkout disable
+2026-10-27T22:52:19.2633500Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-27T22:52:19.2681462Z ##[group]Checking out the ref
+2026-10-27T22:52:19.2687535Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/113/merge
+2026-10-27T22:52:19.4790548Z Note: switching to 'refs/remotes/pull/113/merge'.
+2026-10-27T22:52:19.4791754Z 
+2026-10-27T22:52:19.4792389Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-27T22:52:19.4793790Z changes and commit them, and you can discard any commits you make in this
+2026-10-27T22:52:19.4795146Z state without impacting any branches by switching back to a branch.
+2026-10-27T22:52:19.4795924Z 
+2026-10-27T22:52:19.4796520Z If you want to create a new branch to retain commits you create, you may
+2026-10-27T22:52:19.4797860Z do so (now or later) by using -c with the switch command. Example:
+2026-10-27T22:52:19.4798677Z 
+2026-10-27T22:52:19.4799058Z   git switch -c <new-branch-name>
+2026-10-27T22:52:19.4799656Z 
+2026-10-27T22:52:19.4799999Z Or undo this operation with:
+2026-10-27T22:52:19.4800541Z 
+2026-10-27T22:52:19.4800849Z   git switch -
+2026-10-27T22:52:19.4801485Z 
+2026-10-27T22:52:19.4802281Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-27T22:52:19.4803315Z 
+2026-10-27T22:52:19.4804658Z HEAD is now at 4470f30 Merge d727640e36ec9f7915aa208d69d9b78e4448f0c6 into 3592841802d85c442ca2521479b5d8795bee7233
+2026-10-27T22:52:19.4814028Z ##[endgroup]
+2026-10-27T22:52:19.4874513Z [command]/usr/bin/git log -1 --format=%H
+2026-10-27T22:52:19.4912290Z 4470f3070abdee1a6b31d82b27663a8bfe0fdd41
+2026-10-27T22:52:19.4923892Z ##[group]Removing auth
+2026-10-27T22:52:19.4925453Z Removing SSH command configuration
+2026-10-27T22:52:19.4928415Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:19.4978295Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:19.5233603Z Removing HTTP extra header
+2026-10-27T22:52:19.5237236Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:19.5287211Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:19.5542947Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:19.5545922Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:19.5588196Z includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path
+2026-10-27T22:52:19.5592668Z includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path
+2026-10-27T22:52:19.5596366Z includeif.gitdir:/github/workspace/.git.path
+2026-10-27T22:52:19.5599198Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-27T22:52:19.5605959Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path
+2026-10-27T22:52:19.5638472Z /home/runner/work/_temp/git-credentials-ef4fe52d-f2cc-4c96-8052-4e0044683c81.config
+2026-10-27T22:52:19.5650846Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-ef4fe52d\-f2cc\-4c96\-8052\-4e0044683c81\.config
+2026-10-27T22:52:19.5712026Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path
+2026-10-27T22:52:19.5747142Z /home/runner/work/_temp/git-credentials-ef4fe52d-f2cc-4c96-8052-4e0044683c81.config
+2026-10-27T22:52:19.5758168Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-ef4fe52d\-f2cc\-4c96\-8052\-4e0044683c81\.config
+2026-10-27T22:52:19.5804252Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-27T22:52:19.5843691Z /github/runner_temp/git-credentials-ef4fe52d-f2cc-4c96-8052-4e0044683c81.config
+2026-10-27T22:52:19.5853712Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-ef4fe52d\-f2cc\-4c96\-8052\-4e0044683c81\.config
+2026-10-27T22:52:19.5900168Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-27T22:52:19.5935748Z /github/runner_temp/git-credentials-ef4fe52d-f2cc-4c96-8052-4e0044683c81.config
+2026-10-27T22:52:19.5946191Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-ef4fe52d\-f2cc\-4c96\-8052\-4e0044683c81\.config
+2026-10-27T22:52:19.6072211Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:19.6248993Z Removing credentials config '/home/runner/work/_temp/git-credentials-ef4fe52d-f2cc-4c96-8052-4e0044683c81.config'
+2026-10-27T22:52:19.6258942Z ##[endgroup]
+2026-10-27T22:52:19.6716080Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-27T22:52:19.6717633Z with:
+2026-10-27T22:52:19.6718588Z   ref: 3592841802d85c442ca2521479b5d8795bee7233
+2026-10-27T22:52:19.6719951Z   path: candidate
+2026-10-27T22:52:19.6720929Z   persist-credentials: false
+2026-10-27T22:52:19.6722268Z   repository: techrote/neurounner
+2026-10-27T22:52:19.6730550Z   token: ***
+2026-10-27T22:52:19.6731633Z   ssh-strict: true
+2026-10-27T22:52:19.6732573Z   ssh-user: git
+2026-10-27T22:52:19.6733460Z   clean: true
+2026-10-27T22:52:19.6734446Z   sparse-checkout-cone-mode: true
+2026-10-27T22:52:19.6735592Z   fetch-depth: 1
+2026-10-27T22:52:19.6736511Z   fetch-tags: false
+2026-10-27T22:52:19.6737458Z   show-progress: true
+2026-10-27T22:52:19.6738406Z   lfs: false
+2026-10-27T22:52:19.6739276Z   submodules: false
+2026-10-27T22:52:19.6740228Z   set-safe-directory: true
+2026-10-27T22:52:19.6741431Z   allow-unsafe-pr-checkout: false
+2026-10-27T22:52:19.6742522Z env:
+2026-10-27T22:52:19.6743488Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:52:19.6744703Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:52:19.6745789Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:52:19.6746894Z   OMP_NUM_THREADS: 4
+2026-10-27T22:52:19.6747837Z   MKL_NUM_THREADS: 4
+2026-10-27T22:52:19.6748835Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:52:19.6749880Z ##[endgroup]
+2026-10-27T22:52:19.7630295Z Syncing repository: techrote/neurounner
+2026-10-27T22:52:19.7638418Z ##[group]Getting Git version info
+2026-10-27T22:52:19.7640555Z Working directory is '/home/runner/work/neurounner/neurounner/candidate'
+2026-10-27T22:52:19.7678016Z [command]/usr/bin/git version
+2026-10-27T22:52:19.7730085Z git version 2.56.0
+2026-10-27T22:52:19.7759341Z ##[endgroup]
+2026-10-27T22:52:19.7771428Z Temporarily overriding HOME='/home/runner/work/_temp/4d919740-ad6c-4431-86ee-3bdce6add03f' before making global git config changes
+2026-10-27T22:52:19.7774870Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:52:19.7779437Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner/candidate
+2026-10-27T22:52:19.7823191Z ##[group]Determining repository object format
+2026-10-27T22:52:19.7825699Z ##[endgroup]
+2026-10-27T22:52:19.7827244Z ##[group]Initializing the repository
+2026-10-27T22:52:19.7830842Z [command]/usr/bin/git init /home/runner/work/neurounner/neurounner/candidate
+2026-10-27T22:52:19.7892912Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-27T22:52:19.7896108Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-27T22:52:19.7899148Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-27T22:52:19.7901922Z hint: call:
+2026-10-27T22:52:19.7903326Z hint:
+2026-10-27T22:52:19.7904962Z hint: 	git config --global init.defaultBranch <name>
+2026-10-27T22:52:19.7907098Z hint:
+2026-10-27T22:52:19.7909071Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-27T22:52:19.7912756Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-27T22:52:19.7915205Z hint:
+2026-10-27T22:52:19.7916664Z hint: 	git branch -m <name>
+2026-10-27T22:52:19.7918220Z hint:
+2026-10-27T22:52:19.7920383Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-27T22:52:19.7924332Z Initialized empty Git repository in /home/runner/work/neurounner/neurounner/candidate/.git/
+2026-10-27T22:52:19.7930096Z [command]/usr/bin/git remote add origin https://github.com/techrote/neurounner
+2026-10-27T22:52:19.7988459Z ##[endgroup]
+2026-10-27T22:52:19.7991301Z ##[group]Disabling automatic garbage collection
+2026-10-27T22:52:19.7993546Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-27T22:52:19.8047552Z ##[endgroup]
+2026-10-27T22:52:19.8050113Z ##[group]Setting up auth
+2026-10-27T22:52:19.8052253Z Removing SSH command configuration
+2026-10-27T22:52:19.8054697Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:19.8106996Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:19.8380903Z Removing HTTP extra header
+2026-10-27T22:52:19.8387342Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:19.8440053Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:19.8713659Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:19.8719522Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:19.8767603Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:19.9022029Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-a47db29e-a95c-4473-bc31-157c6c3e7375.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-27T22:52:19.9075384Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git.path /home/runner/work/_temp/git-credentials-a47db29e-a95c-4473-bc31-157c6c3e7375.config
+2026-10-27T22:52:19.9123736Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-a47db29e-a95c-4473-bc31-157c6c3e7375.config
+2026-10-27T22:52:19.9172406Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/candidate/.git.path /github/runner_temp/git-credentials-a47db29e-a95c-4473-bc31-157c6c3e7375.config
+2026-10-27T22:52:19.9222485Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/candidate/.git/worktrees/*.path /github/runner_temp/git-credentials-a47db29e-a95c-4473-bc31-157c6c3e7375.config
+2026-10-27T22:52:19.9272722Z ##[endgroup]
+2026-10-27T22:52:19.9275496Z ##[group]Fetching the repository
+2026-10-27T22:52:19.9279334Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin 3592841802d85c442ca2521479b5d8795bee7233
+2026-10-27T22:52:20.6980157Z From https://github.com/techrote/neurounner
+2026-10-27T22:52:20.6980982Z  * branch            3592841802d85c442ca2521479b5d8795bee7233 -> FETCH_HEAD
+2026-10-27T22:52:20.6989645Z [command]/usr/bin/git rev-parse --verify --quiet 3592841802d85c442ca2521479b5d8795bee7233^{object}
+2026-10-27T22:52:20.7032375Z 3592841802d85c442ca2521479b5d8795bee7233
+2026-10-27T22:52:20.7037970Z ##[endgroup]
+2026-10-27T22:52:20.7038843Z ##[group]Determining the checkout info
+2026-10-27T22:52:20.7039816Z ##[endgroup]
+2026-10-27T22:52:20.7044558Z [command]/usr/bin/git sparse-checkout disable
+2026-10-27T22:52:20.7099337Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-27T22:52:20.7142249Z ##[group]Checking out the ref
+2026-10-27T22:52:20.7146427Z [command]/usr/bin/git checkout --progress --force 3592841802d85c442ca2521479b5d8795bee7233
+2026-10-27T22:52:20.9190916Z Note: switching to '3592841802d85c442ca2521479b5d8795bee7233'.
+2026-10-27T22:52:20.9191945Z 
+2026-10-27T22:52:20.9192305Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-27T22:52:20.9193119Z changes and commit them, and you can discard any commits you make in this
+2026-10-27T22:52:20.9193917Z state without impacting any branches by switching back to a branch.
+2026-10-27T22:52:20.9194456Z 
+2026-10-27T22:52:20.9194835Z If you want to create a new branch to retain commits you create, you may
+2026-10-27T22:52:20.9195490Z do so (now or later) by using -c with the switch command. Example:
+2026-10-27T22:52:20.9196009Z 
+2026-10-27T22:52:20.9196163Z   git switch -c <new-branch-name>
+2026-10-27T22:52:20.9196477Z 
+2026-10-27T22:52:20.9197182Z Or undo this operation with:
+2026-10-27T22:52:20.9197568Z 
+2026-10-27T22:52:20.9197958Z   git switch -
+2026-10-27T22:52:20.9198144Z 
+2026-10-27T22:52:20.9198532Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-27T22:52:20.9198894Z 
+2026-10-27T22:52:20.9199318Z HEAD is now at 3592841 NCR-001E: record independent archived 21-generation evidence, failed gate sentinel and green follow-up
+2026-10-27T22:52:20.9207852Z ##[endgroup]
+2026-10-27T22:52:20.9263188Z [command]/usr/bin/git log -1 --format=%H
+2026-10-27T22:52:20.9301520Z 3592841802d85c442ca2521479b5d8795bee7233
+2026-10-27T22:52:20.9310221Z ##[group]Removing auth
+2026-10-27T22:52:20.9310705Z Removing SSH command configuration
+2026-10-27T22:52:20.9315349Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:20.9359770Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:20.9604260Z Removing HTTP extra header
+2026-10-27T22:52:20.9608106Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:20.9651856Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:20.9894190Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:20.9897682Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:20.9933202Z includeif.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git.path
+2026-10-27T22:52:20.9934937Z includeif.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git/worktrees/*.path
+2026-10-27T22:52:20.9936068Z includeif.gitdir:/github/workspace/candidate/.git.path
+2026-10-27T22:52:20.9936665Z includeif.gitdir:/github/workspace/candidate/.git/worktrees/*.path
+2026-10-27T22:52:20.9944711Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git.path
+2026-10-27T22:52:20.9989134Z /home/runner/work/_temp/git-credentials-a47db29e-a95c-4473-bc31-157c6c3e7375.config
+2026-10-27T22:52:20.9999219Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-a47db29e\-a95c\-4473\-bc31\-157c6c3e7375\.config
+2026-10-27T22:52:21.0046072Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git/worktrees/*.path
+2026-10-27T22:52:21.0083673Z /home/runner/work/_temp/git-credentials-a47db29e-a95c-4473-bc31-157c6c3e7375.config
+2026-10-27T22:52:21.0094391Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/candidate/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-a47db29e\-a95c\-4473\-bc31\-157c6c3e7375\.config
+2026-10-27T22:52:21.0148419Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/candidate/.git.path
+2026-10-27T22:52:21.0184542Z /github/runner_temp/git-credentials-a47db29e-a95c-4473-bc31-157c6c3e7375.config
+2026-10-27T22:52:21.0193596Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/candidate/.git.path \/github\/runner_temp\/git\-credentials\-a47db29e\-a95c\-4473\-bc31\-157c6c3e7375\.config
+2026-10-27T22:52:21.0246560Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/candidate/.git/worktrees/*.path
+2026-10-27T22:52:21.0286439Z /github/runner_temp/git-credentials-a47db29e-a95c-4473-bc31-157c6c3e7375.config
+2026-10-27T22:52:21.0296810Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/candidate/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-a47db29e\-a95c\-4473\-bc31\-157c6c3e7375\.config
+2026-10-27T22:52:21.0352692Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:21.0641919Z Removing credentials config '/home/runner/work/_temp/git-credentials-a47db29e-a95c-4473-bc31-157c6c3e7375.config'
+2026-10-27T22:52:21.0659739Z ##[endgroup]
+2026-10-27T22:52:21.0912318Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-27T22:52:21.0912712Z with:
+2026-10-27T22:52:21.0912942Z   repository: kandivault-source/Sprocket-500M
+2026-10-27T22:52:21.0913258Z   ref: a003767e70d766bc14b40c89792543ee8641c8bc
+2026-10-27T22:52:21.0913532Z   path: publisher
+2026-10-27T22:52:21.0913750Z   persist-credentials: false
+2026-10-27T22:52:21.0916202Z   token: ***
+2026-10-27T22:52:21.0916408Z   ssh-strict: true
+2026-10-27T22:52:21.0916615Z   ssh-user: git
+2026-10-27T22:52:21.0916805Z   clean: true
+2026-10-27T22:52:21.0917017Z   sparse-checkout-cone-mode: true
+2026-10-27T22:52:21.0917271Z   fetch-depth: 1
+2026-10-27T22:52:21.0917472Z   fetch-tags: false
+2026-10-27T22:52:21.0917682Z   show-progress: true
+2026-10-27T22:52:21.0917897Z   lfs: false
+2026-10-27T22:52:21.0918101Z   submodules: false
+2026-10-27T22:52:21.0918310Z   set-safe-directory: true
+2026-10-27T22:52:21.0918556Z   allow-unsafe-pr-checkout: false
+2026-10-27T22:52:21.0918802Z env:
+2026-10-27T22:52:21.0919051Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:52:21.0919365Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:52:21.0919619Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:52:21.0919859Z   OMP_NUM_THREADS: 4
+2026-10-27T22:52:21.0920064Z   MKL_NUM_THREADS: 4
+2026-10-27T22:52:21.0920287Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:52:21.0920528Z ##[endgroup]
+2026-10-27T22:52:21.1836930Z Syncing repository: kandivault-source/Sprocket-500M
+2026-10-27T22:52:21.1843551Z ##[group]Getting Git version info
+2026-10-27T22:52:21.1844281Z Working directory is '/home/runner/work/neurounner/neurounner/publisher'
+2026-10-27T22:52:21.1886923Z [command]/usr/bin/git version
+2026-10-27T22:52:21.1934303Z git version 2.56.0
+2026-10-27T22:52:21.1957862Z ##[endgroup]
+2026-10-27T22:52:21.1970148Z Temporarily overriding HOME='/home/runner/work/_temp/774b86c0-a00b-4341-9c7a-bfcf3b9da592' before making global git config changes
+2026-10-27T22:52:21.1971949Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:52:21.1976817Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner/publisher
+2026-10-27T22:52:21.2018224Z ##[group]Determining repository object format
+2026-10-27T22:52:21.2020500Z ##[endgroup]
+2026-10-27T22:52:21.2021362Z ##[group]Initializing the repository
+2026-10-27T22:52:21.2026720Z [command]/usr/bin/git init /home/runner/work/neurounner/neurounner/publisher
+2026-10-27T22:52:21.2082211Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-27T22:52:21.2083330Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-27T22:52:21.2084440Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-27T22:52:21.2085314Z hint: call:
+2026-10-27T22:52:21.2085894Z hint:
+2026-10-27T22:52:21.2086531Z hint: 	git config --global init.defaultBranch <name>
+2026-10-27T22:52:21.2087203Z hint:
+2026-10-27T22:52:21.2087743Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-27T22:52:21.2088605Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-27T22:52:21.2089304Z hint:
+2026-10-27T22:52:21.2089645Z hint: 	git branch -m <name>
+2026-10-27T22:52:21.2090046Z hint:
+2026-10-27T22:52:21.2090592Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-27T22:52:21.2091806Z Initialized empty Git repository in /home/runner/work/neurounner/neurounner/publisher/.git/
+2026-10-27T22:52:21.2096024Z [command]/usr/bin/git remote add origin https://github.com/kandivault-source/Sprocket-500M
+2026-10-27T22:52:21.2137074Z ##[endgroup]
+2026-10-27T22:52:21.2137497Z ##[group]Disabling automatic garbage collection
+2026-10-27T22:52:21.2142294Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-27T22:52:21.2182592Z ##[endgroup]
+2026-10-27T22:52:21.2183243Z ##[group]Setting up auth
+2026-10-27T22:52:21.2183696Z Removing SSH command configuration
+2026-10-27T22:52:21.2190963Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:21.2233993Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:21.2501479Z Removing HTTP extra header
+2026-10-27T22:52:21.2507532Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:21.2556359Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:21.2837326Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:21.2843275Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:21.2889747Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:21.3135548Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-221e5afe-537c-42b1-a2f6-1c3c53439827.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-27T22:52:21.3185031Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git.path /home/runner/work/_temp/git-credentials-221e5afe-537c-42b1-a2f6-1c3c53439827.config
+2026-10-27T22:52:21.3229580Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-221e5afe-537c-42b1-a2f6-1c3c53439827.config
+2026-10-27T22:52:21.3275972Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/publisher/.git.path /github/runner_temp/git-credentials-221e5afe-537c-42b1-a2f6-1c3c53439827.config
+2026-10-27T22:52:21.3320064Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/publisher/.git/worktrees/*.path /github/runner_temp/git-credentials-221e5afe-537c-42b1-a2f6-1c3c53439827.config
+2026-10-27T22:52:21.3360973Z ##[endgroup]
+2026-10-27T22:52:21.3364365Z ##[group]Fetching the repository
+2026-10-27T22:52:21.3370373Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin a003767e70d766bc14b40c89792543ee8641c8bc
+2026-10-27T22:52:21.8678878Z From https://github.com/kandivault-source/Sprocket-500M
+2026-10-27T22:52:21.8679918Z  * branch            a003767e70d766bc14b40c89792543ee8641c8bc -> FETCH_HEAD
+2026-10-27T22:52:21.8689989Z [command]/usr/bin/git rev-parse --verify --quiet a003767e70d766bc14b40c89792543ee8641c8bc^{object}
+2026-10-27T22:52:21.8731509Z a003767e70d766bc14b40c89792543ee8641c8bc
+2026-10-27T22:52:21.8737234Z ##[endgroup]
+2026-10-27T22:52:21.8737920Z ##[group]Determining the checkout info
+2026-10-27T22:52:21.8739140Z ##[endgroup]
+2026-10-27T22:52:21.8744693Z [command]/usr/bin/git sparse-checkout disable
+2026-10-27T22:52:21.8802656Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-27T22:52:21.8848508Z ##[group]Checking out the ref
+2026-10-27T22:52:21.8853645Z [command]/usr/bin/git checkout --progress --force a003767e70d766bc14b40c89792543ee8641c8bc
+2026-10-27T22:52:21.9134028Z Note: switching to 'a003767e70d766bc14b40c89792543ee8641c8bc'.
+2026-10-27T22:52:21.9134546Z 
+2026-10-27T22:52:21.9135182Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-27T22:52:21.9136013Z changes and commit them, and you can discard any commits you make in this
+2026-10-27T22:52:21.9136655Z state without impacting any branches by switching back to a branch.
+2026-10-27T22:52:21.9136966Z 
+2026-10-27T22:52:21.9137175Z If you want to create a new branch to retain commits you create, you may
+2026-10-27T22:52:21.9137699Z do so (now or later) by using -c with the switch command. Example:
+2026-10-27T22:52:21.9137991Z 
+2026-10-27T22:52:21.9138378Z   git switch -c <new-branch-name>
+2026-10-27T22:52:21.9138714Z 
+2026-10-27T22:52:21.9138886Z Or undo this operation with:
+2026-10-27T22:52:21.9139183Z 
+2026-10-27T22:52:21.9139349Z   git switch -
+2026-10-27T22:52:21.9139549Z 
+2026-10-27T22:52:21.9139910Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-27T22:52:21.9140508Z 
+2026-10-27T22:52:21.9140822Z HEAD is now at a003767 docs: remove em dashes from the model card
+2026-10-27T22:52:21.9143664Z ##[endgroup]
+2026-10-27T22:52:21.9202405Z [command]/usr/bin/git log -1 --format=%H
+2026-10-27T22:52:21.9242173Z a003767e70d766bc14b40c89792543ee8641c8bc
+2026-10-27T22:52:21.9251711Z ##[group]Removing auth
+2026-10-27T22:52:21.9270281Z Removing SSH command configuration
+2026-10-27T22:52:21.9271267Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:21.9307107Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:21.9564140Z Removing HTTP extra header
+2026-10-27T22:52:21.9564947Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:21.9613613Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:21.9862154Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:21.9868068Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:21.9906862Z includeif.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git.path
+2026-10-27T22:52:21.9907917Z includeif.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git/worktrees/*.path
+2026-10-27T22:52:21.9909590Z includeif.gitdir:/github/workspace/publisher/.git.path
+2026-10-27T22:52:21.9910518Z includeif.gitdir:/github/workspace/publisher/.git/worktrees/*.path
+2026-10-27T22:52:21.9922607Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git.path
+2026-10-27T22:52:21.9962275Z /home/runner/work/_temp/git-credentials-221e5afe-537c-42b1-a2f6-1c3c53439827.config
+2026-10-27T22:52:21.9973530Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-221e5afe\-537c\-42b1\-a2f6\-1c3c53439827\.config
+2026-10-27T22:52:22.0032456Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git/worktrees/*.path
+2026-10-27T22:52:22.0068654Z /home/runner/work/_temp/git-credentials-221e5afe-537c-42b1-a2f6-1c3c53439827.config
+2026-10-27T22:52:22.0080729Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/publisher/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-221e5afe\-537c\-42b1\-a2f6\-1c3c53439827\.config
+2026-10-27T22:52:22.0133893Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/publisher/.git.path
+2026-10-27T22:52:22.0171822Z /github/runner_temp/git-credentials-221e5afe-537c-42b1-a2f6-1c3c53439827.config
+2026-10-27T22:52:22.0182473Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/publisher/.git.path \/github\/runner_temp\/git\-credentials\-221e5afe\-537c\-42b1\-a2f6\-1c3c53439827\.config
+2026-10-27T22:52:22.0232873Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/publisher/.git/worktrees/*.path
+2026-10-27T22:52:22.0267731Z /github/runner_temp/git-credentials-221e5afe-537c-42b1-a2f6-1c3c53439827.config
+2026-10-27T22:52:22.0276102Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/publisher/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-221e5afe\-537c\-42b1\-a2f6\-1c3c53439827\.config
+2026-10-27T22:52:22.0323211Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:22.0569451Z Removing credentials config '/home/runner/work/_temp/git-credentials-221e5afe-537c-42b1-a2f6-1c3c53439827.config'
+2026-10-27T22:52:22.0589992Z ##[endgroup]
+2026-10-27T22:52:22.0727778Z ##[group]Run set -euxo pipefail
+2026-10-27T22:52:22.0728165Z [36;1mset -euxo pipefail[0m
+2026-10-27T22:52:22.0728608Z [36;1mtest "$(git -C candidate rev-parse HEAD)" = "3592841802d85c442ca2521479b5d8795bee7233"[0m
+2026-10-27T22:52:22.0729373Z [36;1mtest "$(git -C candidate hash-object scripts/ncr_001e_sprocket_publisher_wire.py)" = "4e558ae530a1b79050e22bee587b3caf056e4563"[0m
+2026-10-27T22:52:22.0730223Z [36;1mtest "$(git hash-object scripts/ncr_001e_pr102_masked_batch_review.py)" = "6ade653f0452e58f82c8c78e79d326018c30bcf1"[0m
+2026-10-27T22:52:22.0730933Z [36;1mtest "$(git -C publisher rev-parse HEAD)" = "a003767e70d766bc14b40c89792543ee8641c8bc"[0m
+2026-10-27T22:52:22.0731973Z [36;1mtest "$(git -C publisher hash-object src/train/sft_data.py)" = "90bddf8976b9d6410fe7c5c1f084708e1cebab73"[0m
+2026-10-27T22:52:22.0732484Z [36;1mpython3 - <<'PY'[0m
+2026-10-27T22:52:22.0732723Z [36;1mimport hashlib,json[0m
+2026-10-27T22:52:22.0733017Z [36;1mfrom pathlib import Path[0m
+2026-10-27T22:52:22.0733451Z [36;1mp=json.loads(Path('candidate/experiments/ncr-001/protocol.json').read_text())[0m
+2026-10-27T22:52:22.0734029Z [36;1mpins=json.loads(Path('candidate/experiments/ncr-001/source-pins.json').read_text())[0m
+2026-10-27T22:52:22.0734487Z [36;1massert p['train_authorized'] is False[0m
+2026-10-27T22:52:22.0734971Z [36;1massert set(p['models'])==set(pins['models'])=={'smollm2','sprocket_chat','sprocket_instruct','void1'}[0m
+2026-10-27T22:52:22.0735867Z [36;1massert p['conformance']['full_vs_cached_prefill_atol']==p['conformance']['full_vs_cached_prefill_rtol']==.0005[0m
+2026-10-27T22:52:22.0736517Z [36;1massert pins['models']['sprocket_instruct']['hf_weight_file']=='model.safetensors'[0m
+2026-10-27T22:52:22.0737081Z [36;1massert pins['models']['sprocket_chat']['hf_weight_file']=='chat/model.safetensors'[0m
+2026-10-27T22:52:22.0737567Z [36;1ms=Path('publisher/src/train/sft_data.py').read_bytes()[0m
+2026-10-27T22:52:22.0738141Z [36;1massert hashlib.sha256(s).hexdigest()=='e5568c15989f3987fec07545640f2f271ffe967c27cbe9d9883c0dd7b5c4ec69'[0m
+2026-10-27T22:52:22.0738777Z [36;1mprint('SOURCE_NO_TRAINING_NO_HOLDOUT exact publisher role schema verified')[0m
+2026-10-27T22:52:22.0739173Z [36;1mPY[0m
+2026-10-27T22:52:22.0763068Z shell: /usr/bin/bash -e {0}
+2026-10-27T22:52:22.0763326Z env:
+2026-10-27T22:52:22.0763552Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:52:22.0763841Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:52:22.0764107Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:52:22.0764354Z   OMP_NUM_THREADS: 4
+2026-10-27T22:52:22.0764562Z   MKL_NUM_THREADS: 4
+2026-10-27T22:52:22.0764781Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:52:22.0765021Z ##[endgroup]
+2026-10-27T22:52:22.0841574Z ++ git -C candidate rev-parse HEAD
+2026-10-27T22:52:22.0857599Z + test 3592841802d85c442ca2521479b5d8795bee7233 = 3592841802d85c442ca2521479b5d8795bee7233
+2026-10-27T22:52:22.0860547Z ++ git -C candidate hash-object scripts/ncr_001e_sprocket_publisher_wire.py
+2026-10-27T22:52:22.0875600Z + test 4e558ae530a1b79050e22bee587b3caf056e4563 = 4e558ae530a1b79050e22bee587b3caf056e4563
+2026-10-27T22:52:22.0878482Z ++ git hash-object scripts/ncr_001e_pr102_masked_batch_review.py
+2026-10-27T22:52:22.0894245Z + test 6ade653f0452e58f82c8c78e79d326018c30bcf1 = 6ade653f0452e58f82c8c78e79d326018c30bcf1
+2026-10-27T22:52:22.0896841Z ++ git -C publisher rev-parse HEAD
+2026-10-27T22:52:22.0911673Z + test a003767e70d766bc14b40c89792543ee8641c8bc = a003767e70d766bc14b40c89792543ee8641c8bc
+2026-10-27T22:52:22.0914494Z ++ git -C publisher hash-object src/train/sft_data.py
+2026-10-27T22:52:22.0929781Z + test 90bddf8976b9d6410fe7c5c1f084708e1cebab73 = 90bddf8976b9d6410fe7c5c1f084708e1cebab73
+2026-10-27T22:52:22.0930595Z + python3 -
+2026-10-27T22:52:22.1189829Z SOURCE_NO_TRAINING_NO_HOLDOUT exact publisher role schema verified
+2026-10-27T22:52:22.1272753Z ##[group]Run python3 -m py_compile scripts/ncr_001e_pr102_rightpad_generate.py
+2026-10-27T22:52:22.1273344Z [36;1mpython3 -m py_compile scripts/ncr_001e_pr102_rightpad_generate.py[0m
+2026-10-27T22:52:22.1273848Z [36;1mpython3 scripts/ncr_001e_pr102_rightpad_generate.py --source-test[0m
+2026-10-27T22:52:22.1274396Z [36;1mpython3 -m unittest discover -s tests -p 'test_ncr_001e_pr102_rightpad_generate.py' -v[0m
+2026-10-27T22:52:22.1294841Z shell: /usr/bin/bash -e {0}
+2026-10-27T22:52:22.1295082Z env:
+2026-10-27T22:52:22.1295301Z   HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+2026-10-27T22:52:22.1295590Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-27T22:52:22.1295868Z   TOKENIZERS_PARALLELISM: false
+2026-10-27T22:52:22.1296108Z   OMP_NUM_THREADS: 4
+2026-10-27T22:52:22.1296309Z   MKL_NUM_THREADS: 4
+2026-10-27T22:52:22.1296524Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-27T22:52:22.1296760Z ##[endgroup]
+2026-10-27T22:52:22.2218274Z {"geometry_valid": true, "right_gap_width": 26, "train_authorized": false}
+2026-10-27T22:52:22.2902318Z test_masked_influence_sentinel_uses_real_control_id_and_token_positions (test_ncr_001e_pr102_rightpad_generate.RightPaddingSourceTests.test_masked_influence_sentinel_uses_real_control_id_and_token_positions) ... ok
+2026-10-27T22:52:22.2905030Z test_reject_false_training_heldout_semantics_and_variant (test_ncr_001e_pr102_rightpad_generate.RightPaddingSourceTests.test_reject_false_training_heldout_semantics_and_variant) ... ok
+2026-10-27T22:52:22.2907572Z test_reject_unknown_padding_wrong_shape_or_inadequate_source_gap (test_ncr_001e_pr102_rightpad_generate.RightPaddingSourceTests.test_reject_unknown_padding_wrong_shape_or_inadequate_source_gap) ... ok
+2026-10-27T22:52:22.2910387Z test_right_gapped_prefix_requires_masked_holes_and_appended_real_tokens (test_ncr_001e_pr102_rightpad_generate.RightPaddingSourceTests.test_right_gapped_prefix_requires_masked_holes_and_appended_real_tokens) ... ok
+2026-10-27T22:52:22.2912942Z test_source_locked_four_variant_model_and_generation_budget (test_ncr_001e_pr102_rightpad_generate.RightPaddingSourceTests.test_source_locked_four_variant_model_and_generation_budget) ... ok
+2026-10-27T22:52:22.2915132Z test_source_review_keeps_original_generation_and_archive_separate (test_ncr_001e_pr102_rightpad_generate.RightPaddingSourceTests.test_source_review_keeps_original_generation_and_archive_separate) ... ok
+2026-10-27T22:52:22.2916363Z 
+2026-10-27T22:52:22.2916609Z ----------------------------------------------------------------------
+2026-10-27T22:52:22.2917193Z Ran 6 tests in 0.001s
+2026-10-27T22:52:22.2917409Z 
+2026-10-27T22:52:22.2917531Z OK
+2026-10-27T22:52:22.3089556Z Post job cleanup.
+2026-10-27T22:52:22.3993162Z [command]/usr/bin/git version
+2026-10-27T22:52:22.4040887Z git version 2.56.0
+2026-10-27T22:52:22.4083798Z Temporarily overriding HOME='/home/runner/work/_temp/6134a780-1fea-4823-9e34-4b119447acde' before making global git config changes
+2026-10-27T22:52:22.4085373Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:52:22.4089174Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner/publisher
+2026-10-27T22:52:22.4128533Z Removing SSH command configuration
+2026-10-27T22:52:22.4135519Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:22.4177319Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:22.4462782Z Removing HTTP extra header
+2026-10-27T22:52:22.4470619Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:22.4519309Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:22.4855654Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:22.4874867Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:22.4939511Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:22.5396655Z Post job cleanup.
+2026-10-27T22:52:22.6264440Z [command]/usr/bin/git version
+2026-10-27T22:52:22.6315163Z git version 2.56.0
+2026-10-27T22:52:22.6360272Z Temporarily overriding HOME='/home/runner/work/_temp/51f7f823-1444-4cdb-9453-453566c93116' before making global git config changes
+2026-10-27T22:52:22.6361740Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:52:22.6367749Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner/candidate
+2026-10-27T22:52:22.6408890Z Removing SSH command configuration
+2026-10-27T22:52:22.6417095Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:22.6460449Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:22.6740595Z Removing HTTP extra header
+2026-10-27T22:52:22.6746547Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:22.6795406Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:22.7059283Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:22.7067155Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:22.7116273Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:22.7647013Z Post job cleanup.
+2026-10-27T22:52:22.8547793Z [command]/usr/bin/git version
+2026-10-27T22:52:22.8596209Z git version 2.56.0
+2026-10-27T22:52:22.8653457Z Temporarily overriding HOME='/home/runner/work/_temp/51cddacd-2abf-4ecb-92da-bb36e97383fb' before making global git config changes
+2026-10-27T22:52:22.8673990Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T22:52:22.8681926Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner
+2026-10-27T22:52:22.8772145Z Removing SSH command configuration
+2026-10-27T22:52:22.8772930Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T22:52:22.8784425Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T22:52:22.9152603Z Removing HTTP extra header
+2026-10-27T22:52:22.9153623Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T22:52:22.9232649Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T22:52:22.9553012Z Removing includeIf entries pointing to credentials config files
+2026-10-27T22:52:22.9553931Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T22:52:22.9603331Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T22:52:23.0019878Z Cleaning up orphan processes

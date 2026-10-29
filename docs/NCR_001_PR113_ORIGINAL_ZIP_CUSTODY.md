@@ -1,0 +1,15 @@
+# NCR-001E — original PR #113 complete ZIP and decoded job-log custody
+
+**Original physical source:** [PR #113](https://github.com/techrote/neurounner/pull/113), original checkout head `d727640e36ec9f7915aa208d69d9b78e4448f0c6`, original [Actions #40598034739](https://github.com/techrote/neurounner/actions/runs/40598034739), source job `122518832102` and frozen root-Instruct model job `122518920068`.
+
+This descendant does NOT alter #113, #102, protocol, pins, model weights, source/runner receipts, numerical tolerances, negative tests, fixtures or historical failures. Original failed source-only workflows #40597707675 and #40597891619 remain negative CI. No new model invocation, optimizer step, held-out opening or NCA/MLP comparison.
+
+The **original whole Actions artifact #12777685787** (expires 2026-11-26T22:53:58Z) is 5,754 bytes, SHA-256 `30bc7fa3231047561b5ab0142b59b7012e7e1ee4e72329198f7d778b65be9a1e`, Git blob `6e231bf8cfc909bb943ab3807cc4d2b4f7ad5413`, and contains exactly five individually SHA-pinned members. Its bytes are to be preserved directly as `original-actions-40598034739.zip`, never reconstructed from a ZIP library. The committed `original-actions-custody.json` locks member hashes, source head, distinct root-versus-Chat weight SHA, original run/artifact and closed scientific gates.
+
+Both complete **GitHub-decoded text** job logs are committed separately at Git blobs `072ad20c4be7622f31d252bf836e5e1ab26fc269` (source) and `c8e2846a1539a4aaede774861c9a41429c1d6394` (physical). They are not described as byte-identical to the compressed HTTP job-log transport format.
+
+The standalone stdlib auditor refuses changed ZIP container/member bytes, source/manifest mutations, modified decoded job logs or false training/scientific admission; it also compares all five ZIP members against the previously archived exact original text evidence and runs its original mask/cache/generation checks.
+
+The initial workflow has temporary `contents:write` permission **only** for a single constrained original-ZIP bootstrap commit on this descendant branch. After the original bytes land and tests succeed, change to `contents:read`, remove the commit operation, rerun read-only exact-head CI and obtain scoped source review before considering any merge. Failure to publish the ZIP is a **blocked archival gate**, not PASS. Verify final head and run after this initial source commit.
+
+**No scientific promotion:** real root Instruct generated only an incomplete six-token tool-call prefix in separate earlier evidence. Source-structured token transport, right-padding and actual HF.generate parity are NOT generated tool/memory competence; no final per-lane or aggregate #72 admission. Owner accepts same-account COMMENTED scoped reviews #161/#162/#181/#182 administratively, never as distinct GitHub APPROVED or scientific acceptance. `train_authorized=false`, `full_72_conformance_pass=false`, original void.1 EOS ID 258 and historical training impact UNMEASURED remain unchanged.

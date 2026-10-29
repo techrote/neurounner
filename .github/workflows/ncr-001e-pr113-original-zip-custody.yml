@@ -1,0 +1,83 @@
+name: NCR-001E PR113 complete original ZIP and job-log custody (NO TRAIN)
+on:
+  pull_request:
+    branches: [review/ncr001e-pr102-independent-masked-batch-20261027]
+    paths:
+      - ".github/workflows/ncr-001e-pr113-original-zip-custody.yml"
+      - "scripts/ncr_001e_pr113_original_zip_custody.py"
+      - "tests/test_ncr_001e_pr113_original_zip_custody.py"
+      - "experiments/ncr-001/evidence-review/pr113-rightpad-generation/**"
+      - "docs/NCR_001_PR113_ORIGINAL_ZIP_CUSTODY.md"
+      - "RAG.md"
+permissions:
+  contents: write # ONE-TIME BOOTSTRAP ONLY; revoke once original ZIP committed
+  actions: read
+concurrency:
+  group: ncr-pr113-original-zip-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  original-artifact-bootstrap:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.head.ref == 'review/ncr001-pr113-original-actions-custody-20261029'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      SOURCE_HEAD: a7391683478968301301959c100576b2a4cbf2a8
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      EVIDENCE: experiments/ncr-001/evidence-review/pr113-rightpad-generation
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: true
+          fetch-depth: 0
+      - name: Fail closed on exact source/protocol, branch and absence of original ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "techrote/neurounner"
+          test "$GITHUB_HEAD_REF" = "review/ncr001-pr113-original-actions-custody-20261029"
+          test "$GITHUB_BASE_REF" = "review/ncr001e-pr102-independent-masked-batch-20261027"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "${{ github.event.pull_request.base.sha }}" = "$SOURCE_HEAD"
+          git merge-base --is-ancestor "$SOURCE_HEAD" "$EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          test "$(git hash-object "$EVIDENCE/original-actions-custody.json")" = ecff0787c849428e788d3d8a2401792c2c8b12c2
+          test "$(git hash-object "$EVIDENCE/original-source-job-122518832102.log")" = 072ad20c4be7622f31d252bf836e5e1ab26fc269
+          test "$(git hash-object "$EVIDENCE/original-physical-job-122518920068.log")" = c8e2846a1539a4aaede774861c9a41429c1d6394
+          test ! -e "$EVIDENCE/original-actions-40598034739.zip"
+      - name: Re-download immutable ORIGINAL Actions artifact by ID
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/pr113-original
+          curl --fail --show-error --silent --location --retry 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/techrote/neurounner/actions/artifacts/12777685787/zip \
+            -o runtime/pr113-original/original.zip
+          python3 scripts/ncr_001e_pr113_original_zip_custody.py --verify-external-zip runtime/pr113-original/original.zip
+      - name: Stage only original ZIP bytes, verify source/negative controls, and publish one scoped archival commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp runtime/pr113-original/original.zip "$EVIDENCE/original-actions-40598034739.zip"
+          python3 -m unittest discover -s tests -p test_ncr_001e_pr113_original_zip_custody.py -v
+          python3 scripts/ncr_001e_pr113_original_zip_custody.py
+          test "$(git hash-object "$EVIDENCE/original-actions-40598034739.zip")" = 6e231bf8cfc909bb943ab3807cc4d2b4f7ad5413
+          git add -- "$EVIDENCE/original-actions-40598034739.zip"
+          test "$(git diff --cached --name-only)" = "$EVIDENCE/original-actions-40598034739.zip"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "NCR-001E: permanently preserve byte-exact original PR113 Actions ZIP"
+          git push origin HEAD:refs/heads/review/ncr001-pr113-original-actions-custody-20261029
+      - name: Preserve bootstrap diagnostics without replacing originals
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-pr113-original-zip-bootstrap-a${{ github.run_attempt }}
+          path: runtime/pr113-original/
+          retention-days: 30
+          if-no-files-found: warn
