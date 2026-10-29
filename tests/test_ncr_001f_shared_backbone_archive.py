@@ -31,6 +31,30 @@ class SharedBackboneArchiveTests(unittest.TestCase):
         self.assertFalse(r["model_execution"])
         self.assertFalse(r["final_72_or_73_accepted"])
 
+    def test_original_source_survives_later_lease_code(self):
+        # The merged decoder lease deliberately changes live MLP hook source.
+        # Historical custody must remain bound to its original tested Git tree.
+        from ncr_001f_shared_backbone_archive import git_blob_sha1
+        current = ROOT / "scripts/ncr_001f_frozen_hooks.py"
+        expected = self.original["source_git_blobs_sha1"]["scripts/ncr_001f_frozen_hooks.py"]
+        self.assertNotEqual(git_blob_sha1(current), expected)
+        self.assertEqual(audit()["tested_source_commit"], self.original["exact_tested_head"])
+
+    def test_missing_original_git_object_fails_closed(self):
+        from unittest.mock import patch
+        import subprocess
+        original = subprocess.check_output
+
+        def deny_historical_blob(argv, *args, **kwargs):
+            if argv[1] == "rev-parse":
+                raise subprocess.CalledProcessError(128, argv)
+            return original(argv, *args, **kwargs)
+
+        with patch("ncr_001f_shared_backbone_archive.subprocess.check_output",
+                   side_effect=deny_historical_blob):
+            with self.assertRaisesRegex(RuntimeError, "original tested Git source unavailable"):
+                audit()
+
     def test_falsified_actions_job_or_checkout_is_rejected(self):
         for field, wrong in (("workflow_run_id", 12345),
                              ("workflow_job_id", 67890),
