@@ -56,9 +56,72 @@ def check_committed_bytes(evidence: Path = EVIDENCE) -> None:
                 "changed original committed Git blob: " + name)
 
 
+# Numeric Actions job IDs are external run-ledger metadata, not receipt fields.
+# The immutable manifest maps IDs to the three exact committed decoded logs.
+ORIGINAL_JOBS = {
+    "source": 122892989282,
+    "chat": 122893504080,
+    "instruct": 122893504180,
+}
+ORIGINAL_JOB_NAMES = {
+    "source": "source-sentinels",
+    "chat": "actual-frozen-sprocket-nca (chat, chat/model.safetensors)",
+    "instruct": "actual-frozen-sprocket-nca (instruct, model.safetensors)",
+}
+
+
+def check_archived_job_bindings(
+    manifest: dict, *, log_texts: dict[str, str] | None = None,
+) -> dict[str, int]:
+    """Tie the pinned job ledger to archived job content, not receipt-invented IDs.
+
+    Job IDs are authoritative GitHub run metadata; the original receipt.json
+    files themselves do NOT contain job IDs. The caller separately verifies
+    original manifest/log Git blobs before using these source-bound bindings.
+    """
+    require(manifest["original_decoded_actions_jobs"] == ORIGINAL_JOBS,
+            "original decoded Actions job-ID ledger changed")
+    artifacts = manifest["original_actions_artifacts"]
+    require(set(artifacts) == set(ORIGINAL_JOBS),
+            "original three-lane artifact ledger changed")
+    if log_texts is not None:
+        require(set(log_texts) == set(ORIGINAL_JOBS),
+                "original decoded job-log set changed")
+    for variant, job_id in ORIGINAL_JOBS.items():
+        filename = "actions-decoded/" + (
+            "source-original-job-" if variant == "source"
+            else variant + "-original-job-"
+        ) + str(job_id) + ".log"
+        require(filename in ORIGINAL_BLOBS,
+                "original job-ID has no pinned committed log: " + variant)
+        log = (log_texts[variant] if log_texts is not None
+               else (EVIDENCE / filename).read_text(encoding="utf-8-sig"))
+        expected_zip = original.ARTIFACTS[variant][0]
+        require(artifacts[variant]["zip_sha256"] == expected_zip,
+                "original Actions job artifact digest ledger changed: " + variant)
+        required = (
+            "Complete job name: " + ORIGINAL_JOB_NAMES[variant],
+            "ref: " + SOURCE_HEAD,
+            "SHA256 digest of uploaded artifact is " + expected_zip,
+        )
+        if variant != "source":
+            required += (
+                "NCR_VARIANT: " + variant,
+                '"lane": "' + original.WEIGHTS[variant][0] + '"',
+                '"diagnostic_optimizer_steps": 1',
+                '"status": "PASS_DIAGNOSTIC_NCA_LEARNING_GATES__FINAL_72_BLOCKED"',
+            )
+        else:
+            required += ("Ran 10 tests",)
+        require(all(needle in log for needle in required),
+                "original Actions job log/source/variant/artifact mismatch: " + variant)
+    return dict(ORIGINAL_JOBS)
+
+
 def reconcile() -> dict:
     check_committed_bytes()
     manifest, members = custody.load_archive()
+    archived_jobs = check_archived_job_bindings(manifest)
     require(manifest["original_source_head"] == SOURCE_HEAD
             and manifest["original_run_id"] == RUN
             and original.HEAD == SOURCE_HEAD and original.RUN_ID == str(RUN),
@@ -75,8 +138,7 @@ def reconcile() -> dict:
             "four-lane preregistered protocol or training gate changed")
     lanes = {}
     fingerprints = []
-    for variant, expected_job in (("chat", 122893504080),
-                                  ("instruct", 122893504180)):
+    for variant in ("chat", "instruct"):
         receipt = json.loads(members[variant]["receipt.json"])
         independent = original.receipt_gate(receipt, variant, source_tree=True)
         require(receipt["runner"]["run_id"] == str(RUN)
@@ -93,7 +155,8 @@ def reconcile() -> dict:
         fingerprints.append(independent["backbone_fingerprint"])
         lanes[lane_key] = {
             "variant": variant,
-            "physical_job_id": expected_job,
+            "physical_job_id": archived_jobs[variant],
+            "job_id_provenance": "PINNED_GITHUB_ACTIONS_RUN_LEDGER_PLUS_ORIGINAL_DECODED_LOG",
             "original_checkpoint_file": weight_file,
             "original_checkpoint_sha256": weight_sha,
             "backbone_fingerprint_unchanged": True,
