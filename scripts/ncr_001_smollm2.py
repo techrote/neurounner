@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from pathlib import Path
 import json
 import threading
+import weakref
 from typing import Any, Iterator
 
 import torch
@@ -21,6 +22,21 @@ MODEL_REVISION = "12fd25f77366fa6b3b4b768ec3050bf629380bac"
 HIDDEN_SIZE = 576
 LAYER_COUNT = 30
 POST_BLOCK_TAPS = (9, 19, 29)
+
+
+# Ownership metadata only: no token history, NCA field or model tensor lives here.
+# Weak keys prevent the registry from extending the lifetime of a frozen model.
+_BACKBONE_LOCKS_GUARD = threading.Lock()
+_BACKBONE_LOCKS: weakref.WeakKeyDictionary = weakref.WeakKeyDictionary()
+
+
+def _shared_backbone_lock(backbone: nn.Module) -> threading.Lock:
+    with _BACKBONE_LOCKS_GUARD:
+        lock = _BACKBONE_LOCKS.get(backbone)
+        if lock is None:
+            lock = threading.Lock()
+            _BACKBONE_LOCKS[backbone] = lock
+        return lock
 
 
 class FrozenSmolLM2DepthNCA(nn.Module):
@@ -60,6 +76,7 @@ class FrozenSmolLM2DepthNCA(nn.Module):
             observation_gain=0.2, update_gain=0.25,
         )
         self._instrument_lock = threading.Lock()
+        self._backbone_lock = _shared_backbone_lock(backbone)
         self._last_hook_trace: list[dict[str, Any]] = []
 
     def train(self, mode: bool = True):
@@ -82,6 +99,22 @@ class FrozenSmolLM2DepthNCA(nn.Module):
     @property
     def last_hook_trace(self) -> list[dict[str, Any]]:
         return [dict(item) for item in self._last_hook_trace]
+
+    @contextmanager
+    def _claim_backbone(self) -> Iterator[None]:
+        """Refuse overlapping wrappers AND uninstrumented reference paths.
+
+        This protects the meaning of enabled=False comparisons on one frozen
+        model instance; the pre-existing per-wrapper instrumentation lock still
+        protects nested hook registration.  This registry currently covers only
+        wrappers using this module (not other NCR model/MLP modules).
+        """
+        if not self._backbone_lock.acquire(blocking=False):
+            raise RuntimeError("Shared frozen SmolLM2 backbone already owned")
+        try:
+            yield
+        finally:
+            self._backbone_lock.release()
 
     @contextmanager
     def _instrument(self) -> Iterator[None]:
@@ -161,10 +194,11 @@ class FrozenSmolLM2DepthNCA(nn.Module):
 
     def forward(self, *args, enabled: bool = True, **kwargs):
         self.verify_frozen_base()
-        if not enabled:
-            return self.backbone(*args, **kwargs)
-        with self._instrument():
-            return self.backbone(*args, **kwargs)
+        with self._claim_backbone():
+            if not enabled:
+                return self.backbone(*args, **kwargs)
+            with self._instrument():
+                return self.backbone(*args, **kwargs)
 
     def generate(self, *args, enabled: bool = True, **kwargs):
         """Delegates to the unmodified, pinned HF GenerationMixin machinery.
@@ -173,10 +207,11 @@ class FrozenSmolLM2DepthNCA(nn.Module):
         forward, even though the hooks span the entire generate() invocation.
         """
         self.verify_frozen_base()
-        if not enabled:
-            return self.backbone.generate(*args, **kwargs)
-        with self._instrument():
-            return self.backbone.generate(*args, **kwargs)
+        with self._claim_backbone():
+            if not enabled:
+                return self.backbone.generate(*args, **kwargs)
+            with self._instrument():
+                return self.backbone.generate(*args, **kwargs)
 
     def save_adapter(self, destination: str | Path) -> dict[str, Any]:
         """Only ~297k adapter parameters, never the 135M-parameter backbone."""
