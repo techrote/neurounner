@@ -370,6 +370,45 @@ class Detective005ARecoveryTests(unittest.TestCase):
             self.assertFalse(manifest["production_admission"])
             recover.verify(out)
 
+    @unittest.skipUnless(os.name == "posix", "symlink fixtures require POSIX")
+    def test_symlinked_recovery_is_not_self_contained_even_with_matching_hash(self):
+        """A Git link is not an archived copy, even when its target hashes match."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "artifacts" / "detective005a-G01"
+            source.mkdir(parents=True)
+            (source / "results.partial.jsonl").write_text(
+                screen.canonical(self.row()) + "\n", encoding="utf-8")
+            out = root / "archive"
+            recover.recover(root / "artifacts", out, HEAD, RUN)
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 1)
+
+            original = out / "raw/G01/results.partial.jsonl"
+            external = root / "non-archived-original.jsonl"
+            external.write_bytes(original.read_bytes())
+            original.unlink()
+            original.symlink_to(external)
+            self.assertEqual(original.read_bytes(), external.read_bytes())
+            with self.assertRaisesRegex(screen.ScreenError, "symlink"):
+                recover.verify(out)
+
+            # An entire lineage directory linked to external storage is
+            # equally non-durable, even though every source byte still exists.
+            original.unlink()
+            original.write_bytes(external.read_bytes())
+            lineage_dir = out / "raw/G01"
+            external_dir = root / "non-archived-lineage"
+            lineage_dir.rename(external_dir)
+            lineage_dir.symlink_to(external_dir, target_is_directory=True)
+            with self.assertRaisesRegex(screen.ScreenError, "symlink"):
+                recover.verify(out)
+
+            # The root must also be a real directory, not a linked alias.
+            linked_archive = root / "archive-alias"
+            linked_archive.symlink_to(out, target_is_directory=True)
+            with self.assertRaisesRegex(screen.ScreenError, "physical directory"):
+                recover.verify(linked_archive)
+
     def test_tampered_archive_bytes_fail_readback(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
