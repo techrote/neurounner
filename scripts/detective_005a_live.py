@@ -145,12 +145,14 @@ class PreexistingLineageEvidence(screen.ScreenError):
 
 
 def refuse_existing_lineage_evidence(out: Path) -> None:
-    """Check for any existing receipt, work tree, partial or final output."""
-    if out.is_symlink():
-        raise PreexistingLineageEvidence("refuse symlink lineage output")
-    if out.exists() and (not out.is_dir() or any(out.iterdir())):
+    """Refuse *any* existing target, including an empty directory.
+
+    A prior run may own an empty directory before its first response. A
+    separate atomic mkdir in run_lineage() closes the check/create race.
+    """
+    if out.is_symlink() or out.exists():
         raise PreexistingLineageEvidence(
-            "refuse to overwrite pre-existing lineage evidence")
+            "refuse to reuse pre-existing lineage output")
 
 
 def write_interrupted_receipt(lineage: str, out: Path, error: Exception) -> dict:
@@ -238,7 +240,14 @@ def run_lineage(lineage: str, out: Path, download_dir: Path) -> dict:
     plan = source_plan(lineage)
     member_ids = plan["member_ids"]
     refuse_existing_lineage_evidence(out)
-    out.mkdir(parents=True, exist_ok=True)
+    # Exclusive directory creation is the ownership claim: concurrent callers
+    # can both pass preflight but only one can create this exact output path.
+    # Treat the losing attempt as a read-only collision, never a new receipt.
+    try:
+        out.mkdir(parents=True, exist_ok=False)
+    except FileExistsError as exc:
+        raise PreexistingLineageEvidence(
+            "refuse concurrent lineage output claim") from exc
     partial_path = out / "results.partial.jsonl"
 
     from huggingface_hub import snapshot_download
