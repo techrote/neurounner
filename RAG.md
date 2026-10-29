@@ -60,3 +60,5 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 - **[NCR-001A read-only preflight](scripts/ncr_001_protocol.py)** — verify local protocol & fixed corpus without network, or inspect exact pinned HF model/tokenizer/config metadata without downloading model weights. Do not interpret metadata-preflight success as causal conformance or training authorization.
 
 - **[NCR-001F independent Sprocket matched-MLP actual-host source prepass](docs/NCR_001_F_SPROCKET_REAL_MLP.md)** — separate source-pinned Chat/root-Instruct real frozen MLP hooks, role-only serialization, 48-token real KV-cache and gradient/refusal checks; draft/CI evidence cannot authorize training.
+
+- **[NCR-001F source-only Sprocket MAC budget proxy](docs/NCR_001_F_SPROCKET_MAC_PROXY.md)** — two separate pinned Sprocket sources with matched 658,904 NCA vs 658,432 gated-MLP parameters, but 2,371,584 vs 1,966,080 dense/conv MACs per token; measured CPU compute parity and scientific #72/#73 admission remain **blocked**, no training.
