@@ -8,8 +8,10 @@ on:
       - "scripts/detective_005a_live.py"
       - "scripts/detective_005a_assemble.py"
       - "scripts/detective_005a_recover.py"
+      - "scripts/detective_005a_blind.py"
       - "tests/test_detective_005a_fun_screen.py"
       - "tests/test_detective_005a_recovery.py"
+      - "tests/test_detective_005a_blind.py"
       - "RAG.md"
       - ".github/workflows/detective-005a-protocol.yml"
       - ".github/workflows/detective-005a-live.yml"
@@ -29,10 +31,10 @@ jobs:
           persist-credentials: false
       - name: Compile protocol
         run: |
-          python3 -m py_compile scripts/detective_005a_fun_screen.py scripts/detective_005a_live.py scripts/detective_005a_assemble.py scripts/detective_005a_recover.py tests/test_detective_005a_fun_screen.py tests/test_detective_005a_recovery.py
+          python3 -m py_compile scripts/detective_005a_fun_screen.py scripts/detective_005a_live.py scripts/detective_005a_assemble.py scripts/detective_005a_recover.py scripts/detective_005a_blind.py tests/test_detective_005a_fun_screen.py tests/test_detective_005a_recovery.py tests/test_detective_005a_blind.py
       - name: Run DETECTIVE-005A tests
         run: |
-          python3 -m unittest tests.test_detective_005a_fun_screen tests.test_detective_005a_recovery -v
+          python3 -m unittest tests.test_detective_005a_fun_screen tests.test_detective_005a_recovery tests.test_detective_005a_blind -v
       - name: Verify frozen source cohort and zero-training contract
         run: |
           python3 scripts/detective_005a_fun_screen.py
