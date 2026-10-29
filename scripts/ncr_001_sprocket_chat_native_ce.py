@@ -159,15 +159,18 @@ def construct(tokenizer, serialize, examples=SYNTHETIC) -> dict:
 
 
 def independent_ce(logits: torch.Tensor,
-                   labels: torch.Tensor) -> tuple[float, int]:
+                   labels: torch.Tensor,
+                   expected_count: int) -> tuple[float, int]:
     refuse(logits.ndim == 3 and labels.ndim == 2
            and logits.shape[:2] == labels.shape and logits.shape[0] == 2,
            "native logits and assistant-mask tensor shapes differ")
     targets = labels[:, 1:]
     active = targets != -100
     count = int(active.sum().item())
-    refuse(count > 8 and all(bool(active[i].any().item()) for i in range(2)),
-           "empty or wrong assistant-only supervised targets")
+    refuse(type(expected_count) is int and expected_count > 8
+           and count == expected_count
+           and all(bool(active[i].any().item()) for i in range(2)),
+           "missing/extra assistant-only targets or host-label leakage")
     predicted = logits[:, :-1, :].float()[active]
     gold = targets[active]
     refuse(bool((gold >= 0).all().item()) and
@@ -262,7 +265,7 @@ def run(report: dict):
         refuse(native.loss is not None and bool(torch.isfinite(native.loss)),
                "nonfinite original Chat synthetic CE")
         native_loss = float(native.loss.item())
-        manual, count = independent_ce(native.logits, labels)
+        manual, count = independent_ce(native.logits, labels, batch["supervised_count"])
         difference = abs(native_loss - manual)
         refuse(count == batch["supervised_count"] and math.isfinite(manual)
                and difference <= 1e-5,
