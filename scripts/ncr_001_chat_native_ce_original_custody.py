@@ -24,6 +24,10 @@ BUNDLE = "original-actions-zip.base64"
 MANIFEST = "manifest.json"
 JOB_LOG = "original-physical-job-123202104527.log"
 JOB_BLOB = "05c88bb48111b597d53fce011adfb2a0fa1de38c"
+ORIGINAL_BUNDLE_GIT_BLOB = "daac05623ff4c8360ef89a040ec7a536e58b2286"
+ORIGINAL_MANIFEST_GIT_BLOB = "1640210cf26e4c5cc3f6d3bc3b952f6830e565ec"
+ORIGINAL_CUSTODY_BOOTSTRAP_LOG = "original-custody-bootstrap-job-123204676106.log"
+ORIGINAL_CUSTODY_BOOTSTRAP_GIT_BLOB = "5a7273716360ca3ab988206e316b9d0d8a417546"
 ORIGINAL_PR = 191
 ORIGINAL_HEAD = "6ae912c02c8f9a44bde606b5daa2c73ff8f70567"
 ORIGINAL_RUN = 40798938605
@@ -220,7 +224,10 @@ def fixed_manifest() -> dict:
 
 
 def audit(evidence: Path = EVIDENCE) -> dict:
-    manifest = json.loads((evidence / MANIFEST).read_text(encoding="utf-8"))
+    manifest_raw = (evidence / MANIFEST).read_bytes()
+    refuse(gitblob(manifest_raw) == ORIGINAL_MANIFEST_GIT_BLOB,
+           "original source-bound committed manifest raw Git blob changed")
+    manifest = json.loads(manifest_raw)
     refuse(manifest == fixed_manifest(),
            "committed original source/run/negative-evidence manifest changed")
     raw_job = (evidence / JOB_LOG).read_bytes()
@@ -228,14 +235,24 @@ def audit(evidence: Path = EVIDENCE) -> dict:
            and b"PASS_FROZEN_CHAT_ORDINARY_SYNTHETIC_ASSISTANT_CE_ONLY__72_BLOCKED" in raw_job
            and b"Ran 11 tests" in raw_job,
            "complete decoded original physical job log bytes changed")
+    bootstrap = (evidence / ORIGINAL_CUSTODY_BOOTSTRAP_LOG).read_bytes()
+    refuse(gitblob(bootstrap) == ORIGINAL_CUSTODY_BOOTSTRAP_GIT_BLOB
+           and b"Ran 14 tests" in bootstrap
+           and b"PASS_ORIGINAL_CHAT_FULL_ZIP_AND_JOB_LOG_CUSTODY__72_BLOCKED" in bootstrap,
+           "original exact-head archive promotion job-log bytes changed")
     try:
-        raw_b64 = (evidence / BUNDLE).read_bytes().strip()
-        original_zip = base64.b64decode(raw_b64, validate=True)
+        raw_bundle = (evidence / BUNDLE).read_bytes()
+        refuse(gitblob(raw_bundle) == ORIGINAL_BUNDLE_GIT_BLOB,
+               "original complete ZIP ASCII/base64 Git blob changed")
+        original_zip = base64.b64decode(raw_bundle.strip(), validate=True)
     except (ValueError, binascii.Error) as exc:
         raise ValueError("NCR001_CHAT_ORIGINAL_CUSTODY_REFUSED: unparseable original archive") from exc
     result = validate_zip(original_zip)
     return {"status": "PASS_ORIGINAL_CHAT_FULL_ZIP_AND_JOB_LOG_CUSTODY__72_BLOCKED",
             "original": result, "decoded_job_git_blob": JOB_BLOB,
+            "original_bootstrap_job_git_blob": ORIGINAL_CUSTODY_BOOTSTRAP_GIT_BLOB,
+            "original_raw_zip_archive_git_blob": ORIGINAL_BUNDLE_GIT_BLOB,
+            "original_manifest_git_blob": ORIGINAL_MANIFEST_GIT_BLOB,
             "train_authorized": False, "full_72_conformance_pass": False,
             "new_physical_model_executed_this_audit": False, "optimizer_steps": 0}
 
