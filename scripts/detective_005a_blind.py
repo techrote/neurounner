@@ -38,7 +38,14 @@ def disjoint(a: Path, b: Path) -> None:
                    "private and reviewer outputs must be disjoint")
 
 
+def secure_custody_available() -> bool:
+    """POSIX file modes are verified here; NTFS ACL handling is not implemented."""
+    return os.name == "posix"
+
+
 def new_private_dir(path: Path) -> None:
+    screen.require(secure_custody_available(),
+                   "private custody requires POSIX permissions; use WSL/Linux")
     screen.require(not path.exists() and not path.is_symlink(),
                    "refuse overwrite of sealed review custody")
     outside_repo(path)
