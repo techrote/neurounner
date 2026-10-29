@@ -268,10 +268,15 @@ class Detective005ARecoveryTests(unittest.TestCase):
             valid_archive = root / "archive-api"
             qualified = recover.recover(root / "artifacts", valid_archive,
                                         HEAD, RUN, metadata, "success", "success")
-            self.assertEqual(qualified["complete_lineage_artifacts"], 1)
+            # Native-only complete lineage admission must not count a
+            # labelled synthetic fixture as a real 12-response lineage.
+            self.assertEqual(qualified["complete_lineage_artifacts"], 0)
             self.assertTrue(qualified["artifact_transport_complete"])
+            self.assertFalse(recover.verify(valid_archive)[
+                "artifact_transport_complete"])
             self.assertTrue(recover.require_complete_transport(
-                valid_archive)["artifact_transport_complete"])
+                valid_archive, original_artifacts=root / "artifacts",
+                original_artifact_api=metadata)["artifact_transport_complete"])
             foreign_api = copy.deepcopy(original_api)
             foreign_api["artifacts"][0]["workflow_run"]["head_sha"] = "2" * 40
             metadata.write_text(json.dumps(foreign_api), encoding="utf-8")
@@ -876,6 +881,64 @@ class Detective005ARecoveryTests(unittest.TestCase):
                                         "incomplete original lineage"):
                 recover.require_complete_transport(out)
 
+    def test_removed_unsafe_warning_and_rehashed_archive_cannot_gain_gate(self):
+        """Independent source tree refutes forged 'no unsafe files' claims."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src = root / "artifacts/detective005a-G01"
+            src.mkdir(parents=True)
+            original = (screen.canonical(self.row()) + "\n").encode()
+            (src / "results.partial.jsonl").write_bytes(original)
+            # Do not Git-publish the unsafe weight. But its presence must be
+            # independently recheckable before any positive custody claim.
+            (src / "adapter_model.safetensors").write_bytes(
+                b"synthetic-excluded-unsafe-input")
+            api = root / "api.json"
+            api.write_text(json.dumps({"total_count": 1, "artifacts": [{
+                "name": "detective005a-G01", "id": 8001,
+                "digest": "sha256:" + "b" * 64,
+                "size_in_bytes": 100, "expired": False,
+                "workflow_run": {"id": int(RUN), "head_sha": HEAD,
+                                 "repository_id": 1432134981},
+            }]}), encoding="utf-8")
+            out = root / "archive"
+            report = recover.recover(root / "artifacts", out, HEAD, RUN,
+                                     api, "success", "success")
+            self.assertFalse(report["artifact_transport_complete"])
+            manifest_path = out / "manifest.json"
+            provenance_path = out / "provenance/source-artifacts.json"
+            manifest = screen.read_json(manifest_path)
+            provenance = screen.read_json(provenance_path)
+            self.assertEqual(provenance["lineages"][0][
+                "source_structure_warnings"], [recover.STRUCTURE_WARNING])
+            # Attacker rewrites both warning lists and overall gate, plus the
+            # public SHA inventory, but cannot rewrite independently supplied
+            # original downloaded inputs from the host running final readback.
+            record = provenance["lineages"][0]
+            record["source_structure_warnings"] = []
+            record["custody_warnings"].remove(recover.STRUCTURE_WARNING)
+            manifest["artifact_transport_complete"] = True
+            assemble.write_json(manifest_path, manifest)
+            assemble.write_json(provenance_path, provenance)
+            (out / "provenance/hashes.sha256").write_text(
+                assemble.hash_inventory(out), encoding="utf-8")
+            standalone = recover.verify(out)
+            self.assertTrue(standalone["artifact_transport_claimed"])
+            self.assertFalse(standalone["artifact_transport_complete"])
+            self.assertFalse(standalone["original_artifact_structure_reverified"])
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "incomplete original lineage"):
+                recover.require_complete_transport(out)
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "original source structure warning mismatch"):
+                recover.require_complete_transport(
+                    out, original_artifacts=root / "artifacts",
+                    original_artifact_api=api)
+            self.assertEqual(
+                (out / "raw/G01/results.partial.jsonl").read_bytes(),
+                original)
+            self.assertFalse((out / "raw/G01/adapter_model.safetensors").exists())
+
     def test_dangling_lineage_link_cannot_block_other_recovery(self):
         """Even a broken symlink is not a missing or archived lineage."""
         with tempfile.TemporaryDirectory() as td:
@@ -1071,6 +1134,8 @@ class Detective005ARecoveryTests(unittest.TestCase):
         self.assertIn("steps.download-lineages.outcome", workflow)
         self.assertIn("steps.artifact-api.outcome", workflow)
         self.assertIn("--require-complete-transport", workflow)
+        self.assertIn("--original-artifacts artifacts", workflow)
+        self.assertIn("--original-artifact-api artifacts-api.json", workflow)
         self.assertIn("refuse overwrite", workflow.lower())
         self.assertIn("RUN-144-NO-TRAINING", workflow)
         self.assertIn("refs/heads/main", workflow)
