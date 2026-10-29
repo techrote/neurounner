@@ -6,6 +6,8 @@ on:
     paths:
       - ".github/workflows/ncr-001f-void-archive.yml"
       - "scripts/ncr_001f_void_mlp_receipt_audit.py"
+      - "scripts/ncr_001f_void_mlp_original_actions_audit.py"
+      - "tests/test_ncr_001f_void_mlp_original_actions_audit.py"
       - "tests/test_ncr_001f_void_mlp_receipt_audit.py"
       - "experiments/ncr-001/controls-evidence/real-void1-mlp/**"
       - "docs/NCR_001_F_VOID_REAL_MLP.md"
@@ -41,6 +43,20 @@ jobs:
           python3 -m py_compile scripts/ncr_001f_void_mlp_receipt_audit.py tests/test_ncr_001f_void_mlp_receipt_audit.py
           python3 -m unittest discover -s tests -p "test_ncr_001f_void_mlp_receipt_audit.py" -v
           python3 scripts/ncr_001f_void_mlp_receipt_audit.py
+      - name: Verify exact original compressed Actions ZIP and both complete decoded job logs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001f_void_mlp_original_actions_audit.py tests/test_ncr_001f_void_mlp_original_actions_audit.py
+          python3 -m unittest discover -s tests -p "test_ncr_001f_void_mlp_original_actions_audit.py" -v
+          python3 scripts/ncr_001f_void_mlp_original_actions_audit.py
+          d=experiments/ncr-001/controls-evidence/real-void1-mlp
+          test "$(git hash-object "$d/original-actions-custody.json")" = cff5a8b28239d3bad8b0d0fc92a28d44efac1461
+          test "$(git hash-object "$d/original-actions-zip.base64")" = ffba95801464a046e3a61ecf07e06052b99b4d57
+          test "$(git hash-object "$d/original-source-job-122256460886.log")" = 5dd15def669be3e16870a94ba1e1ed5fa6808bce
+          test "$(git hash-object "$d/original-model-job-122256966798.log")" = 3c51293865c36c188137b8e4a4ee47f082e0bd27
+          test -z "$(git status --porcelain -- "$d")"
+          echo "ORIGINAL_VOID1_MLP_ZIP_AND_TWO_JOBS__IMMUTABLE_READ_ONLY"
       - name: Assert committed original JSON archive/provenance unchanged
         shell: bash
         run: |
