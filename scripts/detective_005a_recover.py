@@ -239,7 +239,20 @@ def metadata_by_name(metadata_path: Path | None) -> dict[str, dict]:
         value["total_count"] == len(value["artifacts"]),
         "incomplete or inconsistent GitHub Actions artifact API pagination")
     found = {}
+    seen_ids: set[int] = set()
     for entry in value["artifacts"]:
+        # The artifact ID, not its name, identifies the immutable GitHub
+        # object. Two differently named lineages may not share an artifact
+        # ID; otherwise a name-only transport check can certify two sources
+        # using the same underlying object. Preserve the API bytes but
+        # quarantine the entire malformed listing.
+        screen.require(isinstance(entry, dict), "invalid artifact API row")
+        artifact_id = entry.get("id")
+        screen.require(type(artifact_id) is int and artifact_id > 0,
+                       "invalid GitHub artifact API ID")
+        screen.require(artifact_id not in seen_ids,
+                       "duplicate GitHub artifact API ID")
+        seen_ids.add(artifact_id)
         name = entry.get("name")
         if name and re.fullmatch(r"detective005a-G(0[1-9]|1[0-2])", name):
             screen.require(name not in found, "duplicate artifact API identity")
