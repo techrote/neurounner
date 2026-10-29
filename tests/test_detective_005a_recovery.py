@@ -1108,5 +1108,91 @@ class Detective005ARecoveryTests(unittest.TestCase):
                                  branch, cwd=root).stdout.strip(), first)
 
 
+
+    @unittest.skipUnless(__import__("shutil").which("git"),
+                         "Git is required for offline rejected-push test")
+    def test_local_push_rejection_and_post_push_ref_drift_fail_closed(self):
+        """Simulate receive-pack rejection and a changed ref before readback.
+
+        A local bare Git server is not proof of GitHub Actions permissions,
+        retention or cancellation behavior. Both negative outcomes must remain
+        distinguishable from a remotely read-back custody success.
+        """
+        import subprocess
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            origin = root / "origin.git"
+            work = root / "working"
+            artifact = root / "artifacts" / "detective005a-G01"
+            artifact.mkdir(parents=True)
+            journal = artifact / "results.partial.jsonl"
+            live.append_completed_raw(journal, self.row())
+            with journal.open("ab") as fp:
+                fp.write(b'{"torn_tail":')
+            original_raw = journal.read_bytes()
+            dataset_rel = Path("datasets/detective-005a-rejected-push-probe")
+            dataset = work / dataset_rel
+            dataset.parent.mkdir(parents=True)
+            recover.recover(root / "artifacts", dataset, HEAD, RUN)
+            self.assertEqual(recover.verify(dataset)["validated_raw_prefix_rows"], 1)
+
+            def git(*args, cwd=work, check=True):
+                return subprocess.run(
+                    ["git", *args], cwd=cwd, check=check,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                )
+
+            git("init", "--bare", str(origin), cwd=root)
+            work.mkdir(exist_ok=True)
+            git("init", "-b", "main")
+            git("config", "user.name", "DETECTIVE refused-push fixture")
+            git("config", "user.email", "fixture@example.invalid")
+            git("remote", "add", "origin", str(origin))
+            git("add", str(dataset_rel))
+            git("commit", "-m", "synthetic original raw custody")
+            expected_head = git("rev-parse", "HEAD").stdout.strip()
+            branch = "refs/heads/evidence/detective-005a-push-failure"
+            lease = "--force-with-lease=" + branch + ":"
+
+            # Remote rejects creation. Local raw recovery must remain intact;
+            # a failed push is NEVER a durable evidence-branch receipt.
+            hook = origin / "hooks" / "pre-receive"
+            hook.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+            hook.chmod(0o755)
+            denied = git("push", lease, "origin", "HEAD:" + branch, check=False)
+            self.assertNotEqual(denied.returncode, 0)
+            self.assertNotEqual(
+                git("--git-dir=" + str(origin), "show-ref", "--verify",
+                    "--quiet", branch, cwd=root, check=False).returncode, 0)
+            self.assertEqual((dataset / "raw/G01/results.partial.jsonl").read_bytes(),
+                             original_raw)
+            recover.verify(dataset)
+
+            # Retry succeeds once the denial hook is removed, but a competing
+            # writer fast-forwards the ref before our fetch: exact-head
+            # readback must reject it even though our push succeeded.
+            hook.unlink()
+            git("push", lease, "origin", "HEAD:" + branch)
+            self.assertEqual(
+                git("--git-dir=" + str(origin), "rev-parse", branch,
+                    cwd=root).stdout.strip(), expected_head)
+            (work / "competing-writer-marker").write_text(
+                "another writer updated the branch\n", encoding="utf-8")
+            git("add", "competing-writer-marker")
+            git("commit", "-m", "competing writer advances ref")
+            git("push", "origin", "HEAD:" + branch)
+            git("fetch", "--no-tags", "origin", branch)
+            fetched_head = git("rev-parse", "FETCH_HEAD").stdout.strip()
+            self.assertNotEqual(fetched_head, expected_head)
+            self.assertEqual(
+                git("--git-dir=" + str(origin), "rev-parse", branch,
+                    cwd=root).stdout.strip(), fetched_head)
+            self.assertEqual((dataset / "raw/G01/results.partial.jsonl").read_bytes(),
+                             original_raw)
+            recover.verify(dataset)
+
+
+
 if __name__ == "__main__":
     unittest.main()
