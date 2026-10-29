@@ -395,6 +395,13 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
 
 
 def verify(path: Path) -> dict:
+    # Git stores symlinks as links, not the bytes they reference. A digest
+    # read through a link can match while the pushed dataset lacks its raw
+    # evidence. Refuse all links before trusting any readback or SHA inventory.
+    screen.require(path.is_dir() and not path.is_symlink(),
+                   "recovery archive root must be a physical directory")
+    screen.require(all(not entry.is_symlink() for entry in path.rglob("*")),
+                   "recovery archive contains symlink; not self-contained custody")
     manifest = screen.read_json(path / "manifest.json")
     screen.require(manifest.get("schema") == "detective-005a-partial-recovery-v1" and
                    manifest.get("status") == "raw_recovery_only_not_a_complete_screen" and
