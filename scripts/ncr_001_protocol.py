@@ -49,6 +49,23 @@ def validate() -> dict:
     assert len(set(p["training"]["seed_list"])) == 3
     assert len(p["comparisons"]) == len(set(p["comparisons"])) == 6
     assert p["match_constraints"]["adapter_trainable_param_tolerance_fraction"] <= 0.05
+    assert p["match_constraints"]["conventional_adapter_bottleneck"] == 256
+    assert a["observation_gain_after_first_tap"] == 0.2
+    assert a["update_gain"] == 0.25
+    assert a["readout_initialization"].startswith("Linear(256")
+    assert a["trainable_parameters_formula"] == "514*hidden_size+984 for C=4/grid=8"
+    cfg = p["training"]
+    assert cfg["optimizer"] == "AdamW"
+    assert cfg["optimizer_lr"] == 0.0008
+    assert cfg["optimizer_betas"] == [0.9, 0.95]
+    assert cfg["weight_decay"] == 0.01
+    assert cfg["grad_clip_norm"] == 1.0
+    assert cfg["per_model_sequence_unit_limits"] == {
+        "smollm2": 256,
+        "sprocket_chat": 256,
+        "sprocket_instruct": 256,
+        "void1": 1024,
+    }
 
     models = p["models"]
     assert set(models) == {"smollm2", "sprocket_chat", "sprocket_instruct", "void1"}

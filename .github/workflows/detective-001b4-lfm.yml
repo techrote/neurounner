@@ -1,0 +1,110 @@
+name: DETECTIVE-001B4 conventional LFM scripter control
+
+on:
+  pull_request:
+    paths:
+      - "scripts/detective_001b4_lfm.py"
+      - "scripts/detective_001b4_verify.py"
+      - "tests/test_detective_001b4_lfm.py"
+      - "experiments/detective-001/lfm-scripter.json"
+      - "experiments/detective-001/LFM_CONTROL_001B4.md"
+      - ".github/workflows/detective-001b4-lfm.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: detective-001b4-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile and run all detective contract tests
+        run: |
+          python3 -m py_compile scripts/detective_001b4_lfm.py scripts/detective_001b4_verify.py tests/test_detective_001b4_lfm.py
+          python3 -m unittest discover -s tests -p 'test_detective_001*.py' -v
+          mkdir -p artifacts
+          python3 scripts/detective_001b4_lfm.py --mode check > artifacts/detective001b4-plan.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective001b4-control-plan
+          path: artifacts/detective001b4-plan.json
+          retention-days: 30
+
+  native-control:
+    needs: offline-contract
+    if: >-
+      ${{ github.event_name }} == 'pull_request' &&
+      ${{ github.head_ref }} == 'research/detective-001b4-lfm-control-20261027' &&
+      ${{ github.event.pull_request.head.repo.full_name }} == 'techrote/neurounner' &&
+      ${{ github.event.pull_request.user.login }} == 'techrote'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
+      DETECTIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Revalidate source or existing exact archive
+        id: cached
+        run: |
+          if [ -e datasets/detective-001-lfm-scripter/manifest.json ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            python3 scripts/detective_001b4_verify.py --dataset datasets/detective-001-lfm-scripter
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            python3 scripts/detective_001b4_lfm.py --mode check
+          fi
+      - name: Download and SHA-verify pinned llama.cpp plus LFM GGUF
+        if: steps.cached.outputs.skip == 'false'
+        run: bash scripts/bootstrap.sh lfm
+      - name: Run five conventional structured-control tasks
+        if: steps.cached.outputs.skip == 'false'
+        run: python3 scripts/detective_001b4_lfm.py --mode run --out out/detective-001b4
+      - name: Independent raw prompt, score and source readback
+        if: steps.cached.outputs.skip == 'false'
+        run: python3 scripts/detective_001b4_verify.py --dataset out/detective-001b4/dataset
+      - name: Preserve complete or partial evidence
+        if: always() && steps.cached.outputs.skip == 'false'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective001b4-lfm-control-raw
+          path: |
+            out/detective-001b4/raw
+            out/detective-001b4/dataset
+            out/detective-001b4/server.log
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Promote only independently verified exact-source evidence
+        if: success() && steps.cached.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          branch='research/detective-001b4-lfm-control-20261027'
+          remote_sha=$(git ls-remote --heads origin "refs/heads/$branch" | cut -f 1)
+          if [ "$remote_sha" != "$DETECTIVE_HEAD_SHA" ]; then
+            echo "PR source changed during run; refusing stale evidence"
+            exit 1
+          fi
+          test ! -e datasets/detective-001-lfm-scripter
+          mkdir -p datasets/detective-001-lfm-scripter
+          cp -a out/detective-001b4/dataset/. datasets/detective-001-lfm-scripter/
+          python3 scripts/detective_001b4_verify.py --dataset datasets/detective-001-lfm-scripter
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add datasets/detective-001-lfm-scripter
+          git commit -m "DETECTIVE-001B4: archive pinned LFM scripting control evidence"
+          git push origin HEAD:"refs/heads/$branch"

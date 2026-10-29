@@ -1,0 +1,360 @@
+{
+  "candidate_id": "smollm2-360m-instruct",
+  "config_sha256": "c33cc016bcec7e87ec0fbc4a8af5ced296e8c931dcb171b757e5f882578a7f3b",
+  "decision": {
+    "classification": "runtime_pass",
+    "population_expansion_admitted": false,
+    "training_selection_allowed": false
+  },
+  "environment": {
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "cpu_count": 4,
+    "cuda_available": false,
+    "model_load_seconds": 0.3257289719999932,
+    "peak_rss_after_load_kib": 2509684,
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "rss_after_load_kib": 1803340,
+    "tokenizer_load_seconds": 0.06732633800000087,
+    "torch": "2.14.1+cpu",
+    "torch_interop_threads": 1,
+    "torch_threads": 4,
+    "transformers": "4.57.6"
+  },
+  "experiment": "DETECTIVE-002B",
+  "issue": 130,
+  "optimizer_steps": 0,
+  "paid_api_calls": 0,
+  "peak_rss_kib": 2509684,
+  "population_expansion_admitted": false,
+  "relevance_mapping_accessed": false,
+  "runtime_contract": {
+    "do_sample": false,
+    "gpu_required": false,
+    "huggingface_hub": "0.36.2",
+    "max_generated_tokens_total": 256,
+    "max_minutes_per_body": 25,
+    "max_new_tokens_per_prompt": 64,
+    "max_prompt_tokens": 512,
+    "optimizer_steps": 0,
+    "os": "ubuntu-24.04",
+    "paid_api_calls": 0,
+    "prompts": 4,
+    "safetensors": "0.8.0",
+    "seed": 260213,
+    "threads": 4,
+    "torch_cpu": "2.14.1+cpu",
+    "torch_dtype": "float32",
+    "transformers": "4.57.6"
+  },
+  "runtime_failure": null,
+  "schema": "detective-002b-body-runtime-v1",
+  "source": {
+    "architecture": [
+      "LlamaForCausalLM"
+    ],
+    "license": "apache-2.0",
+    "model_type": "llama",
+    "production_license_gate": false,
+    "repo": "HuggingFaceTB/SmolLM2-360M-Instruct",
+    "revision": "a10cc1512eabd3dde888204e902eca88bddb4951",
+    "safetensors_parameters": 361821120,
+    "variant": "instruct",
+    "weight": {
+      "blob_id": "5e3cd2324bc51fbe72a42fc00f3ccd8da230cc04",
+      "lfs_sha256": "e6bffe7435d7ddc10fd3b9a9efd429dafbacb1cb17015fb5562664e7532bf86e",
+      "lfs_size": 723674912,
+      "path": "model.safetensors",
+      "pointer_size": 134,
+      "size": 723674912
+    }
+  },
+  "source_evidence_sha256": "86ed547fde7a7472619fcd80d727f7e23bacc08da4d334bf7e8c6fc132aac1a5",
+  "source_runtime": {
+    "selected_weight_bytes": 723674912,
+    "selected_weight_path": "model.safetensors",
+    "selected_weight_sha256": "e6bffe7435d7ddc10fd3b9a9efd429dafbacb1cb17015fb5562664e7532bf86e",
+    "source_snapshot": "/tmp/detective-002b-hf/hub/models--HuggingFaceTB--SmolLM2-360M-Instruct/snapshots/a10cc1512eabd3dde888204e902eca88bddb4951",
+    "staged_weight_sha256": "e6bffe7435d7ddc10fd3b9a9efd429dafbacb1cb17015fb5562664e7532bf86e"
+  },
+  "status": "runtime_pass",
+  "tasks": [
+    {
+      "completion_tokens_per_second": 10.297842608844922,
+      "family": "local_reflex",
+      "generated_token_ids": [
+        68,
+        23233,
+        42,
+        378,
+        442,
+        11674,
+        4485,
+        260,
+        2370,
+        30,
+        198,
+        26741,
+        6850,
+        42,
+        378,
+        442,
+        11674,
+        506,
+        1596,
+        2424,
+        4376,
+        314,
+        6314,
+        281,
+        253,
+        1679,
+        15443,
+        8764,
+        30,
+        198,
+        17832,
+        2353,
+        42,
+        378,
+        442,
+        11674,
+        2925,
+        260,
+        1679,
+        15443,
+        8764,
+        288,
+        3346,
+        260,
+        4376,
+        282,
+        260,
+        2370,
+        284,
+        40356,
+        624,
+        2424,
+        9839,
+        30,
+        2
+      ],
+      "generated_tokens": 55,
+      "generation_seconds": 5.340924510999997,
+      "hit_max_new_tokens": false,
+      "messages": [
+        {
+          "content": "Answer concisely. Treat supplied witness memory as possibly fallible. Distinguish memory from physical proof. Do not invent credentials, evidence IDs, hidden records, or facts not supplied.",
+          "role": "system"
+        },
+        {
+          "content": "Invent one deterministic physical NPC reflex. It may use only a local proximity sensor and one bounded memory value storing the last approach direction. State the trigger, memory update, and physical action in at most three short sentences.",
+          "role": "user"
+        }
+      ],
+      "observations": {
+        "alternative_hits": [
+          "last approach",
+          "direction"
+        ],
+        "characters": 263,
+        "control_token_literals": [],
+        "forbidden_hits": [],
+        "qualifier_hits": [],
+        "repeated_sentence_count": 0,
+        "required_hits": [
+          "sensor",
+          "memory"
+        ],
+        "stale_hits": [],
+        "starts_json_object": false,
+        "whitespace_words": 41
+      },
+      "prefill_seconds": 0.6093867579999994,
+      "prompt_token_count": 95,
+      "prompt_token_sha256": "fc063375306856812f573e8d85ef1286cafb3d311f24dc73ab21855a9074b4c4",
+      "prompt_tokens_per_second": 155.89442788646892,
+      "response": "Trigger: The NPC approaches the target.\nMemory update: The NPC's last approach direction is stored in a local proximity sensor.\nPhysical action: The NPC uses the local proximity sensor to determine the direction of the target and adjusts its approach accordingly.",
+      "response_with_special_tokens": "Trigger: The NPC approaches the target.\nMemory update: The NPC's last approach direction is stored in a local proximity sensor.\nPhysical action: The NPC uses the local proximity sensor to determine the direction of the target and adjusts its approach accordingly.<|im_end|>",
+      "task_id": "B01"
+    },
+    {
+      "completion_tokens_per_second": 8.852138636765208,
+      "family": "uncertain_memory",
+      "generated_token_ids": [
+        57,
+        1378,
+        260,
+        1369,
+        3430,
+        418,
+        216,
+        32,
+        35,
+        42,
+        33,
+        36,
+        30,
+        2
+      ],
+      "generated_tokens": 14,
+      "generation_seconds": 1.5815387189999939,
+      "hit_max_new_tokens": false,
+      "messages": [
+        {
+          "content": "Answer concisely. Treat supplied witness memory as possibly fallible. Distinguish memory from physical proof. Do not invent credentials, evidence IDs, hidden records, or facts not supplied.",
+          "role": "system"
+        },
+        {
+          "content": "You remember the handoff happening at 03:14, but you have no physical record confirming it. What time do you report, and how certain are you?",
+          "role": "user"
+        }
+      ],
+      "observations": {
+        "alternative_hits": [],
+        "characters": 30,
+        "control_token_literals": [],
+        "forbidden_hits": [],
+        "qualifier_hits": [],
+        "repeated_sentence_count": 0,
+        "required_hits": [
+          "03:14"
+        ],
+        "stale_hits": [],
+        "starts_json_object": false,
+        "whitespace_words": 6
+      },
+      "prefill_seconds": 0.567593346999999,
+      "prompt_token_count": 85,
+      "prompt_token_sha256": "bd39f52d4b1e0f0b7832ec661a46cb4bee7d1de80d61a8d36714071f9fd452f3",
+      "prompt_tokens_per_second": 149.75510274964543,
+      "response": "I report the handoff at 03:14.",
+      "response_with_special_tokens": "I report the handoff at 03:14.<|im_end|>",
+      "task_id": "B02"
+    },
+    {
+      "completion_tokens_per_second": 10.016862678791954,
+      "family": "physical_contradiction",
+      "generated_token_ids": [
+        57,
+        2915,
+        216,
+        32,
+        35,
+        42,
+        33,
+        36,
+        30,
+        330,
+        41786,
+        2099,
+        4610,
+        2004,
+        1209,
+        2744,
+        216,
+        32,
+        35,
+        42,
+        36,
+        33,
+        30,
+        2
+      ],
+      "generated_tokens": 24,
+      "generation_seconds": 2.3959597700000046,
+      "hit_max_new_tokens": false,
+      "messages": [
+        {
+          "content": "Answer concisely. Treat supplied witness memory as possibly fallible. Distinguish memory from physical proof. Do not invent credentials, evidence IDs, hidden records, or facts not supplied.",
+          "role": "system"
+        },
+        {
+          "content": "You remember 03:14. A stamped physical transfer record now shows 03:41. What changes in your account?",
+          "role": "user"
+        }
+      ],
+      "observations": {
+        "alternative_hits": [
+          "record",
+          "stamp"
+        ],
+        "characters": 69,
+        "control_token_literals": [],
+        "forbidden_hits": [],
+        "qualifier_hits": [],
+        "repeated_sentence_count": 0,
+        "required_hits": [
+          "03:41"
+        ],
+        "stale_hits": [
+          "03:14"
+        ],
+        "starts_json_object": false,
+        "whitespace_words": 11
+      },
+      "prefill_seconds": 0.5279362690000085,
+      "prompt_token_count": 79,
+      "prompt_token_sha256": "8ade700f6c23242f9b7fe49d57798a6ca9fb52b8f6970555601dfef6bf10a5a1",
+      "prompt_tokens_per_second": 149.6392739783497,
+      "response": "I remember 03:14. A stamped physical transfer record now shows 03:41.",
+      "response_with_special_tokens": "I remember 03:14. A stamped physical transfer record now shows 03:41.<|im_end|>",
+      "task_id": "B03"
+    },
+    {
+      "completion_tokens_per_second": 8.756152401875255,
+      "family": "unsupported_rumor",
+      "generated_token_ids": [
+        5230,
+        28,
+        339,
+        1326,
+        982,
+        457,
+        19472,
+        2004,
+        282,
+        750,
+        7771,
+        30,
+        2
+      ],
+      "generated_tokens": 13,
+      "generation_seconds": 1.4846703669999926,
+      "hit_max_new_tokens": false,
+      "messages": [
+        {
+          "content": "Answer concisely. Treat supplied witness memory as possibly fallible. Distinguish memory from physical proof. Do not invent credentials, evidence IDs, hidden records, or facts not supplied.",
+          "role": "system"
+        },
+        {
+          "content": "Someone claims a blue ceramic tag was attached to the package. You have no firsthand record of any tag. Did you see it?",
+          "role": "user"
+        }
+      ],
+      "observations": {
+        "alternative_hits": [
+          "tag"
+        ],
+        "characters": 45,
+        "control_token_literals": [],
+        "forbidden_hits": [],
+        "qualifier_hits": [],
+        "repeated_sentence_count": 0,
+        "required_hits": [],
+        "stale_hits": [],
+        "starts_json_object": false,
+        "whitespace_words": 9
+      },
+      "prefill_seconds": 0.5095707389999973,
+      "prompt_token_count": 77,
+      "prompt_token_sha256": "28fdfb40b44a5746a5bd1b42cc39d06ec0c7fc3637d19658a7934fe3bca07efc",
+      "prompt_tokens_per_second": 151.10757762721616,
+      "response": "No, I don't have firsthand record of any tag.",
+      "response_with_special_tokens": "No, I don't have firsthand record of any tag.<|im_end|>",
+      "task_id": "B04"
+    }
+  ],
+  "total_generated_tokens": 106,
+  "wall_seconds": 18.40549968399999
+}
