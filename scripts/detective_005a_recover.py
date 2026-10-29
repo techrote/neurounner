@@ -139,30 +139,29 @@ def inspect_artifact(cfg: dict, lineage: str, files: dict[str, Path],
             if valid < 12 or tail_problem:
                 errors.append("missing_interruption_receipt")
         if "manifest.json" in files and "results.jsonl" in files:
-            try:
-                manifest, rows = assemble.read_lineage(
-                    cfg, lineage, files["manifest.json"].parent)
-                # A fully complete lineage can still be in a failed Actions run.
-                assemble.source_run_identity(rows)
-                screen.require(
-                    rows[0]["runner"]["repository_head_sha"] == head and
-                    rows[0]["runner"]["actions_run_id"] == run_id,
-                    "complete lineage source/run mismatch")
-                # A complete #180 lineage necessarily has the fsynced journal
-                # as well as the identical final copy. A missing journal is a
-                # custody defect: retain the final bytes, but never certify
-                # this artifact as a fully recovered source-bound lineage.
-                if "results.partial.jsonl" not in files:
-                    errors.append("complete_lineage_missing_incremental_journal")
-                else:
+            # Classify lost or corrupted fsynced journals explicitly.
+            # The strict assembler now refuses both cases; do not collapse a
+            # demonstrable transport gap into a generic bad-manifest warning.
+            if "results.partial.jsonl" not in files:
+                errors.append("complete_lineage_missing_incremental_journal")
+            elif (files["results.partial.jsonl"].read_bytes() !=
+                  files["results.jsonl"].read_bytes()):
+                errors.append("complete_lineage_incremental_journal_mismatch")
+            else:
+                try:
+                    manifest, rows = assemble.read_lineage(
+                        cfg, lineage, files["manifest.json"].parent)
+                    # Complete lineage is not complete full-matrix evidence.
+                    assemble.source_run_identity(rows)
                     screen.require(
-                        files["results.partial.jsonl"].read_bytes() ==
-                        files["results.jsonl"].read_bytes(),
-                        "complete/partial raw bytes disagree")
-                if "interrupted.json" not in files and not errors:
-                    status = "complete_lineage_recovered"
-            except (ValueError, KeyError, TypeError, AttributeError, OSError):
-                errors.append("invalid_complete_lineage_manifest")
+                        rows[0]["runner"]["repository_head_sha"] == head and
+                        rows[0]["runner"]["actions_run_id"] == run_id,
+                        "complete lineage source/run mismatch")
+                    if "interrupted.json" not in files and not errors:
+                        status = "complete_lineage_recovered"
+                except (ValueError, KeyError, TypeError, AttributeError,
+                        OSError):
+                    errors.append("invalid_complete_lineage_manifest")
         elif "manifest.json" in files or "results.jsonl" in files:
             errors.append("incomplete_final_lineage_pair")
     return {
@@ -224,6 +223,10 @@ def bind_artifact_api(report: dict, name: str, api: dict[str, dict],
     issues = report["custody_warnings"]
     if entry is None and report["files"] and metadata_present:
         issues.append("downloaded_artifact_not_listed")
+    if not metadata_present and report["status"] == "complete_lineage_recovered":
+        # Local source integrity != independently verified Actions artifact
+        # lineage. Preserve bytes but quarantine the custody claim.
+        issues.append("artifact_api_metadata_unavailable")
     if entry is not None and not report["files"]:
         issues.append("listed_artifact_not_downloaded")
     if entry is not None:
@@ -249,10 +252,38 @@ def bind_artifact_api(report: dict, name: str, api: dict[str, dict],
     return report
 
 
+TRANSPORT_CUSTODY_WARNINGS = frozenset({
+    "listed_artifact_not_downloaded",
+    "downloaded_artifact_not_listed",
+    "artifact_api_source_run_mismatch",
+    "artifact_api_id_missing",
+    "artifact_api_size_missing",
+    "artifact_api_digest_missing",
+    "artifact_api_expired_or_unknown",
+    "artifact_api_metadata_unavailable",
+})
+
+
+def artifact_transport_complete(records: list[dict], api: dict[str, dict],
+                                metadata_present: bool,
+                                api_outcome: str, download_outcome: str) -> bool:
+    """Complete *retrieval* custody only; never a complete 144-row screen."""
+    return (metadata_present and bool(api) and
+            api_outcome == "success" and download_outcome == "success" and
+            not any(TRANSPORT_CUSTODY_WARNINGS.intersection(
+                r["custody_warnings"]) for r in records))
+
+
 def recover(artifacts: Path, out: Path, head: str, run_id: str,
-            metadata_path: Path | None = None) -> dict:
+            metadata_path: Path | None = None,
+            artifact_api_outcome: str = "unknown",
+            download_outcome: str = "unknown") -> dict:
     """Archive immutable original per-lineage bytes, including negative evidence."""
     ensure_identity(head, run_id)
+    screen.require(
+        artifact_api_outcome in {"success", "failure", "skipped", "cancelled", "unknown"} and
+        download_outcome in {"success", "failure", "skipped", "cancelled", "unknown"},
+        "invalid artifact-transport outcome")
     cfg = screen.load_contract()
     screen.require(not out.exists(), "refuse overwrite of recovery archive")
     screen.require(artifacts.is_dir(), "downloaded artifact root missing")
@@ -282,6 +313,9 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
 
     completed = sum(r["status"] == "complete_lineage_recovered" for r in records)
     count = sum(r["validated_raw_prefix_rows"] for r in records)
+    transport_complete = artifact_transport_complete(
+        records, api, metadata_path is not None,
+        artifact_api_outcome, download_outcome)
     manifest = {
         "schema": "detective-005a-partial-recovery-v1",
         "experiment": "DETECTIVE-005A",
@@ -299,6 +333,9 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
             sum(bool(r["files"]) for r in records),
         "complete_lineage_artifacts": completed,
         "validated_raw_prefix_rows": count,
+        "artifact_api_outcome": artifact_api_outcome,
+        "artifact_download_outcome": download_outcome,
+        "artifact_transport_complete": transport_complete,
         "review_packet_generated": False,
         "training_admission": False,
         "production_admission": False,
@@ -324,8 +361,12 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
         "outputs or altering original bytes. Incomplete data never produces "
         "a fun-rating packet, model admission, training or cast expansion.\n\n"
         "The archive must be reviewed before retrying a failed lineage. "
-        "A manually cancelled entire workflow may prevent this job from "
-        "starting; inspect the original Actions artifacts in that case.\n",
+        "The artifact_transport_complete flag describes only same-run API "
+        "retrieval/download reconciliation, not semantic output validity. "
+        "A false value is a BLOCKING custody gap even when this best-effort "
+        "archive branch was pushed; recover the remaining original bytes "
+        "before any retry. Entire-workflow cancellation may prevent this "
+        "job from starting; inspect the original Actions artifacts.\n",
         encoding="utf-8")
     (out / "provenance" / "hashes.sha256").write_text(
         assemble.hash_inventory(out), encoding="utf-8")
@@ -401,14 +442,30 @@ def verify(path: Path) -> dict:
                    complete == manifest["complete_lineage_artifacts"] and
                    with_artifacts == manifest["lineages_with_artifacts"],
                    "recovery aggregate row/count drift")
+    screen.require(
+        manifest.get("artifact_transport_complete") is
+        artifact_transport_complete(
+            provenance["lineages"], api, metadata_path.exists(),
+            manifest.get("artifact_api_outcome"),
+            manifest.get("artifact_download_outcome")),
+        "recovery artifact transport gate drift")
     inventory = (path / "provenance" / "hashes.sha256").read_text(
         encoding="utf-8")
     screen.require(inventory == assemble.hash_inventory(path),
                    "recovery hash inventory mismatch")
     return {"validated_raw_prefix_rows": total,
             "complete_lineage_artifacts": complete,
+            "artifact_transport_complete": manifest["artifact_transport_complete"],
             "review_packet_generated": False,
             "production_admission": False}
+
+
+def require_complete_transport(path: Path) -> dict:
+    """Fail CI after best-effort promotion if any original retrieval is unverified."""
+    report = verify(path)
+    screen.require(report["artifact_transport_complete"],
+                   "incomplete original lineage artifact transport custody")
+    return report
 
 
 def main() -> None:
@@ -418,18 +475,27 @@ def main() -> None:
     ap.add_argument("--source-head")
     ap.add_argument("--run-id")
     ap.add_argument("--artifact-metadata", type=Path)
+    ap.add_argument("--artifact-api-outcome", default="unknown")
+    ap.add_argument("--download-outcome", default="unknown")
     ap.add_argument("--verify", type=Path)
+    ap.add_argument("--require-complete-transport", action="store_true")
     args = ap.parse_args()
     if args.verify:
-        print(json.dumps(verify(args.verify), indent=2, sort_keys=True))
+        print(json.dumps(
+            require_complete_transport(args.verify)
+            if args.require_complete_transport else verify(args.verify),
+            indent=2, sort_keys=True))
     else:
+        screen.require(not args.require_complete_transport,
+                       "complete transport gate requires --verify")
         screen.require(
             args.artifacts is not None and args.out is not None and
             args.source_head is not None and args.run_id is not None,
             "recovery requires artifacts, output, exact source and Actions run")
         print(json.dumps(recover(
             args.artifacts, args.out, args.source_head, args.run_id,
-            args.artifact_metadata), indent=2, sort_keys=True))
+            args.artifact_metadata, args.artifact_api_outcome,
+            args.download_outcome), indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":
