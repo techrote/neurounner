@@ -1,0 +1,65 @@
+name: NCR-001B pure PyTorch cellular core
+
+on:
+  pull_request:
+    branches: [main, research/ncr-001a-protocol-preflight]
+    paths:
+      - ".github/workflows/ncr-001b.yml"
+      - "scripts/ncr_001_core.py"
+      - "scripts/ncr_001_core_probe.py"
+      - "tests/test_ncr_001_core.py"
+      - "docs/NCR_001_B_CORE.md"
+      - "experiments/ncr-001/protocol.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neurounner-ncr-001b-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  TOKENIZERS_PARALLELISM: "false"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  synthetic-core:
+    name: CPU locality, gradient, state + checkpoint proofs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install proven CPU-only PyTorch stack
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu \
+            "torch==2.14.1+cpu"
+          python3 - <<'PY'
+          import torch
+          assert torch.__version__.startswith("2.14.1")
+          assert not torch.cuda.is_available()
+          print(f"NCR core CPU PyTorch: {torch.__version__}")
+          PY
+      - name: Compile core, smoke utility and synthetic tests
+        run: python3 -m py_compile scripts/ncr_001_core.py scripts/ncr_001_core_probe.py tests/test_ncr_001_core.py
+      - name: Run independent local, gradient and state-isolation tests
+        run: |
+          python3 -m unittest discover -s tests -p "test_ncr_001_core.py" -v
+      - name: Compare model-specific widths without loading model weights
+        run: |
+          python3 scripts/ncr_001_core_probe.py \
+            --sequence-length 64 \
+            --out runtime/ncr-001/core-smoke.json
+      - name: Upload temporary CPU evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr-001b-cpu-core-${{ github.run_attempt }}
+          path: runtime/ncr-001
+          retention-days: 30
+          if-no-files-found: warn

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001",
+  "scope": "source-only original-custody audit of failure/repaired CI runs",
+  "train_authorized": false,
+  "optimizer_steps": 0,
+  "original_frozen_model_executed": false,
+  "claims_limit": "Complete decoded job logs imported as original Git blobs. Artifact ZIP digests from GitHub metadata; ZIP byte contents not independently promoted. The negative run's test PASS never overrides its workflow FAILURE.",
+  "runs": {
+    "schema_failure": {
+      "run_id": 40674293265,
+      "job_id": 122768645019,
+      "head_sha": "2ab083fc7b07a1782ccb8edde5242e12ab42baa9",
+      "conclusion": "failure",
+      "log_git_blob": "96129f4fd841647ad07ed51108563aedeae6e01e",
+      "log_path": "experiments/ncr-001/controls-evidence/cross-decoder-lease/ci-40674293265-job-122768645019.log",
+      "artifact_id": 12808349780,
+      "artifact_digest": "sha256:c8ddc3d5cfc226107cfb2eac3793501d85286f8f1a92f77e7288e47f894b7138",
+      "runner_name": "GitHub Actions 1000046435",
+      "runner_image": "ubuntu-24.04",
+      "runner_region": "eastus",
+      "review": "The new offline archive checker expected log_git_blob but provenance used blob; original 10 synthetic cross-adapter tests PASSED before archive verifier failed. This was an evidence schema fault, not frozen-host/model conformance."
+    },
+    "schema_repaired": {
+      "run_id": 40674371744,
+      "job_id": 122768912811,
+      "head_sha": "78d3daf47872eb1edbba3ebe373e96eef6cf56d1",
+      "conclusion": "success",
+      "log_git_blob": "e8409666fc525d0af900bccc0f43a38d48ec0e61",
+      "log_path": "experiments/ncr-001/controls-evidence/cross-decoder-lease/ci-40674371744-job-122768912811.log",
+      "artifact_id": 12809926725,
+      "artifact_digest": "sha256:4ec5954df77c3dc55b898ba795135acc4cce227e37ea5c2b67338ec4f5741afd",
+      "runner_name": "GitHub Actions 1000046437",
+      "runner_image": "ubuntu-24.04",
+      "runner_region": "northcentralus",
+      "review": "Provenance schema fixed and original archived-run log hashes/receipts verified; 10 cross-adapter synthetic and 6 archival positive/adversarial tests passed."
+    }
+  }
+}

@@ -1,0 +1,79 @@
+name: NCR-001K reviewed void.1 byte tokenizer runtime semantics
+
+on:
+  pull_request:
+    branches: [main, review/ncr-001k-void-tokenizer-source-audit]
+    paths:
+      - ".github/workflows/ncr-001k-byte-runtime.yml"
+      - "scripts/ncr_001k_byte_runtime.py"
+      - "scripts/ncr_001k_byte_source_audit.py"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/source-pins.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001k-byte-runtime-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  HF_HOME: /tmp/ncr-001k-reviewed-byte
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  TOKENIZERS_PARALLELISM: "false"
+
+jobs:
+  reviewed-byte-runtime:
+    name: Exact reviewed tokenizer, offline Unicode/EOS/padding checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install tokenizer runtime dependencies but no PyTorch model weights
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0"
+      - name: Prefetch exact source-only files and verify reviewed AST
+        run: |
+          python3 scripts/ncr_001k_byte_source_audit.py
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          pins=json.loads(Path("experiments/ncr-001/source-pins.json").read_text())["models"]["void1"]
+          path=Path(hf_hub_download(pins["repo_id"],"config.json",revision=pins["revision"]))
+          actual=hashlib.sha256(path.read_bytes()).hexdigest()
+          assert actual==pins["config_sha256"],(actual,pins["config_sha256"])
+          print("Verified pinned config was prefetched as data; no model weights")
+          PY
+      - name: Execute only independently source-hashed ByteTokenizer offline
+        run: |
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001k_byte_runtime.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("runtime/ncr-001/void-byte-runtime.json").read_text())
+          assert d["status"]=="PASS_REVIEWED_VOID_BYTE_TOKENIZER_RUNTIME_SEMANTICS__MODEL_CONFORMANCE_BLOCKED"
+          assert d["byte_semantics_qualified"] is True
+          assert d["remaining_full_void1_conformance"] is True
+          assert d["model_training_performed"] is False
+          assert d["model_weights_loaded"] is False
+          assert d["optimizer_steps"] == 0
+          print("Reviewed tokenizer runtime semantics PASS; NCR model qualification BLOCKED")
+          PY
+      - name: Preserve partial failure or successful source-bound byte report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr-001k-byte-runtime-a${{ github.run_attempt }}
+          path: |
+            runtime/ncr-001/void-byte-runtime.json
+            runtime/ncr-001/void-byte-source-audit.json
+          retention-days: 30
+          if-no-files-found: warn
