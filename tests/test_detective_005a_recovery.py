@@ -99,8 +99,8 @@ class Detective005ARecoveryTests(unittest.TestCase):
             '"prompt_id":"F99","prompt_id":"F01"', 1)
         self.assertNotEqual(duplicate, base)
         for name, forged in (
-                ("duplicate-key", duplicate + "\\n"),
-                ("trailing-space", base + " \\n")):
+                ("duplicate-key", duplicate + "\n"),
+                ("trailing-space", base + " \n")):
             with self.subTest(case=name), tempfile.TemporaryDirectory() as td:
                 root = Path(td)
                 src = root / "artifacts" / "detective005a-G01"
@@ -130,7 +130,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
             rows = [self.row(f"V-G01-{s}", p["id"])
                     for s in "ABC" for p in self.cfg["prompts"]]
             original = "".join(
-                screen.canonical(row) + "\\n" for row in rows).encode("utf-8")
+                screen.canonical(row) + "\n" for row in rows).encode("utf-8")
             forged = original.replace(
                 b'"prompt_id":"F01"',
                 b'"prompt_id":"F99","prompt_id":"F01"', 1)
