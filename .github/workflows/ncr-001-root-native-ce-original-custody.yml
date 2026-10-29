@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 permissions:
   actions: read
-  contents: write
+  contents: read
 concurrency:
   group: ncr001-native-original-archive-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -75,29 +75,14 @@ jobs:
             2>&1 | tee runtime/ncr001-root-original-custody/negative-tests.log
           python3 scripts/ncr_001_root_native_ce_original_custody.py \
             2>&1 | tee runtime/ncr001-root-original-custody/verified-git-readback.json
-      - name: Commit only the two new immutable original-archive files on this dedicated PR branch
+      - name: Fail closed on any new archive mutation or untracked original evidence (READ ONLY)
         shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$SOURCE_HEAD"
-          git add -- "$EVIDENCE/original-actions-zip.xz.base64" "$EVIDENCE/manifest.json"
-          python3 - <<'PY'
-          import subprocess
-          paths=subprocess.check_output(["git","diff","--cached","--name-only"],text=True).splitlines()
-          approved={
-            "experiments/ncr-001/controls-evidence/root-native-ce-20261029/original-actions-zip.xz.base64",
-            "experiments/ncr-001/controls-evidence/root-native-ce-20261029/manifest.json",
-          }
-          assert set(paths)<=approved,paths
-          PY
-          if git diff --cached --quiet; then
-            echo "PREVIOUS EXACT ORIGINAL ARCHIVE ALREADY COMMITTED"
-          else
-            git -c user.name="github-actions[bot]" \
-                -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-                commit -m "NCR-001E: permanently promote the original exact frozen-root native CE ZIP"
-            git push origin HEAD:refs/heads/review/ncr001-root-native-ce-original-custody-20261029
-          fi
+          test -z "$(git status --porcelain -- "$EVIDENCE/original-actions-zip.xz.base64" "$EVIDENCE/manifest.json")"
+          git ls-files --error-unmatch -- "$EVIDENCE/original-actions-zip.xz.base64" "$EVIDENCE/manifest.json" >/dev/null
+          echo "ORIGINAL_GIT_ARCHIVE_IMMUTABLE__NO_BOT_WRITE"
       - name: Preserve original source, raw ZIP, positive and negative logs even upon failure
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
