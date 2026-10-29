@@ -13,6 +13,7 @@ import hashlib
 import hmac
 import json
 import re
+import struct
 from pathlib import Path
 from typing import Any
 
@@ -40,6 +41,19 @@ def canonical(value: Any) -> str:
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
+
+
+def prompt_ids_sha256(token_ids: list[int]) -> str:
+    """Hash tokenizer int64 token IDs as little-endian signed 64-bit bytes.
+
+    Frozen Ubuntu x86_64 PyTorch input_ids uses torch.int64 and NumPy's
+    little-endian int64 tobytes() representation; this is exactly the wire
+    layout of the live producer, without requiring torch/numpy in the verifier.
+    """
+    require(isinstance(token_ids, list) and
+            all(type(t) is int and 0 <= t < (1 << 63) for t in token_ids),
+            "invalid int64 prompt token IDs")
+    return sha256_bytes(struct.pack(f"<{len(token_ids)}q", *token_ids))
 
 
 def git_blob_sha(path: Path) -> str:
@@ -298,7 +312,9 @@ def validate_result(cfg: dict, row: dict) -> dict:
             all(type(t) is int and t >= 0
                 for t in runner["prompt_token_ids"]) and
             isinstance(runner["prompt_ids_sha256"], str) and
-            SHA_RX.fullmatch(runner["prompt_ids_sha256"]) is not None,
+            SHA_RX.fullmatch(runner["prompt_ids_sha256"]) is not None and
+            runner["prompt_ids_sha256"] ==
+                prompt_ids_sha256(runner["prompt_token_ids"]),
             "invalid source-bound native runner receipt")
     else:
         require("cpu" not in runner or runner["cpu"] == "none",
@@ -310,6 +326,20 @@ def validate_result(cfg: dict, row: dict) -> dict:
         "response_sha256": sha256_bytes(response["text"].encode("utf-8")),
         **obs,
     }
+
+
+def require_native_results(rows: list[dict],
+                           *, allow_synthetic_test_only: bool = False) -> None:
+    """Production archive admission refuses synthetic-only fixture receipts.
+
+    An explicit Python-only fixture argument is available to isolated offline
+    unit tests. There is deliberately NO command-line or Actions toggle.
+    """
+    if not allow_synthetic_test_only:
+        require(all(isinstance(r.get("runner"), dict) and
+                    r["runner"].get("synthetic_test_only") is not True
+                    for r in rows),
+                "synthetic-only runner receipts are not live generations")
 
 
 def read_results(path: Path) -> list[dict]:
