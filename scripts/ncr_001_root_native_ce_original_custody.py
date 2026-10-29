@@ -28,6 +28,14 @@ SOURCE = "1178b896848df0984a0670180c62d6f8e9b9a512"
 ROOT_WEIGHT = "1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864"
 CHAT_WEIGHT = "551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97"
 JOB_BLOB = "43ffa04c411f4672ed04c693cab5ece36a462f69"
+FAILED_ARCHIVE_JOBS = {
+    "failed-archive-job-123195596157.log":
+        ("a0bb9a0dd5c5ee273c168e027edbc730f70ae4bc", b"Memory usage limit exceeded"),
+    "failed-archive-job-123195950077.log":
+        ("839cc6a9ca12ea5864ca58fb81a826cb8a636eff", b"Corrupt input data"),
+    "failed-archive-job-123196038745.log":
+        ("525da3dcec3271531600307896132dd79db78b9c", b"Corrupt input data"),
+}
 MEMBERS = {
     "install-tokenizer.log": (5030, "8c1d73d82a07d6c6ac7051121dcc9b3a7ffaa1183e11b36fb06442d779d0c006"),
     "install-torch.log": (2828, "c34a1795bcea72216f615f3f22bd4d8ac44eb017bfdff18a965e2dbe860b061c"),
@@ -176,6 +184,11 @@ def audit(evidence: Path = EVIDENCE) -> dict:
            b"PASS_FROZEN_ROOT_INSTRUCT_SYNTHETIC_MASKED_CE_ONLY__72_BLOCKED" in logged
            and b"Ran 6 tests" in logged,
            "full original physical GitHub job log changed")
+    for name, (pinned_git_blob, negative_witness) in FAILED_ARCHIVE_JOBS.items():
+        archived_log = (evidence / name).read_bytes()
+        refuse(gitblob(archived_log) == pinned_git_blob
+               and negative_witness in archived_log,
+               "retained failed archival Actions job changed: " + name)
     b64 = (evidence / ARCHIVE).read_bytes().strip()
     try:
         compressed = base64.b64decode(b64, validate=True)
@@ -185,6 +198,7 @@ def audit(evidence: Path = EVIDENCE) -> dict:
     result = validate_zip(original)
     return {"status": "PASS_ORIGINAL_FULL_ZIP_AND_LOG_GIT_CUSTODY__72_BLOCKED",
             "decoded_full_job_blob": JOB_BLOB,
+            "retained_archival_failed_jobs_verified": len(FAILED_ARCHIVE_JOBS),
             "source_and_original_zip": result, "train_authorized": False,
             "full_72_conformance_pass": False, "new_model_executed": False,
             "optimizer_steps": 0}
