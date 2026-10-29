@@ -1,0 +1,132 @@
+name: DETECTIVE-001B2 matched presentation A-B
+
+on:
+  pull_request:
+    paths:
+      - "scripts/detective_001b2_presentation.py"
+      - "scripts/detective_001b2_verify.py"
+      - "tests/test_detective_001b2_presentation.py"
+      - "experiments/detective-001/presentation-ab.json"
+      - "experiments/detective-001/PRESENTATION_001B2.md"
+      - ".github/workflows/detective-001b2-presentation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: detective-001b2-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile and validate prompt/parity/source contracts
+        run: |
+          python3 -m py_compile scripts/detective_001b2_presentation.py scripts/detective_001b2_verify.py tests/test_detective_001b2_presentation.py
+          python3 -m unittest discover -s tests -p 'test_detective_001*.py' -v
+          mkdir -p artifacts
+          python3 scripts/detective_001b2_presentation.py --mode check > artifacts/detective001b2-plan.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective001b2-presentation-plan
+          path: artifacts/detective001b2-plan.json
+          retention-days: 30
+
+  native-presentation-ab:
+    needs: offline-contract
+    if: >-
+      ${{ github.event_name }} == 'pull_request' &&
+      ${{ github.head_ref }} == 'research/detective-001b2-presentation-ab-20261027' &&
+      ${{ github.event.pull_request.head.repo.full_name }} == 'techrote/neurounner' &&
+      ${{ github.event.pull_request.user.login }} == 'techrote'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
+      TOKENIZERS_PARALLELISM: "false"
+      DETECTIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Require original source and skip previously-promoted identical evidence
+        id: cached
+        run: |
+          if [ -e datasets/detective-001-presentation-ab/manifest.json ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            python3 scripts/detective_001b2_verify.py --dataset datasets/detective-001-presentation-ab
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            python3 scripts/detective_001b2_presentation.py --mode check
+          fi
+      - name: Install pinned CPU-only inference runtime
+        if: steps.cached.outputs.skip == 'false'
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "peft==0.21.2" "huggingface_hub==0.36.0"
+      - name: Retrieve immutable published LoRA adapter pair
+        if: steps.cached.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p downloads/detective-001b2
+          for member in V-G02-A V-G09-C; do
+            gh release download village-001-sft-v1 \
+              --repo techrote/neurounner \
+              --pattern "village-001-sft-$member-smollm2-135m-lora.tar.gz" \
+              --dir downloads/detective-001b2
+          done
+      - name: Generate same-fact JSON and natural-language responses
+        if: steps.cached.outputs.skip == 'false'
+        run: |
+          python3 scripts/detective_001b2_presentation.py \
+            --mode run --out out/detective-001b2 \
+            --download-dir downloads/detective-001b2
+      - name: Independently verify case, inputs, model pins and archive
+        if: steps.cached.outputs.skip == 'false'
+        run: |
+          python3 scripts/detective_001b2_verify.py \
+            --dataset out/detective-001b2/dataset
+      - name: Retain full raw/partial evidence even on failure
+        if: always() && steps.cached.outputs.skip == 'false'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective001b2-presentation-raw
+          path: |
+            out/detective-001b2/raw
+            out/detective-001b2/dataset
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Promote only completely verified evidence to separate archive
+        if: success() && steps.cached.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          branch='research/detective-001b2-presentation-ab-20261027'
+          remote_sha=$(git ls-remote --heads origin "refs/heads/$branch" | cut -f 1)
+          if [ "$remote_sha" != "$DETECTIVE_HEAD_SHA" ]; then
+            echo "Source PR moved; refusing incompatible live evidence promotion"
+            exit 1
+          fi
+          test ! -e datasets/detective-001-presentation-ab
+          mkdir -p datasets/detective-001-presentation-ab
+          cp -a out/detective-001b2/dataset/. datasets/detective-001-presentation-ab/
+          python3 scripts/detective_001b2_verify.py --dataset datasets/detective-001-presentation-ab
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add datasets/detective-001-presentation-ab
+          git commit -m "DETECTIVE-001B2: archive native JSON/natural comparison and raw responses"
+          git push origin HEAD:"refs/heads/$branch"

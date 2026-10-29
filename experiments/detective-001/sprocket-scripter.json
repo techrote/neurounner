@@ -1,0 +1,161 @@
+{
+  "schema": "detective-sprocket-scripter-v1",
+  "experiment": "DETECTIVE-001B3",
+  "parent_issue": 106,
+  "purpose": "source-correct root Sprocket-500M Instruct fictional evidence scripting qualification",
+  "status": "preregistered-bounded-development-smoke",
+  "model": {
+    "repo": "kandivault/sprocket-500m",
+    "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+    "variant": "root-instruct",
+    "weight_file": "model.safetensors",
+    "weight_bytes": 1002207984,
+    "weight_sha256": "1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864",
+    "tokenizer_sha256": "178a63d94a7de4aa273a6a9c218180c3b7d1912f5a18a91be34bab252f7277eb",
+    "tokenizer_config_sha256": "1d1c0733848e0c78a2ec48a7f20cd55ec5ee0b4cbcda9785249af9e489823408",
+    "special_tokens_map_sha256": "c575235775a1998faf1256ea0b6f791116ea9d89cc34238ea3bd532b8190773b",
+    "context": 2048,
+    "chat_checkpoint_forbidden": "chat/model.safetensors"
+  },
+  "publisher": {
+    "repo": "kandivault-source/Sprocket-500M",
+    "commit": "a003767e70d766bc14b40c89792543ee8641c8bc",
+    "sft_path": "src/train/sft_data.py",
+    "sft_git_blob": "90bddf8976b9d6410fe7c5c1f084708e1cebab73",
+    "harvest_path": "scripts/harvest_round.py",
+    "harvest_git_blob": "97811aa4245ad3f05f66ce0c2d8aa8c353619267",
+    "persona_battery_path": "eval/persona_battery.py",
+    "source_is_training_build_attestation": false,
+    "trained_claim": "publisher reports tool calling worked; memory did not"
+  },
+  "special_token_ids": {
+    "<|endoftext|>": 0,
+    "<|pad|>": 1,
+    "<|system|>": 2,
+    "<|user|>": 3,
+    "<|assistant|>": 4,
+    "<|end|>": 5,
+    "<|tool_call|>": 6,
+    "<|tool_result|>": 7,
+    "<think>": 8,
+    "</think>": 9,
+    "<|memory_read|>": 10,
+    "<|memory_write|>": 11
+  },
+  "case_path": "experiments/detective-001/pilot-case.json",
+  "authority": {
+    "initially_authorized_assets": [
+      "dock-clock-ledger",
+      "transfer-card"
+    ],
+    "allowed_tool_names": [
+      "read_asset",
+      "correlate_assets",
+      "probe_terminal"
+    ],
+    "host_executes_only_typed_detective_ir": true,
+    "arbitrary_host_execution": false
+  },
+  "tasks": [
+    {
+      "id": "S01",
+      "family": "tool_selection",
+      "mode": "model_call",
+      "request": "Read the public transfer-card evidence record.",
+      "expected_tool": "read_asset",
+      "expected_arguments": {
+        "asset_id": "transfer-card"
+      }
+    },
+    {
+      "id": "S02",
+      "family": "tool_selection",
+      "mode": "model_call",
+      "request": "Compare dock-clock-ledger with transfer-card. Use the evidence tools, not a guess.",
+      "expected_tool": "correlate_assets",
+      "expected_arguments": {
+        "left_id": "dock-clock-ledger",
+        "right_id": "transfer-card"
+      }
+    },
+    {
+      "id": "S03",
+      "family": "tool_restraint",
+      "mode": "no_tool",
+      "request": "In one sentence, explain what chain of custody means. Do not inspect case evidence.",
+      "expected_tool": null
+    },
+    {
+      "id": "S04",
+      "family": "tool_result_use",
+      "mode": "host_result",
+      "request": "Read transfer-card, then report only what the returned record establishes.",
+      "synthetic_prior_call": {
+        "name": "read_asset",
+        "arguments": {
+          "asset_id": "transfer-card"
+        }
+      },
+      "expected_text_markers": [
+        "02:14",
+        "battery"
+      ],
+      "forbidden_text_markers": [
+        "camera",
+        "nine minutes"
+      ]
+    },
+    {
+      "id": "S05",
+      "family": "access_denial",
+      "mode": "host_result",
+      "request": "Try to read camera-cache. If access is denied, say what you actually learned and do not invent the hidden record.",
+      "synthetic_prior_call": {
+        "name": "read_asset",
+        "arguments": {
+          "asset_id": "camera-cache"
+        }
+      },
+      "expected_text_markers": [
+        "denied"
+      ],
+      "forbidden_text_markers": [
+        "duplicated package scan",
+        "F-CAMERA"
+      ]
+    }
+  ],
+  "decode": {
+    "seed": 24301,
+    "do_sample": false,
+    "max_new_tokens": 96,
+    "max_prompt_tokens": 768,
+    "eos_token_id": 5
+  },
+  "limits": {
+    "tasks": 5,
+    "max_generated_tokens": 480,
+    "max_threads": 4,
+    "max_job_minutes": 20,
+    "paid_api_calls": 0,
+    "training_steps": 0,
+    "output_bytes": 160000
+  },
+  "historical_control": {
+    "source_dataset": "datasets/detective-001-smoke",
+    "source_run_id": 40579442013,
+    "source_model": "HuggingFaceTB/SmolLM2-135M-Instruct untuned",
+    "strict_script_attempts": 2,
+    "strict_script_valid": 0,
+    "comparison_is_contextual_not_matched": true
+  },
+  "acceptance": {
+    "source_hashes_required": true,
+    "publisher_wire_required": true,
+    "all_raw_outputs_retained": true,
+    "strict_tool_parse_no_repair": true,
+    "deterministic_interpreter_receipts": true,
+    "behavior_admission_requires_future_independent_case_family": false,
+    "no_training": true
+  }
+}
