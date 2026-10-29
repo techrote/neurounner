@@ -1,0 +1,184 @@
+name: DETECTIVE-002B seven-body runtime smoke
+
+on:
+  pull_request:
+    paths:
+      - "experiments/detective-002/runtime-smoke.json"
+      - "experiments/detective-002/RUNTIME_SMOKE.md"
+      - "experiments/detective-002/source-evidence/source-evidence.json"
+      - "scripts/detective_002b_runtime.py"
+      - "scripts/detective_002b_aggregate.py"
+      - "scripts/detective_002b_verify.py"
+      - "tests/test_detective_002b_*.py"
+      - "datasets/detective-002b/**"
+      - ".github/workflows/detective-002b-runtime.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: detective-002b-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    outputs:
+      evidence_ready: ${{ steps.evidence.outputs.ready }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile source-bound runtime and aggregate tooling
+        run: |
+          python3 -m py_compile scripts/detective_002b_runtime.py scripts/detective_002b_aggregate.py scripts/detective_002b_verify.py tests/test_detective_002b_runtime.py tests/test_detective_002b_aggregate.py
+      - name: Run all DETECTIVE offline tests
+        run: |
+          python3 -m unittest discover -s tests -p 'test_detective_*.py' -v
+      - name: Verify frozen Stage-A body authority
+        run: |
+          python3 - <<'PY'
+          from scripts.detective_002b_runtime import load_contract
+          cfg,candidates=load_contract()
+          assert len(cfg["cohort"])==7
+          assert all(candidates[x]["runtime_eligibility"]=="stage_b_candidate" for x in cfg["cohort"])
+          print("DETECTIVE-002B FROZEN SOURCE CONTRACT: PASS")
+          PY
+      - name: Revalidate existing durable runtime evidence if present
+        id: evidence
+        run: |
+          if [ -e datasets/detective-002b/manifest.json ]; then
+            python3 scripts/detective_002b_verify.py --evidence datasets/detective-002b
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  body-matrix:
+    needs: offline-contract
+    if: ${{ needs.offline-contract.outputs.evidence_ready != 'true' && github.event_name == 'pull_request' && github.head_ref == 'research/detective-002b-runtime-matrix-20261028' && github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.user.login == 'techrote' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        candidate:
+          - smollm2-135m-instruct
+          - smollm2-360m-instruct
+          - sprocket-500m-chat
+          - sprocket-500m-instruct
+          - qwen25-0.5b-instruct
+          - qwen3-0.6b
+          - lfm25-350m
+    env:
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
+      TOKENIZERS_PARALLELISM: "false"
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      HF_HOME: /tmp/detective-002b-hf
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned CPU inference stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "huggingface_hub==0.36.2" "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Run exact frozen body
+        run: |
+          mkdir -p "out/${{ matrix.candidate }}"
+          python3 scripts/detective_002b_runtime.py             --candidate "${{ matrix.candidate }}"             --out "out/${{ matrix.candidate }}/result.json"
+      - name: Verify body result remains non-training/non-admission
+        env:
+          CANDIDATE: ${{ matrix.candidate }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          c=os.environ["CANDIDATE"]
+          r=json.loads((Path("out")/c/"result.json").read_text())
+          assert r["candidate_id"]==c
+          assert r["status"] in {"runtime_pass","runtime_fail","protocol_specialization_required"}
+          assert r["optimizer_steps"]==0
+          assert r["paid_api_calls"]==0
+          assert r["relevance_mapping_accessed"] is False
+          assert r["population_expansion_admitted"] is False
+          if r["status"]=="runtime_pass":
+              assert len(r["tasks"])==4
+              assert r["total_generated_tokens"]<=256
+              assert r["environment"]["torch_threads"]==4
+              assert r["environment"]["cuda_available"] is False
+          print(c,r["status"],len(r.get("tasks",[])))
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: detective002b-body-${{ matrix.candidate }}
+          path: out/${{ matrix.candidate }}
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate-and-publish:
+    needs: [offline-contract, body-matrix]
+    if: ${{ always() && needs.offline-contract.result == 'success' && needs.offline-contract.outputs.evidence_ready != 'true' && needs.body-matrix.result == 'success' && github.event_name == 'pull_request' && github.head_ref == 'research/detective-002b-runtime-matrix-20261028' && github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.user.login == 'techrote' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      DETECTIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: detective002b-body-*
+          path: runtime/body-artifacts
+      - name: Assemble all seven raw body records
+        run: |
+          rm -rf datasets/detective-002b
+          python3 scripts/detective_002b_aggregate.py             --results-dir runtime/body-artifacts             --out datasets/detective-002b             --source-head "$DETECTIVE_HEAD_SHA"             --run-id "$GITHUB_RUN_ID"             --run-url "https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+      - name: Independent aggregate replay
+        run: |
+          python3 scripts/detective_002b_verify.py --evidence datasets/detective-002b
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective002b-complete-${{ github.run_id }}
+          path: datasets/detective-002b
+          if-no-files-found: error
+          retention-days: 30
+      - name: Refuse stale source before publication
+        run: |
+          remote_sha=$(git ls-remote --heads origin refs/heads/research/detective-002b-runtime-matrix-20261028 | cut -f1)
+          test "$remote_sha" = "$DETECTIVE_HEAD_SHA"
+      - name: Commit durable runtime evidence to exact PR branch
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add datasets/detective-002b
+          git diff --cached --quiet && { echo "expected DETECTIVE-002B evidence"; exit 1; }
+          git commit -m "DETECTIVE-002B: record seven-body runtime smoke evidence"
+          git push origin HEAD:research/detective-002b-runtime-matrix-20261028
+
+  evidence-readback:
+    needs: offline-contract
+    if: ${{ needs.offline-contract.outputs.evidence_ready == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify committed raw/body aggregate only
+        run: |
+          python3 scripts/detective_002b_verify.py --evidence datasets/detective-002b
