@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001J",
+  "qualification_class": "read_only_real_root_instruct_HF_depth_hook_prepass_not_independent_NCR_001E",
+  "final_status": "PASS_PRELIMINARY_SOURCE_BOUND_SPROCKET_INSTRUCT_HOOK_CONFORMANCE",
+  "source_run": {
+    "workflow_url": "https://github.com/techrote/neurounner/actions/runs/40423957135",
+    "run_id": 40423957135,
+    "tested_source_commit": "85afe6e74e74e69a4c5788c652b5620963f4cdbf",
+    "offline_test_job_id": 121925059724,
+    "real_source_job_id": 121925320372,
+    "artifact_id": 12699072532,
+    "artifact_name": "ncr-001j-sprocket-instruct-source-conformance-a1",
+    "artifact_zip_sha256": "3d3b77a645cadc6b646194b6374f480266eb56edb60c267c4fe928b024b50ace",
+    "original_report_sha256": "cc7d677300b6b88e1b01a52a32fe9ae74ee111b9be58b3d9c006d0e346fc87f2",
+    "original_report_bytes": 3955,
+    "committed_report": "experiments/ncr-001/sprocket-instruct-preflight/receipt.json",
+    "protocol_sha256_at_run": "2e294750a17b1bfb3eba448f8a5b55344c72aff700587351bd10da1af38885ab",
+    "source_pins_sha256_at_run": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1",
+    "original_run_result": "success",
+    "offline_test_count": 7,
+    "prior_label_issue": "Earlier source run 40423634303 had equivalent positive numbers but an inherited SmolLM2 status/artifact label; preserved as superseded, not used as final NCR-001J evidence."
+  },
+  "model": {
+    "repository": "kandivault/sprocket-500m",
+    "variant": "root_instruct_not_chat",
+    "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+    "actual_full_safetensors_sha256": "1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864",
+    "actual_full_safetensors_bytes": 1002207984,
+    "chat_weight_sha256_separate": "551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97",
+    "frozen_base_parameters": 501090560,
+    "nca_trainable_parameters": 658904,
+    "architecture": {
+      "num_hidden_layers": 26,
+      "hidden_size": 1280,
+      "post_block_taps": [
+        7,
+        16,
+        25
+      ]
+    }
+  },
+  "results": {
+    "zero_init_logits_max_abs": 0,
+    "zero_init_padded_batch_max_abs": 0,
+    "greedy_generation_equal": true,
+    "manual_untrained_readout_logits_max_abs": 0.011340200901031494,
+    "full_vs_incremental_cache_max_abs": 0.00010323524475097656,
+    "future_suffix_invariance_max_abs": 0,
+    "readout_grad_l1": 3930.00341796875,
+    "peak_rss_kib": 3314644,
+    "cpu": "AMD EPYC 7763, four threads",
+    "torch": "2.14.1+cpu",
+    "transformers": "4.57.6",
+    "actual_optimizer_steps": 0
+  },
+  "limitations": [
+    "Formatter/tool/memory token semantics of Sprocket Instruct are NOT qualified by raw tokenization-only prepass",
+    "NCA readout perturbation manually injected, no adapter training",
+    "No independent #72 4-model qualification and no matched baseline quality comparison",
+    "Full model SHA verified, but wrapper constructor relies on caller supplied verified hash; production loader must continue to independently validate source bytes"
+  ]
+}

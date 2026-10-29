@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001",
+  "fixture_id": "void-byte-tokenizer-probes-v1",
+  "status": "REVIEW_CANDIDATE_NOT_TRAINING_APPROVED",
+  "model_lane": "void1",
+  "source": "Original held-out fixed prompts authored for NCR-001 on 2026-10-26",
+  "source_tokenizer": "dotlabs/void.1@9c2be5087772867d45961abd11f6b35110617563 tokenization_byte.py + byte_vocab.json; exact code review required in #79",
+  "data_use": "EVALUATION_AND_BYTE_ROUNDTRIP_ONLY; not optimizer input or model selection until prereg locked",
+  "metric_contract": {
+    "tokenizer_unit_counts": "Record exact ByteTokenizer units and separately decoded UTF-8 bytes and Python Unicode code points; never compare as BPE units",
+    "byte_roundtrip": "For exact-text cases compare UTF-8 bytes, not an equivalent normalised Unicode string",
+    "generated_output": "Record first complete object where relevant, full raw output, EOS, trailing text and exhaustion separately",
+    "initial_max_new_tokenizer_units": 768,
+    "note": "TRAIN-002b had frequent output-budget exhaustion even with 768 tokenizer units. The evaluation budget is provisional until #79 runs a source-bound capacity smoke; never silently truncate expected answers."
+  },
+  "cases": [
+    {
+      "id": "VB01",
+      "family": "ascii_exact",
+      "prompt": "Print the ASCII string: bolt-17",
+      "expected_text": "bolt-17"
+    },
+    {
+      "id": "VB02",
+      "family": "ascii_exact",
+      "prompt": "Print the ASCII string: x=4;y=-2",
+      "expected_text": "x=4;y=-2"
+    },
+    {
+      "id": "VB03",
+      "family": "ascii_exact",
+      "prompt": "Print these three letters, uppercase: nca",
+      "expected_text": "NCA"
+    },
+    {
+      "id": "VB04",
+      "family": "unicode_exact",
+      "prompt": "Repeat exactly this accented word: café",
+      "expected_text": "café"
+    },
+    {
+      "id": "VB05",
+      "family": "unicode_exact",
+      "prompt": "Repeat exactly this word: naïve",
+      "expected_text": "naïve"
+    },
+    {
+      "id": "VB06",
+      "family": "unicode_exact",
+      "prompt": "Repeat exactly these symbols: πΩ",
+      "expected_text": "πΩ"
+    },
+    {
+      "id": "VB07",
+      "family": "unicode_exact",
+      "prompt": "Repeat exactly this tool emoji: 🔧",
+      "expected_text": "🔧"
+    },
+    {
+      "id": "VB08",
+      "family": "unicode_exact",
+      "prompt": "Repeat exactly these characters: 日本語",
+      "expected_text": "日本語"
+    },
+    {
+      "id": "VB09",
+      "family": "whitespace",
+      "prompt": "Return the words red and blue separated by a single ordinary space.",
+      "expected_text": "red blue"
+    },
+    {
+      "id": "VB10",
+      "family": "json_first_complete",
+      "prompt": "Return one compact JSON object only, with keys state and action and values ready and wait.",
+      "expected_text": "{\"state\":\"ready\",\"action\":\"wait\"}"
+    },
+    {
+      "id": "VB11",
+      "family": "json_first_complete",
+      "prompt": "Return one compact JSON object only with keys material and count, and values sand and 3.",
+      "expected_text": "{\"material\":\"sand\",\"count\":3}"
+    },
+    {
+      "id": "VB12",
+      "family": "long_response",
+      "prompt": "In exactly two sentences, explain why a spring latch can fail after many cycles.",
+      "expected_text": null
+    },
+    {
+      "id": "VB13",
+      "family": "long_response",
+      "prompt": "In exactly two sentences, explain how grit can change the friction of a sliding guide.",
+      "expected_text": null
+    },
+    {
+      "id": "VB14",
+      "family": "continuation",
+      "prompt": "If a JSON object is complete, do not emit a duplicate object or repetitive filler after it.",
+      "expected_text": null
+    },
+    {
+      "id": "VB15",
+      "family": "continuation",
+      "prompt": "Provide a complete one-line explanation for a local mechanical failure and end naturally.",
+      "expected_text": null
+    },
+    {
+      "id": "VB16",
+      "family": "unicode_exact",
+      "prompt": "Repeat exactly this English word with punctuation: 'don't'",
+      "expected_text": "don't"
+    }
+  ]
+}

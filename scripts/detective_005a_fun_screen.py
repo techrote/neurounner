@@ -1,0 +1,574 @@
+#!/usr/bin/env python3
+"""DETECTIVE-005A fun-first 36-villager screen contract.
+
+Stage A is standard-library only: it freezes the exact VILLAGE-001C SFT cohort,
+matched prompts, raw-result schema, hard authority/leakage floors and the
+identity-blind subjective gameplay packet. It never downloads a model, runs
+inference, trains, judges fun automatically or opens C1/C2/C3 learner-finals.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import hmac
+import json
+import re
+import struct
+from pathlib import Path
+from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+CONFIG = ROOT / "experiments/detective-005/fun-screen.json"
+VILLAGE_RELEASE_MANIFEST = ROOT / "experiments/village-001/sft-evidence/adapter-release.json"
+MEMBER_RX = re.compile(r"^V-G(0[1-9]|1[0-2])-[ABC]$")
+SHA_RX = re.compile(r"^[0-9a-f]{64}$")
+
+
+class ScreenError(ValueError):
+    pass
+
+
+def require(ok: bool, why: str) -> None:
+    if not ok:
+        raise ScreenError(why)
+
+
+def canonical(value: Any) -> str:
+    return json.dumps(value, sort_keys=True, ensure_ascii=False,
+                      separators=(",", ":"), allow_nan=False)
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+
+def prompt_ids_sha256(token_ids: list[int]) -> str:
+    """Hash tokenizer int64 token IDs as little-endian signed 64-bit bytes.
+
+    Frozen Ubuntu x86_64 PyTorch input_ids uses torch.int64 and NumPy's
+    little-endian int64 tobytes() representation; this is exactly the wire
+    layout of the live producer, without requiring torch/numpy in the verifier.
+    """
+    require(isinstance(token_ids, list) and
+            all(type(t) is int and 0 <= t < (1 << 63) for t in token_ids),
+            "invalid int64 prompt token IDs")
+    return sha256_bytes(struct.pack(f"<{len(token_ids)}q", *token_ids))
+
+
+def git_blob_sha(path: Path) -> str:
+    data = path.read_bytes()
+    return hashlib.sha1(f"blob {len(data)}\0".encode("ascii") + data).hexdigest()
+
+def sha256_file(path: Path) -> str:
+    return sha256_bytes(path.read_bytes())
+
+
+def read_json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_contract() -> dict:
+    cfg = read_json(CONFIG)
+    require((cfg.get("schema"), cfg.get("experiment"), cfg.get("issue"),
+             cfg.get("parent_issue")) ==
+            ("detective-005a-fun-screen-v1", "DETECTIVE-005A", 176, 103),
+            "identity drift")
+    pop = cfg["source_population"]
+    require(pop["release_tag"] == "village-001-sft-v1" and
+            pop["release_id"] == 423495298 and
+            pop["draft"] is False and pop["prerelease"] is False and
+            pop["expected_assets"] == 36, "release identity drift")
+    require(pop["base_model"] == {
+        "repo": "HuggingFaceTB/SmolLM2-135M-Instruct",
+        "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+        "weights_file": "model.safetensors",
+        "weights_sha256":
+            "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+    }, "base model drift")
+    authority = pop["release_manifest"]
+    require(authority == {
+        "path": "experiments/village-001/sft-evidence/adapter-release.json",
+        "git_blob_sha1": "29d269f69e30d200ce7c8d61b81b7b7f3865b5aa",
+        "member_contract_sha256":
+            "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+    }, "release manifest authority drift")
+    require(VILLAGE_RELEASE_MANIFEST.is_file() and
+            git_blob_sha(VILLAGE_RELEASE_MANIFEST) == authority["git_blob_sha1"],
+            "committed VILLAGE release manifest blob drift")
+    release = read_json(VILLAGE_RELEASE_MANIFEST)
+    require(release.get("release_tag") == pop["release_tag"] and
+            release.get("base_model") == pop["base_model"]["repo"] and
+            release.get("base_revision") == pop["base_model"]["revision"] and
+            release.get("member_contract_sha256") ==
+            authority["member_contract_sha256"] and
+            isinstance(release.get("assets"), list) and
+            len(release["assets"]) == 36,
+            "committed VILLAGE release manifest identity drift")
+    release_assets = {x["member_id"]: x for x in release["assets"]}
+    members = pop["members"]
+    expected_ids = [f"V-G{g:02d}-{s}" for g in range(1, 13) for s in "ABC"]
+    require([m["member_id"] for m in members] == expected_ids,
+            "36-member order/identity drift")
+    require(len({m["asset_name"] for m in members}) == 36 and
+            len({m["asset_sha256"] for m in members}) == 36 and
+            len({m["asset_id"] for m in members}) == 36,
+            "release asset identity collision")
+    for m in members:
+        require(MEMBER_RX.fullmatch(m["member_id"]) is not None,
+                "invalid member id")
+        require(m["asset_name"] ==
+                f'village-001-sft-{m["member_id"]}-smollm2-135m-lora.tar.gz',
+                "asset filename/member mismatch")
+        require(type(m["asset_id"]) is int and m["asset_id"] > 0 and
+                type(m["asset_bytes"]) is int and m["asset_bytes"] > 0 and
+                SHA_RX.fullmatch(m["asset_sha256"]) is not None and
+                type(m["adapter_directory_bytes"]) is int and
+                m["adapter_directory_bytes"] > 0 and
+                SHA_RX.fullmatch(m["adapter_directory_sha256"]) is not None,
+                "invalid asset metadata")
+        manifest_asset = release_assets.get(m["member_id"])
+        require(manifest_asset == {
+            "member_id": m["member_id"],
+            "file": m["asset_name"],
+            "sha256": m["asset_sha256"],
+            "bytes": m["asset_bytes"],
+            "adapter_directory_sha256": m["adapter_directory_sha256"],
+            "adapter_directory_bytes": m["adapter_directory_bytes"],
+        }, "release manifest/member source mismatch")
+    prompts = cfg["prompts"]
+    require([p["id"] for p in prompts] == ["F01", "F02", "F03", "F04"] and
+            len({p["user"] for p in prompts}) == 4,
+            "prompt battery drift")
+    require(cfg["decode"] == {
+        "seed": 17601, "do_sample": False,
+        "max_new_tokens": 96, "max_prompt_tokens": 512,
+    }, "decode contract drift")
+    require(cfg["limits"] == {
+        "members": 36, "prompts_per_member": 4, "total_generations": 144,
+        "optimizer_steps": 0, "paid_api_calls": 0, "gpu_required": False,
+        "max_threads": 4, "max_job_minutes_per_member": 15,
+    }, "resource envelope drift")
+    review = cfg["subjective_review"]
+    require(review["scale"] == {
+        "0": "Actively unfun, dead, or would remove.",
+        "1": "Mostly generic, tedious, or irritating without payoff.",
+        "2": "Usable or neutral.",
+        "3": "Memorable or entertaining.",
+        "4": "Strongly want this character in the game.",
+    } and review["identity_blind"] is True and
+            review["model_judge"] is False,
+            "subjective review contract drift")
+    require(cfg["outcome"]["objective_relevance_threshold"] is None and
+            cfg["outcome"]["shortlist_size"] == 12 and
+            cfg["outcome"]["production_admission"] is False and
+            cfg["outcome"]["training_admission"] is False and
+            cfg["outcome"]["population_expansion_admitted"] is False,
+            "outcome authority drift")
+    return cfg
+
+
+def members_by_id(cfg: dict) -> dict[str, dict]:
+    return {m["member_id"]: m for m in cfg["source_population"]["members"]}
+
+
+def prompts_by_id(cfg: dict) -> dict[str, dict]:
+    return {p["id"]: p for p in cfg["prompts"]}
+
+
+def prompt_messages(cfg: dict, prompt_id: str) -> list[dict[str, str]]:
+    prompt = prompts_by_id(cfg).get(prompt_id)
+    require(prompt is not None, "unknown prompt id")
+    return [
+        {"role": "system", "content": cfg["system_prompt"]},
+        {"role": "user", "content": prompt["user"]},
+    ]
+
+
+def expected_source(cfg: dict, member_id: str) -> dict:
+    member = members_by_id(cfg).get(member_id)
+    require(member is not None, "unknown member")
+    base = cfg["source_population"]["base_model"]
+    return {
+        "release_tag": cfg["source_population"]["release_tag"],
+        "asset_name": member["asset_name"],
+        "asset_id": member["asset_id"],
+        "asset_bytes": member["asset_bytes"],
+        "asset_sha256": member["asset_sha256"],
+        "adapter_directory_sha256": member["adapter_directory_sha256"],
+        "adapter_directory_bytes": member["adapter_directory_bytes"],
+        "member_contract_sha256":
+            cfg["source_population"]["release_manifest"]["member_contract_sha256"],
+        "base_repo": base["repo"],
+        "base_revision": base["revision"],
+        "base_weights_file": base["weights_file"],
+        "base_weights_sha256": base["weights_sha256"],
+    }
+
+
+def expected_request(cfg: dict, prompt_id: str) -> dict:
+    return {
+        "messages": prompt_messages(cfg, prompt_id),
+        "seed": cfg["decode"]["seed"],
+        "do_sample": False,
+        "max_new_tokens": cfg["decode"]["max_new_tokens"],
+        "max_prompt_tokens": cfg["decode"]["max_prompt_tokens"],
+    }
+
+
+def mechanical_observations(cfg: dict, text: str) -> dict:
+    floors = cfg["hard_floors"]
+    hidden = [x for x in floors["hidden_canary_strings"] if x in text]
+    controls = [x for x in floors["forbidden_native_controls"] if x in text]
+    return {
+        "nonempty": bool(text.strip()),
+        "hidden_canary_hits": hidden,
+        "forbidden_control_hits": controls,
+        "hard_floor_pass": bool(text.strip()) and not hidden and not controls,
+    }
+
+
+def validate_result(cfg: dict, row: dict) -> dict:
+    require(set(row) == {
+        "schema", "experiment", "member_id", "prompt_id", "source",
+        "request", "response", "runner",
+    }, "raw result field drift")
+    require((row["schema"], row["experiment"]) ==
+            ("detective-005a-raw-response-v1", "DETECTIVE-005A"),
+            "raw result identity drift")
+    member_id, prompt_id = row["member_id"], row["prompt_id"]
+    require(row["source"] == expected_source(cfg, member_id),
+            "source asset/hash drift")
+    require(row["request"] == expected_request(cfg, prompt_id),
+            "model-visible request/decode drift")
+    response = row["response"]
+    require(set(response) == {
+        "text", "raw_with_special_tokens", "token_ids", "finish_reason",
+        "prompt_tokens", "completion_tokens", "elapsed_seconds",
+    }, "response field drift")
+    require(isinstance(response["text"], str) and
+            isinstance(response["raw_with_special_tokens"], str) and
+            isinstance(response["token_ids"], list) and
+            all(type(x) is int and x >= 0 for x in response["token_ids"]) and
+            type(response["prompt_tokens"]) is int and response["prompt_tokens"] > 0 and
+            type(response["completion_tokens"]) is int and
+            response["completion_tokens"] == len(response["token_ids"]) and
+            0 <= response["completion_tokens"] <= cfg["decode"]["max_new_tokens"] and
+            isinstance(response["finish_reason"], str) and
+            isinstance(response["elapsed_seconds"], (int, float)) and
+            response["elapsed_seconds"] >= 0,
+            "invalid raw response record")
+    runner = row["runner"]
+    require(isinstance(runner, dict), "runner receipt required")
+    # Source labels alone are not weight provenance. Every raw result must
+    # carry the exact hashes actually checked by the live frozen-model loader;
+    # never accept an unverified or substituted adapter as frozen village SFT.
+    source = row["source"]
+    require(
+        runner.get("base_weights_sha256_verified") ==
+            source["base_weights_sha256"] and
+        runner.get("adapter_archive_sha256_verified") ==
+            source["asset_sha256"] and
+        runner.get("adapter_directory_sha256_verified") ==
+            source["adapter_directory_sha256"],
+        "missing or mismatched base/adapter verification receipt")
+    # Public raw evidence must not carry arbitrary runner metadata: an
+    # attacker could forge canonical JSONL plus its SHA inventory while
+    # inserting a private blinding key or rating mapping as an extra key.
+    native_keys = {
+        "repository_head_sha", "actions_run_id", "actions_run_url",
+        "platform", "cpu_model", "python", "torch", "transformers",
+        "peft", "threads", "base_weights_sha256_verified",
+        "prompt_token_ids", "prompt_ids_sha256",
+        "adapter_archive_sha256_verified",
+        "adapter_directory_sha256_verified",
+    }
+    synthetic_keys = {
+        "repository_head_sha", "actions_run_id",
+        "base_weights_sha256_verified",
+        "adapter_archive_sha256_verified",
+        "adapter_directory_sha256_verified", "synthetic_test_only",
+    }
+    keys = set(runner)
+    native = keys == native_keys
+    synthetic = (runner.get("synthetic_test_only") is True and
+                 (keys == synthetic_keys or
+                  keys == synthetic_keys | {"cpu"}))
+    require(native or synthetic,
+            "runner receipt field-set drift or unregistered metadata")
+    if native:
+        run_id = runner["actions_run_id"]
+        require(
+            isinstance(run_id, str) and
+            re.fullmatch(r"[1-9][0-9]*", run_id) is not None and
+            isinstance(runner["repository_head_sha"], str) and
+            re.fullmatch(r"[0-9a-f]{40}", runner["repository_head_sha"]) is not None and
+            runner["actions_run_url"] ==
+                f"https://github.com/techrote/neurounner/actions/runs/{run_id}" and
+            type(runner["threads"]) is int and
+            1 <= runner["threads"] <= cfg["limits"]["max_threads"] and
+            isinstance(runner["prompt_token_ids"], list) and
+            len(runner["prompt_token_ids"]) == response["prompt_tokens"] and
+            all(type(t) is int and t >= 0
+                for t in runner["prompt_token_ids"]) and
+            isinstance(runner["prompt_ids_sha256"], str) and
+            SHA_RX.fullmatch(runner["prompt_ids_sha256"]) is not None and
+            runner["prompt_ids_sha256"] ==
+                prompt_ids_sha256(runner["prompt_token_ids"]),
+            "invalid source-bound native runner receipt")
+    else:
+        require("cpu" not in runner or runner["cpu"] == "none",
+                "synthetic-only runner receipt drift")
+    obs = mechanical_observations(
+        cfg, response["text"] + "\n" + response["raw_with_special_tokens"])
+    return {
+        "member_id": member_id, "prompt_id": prompt_id,
+        "response_sha256": sha256_bytes(response["text"].encode("utf-8")),
+        **obs,
+    }
+
+
+def require_native_results(rows: list[dict],
+                           *, allow_synthetic_test_only: bool = False) -> None:
+    """Production archive admission refuses synthetic-only fixture receipts.
+
+    An explicit Python-only fixture argument is available to isolated offline
+    unit tests. There is deliberately NO command-line or Actions toggle.
+    """
+    if not allow_synthetic_test_only:
+        require(all(isinstance(r.get("runner"), dict) and
+                    r["runner"].get("synthetic_test_only") is not True
+                    for r in rows),
+                "synthetic-only runner receipts are not live generations")
+
+
+def read_results(path: Path) -> list[dict]:
+    rows = [json.loads(line) for line in
+            path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return rows
+
+
+def validate_complete_results(cfg: dict, rows: list[dict]) -> list[dict]:
+    require(len(rows) == 144, "complete screen requires exactly 144 raw results")
+    seen = set()
+    observations = []
+    for row in rows:
+        key = (row.get("member_id"), row.get("prompt_id"))
+        require(key not in seen, "duplicate member/prompt result")
+        seen.add(key)
+        observations.append(validate_result(cfg, row))
+    expected = {(m["member_id"], p["id"])
+                for m in cfg["source_population"]["members"]
+                for p in cfg["prompts"]}
+    require(seen == expected, "missing or unexpected member/prompt result")
+    return observations
+
+
+def require_blinding_key(secret: bytes) -> None:
+    require(isinstance(secret, bytes) and len(secret) == 32,
+            "private 32-byte blinding key required")
+
+
+def opaque_key(member_id: str, prompt_id: str, secret: bytes) -> str:
+    """Private deterministic permutation, not a publicly guessable fixed salt."""
+    require_blinding_key(secret)
+    return hmac.new(
+        secret,
+        f"DETECTIVE-005A|{member_id}|{prompt_id}".encode("utf-8"),
+        hashlib.sha256).hexdigest()
+
+
+def mapping_commitment(secret: bytes, mapping: dict[str, dict]) -> str:
+    """Commit to the secret permutation without publishing the mapping or key."""
+    require_blinding_key(secret)
+    return sha256_bytes(
+        b"detective-005a-private-mapping-v1|" +
+        secret + canonical(mapping).encode("utf-8"))
+
+
+def build_review_packet(
+        cfg: dict, rows: list[dict], secret: bytes
+) -> tuple[dict, dict[str, dict]]:
+    require_blinding_key(secret)
+    observations = validate_complete_results(cfg, rows)
+    by_key = {(r["member_id"], r["prompt_id"]): r for r in rows}
+    obs_by_key = {(o["member_id"], o["prompt_id"]): o for o in observations}
+    ordered = sorted(by_key, key=lambda x: opaque_key(*x, secret))
+    items, mapping = [], {}
+    prompts = prompts_by_id(cfg)
+    for i, key in enumerate(ordered, 1):
+        item_id = f"R{i:03d}"
+        member_id, prompt_id = key
+        row = by_key[key]
+        mapping[item_id] = {
+            "member_id": member_id,
+            "prompt_id": prompt_id,
+            "hard_floor_pass": obs_by_key[key]["hard_floor_pass"],
+        }
+        items.append({
+            "item_id": item_id,
+            "prompt": prompts[prompt_id]["user"],
+            "response": row["response"]["text"],
+            "score_0_to_4": None,
+            "tags": [],
+            "note": "",
+        })
+    packet = {
+        "schema": "detective-005a-subjective-gameplay-packet-v1",
+        "experiment": "DETECTIVE-005A",
+        "issue": 176,
+        "identity_mapping_committed": False,
+        "blinding": "private-hmac-sha256-v1",
+        "private_mapping_commitment_sha256": mapping_commitment(secret, mapping),
+        "question": cfg["subjective_review"]["question"],
+        "scale": cfg["subjective_review"]["scale"],
+        "interpretation": cfg["subjective_review"]["interpretation"],
+        "allowed_tags": cfg["subjective_review"]["optional_tags"],
+        "items": items,
+    }
+    blob = canonical(packet)
+    for member in members_by_id(cfg):
+        require(member not in blob, "opaque packet leaked member identity")
+    return packet, mapping
+
+
+def rating_template(packet: dict) -> dict:
+    require(packet.get("schema") ==
+            "detective-005a-subjective-gameplay-packet-v1" and
+            packet.get("blinding") == "private-hmac-sha256-v1" and
+            isinstance(packet.get("private_mapping_commitment_sha256"), str) and
+            SHA_RX.fullmatch(packet["private_mapping_commitment_sha256"]) is not None,
+            "wrong review packet schema or missing private blinding commitment")
+    return {
+        "schema": "detective-005a-subjective-gameplay-ratings-v1",
+        "experiment": "DETECTIVE-005A",
+        "issue": 176,
+        "packet_sha256": sha256_bytes(
+            (json.dumps(packet, indent=2, ensure_ascii=False,
+                        sort_keys=True) + "\n").encode("utf-8")),
+        "reviewer_label": "",
+        "question": packet["question"],
+        "scale": packet["scale"],
+        "ratings": [{
+            "item_id": x["item_id"],
+            "score_0_to_4": None,
+            "tags": [],
+            "note": "",
+        } for x in packet["items"]],
+    }
+
+
+def validate_ratings(cfg: dict, packet: dict, ratings: dict) -> None:
+    expected = rating_template(packet)
+    require((ratings.get("schema"), ratings.get("experiment"),
+             ratings.get("issue"), ratings.get("packet_sha256")) ==
+            (expected["schema"], "DETECTIVE-005A", 176,
+             expected["packet_sha256"]),
+            "rating packet identity/hash mismatch")
+    require(isinstance(ratings.get("reviewer_label"), str),
+            "reviewer label must be text")
+    rows = ratings.get("ratings")
+    require(isinstance(rows, list) and len(rows) == 144,
+            "all 144 fun ratings required")
+    require([x.get("item_id") for x in rows] ==
+            [x["item_id"] for x in expected["ratings"]],
+            "rating order/item IDs changed")
+    allowed = set(cfg["subjective_review"]["optional_tags"])
+    for row in rows:
+        require(set(row) == {"item_id", "score_0_to_4", "tags", "note"},
+                "rating row field drift")
+        require(type(row["score_0_to_4"]) is int and
+                0 <= row["score_0_to_4"] <= 4,
+                "every fun score must be integer 0..4")
+        require(isinstance(row["tags"], list) and
+                len(row["tags"]) == len(set(row["tags"])) and
+                all(isinstance(x, str) and x in allowed for x in row["tags"]),
+                "invalid subjective tags")
+        require(isinstance(row["note"], str), "rating note must be text")
+
+
+def aggregate(cfg: dict, rows: list[dict], packet: dict, ratings: dict,
+              secret: bytes) -> dict:
+    require_blinding_key(secret)
+    validate_ratings(cfg, packet, ratings)
+    packet2, mapping = build_review_packet(cfg, rows, secret)
+    require(packet2 == packet, "review packet does not reconstruct")
+    groups = {m["member_id"]: [] for m in cfg["source_population"]["members"]}
+    hard = {m["member_id"]: True for m in cfg["source_population"]["members"]}
+    tags = {m["member_id"]: {} for m in cfg["source_population"]["members"]}
+    for rating in ratings["ratings"]:
+        src = mapping[rating["item_id"]]
+        member = src["member_id"]
+        groups[member].append(rating["score_0_to_4"])
+        hard[member] = hard[member] and src["hard_floor_pass"]
+        for tag in rating["tags"]:
+            tags[member][tag] = tags[member].get(tag, 0) + 1
+    members = []
+    for member in sorted(groups):
+        values = groups[member]
+        require(len(values) == 4, "member must have four fun ratings")
+        members.append({
+            "member_id": member,
+            "mean_fun": sum(values) / 4,
+            "scores": values,
+            "hard_floor_pass": hard[member],
+            "tag_counts": dict(sorted(tags[member].items())),
+        })
+    eligible = [x for x in members if x["hard_floor_pass"]]
+    eligible.sort(key=lambda x: (-x["mean_fun"], x["member_id"]))
+    shortlist = [x["member_id"] for x in
+                 eligible[:cfg["outcome"]["shortlist_size"]]]
+    return {
+        "schema": "detective-005a-fun-screen-summary-v1",
+        "experiment": "DETECTIVE-005A",
+        "issue": 176,
+        "packet_sha256": rating_template(packet)["packet_sha256"],
+        "ratings_sha256": sha256_bytes(
+            (json.dumps(ratings, indent=2, ensure_ascii=False,
+                        sort_keys=True) + "\n").encode("utf-8")),
+        "objective_relevance_threshold": None,
+        "members": members,
+        "hard_floor_clean_members": len(eligible),
+        "subjective_fun_shortlist": shortlist,
+        "production_admission": False,
+        "training_admission": False,
+        "population_expansion_admitted": False,
+    }
+
+
+def write_json(path: Path, value: Any) -> None:
+    require(not path.exists(), "refuse overwrite")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2, sort_keys=True,
+                               ensure_ascii=False) + "\n",
+                    encoding="utf-8")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--results", type=Path)
+    ap.add_argument("--write-packet", type=Path)
+    ap.add_argument("--write-ratings-template", type=Path)
+    ap.add_argument("--ratings", type=Path)
+    ap.add_argument("--write-summary", type=Path)
+    args = ap.parse_args()
+    cfg = load_contract()
+    if args.results is None:
+        print(json.dumps({
+            "experiment": cfg["experiment"],
+            "members": len(cfg["source_population"]["members"]),
+            "prompts_per_member": len(cfg["prompts"]),
+            "total_generations": cfg["limits"]["total_generations"],
+            "optimizer_steps": 0,
+            "subjective_fun_is_intended_metric": True,
+            "objective_relevance_threshold": None,
+        }, indent=2, sort_keys=True))
+        return
+    raise ScreenError(
+        "public fixed-salt packet generation disabled; use the reviewed "
+        "private-custodian tool to prepare, freeze and unblind only after "
+        "all 144 source-verified responses exist")
+
+
+if __name__ == "__main__":
+    main()

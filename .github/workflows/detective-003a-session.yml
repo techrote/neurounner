@@ -1,0 +1,46 @@
+name: DETECTIVE-003A authoritative interview session ledger
+
+on:
+  pull_request:
+    paths:
+      - "scripts/detective_003a_session.py"
+      - "tests/test_detective_003a_session.py"
+      - "experiments/detective-003/session-fixture.json"
+      - "experiments/detective-003/SESSION_LEDGER.md"
+      - "experiments/detective-001/pilot-case.json"
+      - ".github/workflows/detective-003a-session.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-session-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile deterministic session source/tests
+        run: |
+          python3 -m py_compile scripts/detective_003a_session.py tests/test_detective_003a_session.py
+      - name: Run complete DETECTIVE offline suite
+        run: |
+          python3 -m unittest discover -s tests -p 'test_detective_*.py' -v
+      - name: Enforce no-model/no-training/no-relevance dependency
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          source=Path("scripts/detective_003a_session.py").read_text()
+          test=Path("tests/test_detective_003a_session.py").read_text()
+          for forbidden in (
+              "import torch", "transformers", "peft", "huggingface_hub",
+              "openai", "anthropic", "nvidia", "optimizer", "backward(",
+              "relevance-packet", "identity_mapping"
+          ):
+              assert forbidden not in source, forbidden
+          assert "execute_program" in test
+          assert "camera-cache" in test
+          print("DETECTIVE-003A OFFLINE AUTHORITY BOUNDARY: PASS")
+          PY
