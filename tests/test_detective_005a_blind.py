@@ -275,9 +275,9 @@ class Detective005ABlindCustodyTests(unittest.TestCase):
         if os.name != "posix":
             self.skipTest("Linux-only mount qualification")
         example = (
-            "21 0 0:1 / / rw - overlay overlay rw\\n"
-            "22 21 0:2 / /mnt/c rw - 9p C: rw,aname=drvfs\\n"
-            "23 22 0:3 / /mnt/c/secrets rw - ntfs3 /dev/sda rw\\n"
+            "21 0 0:1 / / rw - overlay overlay rw\n"
+            "22 21 0:2 / /mnt/c rw - 9p C: rw,aname=drvfs\n"
+            "23 22 0:3 / /mnt/c/secrets rw - ntfs3 /dev/sda rw\n"
         )
         with mock.patch.object(blind.Path, "read_text", return_value=example):
             self.assertEqual(blind._linux_mount_type(
