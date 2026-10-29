@@ -985,5 +985,79 @@ class Detective005ARecoveryTests(unittest.TestCase):
         self.assertNotIn("hf_hub_download", probe)
 
 
+
+    @unittest.skipUnless(
+        __import__("shutil").which("git") and __import__("shutil").which("tar"),
+        "Local Git and tar are required for the no-network transport test",
+    )
+    def test_local_git_push_fetch_archive_uses_persisted_bytes(self):
+        """Actual local bare-Git transfer, not a hosted GitHub persistence claim."""
+        import subprocess
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            origin = root / "origin.git"
+            working = root / "working"
+            artifact = root / "artifacts" / "detective005a-G01"
+            artifact.mkdir(parents=True)
+            journal = artifact / "results.partial.jsonl"
+            live.append_completed_raw(journal, self.row())
+            # Deliberately preserve a torn suffix, as in an interrupted run.
+            with journal.open("ab") as fp:
+                fp.write(b'{"torn_tail":')
+            original = journal.read_bytes()
+            dataset_rel = Path("datasets/detective-005a-local-git-probe")
+            dataset = working / dataset_rel
+            dataset.parent.mkdir(parents=True)
+            recover.recover(root / "artifacts", dataset, HEAD, RUN)
+            recover.verify(dataset)
+
+            def git(*args, cwd=working):
+                return subprocess.run(
+                    ["git", *args], cwd=cwd, check=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                ).stdout.strip()
+
+            git("init", "--bare", str(origin), cwd=root)
+            working.mkdir(exist_ok=True)
+            git("init", "-b", "main")
+            git("config", "user.name", "DETECTIVE no-model fixture")
+            git("config", "user.email", "fixture@example.invalid")
+            git("add", str(dataset_rel))
+            git("commit", "-m", "synthetic interrupted recovery, not model data")
+            local_head = git("rev-parse", "HEAD")
+            git("remote", "add", "origin", str(origin))
+            branch = "refs/heads/evidence/detective-005a-local-git-probe"
+            git("push", "origin", "HEAD:" + branch)
+            git("fetch", "--no-tags", "origin", branch)
+            self.assertEqual(local_head, git("rev-parse", "FETCH_HEAD"))
+
+            # Mutate the local working file after the commit; the fetched
+            # remote Git object must still contain the exact original bytes.
+            (dataset / "raw/G01/results.partial.jsonl").write_bytes(b"changed locally")
+            archive = subprocess.run(
+                ["git", "archive", "FETCH_HEAD", str(dataset_rel)],
+                cwd=working, check=True, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            ).stdout
+            extracted = root / "readback"
+            extracted.mkdir()
+            subprocess.run(
+                ["tar", "-xf", "-", "-C", str(extracted)], input=archive,
+                check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            fetched = extracted / dataset_rel
+            self.assertEqual(
+                (fetched / "raw/G01/results.partial.jsonl").read_bytes(), original)
+            self.assertEqual(recover.verify(fetched)["validated_raw_prefix_rows"], 1)
+
+            # A corrupted extracted copy must be refused rather than laundered
+            # through the otherwise-valid inventory or remote commit identity.
+            fetched_raw = fetched / "raw/G01/results.partial.jsonl"
+            fetched_raw.write_bytes(original + b"unrecorded change")
+            with self.assertRaisesRegex(screen.ScreenError, "bytes drift"):
+                recover.verify(fetched)
+
+
 if __name__ == "__main__":
     unittest.main()
