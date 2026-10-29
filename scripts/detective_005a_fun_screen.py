@@ -244,7 +244,20 @@ def validate_result(cfg: dict, row: dict) -> dict:
             isinstance(response["elapsed_seconds"], (int, float)) and
             response["elapsed_seconds"] >= 0,
             "invalid raw response record")
-    require(isinstance(row["runner"], dict), "runner receipt required")
+    runner = row["runner"]
+    require(isinstance(runner, dict), "runner receipt required")
+    # Source labels alone are not weight provenance. Every raw result must
+    # carry the exact hashes actually checked by the live frozen-model loader;
+    # never accept an unverified or substituted adapter as frozen village SFT.
+    source = row["source"]
+    require(
+        runner.get("base_weights_sha256_verified") ==
+            source["base_weights_sha256"] and
+        runner.get("adapter_archive_sha256_verified") ==
+            source["asset_sha256"] and
+        runner.get("adapter_directory_sha256_verified") ==
+            source["adapter_directory_sha256"],
+        "missing or mismatched base/adapter verification receipt")
     obs = mechanical_observations(
         cfg, response["text"] + "\n" + response["raw_with_special_tokens"])
     return {
