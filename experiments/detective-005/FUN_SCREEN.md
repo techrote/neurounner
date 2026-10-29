@@ -164,11 +164,27 @@ The standard-library `scripts/detective_005a_recover.py`:
   inventory, then independently re-verifies the archived bytes before push;
 - never builds a subjective fun packet or grants any admission.
 
-`complete_lineage_recovered` means 12 raw results and a valid lineage
-manifest were preserved from a **failed workflow**, NOT that the whole
-144-response screen passed. Invalid or foreign records stay quarantined as
-raw bytes, never counted as validated results. Artifact IDs/digests are recorded
-only when returned by GitHub; missing downloads are explicitly flagged.
+`complete_lineage_recovered` requires all 12 source-valid raw results,
+a valid original manifest, a present byte-identical **fsynced incremental
+journal**, and a matching same-run GitHub Actions artifact API identity.
+It applies to **one recovered lineage only**, not the 144-response screen.
+A locally complete lineage without API metadata is `recovery_only`, not
+certified custody. Invalid/foreign rows remain retained but quarantined.
+
+Truncated, malformed or ambiguous GitHub artifact API metadata does not
+abort preservation of already-downloaded raw files. The original broken
+API bytes are retained and SHA-inventoried, with
+`artifact_api_metadata_invalid` recorded. The retrieval gate remains
+**RED**; this does not prove missing artifacts were recovered.
+
+`artifact_transport_complete` measures only same-run artifact retrieval,
+not a valid full screen: the API and download steps must report success;
+listed original lineage artifacts must be present, and every downloaded
+artifact needs a valid API-bound source-run identity. A failed download
+or invalid API response can still produce a best-effort archive, but
+**cannot leave the final recovery job green**. No rerun is permitted
+until original surviving evidence is durably promoted or a verified
+no-output determination is documented.
 
 **Push-failure fallback (source-only, not live-qualified):** after the
 recovery dataset passes local readback, the workflow attempts a separate
