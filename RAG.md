@@ -72,6 +72,8 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 
 - **[NCR-001E fresh actual frozen SmolLM2 reviewer run](docs/NCR_001_E_SMOL_FRESH.md)** — source-pinned PR #83 implementation re-executed on a separate runner; 128-token initial parity, left/right masked padding, 48-token one-step KV-cache, A→B→A reset and same-base cold adapter reload. [Raw receipt](experiments/ncr-001/evidence-review/smolllm2-fresh/receipt.json) and [source-bound provenance](experiments/ncr-001/evidence-review/smolllm2-fresh/provenance.json) retained. **SmolLM2-only prepass; not full #72 or training admission.**
 
+- **[NCR-001E fresh pinned Sprocket Chat/Instruct ordinary-role/cache reviewers](docs/NCR_001_E_SPROCKET_FRESH.md)** — verify source-card user/end/assistant role markers and real tokenizer IDs before separately pinned full frozen Chat/root-Instruct long/cache/A→B→A and cold-adapter source tests. Tool/memory semantics remain unqualified; no trained adapters.
+
 ## Retrieval rules
 
 1. Prefer primary dataset records over prose summaries when answering questions about exact prompts or outputs.
