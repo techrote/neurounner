@@ -6,6 +6,7 @@ on:
 permissions:
   contents: read
   pull-requests: read
+  actions: read
 concurrency:
   group: merge-down-foundations-20261029
   cancel-in-progress: false
@@ -16,7 +17,7 @@ env:
   TOKENIZERS_PARALLELISM: "false"
   OMP_NUM_THREADS: "4"
   MKL_NUM_THREADS: "4"
-  BASE_SHA: 547c28bc6d16d306ef16a655e87fc8adff72ecce
+  BASE_SHA: 663dc1c90136386aa1df6bd3b7e44400122998b7
 jobs:
   integration:
     runs-on: ubuntu-24.04
@@ -24,14 +25,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 547c28bc6d16d306ef16a655e87fc8adff72ecce
+          ref: 663dc1c90136386aa1df6bd3b7e44400122998b7
           fetch-depth: 0
           persist-credentials: false
       - name: Install pinned CPU test dependency without model libraries
         run: |
           python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
           python3 -c 'import torch; assert torch.__version__ == "2.14.1+cpu"; assert not torch.cuda.is_available()'
-      - name: Verify current main and accepted head, then validate integrated archive
+      - name: Validate integrated source and replay original records without new benchmark work
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -39,7 +40,7 @@ jobs:
           git config user.name 'Read-only integration validation'
           git config user.email 'integration-validation@example.invalid'
           python3 - <<'PY'
-          import hashlib, json, os, pathlib, subprocess, sys, urllib.request
+          import hashlib, io, json, os, pathlib, re, subprocess, sys, urllib.request, zipfile
           out = pathlib.Path(os.environ['RUNNER_TEMP']) / 'merge-down-validation'
           out.mkdir()
           def run(args, name):
@@ -49,42 +50,81 @@ jobs:
               if p.returncode:
                   raise RuntimeError(f'{name}: exit {p.returncode}')
               return p.stdout.strip()
-          def read(path):
-              r = urllib.request.Request('https://api.github.com/repos/techrote/neurounner' + path,
+          class StripRedirectAuth(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  result = super().redirect_request(req, fp, code, msg, headers, newurl)
+                  if result is not None:
+                      result.remove_header('Authorization')
+                  return result
+          opener = urllib.request.build_opener(StripRedirectAuth())
+          def read_bytes(path, limit=4000000):
+              request = urllib.request.Request('https://api.github.com/repos/techrote/neurounner' + path,
                   headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
-              with urllib.request.urlopen(r, timeout=45) as response:
-                  return json.load(response)
-          head = '8a285193003627d83ab7938845f2714da852d528'
+              with opener.open(request, timeout=45) as response:
+                  data = response.read(limit + 1)
+              assert len(data) <= limit, 'Bounded evidence read exceeded limit'
+              return data
+          def read(path):
+              return json.loads(read_bytes(path))
+          head = 'edb5ccecf602ad16b166a75d133ed2d9562bf41a'
           main = read('/branches/main')
           assert main['commit']['sha'] == os.environ['BASE_SHA'], 'Main moved: re-audit'
-          pr = read('/pulls/44')
+          pr = read('/pulls/52')
           assert pr['state'] == 'open' and pr['head']['sha'] == head, 'PR moved: re-audit'
           (out / 'main-before.json').write_text(json.dumps(main, indent=2) + '\n')
-          (out / '44-pr.json').write_text(json.dumps(pr, indent=2) + '\n')
-          run(['git', 'merge', '--no-ff', '--no-edit', head], '44-merge.log')
-          tree = run(['git', 'rev-parse', 'HEAD^{tree}'], '44-tree.txt')
-          assert tree == 'e840da2d606a967d853830c67e908454a5a701a3', tree
-          # Preserve archived Markdown's intentional two-space hard breaks.
-          # Other files, including all source, workflows and JSON, retain whitespace checks.
-          run(['git', 'diff', '--check', 'HEAD^1', 'HEAD', '--', '.', ':(exclude)*.md'], '44-nonmarkdown-diff-check.log')
-          run([sys.executable, 'scripts/ncr_001_protocol.py', 'validate'], 'protocol.json')
-          for group in ('ncr_001', 'detective_001', 'detective_005'):
+          (out / '52-pr.json').write_text(json.dumps(pr, indent=2) + '\n')
+          run(['git', 'merge', '--no-ff', '--no-edit', head], '52-merge.log')
+          tree = run(['git', 'rev-parse', 'HEAD^{tree}'], '52-tree.txt')
+          assert tree == 'ae04cf990390ff265c64319d64a37f53b0371664', tree
+          run(['git', 'diff', '--check', 'HEAD^1', 'HEAD'], '52-diff-check.log')
+          for group in ('runner_001', 'ncr_001', 'detective_001', 'detective_005'):
               run([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', f'test_{group}*.py', '-v'], f'{group}-tests.log')
-          run([sys.executable, 'scripts/verify_story_001_v2.py'], '44-archive-verification.log')
-          for variant in ('story_001', 'story_001_v2'):
-              directory = variant.replace('_', '-')
-              run([sys.executable, f'scripts/{variant}.py', '--config', f'experiments/{directory}/config.json', 'self-test'], f'44-{variant}-selftest.log')
-          run([sys.executable, 'scripts/ncr_001f_plan.py', '--out', str(out / 'control-plan.json')], 'plan.log')
-          run([sys.executable, 'scripts/ncr_001e_readback.py', '--out', str(out / 'readback.json')], 'readback.log')
-          checks = [(out / 'control-plan.json', pathlib.Path('experiments/ncr-001/controls-evidence/provenance.json')),
-                    (out / 'readback.json', pathlib.Path('experiments/ncr-001/evidence-review/audit-provenance.json'))]
-          for report, source in checks:
-              assert hashlib.sha256(report.read_bytes()).hexdigest() == json.loads(source.read_text())['source']['original_uncompressed_report_sha256']
+          run([sys.executable, 'scripts/ncr_001_protocol.py', 'validate'], 'protocol.json')
+          run([sys.executable, 'scripts/verify_story_001_v2.py'], 'story-archive.log')
+          original_run = 40220617428
+          api_run = read(f'/actions/runs/{original_run}')
+          assert api_run['head_sha'] == '1f7a8783063c34be0449fc9bf1b20e95dcb2e9ea' and api_run['conclusion'] == 'success'
+          artifacts = read(f'/actions/runs/{original_run}/artifacts?per_page=100')
+          expected = {f'runner001-{lane}-r{rep}-a1' for lane in ('ubuntu-24.04-x64', 'windows-2025-x64', 'macos-15-arm64') for rep in (1, 2, 3)}
+          expected.add('runner001-summary-a1')
+          rows = [a for a in artifacts['artifacts'] if a['name'] in expected]
+          assert len(rows) == 10 and {a['name'] for a in rows} == expected
+          (out / 'original-run-api.json').write_text(json.dumps(api_run, indent=2) + '\n')
+          (out / 'original-artifacts-api.json').write_text(json.dumps(artifacts, indent=2) + '\n')
+          originals = out / 'originals-40220617428'
+          extracted = originals / 'extracted'
+          extracted.mkdir(parents=True)
+          for artifact in rows:
+              assert not artifact['expired']
+              assert artifact['workflow_run']['id'] == original_run
+              digest = artifact['digest']
+              assert re.fullmatch(r'sha256:[0-9a-f]{64}', digest)
+              data = read_bytes(f"/actions/artifacts/{artifact['id']}/zip")
+              assert len(data) == artifact['size_in_bytes']
+              assert 'sha256:' + hashlib.sha256(data).hexdigest() == digest
+              (originals / f"{artifact['id']}.zip").write_bytes(data)
+              with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                  assert sum(x.file_size for x in archive.infolist()) < 1000000
+                  for member in archive.infolist():
+                      name = pathlib.PurePosixPath(member.filename)
+                      assert len(name.parts) == 1 and name.name.startswith('runner001-') and name.suffix in ('.json', '.md')
+                      target = extracted / name.name
+                      assert not target.exists(), 'Duplicate original member'
+                      target.write_bytes(archive.read(member))
+          run([sys.executable, 'scripts/runner_001_summary.py', '--input-dir', str(extracted),
+               '--json-out', str(out / 'replayed-summary.json'), '--md-out', str(out / 'replayed-summary.md')], 'original-replay.log')
+          old = json.loads((extracted / 'runner001-summary.json').read_text())
+          new = json.loads((out / 'replayed-summary.json').read_text())
+          assert len(new['rows']) == 9 and new['source_run']['id'] == str(original_run)
+          assert new['aggregates'] == old['aggregates'], 'Original aggregate numbers changed'
+          assert new['dataset_canonical_sha256'] == old['dataset_canonical_sha256']
           assert json.loads(pathlib.Path('experiments/ncr-001/protocol.json').read_text())['train_authorized'] is False
-          (out / 'accepted.json').write_text(json.dumps({'pr': 44, 'head': head, 'base': os.environ['BASE_SHA'], 'tree': tree, 'passed': True, 'models_loaded': 0, 'provider_calls': 0}, indent=2) + '\n')
-          print('No model loading, provider calls, comparative training, repository writes or scientific admission.')
+          (out / 'accepted.json').write_text(json.dumps({'pr': 52, 'head': head, 'base': os.environ['BASE_SHA'], 'tree': tree,
+              'passed': True, 'original_run': original_run, 'original_records': 9, 'original_aggregates_unchanged': True,
+              'fresh_physical_benchmark_runs': 0, 'provider_calls': 0}, indent=2) + '\n')
+          print('No new benchmark, model loading, provider calls, comparative training or repository writes.')
           PY
-      - name: Preserve success and failure logs
+      - name: Preserve original ZIPs plus success or failure logs
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
