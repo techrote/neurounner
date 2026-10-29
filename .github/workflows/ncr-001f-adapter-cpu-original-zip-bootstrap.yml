@@ -37,8 +37,9 @@ jobs:
           test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
           test "$(git hash-object scripts/ncr_001_core.py)" = 0427ad0b0f1fc68199369d5094952017bc70f503
           test "$(git hash-object scripts/ncr_001f_controls.py)" = b4d486c6d9f8c8d37fd2205b0381db9ef4ae9c22
-          git ls-files --error-unmatch "$DEST/original-actions-40867677298.zip"
+          git ls-files --error-unmatch "$DEST/original-actions-40867677298.zip" "$DEST/original-job-123426590154.log"
           test "$(git hash-object "$DEST/original-actions-40867677298.zip")" = 38a428b1a0fae2c7b9163f200a2b83f37f369add
+          test "$(git hash-object "$DEST/original-job-123426590154.log")" = 7ec9f8443bb69ce69330088457c3e31bee19d512
       - name: Re-download ORIGINAL GitHub artifact and independently byte-compare to committed Git object
         shell: bash
         run: |
@@ -78,7 +79,7 @@ jobs:
             assert r["frozen_model_inference_executed"] is False
           print("ORIGINAL-RAW-ACTIONS-ZIP-GIT-CUSTODY-VERIFIED__FULL_HOST_NOT_RUN")
           PY
-      - name: Independently replay custody auditor and eight adversarial source tests
+      - name: Independently replay custody auditor and ten original archive/log adversarial tests
         shell: bash
         run: |
           set -euo pipefail
