@@ -79,6 +79,7 @@ jobs:
               cmd(['git','diff','--cached','--check','--',':(exclude,glob)**/*.md'],f'{n}-nonmarkdown-diff-check.log')
               cmd(['git','commit','--no-edit'],f'{n}-local-merge-commit.log')
               tree=cmd(['git','rev-parse','HEAD^{tree}'],f'{n}-tree.txt').stdout.strip()
+              (out/f'{n}-RAG.md').write_bytes(pathlib.Path('RAG.md').read_bytes())
               assert json.loads(pathlib.Path('experiments/ncr-001/protocol.json').read_text())['train_authorized'] is False
               if n==89:
                   root=pathlib.Path('experiments/ncr-001/evidence-review/smolllm2-fresh')
