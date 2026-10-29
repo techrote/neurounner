@@ -226,7 +226,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
             unbound = screen.read_json(
                 out / "provenance/source-artifacts.json")["lineages"][0]
             self.assertEqual(unbound["status"], "recovery_only")
-            self.assertIn("artifact_api_metadata_unavailable",
+            self.assertIn("invalid_complete_lineage_manifest",
                           unbound["custody_warnings"])
             self.assertFalse(recover.verify(out)["artifact_transport_complete"])
             self.assertFalse((out / "review/fun-packet.json").exists())
