@@ -133,6 +133,12 @@ def inspect_raw(cfg: dict, lineage: str, source: Path,
             line = fh.readline()
             try:
                 row = json.loads(line)
+                # JSON parsers accept duplicate keys, concealing an original
+                # raw value from the validated semantic row. Do not count it
+                # as a source-valid prefix, but preserve the exact raw bytes.
+                screen.require(
+                    line == (screen.canonical(row) + "\n").encode("utf-8"),
+                    "noncanonical raw response or duplicate JSON keys")
                 screen.validate_result(cfg, row)
                 identity = row["member_id"], row["prompt_id"]
                 screen.require(identity == expected[offset],
@@ -411,6 +417,34 @@ def artifact_transport_complete(records: list[dict], api: dict[str, dict],
                 r["custody_warnings"]) for r in records))
 
 
+def recovery_readme_text(head: str, run_id: str) -> str:
+    """Reproducible public recovery README; no appended private payload."""
+    return (
+        "# DETECTIVE-005A failed-run raw custody\n\n"
+        f"Source commit: `{head}`. GitHub Actions run: `{run_id}`.\n\n"
+        "This is a **recovery archive, not a complete experiment**. "
+        "Each available permitted raw file is copied byte-for-byte, including "
+        "torn JSONL suffixes, error receipts and successful full lineages. "
+        "Missing artifacts or invalid rows are identified without fabricating "
+        "outputs or altering original bytes. Incomplete data never produces "
+        "a fun-rating packet, model admission, training or cast expansion.\n\n"
+        "The archive must be reviewed before retrying a failed lineage. "
+        "The artifact_transport_complete flag describes only same-run API "
+        "retrieval/download reconciliation, not semantic output validity. "
+        "A false value is a BLOCKING custody gap even when this best-effort "
+        "archive branch was pushed; recover the remaining original bytes "
+        "before any retry. Unexpected artifact paths or API names are " 
+        "recorded but NOT copied because they may contain private data; " 
+        "inspect original artifacts separately before retry or expiry. " 
+        "Unexpected files, symlinks, duplicated raw names and unpacked "
+        "weight directories are NOT archived: source_structure_warnings "
+        "blocks transport completion and requires separate inspection of "
+        "the expiring original artifact even when safe sibling raw files "
+        "were preserved. Entire-workflow cancellation may prevent this "
+        "job from starting; inspect the original Actions artifacts.\n"
+    )
+
+
 def recover(artifacts: Path, out: Path, head: str, run_id: str,
             metadata_path: Path | None = None,
             artifact_api_outcome: str = "unknown",
@@ -497,35 +531,78 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
         "lineages": records,
     })
     (out / "README.md").write_text(
-        "# DETECTIVE-005A failed-run raw custody\n\n"
-        f"Source commit: `{head}`. GitHub Actions run: `{run_id}`.\n\n"
-        "This is a **recovery archive, not a complete experiment**. "
-        "Each available permitted raw file is copied byte-for-byte, including "
-        "torn JSONL suffixes, error receipts and successful full lineages. "
-        "Missing artifacts or invalid rows are identified without fabricating "
-        "outputs or altering original bytes. Incomplete data never produces "
-        "a fun-rating packet, model admission, training or cast expansion.\n\n"
-        "The archive must be reviewed before retrying a failed lineage. "
-        "The artifact_transport_complete flag describes only same-run API "
-        "retrieval/download reconciliation, not semantic output validity. "
-        "A false value is a BLOCKING custody gap even when this best-effort "
-        "archive branch was pushed; recover the remaining original bytes "
-        "before any retry. Unexpected artifact paths or API names are " 
-        "recorded but NOT copied because they may contain private data; " 
-        "inspect original artifacts separately before retry or expiry. " 
-        "Unexpected files, symlinks, duplicated raw names and unpacked "
-        "weight directories are NOT archived: source_structure_warnings "
-        "blocks transport completion and requires separate inspection of "
-        "the expiring original artifact even when safe sibling raw files "
-        "were preserved. Entire-workflow cancellation may prevent this "
-        "job from starting; inspect the original Actions artifacts.\n",
-        encoding="utf-8")
+        recovery_readme_text(head, run_id), encoding="utf-8")
     (out / "provenance" / "hashes.sha256").write_text(
         assemble.hash_inventory(out), encoding="utf-8")
     return manifest
 
 
-def verify(path: Path) -> dict:
+RECOVERY_MANIFEST_KEYS = {
+    "schema", "experiment", "issue", "status", "repository_head_sha",
+    "actions_run_id", "actions_run_url", "source_config_sha256",
+    "runner_script_sha256", "recovery_script_sha256", "lineages_reported",
+    "lineages_with_artifacts", "complete_lineage_artifacts",
+    "validated_raw_prefix_rows", "artifact_api_outcome",
+    "artifact_download_outcome", "artifact_api_metadata_invalid",
+    "unexpected_artifact_sources", "artifact_transport_complete",
+    "review_packet_generated", "training_admission", "production_admission",
+    "population_expansion_admitted", "optimizer_steps", "model_judge_calls",
+}
+RECOVERY_PROVENANCE_KEYS = {
+    "schema", "repository_head_sha", "actions_run_id",
+    "metadata_available", "artifact_api_metadata_invalid",
+    "unexpected_artifact_sources", "lineages",
+}
+RECOVERY_LINEAGE_KEYS = {
+    "lineage", "status", "validated_raw_prefix_rows",
+    "journal_tail_problem", "custody_warnings", "files",
+    "source_structure_warnings", "artifact_name", "artifact_api",
+}
+
+
+def require_original_artifact_inspection(
+        archived_provenance: dict, archive_api: Path,
+        original_artifacts: Path, original_api: Path) -> None:
+    """Compare a pushed archive with separate, still-existing source inputs.
+
+    Intentionally excluded unsafe entries cannot be reconstructed from the
+    Git-only archive. The self-reported source_structure_warnings are not
+    independently authoritative, even when the hash inventory is rebuilt.
+    """
+    screen.require(original_artifacts.is_dir() and
+                   not original_artifacts.is_symlink(),
+                   "independent original artifact directory required")
+    screen.require(original_api.is_file() and
+                   not original_api.is_symlink() and
+                   archive_api.is_file() and
+                   archive_api.read_bytes() == original_api.read_bytes(),
+                   "independent original artifact API bytes disagree")
+    old_downloaded = sorted(
+        x for x in archived_provenance["unexpected_artifact_sources"]
+        if x.startswith("downloaded:"))
+    actual_downloaded = unexpected_artifact_sources(original_artifacts, None)
+    screen.require(old_downloaded == actual_downloaded,
+                   "original unexpected downloaded artifacts were omitted")
+    for lineage, saved in zip(assemble.LINEAGES, archived_provenance["lineages"]):
+        files, warnings = salvage_artifact_files(original_artifacts, lineage)
+        screen.require(
+            saved["lineage"] == lineage and
+            warnings == saved["source_structure_warnings"],
+            "original source structure warning mismatch")
+        expected = {item["name"]: item for item in saved["files"]}
+        screen.require(set(files) == set(expected),
+                       "original recovered source file set drift")
+        for name, original in files.items():
+            item = expected[name]
+            screen.require(
+                original.stat().st_size == item["bytes"] and
+                screen.sha256_file(original) == item["sha256"],
+                "independent original artifact bytes differ from archive")
+
+
+def verify(path: Path, *,
+           original_artifacts: Path | None = None,
+           original_artifact_api: Path | None = None) -> dict:
     # Git stores symlinks as links, not the bytes they reference. A digest
     # read through a link can match while the pushed dataset lacks its raw
     # evidence. Refuse all links before trusting any readback or SHA inventory.
@@ -533,7 +610,13 @@ def verify(path: Path) -> dict:
                    "recovery archive root must be a physical directory")
     screen.require(all(not entry.is_symlink() for entry in path.rglob("*")),
                    "recovery archive contains symlink; not self-contained custody")
-    manifest = screen.read_json(path / "manifest.json")
+    manifest_path = path / "manifest.json"
+    manifest = screen.read_json(manifest_path)
+    screen.require(type(manifest) is dict and
+                   set(manifest) == RECOVERY_MANIFEST_KEYS,
+                   "recovery manifest field-set drift")
+    assemble.require_canonical_json(
+        manifest_path, manifest, "recovery manifest")
     screen.require(manifest.get("schema") == "detective-005a-partial-recovery-v1" and
                    manifest.get("status") == "raw_recovery_only_not_a_complete_screen" and
                    manifest.get("review_packet_generated") is False and
@@ -546,6 +629,20 @@ def verify(path: Path) -> dict:
     head = manifest["repository_head_sha"]
     run_id = manifest["actions_run_id"]
     ensure_identity(head, run_id)
+    screen.require(
+        manifest.get("experiment") == "DETECTIVE-005A" and
+        manifest.get("issue") == 176 and
+        manifest.get("lineages_reported") == len(assemble.LINEAGES) and
+        manifest.get("actions_run_url") ==
+            f"https://github.com/techrote/neurounner/actions/runs/{run_id}" and
+        manifest.get("artifact_api_outcome") in
+            {"success", "failure", "skipped", "cancelled", "unknown"} and
+        manifest.get("artifact_download_outcome") in
+            {"success", "failure", "skipped", "cancelled", "unknown"},
+        "recovery identity, Actions URL or transport outcome drift")
+    screen.require((path / "README.md").read_text(encoding="utf-8") ==
+                   recovery_readme_text(head, run_id),
+                   "recovery README content drift")
     screen.require(manifest.get("source_config_sha256") ==
                    screen.sha256_file(screen.CONFIG) and
                    manifest.get("runner_script_sha256") ==
@@ -553,7 +650,13 @@ def verify(path: Path) -> dict:
                    manifest.get("recovery_script_sha256") ==
                    screen.sha256_file(Path(__file__)),
                    "recovery source hash mismatch")
-    provenance = screen.read_json(path / "provenance" / "source-artifacts.json")
+    provenance_path = path / "provenance" / "source-artifacts.json"
+    provenance = screen.read_json(provenance_path)
+    screen.require(type(provenance) is dict and
+                   set(provenance) == RECOVERY_PROVENANCE_KEYS,
+                   "recovery source provenance field-set drift")
+    assemble.require_canonical_json(
+        provenance_path, provenance, "recovery source provenance")
     screen.require(provenance.get("schema") ==
                    "detective-005a-recovery-source-artifacts-v1" and
                    provenance.get("repository_head_sha") == head and
@@ -589,7 +692,8 @@ def verify(path: Path) -> dict:
         # rehashed archive (not even inside an expected G01..G12 directory).
         # Recovery itself copies only these four root-level raw names.
         screen.require(
-            isinstance(saved, dict) and
+            type(saved) is dict and
+            set(saved) == RECOVERY_LINEAGE_KEYS and
             saved.get("lineage") in assemble.LINEAGES and
             isinstance(saved.get("files"), list) and
             all(isinstance(item, dict) and
@@ -663,20 +767,37 @@ def verify(path: Path) -> dict:
             manifest.get("artifact_download_outcome"), metadata_invalid,
             unexpected),
         "recovery artifact transport gate drift")
+    # Excluded unsafe source entries are not part of this public archive.
+    # A green claim derived only from its editable manifest cannot be
+    # re-attested after the original artifact tree has disappeared.
+    screen.require((original_artifacts is None) ==
+                   (original_artifact_api is None),
+                   "original downloaded artifacts and API must be supplied together")
+    if original_artifacts is not None:
+        require_original_artifact_inspection(
+            provenance, metadata_path, original_artifacts, original_artifact_api)
+    independently_verified = original_artifacts is not None
     inventory = (path / "provenance" / "hashes.sha256").read_text(
         encoding="utf-8")
     screen.require(inventory == assemble.hash_inventory(path),
                    "recovery hash inventory mismatch")
     return {"validated_raw_prefix_rows": total,
             "complete_lineage_artifacts": complete,
-            "artifact_transport_complete": manifest["artifact_transport_complete"],
+            "artifact_transport_claimed": manifest["artifact_transport_complete"],
+            "original_artifact_structure_reverified": independently_verified,
+            "artifact_transport_complete":
+                manifest["artifact_transport_complete"] and independently_verified,
             "review_packet_generated": False,
             "production_admission": False}
 
 
-def require_complete_transport(path: Path) -> dict:
-    """Fail CI after best-effort promotion if any original retrieval is unverified."""
-    report = verify(path)
+def require_complete_transport(
+        path: Path, *, original_artifacts: Path | None = None,
+        original_artifact_api: Path | None = None) -> dict:
+    """Refuse a positive custody gate without separate original source bytes."""
+    report = verify(
+        path, original_artifacts=original_artifacts,
+        original_artifact_api=original_artifact_api)
     screen.require(report["artifact_transport_complete"],
                    "incomplete original lineage artifact transport custody")
     return report
@@ -693,15 +814,25 @@ def main() -> None:
     ap.add_argument("--download-outcome", default="unknown")
     ap.add_argument("--verify", type=Path)
     ap.add_argument("--require-complete-transport", action="store_true")
+    ap.add_argument("--original-artifacts", type=Path)
+    ap.add_argument("--original-artifact-api", type=Path)
     args = ap.parse_args()
     if args.verify:
         print(json.dumps(
-            require_complete_transport(args.verify)
-            if args.require_complete_transport else verify(args.verify),
+            require_complete_transport(
+                args.verify,
+                original_artifacts=args.original_artifacts,
+                original_artifact_api=args.original_artifact_api)
+            if args.require_complete_transport else verify(
+                args.verify,
+                original_artifacts=args.original_artifacts,
+                original_artifact_api=args.original_artifact_api),
             indent=2, sort_keys=True))
     else:
-        screen.require(not args.require_complete_transport,
-                       "complete transport gate requires --verify")
+        screen.require(
+            not args.require_complete_transport and
+            args.original_artifacts is None and args.original_artifact_api is None,
+            "original source custody verification requires --verify")
         screen.require(
             args.artifacts is not None and args.out is not None and
             args.source_head is not None and args.run_id is not None,

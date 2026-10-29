@@ -22,6 +22,18 @@ class Detective005ABlindCustodyTests(unittest.TestCase):
     def setUpClass(cls):
         cls.cfg = screen.load_contract()
 
+    def setUp(self):
+        # The private-blinding protocol has an explicit no-model unit fixture.
+        # Production verify_dataset() remains native-only; only within this
+        # isolated test class can synthetic records pass the verifier.
+        native_gate = assemble.verify_dataset
+        patch = mock.patch.object(
+            assemble, "verify_dataset",
+            side_effect=lambda dataset: native_gate(
+                dataset, allow_synthetic_test_only=True))
+        patch.start()
+        self.addCleanup(patch.stop)
+
     def make_dataset(self, root: Path) -> Path:
         fixture = fixtures.Detective005AFunScreenTests()
         fixture.cfg = self.cfg
@@ -49,8 +61,10 @@ class Detective005ABlindCustodyTests(unittest.TestCase):
                 "runner_script_sha256": screen.sha256_file(Path(live.__file__)),
                 "results_jsonl_sha256": screen.sha256_file(raw),
                 "results": 12,
-                "members": [],
-                "total_generated_tokens": 12,
+                "members": assemble.lineage_member_receipts(
+                    self.cfg, lineage, selection)[0],
+                "total_generated_tokens": assemble.lineage_member_receipts(
+                    self.cfg, lineage, selection)[1],
                 "peak_rss_kib": 1,
                 "optimizer_steps": 0,
                 "paid_api_calls": 0,
@@ -59,7 +73,8 @@ class Detective005ABlindCustodyTests(unittest.TestCase):
                 "population_expansion_admitted": False,
             })
         dataset = root / "dataset"
-        assemble.assemble(artifacts, dataset)
+        assemble.assemble(artifacts, dataset,
+                          allow_synthetic_test_only=True)
         return dataset
 
     def test_blind_fixture_refuses_missing_original_fsynced_journal(self):
@@ -72,7 +87,8 @@ class Detective005ABlindCustodyTests(unittest.TestCase):
             original.unlink()
             with self.assertRaisesRegex(screen.ScreenError,
                                         "lineage fsynced journal missing"):
-                assemble.assemble(root / "artifacts", root / "invalid-dataset")
+                assemble.assemble(root / "artifacts", root / "invalid-dataset",
+                                  allow_synthetic_test_only=True)
 
     def prepare_fixture(self, root: Path):
         dataset = self.make_dataset(root)

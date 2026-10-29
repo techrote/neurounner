@@ -70,7 +70,9 @@ def discover_lineages(root: Path) -> dict[str, Path]:
     return {k: v[0] for k, v in found.items()}
 
 
-def read_lineage(cfg: dict, lineage: str, folder: Path) -> tuple[dict, list[dict]]:
+def read_lineage(cfg: dict, lineage: str, folder: Path,
+                 *, allow_synthetic_test_only: bool = False
+                 ) -> tuple[dict, list[dict]]:
     manifest = screen.read_json(folder / "manifest.json")
     results_path = folder / "results.jsonl"
     journal_path = folder / "results.partial.jsonl"
@@ -100,7 +102,16 @@ def read_lineage(cfg: dict, lineage: str, folder: Path) -> tuple[dict, list[dict
                    manifest.get("population_expansion_admitted") is False,
                    "lineage authority/resource drift")
     rows = screen.read_results(results_path)
+    # A checksum of the original JSONL does not disambiguate duplicate keys:
+    # json.loads silently accepts the last value. The live fsynced writer
+    # emits exactly canonical JSON + LF, so demand those same original bytes.
+    screen.require(
+        results_path.read_bytes() ==
+        "".join(screen.canonical(row) + "\n" for row in rows).encode("utf-8"),
+        "lineage raw JSONL noncanonical or duplicate keys")
     screen.require(len(rows) == 12, "lineage raw result count drift")
+    screen.require_native_results(
+        rows, allow_synthetic_test_only=allow_synthetic_test_only)
     expected_members = live.lineage_member_ids(cfg, lineage)
     screen.require(
         {(r.get("member_id"), r.get("prompt_id")) for r in rows} ==
@@ -108,7 +119,60 @@ def read_lineage(cfg: dict, lineage: str, folder: Path) -> tuple[dict, list[dict
         "lineage member/prompt matrix drift")
     for row in rows:
         screen.validate_result(cfg, row)
+    require_lineage_member_receipts(cfg, lineage, rows, manifest)
     return manifest, rows
+
+
+LINEAGE_MANIFEST_KEYS = {
+    "schema", "experiment", "issue", "lineage", "source_plan",
+    "runner_script_sha256", "results_jsonl_sha256", "results", "members",
+    "total_generated_tokens", "peak_rss_kib", "optimizer_steps",
+    "paid_api_calls", "model_judge_calls", "production_admission",
+    "population_expansion_admitted",
+}
+
+
+def lineage_member_receipts(
+        cfg: dict, lineage: str, rows: list[dict]) -> tuple[list[dict], int]:
+    """Independently reconstruct the claimed per-member observations.
+
+    The raw, source-matched rows—not editable manifest summaries—are the
+    authority for hard-floor status and token counts.
+    """
+    screen.require(len(rows) == 12, "lineage member summary requires 12 rows")
+    keyed = {(r["member_id"], r["prompt_id"]): r for r in rows}
+    screen.require(len(keyed) == 12, "lineage summary duplicate member/prompt")
+    summaries = []
+    for member_id in live.lineage_member_ids(cfg, lineage):
+        member_rows = []
+        for prompt in cfg["prompts"]:
+            row = keyed.get((member_id, prompt["id"]))
+            screen.require(row is not None, "lineage summary member/prompt missing")
+            member_rows.append(row)
+        observations = [screen.validate_result(cfg, row) for row in member_rows]
+        summaries.append({
+            "member_id": member_id,
+            "hard_floor_pass": all(x["hard_floor_pass"] for x in observations),
+            "hard_floor_failures": [
+                x["prompt_id"] for x in observations if not x["hard_floor_pass"]],
+            "generated_tokens": sum(
+                row["response"]["completion_tokens"] for row in member_rows),
+        })
+    return summaries, sum(item["generated_tokens"] for item in summaries)
+
+
+def require_lineage_member_receipts(
+        cfg: dict, lineage: str, rows: list[dict], manifest: dict) -> None:
+    screen.require(isinstance(manifest, dict) and
+                   set(manifest) == LINEAGE_MANIFEST_KEYS,
+                   "lineage manifest field-set drift")
+    members, total_tokens = lineage_member_receipts(cfg, lineage, rows)
+    screen.require(
+        manifest.get("members") == members and
+        manifest.get("total_generated_tokens") == total_tokens and
+        type(manifest.get("peak_rss_kib")) is int and
+        manifest["peak_rss_kib"] > 0,
+        "lineage member/token/resource summary drift")
 
 
 def write_json(path: Path, value) -> None:
@@ -128,13 +192,58 @@ def hash_inventory(root: Path) -> str:
     return "\n".join(rows) + "\n"
 
 
-def assemble(artifacts: Path, out: Path) -> dict:
+
+DATASET_MANIFEST_KEYS = {
+    "schema", "experiment", "issue", "repository_head_sha", "actions_run_id",
+    "source_config_sha256", "release_tag", "release_manifest_git_blob_sha1",
+    "member_contract_sha256", "members", "prompts_per_member", "raw_results",
+    "raw_results_sha256", "review_packet_sha256", "private_blind_review_status",
+    "review_packet_generated", "hard_floor_failures",
+    "hard_floor_clean_results", "objective_relevance_threshold",
+    "subjective_fun_ratings_present", "model_judge_calls", "optimizer_steps",
+    "production_admission", "training_admission",
+    "population_expansion_admitted",
+}
+SOURCE_ARTIFACT_PROVENANCE_KEYS = {
+    "schema", "repository_head_sha", "actions_run_id", "actions_run_url",
+    "source_artifacts", "artifact_ids_unavailable_at_assembly",
+}
+
+
+def require_canonical_json(path: Path, value, label: str) -> None:
+    """Reject hidden duplicate JSON keys and noncanonical extra raw bytes."""
+    expected = (json.dumps(value, indent=2, sort_keys=True,
+                           ensure_ascii=False) + "\n").encode("utf-8")
+    screen.require(path.read_bytes() == expected,
+                   label + " noncanonical JSON or duplicate members")
+
+
+def public_readme_text() -> str:
+    return (
+        "# DETECTIVE-005A raw fun-first cast screen\n\n"
+        "Complete source-bound raw outputs for the 36 VILLAGE-001C SFT "
+        "villagers on four matched detective gameplay prompts. This archive "
+        "contains no subjective scores and NO review packet. The old public "
+        "fixed-salt item ordering was reconstructible. A separate private "
+        "custodian must prepare a random-key blinded packet outside the "
+        "repository, retain mapping/key in private custody, freeze all human "
+        "ratings, and only then authorize identity unblinding. Never hand "
+        "this raw archive to a supposedly blind reviewer. Wrong or incoherent "
+        "answers are not automatically bad. Mechanical hard authority/leakage "
+        "floors remain separate from subjective fun. No training, model judge "
+        "or production admission occurs here.\n"
+    )
+
+def assemble(artifacts: Path, out: Path,
+             *, allow_synthetic_test_only: bool = False) -> dict:
     cfg = screen.load_contract()
     screen.require(not out.exists(), "output dataset already exists")
     found = discover_lineages(artifacts)
     manifests, rows = {}, []
     for lineage in LINEAGES:
-        manifest, lineage_rows = read_lineage(cfg, lineage, found[lineage])
+        manifest, lineage_rows = read_lineage(
+            cfg, lineage, found[lineage],
+            allow_synthetic_test_only=allow_synthetic_test_only)
         manifests[lineage] = manifest
         rows.extend(lineage_rows)
     observations = screen.validate_complete_results(cfg, rows)
@@ -220,48 +329,126 @@ def assemble(artifacts: Path, out: Path) -> dict:
         "population_expansion_admitted": False,
     }
     write_json(out / "manifest.json", manifest)
-    (out / "README.md").write_text(
-        "# DETECTIVE-005A raw fun-first cast screen\n\n"
-        "Complete source-bound raw outputs for the 36 VILLAGE-001C SFT "
-        "villagers on four matched detective gameplay prompts. This archive "
-        "contains no subjective scores and NO review packet. The old public "
-        "fixed-salt item ordering was reconstructible. A separate private "
-        "custodian must prepare a random-key blinded packet outside the "
-        "repository, retain mapping/key in private custody, freeze all human "
-        "ratings, and only then authorize identity unblinding. Never hand "
-        "this raw archive to a supposedly blind reviewer. Wrong or incoherent "
-        "answers are not automatically bad. Mechanical hard authority/leakage "
-        "floors remain separate from subjective fun. No training, model judge "
-        "or production admission occurs here.\n",
-        encoding="utf-8")
+    (out / "README.md").write_text(public_readme_text(), encoding="utf-8")
     (out / "provenance" / "hashes.sha256").write_text(
         hash_inventory(out), encoding="utf-8")
     return manifest
 
 
-def verify_dataset(path: Path) -> dict:
+def verify_dataset(path: Path, *,
+                   allow_synthetic_test_only: bool = False) -> dict:
+    # A rehashed SHA inventory is self-reported. It cannot authorize extra
+    # files (including a private HMAC key/mapping) or external symlink targets.
+    # Git archives symlinks as links, not the underlying original raw bytes.
+    screen.require(path.is_dir() and not path.is_symlink(),
+                   "full-screen archive root must be a physical directory")
+    screen.require(all(not p.is_symlink() for p in path.rglob("*")),
+                   "full-screen archive contains symlink")
+    expected_files = {
+        "README.md", "manifest.json", "raw/results.jsonl",
+        "provenance/source-artifacts.json", "provenance/hashes.sha256",
+    }
+    expected_files.update(
+        f"raw/lineage-manifests/{lineage}.json" for lineage in LINEAGES)
+    expected_files.update(
+        f"raw/lineage-journals/{lineage}.jsonl" for lineage in LINEAGES)
+    actual_files = {
+        p.relative_to(path).as_posix()
+        for p in path.rglob("*") if p.is_file()
+    }
+    screen.require(actual_files == expected_files,
+                   "full-screen archive has unregistered or missing files")
+    screen.require((path / "README.md").read_text(encoding="utf-8") ==
+                   public_readme_text(),
+                   "full-screen README content drift")
+
     cfg = screen.load_contract()
-    manifest = screen.read_json(path / "manifest.json")
+    manifest_path = path / "manifest.json"
+    manifest = screen.read_json(manifest_path)
+    screen.require(isinstance(manifest, dict) and
+                   set(manifest) == DATASET_MANIFEST_KEYS,
+                   "full-screen dataset manifest field-set drift")
+    require_canonical_json(manifest_path, manifest, "dataset manifest")
     screen.require(manifest.get("schema") ==
                    "detective-005a-dataset-manifest-v1",
                    "wrong dataset manifest")
-    results = screen.read_results(path / "raw" / "results.jsonl")
-    screen.validate_complete_results(cfg, results)
+    screen.require(
+        manifest.get("experiment") == "DETECTIVE-005A" and
+        manifest.get("issue") == 176 and
+        manifest.get("members") == 36 and
+        manifest.get("prompts_per_member") == 4 and
+        manifest.get("raw_results") == 144 and
+        manifest.get("source_config_sha256") == screen.sha256_file(screen.CONFIG) and
+        manifest.get("release_tag") == cfg["source_population"]["release_tag"] and
+        manifest.get("release_manifest_git_blob_sha1") ==
+            cfg["source_population"]["release_manifest"]["git_blob_sha1"] and
+        manifest.get("member_contract_sha256") ==
+            cfg["source_population"]["release_manifest"]["member_contract_sha256"],
+        "full-screen frozen source/size manifest drift")
+    screen.require(
+        manifest.get("review_packet_generated") is False and
+        manifest.get("review_packet_sha256") is None and
+        manifest.get("private_blind_review_status") ==
+            "not_prepared_outside_repository" and
+        manifest.get("subjective_fun_ratings_present") is False and
+        manifest.get("objective_relevance_threshold") is None and
+        manifest.get("model_judge_calls") == 0 and
+        manifest.get("optimizer_steps") == 0 and
+        manifest.get("production_admission") is False and
+        manifest.get("training_admission") is False and
+        manifest.get("population_expansion_admitted") is False,
+        "full-screen rating/resource/admission authority drift")
+    results_path = path / "raw" / "results.jsonl"
+    results = screen.read_results(results_path)
+    # The archive's original aggregate is untrusted, even if its SHA inventory
+    # and individual fsynced lineage journals were later rehashed. Disallow
+    # shadow duplicate keys, blank lines and noncanonical whitespace at the
+    # exact original-byte boundary before any 144-row admission.
+    screen.require(
+        results_path.read_bytes() ==
+            "".join(screen.canonical(row) + "\n" for row in results).encode("utf-8"),
+        "combined raw JSONL noncanonical or duplicate keys")
+    screen.require_native_results(
+        results, allow_synthetic_test_only=allow_synthetic_test_only)
+    observations = screen.validate_complete_results(cfg, results)
+    expected_floor_failures = [
+        {"member_id": x["member_id"], "prompt_id": x["prompt_id"],
+         "hidden_canary_hits": x["hidden_canary_hits"],
+         "forbidden_control_hits": x["forbidden_control_hits"],
+         "nonempty": x["nonempty"]}
+        for x in observations if not x["hard_floor_pass"]
+    ]
+    screen.require(
+        manifest.get("hard_floor_failures") == expected_floor_failures and
+        manifest.get("hard_floor_clean_results") == 144 - len(expected_floor_failures),
+        "full-screen mechanical hard-floor summary drift")
     head, run_id = source_run_identity(results)
     screen.require(
         (manifest.get("repository_head_sha"),
          manifest.get("actions_run_id")) == (head, run_id),
         "dataset source/run identity drift")
-    provenance = screen.read_json(path / "provenance" / "source-artifacts.json")
+    provenance_path = path / "provenance" / "source-artifacts.json"
+    provenance = screen.read_json(provenance_path)
+    screen.require(isinstance(provenance, dict) and
+                   set(provenance) == SOURCE_ARTIFACT_PROVENANCE_KEYS and
+                   provenance.get("actions_run_url") ==
+                       f"https://github.com/techrote/neurounner/actions/runs/{run_id}",
+                   "full-screen source-artifact metadata field-set or URL drift")
+    require_canonical_json(provenance_path, provenance, "source provenance")
     screen.require(
         provenance.get("schema") == "detective-005a-source-artifacts-v1" and
         provenance.get("repository_head_sha") == head and
         provenance.get("actions_run_id") == run_id,
         "dataset source-artifact provenance drift")
+    screen.require(provenance.get("artifact_ids_unavailable_at_assembly") is True,
+                   "full-screen source-artifact transport provenance drift")
     expected_artifacts = []
     for lineage in LINEAGES:
-        lineage_manifest = screen.read_json(
-            path / "raw" / "lineage-manifests" / f"{lineage}.json")
+        lineage_manifest_path = (path / "raw" / "lineage-manifests" /
+                                 f"{lineage}.json")
+        lineage_manifest = screen.read_json(lineage_manifest_path)
+        require_canonical_json(lineage_manifest_path, lineage_manifest,
+                               "lineage manifest")
         lineage_rows = [r for r in results
                         if r["member_id"].split("-")[1] == lineage]
         recreated_sha = screen.sha256_bytes(
@@ -276,10 +463,23 @@ def verify_dataset(path: Path) -> dict:
             "archived fsynced lineage journal missing or mismatched")
         screen.require(
             len(lineage_rows) == 12 and
+            lineage_manifest.get("schema") == "detective-005a-live-lineage-manifest-v1" and
+            lineage_manifest.get("experiment") == "DETECTIVE-005A" and
+            lineage_manifest.get("issue") == 176 and
             lineage_manifest.get("lineage") == lineage and
             lineage_manifest.get("source_plan") == live.source_plan(lineage) and
-            lineage_manifest.get("results_jsonl_sha256") == recreated_sha,
-            "archived lineage raw/source digest drift")
+            lineage_manifest.get("runner_script_sha256") ==
+                screen.sha256_file(Path(live.__file__)) and
+            lineage_manifest.get("results_jsonl_sha256") == recreated_sha and
+            lineage_manifest.get("results") == 12 and
+            lineage_manifest.get("optimizer_steps") == 0 and
+            lineage_manifest.get("paid_api_calls") == 0 and
+            lineage_manifest.get("model_judge_calls") == 0 and
+            lineage_manifest.get("production_admission") is False and
+            lineage_manifest.get("population_expansion_admitted") is False,
+            "archived lineage raw/source/authority drift")
+        require_lineage_member_receipts(cfg, lineage, lineage_rows,
+                                        lineage_manifest)
         expected_artifacts.append({
             "lineage": lineage,
             "artifact_name": f"detective005a-{lineage}",

@@ -89,6 +89,79 @@ class Detective005ARecoveryTests(unittest.TestCase):
                 (out / "raw/G01/results.partial.jsonl").read_bytes(), original)
             self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 1)
 
+    def test_rehashed_duplicate_key_and_noncanonical_jsonl_never_gain_custody(self):
+        # Duplicate JSON keys are accepted by json.loads (last value wins).
+        # The original byte stream can hold data that validation cannot see,
+        # even if an adversary recomputes every claimed SHA-256 receipt.
+        base = screen.canonical(self.row())
+        duplicate = base.replace(
+            '"prompt_id":"F01"',
+            '"prompt_id":"F99","prompt_id":"F01"', 1)
+        self.assertNotEqual(duplicate, base)
+        for name, forged in (
+                ("duplicate-key", duplicate + "\n"),
+                ("trailing-space", base + " \n")):
+            with self.subTest(case=name), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                src = root / "artifacts" / "detective005a-G01"
+                src.mkdir(parents=True)
+                raw = forged.encode("utf-8")
+                (src / "results.partial.jsonl").write_bytes(raw)
+                archive = root / "archive"
+                receipt = recover.recover(
+                    root / "artifacts", archive, HEAD, RUN)
+                self.assertEqual(receipt["validated_raw_prefix_rows"], 0)
+                saved = screen.read_json(
+                    archive / "provenance/source-artifacts.json")["lineages"][0]
+                self.assertIn(
+                    "invalid_response_1:ScreenError",
+                    saved["custody_warnings"])
+                self.assertEqual(
+                    (archive / "raw/G01/results.partial.jsonl").read_bytes(),
+                    raw)
+                self.assertFalse(recover.verify(archive)[
+                    "artifact_transport_complete"])
+
+        # A forged complete lineage with final and incremental journals
+        # identical and a freshly computed SHA must also fail admission.
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "G01"
+            source.mkdir()
+            rows = [self.row(f"V-G01-{s}", p["id"])
+                    for s in "ABC" for p in self.cfg["prompts"]]
+            original = "".join(
+                screen.canonical(row) + "\n" for row in rows).encode("utf-8")
+            forged = original.replace(
+                b'"prompt_id":"F01"',
+                b'"prompt_id":"F99","prompt_id":"F01"', 1)
+            self.assertNotEqual(original, forged)
+            (source / "results.partial.jsonl").write_bytes(forged)
+            (source / "results.jsonl").write_bytes(forged)
+            members, total = assemble.lineage_member_receipts(
+                self.cfg, "G01", rows)
+            assemble.write_json(source / "manifest.json", {
+                "schema": "detective-005a-live-lineage-manifest-v1",
+                "experiment": "DETECTIVE-005A",
+                "issue": 176,
+                "lineage": "G01",
+                "source_plan": live.source_plan("G01"),
+                "runner_script_sha256":
+                    screen.sha256_file(Path(live.__file__)),
+                "results_jsonl_sha256": screen.sha256_bytes(forged),
+                "results": 12,
+                "members": members,
+                "total_generated_tokens": total,
+                "peak_rss_kib": 1,
+                "optimizer_steps": 0,
+                "paid_api_calls": 0,
+                "model_judge_calls": 0,
+                "production_admission": False,
+                "population_expansion_admitted": False,
+            })
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "noncanonical or duplicate"):
+                assemble.read_lineage(self.cfg, "G01", source)
+
     def test_unauthorized_source_run_row_is_quarantined_not_discarded(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -134,8 +207,10 @@ class Detective005ARecoveryTests(unittest.TestCase):
                     screen.sha256_file(Path(live.__file__)),
                 "results_jsonl_sha256": screen.sha256_bytes(result_bytes),
                 "results": 12,
-                "members": [],
-                "total_generated_tokens": 12,
+                "members": assemble.lineage_member_receipts(
+                    self.cfg, "G01", rows)[0],
+                "total_generated_tokens": assemble.lineage_member_receipts(
+                    self.cfg, "G01", rows)[1],
                 "peak_rss_kib": 1,
                 "optimizer_steps": 0,
                 "paid_api_calls": 0,
@@ -151,7 +226,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
             unbound = screen.read_json(
                 out / "provenance/source-artifacts.json")["lineages"][0]
             self.assertEqual(unbound["status"], "recovery_only")
-            self.assertIn("artifact_api_metadata_unavailable",
+            self.assertIn("invalid_complete_lineage_manifest",
                           unbound["custody_warnings"])
             self.assertFalse(recover.verify(out)["artifact_transport_complete"])
             self.assertFalse((out / "review/fun-packet.json").exists())
@@ -193,10 +268,15 @@ class Detective005ARecoveryTests(unittest.TestCase):
             valid_archive = root / "archive-api"
             qualified = recover.recover(root / "artifacts", valid_archive,
                                         HEAD, RUN, metadata, "success", "success")
-            self.assertEqual(qualified["complete_lineage_artifacts"], 1)
+            # Native-only complete lineage admission must not count a
+            # labelled synthetic fixture as a real 12-response lineage.
+            self.assertEqual(qualified["complete_lineage_artifacts"], 0)
             self.assertTrue(qualified["artifact_transport_complete"])
+            self.assertFalse(recover.verify(valid_archive)[
+                "artifact_transport_complete"])
             self.assertTrue(recover.require_complete_transport(
-                valid_archive)["artifact_transport_complete"])
+                valid_archive, original_artifacts=root / "artifacts",
+                original_artifact_api=metadata)["artifact_transport_complete"])
             foreign_api = copy.deepcopy(original_api)
             foreign_api["artifacts"][0]["workflow_run"]["head_sha"] = "2" * 40
             metadata.write_text(json.dumps(foreign_api), encoding="utf-8")
@@ -592,6 +672,29 @@ class Detective005ARecoveryTests(unittest.TestCase):
                         recover.unexpected_artifact_sources(
                             None, Path("original-api.json")), [])
 
+    def test_public_runner_metadata_injection_retains_raw_but_refuses_prefix(self):
+        # Preserve the original suspicious bytes but do not validate them
+        # as clean source-matched evidence after JSONL parsing.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "artifacts/detective005a-G01"
+            source.mkdir(parents=True)
+            row = self.row()
+            row["runner"]["private_blind_key"] = "synthetic-never-publish"
+            original = (screen.canonical(row) + "\n").encode("utf-8")
+            (source / "results.partial.jsonl").write_bytes(original)
+            out = root / "recovery"
+            report = recover.recover(root / "artifacts", out, HEAD, RUN)
+            self.assertEqual(report["validated_raw_prefix_rows"], 0)
+            self.assertEqual(
+                (out / "raw/G01/results.partial.jsonl").read_bytes(), original)
+            record = screen.read_json(
+                out / "provenance/source-artifacts.json")["lineages"][0]
+            self.assertIn("invalid_response_1:ScreenError",
+                          record["custody_warnings"])
+            self.assertEqual(record["status"], "recovery_only")
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 0)
+
     def test_no_artifacts_never_claims_work_or_review(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -778,6 +881,64 @@ class Detective005ARecoveryTests(unittest.TestCase):
                                         "incomplete original lineage"):
                 recover.require_complete_transport(out)
 
+    def test_removed_unsafe_warning_and_rehashed_archive_cannot_gain_gate(self):
+        """Independent source tree refutes forged 'no unsafe files' claims."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src = root / "artifacts/detective005a-G01"
+            src.mkdir(parents=True)
+            original = (screen.canonical(self.row()) + "\n").encode()
+            (src / "results.partial.jsonl").write_bytes(original)
+            # Do not Git-publish the unsafe weight. But its presence must be
+            # independently recheckable before any positive custody claim.
+            (src / "adapter_model.safetensors").write_bytes(
+                b"synthetic-excluded-unsafe-input")
+            api = root / "api.json"
+            api.write_text(json.dumps({"total_count": 1, "artifacts": [{
+                "name": "detective005a-G01", "id": 8001,
+                "digest": "sha256:" + "b" * 64,
+                "size_in_bytes": 100, "expired": False,
+                "workflow_run": {"id": int(RUN), "head_sha": HEAD,
+                                 "repository_id": 1432134981},
+            }]}), encoding="utf-8")
+            out = root / "archive"
+            report = recover.recover(root / "artifacts", out, HEAD, RUN,
+                                     api, "success", "success")
+            self.assertFalse(report["artifact_transport_complete"])
+            manifest_path = out / "manifest.json"
+            provenance_path = out / "provenance/source-artifacts.json"
+            manifest = screen.read_json(manifest_path)
+            provenance = screen.read_json(provenance_path)
+            self.assertEqual(provenance["lineages"][0][
+                "source_structure_warnings"], [recover.STRUCTURE_WARNING])
+            # Attacker rewrites both warning lists and overall gate, plus the
+            # public SHA inventory, but cannot rewrite independently supplied
+            # original downloaded inputs from the host running final readback.
+            record = provenance["lineages"][0]
+            record["source_structure_warnings"] = []
+            record["custody_warnings"].remove(recover.STRUCTURE_WARNING)
+            manifest["artifact_transport_complete"] = True
+            assemble.write_json(manifest_path, manifest)
+            assemble.write_json(provenance_path, provenance)
+            (out / "provenance/hashes.sha256").write_text(
+                assemble.hash_inventory(out), encoding="utf-8")
+            standalone = recover.verify(out)
+            self.assertTrue(standalone["artifact_transport_claimed"])
+            self.assertFalse(standalone["artifact_transport_complete"])
+            self.assertFalse(standalone["original_artifact_structure_reverified"])
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "incomplete original lineage"):
+                recover.require_complete_transport(out)
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "original source structure warning mismatch"):
+                recover.require_complete_transport(
+                    out, original_artifacts=root / "artifacts",
+                    original_artifact_api=api)
+            self.assertEqual(
+                (out / "raw/G01/results.partial.jsonl").read_bytes(),
+                original)
+            self.assertFalse((out / "raw/G01/adapter_model.safetensors").exists())
+
     def test_dangling_lineage_link_cannot_block_other_recovery(self):
         """Even a broken symlink is not a missing or archived lineage."""
         with tempfile.TemporaryDirectory() as td:
@@ -868,6 +1029,65 @@ class Detective005ARecoveryTests(unittest.TestCase):
                     screen.ScreenError, "unapproved recovery file provenance"):
                 recover.require_complete_transport(out)
 
+    def test_rehashed_recovery_envelope_metadata_is_rejected(self):
+        """Source-inventory rehash must not legalize hidden reviewer metadata."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src = root / "artifacts" / "detective005a-G01"
+            src.mkdir(parents=True)
+            original_raw = (screen.canonical(self.row()) + "\n").encode()
+            (src / "results.partial.jsonl").write_bytes(original_raw)
+            out = root / "archive"
+            recover.recover(root / "artifacts", out, HEAD, RUN)
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 1)
+            manifest = out / "manifest.json"
+            provenance = out / "provenance/source-artifacts.json"
+            readme = out / "README.md"
+            originals = {p: p.read_bytes() for p in (manifest, provenance, readme)}
+
+            for attack in ("extra_manifest", "duplicate_schema",
+                           "extra_provenance", "nested_lineage",
+                           "wrong_run_url", "appended_readme"):
+                with self.subTest(attack=attack):
+                    for path, data in originals.items():
+                        path.write_bytes(data)
+                    if attack == "duplicate_schema":
+                        content = manifest.read_text(encoding="utf-8")
+                        manifest.write_text(
+                            content.replace('{\n', '{\n  "schema": "shadow",\n', 1),
+                            encoding="utf-8")
+                    elif attack == "appended_readme":
+                        readme.write_bytes(
+                            readme.read_bytes() + b"private-fun-map\n")
+                    else:
+                        path = (provenance if attack in
+                                ("extra_provenance", "nested_lineage") else manifest)
+                        value = screen.read_json(path)
+                        if attack == "extra_manifest":
+                            value["private_blind_key"] = "synthetic"
+                        elif attack == "extra_provenance":
+                            value["private_identity_map"] = {"opaque": "V-G01-A"}
+                        elif attack == "nested_lineage":
+                            value["lineages"][0]["private_note"] = "synthetic"
+                        elif attack == "wrong_run_url":
+                            value["actions_run_url"] = (
+                                "https://github.com/techrote/neurounner/actions/runs/999")
+                        assemble.write_json(path, value)
+                    (out / "provenance/hashes.sha256").write_text(
+                        assemble.hash_inventory(out), encoding="utf-8")
+                    self.assertEqual(
+                        (out / "raw/G01/results.partial.jsonl").read_bytes(),
+                        original_raw)
+                    with self.assertRaises(screen.ScreenError):
+                        recover.verify(out)
+
+            for path, data in originals.items():
+                path.write_bytes(data)
+            (out / "provenance/hashes.sha256").write_text(
+                assemble.hash_inventory(out), encoding="utf-8")
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 1)
+
+
     def test_tampered_archive_bytes_fail_readback(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -914,6 +1134,8 @@ class Detective005ARecoveryTests(unittest.TestCase):
         self.assertIn("steps.download-lineages.outcome", workflow)
         self.assertIn("steps.artifact-api.outcome", workflow)
         self.assertIn("--require-complete-transport", workflow)
+        self.assertIn("--original-artifacts artifacts", workflow)
+        self.assertIn("--original-artifact-api artifacts-api.json", workflow)
         self.assertIn("refuse overwrite", workflow.lower())
         self.assertIn("RUN-144-NO-TRAINING", workflow)
         self.assertIn("refs/heads/main", workflow)
@@ -939,6 +1161,258 @@ class Detective005ARecoveryTests(unittest.TestCase):
         self.assertIn("if-no-files-found: error", fallback)
         self.assertIn("retention-days: 30", fallback)
         self.assertIn("--require-complete-transport", recovery.split(final_name, 1)[1])
+
+
+
+    def test_remote_branch_readback_and_main_only_synthetic_push_contract(self):
+        """Static guard only; a PASS is not a real GitHub branch-push receipt."""
+        root = screen.ROOT / ".github/workflows"
+        live_workflow = (root / "detective-005a-live.yml").read_text(
+            encoding="utf-8")
+        complete = live_workflow.split("  assemble:\n", 1)[1].split(
+            "  recover-failed-evidence:\n", 1)[0]
+        recovery = live_workflow.split("  recover-failed-evidence:\n", 1)[1]
+        for section, program in (
+            (complete, "detective_005a_assemble.py"),
+            (recovery, "detective_005a_recover.py"),
+        ):
+            self.assertIn('git push --force-with-lease="refs/heads/$TARGET_BRANCH:" origin', section)
+            self.assertIn('git fetch --no-tags origin "refs/heads/$TARGET_BRANCH"', section)
+            self.assertIn('git archive FETCH_HEAD', section)
+            self.assertIn('"$(git rev-parse FETCH_HEAD)" = "$(git rev-parse HEAD)"',
+                          section)
+            self.assertIn('remote-readback', section)
+            self.assertIn('--verify', section.split('git archive FETCH_HEAD', 1)[1])
+            self.assertIn(program, section.split('git archive FETCH_HEAD', 1)[1])
+            self.assertLess(section.index('git push --force-with-lease='),
+                            section.index('git fetch --no-tags origin'))
+
+        protocol = (root / "detective-005a-protocol.yml").read_text(
+            encoding="utf-8")
+        self.assertIn("  synthetic-durable-branch-probe:\n", protocol)
+        probe = protocol.split("  synthetic-durable-branch-probe:\n", 1)[1]
+        self.assertIn("github.event_name == 'workflow_dispatch'", probe)
+        self.assertIn("github.ref == 'refs/heads/main'", probe)
+        self.assertIn("needs: synthetic-artifact-readback", probe)
+        self.assertIn("contents: write", probe)
+        self.assertIn("evidence/detective-005a-synthetic-probe-", probe)
+        self.assertIn("datasets/detective-005a-synthetic-probe-", probe)
+        self.assertIn('git push --force-with-lease="refs/heads/$TARGET_BRANCH:" origin "HEAD:refs/heads/$TARGET_BRANCH"', probe)
+        self.assertIn('git archive FETCH_HEAD "$TARGET_DATASET"', probe)
+        self.assertIn('--require-complete-transport', probe)
+        self.assertIn('"complete_lineage_artifacts"] == 0', probe)
+        self.assertIn('"optimizer_steps"] == 0', probe)
+        self.assertNotIn("--run --out", probe)
+        self.assertNotIn("pip install", probe)
+        self.assertNotIn("hf_hub_download", probe)
+
+
+
+    @unittest.skipUnless(
+        __import__("shutil").which("git") and __import__("shutil").which("tar"),
+        "Local Git and tar are required for the no-network transport test",
+    )
+    def test_local_git_push_fetch_archive_uses_persisted_bytes(self):
+        """Actual local bare-Git transfer, not a hosted GitHub persistence claim."""
+        import subprocess
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            origin = root / "origin.git"
+            working = root / "working"
+            artifact = root / "artifacts" / "detective005a-G01"
+            artifact.mkdir(parents=True)
+            journal = artifact / "results.partial.jsonl"
+            live.append_completed_raw(journal, self.row())
+            # Deliberately preserve a torn suffix, as in an interrupted run.
+            with journal.open("ab") as fp:
+                fp.write(b'{"torn_tail":')
+            original = journal.read_bytes()
+            dataset_rel = Path("datasets/detective-005a-local-git-probe")
+            dataset = working / dataset_rel
+            dataset.parent.mkdir(parents=True)
+            recover.recover(root / "artifacts", dataset, HEAD, RUN)
+            recover.verify(dataset)
+
+            def git(*args, cwd=working):
+                return subprocess.run(
+                    ["git", *args], cwd=cwd, check=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                ).stdout.strip()
+
+            git("init", "--bare", str(origin), cwd=root)
+            working.mkdir(exist_ok=True)
+            git("init", "-b", "main")
+            git("config", "user.name", "DETECTIVE no-model fixture")
+            git("config", "user.email", "fixture@example.invalid")
+            git("add", str(dataset_rel))
+            git("commit", "-m", "synthetic interrupted recovery, not model data")
+            local_head = git("rev-parse", "HEAD")
+            git("remote", "add", "origin", str(origin))
+            branch = "refs/heads/evidence/detective-005a-local-git-probe"
+            git("push", "--force-with-lease=" + branch + ":", "origin", "HEAD:" + branch)
+            git("fetch", "--no-tags", "origin", branch)
+            self.assertEqual(local_head, git("rev-parse", "FETCH_HEAD"))
+
+            # Mutate the local working file after the commit; the fetched
+            # remote Git object must still contain the exact original bytes.
+            (dataset / "raw/G01/results.partial.jsonl").write_bytes(b"changed locally")
+            archive = subprocess.run(
+                ["git", "archive", "FETCH_HEAD", str(dataset_rel)],
+                cwd=working, check=True, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            ).stdout
+            extracted = root / "readback"
+            extracted.mkdir()
+            subprocess.run(
+                ["tar", "-xf", "-", "-C", str(extracted)], input=archive,
+                check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            fetched = extracted / dataset_rel
+            self.assertEqual(
+                (fetched / "raw/G01/results.partial.jsonl").read_bytes(), original)
+            self.assertEqual(recover.verify(fetched)["validated_raw_prefix_rows"], 1)
+
+            # A corrupted extracted copy must be refused rather than laundered
+            # through the otherwise-valid inventory or remote commit identity.
+            fetched_raw = fetched / "raw/G01/results.partial.jsonl"
+            fetched_raw.write_bytes(original + b"unrecorded change")
+            with self.assertRaisesRegex(screen.ScreenError, "bytes drift"):
+                recover.verify(fetched)
+
+
+    @unittest.skipUnless(__import__("shutil").which("git"),
+                         "Git is required for the local create-only lease test")
+    def test_evidence_branch_create_only_lease_rejects_raced_fast_forward(self):
+        """Reject an existing branch even when a plain push would fast-forward.
+
+        The preliminary ls-remote branch absence check is TOCTOU-prone.
+        This tests the Git server's absent-ref lease locally, not on GitHub.
+        """
+        import subprocess
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            origin = root / "origin.git"
+            work = root / "work"
+            work.mkdir()
+
+            def git(*args, cwd=work, check=True):
+                return subprocess.run(
+                    ["git", *args], cwd=cwd, check=check,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                )
+
+            git("init", "--bare", str(origin), cwd=root)
+            git("init", "-b", "main")
+            git("config", "user.name", "DETECTIVE create-only fixture")
+            git("config", "user.email", "fixture@example.invalid")
+            git("remote", "add", "origin", str(origin))
+            (work / "fixture").write_text("original\n", encoding="utf-8")
+            git("add", "fixture")
+            git("commit", "-m", "first")
+            first = git("rev-parse", "HEAD").stdout.strip()
+            branch = "refs/heads/evidence/detective-005a-create-only-race"
+            lease = "--force-with-lease=" + branch + ":"
+            git("push", lease, "origin", "HEAD:" + branch)
+            self.assertEqual(git("--git-dir=" + str(origin), "rev-parse",
+                                 branch, cwd=root).stdout.strip(), first)
+
+            # A competing writer has already created the ref. The next
+            # attempted push is a valid fast-forward, but must be refused.
+            (work / "fixture").write_text("successor\n", encoding="utf-8")
+            git("commit", "-am", "second")
+            self.assertEqual(git("merge-base", "--is-ancestor",
+                                 first.decode("ascii"), "HEAD").returncode, 0)
+            rejected = git("push", lease, "origin", "HEAD:" + branch, check=False)
+            self.assertNotEqual(rejected.returncode, 0, rejected.stdout)
+            self.assertEqual(git("--git-dir=" + str(origin), "rev-parse",
+                                 branch, cwd=root).stdout.strip(), first)
+
+
+
+    @unittest.skipUnless(__import__("shutil").which("git"),
+                         "Git is required for offline rejected-push test")
+    def test_local_push_rejection_and_post_push_ref_drift_fail_closed(self):
+        """Simulate receive-pack rejection and a changed ref before readback.
+
+        A local bare Git server is not proof of GitHub Actions permissions,
+        retention or cancellation behavior. Both negative outcomes must remain
+        distinguishable from a remotely read-back custody success.
+        """
+        import subprocess
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            origin = root / "origin.git"
+            work = root / "working"
+            artifact = root / "artifacts" / "detective005a-G01"
+            artifact.mkdir(parents=True)
+            journal = artifact / "results.partial.jsonl"
+            live.append_completed_raw(journal, self.row())
+            with journal.open("ab") as fp:
+                fp.write(b'{"torn_tail":')
+            original_raw = journal.read_bytes()
+            dataset_rel = Path("datasets/detective-005a-rejected-push-probe")
+            dataset = work / dataset_rel
+            dataset.parent.mkdir(parents=True)
+            recover.recover(root / "artifacts", dataset, HEAD, RUN)
+            self.assertEqual(recover.verify(dataset)["validated_raw_prefix_rows"], 1)
+
+            def git(*args, cwd=work, check=True):
+                return subprocess.run(
+                    ["git", *args], cwd=cwd, check=check,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                )
+
+            git("init", "--bare", str(origin), cwd=root)
+            work.mkdir(exist_ok=True)
+            git("init", "-b", "main")
+            git("config", "user.name", "DETECTIVE refused-push fixture")
+            git("config", "user.email", "fixture@example.invalid")
+            git("remote", "add", "origin", str(origin))
+            git("add", str(dataset_rel))
+            git("commit", "-m", "synthetic original raw custody")
+            expected_head = git("rev-parse", "HEAD").stdout.strip()
+            branch = "refs/heads/evidence/detective-005a-push-failure"
+            lease = "--force-with-lease=" + branch + ":"
+
+            # Remote rejects creation. Local raw recovery must remain intact;
+            # a failed push is NEVER a durable evidence-branch receipt.
+            hook = origin / "hooks" / "pre-receive"
+            hook.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+            hook.chmod(0o755)
+            denied = git("push", lease, "origin", "HEAD:" + branch, check=False)
+            self.assertNotEqual(denied.returncode, 0)
+            self.assertNotEqual(
+                git("--git-dir=" + str(origin), "show-ref", "--verify",
+                    "--quiet", branch, cwd=root, check=False).returncode, 0)
+            self.assertEqual((dataset / "raw/G01/results.partial.jsonl").read_bytes(),
+                             original_raw)
+            recover.verify(dataset)
+
+            # Retry succeeds once the denial hook is removed, but a competing
+            # writer fast-forwards the ref before our fetch: exact-head
+            # readback must reject it even though our push succeeded.
+            hook.unlink()
+            git("push", lease, "origin", "HEAD:" + branch)
+            self.assertEqual(
+                git("--git-dir=" + str(origin), "rev-parse", branch,
+                    cwd=root).stdout.strip(), expected_head)
+            (work / "competing-writer-marker").write_text(
+                "another writer updated the branch\n", encoding="utf-8")
+            git("add", "competing-writer-marker")
+            git("commit", "-m", "competing writer advances ref")
+            git("push", "origin", "HEAD:" + branch)
+            git("fetch", "--no-tags", "origin", branch)
+            fetched_head = git("rev-parse", "FETCH_HEAD").stdout.strip()
+            self.assertNotEqual(fetched_head, expected_head)
+            self.assertEqual(
+                git("--git-dir=" + str(origin), "rev-parse", branch,
+                    cwd=root).stdout.strip(), fetched_head)
+            self.assertEqual((dataset / "raw/G01/results.partial.jsonl").read_bytes(),
+                             original_raw)
+            recover.verify(dataset)
 
 
 

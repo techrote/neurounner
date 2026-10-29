@@ -13,6 +13,7 @@ import hashlib
 import hmac
 import json
 import re
+import struct
 from pathlib import Path
 from typing import Any
 
@@ -40,6 +41,19 @@ def canonical(value: Any) -> str:
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
+
+
+def prompt_ids_sha256(token_ids: list[int]) -> str:
+    """Hash tokenizer int64 token IDs as little-endian signed 64-bit bytes.
+
+    Frozen Ubuntu x86_64 PyTorch input_ids uses torch.int64 and NumPy's
+    little-endian int64 tobytes() representation; this is exactly the wire
+    layout of the live producer, without requiring torch/numpy in the verifier.
+    """
+    require(isinstance(token_ids, list) and
+            all(type(t) is int and 0 <= t < (1 << 63) for t in token_ids),
+            "invalid int64 prompt token IDs")
+    return sha256_bytes(struct.pack(f"<{len(token_ids)}q", *token_ids))
 
 
 def git_blob_sha(path: Path) -> str:
@@ -244,7 +258,67 @@ def validate_result(cfg: dict, row: dict) -> dict:
             isinstance(response["elapsed_seconds"], (int, float)) and
             response["elapsed_seconds"] >= 0,
             "invalid raw response record")
-    require(isinstance(row["runner"], dict), "runner receipt required")
+    runner = row["runner"]
+    require(isinstance(runner, dict), "runner receipt required")
+    # Source labels alone are not weight provenance. Every raw result must
+    # carry the exact hashes actually checked by the live frozen-model loader;
+    # never accept an unverified or substituted adapter as frozen village SFT.
+    source = row["source"]
+    require(
+        runner.get("base_weights_sha256_verified") ==
+            source["base_weights_sha256"] and
+        runner.get("adapter_archive_sha256_verified") ==
+            source["asset_sha256"] and
+        runner.get("adapter_directory_sha256_verified") ==
+            source["adapter_directory_sha256"],
+        "missing or mismatched base/adapter verification receipt")
+    # Public raw evidence must not carry arbitrary runner metadata: an
+    # attacker could forge canonical JSONL plus its SHA inventory while
+    # inserting a private blinding key or rating mapping as an extra key.
+    native_keys = {
+        "repository_head_sha", "actions_run_id", "actions_run_url",
+        "platform", "cpu_model", "python", "torch", "transformers",
+        "peft", "threads", "base_weights_sha256_verified",
+        "prompt_token_ids", "prompt_ids_sha256",
+        "adapter_archive_sha256_verified",
+        "adapter_directory_sha256_verified",
+    }
+    synthetic_keys = {
+        "repository_head_sha", "actions_run_id",
+        "base_weights_sha256_verified",
+        "adapter_archive_sha256_verified",
+        "adapter_directory_sha256_verified", "synthetic_test_only",
+    }
+    keys = set(runner)
+    native = keys == native_keys
+    synthetic = (runner.get("synthetic_test_only") is True and
+                 (keys == synthetic_keys or
+                  keys == synthetic_keys | {"cpu"}))
+    require(native or synthetic,
+            "runner receipt field-set drift or unregistered metadata")
+    if native:
+        run_id = runner["actions_run_id"]
+        require(
+            isinstance(run_id, str) and
+            re.fullmatch(r"[1-9][0-9]*", run_id) is not None and
+            isinstance(runner["repository_head_sha"], str) and
+            re.fullmatch(r"[0-9a-f]{40}", runner["repository_head_sha"]) is not None and
+            runner["actions_run_url"] ==
+                f"https://github.com/techrote/neurounner/actions/runs/{run_id}" and
+            type(runner["threads"]) is int and
+            1 <= runner["threads"] <= cfg["limits"]["max_threads"] and
+            isinstance(runner["prompt_token_ids"], list) and
+            len(runner["prompt_token_ids"]) == response["prompt_tokens"] and
+            all(type(t) is int and t >= 0
+                for t in runner["prompt_token_ids"]) and
+            isinstance(runner["prompt_ids_sha256"], str) and
+            SHA_RX.fullmatch(runner["prompt_ids_sha256"]) is not None and
+            runner["prompt_ids_sha256"] ==
+                prompt_ids_sha256(runner["prompt_token_ids"]),
+            "invalid source-bound native runner receipt")
+    else:
+        require("cpu" not in runner or runner["cpu"] == "none",
+                "synthetic-only runner receipt drift")
     obs = mechanical_observations(
         cfg, response["text"] + "\n" + response["raw_with_special_tokens"])
     return {
@@ -252,6 +326,20 @@ def validate_result(cfg: dict, row: dict) -> dict:
         "response_sha256": sha256_bytes(response["text"].encode("utf-8")),
         **obs,
     }
+
+
+def require_native_results(rows: list[dict],
+                           *, allow_synthetic_test_only: bool = False) -> None:
+    """Production archive admission refuses synthetic-only fixture receipts.
+
+    An explicit Python-only fixture argument is available to isolated offline
+    unit tests. There is deliberately NO command-line or Actions toggle.
+    """
+    if not allow_synthetic_test_only:
+        require(all(isinstance(r.get("runner"), dict) and
+                    r["runner"].get("synthetic_test_only") is not True
+                    for r in rows),
+                "synthetic-only runner receipts are not live generations")
 
 
 def read_results(path: Path) -> list[dict]:

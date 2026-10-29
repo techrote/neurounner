@@ -328,6 +328,13 @@ def run_lineage(lineage: str, out: Path, download_dir: Path) -> dict:
             ids = tokenizer.apply_chat_template(
                 messages, tokenize=True, add_generation_prompt=True,
                 return_tensors="pt")
+            # Publisher-native CPU tokenizer output is a single row of
+            # signed int64 tokens. Bind the SHA wire format to this tensor
+            # dtype instead of assuming NumPy's platform-dependent defaults.
+            screen.require(
+                ids.device.type == "cpu" and ids.dtype == torch.int64 and
+                ids.ndim == 2 and ids.shape[0] == 1,
+                "native prompt tensor must be one CPU int64 row")
             screen.require(
                 int(ids.shape[-1]) <= cfg["decode"]["max_prompt_tokens"],
                 "prompt exceeds frozen token budget")
@@ -371,8 +378,8 @@ def run_lineage(lineage: str, out: Path, download_dir: Path) -> dict:
                 "runner": {
                     **common_runner,
                     "prompt_token_ids": ids[0].tolist(),
-                    "prompt_ids_sha256": hashlib.sha256(
-                        ids.numpy().tobytes()).hexdigest(),
+                    "prompt_ids_sha256": screen.prompt_ids_sha256(
+                        ids[0].tolist()),
                     "adapter_archive_sha256_verified": file_sha(archive),
                     "adapter_directory_sha256_verified":
                         directory_hash(adapter_dir),

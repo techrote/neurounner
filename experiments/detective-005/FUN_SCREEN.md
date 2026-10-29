@@ -139,7 +139,77 @@ The 144-response assembler remains strict: no incomplete lineage is accepted,
 no subjective packet is constructed from partial results, and no training,
 model judging or population admission is authorized.
 
-## Failed-workflow durable recovery design (draft; not yet executed)
+## Pending full-screen archive readback hardening (PR #196)
+
+An exact-byte hash inventory is necessary but not sufficient: an attacker
+could add a private mapping/key or replace an original file with a symlink,
+then recompute the self-reported inventory. The reviewed full-screen readback
+must reject **all unregistered paths and symlinks**, recompute hard-floor
+observations and all no-rating/no-admission flags, and bind frozen
+source/lineage runner hashes independently of editable manifests.
+Original raw rows must also include the actual verified base-weight,
+adapter-archive and unpacked-adapter SHA-256 receipts; the public source
+label by itself is not proof of what was loaded.
+
+PR #196 adds synthetic adversarial tests for these custody defects. These are
+**proposed source checks**, not a qualification of actual model execution or
+authenticated GitHub evidence-branch persistence. No private blinding key,
+identity mapping, human ratings or real villager outputs were produced.
+
+The public raw **runner receipt** has a separate metadata-smuggling
+boundary: canonical JSONL and a self-recomputed SHA inventory do not
+prevent an extra runner field from carrying a private mapping or rating.
+The verifier now requires the exact native runner field set (including
+bounded threads, matched prompt-token count, and same-run Actions URL) or
+one of the explicit no-model synthetic fixture sets. An unexpected runner
+field fails complete-screen admission; failed-run recovery retains its
+original bytes but credits no validated prefix. This is source-only
+hardening, not cryptographic proof that real inference occurred.
+
+The **public failed-run recovery envelope** now also rejects extra/duplicate
+fields in derived metadata, noncanonical manifest/provenance JSON, forged
+original Actions URLs, and appended README data, even if an attacker recomputes
+the self-reported SHA inventory. The exact original raw journals and GitHub
+artifact API response remain byte-preserved, including malformed and negative
+evidence. This does not establish authenticated GitHub branch persistence or
+real cancellation recovery.
+
+## Failed-workflow durable recovery (source merged; live unqualified)
+
+As of 29 October 2026, source custody PRs #180, #183 and #189 have
+been merged on main in dependency order after recorded independent
+correction acceptance. Green offline tests and synthetic Actions ZIP
+readbacks do not establish actual cancelled-workflow survival or
+durable Git evidence-branch write/readback. The main-only synthetic
+protocol dispatch is a separate no-model push/fetch/verification probe:
+its output branch is explicitly named `evidence/detective-005a-synthetic-probe-<run-id>`.
+It never constitutes real villager output or a live-screen authorization.
+Both complete and failed-run live promotion steps now require a remote
+branch fetch, exact pushed-commit identity and raw-archive verification
+after git push. These are source safeguards until exercised on real runs.
+All three promotion paths now use Git's absent-ref `--force-with-lease`
+precondition, so a run-scoped branch created between the existence check
+and push must be rejected even if a normal push would fast-forward.
+An adversarial local bare-Git regression covers that race; this does not
+qualify GitHub authorization, cancellation or remote push behavior.
+
+An additional adversarial offline test now creates a fresh **local bare Git**
+repository, commits an interrupted raw journal, pushes/fetches an isolated
+evidence ref, extracts `git archive FETCH_HEAD`, verifies the original
+bytes even after the working copy is changed, and refuses a tampered
+extracted journal. This exercises actual local Git persistence/verification
+rather than static workflow string checks. **Local Git is not GitHub Actions**:
+remote authentication, permissions, cancellation and hosted branch durability
+remain unqualified until the separately reviewed main-only synthetic probe.
+
+A further adversarial **local-only** transport test preserves a real torn raw
+journal across two negative cases: a Git server pre-receive hook rejects
+creation of the evidence branch (no remote ref exists), and a competing writer
+advances a successfully created branch before readback (fetched SHA differs
+from the recorded pushed SHA). Neither failure can be counted as a successful
+remote archive; the original staged bytes remain separately verifiable. This
+is **not** proof that GitHub-hosted cancellation, credential rejection, branch
+policy or transient fallback upload will behave identically.
 
 **Artifact API pagination safeguard (source-only):** the live recovery job
 requests `?per_page=100`. An HTTP-success first-page response does not prove
@@ -172,7 +242,7 @@ response for later review. The adversarial no-model test exercises both the
 collision refusal and a valid distinct-ID control. It does not prove a real
 failed/cancelled workflow or successful remote evidence-branch promotion.
 
-The proposed `recover-failed-evidence` job is strictly conditional: it runs
+The merged `recover-failed-evidence` job is strictly conditional: it runs
 only after a confirmed-main `RUN-144-NO-TRAINING` plan succeeds and the
 lineage matrix or full evidence assembler fails. It does **not** initiate any
 generation or permit a retry. It retrieves already-uploaded, same-run
@@ -368,3 +438,90 @@ These are instructions, **not evidence of performed runs**. All 144 scores
 must originate from a human reviewer, and the owner must document their
 independence and their lack of raw/identity access before interpreting scores
 as blinded. The output is a subjective candidate shortlist only.
+
+### Lineage member-summary integrity (draft PR #196)
+
+A source-verified 12-row lineage's manifest is not trusted as a scoring or
+custody authority. Source ingestion and full-archive remote readback now
+recompute each member's hard-floor status, failure prompt IDs, generated-token
+count and total generation tokens from the original raw rows, require a
+positive integer peak-RSS receipt and enforce the exact live manifest key set.
+Synthetic adversarial checks reject rehashed false-clean member verdicts,
+inflated token counts and unauthorized identity-bearing metadata fields.
+These checks do not reconstruct missing model outputs, prove host execution or
+qualify authenticated GitHub remote persistence.
+
+### Public-archive allowlisted-file content verification (draft PR #196)
+
+An exact pathname allowlist and self-rehashed inventory alone cannot keep
+unregistered *contents* out of otherwise permitted public files. Full readback
+now enforces exact dataset/provenance metadata field sets, exact source-run URL,
+canonical JSON bytes (rejecting duplicate-key smuggling) for dataset, source
+provenance and lineage manifests, and byte-identical generated README text.
+Synthetic adversarial tests inject private-looking mappings, duplicate JSON
+keys and README appendages with recomputed hash inventories. These checks do
+not authenticate a model execution, prevent a model from emitting secrets in
+dialogue, or qualify remote GitHub persistence.
+
+### Original raw JSONL ambiguity guard (draft PR #196)
+
+JSON permits ambiguous object members in permissive parsers: `json.loads`
+silently selects the final occurrence of a duplicate key. A forged raw
+response can therefore contain an unvalidated first value while passing a
+recomputed file SHA-256 and the previous semantic row checks. The approved
+live writer already fsyncs canonical single-line JSON followed by LF.
+
+Strict completed-lineage ingestion now requires every original JSONL byte to
+match its canonical parsed row, including field order and line termination.
+Recovery uses the same check **per intact prefix row**: a noncanonical row
+or duplicate-key payload stops validated-prefix counting at that point but
+is copied byte-for-byte into the quarantined recovery dataset, with a visible
+warning. This prevents a rehashed raw file from silently gaining source-valid
+custody; it does not establish that a model actually produced the text.
+The synthetic adversarial fixture checks both duplicate-key and trailing-space
+cases, and a forged complete 12-row lineage with matching journal, final file,
+and recomputed manifest digest. No original archived evidence is rewritten.
+
+### Independent source review #5703653661 — correction pending acceptance (PR #196)
+
+The submitted independent `COMMENTED` review of literal head
+`492847b3c412763e284370b887afb2fa2c6c2860` identified four blocking
+gaps in otherwise passing **no-model** synthetic CI. The following are
+source-only corrections requiring new exact-head CI and distinct correction
+acceptance before any merge:
+
+- The original combined `raw/results.jsonl` archive must match its canonical
+  144-row JSONL+LF serialization byte-for-byte. Rehashing a duplicate key,
+  injected blank row, or other noncanonical aggregate does not authorize
+  complete-screen admission, even if unchanged lineage journals still match
+  the parsed values.
+- Production `read_lineage`, `assemble`, and fetched `verify_dataset`
+  require native runner receipts. Explicit `synthetic_test_only` rows are
+  valid **only when a Python unit test expressly passes**
+  `allow_synthetic_test_only=True`; there is no command-line or live-workflow
+  override, and the blind custodian's normal verifier remains native-only.
+  Synthetic rows in failed-run archives may still be retained as original
+  evidence but cannot qualify a completed lineage or a real 144/144 screen.
+- Native `prompt_ids_sha256` is recomputed over the full `prompt_token_ids`
+  array, serialized as **little-endian signed int64** (the frozen x86_64
+  PyTorch/NumPy input-ID layout). The verifier refuses a well-formed but
+  incorrect digest, and an offline tamper test alters one token while
+  preserving the recorded hash.
+- A **self-rehashed public recovery archive cannot prove whether unsafe
+  downloaded source entries were omitted**. A standalone `verify` returns
+  `artifact_transport_claimed` separately from the independently qualified
+  `artifact_transport_complete` (false without fresh originals). A
+  positive `--require-complete-transport` gate now requires *both* the
+  separately supplied original downloaded tree
+  (`--original-artifacts artifacts`) and its original GitHub Actions API
+  response (`--original-artifact-api artifacts-api.json`), and rechecks
+  the source structure warning state, expected file bytes, and API bytes.
+  A forged cleared warning list, even with a recomputed SHA inventory,
+  cannot pass against the original unsafe source. If originals are lost or
+  expire, **the positive transport gate is unqualified**, not silently
+  reconstructed from the published archive.
+
+These measures do not prove independent original model execution, a successful
+remote GitHub branch push, a cancelled-workflow recovery, or human-rating
+independence. No 144-generation inference, training, scoring, private mapping
+disclosure, or population admission is authorized by this correction.

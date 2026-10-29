@@ -37,13 +37,14 @@ class Detective005AFunScreenTests(unittest.TestCase):
                     f"The relay sounds offended today. Prompt {prompt['id']} "
                     "gets my best theory: blame the vending hatch's imaginary union."
                 )
+                source = screen.expected_source(
+                    self.cfg, member["member_id"])
                 rows.append({
                     "schema": "detective-005a-raw-response-v1",
                     "experiment": "DETECTIVE-005A",
                     "member_id": member["member_id"],
                     "prompt_id": prompt["id"],
-                    "source": screen.expected_source(
-                        self.cfg, member["member_id"]),
+                    "source": source,
                     "request": screen.expected_request(
                         self.cfg, prompt["id"]),
                     "response": {
@@ -60,6 +61,10 @@ class Detective005AFunScreenTests(unittest.TestCase):
                         "cpu": "none",
                         "repository_head_sha": "1" * 40,
                         "actions_run_id": "123456",
+                        "base_weights_sha256_verified": source["base_weights_sha256"],
+                        "adapter_archive_sha256_verified": source["asset_sha256"],
+                        "adapter_directory_sha256_verified":
+                            source["adapter_directory_sha256"],
                     },
                 })
         return rows
@@ -143,6 +148,83 @@ class Detective005AFunScreenTests(unittest.TestCase):
         bad["request"]["max_new_tokens"] = 95
         with self.assertRaisesRegex(screen.ScreenError, "request/decode"):
             screen.validate_result(self.cfg, bad)
+        # Labels can remain untouched while a forged receipt claims a
+        # different downloaded model; never certify the frozen cohort.
+        for field in ("base_weights_sha256_verified",
+                      "adapter_archive_sha256_verified",
+                      "adapter_directory_sha256_verified"):
+            with self.subTest(forged_verified_hash=field):
+                bad = copy.deepcopy(row)
+                bad["runner"][field] = "0" * 64
+                with self.assertRaisesRegex(
+                        screen.ScreenError, "base/adapter verification receipt"):
+                    screen.validate_result(self.cfg, bad)
+                bad["runner"].pop(field)
+                with self.assertRaisesRegex(
+                        screen.ScreenError, "base/adapter verification receipt"):
+                    screen.validate_result(self.cfg, bad)
+
+    def test_runner_metadata_smuggling_and_native_receipt_drift_rejected(self):
+        # These values used to pass validation when hidden in the runner
+        # rather than the model response, even with recomputed SHA inventory.
+        row = self.synthetic_rows()[0]
+        for key in ("private_blind_key", "human_fun_ratings",
+                    "identity_mapping", "review_packet"):
+            with self.subTest(unregistered=key):
+                forged = copy.deepcopy(row)
+                forged["runner"][key] = {"synthetic_private": "never archive"}
+                with self.assertRaisesRegex(
+                        screen.ScreenError, "runner receipt field-set"):
+                    screen.validate_result(self.cfg, forged)
+
+        # A native-shaped receipt must bind its Actions URL to its run and
+        # the recorded prompt-token count to the supplied token IDs.
+        native = copy.deepcopy(row)
+        native["runner"] = {
+            "repository_head_sha": "1" * 40,
+            "actions_run_id": "123456",
+            "actions_run_url":
+                "https://github.com/techrote/neurounner/actions/runs/123456",
+            "platform": "synthetic-linux", "cpu_model": "synthetic-cpu",
+            "python": "3.11", "torch": "synthetic", "transformers": "synthetic",
+            "peft": "synthetic", "threads": 2,
+            "base_weights_sha256_verified": row["source"]["base_weights_sha256"],
+            "prompt_token_ids": [7] * row["response"]["prompt_tokens"],
+            "prompt_ids_sha256": screen.prompt_ids_sha256([7] * row["response"]["prompt_tokens"]),
+            "adapter_archive_sha256_verified": row["source"]["asset_sha256"],
+            "adapter_directory_sha256_verified":
+                row["source"]["adapter_directory_sha256"],
+        }
+        screen.validate_result(self.cfg, native)
+        for mutate in (
+            lambda r: r.update(actions_run_url="https://example.com/private"),
+            lambda r: r.update(prompt_token_ids=[7]),
+            lambda r: r.update(prompt_token_ids=[8] + r["prompt_token_ids"][1:]),
+            lambda r: r.update(prompt_ids_sha256="0" * 64),
+            lambda r: r.update(threads=99),
+        ):
+            with self.subTest(native_receipt=mutate):
+                forged = copy.deepcopy(native)
+                mutate(forged["runner"])
+                with self.assertRaisesRegex(
+                        screen.ScreenError, "source-bound native runner"):
+                    screen.validate_result(self.cfg, forged)
+
+    def test_native_prompt_digest_exact_int64_little_endian_wire(self):
+        """Reference signed int64 packing and one-token tamper regression."""
+        import hashlib
+        import struct
+        ids = [1, 256, 65536, (1 << 31) + 1]
+        native_bytes = struct.pack("<4q", *ids)
+        self.assertEqual(
+            screen.prompt_ids_sha256(ids),
+            hashlib.sha256(native_bytes).hexdigest())
+        self.assertNotEqual(screen.prompt_ids_sha256(ids),
+                            screen.prompt_ids_sha256([2, *ids[1:]]))
+        for bad in ([True], [-1], [1 << 63], [2.5]):
+            with self.subTest(rejected=bad), self.assertRaisesRegex(
+                    screen.ScreenError, "invalid int64 prompt token IDs"):
+                screen.prompt_ids_sha256(bad)
 
     def test_review_packet_is_identity_blind_and_reconstructible(self):
         rows = self.synthetic_rows()
@@ -337,8 +419,10 @@ class Detective005AFunScreenTests(unittest.TestCase):
                         screen.sha256_file(Path(live.__file__)),
                     "results_jsonl_sha256": screen.sha256_file(results),
                     "results": 12,
-                    "members": [],
-                    "total_generated_tokens": 12,
+                    "members": assemble.lineage_member_receipts(
+                        self.cfg, lineage, line_rows)[0],
+                    "total_generated_tokens": assemble.lineage_member_receipts(
+                        self.cfg, lineage, line_rows)[1],
                     "peak_rss_kib": 1,
                     "optimizer_steps": 0,
                     "paid_api_calls": 0,
@@ -350,14 +434,27 @@ class Detective005AFunScreenTests(unittest.TestCase):
                     json.dumps(manifest, indent=2, sort_keys=True) + "\n",
                     encoding="utf-8")
             out = root / "dataset"
-            manifest = assemble.assemble(artifacts, out)
+            manifest = assemble.assemble(artifacts, out,
+                                        allow_synthetic_test_only=True)
             self.assertEqual(manifest["raw_results"], 144)
             self.assertEqual(manifest["hard_floor_clean_results"], 144)
             self.assertFalse(manifest["subjective_fun_ratings_present"])
             self.assertFalse((out / "review").exists())
             self.assertFalse(manifest["review_packet_generated"])
             self.assertIsNone(manifest["review_packet_sha256"])
-            verified = assemble.verify_dataset(out)
+            # Production entry points must refuse our clearly labelled
+            # no-model synthetic archive. Only this explicit Python-only
+            # fixture switch admits it to isolated test assertions.
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "synthetic-only runner"):
+                assemble.verify_dataset(out)
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "synthetic-only runner"):
+                assemble.read_lineage(self.cfg, "G01", artifacts / "G01")
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "synthetic-only runner"):
+                assemble.assemble(artifacts, root / "real-production-refused")
+            verified = assemble.verify_dataset(out, allow_synthetic_test_only=True)
             self.assertEqual(verified["raw_results"], 144)
             self.assertEqual(verified["packet_items"], 0)
             self.assertFalse(verified["review_packet_generated"])
@@ -365,6 +462,205 @@ class Detective005AFunScreenTests(unittest.TestCase):
             self.assertFalse(verified["production_admission"])
             self.assertEqual(manifest["repository_head_sha"], "1" * 40)
             self.assertEqual(manifest["actions_run_id"], "123456")
+
+            # The combined original aggregate must be byte-canonical even
+            # if both the aggregate SHA and inventory are recomputed. Checking
+            # unchanged per-lineage journals against parsed/re-serialized
+            # objects alone cannot detect a shadow duplicate JSON key.
+            aggregate_path = out / "raw/results.jsonl"
+            orig_aggregate = aggregate_path.read_bytes()
+            manifest_path = out / "manifest.json"
+            orig_manifest_bytes = manifest_path.read_bytes()
+            inventory_path = out / "provenance/hashes.sha256"
+            orig_inventory_bytes = inventory_path.read_bytes()
+            for label, changed in (
+                ("shadow_duplicate_key", orig_aggregate.replace(
+                    b'"experiment":"DETECTIVE-005A"',
+                    b'"experiment":"private-shadow","experiment":"DETECTIVE-005A"',
+                    1)),
+                ("extra_blank_line", orig_aggregate.replace(bytes([10]), bytes([10, 10]), 1)),
+            ):
+                with self.subTest(aggregate_noncanonical=label):
+                    self.assertNotEqual(changed, orig_aggregate)
+                    aggregate_path.write_bytes(changed)
+                    revised = screen.read_json(manifest_path)
+                    revised["raw_results_sha256"] = screen.sha256_file(aggregate_path)
+                    assemble.write_json(manifest_path, revised)
+                    inventory_path.write_text(assemble.hash_inventory(out),
+                                              encoding="utf-8")
+                    with self.assertRaisesRegex(
+                            screen.ScreenError, "combined raw JSONL noncanonical"):
+                        assemble.verify_dataset(
+                            out, allow_synthetic_test_only=True)
+                    aggregate_path.write_bytes(orig_aggregate)
+                    manifest_path.write_bytes(orig_manifest_bytes)
+                    inventory_path.write_bytes(orig_inventory_bytes)
+            self.assertEqual(
+                assemble.verify_dataset(
+                    out, allow_synthetic_test_only=True)["raw_results"], 144)
+
+            # The archive verifier must not accept self-rehashed extraneous
+            # files such as a private reviewer HMAC key or identity map. A
+            # SHA inventory is NOT a file allowlist or a custody authority.
+            inventory_path = out / "provenance" / "hashes.sha256"
+            original_inventory = inventory_path.read_bytes()
+            smuggled = out / "private-identity-map.json"
+            smuggled.write_text('{"synthetic_secret":"DO NOT ARCHIVE"}\\n',
+                                encoding="utf-8")
+            inventory_path.write_text(assemble.hash_inventory(out),
+                                      encoding="utf-8")
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "unregistered or missing files"):
+                assemble.verify_dataset(out, allow_synthetic_test_only=True)
+            smuggled.unlink()
+            inventory_path.write_bytes(original_inventory)
+
+            # A symlink to correct bytes OUTSIDE the archive can satisfy
+            # hashes locally, but Git persists the link, not the raw bytes.
+            journal = out / "raw/lineage-journals/G01.jsonl"
+            original_journal = journal.read_bytes()
+            external_journal = root / "external-original-journal.jsonl"
+            external_journal.write_bytes(original_journal)
+            journal.unlink()
+            journal.symlink_to(external_journal)
+            with self.assertRaisesRegex(screen.ScreenError, "symlink"):
+                assemble.verify_dataset(out, allow_synthetic_test_only=True)
+            journal.unlink()
+            journal.write_bytes(original_journal)
+            self.assertEqual(inventory_path.read_bytes(), original_inventory)
+
+            # Rehashing a forged manifest must not fabricate successful
+            # human ratings, admit characters, hide hard-floor failures or
+            # change the exact source cohort without a verifier refusal.
+            manifest_path = out / "manifest.json"
+            original_manifest = screen.read_json(manifest_path)
+            for field, value, diagnostic in (
+                ("subjective_fun_ratings_present", True, "authority drift"),
+                ("production_admission", True, "authority drift"),
+                ("hard_floor_clean_results", 143, "hard-floor summary drift"),
+                ("source_config_sha256", "0" * 64, "frozen source/size"),
+            ):
+                with self.subTest(forged_manifest=field):
+                    forged = copy.deepcopy(original_manifest)
+                    forged[field] = value
+                    assemble.write_json(manifest_path, forged)
+                    inventory_path.write_text(assemble.hash_inventory(out),
+                                              encoding="utf-8")
+                    with self.assertRaisesRegex(screen.ScreenError,
+                                                diagnostic):
+                        assemble.verify_dataset(out, allow_synthetic_test_only=True)
+            assemble.write_json(manifest_path, original_manifest)
+            inventory_path.write_bytes(original_inventory)
+
+            # Even a rehashed lineage manifest plus edited provenance must
+            # not override the exact checked-out runner-script fingerprint.
+            g01_path = out / "raw/lineage-manifests/G01.json"
+            g01_original = screen.read_json(g01_path)
+            g01_forged = copy.deepcopy(g01_original)
+            g01_forged["runner_script_sha256"] = "0" * 64
+            assemble.write_json(g01_path, g01_forged)
+            inventory_path.write_text(assemble.hash_inventory(out),
+                                      encoding="utf-8")
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "archived lineage raw/source/authority"):
+                assemble.verify_dataset(out, allow_synthetic_test_only=True)
+            assemble.write_json(g01_path, g01_original)
+            inventory_path.write_bytes(original_inventory)
+            # A recomputed inventory must not launder fabricated lineage
+            # hard-floor success, token totals or arbitrary private metadata
+            # inside an otherwise allowlisted source-manifest file.
+            for label in ("member_hard_floor", "member_token_count",
+                          "total_tokens", "peak_rss", "extra_field"):
+                with self.subTest(forged_lineage_summary=label):
+                    forged = copy.deepcopy(g01_original)
+                    if label == "member_hard_floor":
+                        forged["members"][0]["hard_floor_pass"] = False
+                    elif label == "member_token_count":
+                        forged["members"][0]["generated_tokens"] = 999
+                    elif label == "total_tokens":
+                        forged["total_generated_tokens"] = 999
+                    elif label == "peak_rss":
+                        forged["peak_rss_kib"] = -1
+                    else:
+                        forged["private_mapping_key"] = "synthetic-should-not-archive"
+                    assemble.write_json(g01_path, forged)
+                    inventory_path.write_text(assemble.hash_inventory(out),
+                                              encoding="utf-8")
+                    with self.assertRaisesRegex(
+                            screen.ScreenError, "lineage .* drift"):
+                        assemble.verify_dataset(out, allow_synthetic_test_only=True)
+            assemble.write_json(g01_path, g01_original)
+            inventory_path.write_bytes(original_inventory)
+            self.assertEqual(assemble.verify_dataset(out, allow_synthetic_test_only=True)["raw_results"], 144)
+
+            # A rehashed inventory is not permission to embed private mappings
+            # in ALLOWLISTED metadata files or the public README. Strict parsed
+            # schemas alone also miss JSON duplicate keys whose first value
+            # can carry hidden bytes but whose last value parses as expected.
+            for rel in ("manifest.json", "provenance/source-artifacts.json"):
+                with self.subTest(metadata_smuggling=rel):
+                    metadata_path = out / rel
+                    original_bytes = metadata_path.read_bytes()
+                    forged = screen.read_json(metadata_path)
+                    forged["private_identity_map"] = "synthetic-secret"
+                    assemble.write_json(metadata_path, forged)
+                    inventory_path.write_text(assemble.hash_inventory(out),
+                                              encoding="utf-8")
+                    with self.assertRaisesRegex(
+                            screen.ScreenError, "field-set"):
+                        assemble.verify_dataset(out, allow_synthetic_test_only=True)
+                    metadata_path.write_bytes(original_bytes)
+                    inventory_path.write_bytes(original_inventory)
+
+            provenance_path = out / "provenance/source-artifacts.json"
+            original_provenance_bytes = provenance_path.read_bytes()
+            forged_provenance = screen.read_json(provenance_path)
+            forged_provenance["actions_run_url"] = (
+                "https://example.invalid/foreign-run")
+            assemble.write_json(provenance_path, forged_provenance)
+            inventory_path.write_text(assemble.hash_inventory(out),
+                                      encoding="utf-8")
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "metadata field-set or URL drift"):
+                assemble.verify_dataset(out, allow_synthetic_test_only=True)
+            provenance_path.write_bytes(original_provenance_bytes)
+            inventory_path.write_bytes(original_inventory)
+
+            # Two schema keys parse to the second value with plain json.loads.
+            # Their extra raw bytes must not be archived as private metadata.
+            for rel in ("manifest.json", "provenance/source-artifacts.json",
+                        "raw/lineage-manifests/G01.json"):
+                with self.subTest(duplicate_json_member=rel):
+                    metadata_path = out / rel
+                    original_bytes = metadata_path.read_bytes()
+                    original_text = original_bytes.decode("utf-8")
+                    self.assertIn('  "schema": ', original_text)
+                    injected = original_text.replace(
+                        '  "schema": ',
+                        '  "schema": "synthetic-private-material",\n  "schema": ',
+                        1)
+                    metadata_path.write_text(injected, encoding="utf-8")
+                    inventory_path.write_text(assemble.hash_inventory(out),
+                                              encoding="utf-8")
+                    with self.assertRaisesRegex(
+                            screen.ScreenError, "noncanonical JSON"):
+                        assemble.verify_dataset(out, allow_synthetic_test_only=True)
+                    metadata_path.write_bytes(original_bytes)
+                    inventory_path.write_bytes(original_inventory)
+
+            readme_path = out / "README.md"
+            original_readme_bytes = readme_path.read_bytes()
+            readme_path.write_bytes(original_readme_bytes +
+                                    b"Private reviewer mapping: fake-secret\n")
+            inventory_path.write_text(assemble.hash_inventory(out),
+                                      encoding="utf-8")
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "README content drift"):
+                assemble.verify_dataset(out, allow_synthetic_test_only=True)
+            readme_path.write_bytes(original_readme_bytes)
+            inventory_path.write_bytes(original_inventory)
+            self.assertEqual(assemble.verify_dataset(out, allow_synthetic_test_only=True)["raw_results"], 144)
+
             provenance = screen.read_json(
                 out / "provenance" / "source-artifacts.json")
             self.assertEqual(len(provenance["source_artifacts"]), 12)
@@ -377,7 +673,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
             assemble.write_json(provenance_path, bad_provenance)
             with self.assertRaisesRegex(
                     screen.ScreenError, "source-artifact manifest/hash"):
-                assemble.verify_dataset(out)
+                assemble.verify_dataset(out, allow_synthetic_test_only=True)
             assemble.write_json(provenance_path, provenance)
 
             # A substituted runner hash must fail readback.
@@ -386,7 +682,8 @@ class Detective005AFunScreenTests(unittest.TestCase):
             altered["runner_script_sha256"] = "a" * 64
             first.write_text(json.dumps(altered), encoding="utf-8")
             with self.assertRaisesRegex(screen.ScreenError, "runner source hash"):
-                assemble.read_lineage(self.cfg, "G01", first.parent)
+                assemble.read_lineage(self.cfg, "G01", first.parent,
+                                      allow_synthetic_test_only=True)
 
             # A duplicated lineage folder must never be silently selected.
             duplicate = artifacts / "duplicate" / "G01"
@@ -435,6 +732,11 @@ class Detective005AFunScreenTests(unittest.TestCase):
                     screen.sha256_file(Path(live.__file__)),
                 "results_jsonl_sha256": screen.sha256_file(raw),
                 "results": 12,
+                "members": assemble.lineage_member_receipts(
+                    self.cfg, "G01", line_rows)[0],
+                "total_generated_tokens": assemble.lineage_member_receipts(
+                    self.cfg, "G01", line_rows)[1],
+                "peak_rss_kib": 1,
                 "optimizer_steps": 0,
                 "paid_api_calls": 0,
                 "model_judge_calls": 0,
@@ -445,17 +747,83 @@ class Detective005AFunScreenTests(unittest.TestCase):
                 json.dumps(manifest), encoding="utf-8")
             with self.assertRaisesRegex(
                     screen.ScreenError, "fsynced journal missing"):
-                assemble.read_lineage(self.cfg, "G01", folder)
+                assemble.read_lineage(self.cfg, "G01", folder,
+                                      allow_synthetic_test_only=True)
             journal = folder / "results.partial.jsonl"
             journal.write_bytes(raw.read_bytes()[:-1])
             with self.assertRaisesRegex(
                     screen.ScreenError, "journal/final bytes mismatch"):
-                assemble.read_lineage(self.cfg, "G01", folder)
+                assemble.read_lineage(self.cfg, "G01", folder,
+                                      allow_synthetic_test_only=True)
             journal.write_bytes(raw.read_bytes())
             result_manifest, observed = assemble.read_lineage(
-                self.cfg, "G01", folder)
+                self.cfg, "G01", folder,
+                allow_synthetic_test_only=True)
             self.assertEqual(len(observed), 12)
             self.assertEqual(result_manifest["lineage"], "G01")
+
+    def test_source_lineage_rejects_forged_member_hard_floor_and_token_claims(self):
+        """Rehashing a local manifest must not certify falsified metrics."""
+        line_rows = [r for r in self.synthetic_rows()
+                     if r["member_id"].split("-")[1] == "G01"]
+        with tempfile.TemporaryDirectory() as td:
+            folder = Path(td) / "G01"
+            folder.mkdir()
+            raw = folder / "results.jsonl"
+            raw.write_text(
+                "".join(screen.canonical(r) + "\n" for r in line_rows),
+                encoding="utf-8")
+            (folder / "results.partial.jsonl").write_bytes(raw.read_bytes())
+            members, tokens = assemble.lineage_member_receipts(
+                self.cfg, "G01", line_rows)
+            manifest = {
+                "schema": "detective-005a-live-lineage-manifest-v1",
+                "experiment": "DETECTIVE-005A",
+                "issue": 176,
+                "lineage": "G01",
+                "source_plan": live.source_plan("G01"),
+                "runner_script_sha256": screen.sha256_file(Path(live.__file__)),
+                "results_jsonl_sha256": screen.sha256_file(raw),
+                "results": 12,
+                "members": members,
+                "total_generated_tokens": tokens,
+                "peak_rss_kib": 1,
+                "optimizer_steps": 0,
+                "paid_api_calls": 0,
+                "model_judge_calls": 0,
+                "production_admission": False,
+                "population_expansion_admitted": False,
+            }
+            archive_manifest = folder / "manifest.json"
+            assemble.write_json(archive_manifest, manifest)
+            self.assertEqual(assemble.read_lineage(self.cfg, "G01", folder,
+                                      allow_synthetic_test_only=True)[1],
+                             line_rows)
+            for label in ("hard_floor", "prompt_failures", "tokens",
+                          "total_tokens", "peak_rss", "private_field"):
+                with self.subTest(forgery=label):
+                    bad = copy.deepcopy(manifest)
+                    if label == "hard_floor":
+                        bad["members"][0]["hard_floor_pass"] = False
+                    elif label == "prompt_failures":
+                        bad["members"][0]["hard_floor_failures"] = ["F01"]
+                    elif label == "tokens":
+                        bad["members"][0]["generated_tokens"] += 1
+                    elif label == "total_tokens":
+                        bad["total_generated_tokens"] += 1
+                    elif label == "peak_rss":
+                        bad["peak_rss_kib"] = 0
+                    else:
+                        bad["private_member_mapping"] = {"R001": "V-G01-A"}
+                    assemble.write_json(archive_manifest, bad)
+                    with self.assertRaisesRegex(
+                            screen.ScreenError, "lineage .* drift"):
+                        assemble.read_lineage(self.cfg, "G01", folder,
+                                      allow_synthetic_test_only=True)
+            assemble.write_json(archive_manifest, manifest)
+            assemble.read_lineage(self.cfg, "G01", folder,
+                                      allow_synthetic_test_only=True)
+
 
     def test_refused_rerun_preserves_old_receipts_and_work_bytes(self):
         cases = ("receipt_only", "work_only", "complete")
