@@ -15,6 +15,7 @@ import torch
 from torch import Tensor, nn
 
 from ncr_001_core import PersistentDepthNCA, DepthFieldState
+from ncr_001_backbone_lease import shared_decoder_lock
 
 MODEL_ID = "kandivault/sprocket-500m"
 MODEL_REVISION = "eb157d4ddddc4619e661d4a2426bb2dd000fc668"
@@ -64,6 +65,7 @@ class FrozenSprocketChatDepthNCA(nn.Module):
             observation_gain=0.2, update_gain=0.25,
         )
         self._instrument_lock = threading.Lock()
+        self._backbone_lock = shared_decoder_lock(backbone)
         self._last_hook_trace: list[dict[str, Any]] = []
 
     def train(self, mode: bool = True):
@@ -88,7 +90,17 @@ class FrozenSprocketChatDepthNCA(nn.Module):
         return [dict(item) for item in self._last_hook_trace]
 
     @contextmanager
-    def _instrument(self) -> Iterator[None]:
+    def _claim_backbone(self) -> Iterator[None]:
+        """Refuse concurrent NCA/MLP use of the shared decoder root."""
+        if not self._backbone_lock.acquire(blocking=False):
+            raise RuntimeError("Shared frozen decoder already owned by another adapter")
+        try:
+            yield
+        finally:
+            self._backbone_lock.release()
+
+    @contextmanager
+    def _install_hooks(self) -> Iterator[None]:
         if not self._instrument_lock.acquire(blocking=False):
             raise RuntimeError("Concurrent instrumented forwards are prohibited")
         hooks = []
@@ -163,10 +175,18 @@ class FrozenSprocketChatDepthNCA(nn.Module):
             self._last_hook_trace = traces
             self._instrument_lock.release()
 
+    @contextmanager
+    def _instrument(self) -> Iterator[None]:
+        """Claim shared decoder ownership even for direct hook-window calls."""
+        with self._claim_backbone():
+            with self._install_hooks():
+                yield
+
     def forward(self, *args, enabled: bool = True, **kwargs):
         self.verify_frozen_base()
         if not enabled:
-            return self.backbone(*args, **kwargs)
+            with self._claim_backbone():
+                return self.backbone(*args, **kwargs)
         with self._instrument():
             return self.backbone(*args, **kwargs)
 
@@ -178,7 +198,8 @@ class FrozenSprocketChatDepthNCA(nn.Module):
         """
         self.verify_frozen_base()
         if not enabled:
-            return self.backbone.generate(*args, **kwargs)
+            with self._claim_backbone():
+                return self.backbone.generate(*args, **kwargs)
         with self._instrument():
             return self.backbone.generate(*args, **kwargs)
 
