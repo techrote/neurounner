@@ -234,10 +234,15 @@ the checkout and separated from each other**, never in public GitHub Actions:
    reconstruct member scores/shortlist in a separate custodian-only output.
    Admission/training gates remain false.
 
-The private custodian currently requires POSIX mode controls (Linux/WSL);
-it refuses native Windows/NTFS execution because `os.chmod(0600)` alone
-cannot establish a confidential Windows ACL. A Windows-native custodian must
-receive separately reviewed, effective user-only ACL enforcement before use.
+The private custodian requires POSIX permission controls on a vetted
+local filesystem. On Linux/WSL it checks the most-specific mount in
+`/proc/self/mountinfo` and rejects Windows-backed DrvFs/9p/NTFS,
+FUSE and network filesystems (including CIFS/NFS). **WSL on /mnt/c
+must not hold the key**: `os.name == "posix"` and `chmod(0600)`
+do not establish a private Windows ACL. Use a trusted local ext4
+filesystem (e.g. WSL's native Linux filesystem); unknown Linux
+mounts fail closed. Native Windows remains unsupported until an
+independently reviewed ACL implementation exists.
 The local `freeze` receipt is not a trusted timestamp or proof of rating
 independence by itself. The hash of the unpublished map/packet must be
 externally committed before ratings, and the signed/independently witnessed
@@ -261,9 +266,10 @@ unchanged.
 
 ## Private-custodian CLI example (after full 144-row evidence and review)
 
-Run locally on an access-controlled Linux/WSL environment, with paths outside
-the repository and the reviewer distribution channel. Do not use these
-commands inside GitHub-hosted public CI or publish the custodian directory.
+Run locally on an access-controlled POSIX environment with a vetted local
+filesystem (WSL native ext4, **not** /mnt/c DrvFs), with paths outside the
+repository and reviewer distribution channel. Do not run these commands
+in GitHub-hosted public CI or publish the custodian directory.
 
 ```sh
 python3 scripts/detective_005a_blind.py prepare \
