@@ -80,6 +80,41 @@ class SprocketMACProxy(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "REFUSED"):
             m.mac_proxy(1280, steps=True)
 
+    def test_refuse_unregistered_mac_proxy_geometry_and_budget(self):
+        # The old helper accepted these inputs yet returned parameter counts
+        # hardcoded for C=4, 8x8 and bottleneck=256: false #73 fairness.
+        for changes in (
+            {"hidden": 576}, {"hidden": 640},
+            {"taps": 2}, {"taps": 4},
+            {"steps": 2}, {"steps": 4},
+            {"grid": 4}, {"grid": 16},
+            {"channels": 2}, {"channels": 8},
+            {"bottleneck": 128}, {"bottleneck": 512},
+        ):
+            hidden = changes.get("hidden", 1280)
+            kwargs = {k: v for k, v in changes.items() if k != "hidden"}
+            with self.subTest(changes=changes):
+                with self.assertRaisesRegex(ValueError,
+                                            "unregistered Sprocket adapter geometry"):
+                    m.mac_proxy(hidden, **kwargs)
+
+    def test_module_shape_parameter_arithmetic_is_independent_of_steps(self):
+        # Re-derive from pinned PyTorch definitions, including both Conv2d
+        # biases, observation bias, LN affine and per-feature MLP gate.
+        h, field, c, b = 1280, 8 * 8 * 4, 4, 256
+        nca = (2 * h + h * field + field + 4 * c * c * 9 + 4 * c
+               + 2 * c * 4 * c + 2 * c + field * h)
+        mlp = 2 * h + h * b + b + b + b * h
+        self.assertEqual(nca, 658904)
+        self.assertEqual(mlp, 658432)
+        for steps in (1, 3):
+            with self.subTest(steps=steps):
+                r = m.mac_proxy(h, steps=steps)
+                self.assertEqual(r["nca_trainable_parameter_formula"], nca)
+                self.assertEqual(r["mlp_trainable_parameter_formula"], mlp)
+                self.assertEqual(r["nca_trainable_parameter_formula"] -
+                                 r["mlp_trainable_parameter_formula"], 472)
+
 
 if __name__ == "__main__":
     unittest.main()
