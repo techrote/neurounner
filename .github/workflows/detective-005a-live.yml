@@ -256,6 +256,18 @@ jobs:
           cp -a staged/detective-005a-recovery/. "$TARGET_DATASET/"
           python3 scripts/detective_005a_recover.py \
             --verify "$TARGET_DATASET"
+      - name: Upload verified recovery staging as transient push-failure fallback
+        id: recovery-fallback-artifact
+        # A failed git push must not also erase the last staged copy. This
+        # artifact still expires; only a successful evidence-branch push is
+        # durable promotion. Never let upload failure prevent that push.
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective005a-recovery-fallback-${{ github.run_id }}
+          path: staged/detective-005a-recovery
+          if-no-files-found: error
+          retention-days: 30
       - name: Promote failure evidence to fresh run-scoped branch only
         run: |
           set -euo pipefail
