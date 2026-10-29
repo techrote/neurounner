@@ -584,6 +584,19 @@ def verify(path: Path) -> dict:
     if metadata_path.exists():
         expected_files.add("provenance/actions-artifacts-api.json")
     for saved in provenance["lineages"]:
+        # The SHA inventory is self-reported. Do not allow a forged source
+        # provenance entry to legalize an unknown file in an otherwise
+        # rehashed archive (not even inside an expected G01..G12 directory).
+        # Recovery itself copies only these four root-level raw names.
+        screen.require(
+            isinstance(saved, dict) and
+            saved.get("lineage") in assemble.LINEAGES and
+            isinstance(saved.get("files"), list) and
+            all(isinstance(item, dict) and
+                isinstance(item.get("name"), str) and
+                item["name"] in ALLOWED
+                for item in saved["files"]),
+            "unapproved recovery file provenance")
         for item in saved["files"]:
             expected_files.add(f'raw/{saved["lineage"]}/{item["name"]}')
     actual_files = {
