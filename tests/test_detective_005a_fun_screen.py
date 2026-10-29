@@ -19,6 +19,8 @@ from scripts import detective_005a_assemble as assemble
 
 
 class Detective005AFunScreenTests(unittest.TestCase):
+    TEST_SECRET = bytes(range(32))
+
     @classmethod
     def setUpClass(cls):
         cls.cfg = screen.load_contract()
@@ -142,7 +144,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
 
     def test_review_packet_is_identity_blind_and_reconstructible(self):
         rows = self.synthetic_rows()
-        packet, mapping = screen.build_review_packet(self.cfg, rows)
+        packet, mapping = screen.build_review_packet(self.cfg, rows, self.TEST_SECRET)
         self.assertEqual(len(packet["items"]), 144)
         self.assertEqual(len(mapping), 144)
         self.assertFalse(packet["identity_mapping_committed"])
@@ -153,13 +155,13 @@ class Detective005AFunScreenTests(unittest.TestCase):
         self.assertTrue(all(x["score_0_to_4"] is None
                             for x in packet["items"]))
         packet2, mapping2 = screen.build_review_packet(
-            self.cfg, copy.deepcopy(rows))
+            self.cfg, copy.deepcopy(rows), self.TEST_SECRET)
         self.assertEqual(packet, packet2)
         self.assertEqual(mapping, mapping2)
 
     def test_rating_template_requires_all_144_subjective_scores(self):
         rows = self.synthetic_rows()
-        packet, _ = screen.build_review_packet(self.cfg, rows)
+        packet, _ = screen.build_review_packet(self.cfg, rows, self.TEST_SECRET)
         ratings = screen.rating_template(packet)
         self.assertEqual(len(ratings["ratings"]), 144)
         self.assertTrue(all(x["score_0_to_4"] is None
@@ -173,7 +175,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
 
     def test_invalid_subjective_tag_or_missing_rating_refused(self):
         rows = self.synthetic_rows()
-        packet, _ = screen.build_review_packet(self.cfg, rows)
+        packet, _ = screen.build_review_packet(self.cfg, rows, self.TEST_SECRET)
         ratings = screen.rating_template(packet)
         for r in ratings["ratings"]:
             r["score_0_to_4"] = 2
@@ -188,7 +190,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
 
     def test_subjective_fun_shortlist_uses_scores_then_hard_floor(self):
         rows = self.synthetic_rows()
-        packet, mapping = screen.build_review_packet(self.cfg, rows)
+        packet, mapping = screen.build_review_packet(self.cfg, rows, self.TEST_SECRET)
         ratings = screen.rating_template(packet)
         # Give G01 the highest fun score, G02 next, etc. No relevance
         # interpretation is involved.
@@ -198,7 +200,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
             r["score_0_to_4"] = 4 if lineage == 1 else (
                 3 if lineage <= 4 else 2)
             r["tags"] = ["memorable"] if lineage == 1 else []
-        result = screen.aggregate(self.cfg, rows, packet, ratings)
+        result = screen.aggregate(self.cfg, rows, packet, ratings, self.TEST_SECRET)
         self.assertEqual(result["objective_relevance_threshold"], None)
         self.assertEqual(len(result["subjective_fun_shortlist"]), 12)
         self.assertEqual(result["subjective_fun_shortlist"][:3],
@@ -213,13 +215,13 @@ class Detective005AFunScreenTests(unittest.TestCase):
         target = next(r for r in poisoned
                       if r["member_id"] == "V-G01-A" and r["prompt_id"] == "F01")
         target["response"]["text"] += " HIDDEN-ARCHIVE-9F2A"
-        packet2, mapping2 = screen.build_review_packet(self.cfg, poisoned)
+        packet2, mapping2 = screen.build_review_packet(self.cfg, poisoned, self.TEST_SECRET)
         ratings2 = screen.rating_template(packet2)
         for r in ratings2["ratings"]:
             member = mapping2[r["item_id"]]["member_id"]
             r["score_0_to_4"] = 4 if member.startswith("V-G01-") else 2
         result2 = screen.aggregate(
-            self.cfg, poisoned, packet2, ratings2)
+            self.cfg, poisoned, packet2, ratings2, self.TEST_SECRET)
         m = next(x for x in result2["members"]
                  if x["member_id"] == "V-G01-A")
         self.assertEqual(m["mean_fun"], 4.0)
@@ -228,7 +230,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
 
     def test_file_roundtrip_packet_hash_matches_written_bytes(self):
         rows = self.synthetic_rows()
-        packet, _ = screen.build_review_packet(self.cfg, rows)
+        packet, _ = screen.build_review_packet(self.cfg, rows, self.TEST_SECRET)
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             packet_path = root / "packet.json"
@@ -348,13 +350,13 @@ class Detective005AFunScreenTests(unittest.TestCase):
             self.assertEqual(manifest["raw_results"], 144)
             self.assertEqual(manifest["hard_floor_clean_results"], 144)
             self.assertFalse(manifest["subjective_fun_ratings_present"])
-            packet = screen.read_json(out / "review" / "fun-packet.json")
-            self.assertEqual(len(packet["items"]), 144)
-            blob = json.dumps(packet, sort_keys=True)
-            self.assertNotIn("V-G01-A", blob)
+            self.assertFalse((out / "review").exists())
+            self.assertFalse(manifest["review_packet_generated"])
+            self.assertIsNone(manifest["review_packet_sha256"])
             verified = assemble.verify_dataset(out)
             self.assertEqual(verified["raw_results"], 144)
-            self.assertEqual(verified["packet_items"], 144)
+            self.assertEqual(verified["packet_items"], 0)
+            self.assertFalse(verified["review_packet_generated"])
             self.assertFalse(verified["subjective_fun_ratings_present"])
             self.assertFalse(verified["production_admission"])
             self.assertEqual(manifest["repository_head_sha"], "1" * 40)
