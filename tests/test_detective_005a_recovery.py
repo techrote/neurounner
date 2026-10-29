@@ -145,12 +145,15 @@ class Detective005ARecoveryTests(unittest.TestCase):
             })
             out = root / "archive"
             manifest = recover.recover(root / "artifacts", out, HEAD, RUN)
-            self.assertEqual(manifest["complete_lineage_artifacts"], 1)
+            self.assertEqual(manifest["complete_lineage_artifacts"], 0)
             self.assertEqual(manifest["validated_raw_prefix_rows"], 12)
             self.assertFalse(manifest["review_packet_generated"])
-            self.assertEqual(
-                screen.read_json(out / "provenance/source-artifacts.json")
-                ["lineages"][0]["status"], "complete_lineage_recovered")
+            unbound = screen.read_json(
+                out / "provenance/source-artifacts.json")["lineages"][0]
+            self.assertEqual(unbound["status"], "recovery_only")
+            self.assertIn("artifact_api_metadata_unavailable",
+                          unbound["custody_warnings"])
+            self.assertFalse(recover.verify(out)["artifact_transport_complete"])
             self.assertFalse((out / "review/fun-packet.json").exists())
             self.assertFalse(recover.verify(out)["review_packet_generated"])
 
@@ -189,9 +192,11 @@ class Detective005ARecoveryTests(unittest.TestCase):
             metadata.write_text(json.dumps(original_api), encoding="utf-8")
             valid_archive = root / "archive-api"
             qualified = recover.recover(root / "artifacts", valid_archive,
-                                        HEAD, RUN, metadata)
+                                        HEAD, RUN, metadata, "success", "success")
             self.assertEqual(qualified["complete_lineage_artifacts"], 1)
-            recover.verify(valid_archive)
+            self.assertTrue(qualified["artifact_transport_complete"])
+            self.assertTrue(recover.require_complete_transport(
+                valid_archive)["artifact_transport_complete"])
             foreign_api = copy.deepcopy(original_api)
             foreign_api["artifacts"][0]["workflow_run"]["head_sha"] = "2" * 40
             metadata.write_text(json.dumps(foreign_api), encoding="utf-8")
@@ -227,7 +232,9 @@ class Detective005ARecoveryTests(unittest.TestCase):
                     "repository_id": 1432134981}},
             ]}), encoding="utf-8")
             out = root / "archive"
-            recover.recover(root / "artifacts", out, HEAD, RUN, metadata)
+            archive = recover.recover(root / "artifacts", out, HEAD, RUN,
+                                      metadata, "success", "failure")
+            self.assertFalse(archive["artifact_transport_complete"])
             provenance = screen.read_json(
                 out / "provenance/source-artifacts.json")
             self.assertIn("downloaded_artifact_not_listed",
@@ -239,7 +246,60 @@ class Detective005ARecoveryTests(unittest.TestCase):
             self.assertEqual((out /
                 "provenance/actions-artifacts-api.json").read_bytes(),
                 metadata.read_bytes())
-            recover.verify(out)
+            self.assertFalse(recover.verify(out)["artifact_transport_complete"])
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "incomplete original lineage"):
+                recover.require_complete_transport(out)
+
+            # Even if the download action reports success, a same-run API
+            # entry that survived but was not downloaded blocks green custody.
+            alternate = root / "archive-download-outcome-success"
+            manifest = recover.recover(root / "artifacts", alternate,
+                                        HEAD, RUN, metadata,
+                                        "success", "success")
+            self.assertFalse(manifest["artifact_transport_complete"])
+            self.assertFalse(recover.verify(alternate)["artifact_transport_complete"])
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "incomplete original lineage"):
+                recover.require_complete_transport(alternate)
+
+    def test_fatal_download_outcome_with_a_valid_api_row_stays_red(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "artifacts" / "detective005a-G01"
+            source.mkdir(parents=True)
+            original = screen.canonical(self.row()).encode() + b"\n"
+            (source / "results.partial.jsonl").write_bytes(original)
+            metadata = root / "api.json"
+            metadata.write_text(json.dumps({"artifacts": [{
+                "name": "detective005a-G01", "id": 1001,
+                "digest": "sha256:" + "f" * 64, "size_in_bytes": 100,
+                "expired": False, "workflow_run": {
+                    "id": int(RUN), "head_sha": HEAD,
+                    "repository_id": 1432134981},
+            }]}), encoding="utf-8")
+            # All visible source bytes survived, but the failed downloader
+            # might have dropped another file inside the artifact. Never green.
+            out = root / "archive"
+            manifest = recover.recover(root / "artifacts", out, HEAD, RUN,
+                                        metadata, "success", "failure")
+            self.assertEqual(manifest["validated_raw_prefix_rows"], 1)
+            self.assertFalse(manifest["artifact_transport_complete"])
+            self.assertEqual(
+                (out / "raw/G01/results.partial.jsonl").read_bytes(), original)
+            self.assertFalse(recover.verify(out)["artifact_transport_complete"])
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "incomplete original lineage"):
+                recover.require_complete_transport(out)
+
+            # API lookup failure also blocks green even with clean download.
+            missing_api = root / "archive-no-api"
+            missing = recover.recover(root / "artifacts", missing_api,
+                                      HEAD, RUN, None, "failure", "success")
+            self.assertFalse(missing["artifact_transport_complete"])
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "incomplete original lineage"):
+                recover.require_complete_transport(missing)
 
     def test_no_artifacts_never_claims_work_or_review(self):
         with tempfile.TemporaryDirectory() as td:
@@ -294,6 +354,11 @@ class Detective005ARecoveryTests(unittest.TestCase):
         self.assertIn("needs.assemble.result != 'success'", workflow)
         self.assertIn("evidence/detective-005a-partial-", workflow)
         self.assertIn("scripts/detective_005a_recover.py", workflow)
+        self.assertIn("id: artifact-api", workflow)
+        self.assertIn("id: download-lineages", workflow)
+        self.assertIn("steps.download-lineages.outcome", workflow)
+        self.assertIn("steps.artifact-api.outcome", workflow)
+        self.assertIn("--require-complete-transport", workflow)
         self.assertIn("refuse overwrite", workflow.lower())
         self.assertIn("RUN-144-NO-TRAINING", workflow)
         self.assertIn("refs/heads/main", workflow)
