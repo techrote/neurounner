@@ -253,6 +253,8 @@ jobs:
             --out staged/detective-005a-synthetic-probe
           python3 scripts/detective_005a_recover.py \
             --verify staged/detective-005a-synthetic-probe \
+            --original-artifacts artifacts \
+            --original-artifact-api artifacts-api.json \
             --require-complete-transport
           python3 - <<'PY'
           import json
@@ -286,5 +288,7 @@ jobs:
           git archive FETCH_HEAD "$TARGET_DATASET" | tar -xf - -C remote-readback
           python3 scripts/detective_005a_recover.py \
             --verify "remote-readback/$TARGET_DATASET" \
+            --original-artifacts artifacts \
+            --original-artifact-api artifacts-api.json \
             --require-complete-transport
           echo "SYNTHETIC remote branch readback PASS; zero model calls, zero live responses"
