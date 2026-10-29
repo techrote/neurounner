@@ -1,0 +1,122 @@
+name: NCR-001E original PR202 full ZIP/job custody BOOTSTRAP (ONE SHOT)
+on:
+  push:
+    branches: [review/ncr001e-masked2048-original-custody-20261029]
+permissions:
+  actions: read
+  contents: write
+jobs:
+  original-byte-preservation:
+    if: github.repository == 'techrote/neurounner'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ORIGINAL_HEAD: b52af229dbfd0220d8d89f0d18e58733a2c3b56b
+      DEST: experiments/ncr-001/evidence-review/pr202-masked2048-original
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Refuse original source/pins/training drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "review/ncr001e-masked2048-original-custody-20261029"
+          test "$(git rev-parse HEAD^)" = "$ORIGINAL_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          python3 - <<'PY'
+          import json
+          p=json.load(open('experiments/ncr-001/protocol.json'))
+          assert p['train_authorized'] is False
+          assert set(p['models'])=={'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          assert p['conformance']['full_vs_cached_prefill_atol']==p['conformance']['full_vs_cached_prefill_rtol']==0.0005
+          print('PASS_FROZEN_ORIGINAL_SOURCE_NO_TRAIN')
+          PY
+      - name: Verify exact original run, 3 jobs and 3 artifact identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$DEST" /tmp/original-ledger
+          api() {
+            curl --fail --silent --show-error --location --retry 4 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/techrote/neurounner/$1" -o "$2"
+          }
+          api actions/runs/40939386209 /tmp/original-ledger/run.json
+          api actions/runs/40939386209/jobs?per_page=100 /tmp/original-ledger/jobs.json
+          api actions/runs/40939386209/artifacts?per_page=100 /tmp/original-ledger/artifacts.json
+          python3 - <<'PY'
+          import json,pathlib
+          root=pathlib.Path('/tmp/original-ledger')
+          run=json.loads((root/'run.json').read_text())
+          assert run['id']==40939386209 and run['head_sha']=='b52af229dbfd0220d8d89f0d18e58733a2c3b56b'
+          assert run['status']=='completed' and run['conclusion']=='success'
+          jobs={j['id']:j for j in json.loads((root/'jobs.json').read_text())['jobs']}
+          assert all(jobs[j]['conclusion']=='success' for j in (123678411187,123678836606,123678836615))
+          artifacts={a['id']:a for a in json.loads((root/'artifacts.json').read_text())['artifacts']}
+          wanted={12925688929:'a61769d08582dfb8f8dfc07c02a385c34380627cae3820889fece6e223',12927370503:'d0fac3a396c201d0f5377160381d47e101a62194e577dd0f3e7b51a4254a3753',12926034445:'59b65a0ef8be4191fe1ad63ec016694f5bc88f03dd647bece9635cfa5c2499fd'}
+          for aid,sha in wanted.items():
+            assert artifacts[aid]['digest']=='sha256:'+sha and artifacts[aid]['workflow_run']['id']==40939386209 and not artifacts[aid]['expired']
+          print('PASS_ORIGINAL_RUN_JOB_ARTIFACT_LEDGER')
+          PY
+      - name: Download and verify exact original three ZIPs and full job logs
+        shell: bash
+        run: |
+          set -euo pipefail
+          api() {
+            curl --fail --silent --show-error --location --retry 4 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/techrote/neurounner/$1" -o "$DEST/$2"
+          }
+          api actions/artifacts/12925688929/zip original-source-12925688929.zip
+          api actions/artifacts/12927370503/zip original-chat-12927370503.zip
+          api actions/artifacts/12926034445/zip original-instruct-12926034445.zip
+          api actions/jobs/123678411187/logs original-source-job-123678411187.log
+          api actions/jobs/123678836606/logs original-chat-job-123678836606.log
+          api actions/jobs/123678836615/logs original-instruct-job-123678836615.log
+          printf '%s\n' \
+            "a61769d08582dfb8f8dfc07c02a385c34380627cae3820889fece6e223  $DEST/original-source-12925688929.zip" \
+            "d0fac3a396c201d0f5377160381d47e101a62194e577dd0f3e7b51a4254a3753  $DEST/original-chat-12927370503.zip" \
+            "59b65a0ef8be4191fe1ad63ec016694f5bc88f03dd647bece9635cfa5c2499fd  $DEST/original-instruct-12926034445.zip" | sha256sum -c
+      - name: Build fail-closed provenance record and validate original phase witnesses
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess,zipfile
+          dest=pathlib.Path(os.environ['DEST'])
+          variants={'source':(12925688929,123678411187),'chat':(12927370503,123678836606),'instruct':(12926034445,123678836615)}
+          out={'schema':'ncr001-pr202-original-github-actions-custody-v1','source_pr':202,'source_sha':'b52af229dbfd0220d8d89f0d18e58733a2c3b56b','source_run':40939386209,'original_parent_sha':'2d5c0ed72c3d1c44f78ba58493bfffd8fab26d80','protocol_blob':'14ce5fbaa38f8806c8c8738f19c01b91385eebaf','pins_blob':'59fff1aed872b5563aa6898171983973e0cdb02c','train_authorized':False,'full_72_conformance_pass':False,'optimizer_steps':0,'original_files':{}}
+          for variant,(aid,jid) in variants.items():
+            zp=dest/f'original-{variant}-{aid}.zip'
+            lp=dest/f'original-{variant}-job-{jid}.log'
+            with zipfile.ZipFile(zp) as z:
+              members={m.filename:{'bytes':m.file_size,'sha256':hashlib.sha256(z.read(m)).hexdigest()} for m in z.infolist() if not m.is_dir()}
+              if variant!='source':
+                a,b=json.loads(z.read('producer.json')),json.loads(z.read('consumer.json'))
+                assert a['status']=='PASS_MASKED2048_PRODUCER' and b['status']=='PASS_MASKED2048_SEPARATE_PYTHON_COLD_CONSUMER'
+                assert a['variant']==b['variant']=='sprocket_'+variant
+                assert a['runner']['head_sha']==b['runner']['head_sha']==out['source_sha']
+                assert str(a['runner']['run_id'])==str(b['runner']['run_id'])=='40939386209'
+                assert a['runner']['pid']!=b['runner']['pid']
+                assert a['optimizer_steps']==b['optimizer_steps']==0
+                assert all(a['checks'][s+'_2048_full_vs_four_real_cached']['pass'] for s in ('left','right'))
+                assert all(b['checks'][s+'_cold_new_python_same_model_2048']['max_abs']==0 for s in ('left','right'))
+            for path in (zp,lp):
+              data=path.read_bytes()
+              assert len(data)>100
+              out['original_files'][path.name]={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'git_blob_sha1':subprocess.check_output(['git','hash-object',str(path)],text=True).strip()}
+            out['original_files'][zp.name]['members']=members
+          (dest/'manifest.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          print('PASS_ORIGINAL_ZIP_MEMBERS_AND_DISTINCT_PHASES')
+          PY
+      - name: Commit original raw ZIP and decoded log bytes once
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$DEST"
+          test "$(git diff --cached --name-only | wc -l)" -eq 7
+          git commit -m "NCR-001E: commit original PR202 three Actions ZIPs and three decoded job logs"
+          git push origin HEAD:refs/heads/review/ncr001e-masked2048-original-custody-20261029
+          echo PASS_ORIGINAL_ZIPS_LOGS_PERMANENT_GIT
