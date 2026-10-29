@@ -53,7 +53,7 @@ Those properties are enforced by the existing DETECTIVE game/session/transaction
 
 ## Subjective review
 
-After all **144** raw generations exist, the standard-library protocol creates a deterministic identity-blind packet.
+Only after all **144** raw generations exist and pass source-bound dataset readback may a trusted, separate custodian prepare the reviewer-only packet. The old publicly deterministic item ordering is disabled: a fresh 32-byte private key permutes item identities. The raw dataset contains **no packet**; the key and identity mapping must remain outside the repository until ratings have been sealed.
 
 Reviewer question:
 
@@ -94,7 +94,7 @@ Current Stage A consists only of:
 - prompt/decode contract;
 - raw evidence schema;
 - mechanical hard-floor checks;
-- deterministic opaque review packet/rating schema/aggregation;
+- private-key deterministic review packet/rating schema/aggregation, with post-rating unblinding;
 - adversarial standard-library tests.
 
 It downloads no weights or adapters, performs no inference/training, opens no sealed C1/C2/C3 finals and accesses no hidden R1 identity mapping.
@@ -199,3 +199,52 @@ Successful synthetic upload/download/readback establishes GitHub Actions
 artifact *transport* compatibility, not the success of a real failed-run
 recovery job, not guaranteed handling of entire-workflow cancellation, and not
 the durable promotion of any of the 144 future model responses.
+
+## Private blinded-review custody — proposed correction for issue #187
+
+The Stage-A public fixed `REVIEW_SALT` was insufficient for genuine blinded
+human review: the known 36×4 roster and code could reconstruct R001–R144
+ordering. The proposed replacement requires a **fresh random 32-byte key** and
+HMAC-SHA256 ordering. The key and complete mapping are not published in
+`datasets/detective-005a`. Even though public code can now reproduce the
+algorithm, it cannot recover the ordering from public information alone.
+
+The complete 144-response evidence assembler stores **only the raw dataset,
+source/lineage provenance, SHA-256 inventory and mechanical hard floors**.
+Its verification refuses a public review/ folder or reviewer packet. It
+continues to require all 12 source-matched lineages from one exact run.
+
+After complete evidence is committed, an authorized trusted custodian uses
+`scripts/detective_005a_blind.py` locally, with directories **outside
+the checkout and separated from each other**, never in public GitHub Actions:
+
+1. `prepare` verifies the raw dataset, generates a CSPRNG 256-bit key,
+   constructs an opaque 144-item reviewer packet and blank 0–4 rating
+   template, and retains the seed plus exact item-to-member mapping in a
+   distinct permission-restricted private directory. The public packet holds
+   a binding hash commitment, not the key or the mapping.
+2. The independent human reviewer gets only the packet and template; they
+   must not have access to the raw archive, full source output histories or
+   private custodian directory while scoring. The custodian verifies all 144
+   ratings against the packet hash and original item order.
+3. `freeze` preserves the **original rating bytes** and a SHA-256 receipt,
+   still without member IDs or seed. A missing score or changed packet refuses.
+4. Only an explicitly confirmed `reveal` after freeze can authenticate the
+   private commitment, verify unchanged source/packet/rating hashes, and
+   reconstruct member scores/shortlist in a separate custodian-only output.
+   Admission/training gates remain false.
+
+The mapped packet cannot be considered cryptographically anonymous to a
+reviewer with access to the original, labelled raw records, whose response
+text can be matched against the packet. This is an **operational access
+separation requirement**. The repository does not provide such a controlled
+reviewer distribution channel automatically: the custodian must share only
+the sanitized packet through a separate authorized channel. A public GitHub
+review comment or publicly committed packet alongside raw data cannot
+establish blindness.
+
+This proposal does not prepare any actual reviewer packet, generate model
+responses or use unrelated DETECTIVE-001R1 mappings. It is a new, distinct
+review gate stacked after PR #183. The existing 0/144 live evidence status and
+the separate independent source reviews/explicit runtime authorization are
+unchanged.
