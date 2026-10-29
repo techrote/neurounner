@@ -1,5 +1,11 @@
 # DETECTIVE-004A — frozen task-specific Sprocket detective-scripter specialization (Stage A)
 
+## Current owner policy (29 October 2026): relevance gate retired, source gates unchanged
+
+Issue [#121](https://github.com/techrote/neurounner/issues/121) retired **objective relevance nonregression as a population-expansion gate** on 28 October 2026. Its 24 externally supplied C2/C3 scores are preserved as **subjective gameplay-reaction evidence**, not objective relevance qualification. Older #121 language below is historical only. Stage A grants **no model training, scripter research qualification, population expansion or production admission**. Exact source/lineage custody, leakage/proposition controls, mandatory-clue solvability, typed game authority, independently reviewed Stage-A protocol, real-tokenizer masks/512-token checks, and a separately complete Stage-B execution contract remain mandatory.
+
+The frozen `specialization.json` field `stage_b_approved_only_after_merge=true` specifies a **minimum sequencing constraint**: Stage-A merging is necessary, never sufficient for optimizer authorization. Do not modify the hash-bound config, generator or archived 36-row corpus to record this later policy decision.
+
 Tracking: [issue #148](https://github.com/techrote/neurounner/issues/148). Parent: [#103](https://github.com/techrote/neurounner/issues/103). This is **offline, pre-optimizer preparation only**.
 
 ## Why
@@ -85,6 +91,6 @@ Exactly one frozen-root LoRA adapter, rank 8, alpha 16, dropout zero, `q_proj`/`
 
 ## Separation of authority
 
-This lane cannot access DETECTIVE-001R1 hidden identity/relevance maps or decide Village witness population admission. #121 still requires completely independent external blind relevance ratings. Nothing here reopens C1/C2/C3 learner-finals, affects NPC witnesses, alters the immutable Bay Seventeen case, executes host shell/network/filesystem actions from model output, or chooses a production body.
+This lane cannot access DETECTIVE-001R1 hidden identity/relevance maps or decide Village witness population admission. #121's historical objective relevance-review prerequisite is retired as an expansion gate; externally supplied ratings survive only as subjective gameplay reactions, not objective qualification. Nothing here reopens C1/C2/C3 learner-finals, affects NPC witnesses, alters the immutable Bay Seventeen case, executes host shell/network/filesystem actions from model output, or chooses a production body.
 
 The generated 36-row dataset and source-bound manifest have now been durably promoted under [`datasets/detective-004a`](../../datasets/detective-004a/); Actions artifacts remain auxiliary staging only. The Stage-A pull request stays **draft until exact-head CI validates the committed archive and independent review approves the frozen protocol**. Neither archive promotion nor a green mechanical test is optimizer authorization.
