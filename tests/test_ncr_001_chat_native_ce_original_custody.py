@@ -126,6 +126,12 @@ class OriginalChatCEArchiveTests(unittest.TestCase):
             p.write_bytes(p.read_bytes() + b"\nFORGED BOOTSTRAP PASS\n")
         self.mutate_dir(mutation)
 
+    def test_first_readonly_ci_log_corruption_refused(self):
+        def mutation(evidence):
+            p = evidence / audit.ORIGINAL_READONLY_LOG
+            p.write_bytes(p.read_bytes() + b"\\nFORGED SOURCE VERIFICATION\\n")
+        self.mutate_dir(mutation)
+
     def test_reencoded_original_zip_but_changed_git_blob_refused(self):
         def mutation(evidence):
             p = evidence / audit.BUNDLE
