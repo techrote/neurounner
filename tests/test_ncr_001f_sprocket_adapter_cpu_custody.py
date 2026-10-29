@@ -76,6 +76,22 @@ class OriginalCPUTimingZipCustody(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "original Actions ZIP container changed"):
             c.audit_zip(buffer.getvalue())
 
+    def test_missing_original_job_log_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            (d/c.ORIGINAL).write_bytes(self.original)
+            with self.assertRaises(FileNotFoundError):
+                c.audit(d)
+
+    def test_reject_changed_decoded_job_log_even_semantically_same(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            (d/c.ORIGINAL).write_bytes(self.original)
+            original = (c.EVIDENCE/c.ORIGINAL_JOB_LOG).read_bytes()
+            (d/c.ORIGINAL_JOB_LOG).write_bytes(original + b"\n")
+            with self.assertRaisesRegex(ValueError, "original job-log Git blob changed"):
+                c.audit(d)
+
     def test_original_zip_repacked_same_data_fails(self):
         with zipfile.ZipFile(io.BytesIO(self.original)) as z:
             originals = {name:z.read(name) for name in z.namelist()}
