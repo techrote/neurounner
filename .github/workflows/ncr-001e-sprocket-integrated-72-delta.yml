@@ -1,0 +1,109 @@
+name: NCR-001E Sprocket original-source dual-lane #72 delta review (NO TRAIN)
+on:
+  pull_request:
+    branches: [review/ncr001e-masked2048-original-custody-20261029]
+    paths:
+      - ".github/workflows/ncr-001e-sprocket-integrated-72-delta.yml"
+      - "scripts/ncr_001e_sprocket_integrated_72_delta.py"
+      - "tests/test_ncr_001e_sprocket_integrated_72_delta.py"
+      - "experiments/ncr-001/adjudication/sprocket-source-matched-2048-delta-20261029.json"
+      - "docs/NCR_001_E_SPROCKET_INTEGRATED_DELTA.md"
+      - "RAG.md"
+permissions:
+  contents: read
+concurrency:
+  group: ncr001e-sprocket-lane-delta-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  source-bound-original-lane-delta:
+    if: github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.head.ref == 'review/ncr001e-sprocket-source-matched-lane-delta-20261029'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: e5ac7fb0659bd2e640a3007e8cf798820069fc2d
+          path: diagnostic-source
+          persist-credentials: false
+      - name: Refuse unexpected PR parent, original evidence or training modifications
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "techrote/neurounner"
+          test "$GITHUB_HEAD_REF" = "review/ncr001e-sprocket-source-matched-lane-delta-20261029"
+          test "$GITHUB_BASE_REF" = "review/ncr001e-masked2048-original-custody-20261029"
+          test "${{ github.event.pull_request.base.sha }}" = "f33dbe82a49724f8086b264f62efe3e75b5b8bfb"
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "$(git -C diagnostic-source rev-parse HEAD)" = "e5ac7fb0659bd2e640a3007e8cf798820069fc2d"
+          git merge-base --is-ancestor f33dbe82a49724f8086b264f62efe3e75b5b8bfb HEAD
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          test "$(git hash-object scripts/ncr_001e_sprocket_masked_cold_2048.py)" = c92a410dc6605fa1878ded44265906e0a9769d08
+          test "$(git hash-object experiments/ncr-001/adjudication/sprocket-source-matched-2048-delta-20261029.json)" = 09d8bc81b4568931c964a3c1b070997ae9cba00d
+          python3 - <<'PY'
+          import subprocess
+          base="f33dbe82a49724f8086b264f62efe3e75b5b8bfb"
+          changed=set(subprocess.check_output(["git","diff","--name-only",base,"HEAD"],text=True).splitlines())
+          allowed={
+              ".github/workflows/ncr-001e-sprocket-integrated-72-delta.yml",
+              "scripts/ncr_001e_sprocket_integrated_72_delta.py",
+              "tests/test_ncr_001e_sprocket_integrated_72_delta.py",
+              "docs/NCR_001_E_SPROCKET_INTEGRATED_DELTA.md",
+              "experiments/ncr-001/adjudication/sprocket-source-matched-2048-delta-20261029.json",
+              "RAG.md",
+          }
+          assert changed and changed <= allowed,changed
+          print("PASS_PINNED_ORIGINAL_PARENT_PROTOCOL_NO_TRAIN_DELTA")
+          PY
+      - name: Re-audit entire original physical NCA-only #159 evidence with pinned #194 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime
+          python3 diagnostic-source/scripts/ncr_001_sprocket_postwarmup_reconcile.py \
+            --output "$GITHUB_WORKSPACE/runtime/ncr001-original-postwarmup-diagnostic.json" \
+            2>&1 | tee runtime/ncr001-original-diagnostic-audit.log
+      - name: Independently verify original #202 Git ZIP/log evidence and 11 scientific refusal tests
+        shell: bash
+        env:
+          NCR_ORIGINAL_DIAGNOSTIC_REPORT: runtime/ncr001-original-postwarmup-diagnostic.json
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_sprocket_integrated_72_delta.py tests/test_ncr_001e_sprocket_integrated_72_delta.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_sprocket_integrated_72_delta.py' -v \
+            2>&1 | tee runtime/ncr001-sprocket-delta-tests.log
+          python3 scripts/ncr_001e_sprocket_integrated_72_delta.py \
+            --diagnostic-checkout diagnostic-source \
+            --output runtime/ncr001-sprocket-integrated-72-delta.json \
+            2>&1 | tee runtime/ncr001-sprocket-delta-out.log
+          python3 - <<'PY'
+          import json
+          r=json.load(open("runtime/ncr001-sprocket-integrated-72-delta.json"))
+          assert r["status"] == "BLOCKED_FULL_72_SCIENTIFIC_CONFORMANCE__BOUNDED_TWO_SPROCKET_DELTA"
+          assert set(r["lanes"]) == {"sprocket_chat","sprocket_instruct"}
+          assert r["train_authorized"] is False
+          assert r["full_72_conformance_pass"] is False
+          assert r["actual_compute_budget_qualified"] is False
+          assert r["new_frozen_model_execution"] is False
+          assert r["new_optimizer_steps"] == 0
+          print("PASS_SOURCE_MATCHED_SPROCKET_DELTA__FINAL_72_BLOCKED")
+          PY
+      - name: Preserve source-only original audit, report, CI failures and runner diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-sprocket-source-matched-lane-delta-a${{ github.run_attempt }}
+          path: |
+            runtime/ncr001-original-postwarmup-diagnostic.json
+            runtime/ncr001-original-diagnostic-audit.log
+            runtime/ncr001-sprocket-delta-tests.log
+            runtime/ncr001-sprocket-delta-out.log
+            runtime/ncr001-sprocket-integrated-72-delta.json
+            runtime/ncr001-sprocket-integrated-72-delta.diagnostic.json
+          if-no-files-found: warn
+          retention-days: 30
