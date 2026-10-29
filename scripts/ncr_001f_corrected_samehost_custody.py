@@ -162,5 +162,36 @@ def audit(evidence: Path = EVIDENCE) -> dict:
             "train_authorized":False, "full_72_conformance_pass":False,
             "actual_compute_budget_qualified":False}
 
+
+def audit_original_job_ledger(payload: dict, evidence: Path = EVIDENCE) -> dict:
+    """Independently bind original GitHub job IDs/names to one completed run; no model."""
+    raw_manifest = (evidence / MANIFEST).read_bytes()
+    refuse(gitblob(raw_manifest) == MANIFEST_BLOB,
+           "immutable manifest changed before original live job-ledger audit")
+    manifest = json.loads(raw_manifest)
+    refuse(manifest["original_run"] == int(ORIGINAL_RUN),
+           "original job-ledger run is not the archived source run")
+    expected_names = {
+        "source": "offline-source-and-refusals",
+        "chat": "real-separate-frozen-variant (chat)",
+        "instruct": "real-separate-frozen-variant (instruct)",
+    }
+    jobs = payload.get("jobs") if type(payload) is dict else None
+    refuse(type(jobs) is list and len(jobs) == 3,
+           "original Actions job inventory incomplete or has unexpected jobs")
+    actual = {j.get("id"): j for j in jobs if type(j) is dict}
+    refuse(len(actual) == 3, "original Actions job IDs duplicated or malformed")
+    for variant, name in expected_names.items():
+        pinned_id = manifest["artifacts"][variant]["job_id"]
+        job = actual.get(pinned_id)
+        refuse(type(job) is dict and job.get("name") == name and
+               job.get("run_id") == int(ORIGINAL_RUN) and
+               job.get("status") == "completed" and
+               job.get("conclusion") == "success",
+               variant + " original job ID/name/run/conclusion not independently established")
+    return {"status": "PASS_ORIGINAL_GITHUB_JOBS_LEDGER_BINDING",
+            "run": int(ORIGINAL_RUN), "jobs_checked": len(actual)}
+
+
 if __name__ == "__main__":
     print(json.dumps(audit(), indent=2, sort_keys=True))
