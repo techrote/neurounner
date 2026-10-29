@@ -560,7 +560,49 @@ RECOVERY_LINEAGE_KEYS = {
 }
 
 
-def verify(path: Path) -> dict:
+def require_original_artifact_inspection(
+        archived_provenance: dict, archive_api: Path,
+        original_artifacts: Path, original_api: Path) -> None:
+    """Compare a pushed archive with separate, still-existing source inputs.
+
+    Intentionally excluded unsafe entries cannot be reconstructed from the
+    Git-only archive. The self-reported source_structure_warnings are not
+    independently authoritative, even when the hash inventory is rebuilt.
+    """
+    screen.require(original_artifacts.is_dir() and
+                   not original_artifacts.is_symlink(),
+                   "independent original artifact directory required")
+    screen.require(original_api.is_file() and
+                   not original_api.is_symlink() and
+                   archive_api.is_file() and
+                   archive_api.read_bytes() == original_api.read_bytes(),
+                   "independent original artifact API bytes disagree")
+    old_downloaded = sorted(
+        x for x in archived_provenance["unexpected_artifact_sources"]
+        if x.startswith("downloaded:"))
+    actual_downloaded = unexpected_artifact_sources(original_artifacts, None)
+    screen.require(old_downloaded == actual_downloaded,
+                   "original unexpected downloaded artifacts were omitted")
+    for lineage, saved in zip(assemble.LINEAGES, archived_provenance["lineages"]):
+        files, warnings = salvage_artifact_files(original_artifacts, lineage)
+        screen.require(
+            saved["lineage"] == lineage and
+            warnings == saved["source_structure_warnings"],
+            "original source structure warning mismatch")
+        expected = {item["name"]: item for item in saved["files"]}
+        screen.require(set(files) == set(expected),
+                       "original recovered source file set drift")
+        for name, original in files.items():
+            item = expected[name]
+            screen.require(
+                original.stat().st_size == item["bytes"] and
+                screen.sha256_file(original) == item["sha256"],
+                "independent original artifact bytes differ from archive")
+
+
+def verify(path: Path, *,
+           original_artifacts: Path | None = None,
+           original_artifact_api: Path | None = None) -> dict:
     # Git stores symlinks as links, not the bytes they reference. A digest
     # read through a link can match while the pushed dataset lacks its raw
     # evidence. Refuse all links before trusting any readback or SHA inventory.
@@ -725,20 +767,37 @@ def verify(path: Path) -> dict:
             manifest.get("artifact_download_outcome"), metadata_invalid,
             unexpected),
         "recovery artifact transport gate drift")
+    # Excluded unsafe source entries are not part of this public archive.
+    # A green claim derived only from its editable manifest cannot be
+    # re-attested after the original artifact tree has disappeared.
+    screen.require((original_artifacts is None) ==
+                   (original_artifact_api is None),
+                   "original downloaded artifacts and API must be supplied together")
+    if original_artifacts is not None:
+        require_original_artifact_inspection(
+            provenance, metadata_path, original_artifacts, original_artifact_api)
+    independently_verified = original_artifacts is not None
     inventory = (path / "provenance" / "hashes.sha256").read_text(
         encoding="utf-8")
     screen.require(inventory == assemble.hash_inventory(path),
                    "recovery hash inventory mismatch")
     return {"validated_raw_prefix_rows": total,
             "complete_lineage_artifacts": complete,
-            "artifact_transport_complete": manifest["artifact_transport_complete"],
+            "artifact_transport_claimed": manifest["artifact_transport_complete"],
+            "original_artifact_structure_reverified": independently_verified,
+            "artifact_transport_complete":
+                manifest["artifact_transport_complete"] and independently_verified,
             "review_packet_generated": False,
             "production_admission": False}
 
 
-def require_complete_transport(path: Path) -> dict:
-    """Fail CI after best-effort promotion if any original retrieval is unverified."""
-    report = verify(path)
+def require_complete_transport(
+        path: Path, *, original_artifacts: Path | None = None,
+        original_artifact_api: Path | None = None) -> dict:
+    """Refuse a positive custody gate without separate original source bytes."""
+    report = verify(
+        path, original_artifacts=original_artifacts,
+        original_artifact_api=original_artifact_api)
     screen.require(report["artifact_transport_complete"],
                    "incomplete original lineage artifact transport custody")
     return report
@@ -755,15 +814,25 @@ def main() -> None:
     ap.add_argument("--download-outcome", default="unknown")
     ap.add_argument("--verify", type=Path)
     ap.add_argument("--require-complete-transport", action="store_true")
+    ap.add_argument("--original-artifacts", type=Path)
+    ap.add_argument("--original-artifact-api", type=Path)
     args = ap.parse_args()
     if args.verify:
         print(json.dumps(
-            require_complete_transport(args.verify)
-            if args.require_complete_transport else verify(args.verify),
+            require_complete_transport(
+                args.verify,
+                original_artifacts=args.original_artifacts,
+                original_artifact_api=args.original_artifact_api)
+            if args.require_complete_transport else verify(
+                args.verify,
+                original_artifacts=args.original_artifacts,
+                original_artifact_api=args.original_artifact_api),
             indent=2, sort_keys=True))
     else:
-        screen.require(not args.require_complete_transport,
-                       "complete transport gate requires --verify")
+        screen.require(
+            not args.require_complete_transport and
+            args.original_artifacts is None and args.original_artifact_api is None,
+            "original source custody verification requires --verify")
         screen.require(
             args.artifacts is not None and args.out is not None and
             args.source_head is not None and args.run_id is not None,
