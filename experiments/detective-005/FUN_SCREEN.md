@@ -258,3 +258,42 @@ responses or use unrelated DETECTIVE-001R1 mappings. It is a new, distinct
 review gate stacked after PR #183. The existing 0/144 live evidence status and
 the separate independent source reviews/explicit runtime authorization are
 unchanged.
+
+## Private-custodian CLI example (after full 144-row evidence and review)
+
+Run locally on an access-controlled Linux/WSL environment, with paths outside
+the repository and the reviewer distribution channel. Do not use these
+commands inside GitHub-hosted public CI or publish the custodian directory.
+
+```sh
+python3 scripts/detective_005a_blind.py prepare \
+  --dataset datasets/detective-005a \
+  --reviewer-dir /secure/reviewer-005a \
+  --custody-dir /secure/owner-005a
+
+# Give ONLY reviewer-005a/fun-packet.json and its matching blank ratings
+# template to the independent human reviewer; do not share the raw dataset.
+
+python3 scripts/detective_005a_blind.py freeze \
+  --dataset datasets/detective-005a \
+  --reviewer-dir /secure/reviewer-005a \
+  --custody-dir /secure/owner-005a \
+  --ratings /secure/received-human-ratings.json \
+  --freeze-dir /secure/frozen-005a
+
+# Witness and record the original ratings SHA and prior mapping/packet
+# commitment through an independent archival channel before any reveal.
+
+python3 scripts/detective_005a_blind.py reveal \
+  --dataset datasets/detective-005a \
+  --reviewer-dir /secure/reviewer-005a \
+  --custody-dir /secure/owner-005a \
+  --freeze-dir /secure/frozen-005a \
+  --out-dir /secure/unblinded-005a \
+  --confirm UNBLIND-AFTER-FROZEN-144-RATINGS
+```
+
+These are instructions, **not evidence of performed runs**. All 144 scores
+must originate from a human reviewer, and the owner must document their
+independence and their lack of raw/identity access before interpreting scores
+as blinded. The output is a subjective candidate shortlist only.
