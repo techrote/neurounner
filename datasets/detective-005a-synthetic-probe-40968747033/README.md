@@ -1,0 +1,7 @@
+# DETECTIVE-005A failed-run raw custody
+
+Source commit: `23f6303bfba5d7d13d7bc8695c4210cfc0203b06`. GitHub Actions run: `40968747033`.
+
+This is a **recovery archive, not a complete experiment**. Each available permitted raw file is copied byte-for-byte, including torn JSONL suffixes, error receipts and successful full lineages. Missing artifacts or invalid rows are identified without fabricating outputs or altering original bytes. Incomplete data never produces a fun-rating packet, model admission, training or cast expansion.
+
+The archive must be reviewed before retrying a failed lineage. The artifact_transport_complete flag describes only same-run API retrieval/download reconciliation, not semantic output validity. A false value is a BLOCKING custody gap even when this best-effort archive branch was pushed; recover the remaining original bytes before any retry. Unexpected artifact paths or API names are recorded but NOT copied because they may contain private data; inspect original artifacts separately before retry or expiry. Unexpected files, symlinks, duplicated raw names and unpacked weight directories are NOT archived: source_structure_warnings blocks transport completion and requires separate inspection of the expiring original artifact even when safe sibling raw files were preserved. Entire-workflow cancellation may prevent this job from starting; inspect the original Actions artifacts.
