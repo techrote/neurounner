@@ -167,6 +167,15 @@ rather than static workflow string checks. **Local Git is not GitHub Actions**:
 remote authentication, permissions, cancellation and hosted branch durability
 remain unqualified until the separately reviewed main-only synthetic probe.
 
+A further adversarial **local-only** transport test preserves a real torn raw
+journal across two negative cases: a Git server pre-receive hook rejects
+creation of the evidence branch (no remote ref exists), and a competing writer
+advances a successfully created branch before readback (fetched SHA differs
+from the recorded pushed SHA). Neither failure can be counted as a successful
+remote archive; the original staged bytes remain separately verifiable. This
+is **not** proof that GitHub-hosted cancellation, credential rejection, branch
+policy or transient fallback upload will behave identically.
+
 **Artifact API pagination safeguard (source-only):** the live recovery job
 requests `?per_page=100`. An HTTP-success first-page response does not prove
 all original artifacts were listed. Recovery requires a non-boolean integer
