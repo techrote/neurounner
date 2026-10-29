@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 import unittest
+from pathlib import Path
 
 from scripts import detective_004a_custody_audit as audit
 from scripts import detective_004a_protocol as protocol
@@ -447,7 +448,7 @@ class Detective004ACustodyTests(unittest.TestCase):
         self.assertIn("not a positive optimizer-authorization flag",audit)
         self.assertNotIn("#121 still requires completely independent external blind relevance ratings",stage)
         self.assertNotIn("no opaque relevance ratings, no population expansion",audit)
-        self.assertNotIn("still requires independent external\\nscores",audit)
+        self.assertNotIn("Witness relevance review #121 still requires independent external",audit)
         self.assertIn("No population expansion is admitted",audit)
 
 
