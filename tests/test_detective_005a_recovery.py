@@ -179,7 +179,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
             # but a foreign Actions-run identity must demote, not discard it.
             (src / "results.partial.jsonl").write_bytes(result_bytes)
             metadata = root / "source-api.json"
-            original_api = {"artifacts": [{
+            original_api = {"total_count": 1, "artifacts": [{
                 "name": "detective005a-G01", "id": 712,
                 "digest": "sha256:" + "f" * 64,
                 "size_in_bytes": 1200,
@@ -224,7 +224,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
              "results.partial.jsonl").write_text(
                 screen.canonical(self.row()) + "\n", encoding="utf-8")
             metadata = root / "artifact-list.json"
-            metadata.write_text(json.dumps({"artifacts": [
+            metadata.write_text(json.dumps({"total_count": 1, "artifacts": [
                 {"name": "detective005a-G02", "id": 711, "digest":
                  "sha256:" + "2" * 64, "size_in_bytes": 10,
                  "expired": False, "workflow_run": {
@@ -263,6 +263,46 @@ class Detective005ARecoveryTests(unittest.TestCase):
                                         "incomplete original lineage"):
                 recover.require_complete_transport(alternate)
 
+    def test_successful_api_first_page_cannot_hide_later_artifacts(self):
+        """HTTP/API success is insufficient if total_count exceeds page rows."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "artifacts/detective005a-G01"
+            source.mkdir(parents=True)
+            original = screen.canonical(self.row()).encode("utf-8") + b"\n"
+            (source / "results.partial.jsonl").write_bytes(original)
+            metadata = root / "api-first-page.json"
+            # A ?per_page=100 response can be truncated while HTTP 200
+            # and the download action both report success.
+            response = {"total_count": 101, "artifacts": [{
+                "name": "detective005a-G01", "id": 1001,
+                "digest": "sha256:" + "f" * 64,
+                "size_in_bytes": 100, "expired": False,
+                "workflow_run": {
+                    "id": int(RUN), "head_sha": HEAD,
+                    "repository_id": 1432134981},
+            }]}
+            metadata.write_text(json.dumps(response), encoding="utf-8")
+            out = root / "recovery"
+            report = recover.recover(root / "artifacts", out, HEAD, RUN,
+                                     metadata, "success", "success")
+            self.assertEqual(report["validated_raw_prefix_rows"], 1)
+            self.assertTrue(report["artifact_api_metadata_invalid"])
+            self.assertFalse(report["artifact_transport_complete"])
+            self.assertEqual(
+                (out / "raw/G01/results.partial.jsonl").read_bytes(), original)
+            self.assertEqual(
+                (out / "provenance/actions-artifacts-api.json").read_bytes(),
+                metadata.read_bytes())
+            provenance = screen.read_json(
+                out / "provenance/source-artifacts.json")
+            self.assertIn("artifact_api_metadata_invalid",
+                          provenance["lineages"][0]["custody_warnings"])
+            self.assertFalse(recover.verify(out)["artifact_transport_complete"])
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "incomplete original lineage"):
+                recover.require_complete_transport(out)
+
     def test_fatal_download_outcome_with_a_valid_api_row_stays_red(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -271,7 +311,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
             original = screen.canonical(self.row()).encode() + b"\n"
             (source / "results.partial.jsonl").write_bytes(original)
             metadata = root / "api.json"
-            metadata.write_text(json.dumps({"artifacts": [{
+            metadata.write_text(json.dumps({"total_count": 1, "artifacts": [{
                 "name": "detective005a-G01", "id": 1001,
                 "digest": "sha256:" + "f" * 64, "size_in_bytes": 100,
                 "expired": False, "workflow_run": {
@@ -307,7 +347,9 @@ class Detective005ARecoveryTests(unittest.TestCase):
             ("truncated", b'{"artifacts": ['),
             ("wrong_shape", b'{"artifacts": {"wrong": "type"}}'),
             ("null_entry", b'{"artifacts": [null]}'),
-            ("duplicate", json.dumps({"artifacts": [
+            ("missing_count", b'{"artifacts": [{"name": "detective005a-G01"}]}'),
+            ("boolean_count", b'{"total_count": true, "artifacts": []}'),
+            ("duplicate", json.dumps({"total_count": 2, "artifacts": [
                 {"name": "detective005a-G01"},
                 {"name": "detective005a-G01"}]}).encode()),
         )
@@ -383,7 +425,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
             foreign.mkdir()
             (foreign / "unknown.bin").write_bytes(b"synthetic-untrusted-bytes")
             metadata = root / "api.json"
-            metadata.write_text(json.dumps({"artifacts": [
+            metadata.write_text(json.dumps({"total_count": 2, "artifacts": [
                 {"name": "detective005a-G01", "id": 712,
                  "digest": "sha256:" + "a" * 64, "size_in_bytes": 100,
                  "expired": False, "workflow_run": {
@@ -429,7 +471,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
             (source / "results.partial.jsonl").write_text(
                 screen.canonical(self.row()) + "\n", encoding="utf-8")
             metadata = root / "api.json"
-            metadata.write_text(json.dumps({"artifacts": [{
+            metadata.write_text(json.dumps({"total_count": 1, "artifacts": [{
                 "name": "detective005a-G01", "id": 1001,
                 "digest": "sha256:" + "f" * 64,
                 "size_in_bytes": 120, "expired": False,
@@ -516,7 +558,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
                 b"synthetic-unpacked-weight")
             (foreign / "unresolved-link").symlink_to(root / "missing")
             metadata = root / "api.json"
-            metadata.write_text(json.dumps({"artifacts": entries}),
+            metadata.write_text(json.dumps({"total_count": len(entries), "artifacts": entries}),
                                 encoding="utf-8")
             out = root / "recovery"
             report = recover.recover(root / "artifacts", out, HEAD, RUN,

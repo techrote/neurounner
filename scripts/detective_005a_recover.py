@@ -232,6 +232,12 @@ def metadata_by_name(metadata_path: Path | None) -> dict[str, dict]:
     screen.require(isinstance(value, dict) and
                    isinstance(value.get("artifacts"), list),
                    "invalid GitHub Actions artifact API response")
+    # The live workflow requests only ?per_page=100. An HTTP 200 first page
+    # can conceal additional unarchived artifacts when total_count is larger.
+    screen.require(
+        type(value.get("total_count")) is int and
+        value["total_count"] == len(value["artifacts"]),
+        "incomplete or inconsistent GitHub Actions artifact API pagination")
     found = {}
     for entry in value["artifacts"]:
         name = entry.get("name")

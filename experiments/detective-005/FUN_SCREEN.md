@@ -141,6 +141,15 @@ model judging or population admission is authorized.
 
 ## Failed-workflow durable recovery design (draft; not yet executed)
 
+**Artifact API pagination safeguard (source-only):** the live recovery job
+requests `?per_page=100`. An HTTP-success first-page response does not prove
+all original artifacts were listed. Recovery requires a non-boolean integer
+`total_count` equal to the returned `artifacts` count; missing or inconsistent
+counts are quarantined as invalid metadata. Surviving downloaded raw files
+and original API response bytes are preserved, but `artifact_transport_complete`
+remains false and the final custody gate RED. Unlisted originals require
+independent retrieval before retry; this is not live cancellation/push proof.
+
 The proposed `recover-failed-evidence` job is strictly conditional: it runs
 only after a confirmed-main `RUN-144-NO-TRAINING` plan succeeds and the
 lineage matrix or full evidence assembler fails. It does **not** initiate any
