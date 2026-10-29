@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001F",
+  "evidence_class": "deterministic_source_bound_no_training_controls_prepass",
+  "result": "PASS_COMPARISON_PLAN_PRECHECK__BLOCKED_FOR_TRAINING",
+  "source": {
+    "pr": 87,
+    "workflow": "https://github.com/techrote/neurounner/actions/runs/40434751345",
+    "run_id": 40434751345,
+    "tested_commit": "78145efb3cd636f1273ea8ee45a169aad9ad37e5",
+    "tests": 10,
+    "tests_passed": 10,
+    "artifact_id": 12704290067,
+    "artifact_name": "ncr-001f-matched-controls-a1",
+    "artifact_zip_sha256": "58353185298c27f89144baeac97dc19cd3ed8c8951011d1bfb7346c1b06d55cb",
+    "original_uncompressed_report_file": "matched-control-plan.json",
+    "original_uncompressed_report_sha256": "f906206cfde550625512efe4c5af2f2add1a281a17c9cd3fff16991d95f17ed0",
+    "original_uncompressed_report_bytes": 7204,
+    "source_protocol_sha256": "a76d38f80a57012ca8e62fba183d1cf2e91fd0986032f1adcdfb0aef843bf0b4",
+    "dataset_manifest_sha256": "d487a886654f4c8e815a5f6d79b67f067b520684e9db6cb52c46a7dcdfb353d5"
+  },
+  "observed": {
+    "model_lanes": [
+      "smollm2",
+      "sprocket_chat",
+      "sprocket_instruct",
+      "void1"
+    ],
+    "sealed_fixtures": 5,
+    "original_train_rows": 768,
+    "original_heldout_rows": 128,
+    "train_family_count": 24,
+    "heldout_family_count": 4,
+    "id_overlap": 0,
+    "family_overlap": 0,
+    "planned_optimizer_steps_per_seed": 192,
+    "planned_seeds": [
+      20261026,
+      20261027,
+      20261028
+    ],
+    "matched_control_parameters": {
+      "smollm2": {
+        "nca": 297048,
+        "gated_mlp": 296576
+      },
+      "sprocket_chat": {
+        "nca": 658904,
+        "gated_mlp": 658432
+      },
+      "sprocket_instruct": {
+        "nca": 658904,
+        "gated_mlp": 658432
+      },
+      "void1": {
+        "nca": 329944,
+        "gated_mlp": 329472
+      }
+    },
+    "exact_train_schedule_sha256": {
+      "20261026": "d657cc4efe50d48e0bb20b600d7d35a52d1cc5773bb10e5c7f01ce13e65f949a",
+      "20261027": "83d91b2c851a327de9cfde4c0d2fdf3b7afc82f91e3fbe0558bfeb975ea6f927",
+      "20261028": "38dcaa399c0d8fdd5737fb3b4c02e36a1008790a45fadaadbbb813c170938450"
+    },
+    "training_authorized": false,
+    "full_model_checkpoints_downloaded": false,
+    "model_optimizer_steps": 0
+  },
+  "limitations": [
+    "No parameter-matched baseline has been injected into real Transformers blocks",
+    "No real-model NCA-versus-MLP quality comparison or efficiency claim",
+    "Source-fidelity and four-way independent #72, including Sprocket formats and void byte-tokenizer runtime, are unqualified",
+    "Original raw plan can be reproduced with the exact committed source/fixture snapshot and checked against SHA256; artifact ZIP is ephemeral",
+    "No training campaign permitted by protocol flag"
+  ]
+}

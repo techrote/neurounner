@@ -1,0 +1,69 @@
+{
+  "schema": "detective-session-fixture-v1",
+  "case_path": "experiments/detective-001/pilot-case.json",
+  "session_key": "bay17-session-ledger-fixture-v1",
+  "participants": [
+    "V-G02-A",
+    "V-G09-C"
+  ],
+  "steps": [
+    {
+      "action": "turn",
+      "npc_id": "V-G02-A",
+      "question": "What time do you remember the battery handoff happening?",
+      "include_history": false,
+      "raw_response": "I remember the canister handoff at 02:05. The clock was sick that night.",
+      "annotations": [
+        {
+          "proposition_key": "handoff-time",
+          "value": "02:05",
+          "epistemic_class": "statement"
+        }
+      ]
+    },
+    {
+      "action": "turn",
+      "npc_id": "V-G09-C",
+      "question": "What time was the battery handoff?",
+      "include_history": false,
+      "raw_response": "02:09. Nine minutes, nine minutes; that's the plausible slot.",
+      "annotations": [
+        {
+          "proposition_key": "handoff-time",
+          "value": "02:09",
+          "epistemic_class": "statement"
+        }
+      ]
+    },
+    {
+      "action": "evidence",
+      "npc_id": "V-G02-A",
+      "asset_id": "transfer-card",
+      "challenged_claim_ids": [
+        "C0001"
+      ]
+    },
+    {
+      "action": "turn",
+      "npc_id": "V-G02-A",
+      "question": "The physical receipt is now in front of you. Does your account change?",
+      "include_history": true,
+      "raw_response": "Yes. The receipt says 02:14, so my old 02:05 memory loses.",
+      "annotations": [
+        {
+          "proposition_key": "handoff-time",
+          "value": "02:14",
+          "epistemic_class": "statement"
+        }
+      ]
+    }
+  ],
+  "expected": {
+    "turns": 3,
+    "claims": 3,
+    "min_contradictions": 3,
+    "presented_public_asset": "transfer-card",
+    "challenged_claim": "C0001",
+    "revised_claim": "C0003"
+  }
+}
