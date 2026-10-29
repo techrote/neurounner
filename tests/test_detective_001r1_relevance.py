@@ -232,5 +232,21 @@ class RelevanceReviewTests(unittest.TestCase):
             "relevance-summary.json","review-status.json"])
 
 
+    def test_historical_review_protocol_cannot_reactivate_retired_gate(self):
+        # Guard the primary R1 protocol, not only its later filing README.
+        # Do not alter scores, historical aggregation, or sealed finals.
+        path=r.ROOT/"experiments/detective-001/RELEVANCE_REVIEW_001R1.md"
+        document=path.read_text(encoding="utf-8")
+        self.assertIn("Current policy: historical relevance protocol, retired gate",document)
+        self.assertIn(
+            "retire objective prompt-relevance nonregression as a population-expansion gate",
+            document)
+        self.assertIn("subjective gameplay-reaction evidence",document)
+        self.assertIn("candidate-set relevance FAIL",document)
+        self.assertIn("C1/C2/C3 learner-finals stay sealed",document)
+        self.assertIn("historical research/provenance instructions only",document)
+        self.assertIn("The historical sections below are intentionally retained",document)
+
+
 if __name__=="__main__":
     unittest.main()
