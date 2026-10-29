@@ -806,6 +806,68 @@ class Detective005ARecoveryTests(unittest.TestCase):
                                         "incomplete original lineage"):
                 recover.require_complete_transport(out)
 
+    def test_rehashed_foreign_file_in_expected_lineage_is_not_authorized(self):
+        """A self-edited SHA inventory/provenance cannot legalize extra bytes.
+
+        Previously a forged raw/G01/foreign.bin could be added to source
+        provenance and the SHA inventory; readback then recomputed the same
+        untrusted file list and still reported transport complete.
+        """
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "artifacts/detective005a-G01"
+            source.mkdir(parents=True)
+            original = (screen.canonical(self.row()) + "\n").encode("utf-8")
+            (source / "results.partial.jsonl").write_bytes(original)
+            api = root / "api.json"
+            api.write_text(json.dumps({
+                "total_count": 1,
+                "artifacts": [{
+                    "name": "detective005a-G01",
+                    "id": 7001,
+                    "size_in_bytes": 100,
+                    "digest": "sha256:" + "a" * 64,
+                    "expired": False,
+                    "workflow_run": {
+                        "id": int(RUN), "head_sha": HEAD,
+                        "repository_id": 1432134981,
+                    },
+                }],
+            }), encoding="utf-8")
+            out = root / "archive"
+            report = recover.recover(
+                root / "artifacts", out, HEAD, RUN,
+                api, "success", "success")
+            self.assertTrue(report["artifact_transport_complete"])
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 1)
+
+            # Simulate a post-promotion archive rewrite that updates BOTH
+            # the self-reported file inventory and its checksums.
+            foreign = out / "raw/G01/foreign.bin"
+            foreign.write_bytes(b"synthetic-foreign-payload-not-original-response")
+            source_inventory = out / "provenance/source-artifacts.json"
+            provenance = screen.read_json(source_inventory)
+            provenance["lineages"][0]["files"].append({
+                "name": foreign.name,
+                "bytes": foreign.stat().st_size,
+                "sha256": screen.sha256_file(foreign),
+            })
+            provenance["lineages"][0]["files"].sort(key=lambda x: x["name"])
+            source_inventory.write_text(
+                json.dumps(provenance, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8")
+            (out / "provenance/hashes.sha256").write_text(
+                assemble.hash_inventory(out), encoding="utf-8")
+            self.assertEqual(
+                (out / "raw/G01/results.partial.jsonl").read_bytes(),
+                original)
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "unapproved recovery file provenance"):
+                recover.verify(out)
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "unapproved recovery file provenance"):
+                recover.require_complete_transport(out)
+
     def test_tampered_archive_bytes_fail_readback(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
