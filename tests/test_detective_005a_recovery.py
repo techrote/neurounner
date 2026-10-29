@@ -299,7 +299,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
             self.assertFalse(missing["artifact_transport_complete"])
             with self.assertRaisesRegex(screen.ScreenError,
                                         "incomplete original lineage"):
-                recover.require_complete_transport(missing)
+                recover.require_complete_transport(missing_api)
 
     def test_no_artifacts_never_claims_work_or_review(self):
         with tempfile.TemporaryDirectory() as td:
