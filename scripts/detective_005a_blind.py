@@ -243,9 +243,10 @@ def freeze(dataset: Path, reviewer_dir: Path, custody_dir: Path,
     screen.require(not freeze_dir.exists(), "refuse overwrite of frozen ratings")
     custody, packet, _, cfg = authenticated_packet(
         dataset, reviewer_dir, custody_dir)
-    ratings = screen.read_json(ratings_path)
-    screen.validate_ratings(cfg, packet, ratings)
+    # Parse, validate and hash the same original bytes, not two file states.
     ratings_bytes = ratings_path.read_bytes()
+    ratings = json.loads(ratings_bytes)
+    screen.validate_ratings(cfg, packet, ratings)
     digest = screen.sha256_bytes(ratings_bytes)
     seal = {
         "schema": FREEZE,
@@ -283,6 +284,9 @@ def reveal(dataset: Path, reviewer_dir: Path, custody_dir: Path,
         dataset, reviewer_dir, custody_dir)
     seal = screen.read_json(freeze_dir / "freeze.json")
     ratings_file = freeze_dir / "ratings.json"
+    # The hash check and aggregation must use one immutable byte snapshot;
+    # rereading the file after verification can substitute unsealed scores.
+    sealed_ratings_bytes = ratings_file.read_bytes()
     screen.require(
         seal.get("schema") == FREEZE and
         seal.get("ratings") == 144 and
@@ -290,10 +294,13 @@ def reveal(dataset: Path, reviewer_dir: Path, custody_dir: Path,
         seal.get("packet_sha256") == custody["packet_sha256"] and
         seal.get("private_mapping_commitment_sha256") ==
             custody["private_mapping_commitment_sha256"] and
-        seal.get("ratings_file_sha256") == screen.sha256_file(ratings_file),
+        seal.get("ratings_file_sha256") ==
+            screen.sha256_bytes(sealed_ratings_bytes),
         "ratings are not sealed to source/packet commitment")
-    ratings = screen.read_json(ratings_file)
+    ratings = json.loads(sealed_ratings_bytes)
     screen.validate_ratings(cfg, packet, ratings)
+    screen.require(seal.get("reviewer_label") == ratings["reviewer_label"],
+                   "frozen reviewer label drift")
     secret = bytes.fromhex(custody["secret_hex"])
     summary = screen.aggregate(cfg, rows, packet, ratings, secret)
     screen.require(summary["ratings_sha256"] == screen.sha256_bytes(

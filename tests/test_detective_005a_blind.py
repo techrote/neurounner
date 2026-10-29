@@ -233,6 +233,67 @@ class Detective005ABlindCustodyTests(unittest.TestCase):
                 blind.reveal(dataset, reviewer, custody, frozen, unblind,
                              blind.REVEAL)
 
+    def test_freeze_uses_same_bytes_for_validation_and_receipt(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            dataset, reviewer, custody, _ = self.prepare_fixture(root)
+            source = root / "ratings.json"
+            original = self.filled_ratings(reviewer, source)
+            substituted = copy.deepcopy(original)
+            substituted["reviewer_label"] = "unverified"
+            for row in substituted["ratings"]:
+                row["score_0_to_4"] = 4
+            read_json = screen.read_json
+            with mock.patch.object(
+                screen, "read_json", side_effect=lambda path:
+                substituted if Path(path) == source else read_json(path)
+            ):
+                blind.freeze(dataset, reviewer, custody, source, root / "frozen")
+            seal = screen.read_json(root / "frozen/freeze.json")
+            self.assertEqual(seal["reviewer_label"], original["reviewer_label"])
+            self.assertEqual((root / "frozen/ratings.json").read_bytes(),
+                             source.read_bytes())
+
+    def test_reveal_does_not_score_post_hash_substitution(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            dataset, reviewer, custody, _ = self.prepare_fixture(root)
+            source = root / "ratings.json"
+            original = self.filled_ratings(reviewer, source)
+            frozen = root / "frozen"
+            blind.freeze(dataset, reviewer, custody, source, frozen)
+            forged = copy.deepcopy(original)
+            for row in forged["ratings"]:
+                row["score_0_to_4"] = 4
+            read_json = screen.read_json
+            with mock.patch.object(
+                screen, "read_json", side_effect=lambda path:
+                forged if Path(path) == frozen / "ratings.json" else read_json(path)
+            ):
+                blind.reveal(dataset, reviewer, custody, frozen,
+                             root / "reveal", blind.REVEAL)
+            result = screen.read_json(root / "reveal/summary.json")
+            self.assertTrue(all(x["mean_fun"] == 2 for x in result["members"]))
+            self.assertEqual(result["ratings_sha256"],
+                             screen.sha256_bytes(blind.encoded(original)))
+
+    def test_reveal_refuses_forged_reviewer_label_in_seal(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            dataset, reviewer, custody, _ = self.prepare_fixture(root)
+            source = root / "ratings.json"
+            self.filled_ratings(reviewer, source)
+            frozen = root / "frozen"
+            blind.freeze(dataset, reviewer, custody, source, frozen)
+            seal_path = frozen / "freeze.json"
+            seal = screen.read_json(seal_path)
+            seal["reviewer_label"] = "forged-witness"
+            seal_path.write_bytes(blind.encoded(seal))
+            with self.assertRaisesRegex(screen.ScreenError, "reviewer label drift"):
+                blind.reveal(dataset, reviewer, custody, frozen,
+                             root / "reveal", blind.REVEAL)
+            self.assertFalse((root / "reveal").exists())
+
     def test_frozen_ratings_mutation_blocks_identity_disclosure(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
