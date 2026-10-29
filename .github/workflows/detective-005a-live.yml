@@ -213,29 +213,43 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
       - name: Read original same-run Actions artifact identities
+        id: artifact-api
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           gh api -H "Accept: application/vnd.github+json" \
             "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100" \
-            > artifacts-api.json
+            > artifacts-api.tmp
+          mv artifacts-api.tmp artifacts-api.json
       - name: Retrieve surviving lineage artifacts without rewriting raw bytes
+        id: download-lineages
         continue-on-error: true
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           pattern: detective005a-G*
           path: artifacts
       - name: Build and read back quarantine-only durable dataset
+        env:
+          ARTIFACT_API_OUTCOME: ${{ steps.artifact-api.outcome }}
+          DOWNLOAD_OUTCOME: ${{ steps.download-lineages.outcome }}
         run: |
           set -euo pipefail
           mkdir -p artifacts
           python3 -m py_compile scripts/detective_005a_recover.py
-          python3 scripts/detective_005a_recover.py \
-            --artifacts artifacts \
-            --artifact-metadata artifacts-api.json \
-            --source-head "$SOURCE_HEAD_SHA" \
-            --run-id "$GITHUB_RUN_ID" \
+          args=(
+            --artifacts artifacts
+            --source-head "$SOURCE_HEAD_SHA"
+            --run-id "$GITHUB_RUN_ID"
+            --artifact-api-outcome "$ARTIFACT_API_OUTCOME"
+            --download-outcome "$DOWNLOAD_OUTCOME"
             --out staged/detective-005a-recovery
+          )
+          if test -f artifacts-api.json; then
+            args+=(--artifact-metadata artifacts-api.json)
+          fi
+          python3 scripts/detective_005a_recover.py "${args[@]}"
           python3 scripts/detective_005a_recover.py \
             --verify staged/detective-005a-recovery
           test ! -e "$TARGET_DATASET"
@@ -260,4 +274,10 @@ jobs:
           git add "$TARGET_DATASET"
           git commit -m "DETECTIVE-005A: preserve failed-run raw custody ${GITHUB_RUN_ID}"
           git push origin "HEAD:refs/heads/$TARGET_BRANCH"
-          echo "Archived failed-run evidence at $TARGET_BRANCH/$TARGET_DATASET"
+          echo "Preserved best-effort failed-run evidence at $TARGET_BRANCH/$TARGET_DATASET"
+      - name: Fail recovery gate when original artifact custody is incomplete
+        run: |
+          set -euo pipefail
+          python3 scripts/detective_005a_recover.py \
+            --verify "$TARGET_DATASET" \
+            --require-complete-transport
