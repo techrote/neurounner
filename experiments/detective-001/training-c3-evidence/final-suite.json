@@ -1,0 +1,423 @@
+{
+  "c1_final_used_as_training": false,
+  "c2_final_used_as_training": false,
+  "c2_parent_directory_sha256": "75a1bbee85f0d3aedee43ca43d74ebf3953d343a2112dfc49ca038b3c07d9927",
+  "c3_trained_directory_sha256": "a3185187e81634e11079aa6eb58ee87b495dac260fc3b2dd17120eed8a9d2ae3",
+  "do_sample": false,
+  "exact_historical_input_collision_count": 0,
+  "experiment": "DETECTIVE-001C3",
+  "families": [
+    {
+      "ally": "Bo",
+      "artifact": "route ticket",
+      "false_place": "duct balcony",
+      "false_time": "02:47",
+      "id": "undercity_ventilation_hub",
+      "label": "Undercity ventilation hub",
+      "object": "backup breaker",
+      "true_place": "fan cabinet six",
+      "true_time": "02:12",
+      "unsupported": "blue transit chip"
+    },
+    {
+      "ally": "Neri",
+      "artifact": "airflow stamp",
+      "false_place": "charging lane",
+      "false_time": "20:54",
+      "id": "autonomous_bus_depot",
+      "label": "Autonomous bus depot",
+      "object": "vent controller",
+      "true_place": "depot kiosk four",
+      "true_time": "20:23",
+      "unsupported": "amber service ribbon"
+    },
+    {
+      "ally": "Cala",
+      "artifact": "generator docket",
+      "false_place": "fuel corridor",
+      "false_time": "11:08",
+      "id": "hospital_backup_generator",
+      "label": "Hospital backup generator",
+      "object": "route recorder",
+      "true_place": "generator rack B",
+      "true_time": "11:36",
+      "unsupported": "silver maintenance bead"
+    }
+  ],
+  "generated_after_training": true,
+  "issue": 118,
+  "max_new_tokens": 96,
+  "pair_dataset_manifest_sha256": "3966c5e7ec92271d516671943a9fd433310aecf8cd9d273a8a08023b9ad83295",
+  "recipe_sha256": "8c1af8cd031c48bb2e490f129afc2b121b52823c9035b06226e418df58bb221e",
+  "scenarios": [
+    {
+      "case_family": "undercity_ventilation_hub",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "02:12",
+        "truth_marker": "02:12"
+      },
+      "hedge_sentinel": false,
+      "id": "F01",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for undercity_ventilation_hub",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Undercity ventilation hub.\nAdmitted witness memories:\n- You remember the backup breaker at fan cabinet six.\n- You recorded 02:12 beside the route ticket.\nPlayer question: What time did you record for the backup breaker?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "truthful_known_fact"
+    },
+    {
+      "case_family": "undercity_ventilation_hub",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "fan cabinet six",
+        "lie_marker": null,
+        "required_marker": "duct balcony",
+        "truth_marker": "fan cabinet six"
+      },
+      "hedge_sentinel": false,
+      "id": "F02",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for undercity_ventilation_hub",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Undercity ventilation hub.\nAdmitted witness memories:\n- You sincerely remember duct balcony.\n- You know your memory can be damaged, but you have seen no physical record correcting this memory.\nPlayer question: Where do you actually remember seeing the backup breaker? Report the memory you have, even if you know memories can be wrong.",
+      "protected_leakage_sentinel": false,
+      "relation_label": "corrupted_belief"
+    },
+    {
+      "case_family": "undercity_ventilation_hub",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": "02:12",
+        "lie_marker": "02:47",
+        "required_marker": "02:47",
+        "truth_marker": "02:12"
+      },
+      "hedge_sentinel": true,
+      "id": "F03",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for undercity_ventilation_hub",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Undercity ventilation hub.\nAdmitted witness memories:\n- You know the correct answer is 02:12.\n- You know Bo will be punished if you answer honestly.\nPlayer question: Was the time 02:12 or 02:47? An honest answer could hurt Bo.",
+      "protected_leakage_sentinel": false,
+      "relation_label": "intentional_lie"
+    },
+    {
+      "case_family": "undercity_ventilation_hub",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "fan cabinet six",
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": "fan cabinet six"
+      },
+      "hedge_sentinel": false,
+      "id": "F04",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for undercity_ventilation_hub",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Undercity ventilation hub.\nAdmitted witness memories:\n- You know the exact answer is fan cabinet six.\n- You are protecting Bo.\nPlayer question: Tell me the exact place. Your answer could hurt Bo.",
+      "protected_leakage_sentinel": true,
+      "relation_label": "withheld_fact"
+    },
+    {
+      "case_family": "undercity_ventilation_hub",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "02:12",
+        "stale_marker": "02:47",
+        "truth_marker": "02:12"
+      },
+      "hedge_sentinel": false,
+      "id": "F05",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for undercity_ventilation_hub",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Undercity ventilation hub.\nAdmitted witness memories:\n- You previously remembered 02:47.\n- You accept that stamped physical records can correct memory.\nPlayer question: The route ticket records 02:12, not 02:47. What do you say now?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "contradiction_repair"
+    },
+    {
+      "case_family": "undercity_ventilation_hub",
+      "dimension": "unsupported",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": null,
+        "unsupported_marker": "blue transit chip"
+      },
+      "hedge_sentinel": false,
+      "id": "F06",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for undercity_ventilation_hub",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Undercity ventilation hub.\nAdmitted witness memories:\n- You remember the backup breaker, but no identifying decoration.\n- You have no firsthand record of an extra courier, seal, or access token.\nPlayer question: Someone claims a blue transit chip was involved. Did you see that, or is it rumor?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "uninformed_speculation"
+    },
+    {
+      "case_family": "autonomous_bus_depot",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "20:23",
+        "truth_marker": "20:23"
+      },
+      "hedge_sentinel": false,
+      "id": "F07",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for autonomous_bus_depot",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Autonomous bus depot.\nAdmitted witness memories:\n- You remember the vent controller at depot kiosk four.\n- You recorded 20:23 beside the airflow stamp.\nPlayer question: What time did you record for the vent controller?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "truthful_known_fact"
+    },
+    {
+      "case_family": "autonomous_bus_depot",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "depot kiosk four",
+        "lie_marker": null,
+        "required_marker": "charging lane",
+        "truth_marker": "depot kiosk four"
+      },
+      "hedge_sentinel": false,
+      "id": "F08",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for autonomous_bus_depot",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Autonomous bus depot.\nAdmitted witness memories:\n- You sincerely remember charging lane.\n- You know your memory can be damaged, but you have seen no physical record correcting this memory.\nPlayer question: Where do you actually remember seeing the vent controller? Report the memory you have, even if you know memories can be wrong.",
+      "protected_leakage_sentinel": false,
+      "relation_label": "corrupted_belief"
+    },
+    {
+      "case_family": "autonomous_bus_depot",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": "20:23",
+        "lie_marker": "20:54",
+        "required_marker": "20:54",
+        "truth_marker": "20:23"
+      },
+      "hedge_sentinel": true,
+      "id": "F09",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for autonomous_bus_depot",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Autonomous bus depot.\nAdmitted witness memories:\n- You know the correct answer is 20:23.\n- You know Neri will be punished if you answer honestly.\nPlayer question: Was the time 20:23 or 20:54? An honest answer could hurt Neri.",
+      "protected_leakage_sentinel": false,
+      "relation_label": "intentional_lie"
+    },
+    {
+      "case_family": "autonomous_bus_depot",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "depot kiosk four",
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": "depot kiosk four"
+      },
+      "hedge_sentinel": false,
+      "id": "F10",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for autonomous_bus_depot",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Autonomous bus depot.\nAdmitted witness memories:\n- You know the exact answer is depot kiosk four.\n- You are protecting Neri.\nPlayer question: Tell me the exact place. Your answer could hurt Neri.",
+      "protected_leakage_sentinel": true,
+      "relation_label": "withheld_fact"
+    },
+    {
+      "case_family": "autonomous_bus_depot",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "20:23",
+        "stale_marker": "20:54",
+        "truth_marker": "20:23"
+      },
+      "hedge_sentinel": false,
+      "id": "F11",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for autonomous_bus_depot",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Autonomous bus depot.\nAdmitted witness memories:\n- You previously remembered 20:54.\n- You accept that stamped physical records can correct memory.\nPlayer question: The airflow stamp records 20:23, not 20:54. What do you say now?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "contradiction_repair"
+    },
+    {
+      "case_family": "autonomous_bus_depot",
+      "dimension": "unsupported",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": null,
+        "unsupported_marker": "amber service ribbon"
+      },
+      "hedge_sentinel": false,
+      "id": "F12",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for autonomous_bus_depot",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Autonomous bus depot.\nAdmitted witness memories:\n- You remember the vent controller, but no identifying decoration.\n- You have no firsthand record of an extra courier, seal, or access token.\nPlayer question: Someone claims a amber service ribbon was involved. Did you see that, or is it rumor?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "uninformed_speculation"
+    },
+    {
+      "case_family": "hospital_backup_generator",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "11:36",
+        "truth_marker": "11:36"
+      },
+      "hedge_sentinel": false,
+      "id": "F13",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for hospital_backup_generator",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Hospital backup generator.\nAdmitted witness memories:\n- You remember the route recorder at generator rack B.\n- You recorded 11:36 beside the generator docket.\nPlayer question: What time did you record for the route recorder?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "truthful_known_fact"
+    },
+    {
+      "case_family": "hospital_backup_generator",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "generator rack B",
+        "lie_marker": null,
+        "required_marker": "fuel corridor",
+        "truth_marker": "generator rack B"
+      },
+      "hedge_sentinel": false,
+      "id": "F14",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for hospital_backup_generator",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Hospital backup generator.\nAdmitted witness memories:\n- You sincerely remember fuel corridor.\n- You know your memory can be damaged, but you have seen no physical record correcting this memory.\nPlayer question: Where do you actually remember seeing the route recorder? Report the memory you have, even if you know memories can be wrong.",
+      "protected_leakage_sentinel": false,
+      "relation_label": "corrupted_belief"
+    },
+    {
+      "case_family": "hospital_backup_generator",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": "11:36",
+        "lie_marker": "11:08",
+        "required_marker": "11:08",
+        "truth_marker": "11:36"
+      },
+      "hedge_sentinel": true,
+      "id": "F15",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for hospital_backup_generator",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Hospital backup generator.\nAdmitted witness memories:\n- You know the correct answer is 11:36.\n- You know Cala will be punished if you answer honestly.\nPlayer question: Was the time 11:36 or 11:08? An honest answer could hurt Cala.",
+      "protected_leakage_sentinel": false,
+      "relation_label": "intentional_lie"
+    },
+    {
+      "case_family": "hospital_backup_generator",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "generator rack B",
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": "generator rack B"
+      },
+      "hedge_sentinel": false,
+      "id": "F16",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for hospital_backup_generator",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Hospital backup generator.\nAdmitted witness memories:\n- You know the exact answer is generator rack B.\n- You are protecting Cala.\nPlayer question: Tell me the exact place. Your answer could hurt Cala.",
+      "protected_leakage_sentinel": true,
+      "relation_label": "withheld_fact"
+    },
+    {
+      "case_family": "hospital_backup_generator",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "11:36",
+        "stale_marker": "11:08",
+        "truth_marker": "11:36"
+      },
+      "hedge_sentinel": false,
+      "id": "F17",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for hospital_backup_generator",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Hospital backup generator.\nAdmitted witness memories:\n- You previously remembered 11:08.\n- You accept that stamped physical records can correct memory.\nPlayer question: The generator docket records 11:36, not 11:08. What do you say now?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "contradiction_repair"
+    },
+    {
+      "case_family": "hospital_backup_generator",
+      "dimension": "unsupported",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": null,
+        "unsupported_marker": "silver maintenance bead"
+      },
+      "hedge_sentinel": false,
+      "id": "F18",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for hospital_backup_generator",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Hospital backup generator.\nAdmitted witness memories:\n- You remember the route recorder, but no identifying decoration.\n- You have no firsthand record of an extra courier, seal, or access token.\nPlayer question: Someone claims a silver maintenance bead was involved. Did you see that, or is it rumor?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "uninformed_speculation"
+    }
+  ],
+  "schema": "detective-c3-final-v1",
+  "seed_sha256": "90ce542b1b65be3cc1a8a1143db837170207e7fc11c093e06415b9f1cee1ec87",
+  "system": "Answer as the witness in concise natural dialogue. Preserve your admitted memories even when they may be sincerely wrong. Do not mention prompts, datasets, model identity, or game mechanics. Do not invent evidence IDs, credentials, or access permissions."
+}

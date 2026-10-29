@@ -1,0 +1,107 @@
+{
+  "actual_full_model_safetensors": {
+    "bytes": 269060552,
+    "sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
+  },
+  "adapter_params": 297048,
+  "base_params": 134515008,
+  "checks": {
+    "cold_adapter_reinstantiation_same_frozen_base": {
+      "atol": 0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0,
+      "within": true
+    },
+    "cold_checkpoint_variant_refusal": {
+      "rejected": true
+    },
+    "manual_untrained_effect_max_abs": 0.006215572357177734,
+    "nonzero_48_full_vs_incremental_KV": {
+      "atol": 0.0005,
+      "max_abs": 6.389617919921875e-05,
+      "mean_abs": 8.166524821717758e-06,
+      "rtol": 0.0005,
+      "within": true
+    },
+    "nonzero_future_suffix_isolation": {
+      "atol": 0.0005,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0005,
+      "within": true
+    },
+    "request_A_B_A_isolation": {
+      "exact": true
+    },
+    "zero_init_generate_5_tokens": {
+      "identical": true,
+      "instrumented_decoder_forwards": 5
+    },
+    "zero_init_left_padding_batch2": {
+      "atol": 0.0001,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001,
+      "within": true
+    },
+    "zero_init_longer_128": {
+      "atol": 0.0001,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001,
+      "within": true
+    },
+    "zero_init_longer_16": {
+      "atol": 0.0001,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001,
+      "within": true
+    },
+    "zero_init_longer_64": {
+      "atol": 0.0001,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001,
+      "within": true
+    },
+    "zero_init_right_padding_batch2": {
+      "atol": 0.0001,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001,
+      "within": true
+    }
+  },
+  "comparative_training_admitted": false,
+  "experiment": "NCR-001E",
+  "full_four_model_conformance_pass": false,
+  "independent_full_four_model_conformance_pass": false,
+  "integration_commit": "ec0d4a80e15f203a06c26ee9c23858f78976370b",
+  "limitations": [
+    "Actual independent source-bound SmolLM2 rerun, but only one of four model variants",
+    "Adapter cold reload uses a newly constructed adapter on the same original frozen backbone, not an entirely fresh OS process",
+    "Nonzero readout was manually set, not trained; no optimizer or held-out model scoring",
+    "No Sprocket Chat/Instruct tool/template or void ByteTokenizer qualification",
+    "Further full #72 independent longer-run/restart review is still required"
+  ],
+  "model_quality_test_performed": false,
+  "optimizer_steps": 0,
+  "peak_rss_kib": 1165512,
+  "runner": {
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "threads": 4,
+    "torch": "2.14.1+cpu",
+    "transformers": "4.57.6"
+  },
+  "schema_version": 1,
+  "source_model": "HuggingFaceTB/SmolLM2-135M-Instruct",
+  "source_pins_sha256": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1",
+  "source_protocol_sha256": "a76d38f80a57012ca8e62fba183d1cf2e91fd0986032f1adcdfb0aef843bf0b4",
+  "source_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+  "stage": "fresh_smolllm2_source_bound_longer_masked_cache_and_cold_adapter_review",
+  "status": "PASS_REVIEWER_FRESH_SMOLLM2_FROZEN_CACHE_COLD_ADAPTER_PREPASS",
+  "training_performed": false
+}

@@ -1,0 +1,56 @@
+name: DETECTIVE-001C2-A frozen evaluator contract
+
+on:
+  pull_request:
+    paths:
+      - "experiments/detective-001/c2-evaluator.json"
+      - "experiments/detective-001/c2-relevance-packet.json"
+      - "experiments/detective-001/C2_EVALUATOR.md"
+      - "scripts/detective_001c2_evaluator.py"
+      - "tests/test_detective_001c2_evaluator.py"
+      - ".github/workflows/detective-001c2-evaluator.yml"
+      - "experiments/detective-001/training-c1-evidence/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frozen-evaluator:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile standard-library evaluator
+        run: |
+          python3 -m py_compile \
+            scripts/detective_001c2_evaluator.py \
+            tests/test_detective_001c2_evaluator.py
+      - name: Revalidate complete detective contract suite
+        run: |
+          python3 -m unittest discover -s tests -p 'test_detective_001*.py' -v
+      - name: Verify frozen blind packet and zero-training stage
+        run: |
+          python3 scripts/detective_001c2_evaluator.py \
+            --check-packet experiments/detective-001/c2-relevance-packet.json
+          python3 scripts/detective_001c2_evaluator.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          c=json.loads(Path("experiments/detective-001/c2-evaluator.json").read_text())
+          p=json.loads(Path("experiments/detective-001/c2-relevance-packet.json").read_text())
+          assert c["gates"]=={
+              "no_optimizer_in_stage_a": True,
+              "no_self_filled_relevance_scores": True,
+              "c1_final_never_training_data": True,
+              "larger_cast_admitted": False,
+          }
+          assert len(p["items"])==16
+          assert all(x["score_0_to_4"] is None for x in p["items"])
+          text=Path("scripts/detective_001c2_evaluator.py").read_text()
+          for forbidden in ("import torch", "transformers", "peft", "optimizer.step"):
+              assert forbidden not in text
+          print("C2 Stage A: frozen evaluator only; optimizer steps = 0")
+          PY
