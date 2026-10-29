@@ -85,6 +85,8 @@ def packet_identity(packet: dict) -> str:
 def prepare(dataset: Path, reviewer_dir: Path, custody_dir: Path) -> dict:
     """Create a non-public permutation; publish only the unlabelled packet."""
     disjoint(reviewer_dir, custody_dir)
+    disjoint(dataset, reviewer_dir)
+    disjoint(dataset, custody_dir)
     outside_repo(reviewer_dir)
     outside_repo(custody_dir)
     screen.require(not reviewer_dir.exists() and not custody_dir.exists(),
@@ -144,6 +146,10 @@ def authenticated_packet(dataset: Path, reviewer_dir: Path,
                          custody_dir: Path) -> tuple[dict, dict, list[dict], dict]:
     """Reconstruct privately; fail closed on altered seed, rows or packet."""
     disjoint(reviewer_dir, custody_dir)
+    disjoint(dataset, reviewer_dir)
+    disjoint(dataset, custody_dir)
+    outside_repo(reviewer_dir)
+    outside_repo(custody_dir)
     manifest, rows, cfg = source_dataset(dataset)
     custody = screen.read_json(custody_dir / "private-custody.json")
     screen.require(custody.get("schema") == PREPARED and
@@ -178,6 +184,8 @@ def freeze(dataset: Path, reviewer_dir: Path, custody_dir: Path,
     outside_repo(freeze_dir)
     disjoint(custody_dir, reviewer_dir)
     disjoint(custody_dir, freeze_dir)
+    disjoint(reviewer_dir, freeze_dir)
+    disjoint(dataset, freeze_dir)
     screen.require(not freeze_dir.exists(), "refuse overwrite of frozen ratings")
     custody, packet, _, cfg = authenticated_packet(
         dataset, reviewer_dir, custody_dir)
@@ -213,6 +221,8 @@ def reveal(dataset: Path, reviewer_dir: Path, custody_dir: Path,
     outside_repo(out_dir)
     disjoint(custody_dir, reviewer_dir)
     disjoint(custody_dir, out_dir)
+    disjoint(reviewer_dir, out_dir)
+    disjoint(dataset, out_dir)
     disjoint(freeze_dir, out_dir)
     screen.require(not out_dir.exists(), "refuse overwrite of unblinded archive")
     custody, packet, rows, cfg = authenticated_packet(
