@@ -370,6 +370,83 @@ class Detective005ARecoveryTests(unittest.TestCase):
             self.assertFalse(manifest["production_admission"])
             recover.verify(out)
 
+    def test_foreign_api_and_download_names_block_green_without_copying_foreign(self):
+        """A foreign G13 is an unresolved custody gap, not an empty success."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            artifacts = root / "artifacts"
+            expected = artifacts / "detective005a-G01"
+            expected.mkdir(parents=True)
+            raw = screen.canonical(self.row()).encode() + b"\n"
+            (expected / "results.partial.jsonl").write_bytes(raw)
+            foreign = artifacts / "detective005a-G13"
+            foreign.mkdir()
+            (foreign / "unknown.bin").write_bytes(b"synthetic-untrusted-bytes")
+            metadata = root / "api.json"
+            metadata.write_text(json.dumps({"artifacts": [
+                {"name": "detective005a-G01", "id": 712,
+                 "digest": "sha256:" + "a" * 64, "size_in_bytes": 100,
+                 "expired": False, "workflow_run": {
+                     "id": int(RUN), "head_sha": HEAD,
+                     "repository_id": 1432134981}},
+                {"name": "detective005a-G13", "id": 713,
+                 "digest": "sha256:" + "b" * 64, "size_in_bytes": 100,
+                 "expired": False, "workflow_run": {
+                     "id": int(RUN), "head_sha": HEAD,
+                     "repository_id": 1432134981}},
+            ]}), encoding="utf-8")
+            out = root / "archive"
+            manifest = recover.recover(
+                artifacts, out, HEAD, RUN, metadata, "success", "success")
+            self.assertEqual(manifest["validated_raw_prefix_rows"], 1)
+            self.assertEqual(manifest["unexpected_artifact_sources"], [
+                "api:detective005a-G13", "downloaded:detective005a-G13"])
+            self.assertFalse(manifest["artifact_transport_complete"])
+            self.assertEqual(
+                (out / "raw/G01/results.partial.jsonl").read_bytes(), raw)
+            self.assertFalse((out / "raw/G13").exists())
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 1)
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "incomplete original lineage"):
+                recover.require_complete_transport(out)
+
+            # API-only foreign evidence must be caught even when the
+            # downloader did not return the unexpected artifact.
+            foreign.rename(root / "not-downloaded")
+            out_api_only = root / "archive-api-only"
+            second = recover.recover(artifacts, out_api_only, HEAD, RUN,
+                                     metadata, "success", "success")
+            self.assertEqual(second["unexpected_artifact_sources"],
+                             ["api:detective005a-G13"])
+            self.assertFalse(second["artifact_transport_complete"])
+            recover.verify(out_api_only)
+
+    def test_api_repository_mismatch_blocks_source_bound_custody(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "artifacts/detective005a-G01"
+            source.mkdir(parents=True)
+            (source / "results.partial.jsonl").write_text(
+                screen.canonical(self.row()) + "\n", encoding="utf-8")
+            metadata = root / "api.json"
+            metadata.write_text(json.dumps({"artifacts": [{
+                "name": "detective005a-G01", "id": 1001,
+                "digest": "sha256:" + "f" * 64,
+                "size_in_bytes": 120, "expired": False,
+                "workflow_run": {"id": int(RUN), "head_sha": HEAD,
+                                 "repository_id": 999},
+            }]}), encoding="utf-8")
+            out = root / "archive"
+            manifest = recover.recover(
+                root / "artifacts", out, HEAD, RUN, metadata,
+                "success", "success")
+            self.assertFalse(manifest["artifact_transport_complete"])
+            record = screen.read_json(
+                out / "provenance/source-artifacts.json")["lineages"][0]
+            self.assertIn("artifact_api_repository_mismatch",
+                          record["custody_warnings"])
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 1)
+
     @unittest.skipUnless(os.name == "posix", "symlink fixtures require POSIX")
     def test_symlinked_recovery_is_not_self_contained_even_with_matching_hash(self):
         """A Git link is not an archived copy, even when its target hashes match."""
