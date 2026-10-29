@@ -540,8 +540,8 @@ class Detective005ARecoveryTests(unittest.TestCase):
             records = screen.read_json(
                 out / "provenance/source-artifacts.json")["lineages"]
             self.assertEqual(records[0]["validated_raw_prefix_rows"], 0)
-            self.assertEqual(records[0]["journal_tail_problem"],
-                             "unparseable_raw_row")
+            self.assertIn(records[0]["journal_tail_problem"],
+                          {"non_object_raw_row", "unparseable_raw_row"})
             self.assertIn("invalid_interruption_receipt",
                           records[0]["custody_warnings"])
             self.assertIn("invalid_complete_lineage_manifest",
@@ -569,6 +569,28 @@ class Detective005ARecoveryTests(unittest.TestCase):
                 (out / "raw/G01/results.partial.jsonl").read_bytes(),
                 original)
             self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 0)
+
+    def test_parser_limit_exception_paths_fail_closed(self):
+        """Exercise exceptions independently of Python JSON parser depth limits."""
+        for error_type in (RecursionError, ValueError, OverflowError):
+            with self.subTest(error_type=error_type.__name__):
+                with mock.patch.object(
+                        live, "intact_partial_raw_rows",
+                        side_effect=error_type("synthetic parser limit")):
+                    self.assertEqual(
+                        recover.intact_prefix_or_quarantine(Path("unused.jsonl")),
+                        (0, "unparseable_raw_row"))
+        for error_type in (RecursionError, ValueError, OverflowError):
+            with self.subTest(api_error=error_type.__name__):
+                with mock.patch.object(
+                        screen, "read_json",
+                        side_effect=error_type("synthetic artifact API limit")):
+                    self.assertEqual(
+                        recover.load_api_for_custody(Path("original-api.json")),
+                        ({}, True))
+                    self.assertEqual(
+                        recover.unexpected_artifact_sources(
+                            None, Path("original-api.json")), [])
 
     def test_no_artifacts_never_claims_work_or_review(self):
         with tempfile.TemporaryDirectory() as td:
