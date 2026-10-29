@@ -234,6 +234,16 @@ the checkout and separated from each other**, never in public GitHub Actions:
    reconstruct member scores/shortlist in a separate custodian-only output.
    Admission/training gates remain false.
 
+The private custodian currently requires POSIX mode controls (Linux/WSL);
+it refuses native Windows/NTFS execution because `os.chmod(0600)` alone
+cannot establish a confidential Windows ACL. A Windows-native custodian must
+receive separately reviewed, effective user-only ACL enforcement before use.
+The local `freeze` receipt is not a trusted timestamp or proof of rating
+independence by itself. The hash of the unpublished map/packet must be
+externally committed before ratings, and the signed/independently witnessed
+rating-file SHA must be recorded before disclosure to establish an audit
+timeline. Do not include the private key or mapping in either public receipt.
+
 The mapped packet cannot be considered cryptographically anonymous to a
 reviewer with access to the original, labelled raw records, whose response
 text can be matched against the packet. This is an **operational access
