@@ -34,6 +34,9 @@ class OriginalSprocketZipTests(unittest.TestCase):
     def test_b64_whitespace_mutation_refused_even_if_decoding_equivalent(self):
         self.mutate(c.b64_path("source"),lambda b:b+b"\n")
 
+    def test_manifest_whitespace_mutation_refused_even_if_semantics_equal(self):
+        self.mutate("manifest.json",lambda b:b+b"\n")
+
     def test_chat_archive_byte_flip_refused(self):
         self.mutate(c.b64_path("chat"),lambda b:b[:15]+(b"A" if b[15:16]!=b"A" else b"B")+b[16:])
 
