@@ -156,11 +156,30 @@ The standard-library `scripts/detective_005a_recover.py`:
   inventory, then independently re-verifies the archived bytes before push;
 - never builds a subjective fun packet or grants any admission.
 
-`complete_lineage_recovered` means 12 raw results and a valid lineage
-manifest were preserved from a **failed workflow**, NOT that the whole
-144-response screen passed. Invalid or foreign records stay quarantined as
-raw bytes, never counted as validated results. Artifact IDs/digests are recorded
-only when returned by GitHub; missing downloads are explicitly flagged.
+`complete_lineage_recovered` now requires 12 raw results, a source-valid
+manifest, **byte-identical fsynced incremental journal and final JSONL**,
+and a matching same-run GitHub Actions artifact API record. This means only
+that one lineage was recovered from a failed workflow, **not** that the whole
+144-response screen passed. A source-valid local lineage without API metadata
+is deliberately demoted to `recovery_only` with
+`artifact_api_metadata_unavailable`, retaining every original byte.
+A missing or mismatched journal similarly prevents complete-lineage custody.
+
+The archive's separate `artifact_transport_complete` flag is a retrieval
+gate: the API lookup and artifact download actions must both report success,
+API-listed same-run lineage artifacts must actually be downloaded, no
+downloaded lineage can lack an API binding, and artifact identity/digest/size
+metadata must pass the declared checks. The workflow **always tries to
+preserve and push available original bytes first**, but its final recovery
+job explicitly **fails** when this flag is false. The run-scoped evidence
+branch is non-overwriting; such a red recovery requires manual investigation
+and supplementary custody outside the original branch before any inference
+retry. A green synthetic transfer never authorizes a live retry.
+
+A valid `artifact_transport_complete` flag is **not** a 144-generation
+completion, model-output accuracy claim or guarantee that a cancelled job
+ran its recovery path. Invalid or foreign rows remain quarantined and can
+never be counted as accepted results.
 
 **Operational limits:** cancellation of the entire workflow may also cancel
 the recovery job, and artifact retrieval or branch push can fail. Such red runs
