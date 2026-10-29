@@ -139,6 +139,23 @@ The 144-response assembler remains strict: no incomplete lineage is accepted,
 no subjective packet is constructed from partial results, and no training,
 model judging or population admission is authorized.
 
+## Pending full-screen archive readback hardening (PR #196)
+
+An exact-byte hash inventory is necessary but not sufficient: an attacker
+could add a private mapping/key or replace an original file with a symlink,
+then recompute the self-reported inventory. The reviewed full-screen readback
+must reject **all unregistered paths and symlinks**, recompute hard-floor
+observations and all no-rating/no-admission flags, and bind frozen
+source/lineage runner hashes independently of editable manifests.
+Original raw rows must also include the actual verified base-weight,
+adapter-archive and unpacked-adapter SHA-256 receipts; the public source
+label by itself is not proof of what was loaded.
+
+PR #196 adds synthetic adversarial tests for these custody defects. These are
+**proposed source checks**, not a qualification of actual model execution or
+authenticated GitHub evidence-branch persistence. No private blinding key,
+identity mapping, human ratings or real villager outputs were produced.
+
 ## Failed-workflow durable recovery (source merged; live unqualified)
 
 As of 29 October 2026, source custody PRs #180, #183 and #189 have
