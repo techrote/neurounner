@@ -54,3 +54,39 @@ Actual frozen 134,515,008-parameter base + **296,576** untrained ordinary gated-
 The original model-source job emitted warnings for deprecated `torch_dtype` and absence of an inferable generation attention mask when PAD equals EOS. Three-token frozen/MLP generation remained identical. These warnings remain recorded; a future stringent generation-mask regression should include explicit attention masks rather than claiming warning-free full admission.
 
 **Classification: SmolLM2-only source-bound actual-host nontrained matched MLP PREPASS_PASS; full #73 four-model source acceptance and independent #72 still BLOCKED.** All evidence remains nontraining, the original locked protocol unchanged and `train_authorized=false` continues.
+
+## Follow-up guard candidate — shared-backbone ownership (28 October 2026)
+
+A source audit identified a narrowly scoped, pretraining concurrency hazard in the
+original frozen matched-MLP wrapper: `self._lock` covered only **one adapter
+instance**. A second wrapper constructed around the *same* original backbone
+could independently install hooks. Its nominally frozen `enabled=False` path
+also bypassed the per-instance guard, so a baseline reference call could
+accidentally execute with another wrapper's active post-block hooks. The
+original synthetic concurrency test covered only one wrapper; it was not
+sufficient evidence for two wrappers sharing a model.
+
+This **separate draft follow-up** introduces a weak-keyed, per-frozen-backbone
+nonblocking ownership lock, shared across all wrappers of that exact Python
+model instance. It covers enabled forward/generate **and disabled reference
+forward/generate**, retains the existing same-wrapper recursion refusal,
+cleans up hooks and lock ownership in `finally`, and permits different
+frozen model instances to proceed independently. These locks hold no token,
+cellular field, tensor, recurrent state, checkpoint or training data.
+
+The added `tests/test_ncr_001f_shared_backbone_ownership.py` uses only toy
+backbones to test overlapping wrappers, disabled-path contamination refusal,
+independent-model coexistence, interrupted-hook cleanup and same-wrapper
+recursion. An exact-head CPU-only CI workflow is
+`.github/workflows/ncr-001f-shared-backbone-ownership.yml`. The change **does
+not** replay actual frozen checkpoint results or extend archival original
+receipt acceptance; prior source-bound MLP prepasses remain fixed historical
+evidence and downstream #98/#99 require explicit dependency reconciliation
+before inheriting the updated wrapper.
+
+**Admission remains closed:** `train_authorized=false`, no optimizer,
+comparative training, held-out fixture access, new model-weight execution,
+or promotion to final #72/#73 PASS. CI success must be checked at this
+candidate's exact commit, followed by independent source review; no change
+to the pretrained model identities, taps, parameter counts or preregistered
+numerical tolerances is proposed.
