@@ -263,6 +263,62 @@ class Detective005ARecoveryTests(unittest.TestCase):
                                         "incomplete original lineage"):
                 recover.require_complete_transport(alternate)
 
+    def test_distinct_lineage_names_cannot_share_one_artifact_id(self):
+        """Name matching alone must not certify duplicate GitHub object IDs."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            originals = {}
+            for lineage in ("G01", "G02"):
+                folder = root / "artifacts" / f"detective005a-{lineage}"
+                folder.mkdir(parents=True)
+                raw = (
+                    screen.canonical(self.row(member_id=f"V-{lineage}-A")) + "\n"
+                ).encode("utf-8")
+                (folder / "results.partial.jsonl").write_bytes(raw)
+                originals[lineage] = raw
+
+            api = {"total_count": 2, "artifacts": [
+                {"name": f"detective005a-{lineage}", "id": 5001,
+                 "digest": "sha256:" + character * 64,
+                 "size_in_bytes": 200, "expired": False,
+                 "workflow_run": {
+                     "id": int(RUN), "head_sha": HEAD,
+                     "repository_id": 1432134981}}
+                for lineage, character in (("G01", "a"), ("G02", "b"))
+            ]}
+            metadata = root / "api.json"
+            metadata.write_text(json.dumps(api), encoding="utf-8")
+            out = root / "archive"
+            report = recover.recover(
+                root / "artifacts", out, HEAD, RUN, metadata,
+                "success", "success")
+            self.assertTrue(report["artifact_api_metadata_invalid"])
+            self.assertFalse(report["artifact_transport_complete"])
+            self.assertEqual(report["validated_raw_prefix_rows"], 2)
+            for lineage, original in originals.items():
+                self.assertEqual(
+                    (out / "raw" / lineage / "results.partial.jsonl").read_bytes(),
+                    original)
+            self.assertEqual(
+                (out / "provenance/actions-artifacts-api.json").read_bytes(),
+                metadata.read_bytes())
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 2)
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "incomplete original lineage"):
+                recover.require_complete_transport(out)
+
+            # Replacing the repeated ID with a second distinct immutable
+            # artifact should restore the *transport* gate, not certify
+            # either one-row lineage as a completed 144-response screen.
+            api["artifacts"][1]["id"] = 5002
+            metadata.write_text(json.dumps(api), encoding="utf-8")
+            good = recover.recover(
+                root / "artifacts", root / "archive-unique", HEAD, RUN,
+                metadata, "success", "success")
+            self.assertTrue(good["artifact_transport_complete"])
+            self.assertEqual(good["complete_lineage_artifacts"], 0)
+            recover.verify(root / "archive-unique")
+
     def test_successful_api_first_page_cannot_hide_later_artifacts(self):
         """HTTP/API success is insufficient if total_count exceeds page rows."""
         with tempfile.TemporaryDirectory() as td:
