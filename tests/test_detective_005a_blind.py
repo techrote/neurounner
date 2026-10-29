@@ -37,6 +37,9 @@ class Detective005ABlindCustodyTests(unittest.TestCase):
             raw.write_text(
                 "".join(screen.canonical(r) + "\n" for r in selection),
                 encoding="utf-8")
+            # Match the live runner: the fsynced incremental journal is
+            # mandatory and byte-identical to complete final results.
+            (folder / "results.partial.jsonl").write_bytes(raw.read_bytes())
             assemble.write_json(folder / "manifest.json", {
                 "schema": "detective-005a-live-lineage-manifest-v1",
                 "experiment": "DETECTIVE-005A",
@@ -58,6 +61,18 @@ class Detective005ABlindCustodyTests(unittest.TestCase):
         dataset = root / "dataset"
         assemble.assemble(artifacts, dataset)
         return dataset
+
+    def test_blind_fixture_refuses_missing_original_fsynced_journal(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.make_dataset(root)
+            original = root / "artifacts" / "G01" / "results.partial.jsonl"
+            self.assertEqual(original.read_bytes(),
+                             (original.parent / "results.jsonl").read_bytes())
+            original.unlink()
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "lineage fsynced journal missing"):
+                assemble.assemble(root / "artifacts", root / "invalid-dataset")
 
     def prepare_fixture(self, root: Path):
         dataset = self.make_dataset(root)
