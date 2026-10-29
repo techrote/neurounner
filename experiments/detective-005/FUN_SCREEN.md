@@ -420,3 +420,15 @@ These are instructions, **not evidence of performed runs**. All 144 scores
 must originate from a human reviewer, and the owner must document their
 independence and their lack of raw/identity access before interpreting scores
 as blinded. The output is a subjective candidate shortlist only.
+
+### Lineage member-summary integrity (draft PR #196)
+
+A source-verified 12-row lineage's manifest is not trusted as a scoring or
+custody authority. Source ingestion and full-archive remote readback now
+recompute each member's hard-floor status, failure prompt IDs, generated-token
+count and total generation tokens from the original raw rows, require a
+positive integer peak-RSS receipt and enforce the exact live manifest key set.
+Synthetic adversarial checks reject rehashed false-clean member verdicts,
+inflated token counts and unauthorized identity-bearing metadata fields.
+These checks do not reconstruct missing model outputs, prove host execution or
+qualify authenticated GitHub remote persistence.

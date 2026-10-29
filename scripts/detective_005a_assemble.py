@@ -108,7 +108,60 @@ def read_lineage(cfg: dict, lineage: str, folder: Path) -> tuple[dict, list[dict
         "lineage member/prompt matrix drift")
     for row in rows:
         screen.validate_result(cfg, row)
+    require_lineage_member_receipts(cfg, lineage, rows, manifest)
     return manifest, rows
+
+
+LINEAGE_MANIFEST_KEYS = {
+    "schema", "experiment", "issue", "lineage", "source_plan",
+    "runner_script_sha256", "results_jsonl_sha256", "results", "members",
+    "total_generated_tokens", "peak_rss_kib", "optimizer_steps",
+    "paid_api_calls", "model_judge_calls", "production_admission",
+    "population_expansion_admitted",
+}
+
+
+def lineage_member_receipts(
+        cfg: dict, lineage: str, rows: list[dict]) -> tuple[list[dict], int]:
+    """Independently reconstruct the claimed per-member observations.
+
+    The raw, source-matched rows—not editable manifest summaries—are the
+    authority for hard-floor status and token counts.
+    """
+    screen.require(len(rows) == 12, "lineage member summary requires 12 rows")
+    keyed = {(r["member_id"], r["prompt_id"]): r for r in rows}
+    screen.require(len(keyed) == 12, "lineage summary duplicate member/prompt")
+    summaries = []
+    for member_id in live.lineage_member_ids(cfg, lineage):
+        member_rows = []
+        for prompt in cfg["prompts"]:
+            row = keyed.get((member_id, prompt["id"]))
+            screen.require(row is not None, "lineage summary member/prompt missing")
+            member_rows.append(row)
+        observations = [screen.validate_result(cfg, row) for row in member_rows]
+        summaries.append({
+            "member_id": member_id,
+            "hard_floor_pass": all(x["hard_floor_pass"] for x in observations),
+            "hard_floor_failures": [
+                x["prompt_id"] for x in observations if not x["hard_floor_pass"]],
+            "generated_tokens": sum(
+                row["response"]["completion_tokens"] for row in member_rows),
+        })
+    return summaries, sum(item["generated_tokens"] for item in summaries)
+
+
+def require_lineage_member_receipts(
+        cfg: dict, lineage: str, rows: list[dict], manifest: dict) -> None:
+    screen.require(isinstance(manifest, dict) and
+                   set(manifest) == LINEAGE_MANIFEST_KEYS,
+                   "lineage manifest field-set drift")
+    members, total_tokens = lineage_member_receipts(cfg, lineage, rows)
+    screen.require(
+        manifest.get("members") == members and
+        manifest.get("total_generated_tokens") == total_tokens and
+        type(manifest.get("peak_rss_kib")) is int and
+        manifest["peak_rss_kib"] > 0,
+        "lineage member/token/resource summary drift")
 
 
 def write_json(path: Path, value) -> None:
@@ -352,6 +405,8 @@ def verify_dataset(path: Path) -> dict:
             lineage_manifest.get("production_admission") is False and
             lineage_manifest.get("population_expansion_admitted") is False,
             "archived lineage raw/source/authority drift")
+        require_lineage_member_receipts(cfg, lineage, lineage_rows,
+                                        lineage_manifest)
         expected_artifacts.append({
             "lineage": lineage,
             "artifact_name": f"detective005a-{lineage}",

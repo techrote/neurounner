@@ -134,8 +134,10 @@ class Detective005ARecoveryTests(unittest.TestCase):
                     screen.sha256_file(Path(live.__file__)),
                 "results_jsonl_sha256": screen.sha256_bytes(result_bytes),
                 "results": 12,
-                "members": [],
-                "total_generated_tokens": 12,
+                "members": assemble.lineage_member_receipts(
+                    self.cfg, "G01", rows)[0],
+                "total_generated_tokens": assemble.lineage_member_receipts(
+                    self.cfg, "G01", rows)[1],
                 "peak_rss_kib": 1,
                 "optimizer_steps": 0,
                 "paid_api_calls": 0,

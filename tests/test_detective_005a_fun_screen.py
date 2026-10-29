@@ -357,8 +357,10 @@ class Detective005AFunScreenTests(unittest.TestCase):
                         screen.sha256_file(Path(live.__file__)),
                     "results_jsonl_sha256": screen.sha256_file(results),
                     "results": 12,
-                    "members": [],
-                    "total_generated_tokens": 12,
+                    "members": assemble.lineage_member_receipts(
+                        self.cfg, lineage, line_rows)[0],
+                    "total_generated_tokens": assemble.lineage_member_receipts(
+                        self.cfg, lineage, line_rows)[1],
                     "peak_rss_kib": 1,
                     "optimizer_steps": 0,
                     "paid_api_calls": 0,
@@ -453,6 +455,31 @@ class Detective005AFunScreenTests(unittest.TestCase):
                 assemble.verify_dataset(out)
             assemble.write_json(g01_path, g01_original)
             inventory_path.write_bytes(original_inventory)
+            # A recomputed inventory must not launder fabricated lineage
+            # hard-floor success, token totals or arbitrary private metadata
+            # inside an otherwise allowlisted source-manifest file.
+            for label in ("member_hard_floor", "member_token_count",
+                          "total_tokens", "peak_rss", "extra_field"):
+                with self.subTest(forged_lineage_summary=label):
+                    forged = copy.deepcopy(g01_original)
+                    if label == "member_hard_floor":
+                        forged["members"][0]["hard_floor_pass"] = False
+                    elif label == "member_token_count":
+                        forged["members"][0]["generated_tokens"] = 999
+                    elif label == "total_tokens":
+                        forged["total_generated_tokens"] = 999
+                    elif label == "peak_rss":
+                        forged["peak_rss_kib"] = -1
+                    else:
+                        forged["private_mapping_key"] = "synthetic-should-not-archive"
+                    assemble.write_json(g01_path, forged)
+                    inventory_path.write_text(assemble.hash_inventory(out),
+                                              encoding="utf-8")
+                    with self.assertRaisesRegex(
+                            screen.ScreenError, "lineage .* drift"):
+                        assemble.verify_dataset(out)
+            assemble.write_json(g01_path, g01_original)
+            inventory_path.write_bytes(original_inventory)
             self.assertEqual(assemble.verify_dataset(out)["raw_results"], 144)
 
             provenance = screen.read_json(
@@ -525,6 +552,11 @@ class Detective005AFunScreenTests(unittest.TestCase):
                     screen.sha256_file(Path(live.__file__)),
                 "results_jsonl_sha256": screen.sha256_file(raw),
                 "results": 12,
+                "members": assemble.lineage_member_receipts(
+                    self.cfg, "G01", line_rows)[0],
+                "total_generated_tokens": assemble.lineage_member_receipts(
+                    self.cfg, "G01", line_rows)[1],
+                "peak_rss_kib": 1,
                 "optimizer_steps": 0,
                 "paid_api_calls": 0,
                 "model_judge_calls": 0,
@@ -546,6 +578,66 @@ class Detective005AFunScreenTests(unittest.TestCase):
                 self.cfg, "G01", folder)
             self.assertEqual(len(observed), 12)
             self.assertEqual(result_manifest["lineage"], "G01")
+
+    def test_source_lineage_rejects_forged_member_hard_floor_and_token_claims(self):
+        """Rehashing a local manifest must not certify falsified metrics."""
+        line_rows = [r for r in self.synthetic_rows()
+                     if r["member_id"].split("-")[1] == "G01"]
+        with tempfile.TemporaryDirectory() as td:
+            folder = Path(td) / "G01"
+            folder.mkdir()
+            raw = folder / "results.jsonl"
+            raw.write_text(
+                "".join(screen.canonical(r) + "\n" for r in line_rows),
+                encoding="utf-8")
+            (folder / "results.partial.jsonl").write_bytes(raw.read_bytes())
+            members, tokens = assemble.lineage_member_receipts(
+                self.cfg, "G01", line_rows)
+            manifest = {
+                "schema": "detective-005a-live-lineage-manifest-v1",
+                "experiment": "DETECTIVE-005A",
+                "issue": 176,
+                "lineage": "G01",
+                "source_plan": live.source_plan("G01"),
+                "runner_script_sha256": screen.sha256_file(Path(live.__file__)),
+                "results_jsonl_sha256": screen.sha256_file(raw),
+                "results": 12,
+                "members": members,
+                "total_generated_tokens": tokens,
+                "peak_rss_kib": 1,
+                "optimizer_steps": 0,
+                "paid_api_calls": 0,
+                "model_judge_calls": 0,
+                "production_admission": False,
+                "population_expansion_admitted": False,
+            }
+            archive_manifest = folder / "manifest.json"
+            assemble.write_json(archive_manifest, manifest)
+            self.assertEqual(assemble.read_lineage(self.cfg, "G01", folder)[1],
+                             line_rows)
+            for label in ("hard_floor", "prompt_failures", "tokens",
+                          "total_tokens", "peak_rss", "private_field"):
+                with self.subTest(forgery=label):
+                    bad = copy.deepcopy(manifest)
+                    if label == "hard_floor":
+                        bad["members"][0]["hard_floor_pass"] = False
+                    elif label == "prompt_failures":
+                        bad["members"][0]["hard_floor_failures"] = ["F01"]
+                    elif label == "tokens":
+                        bad["members"][0]["generated_tokens"] += 1
+                    elif label == "total_tokens":
+                        bad["total_generated_tokens"] += 1
+                    elif label == "peak_rss":
+                        bad["peak_rss_kib"] = 0
+                    else:
+                        bad["private_member_mapping"] = {"R001": "V-G01-A"}
+                    assemble.write_json(archive_manifest, bad)
+                    with self.assertRaisesRegex(
+                            screen.ScreenError, "lineage .* drift"):
+                        assemble.read_lineage(self.cfg, "G01", folder)
+            assemble.write_json(archive_manifest, manifest)
+            assemble.read_lineage(self.cfg, "G01", folder)
+
 
     def test_refused_rerun_preserves_old_receipts_and_work_bytes(self):
         cases = ("receipt_only", "work_only", "complete")
