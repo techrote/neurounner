@@ -1,4 +1,4 @@
-name: NCR post-lease Sprocket merge-down source and original ZIP audit
+name: NCR-001 Sprocket explicit-mask merge-down (source and evidence only)
 on:
   push:
     branches: [integration/merge-down-foundations-20261029]
@@ -8,7 +8,7 @@ permissions:
   pull-requests: read
   actions: read
 concurrency:
-  group: ncr-postlease-merge-down-20261029
+  group: ncr-mask-merge-down-20261029
   cancel-in-progress: false
 env:
   PYTHONDONTWRITEBYTECODE: "1"
@@ -17,140 +17,132 @@ env:
   TOKENIZERS_PARALLELISM: "false"
   OMP_NUM_THREADS: "4"
   MKL_NUM_THREADS: "4"
-  BASE_SHA: 23f6303bfba5d7d13d7bc8695c4210cfc0203b06
+  BASE_SHA: 09fdbef9b379db55eac981e2e6ac878836e25c64
 jobs:
   integration:
     runs-on: ubuntu-24.04
-    timeout-minutes: 18
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 23f6303bfba5d7d13d7bc8695c4210cfc0203b06
+          ref: 09fdbef9b379db55eac981e2e6ac878836e25c64
           fetch-depth: 0
           persist-credentials: false
-      - name: Install only original pinned CPU test stack (no weights)
+      - name: Install pinned source-only CPU stack, no frozen model weights
         run: |
           python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
           python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "huggingface_hub==0.36.2" "safetensors==0.8.0" "sentencepiece>=0.2,<1"
           python3 -c 'import torch,transformers; assert torch.__version__=="2.14.1+cpu" and transformers.__version__=="4.57.6" and not torch.cuda.is_available()'
-      - name: Reconstruct #155 and #156 original heads on exact main; read original artifacts
+      - name: Test current-main source merges, original actual-host ZIP hashes and negatives
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git config user.name 'Read-only integration validator'
+          git config user.name 'Read-only Sprocket mask integration'
           git config user.email 'integration-validator@example.invalid'
-          mkdir -p "$RUNNER_TEMP/ncr-postlease-integration"
+          mkdir -p "$RUNNER_TEMP/ncr-mask-integration"
           python3 - <<'PY'
-          import hashlib, io, json, os, pathlib, subprocess, sys, tarfile, urllib.request, zipfile
-          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'ncr-postlease-integration'
-          def cmd(args,label,check=True):
+          import hashlib,io,json,os,pathlib,subprocess,sys,urllib.request,zipfile
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'ncr-mask-integration'
+          def run(args,name,check=True):
               p=subprocess.run(args,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
-              (out/label).write_text(p.stdout)
-              print(label,p.returncode,p.stdout,flush=True)
-              if check and p.returncode:raise RuntimeError(f'{label} status {p.returncode}')
-              return p.stdout
+              (out/name).write_text(p.stdout)
+              print(name,p.returncode,p.stdout,flush=True)
+              if check and p.returncode:raise RuntimeError(f'{name} failed {p.returncode}')
+              return p
           def api(path):
               req=urllib.request.Request('https://api.github.com/repos/techrote/neurounner'+path,
                   headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
               with urllib.request.urlopen(req,timeout=45) as r:return json.load(r)
-          heads=[(155,'2d5c0ed72c3d1c44f78ba58493bfffd8fab26d80'),
-                 (156,'5794964f2ef8f9640669b77d7da74cfcec4d9ddb')]
-          base=api('/branches/main')['commit']['sha']
-          assert base==os.environ['BASE_SHA'],('main moved',base)
-          assert cmd(['git','rev-parse','HEAD'],'starting-head.txt').strip()==base
-          for n,head in heads:
-              pr=api(f'/pulls/{n}')
-              assert pr['state']=='open' and pr['head']['sha']==head,(n,pr['state'],pr['head']['sha'])
-              (out/f'{n}-pr.json').write_text(json.dumps({'head':head,'base':pr['base']['ref'],'draft':pr['draft']},indent=2)+'\n')
+          plan=[(157,'8275063544b90c83d2740f0d356288460b58ef6b'),
+                (158,'4e12ba3a02de58096a6a46f1e5992d0382afdb3c')]
+          assert api('/branches/main')['commit']['sha']==os.environ['BASE_SHA'],'Main changed during test'
+          assert run(['git','rev-parse','HEAD'],'original-main.txt').stdout.strip()==os.environ['BASE_SHA']
+          for n,head in plan:
+              p=api(f'/pulls/{n}')
+              assert p['state']=='open' and p['head']['sha']==head,(n,p['head']['sha'])
+              (out/f'{n}-pr.json').write_text(json.dumps({'head':head,'base':p['base']['ref'],'draft':p['draft']},indent=2)+'\n')
           stages=[]
-          for n,head in heads:
-              result=cmd(['git','merge','--no-ff','--no-commit',head],f'{n}-merge-proposal.log',check=False)
-              conflicts=cmd(['git','diff','--name-only','--diff-filter=U'],f'{n}-conflicts.txt').splitlines()
+          for n,head in plan:
+              p=run(['git','merge','--no-ff','--no-commit',head],f'{n}-merge-proposal.log',False)
+              conflicts=run(['git','diff','--name-only','--diff-filter=U'],f'{n}-conflicts.txt').stdout.splitlines()
               if conflicts==['RAG.md']:
-                  ours=cmd(['git','show','HEAD:RAG.md'],f'{n}-rag-original.md')
-                  theirs=cmd(['git','show','MERGE_HEAD:RAG.md'],f'{n}-rag-supplement.md')
-                  new=[line for line in theirs.splitlines() if line.startswith('- **[NCR-') and line not in ours]
-                  if len(new)!=1:raise RuntimeError(f'RAG conflict needs manual reconciliation #{n}: {new}')
-                  # Append only the source-specific retrieval entry, without discarding current main authorities.
-                  pathlib.Path('RAG.md').write_text(ours.rstrip()+'\n'+new[0]+'\n',encoding='utf-8')
-                  cmd(['git','add','RAG.md'],f'{n}-rag-resolution.log')
-              elif conflicts or 'Automatic merge went well' not in result:
-                  raise RuntimeError(f'Unreviewed merge failure #{n}: {conflicts}, output={result}')
-              cmd(['git','diff','--cached','--check','--','.',':(exclude,glob)**/*.md'],f'{n}-nonmarkdown-diff-check.log')
-              cmd(['git','commit','--no-edit'],f'{n}-merge-commit.log')
-              tree=cmd(['git','rev-parse','HEAD^{tree}'],f'{n}-tree.txt').strip()
+                  ours=run(['git','show','HEAD:RAG.md'],f'{n}-rag-before.md').stdout
+                  theirs=run(['git','show','MERGE_HEAD:RAG.md'],f'{n}-rag-original.md').stdout
+                  unique=[l for l in theirs.splitlines() if l.startswith('- **[NCR-') and l not in ours]
+                  if len(unique)!=1:raise RuntimeError(f'Unexpected RAG reconciliation #{n}: {unique}')
+                  pathlib.Path('RAG.md').write_text(ours.rstrip()+'\n'+unique[0]+'\n')
+                  run(['git','add','RAG.md'],f'{n}-rag-resolution.log')
+              elif conflicts or p.returncode:raise RuntimeError(f'Unreviewed merge conflict #{n}: {conflicts}')
+              run(['git','diff','--cached','--check','--','.',':(exclude,glob)**/*.md'],f'{n}-nonmarkdown-diff-check.log')
+              run(['git','commit','--no-edit'],f'{n}-merge.log')
+              tree=run(['git','rev-parse','HEAD^{tree}'],f'{n}-tree.txt').stdout.strip()
               (out/f'{n}-RAG.md').write_bytes(pathlib.Path('RAG.md').read_bytes())
-              # Original PR executable/evidence files must remain exactly original blobs.
-              changed=api(f'/pulls/{n}/files?per_page=100')
-              for file in changed:
+              for file in api(f'/pulls/{n}/files?per_page=100'):
                   name=file['filename']
                   if name=='RAG.md':continue
-                  current=cmd(['git','rev-parse',f'HEAD:{name}'],f'{n}-blob-current.txt').strip()
-                  original=cmd(['git','rev-parse',f'{head}:{name}'],f'{n}-blob-original.txt').strip()
-                  if current!=original:raise RuntimeError('Source/evidence blob changed: '+name)
+                  local=run(['git','rev-parse',f'HEAD:{name}'],f'{n}-blob-local.txt').stdout.strip()
+                  original=run(['git','rev-parse',f'{head}:{name}'],f'{n}-blob-source.txt').stdout.strip()
+                  assert local==original,('changed original evidence/source',n,name)
               env=dict(os.environ,PYTHONPATH=os.getcwd()+'/scripts')
-              def test(argv,label):
-                  p=subprocess.run(argv,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,env=env)
-                  (out/label).write_text(p.stdout)
-                  print(label,p.returncode,p.stdout,flush=True)
-                  if p.returncode:raise RuntimeError(f'{label} tests failed')
-              for pattern in ('test_ncr_001_postlease_sprocket.py','test_ncr_001_cross_decoder_lease.py'):
+              def test(args,name):
+                  s=subprocess.run(args,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+                  (out/name).write_text(s.stdout)
+                  print(name,s.returncode,s.stdout,flush=True)
+                  if s.returncode:raise RuntimeError(f'{name} tests failed')
+              for pattern in ('test_ncr_001_sprocket_explicit_mask.py','test_ncr_001_cross_decoder_lease.py'):
                   test([sys.executable,'-m','unittest','discover','-s','tests','-p',pattern,'-v'],f'{n}-{pattern}.log')
-              if n==156:
-                  test([sys.executable,'scripts/ncr_001_postlease_evidence_audit.py'],f'{n}-original-archive-audit.json')
+              if n==158:
+                  test([sys.executable,'scripts/ncr_001_sprocket_mask_evidence_audit.py'],f'{n}-archive-audit.json')
                   sys.path.insert(0,str(pathlib.Path('scripts').resolve()))
-                  from ncr_001_postlease_evidence_audit import load
-                  manifest,records=load()
-                  originals=api('/actions/runs/40681920472/artifacts?per_page=100')['artifacts']
-                  byid={a['id']:a for a in originals}
+                  from ncr_001_sprocket_mask_evidence_audit import load_original
+                  manifest,records=load_original()
+                  original=api('/actions/runs/40698955980/artifacts?per_page=100')['artifacts']
+                  byid={x['id']:x for x in original}
                   class StripAuth(urllib.request.HTTPRedirectHandler):
-                      def redirect_request(self,req,fp,code,msg,headers,newurl):
-                          redirected=super().redirect_request(req,fp,code,msg,headers,newurl)
-                          if redirected is not None:redirected.remove_header('Authorization')
-                          return redirected
+                      def redirect_request(self,request,fp,code,msg,headers,newurl):
+                          r=super().redirect_request(request,fp,code,msg,headers,newurl)
+                          if r is not None:r.remove_header('Authorization')
+                          return r
                   opener=urllib.request.build_opener(StripAuth())
                   checked={}
                   for lane in ('source','chat','instruct'):
-                      entry=manifest['artifacts'][lane];ref=byid[entry['id']]
-                      assert ref['expired'] is False and ref['workflow_run']['head_sha']==heads[0][1]
-                      assert ref['digest']=='sha256:'+entry['zip_sha256']
-                      req=urllib.request.Request(f"https://api.github.com/repos/techrote/neurounner/actions/artifacts/{entry['id']}/zip",
-                        headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
-                      with opener.open(req,timeout=90) as response:z=response.read(15000000)
-                      assert len(z)==ref['size_in_bytes'] and hashlib.sha256(z).hexdigest()==entry['zip_sha256'],lane
-                      with zipfile.ZipFile(io.BytesIO(z)) as archive:
+                      ref=manifest['original_actions_zip_artifacts'][lane]
+                      actual=byid[ref['id']]
+                      assert not actual['expired'] and actual['digest']=='sha256:'+ref['sha256']
+                      assert actual['workflow_run']['head_sha']==plan[0][1]
+                      req=urllib.request.Request(f"https://api.github.com/repos/techrote/neurounner/actions/artifacts/{ref['id']}/zip",
+                          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+                      with opener.open(req,timeout=90) as r:payload=r.read(10000000)
+                      assert len(payload)==actual['size_in_bytes'] and hashlib.sha256(payload).hexdigest()==ref['sha256']
+                      with zipfile.ZipFile(io.BytesIO(payload)) as z:
                           names=[]
-                          for member in archive.infolist():
-                              full=lane+'/'+member.filename
-                              raw=archive.read(member)
-                              entrydata=manifest['original_files'][full]
-                              assert hashlib.sha256(raw).hexdigest()==entrydata['sha256'] and len(raw)==entrydata['size'],full
-                              if not full.endswith('.pt'):assert records[full]==raw,full
-                              names.append(full)
-                          checked[lane]={'members':names,'zip_sha256':entry['zip_sha256'],'size':len(z)}
-                  assert set(sum((r['members'] for r in checked.values()),[]))==set(manifest['original_files'])
-                  (out/'original-zip-readback.json').write_text(json.dumps(checked,indent=2)+'\n')
-                  # Original real Sprocket sources remain byte-for-byte what was tested:
+                          for member in z.infolist():
+                              name=lane+'/'+member.filename
+                              data=z.read(member)
+                              assert data==records[name] and len(data)==manifest['original_files'][name]['size']
+                              assert hashlib.sha256(data).hexdigest()==manifest['original_files'][name]['sha256']
+                              names.append(name)
+                          checked[lane]={'sha256':ref['sha256'],'members':names,'bytes':len(payload)}
+                  assert set(sum((v['members'] for v in checked.values()),[]))==set(manifest['original_files'])
+                  (out/'original-mask-zips.json').write_text(json.dumps(checked,indent=2)+'\n')
+                  import ncr_001_sprocket_mask_evidence_audit as audit
                   for lane in ('chat','instruct'):
-                      d=json.loads(records[lane+'/producer.json'])
-                      for source,expected in d['source_sha256'].items():
-                          observed=hashlib.sha256(pathlib.Path(source).read_bytes()).hexdigest()
-                          assert observed==expected,('real-run source drift',lane,source)
-                      assert d['runner']['head_sha']==heads[0][1]
+                      receipt=json.loads(records[lane+'/receipt.json'])
+                      for path,expected in receipt['source_sha256'].items():
+                          assert hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()==expected,path
               assert json.loads(pathlib.Path('experiments/ncr-001/protocol.json').read_text())['train_authorized'] is False
-              stages.append({'pr':n,'original_head':head,'integration_tree':tree,'original_bytes_unchanged':True,'training_authorized':False})
+              stages.append({'pr':n,'original_head':head,'integrated_tree':tree,'original_files_unchanged':True,'train_authorized':False})
               (out/'stages.json').write_text(json.dumps(stages,indent=2)+'\n')
-          test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001*.py','-v'],'full-ncr-tests.log')
+          test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001*.py','-v'],'full-ncr-suite.log')
           test([sys.executable,'scripts/ncr_001_protocol.py','validate'],'protocol-gate.json')
-          print('FINAL POST-LEASE INTEGRATION TREE',stages[-1]['integration_tree'])
-          print('NO MODEL LOADS, NO OPTIMIZER, NO HELDOUT ACCESS')
+          print('TESTED MERGE TREE',stages[-1]['integrated_tree'],'NO MODEL RUN/TRAINING')
           PY
-      - name: Retain exact merge trees, original ZIP checks, tests and failure logs
+      - name: Retain original ZIP/member hashes, exact Git tree, failures and tests
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: ncr-postlease-merge-down-${{ github.run_id }}
-          path: ${{ runner.temp }}/ncr-postlease-integration
+          name: ncr-mask-merge-down-${{ github.run_id }}
+          path: ${{ runner.temp }}/ncr-mask-integration
           if-no-files-found: warn
           retention-days: 30
