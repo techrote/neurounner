@@ -246,6 +246,51 @@ def validate_result(cfg: dict, row: dict) -> dict:
             "invalid raw response record")
     runner = row["runner"]
     require(isinstance(runner, dict), "runner receipt required")
+    # Public raw evidence must not carry arbitrary runner metadata: an
+    # attacker could forge canonical JSONL plus its SHA inventory while
+    # inserting a private blinding key or rating mapping as an extra key.
+    native_keys = {
+        "repository_head_sha", "actions_run_id", "actions_run_url",
+        "platform", "cpu_model", "python", "torch", "transformers",
+        "peft", "threads", "base_weights_sha256_verified",
+        "prompt_token_ids", "prompt_ids_sha256",
+        "adapter_archive_sha256_verified",
+        "adapter_directory_sha256_verified",
+    }
+    synthetic_keys = {
+        "repository_head_sha", "actions_run_id",
+        "base_weights_sha256_verified",
+        "adapter_archive_sha256_verified",
+        "adapter_directory_sha256_verified", "synthetic_test_only",
+    }
+    keys = set(runner)
+    native = keys == native_keys
+    synthetic = (runner.get("synthetic_test_only") is True and
+                 (keys == synthetic_keys or
+                  keys == synthetic_keys | {"cpu"}))
+    require(native or synthetic,
+            "runner receipt field-set drift or unregistered metadata")
+    if native:
+        run_id = runner["actions_run_id"]
+        require(
+            isinstance(run_id, str) and
+            re.fullmatch(r"[1-9][0-9]*", run_id) is not None and
+            isinstance(runner["repository_head_sha"], str) and
+            re.fullmatch(r"[0-9a-f]{40}", runner["repository_head_sha"]) is not None and
+            runner["actions_run_url"] ==
+                f"https://github.com/techrote/neurounner/actions/runs/{run_id}" and
+            type(runner["threads"]) is int and
+            1 <= runner["threads"] <= cfg["limits"]["max_threads"] and
+            isinstance(runner["prompt_token_ids"], list) and
+            len(runner["prompt_token_ids"]) == response["prompt_tokens"] and
+            all(type(t) is int and t >= 0
+                for t in runner["prompt_token_ids"]) and
+            isinstance(runner["prompt_ids_sha256"], str) and
+            SHA_RX.fullmatch(runner["prompt_ids_sha256"]) is not None,
+            "invalid source-bound native runner receipt")
+    else:
+        require("cpu" not in runner or runner["cpu"] == "none",
+                "synthetic-only runner receipt drift")
     # Source labels alone are not weight provenance. Every raw result must
     # carry the exact hashes actually checked by the live frozen-model loader;
     # never accept an unverified or substituted adapter as frozen village SFT.

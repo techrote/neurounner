@@ -667,6 +667,29 @@ class Detective005ARecoveryTests(unittest.TestCase):
                         recover.unexpected_artifact_sources(
                             None, Path("original-api.json")), [])
 
+    def test_public_runner_metadata_injection_retains_raw_but_refuses_prefix(self):
+        # Preserve the original suspicious bytes but do not validate them
+        # as clean source-matched evidence after JSONL parsing.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "artifacts/detective005a-G01"
+            source.mkdir(parents=True)
+            row = self.row()
+            row["runner"]["private_blind_key"] = "synthetic-never-publish"
+            original = (screen.canonical(row) + "\n").encode("utf-8")
+            (source / "results.partial.jsonl").write_bytes(original)
+            out = root / "recovery"
+            report = recover.recover(root / "artifacts", out, HEAD, RUN)
+            self.assertEqual(report["validated_raw_prefix_rows"], 0)
+            self.assertEqual(
+                (out / "raw/G01/results.partial.jsonl").read_bytes(), original)
+            record = screen.read_json(
+                out / "provenance/source-artifacts.json")["lineages"][0]
+            self.assertIn("invalid_response_1:ScreenError",
+                          record["custody_warnings"])
+            self.assertEqual(record["status"], "recovery_only")
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 0)
+
     def test_no_artifacts_never_claims_work_or_review(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

@@ -164,6 +164,50 @@ class Detective005AFunScreenTests(unittest.TestCase):
                         screen.ScreenError, "base/adapter verification receipt"):
                     screen.validate_result(self.cfg, bad)
 
+    def test_runner_metadata_smuggling_and_native_receipt_drift_rejected(self):
+        # These values used to pass validation when hidden in the runner
+        # rather than the model response, even with recomputed SHA inventory.
+        row = self.synthetic_rows()[0]
+        for key in ("private_blind_key", "human_fun_ratings",
+                    "identity_mapping", "review_packet"):
+            with self.subTest(unregistered=key):
+                forged = copy.deepcopy(row)
+                forged["runner"][key] = {"synthetic_private": "never archive"}
+                with self.assertRaisesRegex(
+                        screen.ScreenError, "runner receipt field-set"):
+                    screen.validate_result(self.cfg, forged)
+
+        # A native-shaped receipt must bind its Actions URL to its run and
+        # the recorded prompt-token count to the supplied token IDs.
+        native = copy.deepcopy(row)
+        native["runner"] = {
+            "repository_head_sha": "1" * 40,
+            "actions_run_id": "123456",
+            "actions_run_url":
+                "https://github.com/techrote/neurounner/actions/runs/123456",
+            "platform": "synthetic-linux", "cpu_model": "synthetic-cpu",
+            "python": "3.11", "torch": "synthetic", "transformers": "synthetic",
+            "peft": "synthetic", "threads": 2,
+            "base_weights_sha256_verified": row["source"]["base_weights_sha256"],
+            "prompt_token_ids": [7] * row["response"]["prompt_tokens"],
+            "prompt_ids_sha256": "a" * 64,
+            "adapter_archive_sha256_verified": row["source"]["asset_sha256"],
+            "adapter_directory_sha256_verified":
+                row["source"]["adapter_directory_sha256"],
+        }
+        screen.validate_result(self.cfg, native)
+        for mutate in (
+            lambda r: r.update(actions_run_url="https://example.com/private"),
+            lambda r: r.update(prompt_token_ids=[7]),
+            lambda r: r.update(threads=99),
+        ):
+            with self.subTest(native_receipt=mutate):
+                forged = copy.deepcopy(native)
+                mutate(forged["runner"])
+                with self.assertRaisesRegex(
+                        screen.ScreenError, "source-bound native runner"):
+                    screen.validate_result(self.cfg, forged)
+
     def test_review_packet_is_identity_blind_and_reconstructible(self):
         rows = self.synthetic_rows()
         packet, mapping = screen.build_review_packet(self.cfg, rows, self.TEST_SECRET)

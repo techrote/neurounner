@@ -156,6 +156,16 @@ PR #196 adds synthetic adversarial tests for these custody defects. These are
 authenticated GitHub evidence-branch persistence. No private blinding key,
 identity mapping, human ratings or real villager outputs were produced.
 
+The public raw **runner receipt** has a separate metadata-smuggling
+boundary: canonical JSONL and a self-recomputed SHA inventory do not
+prevent an extra runner field from carrying a private mapping or rating.
+The verifier now requires the exact native runner field set (including
+bounded threads, matched prompt-token count, and same-run Actions URL) or
+one of the explicit no-model synthetic fixture sets. An unexpected runner
+field fails complete-screen admission; failed-run recovery retains its
+original bytes but credits no validated prefix. This is source-only
+hardening, not cryptographic proof that real inference occurred.
+
 The **public failed-run recovery envelope** now also rejects extra/duplicate
 fields in derived metadata, noncanonical manifest/provenance JSON, forged
 original Actions URLs, and appended README data, even if an attacker recomputes
