@@ -1,0 +1,166 @@
+name: NCR-001 Sprocket NCA diagnostic loss/gradient gates (no comparison)
+
+on:
+  pull_request:
+    branches: [review/ncr001-sprocket-mask-original-evidence-20261028]
+    paths:
+      - ".github/workflows/ncr-001-sprocket-learning-gates.yml"
+      - "scripts/ncr_001_sprocket_learning_gate.py"
+      - "tests/test_ncr_001_sprocket_learning_gate.py"
+      - "docs/NCR_001_SPROCKET_LEARNING_GATES.md"
+      - "RAG.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001-sprocket-learning-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  HF_HOME: /tmp/ncr001-sprocket-learning
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  PYTHONDONTWRITEBYTECODE: "1"
+  NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  source-sentinels:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact four-model frozen protocol and training gate
+        run: |
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          PY
+      - name: Install pinned frozen-source CPU dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Run negative learning and shared-lease source sentinels
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p runtime/ncr001-sprocket-learning-gate/source
+          python3 -m py_compile scripts/ncr_001_sprocket_learning_gate.py tests/test_ncr_001_sprocket_learning_gate.py
+          python3 -m unittest discover -s tests -p "test_ncr_001_sprocket_learning_gate.py" -v \
+            2>&1 | tee runtime/ncr001-sprocket-learning-gate/source/source-tests.log
+          python3 -m unittest discover -s tests -p "test_ncr_001_cross_decoder_lease.py" -v \
+            2>&1 | tee runtime/ncr001-sprocket-learning-gate/source/lease-tests.log
+      - name: Preserve source tests, including failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-learning-source-a${{ github.run_attempt }}
+          path: runtime/ncr001-sprocket-learning-gate/source/
+          if-no-files-found: warn
+          retention-days: 30
+
+  actual-frozen-sprocket-nca:
+    needs: source-sentinels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: chat
+            weight: chat/model.safetensors
+          - variant: instruct
+            weight: model.safetensors
+    env:
+      NCR_VARIANT: ${{ matrix.variant }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 2271218d625e1462b2cf218445da975efe17fe32
+          path: format-authority
+          persist-credentials: false
+      - name: Verify exact source and formatter, training still prohibited
+        run: |
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git -C format-authority rev-parse HEAD)" = "2271218d625e1462b2cf218445da975efe17fe32"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          PY
+      - name: Install pinned original-host CPU dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Verify full original variant checkpoint and metadata by SHA-256
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          v=os.environ["NCR_VARIANT"]
+          p=json.load(open("experiments/ncr-001/source-pins.json"))["models"]["sprocket_"+v]
+          assert p["repo_id"]=="kandivault/sprocket-500m"
+          assert p["revision"]=="eb157d4ddddc4619e661d4a2426bb2dd000fc668"
+          names={"chat":["chat/config.json","chat/tokenizer.json","chat/tokenizer_config.json"],
+                 "instruct":["config.json","tokenizer.json","tokenizer_config.json",
+                             "special_tokens_map.json"]}[v]
+          keys={"config.json":"config_sha256","tokenizer.json":"tokenizer_sha256",
+                "tokenizer_config.json":"tokenizer_config_sha256",
+                "special_tokens_map.json":"special_tokens_map_sha256"}
+          for name in ["README.md",*names,p["hf_weight_file"]]:
+              path=Path(hf_hub_download(p["repo_id"],name,revision=p["revision"]))
+              h=hashlib.sha256()
+              with path.open("rb") as f:
+                  for b in iter(lambda:f.read(4*1024*1024),b""): h.update(b)
+              got=h.hexdigest()
+              if name=="README.md":
+                  expected="09aec879dc5b387bdc031dc3c74d77a9ba44362a55163f9a8b456761b68142c9"
+              elif name==p["hf_weight_file"]:
+                  expected=p["weight_declared_lfs_sha256_not_downloaded"]
+                  assert path.stat().st_size==p["weight_bytes"]==1002207984
+              else:
+                  expected=p[("chat_" if v=="chat" else "")+keys[name.split("/")[-1]]]
+              assert got==expected,(v,name,got,expected)
+              print("VERIFIED_FULL_SOURCE",v,name,got,path.stat().st_size,flush=True)
+          PY
+      - name: One NCA-only synthetic loss/gradient conformance step (never comparative training)
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p "runtime/ncr001-sprocket-learning-gate/$NCR_VARIANT"
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001_sprocket_learning_gate.py --variant "$NCR_VARIANT" \
+            2>&1 | tee "runtime/ncr001-sprocket-learning-gate/$NCR_VARIANT/host.log"
+      - name: Preserve complete original host receipt/log including negative results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-learning-${{ matrix.variant }}-a${{ github.run_attempt }}
+          path: runtime/ncr001-sprocket-learning-gate/${{ matrix.variant }}/
+          if-no-files-found: warn
+          retention-days: 30
