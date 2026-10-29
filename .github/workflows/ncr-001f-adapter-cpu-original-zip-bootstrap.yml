@@ -1,0 +1,96 @@
+name: NCR-001F original CPU microbench artifact one-time bootstrap (NO MODEL)
+on:
+  push:
+    branches: [review/ncr-001f-sprocket-real-mlp-20261027]
+    paths:
+      - ".github/workflows/ncr-001f-adapter-cpu-original-zip-bootstrap.yml"
+permissions:
+  contents: write # ONE-TIME evidence bootstrap; REVOKE upon original ZIP commit
+  actions: read
+concurrency:
+  group: ncr001f-adapter-original-custody-bootstrap
+  cancel-in-progress: true
+jobs:
+  original-zip-bootstrap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    if: github.repository == 'techrote/neurounner' && github.ref == 'refs/heads/review/ncr-001f-sprocket-real-mlp-20261027'
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DEST: experiments/ncr-001/controls-evidence/sprocket-adapter-cpu-microbench-20261029
+      ORIGINAL_ARTIFACT_ID: "12895070216"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 2
+          persist-credentials: true # REVOKE on next source commit
+      - name: Require single authorized source commit, branch and no pre-existing archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "techrote/neurounner"
+          test "$GITHUB_REF_NAME" = "review/ncr-001f-sprocket-real-mlp-20261027"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse HEAD^)" = 1f44c775c392cea430457c86253c1f00deea4e70
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          test "$(git hash-object scripts/ncr_001_core.py)" = 0427ad0b0f1fc68199369d5094952017bc70f503
+          test "$(git hash-object scripts/ncr_001f_controls.py)" = b4d486c6d9f8c8d37fd2205b0381db9ef4ae9c22
+          test ! -e "$DEST/original-actions-40867677298.zip"
+      - name: Retrieve original complete GitHub Actions ZIP and verify all seven member SHA256s
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/original-cpu-zip "$DEST"
+          curl -fSL --retry 2 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/techrote/neurounner/actions/artifacts/$ORIGINAL_ARTIFACT_ID/zip" -o runtime/original-cpu-zip/original.zip
+          python3 - <<'PY'
+          import hashlib,zipfile,json
+          from pathlib import Path
+          raw=Path("runtime/original-cpu-zip/original.zip").read_bytes()
+          assert len(raw)==5589
+          assert hashlib.sha256(raw).hexdigest()=="d5bad11d2e28a6b40aa9717046464f9436a5e07ef800559f8044e494c826eea0"
+          members={
+            "lscpu.txt":(3189,"4476e601951bb5e5dc85ca4b9d2e3bc795bb83c0d4e62b8d9f2bdec6659b0e7a"),
+            "pip-freeze.txt":(1551,"ea4b616e5ccd392060001737203319bf998f7cc3308f775e18289b02a7ebe050"),
+            "report.json":(5282,"efd79fb2419c7d8ee98e3b4be4d24bce79b74bc323858f644ed4bafb8603def4"),
+            "runner.log":(307,"9adf3a63a06a7d7d6ad7c016b7365dc3a14ecb8c6d90832a341216075786807b"),
+            "source-head.txt":(41,"f12bec081902a93826dc95c49bb7317814b99cc23589e385356ce815d8ad5b24"),
+            "tests.log":(1718,"e45cffb4274d9135cd3cd7c1bb00331eba7831dc448d52a1c550288a74307eb2"),
+            "uname.txt":(128,"a64b6d81308dc728b286592ae78f6594e185e6db8c474be3c8886f7694f38bb7"),
+          }
+          with zipfile.ZipFile("runtime/original-cpu-zip/original.zip") as z:
+            names=z.namelist()
+            assert len(names)==len(set(names))==len(members) and set(names)==set(members)
+            for name,(size,digest) in members.items():
+              item=z.read(name)
+              assert len(item)==size and hashlib.sha256(item).hexdigest()==digest
+            result=json.loads(z.read("report.json"))
+            assert result["runner"]["github_sha"]=="1f44c775c392cea430457c86253c1f00deea4e70"
+            assert result["status"]=="ADAPTER_ONLY_CPU_FORWARD_MICROBENCH__FROZEN_HOST_NOT_EXECUTED__NO_TRAIN"
+            assert result["full_72_conformance_pass"] is False
+            assert result["train_authorized"] is False
+            assert result["actual_matched_frozen_host_budget_pass"] is False
+            assert result["optimizer_steps"]==0 and result["frozen_model_inference_executed"] is False
+          print("SOURCE-EXACT-ORIGINAL-COMPRESSED-ZIP-SEVEN-MEMBER-CHECK-PASS")
+          PY
+          cp runtime/original-cpu-zip/original.zip "$DEST/original-actions-40867677298.zip"
+      - name: Commit exactly one immutable original ZIP object and nothing else
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- "$DEST/original-actions-40867677298.zip"
+          test "$(git diff --cached --name-only | wc -l)" -eq 1
+          test "$(git diff --cached --name-only)" = "$DEST/original-actions-40867677298.zip"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "NCR-001F: preserve exact original measured adapter CPU Actions ZIP"
+          git push origin HEAD:refs/heads/review/ncr-001f-sprocket-real-mlp-20261027
+          echo "ONE_TIME_ORIGINAL_ZIP_COMMITTED__REVOKE_BOOTSTRAP_WRITE_NEXT"
+      - name: Retain verified bootstrap/failed-run staging
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001f-adapter-original-zip-bootstrap
+          path: runtime/original-cpu-zip/
+          retention-days: 30
+          if-no-files-found: warn
