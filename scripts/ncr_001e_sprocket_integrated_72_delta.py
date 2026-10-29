@@ -151,6 +151,19 @@ def compose(diagnostic: dict, originals: dict) -> dict:
         producer = originals[variant]["producer"]
         consumer = originals[variant]["consumer"]
         diag = diagnostic["lanes"][lane]
+        required_diagnostic_keys = {
+            "original_checkpoint_file", "original_checkpoint_sha256",
+            "one_in_memory_nca_only_diagnostic_step",
+            "backbone_fingerprint_unchanged",
+            "base_weight_unchanged_after_step",
+            "nonzero_adapter_gradient_after_warmup",
+            "finite_state_and_loss", "full_72_per_model_gate",
+            "tool_memory_semantics_qualified",
+            "warmup_synthetic_supervised_loss",
+            "postwarmup_synthetic_supervised_loss",
+        }
+        refuse(type(diag) is dict and required_diagnostic_keys <= set(diag),
+               "missing mandatory original source-bound diagnostic lane fields")
         refuse(producer["variant"] == consumer["variant"] == lane
                and producer["status"] == "PASS_MASKED2048_PRODUCER"
                and consumer["status"] == "PASS_MASKED2048_SEPARATE_PYTHON_COLD_CONSUMER"
