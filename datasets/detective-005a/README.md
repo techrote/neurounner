@@ -1,0 +1,3 @@
+# DETECTIVE-005A raw fun-first cast screen
+
+Complete source-bound raw outputs for the 36 VILLAGE-001C SFT villagers on four matched detective gameplay prompts. This archive contains no subjective scores and NO review packet. The old public fixed-salt item ordering was reconstructible. A separate private custodian must prepare a random-key blinded packet outside the repository, retain mapping/key in private custody, freeze all human ratings, and only then authorize identity unblinding. Never hand this raw archive to a supposedly blind reviewer. Wrong or incoherent answers are not automatically bad. Mechanical hard authority/leakage floors remain separate from subjective fun. No training, model judge or production admission occurs here.
