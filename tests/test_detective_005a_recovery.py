@@ -486,6 +486,92 @@ class Detective005ARecoveryTests(unittest.TestCase):
             with self.assertRaisesRegex(screen.ScreenError, "physical directory"):
                 recover.verify(linked_archive)
 
+    def test_unsafe_files_do_not_strand_other_raw_siblings(self):
+        """A foreign weight must never erase intact raw outputs from the run."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            originals = {}
+            entries = []
+            for lineage, member, artifact_id in (
+                    ("G01", "V-G01-A", 1001), ("G02", "V-G02-A", 1002)):
+                folder = root / "artifacts" / f"detective005a-{lineage}"
+                folder.mkdir(parents=True)
+                original = (
+                    screen.canonical(self.row(member_id=member)) + "\n"
+                ).encode("utf-8")
+                (folder / "results.partial.jsonl").write_bytes(original)
+                originals[lineage] = original
+                entries.append({
+                    "name": f"detective005a-{lineage}", "id": artifact_id,
+                    "digest": "sha256:" + "f" * 64, "size_in_bytes": 100,
+                    "expired": False, "workflow_run": {
+                        "id": int(RUN), "head_sha": HEAD,
+                        "repository_id": 1432134981},
+                })
+            foreign = root / "artifacts" / "detective005a-G01"
+            (foreign / "adapter_model.safetensors").write_bytes(
+                b"synthetic-do-not-publish-weights")
+            (foreign / "work").mkdir()
+            (foreign / "work" / "adapter.safetensors").write_bytes(
+                b"synthetic-unpacked-weight")
+            (foreign / "unresolved-link").symlink_to(root / "missing")
+            metadata = root / "api.json"
+            metadata.write_text(json.dumps({"artifacts": entries}),
+                                encoding="utf-8")
+            out = root / "recovery"
+            report = recover.recover(root / "artifacts", out, HEAD, RUN,
+                                     metadata, "success", "success")
+            self.assertEqual(report["validated_raw_prefix_rows"], 2)
+            self.assertFalse(report["artifact_transport_complete"])
+            for lineage, original in originals.items():
+                self.assertEqual(
+                    (out / "raw" / lineage / "results.partial.jsonl").read_bytes(),
+                    original)
+            self.assertFalse((out / "raw/G01/adapter_model.safetensors").exists())
+            self.assertFalse((out / "raw/G01/work").exists())
+            self.assertFalse((out / "raw/G01/unresolved-link").is_symlink())
+            provenance = screen.read_json(
+                out / "provenance/source-artifacts.json")
+            self.assertEqual(
+                provenance["lineages"][0]["source_structure_warnings"],
+                [recover.STRUCTURE_WARNING])
+            self.assertEqual(
+                provenance["lineages"][1]["source_structure_warnings"], [])
+            self.assertIn(recover.STRUCTURE_WARNING,
+                          provenance["lineages"][0]["custody_warnings"])
+            self.assertFalse(recover.verify(out)["artifact_transport_complete"])
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "incomplete original lineage"):
+                recover.require_complete_transport(out)
+
+    def test_dangling_lineage_link_cannot_block_other_recovery(self):
+        """Even a broken symlink is not a missing or archived lineage."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            artifacts = root / "artifacts"
+            artifacts.mkdir()
+            (artifacts / "detective005a-G01").symlink_to(root / "missing")
+            survivor = artifacts / "detective005a-G02"
+            survivor.mkdir()
+            original = (
+                screen.canonical(self.row(member_id="V-G02-A")) + "\n"
+            ).encode("utf-8")
+            (survivor / "results.partial.jsonl").write_bytes(original)
+            out = root / "recovery"
+            report = recover.recover(artifacts, out, HEAD, RUN)
+            self.assertEqual(report["validated_raw_prefix_rows"], 1)
+            self.assertEqual(
+                (out / "raw/G02/results.partial.jsonl").read_bytes(), original)
+            provenance = screen.read_json(
+                out / "provenance/source-artifacts.json")
+            self.assertEqual(
+                provenance["lineages"][0]["source_structure_warnings"],
+                [recover.STRUCTURE_WARNING])
+            self.assertFalse(recover.verify(out)["artifact_transport_complete"])
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "incomplete original lineage"):
+                recover.require_complete_transport(out)
+
     def test_tampered_archive_bytes_fail_readback(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
