@@ -1,5 +1,13 @@
 # DETECTIVE-001R1 — independent blind old-task relevance review
 
+## Current policy: historical relevance protocol, retired gate (29 October 2026)
+
+**Superseding policy notice, not an edit to the original frozen evaluation protocol:** On 28 October 2026, issue [#121](https://github.com/techrote/neurounner/issues/121) recorded the owner's decision to **retire objective prompt-relevance nonregression as a population-expansion gate**. The 16 C2 and 8 C3 externally submitted scores were subsequently reclassified as **subjective gameplay-reaction evidence**, not verified objective relevance ratings. They remain byte-unchanged, hash-pinned and separately documented under [independent-relevance-review](independent-relevance-review/README.md) in draft PR #174.
+
+The original fixed rubric, source packets, reconstruction procedure, and cumulative threshold **below remain historical research/provenance instructions only**. Mechanical historical aggregation gives G02 C1→C3 `−0.50` and G09 C1→C2 `−1.50`, with candidate-set relevance FAIL, but neither a current objective relevance verdict nor an active expansion veto. Retirement does **not** manufacture a historical PASS. The original CI statement about "no filled ratings" refers to the pre-submission blind workspace; the separately preserved external submissions are allowed only with their original exact hashes.
+
+No population, model, scripter, training or production admission follows from this change. Source/lineage custody, proposition/leakage controls, mandatory-clue solvability, typed game authority, and explicit resource/training approvals remain separate gates. C1/C2/C3 learner-finals stay sealed. The historical sections below are intentionally retained rather than rewritten.
+
 Parent: [DETECTIVE-001 #103](https://github.com/techrote/neurounner/issues/103). Review issue: **DETECTIVE-001R1**.
 
 This stage performs **no model inference, no model judging, no training, and no automatic rating**. It exists to complete the old-task relevance gate intentionally left blank by C2/C3.
