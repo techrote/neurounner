@@ -895,11 +895,11 @@ class Detective005ARecoveryTests(unittest.TestCase):
                     if attack == "duplicate_schema":
                         content = manifest.read_text(encoding="utf-8")
                         manifest.write_text(
-                            content.replace('{\\n', '{\\n  "schema": "shadow",\\n', 1),
+                            content.replace('{\n', '{\n  "schema": "shadow",\n', 1),
                             encoding="utf-8")
                     elif attack == "appended_readme":
                         readme.write_bytes(
-                            readme.read_bytes() + b"private-fun-map\\n")
+                            readme.read_bytes() + b"private-fun-map\n")
                     else:
                         path = (provenance if attack in
                                 ("extra_provenance", "nested_lineage") else manifest)
