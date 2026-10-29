@@ -942,5 +942,48 @@ class Detective005ARecoveryTests(unittest.TestCase):
 
 
 
+    def test_remote_branch_readback_and_main_only_synthetic_push_contract(self):
+        """Static guard only; a PASS is not a real GitHub branch-push receipt."""
+        root = screen.ROOT / ".github/workflows"
+        live_workflow = (root / "detective-005a-live.yml").read_text(
+            encoding="utf-8")
+        complete = live_workflow.split("  assemble:\n", 1)[1].split(
+            "  recover-failed-evidence:\n", 1)[0]
+        recovery = live_workflow.split("  recover-failed-evidence:\n", 1)[1]
+        for section, program in (
+            (complete, "detective_005a_assemble.py"),
+            (recovery, "detective_005a_recover.py"),
+        ):
+            self.assertIn('git push origin', section)
+            self.assertIn('git fetch --no-tags origin "refs/heads/$TARGET_BRANCH"', section)
+            self.assertIn('git archive FETCH_HEAD', section)
+            self.assertIn('"$(git rev-parse FETCH_HEAD)" = "$(git rev-parse HEAD)"',
+                          section)
+            self.assertIn('remote-readback', section)
+            self.assertIn('--verify', section.split('git archive FETCH_HEAD', 1)[1])
+            self.assertIn(program, section.split('git archive FETCH_HEAD', 1)[1])
+            self.assertLess(section.index('git push origin'),
+                            section.index('git fetch --no-tags origin'))
+
+        protocol = (root / "detective-005a-protocol.yml").read_text(
+            encoding="utf-8")
+        self.assertIn("  synthetic-durable-branch-probe:\n", protocol)
+        probe = protocol.split("  synthetic-durable-branch-probe:\n", 1)[1]
+        self.assertIn("github.event_name == 'workflow_dispatch'", probe)
+        self.assertIn("github.ref == 'refs/heads/main'", probe)
+        self.assertIn("needs: synthetic-artifact-readback", probe)
+        self.assertIn("contents: write", probe)
+        self.assertIn("evidence/detective-005a-synthetic-probe-", probe)
+        self.assertIn("datasets/detective-005a-synthetic-probe-", probe)
+        self.assertIn('git push origin "HEAD:refs/heads/$TARGET_BRANCH"', probe)
+        self.assertIn('git archive FETCH_HEAD "$TARGET_DATASET"', probe)
+        self.assertIn('--require-complete-transport', probe)
+        self.assertIn('"complete_lineage_artifacts"] == 0', probe)
+        self.assertIn('"optimizer_steps"] == 0', probe)
+        self.assertNotIn("--run --out", probe)
+        self.assertNotIn("pip install", probe)
+        self.assertNotIn("hf_hub_download", probe)
+
+
 if __name__ == "__main__":
     unittest.main()

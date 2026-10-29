@@ -188,7 +188,14 @@ jobs:
           git add datasets/detective-005a
           git commit -m "DETECTIVE-005A: promote 36-villager raw fun-screen evidence ${GITHUB_RUN_ID}"
           git push origin HEAD:"refs/heads/$TARGET_BRANCH"
-          echo "Promoted verified evidence to $TARGET_BRANCH"
+          # A successful push alone is not a remote archive readback.
+          git fetch --no-tags origin "refs/heads/$TARGET_BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$(git rev-parse HEAD)"
+          mkdir -p remote-readback
+          git archive FETCH_HEAD datasets/detective-005a | tar -xf - -C remote-readback
+          python3 scripts/detective_005a_assemble.py \
+            --verify remote-readback/datasets/detective-005a
+          echo "Promoted and fetched back verified evidence from $TARGET_BRANCH"
 
   recover-failed-evidence:
     # A failed screen OR a failed full archive must not strand raw responses
@@ -286,7 +293,15 @@ jobs:
           git add "$TARGET_DATASET"
           git commit -m "DETECTIVE-005A: preserve failed-run raw custody ${GITHUB_RUN_ID}"
           git push origin "HEAD:refs/heads/$TARGET_BRANCH"
-          echo "Preserved best-effort failed-run evidence at $TARGET_BRANCH/$TARGET_DATASET"
+          # Fetch the actual remote branch and reverify the archived bytes.
+          # Failure stays RED; the previous 30-day fallback is not durable.
+          git fetch --no-tags origin "refs/heads/$TARGET_BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$(git rev-parse HEAD)"
+          mkdir -p remote-readback
+          git archive FETCH_HEAD "$TARGET_DATASET" | tar -xf - -C remote-readback
+          python3 scripts/detective_005a_recover.py \
+            --verify "remote-readback/$TARGET_DATASET"
+          echo "Fetched back original failed-run custody from $TARGET_BRANCH/$TARGET_DATASET"
       - name: Fail recovery gate when original artifact custody is incomplete
         run: |
           set -euo pipefail

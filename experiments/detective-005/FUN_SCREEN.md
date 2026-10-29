@@ -139,7 +139,19 @@ The 144-response assembler remains strict: no incomplete lineage is accepted,
 no subjective packet is constructed from partial results, and no training,
 model judging or population admission is authorized.
 
-## Failed-workflow durable recovery design (draft; not yet executed)
+## Failed-workflow durable recovery (source merged; live unqualified)
+
+As of 29 October 2026, source custody PRs #180, #183 and #189 have
+been merged on main in dependency order after recorded independent
+correction acceptance. Green offline tests and synthetic Actions ZIP
+readbacks do not establish actual cancelled-workflow survival or
+durable Git evidence-branch write/readback. The main-only synthetic
+protocol dispatch is a separate no-model push/fetch/verification probe:
+its output branch is explicitly named `evidence/detective-005a-synthetic-probe-<run-id>`.
+It never constitutes real villager output or a live-screen authorization.
+Both complete and failed-run live promotion steps now require a remote
+branch fetch, exact pushed-commit identity and raw-archive verification
+after git push. These are source safeguards until exercised on real runs.
 
 **Artifact API pagination safeguard (source-only):** the live recovery job
 requests `?per_page=100`. An HTTP-success first-page response does not prove
@@ -172,7 +184,7 @@ response for later review. The adversarial no-model test exercises both the
 collision refusal and a valid distinct-ID control. It does not prove a real
 failed/cancelled workflow or successful remote evidence-branch promotion.
 
-The proposed `recover-failed-evidence` job is strictly conditional: it runs
+The merged `recover-failed-evidence` job is strictly conditional: it runs
 only after a confirmed-main `RUN-144-NO-TRAINING` plan succeeds and the
 lineage matrix or full evidence assembler fails. It does **not** initiate any
 generation or permit a retry. It retrieves already-uploaded, same-run
