@@ -111,6 +111,14 @@ partial record count and partial-file SHA-256. The unconditional lineage
 artifact upload retains these records (while excluding temporary unpacked
 adapter weights).
 
+Before loading models, the runner now **exclusively creates** its lineage
+output directory. Even an already-existing *empty* directory is treated as an
+owned or ambiguous output and refused. An interleaved competing creator
+cannot be bypassed between preflight and output creation: the loser raises a
+read-only collision without writing another interruption receipt. This is
+local output ownership, not a distributed runner lease or proof of artifact
+promotion.
+
 A torn/malformed final JSONL append cannot suppress the interruption receipt:
 the runner counts only intact, newline-terminated JSON object rows, records
 `partial_journal_problem` where needed and retains the **original partial
