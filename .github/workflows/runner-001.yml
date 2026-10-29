@@ -9,6 +9,7 @@ on:
       - ".github/workflows/runner-001.yml"
       - "scripts/runner_001.py"
       - "scripts/runner_001_summary.py"
+      - "tests/test_runner_001_summary.py"
       - "docs/RUNNER_001.md"
       - "experiments/train-001/kernel_compiler_dataset.json"
   pull_request:
@@ -17,6 +18,7 @@ on:
       - ".github/workflows/runner-001.yml"
       - "scripts/runner_001.py"
       - "scripts/runner_001_summary.py"
+      - "tests/test_runner_001_summary.py"
       - "docs/RUNNER_001.md"
       - "experiments/train-001/kernel_compiler_dataset.json"
 
@@ -36,7 +38,21 @@ env:
   RUNNER001_LOCAL_REVISION: 12fd25f77366fa6b3b4b768ec3050bf629380bac
 
 jobs:
+  source-checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile source and reject malformed synthetic result records
+        run: |
+          python3 -m py_compile scripts/runner_001.py scripts/runner_001_summary.py
+          python3 -m unittest discover -s tests -p 'test_runner_001_summary.py' -v
+
   benchmark:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: source-checks
     name: ${{ matrix.runner.lane }} r${{ matrix.replicate }}
     strategy:
       fail-fast: false

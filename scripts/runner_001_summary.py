@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
+import re
 import statistics
 from pathlib import Path
 from typing import Any
@@ -14,6 +16,19 @@ LANE_ORDER = [
 ]
 EXPECTED_LANES = set(LANE_ORDER)
 EXPECTED_REPLICATES = {1, 2, 3}
+EXPECTED_MODEL = "HuggingFaceTB/SmolLM2-135M-Instruct"
+EXPECTED_REVISION = "12fd25f77366fa6b3b4b768ec3050bf629380bac"
+EXPECTED_CORPUS_SHA256 = "44633423b08d6690971e417ca1bf84b96de40fe239b721365d106454d2db63b8"
+METRIC_PATHS = {
+    "generation_tok_s": "benchmarks.local_model.generation.median_tokens_per_second",
+    "lora_tok_s": "benchmarks.local_model.lora_training.sequence_tokens_per_second",
+    "torch_gflops": "benchmarks.torch_matmul.estimated_gflops",
+    "json_mib_s": "benchmarks.json_roundtrip.mib_per_second",
+    "sha_mib_s": "benchmarks.sha256.mib_per_second",
+    "zlib_mib_s": "benchmarks.zlib.mib_per_second",
+    "model_load_s": "benchmarks.local_model.load.seconds",
+    "wall_s": "wall_seconds",
+}
 METRICS = [
     "generation_tok_s",
     "lora_tok_s",
@@ -33,6 +48,57 @@ def get(d: dict[str, Any], path: str):
             return None
         cur = cur[part]
     return cur
+
+
+
+def validate_record(data: dict[str, Any]) -> tuple[str, str, str]:
+    """Refuse incomplete or mixed-source hosted measurements before any output."""
+    if not isinstance(data, dict) or data.get("schema") != "neurounner.runner001.v2":
+        raise ValueError("unsupported RUNNER-001 record schema")
+    lane = get(data, "machine.lane")
+    if lane not in EXPECTED_LANES:
+        raise ValueError("unknown runner lane")
+    replicate = get(data, "machine.replicate")
+    if type(replicate) is not int or replicate not in EXPECTED_REPLICATES:
+        raise ValueError("replicate must be integer 1, 2 or 3")
+    if get(data, "source.dataset_canonical_sha256") != EXPECTED_CORPUS_SHA256:
+        raise ValueError("record does not match the frozen canonical TRAIN-001 corpus")
+    for prefix in ("source", "benchmarks.local_model"):
+        model_key = "local_model" if prefix == "source" else "model"
+        revision_key = "local_revision" if prefix == "source" else "revision"
+        if get(data, prefix + "." + model_key) != EXPECTED_MODEL:
+            raise ValueError("record model differs from frozen benchmark model")
+        if get(data, prefix + "." + revision_key) != EXPECTED_REVISION:
+            raise ValueError("record revision differs from frozen benchmark revision")
+    identity = tuple(get(data, "machine." + field) for field in
+                     ("github_run_id", "github_run_attempt", "github_sha"))
+    if any(not isinstance(v, str) for v in identity):
+        raise ValueError("hosted run/source identity must be present")
+    if any(not v.isdigit() or int(v) < 1 for v in identity[:2]):
+        raise ValueError("invalid hosted run/attempt identity")
+    if re.fullmatch(r"[0-9a-f]{40}", identity[2]) is None:
+        raise ValueError("invalid source commit identity")
+    for field in ("logical_cpus", "memory_bytes"):
+        value = get(data, "machine." + field)
+        if type(value) is not int or value < 1:
+            raise ValueError("missing or invalid machine capacity: " + field)
+    for field in ("cpu_model", "python", "runner_os", "runner_arch"):
+        value = get(data, "machine." + field)
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("missing machine metadata: " + field)
+    versions = get(data, "benchmarks.local_model.versions")
+    expected_versions = {
+        "torch": "2.14.1" if lane == "macos-15-arm64" else "2.14.1+cpu",
+        "transformers": "4.57.6", "peft": "0.21.2",
+        "huggingface_hub": "0.36.2", "psutil": "7.2.2", "safetensors": "0.8.0",
+    }
+    if not isinstance(versions, dict) or any(versions.get(k) != v for k, v in expected_versions.items()):
+        raise ValueError("benchmark package versions do not match the frozen stack")
+    for metric, path in METRIC_PATHS.items():
+        value = get(data, path)
+        if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
+            raise ValueError("missing, non-finite or non-positive measurement: " + metric)
+    return identity
 
 
 def ratio(value, baseline):
@@ -74,11 +140,16 @@ def main() -> int:
     files = sorted(args.input_dir.rglob("runner001-*.json"))
     rows = []
     canonical_hashes = set()
+    run_identities = set()
 
     for path in files:
         if path.name == "runner001-summary.json":
             continue
         data = json.loads(path.read_text(encoding="utf-8"))
+        try:
+            run_identities.add(validate_record(data))
+        except (ValueError, TypeError) as exc:
+            raise SystemExit(f"invalid RUNNER-001 record {path}: {exc}") from exc
         lane = data["machine"]["lane"]
         replicate = int(data["machine"]["replicate"])
         canonical_hashes.add(data["source"]["dataset_canonical_sha256"])
@@ -108,6 +179,8 @@ def main() -> int:
     if not rows:
         raise SystemExit("no RUNNER-001 result JSON files found")
 
+    if len(run_identities) != 1:
+        raise SystemExit("RUNNER-001 records mix workflow runs, attempts or source commits")
     actual_lanes = {r["lane"] for r in rows}
     if actual_lanes != EXPECTED_LANES:
         raise SystemExit(
@@ -161,7 +234,9 @@ def main() -> int:
 
     rows.sort(key=lambda r: (LANE_ORDER.index(r["lane"]), r["replicate"]))
     out = {
-        "schema": "neurounner.runner001.summary.v3",
+        "schema": "neurounner.runner001.summary.v4",
+        "validation": "complete_finite_metrics_and_frozen_source",
+        "source_run": dict(zip(("id", "attempt", "sha"), next(iter(run_identities)))),
         "baseline_lane": baseline["lane"],
         "dataset_canonical_sha256": next(iter(canonical_hashes)),
         "replicates_per_lane": len(EXPECTED_REPLICATES),

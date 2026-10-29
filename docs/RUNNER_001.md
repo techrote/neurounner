@@ -56,7 +56,7 @@ Generation performs one full 48-token warmup at the exact measured shape, then f
 
 Model-load and total-wall measurements include network/cache effects and are retained as end-to-end operational measurements, not pure CPU benchmarks.
 
-The aggregate step fails unless all three platforms have exactly replicas 1, 2 and 3 and all nine artifacts share the same canonical corpus SHA-256.
+The aggregate step fails unless all three platforms have exactly integer replicas 1, 2 and 3, all eight reported metrics are finite and positive in every record, and all nine records bind to the frozen corpus/model/revision/package stack and one workflow run, attempt and source commit. The v4 summary records that source identity explicitly. This is result-record consistency, not independent attestation of the hosted machine or checkpoint bytes.
 
 ## GitHub Models finding
 
@@ -76,4 +76,8 @@ In particular, the Apple runner has fewer CPUs than the x64 runners and a differ
 
 ## Reproduction
 
-Run **Actions → RUNNER-001 cross-platform benchmark** or push the benchmark branch. Per-replica JSON and aggregate JSON/Markdown evidence are retained as Actions artifacts for 30 days.
+Use an explicit **Actions → RUNNER-001 cross-platform benchmark** manual dispatch for the nine-VM physical benchmark. Pushes and pull requests run only standard-library source compilation and synthetic summary-validation tests; they do not load models or perform LoRA optimizer steps. Per-replica JSON and aggregate JSON/Markdown evidence are retained as Actions artifacts for 30 days and are not claimed as permanent archival custody.
+
+### 29 October 2026 integration correction
+
+The original v3 summarizer silently ignored missing metrics and did not bind model/run identity. Its historical reports and original producer source remain unchanged. The v4 reader rejects absent/non-finite/non-positive metrics, changed model/corpus/package pins, mixed run identities, malformed replica values and incomplete/duplicated lane coverage before creating output. Synthetic regressions qualify this correction; they do not constitute another physical benchmark or reinterpret the original measurements.
