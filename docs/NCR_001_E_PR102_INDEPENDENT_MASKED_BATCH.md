@@ -217,3 +217,10 @@ acceptance, full four-lane conformance, and matched #73 controls remain
 blocked. The four distinct model identities, original fixtures and frozen
 tolerances remain unchanged; `train_authorized=false`. **PR #113 and all
 parent branches must stay draft/unmerged.**
+
+
+## 29 October 2026 — exact committed representation immutability follow-up
+
+The historical [original right-gapped/HF.generate physical run 40598034739](https://github.com/techrote/neurounner/actions/runs/40598034739) is unchanged. The PR #113 offline auditor previously normalized Base64 whitespace and parsed the JSON provenance before verifying values. Consequently, adding whitespace could change committed evidence text without changing its decoded member hashes or accepted semantic fields. The reviewed original archive and provenance Git blobs are now pinned separately: `3ca13858e4a878de259406a01f1a0baa1c97282d` and `e944ca2655729e60c587865a9168b34698031114`. Adversarial tests deliberately append an otherwise semantically harmless newline to each source and require refusal. The read-only workflow now checks the exact PR source HEAD, unchanged #102 base and four-lane protocol/source-pin Git blobs before auditing.
+
+**Evidence boundary:** this hardening does not re-execute the frozen Sprocket Instruct model. The five original text members are committed losslessly, but the complete original 5,754-byte GitHub Actions ZIP (SHA-256 `30bc7fa3231047561b5ab0142b59b7012e7e1ee4e72329198f7d778b65be9a1e`) and complete original decoded source/model job logs are **not** yet Git-custodied. Original artifact #12777685787 expires 26 November 2026. Archive the exact original ZIP/logs in a separately scoped descendant without modifying these historical receipts. The prior source-only failed runs #40597707675 and #40597891619 remain negative evidence, not model failures. No training, heldouts, new source-model claims or final #72 admission; `train_authorized=false` and `full_72_conformance_pass=false`.

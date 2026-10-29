@@ -18,6 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 DIR = ROOT / "experiments/ncr-001/evidence-review/pr113-rightpad-generation"
 ARCHIVE = DIR / "original-text-evidence.tar.xz.b64"
 PROVENANCE = DIR / "provenance.json"
+# Pin the Git-stored representation, not just parsed data or decoded source bytes.
+ORIGINAL_ARCHIVE_GIT_BLOB = "3ca13858e4a878de259406a01f1a0baa1c97282d"
+ORIGINAL_PROVENANCE_GIT_BLOB = "e944ca2655729e60c587865a9168b34698031114"
 
 ORIGINAL_RUN = 40598034739
 ORIGINAL_HEAD = "d727640e36ec9f7915aa208d69d9b78e4448f0c6"
@@ -74,12 +77,23 @@ def digest(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
+def gitblob(raw):
+    """Compute the Git blob object ID from exact committed bytes."""
+    return hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\x00" + raw).hexdigest()
+
+
 def load_originals(archive_path=ARCHIVE, provenance_path=PROVENANCE):
-    p = json.loads(Path(provenance_path).read_text(encoding="utf-8"))
+    provenance_raw = Path(provenance_path).read_bytes()
+    require(gitblob(provenance_raw) == ORIGINAL_PROVENANCE_GIT_BLOB,
+            "committed provenance JSON Git blob changed")
+    p = json.loads(provenance_raw)
     a = p["archived_text"]
-    # Git text storage wraps Base64 at 128 chars; wrapping is transport only.
-    # Still require the exact decoded byte length and immutable source digest.
-    encoded = "".join(Path(archive_path).read_text(encoding="ascii").split())
+    # Whitespace-normalized Base64 and reserialized JSON are NOT an acceptable
+    # substitute for exact Git custody of the historical representations.
+    archive_raw = Path(archive_path).read_bytes()
+    require(gitblob(archive_raw) == ORIGINAL_ARCHIVE_GIT_BLOB,
+            "committed encoded original-text archive Git blob changed")
+    encoded = "".join(archive_raw.decode("ascii").split())
     require(len(encoded) == 5848 and encoded.isascii(), "base64 envelope altered")
     compressed = base64.b64decode(encoded, validate=True)
     require(len(compressed) == a["original_xz_bytes"] == 4384

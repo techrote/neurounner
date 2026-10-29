@@ -12,7 +12,7 @@ import unittest
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"scripts"))
 from ncr_001e_pr113_rightpad_receipt_audit import (  # noqa:E402
-    ARCHIVE, load_originals, verify_originals
+    ARCHIVE, PROVENANCE, load_originals, verify_originals
 )
 
 
@@ -43,6 +43,24 @@ class OriginalRightPadArchiveTests(unittest.TestCase):
             path.write_text("%%%%not-valid-base64")
             with self.assertRaises((ValueError,RuntimeError)):
                 load_originals(path)
+
+    def test_equivalent_base64_whitespace_is_rejected_by_git_blob_guard(self):
+        # The original parser discarded all ASCII whitespace. A newline changes
+        # Git custody while leaving the decompressed five-member evidence intact.
+        original = ARCHIVE.read_bytes()
+        with TemporaryDirectory() as tmp:
+            mutated = Path(tmp) / "equivalent-archive.b64"
+            mutated.write_bytes(original + b"\\n")
+            with self.assertRaisesRegex(RuntimeError, "encoded original-text archive Git blob"):
+                load_originals(archive_path=mutated)
+
+    def test_equivalent_provenance_whitespace_is_rejected_by_git_blob_guard(self):
+        original = PROVENANCE.read_bytes()
+        with TemporaryDirectory() as tmp:
+            mutated = Path(tmp) / "equivalent-provenance.json"
+            mutated.write_bytes(original + b"\\n")
+            with self.assertRaisesRegex(RuntimeError, "provenance JSON Git blob"):
+                load_originals(provenance_path=mutated)
 
     def test_original_zip_or_source_identity_mutation_refused(self):
         tests=(
