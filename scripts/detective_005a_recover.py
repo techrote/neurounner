@@ -133,6 +133,12 @@ def inspect_raw(cfg: dict, lineage: str, source: Path,
             line = fh.readline()
             try:
                 row = json.loads(line)
+                # JSON parsers accept duplicate keys, concealing an original
+                # raw value from the validated semantic row. Do not count it
+                # as a source-valid prefix, but preserve the exact raw bytes.
+                screen.require(
+                    line == (screen.canonical(row) + "\n").encode("utf-8"),
+                    "noncanonical raw response or duplicate JSON keys")
                 screen.validate_result(cfg, row)
                 identity = row["member_id"], row["prompt_id"]
                 screen.require(identity == expected[offset],
