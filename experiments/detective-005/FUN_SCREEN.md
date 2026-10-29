@@ -150,6 +150,18 @@ and original API response bytes are preserved, but `artifact_transport_complete`
 remains false and the final custody gate RED. Unlisted originals require
 independent retrieval before retry; this is not live cancellation/push proof.
 
+**Recursive/oversized untrusted JSON (source-only):** a downloaded raw
+JSONL journal, interruption receipt, final manifest or same-run artifact API
+response can exceed Python's JSON parser nesting or integer-conversion limits.
+These can raise `RecursionError` or `ValueError` rather than
+`JSONDecodeError`. Recovery conservatively validates zero prefix rows for
+an unparseable journal, quarantines recursive receipt/manifest/API metadata,
+preserves all allowed original raw bytes and surviving independent lineages,
+and fails transport certification for invalid metadata. Two adversarial
+no-model tests cover deeply nested JSON across all four custody surfaces and
+an oversized integer literal. This is source-only validation, not proof of
+real failed-run archival or an authorized inference retry.
+
 **Artifact identity uniqueness (source-only):** GitHub Actions artifact IDs must
 be positive, non-boolean integers and unique across the *entire* returned API
 page, not merely unique within one expected lineage name. Two different

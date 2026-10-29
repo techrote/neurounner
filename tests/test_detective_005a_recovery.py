@@ -505,6 +505,71 @@ class Detective005ARecoveryTests(unittest.TestCase):
             with self.assertRaisesRegex(screen.ScreenError, "unregistered"):
                 recover.verify(out)
 
+    def test_nested_untrusted_json_cannot_strand_independent_raw_bytes(self):
+        """Recursive JSON in raw, receipt, manifest and API stays quarantined."""
+        nested = b"[" * 2500 + b"0" + b"]" * 2500 + b"\n"
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            g01 = root / "artifacts/detective005a-G01"
+            g02 = root / "artifacts/detective005a-G02"
+            g01.mkdir(parents=True)
+            g02.mkdir(parents=True)
+            for filename in ("results.partial.jsonl", "results.jsonl",
+                             "interrupted.json", "manifest.json"):
+                (g01 / filename).write_bytes(nested)
+            sibling = (screen.canonical(self.row(
+                member_id="V-G02-A")).encode("utf-8") + b"\n")
+            (g02 / "results.partial.jsonl").write_bytes(sibling)
+            api = root / "api.json"
+            api.write_bytes(nested)
+            out = root / "archive"
+            manifest = recover.recover(
+                root / "artifacts", out, HEAD, RUN, api, "success", "success")
+            self.assertEqual(manifest["validated_raw_prefix_rows"], 1)
+            self.assertTrue(manifest["artifact_api_metadata_invalid"])
+            self.assertFalse(manifest["artifact_transport_complete"])
+            for filename in ("results.partial.jsonl", "results.jsonl",
+                             "interrupted.json", "manifest.json"):
+                self.assertEqual((out / "raw/G01" / filename).read_bytes(),
+                                 nested)
+            self.assertEqual((out / "raw/G02/results.partial.jsonl").read_bytes(),
+                             sibling)
+            self.assertEqual(
+                (out / "provenance/actions-artifacts-api.json").read_bytes(),
+                nested)
+            records = screen.read_json(
+                out / "provenance/source-artifacts.json")["lineages"]
+            self.assertEqual(records[0]["validated_raw_prefix_rows"], 0)
+            self.assertEqual(records[0]["journal_tail_problem"],
+                             "unparseable_raw_row")
+            self.assertIn("invalid_interruption_receipt",
+                          records[0]["custody_warnings"])
+            self.assertIn("invalid_complete_lineage_manifest",
+                          records[0]["custody_warnings"])
+            self.assertIn("artifact_api_metadata_invalid",
+                          records[0]["custody_warnings"])
+            self.assertEqual(records[1]["validated_raw_prefix_rows"], 1)
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 1)
+            with self.assertRaisesRegex(screen.ScreenError, "incomplete original"):
+                recover.require_complete_transport(out)
+
+    def test_oversized_json_integer_does_not_abort_raw_preservation(self):
+        """Python integer conversion limits may raise ValueError, not JSONDecodeError."""
+        original = b'{"n":' + b"9" * 12000 + b"}\n"
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            g01 = root / "artifacts/detective005a-G01"
+            g01.mkdir(parents=True)
+            (g01 / "results.partial.jsonl").write_bytes(original)
+            out = root / "archive"
+            manifest = recover.recover(root / "artifacts", out, HEAD, RUN)
+            self.assertEqual(manifest["validated_raw_prefix_rows"], 0)
+            self.assertFalse(manifest["artifact_transport_complete"])
+            self.assertEqual(
+                (out / "raw/G01/results.partial.jsonl").read_bytes(),
+                original)
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 0)
+
     def test_no_artifacts_never_claims_work_or_review(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
