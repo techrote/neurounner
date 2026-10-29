@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import hmac
 import json
 import re
 from pathlib import Path
@@ -18,7 +19,6 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "experiments/detective-005/fun-screen.json"
 VILLAGE_RELEASE_MANIFEST = ROOT / "experiments/village-001/sft-evidence/adapter-release.json"
-REVIEW_SALT = "DETECTIVE-005A-fun-review-v1-20261028"
 MEMBER_RX = re.compile(r"^V-G(0[1-9]|1[0-2])-[ABC]$")
 SHA_RX = re.compile(r"^[0-9a-f]{64}$")
 
@@ -276,16 +276,36 @@ def validate_complete_results(cfg: dict, rows: list[dict]) -> list[dict]:
     return observations
 
 
-def opaque_key(member_id: str, prompt_id: str) -> str:
+def require_blinding_key(secret: bytes) -> None:
+    require(isinstance(secret, bytes) and len(secret) == 32,
+            "private 32-byte blinding key required")
+
+
+def opaque_key(member_id: str, prompt_id: str, secret: bytes) -> str:
+    """Private deterministic permutation, not a publicly guessable fixed salt."""
+    require_blinding_key(secret)
+    return hmac.new(
+        secret,
+        f"DETECTIVE-005A|{member_id}|{prompt_id}".encode("utf-8"),
+        hashlib.sha256).hexdigest()
+
+
+def mapping_commitment(secret: bytes, mapping: dict[str, dict]) -> str:
+    """Commit to the secret permutation without publishing the mapping or key."""
+    require_blinding_key(secret)
     return sha256_bytes(
-        f"{REVIEW_SALT}|{member_id}|{prompt_id}".encode("utf-8"))
+        b"detective-005a-private-mapping-v1|" +
+        secret + canonical(mapping).encode("utf-8"))
 
 
-def build_review_packet(cfg: dict, rows: list[dict]) -> tuple[dict, dict[str, dict]]:
+def build_review_packet(
+        cfg: dict, rows: list[dict], secret: bytes
+) -> tuple[dict, dict[str, dict]]:
+    require_blinding_key(secret)
     observations = validate_complete_results(cfg, rows)
     by_key = {(r["member_id"], r["prompt_id"]): r for r in rows}
     obs_by_key = {(o["member_id"], o["prompt_id"]): o for o in observations}
-    ordered = sorted(by_key, key=lambda x: opaque_key(*x))
+    ordered = sorted(by_key, key=lambda x: opaque_key(*x, secret))
     items, mapping = [], {}
     prompts = prompts_by_id(cfg)
     for i, key in enumerate(ordered, 1):
@@ -310,6 +330,8 @@ def build_review_packet(cfg: dict, rows: list[dict]) -> tuple[dict, dict[str, di
         "experiment": "DETECTIVE-005A",
         "issue": 176,
         "identity_mapping_committed": False,
+        "blinding": "private-hmac-sha256-v1",
+        "private_mapping_commitment_sha256": mapping_commitment(secret, mapping),
         "question": cfg["subjective_review"]["question"],
         "scale": cfg["subjective_review"]["scale"],
         "interpretation": cfg["subjective_review"]["interpretation"],
@@ -324,8 +346,11 @@ def build_review_packet(cfg: dict, rows: list[dict]) -> tuple[dict, dict[str, di
 
 def rating_template(packet: dict) -> dict:
     require(packet.get("schema") ==
-            "detective-005a-subjective-gameplay-packet-v1",
-            "wrong review packet schema")
+            "detective-005a-subjective-gameplay-packet-v1" and
+            packet.get("blinding") == "private-hmac-sha256-v1" and
+            isinstance(packet.get("private_mapping_commitment_sha256"), str) and
+            SHA_RX.fullmatch(packet["private_mapping_commitment_sha256"]) is not None,
+            "wrong review packet schema or missing private blinding commitment")
     return {
         "schema": "detective-005a-subjective-gameplay-ratings-v1",
         "experiment": "DETECTIVE-005A",
@@ -374,9 +399,11 @@ def validate_ratings(cfg: dict, packet: dict, ratings: dict) -> None:
         require(isinstance(row["note"], str), "rating note must be text")
 
 
-def aggregate(cfg: dict, rows: list[dict], packet: dict, ratings: dict) -> dict:
+def aggregate(cfg: dict, rows: list[dict], packet: dict, ratings: dict,
+              secret: bytes) -> dict:
+    require_blinding_key(secret)
     validate_ratings(cfg, packet, ratings)
-    packet2, mapping = build_review_packet(cfg, rows)
+    packet2, mapping = build_review_packet(cfg, rows, secret)
     require(packet2 == packet, "review packet does not reconstruct")
     groups = {m["member_id"]: [] for m in cfg["source_population"]["members"]}
     hard = {m["member_id"]: True for m in cfg["source_population"]["members"]}
@@ -449,25 +476,10 @@ def main() -> None:
             "objective_relevance_threshold": None,
         }, indent=2, sort_keys=True))
         return
-    rows = read_results(args.results)
-    packet, _ = build_review_packet(cfg, rows)
-    if args.write_packet:
-        write_json(args.write_packet, packet)
-    if args.write_ratings_template:
-        write_json(args.write_ratings_template, rating_template(packet))
-    if args.ratings:
-        ratings = read_json(args.ratings)
-        summary = aggregate(cfg, rows, packet, ratings)
-        if args.write_summary:
-            write_json(args.write_summary, summary)
-        print(json.dumps(summary, indent=2, sort_keys=True))
-    else:
-        print(json.dumps({
-            "raw_results": len(rows),
-            "packet_items": len(packet["items"]),
-            "packet_has_member_identity": False,
-            "model_judge": False,
-        }, indent=2, sort_keys=True))
+    raise ScreenError(
+        "public fixed-salt packet generation disabled; use the reviewed "
+        "private-custodian tool to prepare, freeze and unblind only after "
+        "all 144 source-verified responses exist")
 
 
 if __name__ == "__main__":
