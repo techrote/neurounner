@@ -187,7 +187,7 @@ jobs:
           git config user.email '41898282+techrote@users.noreply.github.com'
           git add datasets/detective-005a
           git commit -m "DETECTIVE-005A: promote 36-villager raw fun-screen evidence ${GITHUB_RUN_ID}"
-          git push origin HEAD:"refs/heads/$TARGET_BRANCH"
+          git push --force-with-lease="refs/heads/$TARGET_BRANCH:" origin HEAD:"refs/heads/$TARGET_BRANCH"
           # A successful push alone is not a remote archive readback.
           git fetch --no-tags origin "refs/heads/$TARGET_BRANCH"
           test "$(git rev-parse FETCH_HEAD)" = "$(git rev-parse HEAD)"
@@ -292,7 +292,7 @@ jobs:
           git config user.email '41898282+techrote@users.noreply.github.com'
           git add "$TARGET_DATASET"
           git commit -m "DETECTIVE-005A: preserve failed-run raw custody ${GITHUB_RUN_ID}"
-          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          git push --force-with-lease="refs/heads/$TARGET_BRANCH:" origin "HEAD:refs/heads/$TARGET_BRANCH"
           # Fetch the actual remote branch and reverify the archived bytes.
           # Failure stays RED; the previous 30-day fallback is not durable.
           git fetch --no-tags origin "refs/heads/$TARGET_BRANCH"

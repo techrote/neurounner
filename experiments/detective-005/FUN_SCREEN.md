@@ -152,6 +152,11 @@ It never constitutes real villager output or a live-screen authorization.
 Both complete and failed-run live promotion steps now require a remote
 branch fetch, exact pushed-commit identity and raw-archive verification
 after git push. These are source safeguards until exercised on real runs.
+All three promotion paths now use Git's absent-ref `--force-with-lease`
+precondition, so a run-scoped branch created between the existence check
+and push must be rejected even if a normal push would fast-forward.
+An adversarial local bare-Git regression covers that race; this does not
+qualify GitHub authorization, cancellation or remote push behavior.
 
 An additional adversarial offline test now creates a fresh **local bare Git**
 repository, commits an interrupted raw journal, pushes/fetches an isolated

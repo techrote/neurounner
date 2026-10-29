@@ -954,7 +954,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
             (complete, "detective_005a_assemble.py"),
             (recovery, "detective_005a_recover.py"),
         ):
-            self.assertIn('git push origin', section)
+            self.assertIn('git push --force-with-lease="refs/heads/$TARGET_BRANCH:" origin', section)
             self.assertIn('git fetch --no-tags origin "refs/heads/$TARGET_BRANCH"', section)
             self.assertIn('git archive FETCH_HEAD', section)
             self.assertIn('"$(git rev-parse FETCH_HEAD)" = "$(git rev-parse HEAD)"',
@@ -962,7 +962,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
             self.assertIn('remote-readback', section)
             self.assertIn('--verify', section.split('git archive FETCH_HEAD', 1)[1])
             self.assertIn(program, section.split('git archive FETCH_HEAD', 1)[1])
-            self.assertLess(section.index('git push origin'),
+            self.assertLess(section.index('git push --force-with-lease='),
                             section.index('git fetch --no-tags origin'))
 
         protocol = (root / "detective-005a-protocol.yml").read_text(
@@ -975,7 +975,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
         self.assertIn("contents: write", probe)
         self.assertIn("evidence/detective-005a-synthetic-probe-", probe)
         self.assertIn("datasets/detective-005a-synthetic-probe-", probe)
-        self.assertIn('git push origin "HEAD:refs/heads/$TARGET_BRANCH"', probe)
+        self.assertIn('git push --force-with-lease="refs/heads/$TARGET_BRANCH:" origin "HEAD:refs/heads/$TARGET_BRANCH"', probe)
         self.assertIn('git archive FETCH_HEAD "$TARGET_DATASET"', probe)
         self.assertIn('--require-complete-transport', probe)
         self.assertIn('"complete_lineage_artifacts"] == 0', probe)
@@ -1028,7 +1028,7 @@ class Detective005ARecoveryTests(unittest.TestCase):
             local_head = git("rev-parse", "HEAD")
             git("remote", "add", "origin", str(origin))
             branch = "refs/heads/evidence/detective-005a-local-git-probe"
-            git("push", "origin", "HEAD:" + branch)
+            git("push", "--force-with-lease=" + branch + ":", "origin", "HEAD:" + branch)
             git("fetch", "--no-tags", "origin", branch)
             self.assertEqual(local_head, git("rev-parse", "FETCH_HEAD"))
 
@@ -1057,6 +1057,55 @@ class Detective005ARecoveryTests(unittest.TestCase):
             fetched_raw.write_bytes(original + b"unrecorded change")
             with self.assertRaisesRegex(screen.ScreenError, "bytes drift"):
                 recover.verify(fetched)
+
+
+    @unittest.skipUnless(__import__("shutil").which("git"),
+                         "Git is required for the local create-only lease test")
+    def test_evidence_branch_create_only_lease_rejects_raced_fast_forward(self):
+        """Reject an existing branch even when a plain push would fast-forward.
+
+        The preliminary ls-remote branch absence check is TOCTOU-prone.
+        This tests the Git server's absent-ref lease locally, not on GitHub.
+        """
+        import subprocess
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            origin = root / "origin.git"
+            work = root / "work"
+            work.mkdir()
+
+            def git(*args, cwd=work, check=True):
+                return subprocess.run(
+                    ["git", *args], cwd=cwd, check=check,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                )
+
+            git("init", "--bare", str(origin), cwd=root)
+            git("init", "-b", "main")
+            git("config", "user.name", "DETECTIVE create-only fixture")
+            git("config", "user.email", "fixture@example.invalid")
+            git("remote", "add", "origin", str(origin))
+            (work / "fixture").write_text("original\n", encoding="utf-8")
+            git("add", "fixture")
+            git("commit", "-m", "first")
+            first = git("rev-parse", "HEAD").stdout.strip()
+            branch = "refs/heads/evidence/detective-005a-create-only-race"
+            lease = "--force-with-lease=" + branch + ":"
+            git("push", lease, "origin", "HEAD:" + branch)
+            self.assertEqual(git("--git-dir=" + str(origin), "rev-parse",
+                                 branch, cwd=root).stdout.strip(), first)
+
+            # A competing writer has already created the ref. The next
+            # attempted push is a valid fast-forward, but must be refused.
+            (work / "fixture").write_text("successor\n", encoding="utf-8")
+            git("commit", "-am", "second")
+            self.assertEqual(git("merge-base", "--is-ancestor",
+                                 first.decode("ascii"), "HEAD").returncode, 0)
+            rejected = git("push", lease, "origin", "HEAD:" + branch, check=False)
+            self.assertNotEqual(rejected.returncode, 0, rejected.stdout)
+            self.assertEqual(git("--git-dir=" + str(origin), "rev-parse",
+                                 branch, cwd=root).stdout.strip(), first)
 
 
 if __name__ == "__main__":
