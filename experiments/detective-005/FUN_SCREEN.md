@@ -452,3 +452,22 @@ Synthetic adversarial tests inject private-looking mappings, duplicate JSON
 keys and README appendages with recomputed hash inventories. These checks do
 not authenticate a model execution, prevent a model from emitting secrets in
 dialogue, or qualify remote GitHub persistence.
+
+### Original raw JSONL ambiguity guard (draft PR #196)
+
+JSON permits ambiguous object members in permissive parsers: `json.loads`
+silently selects the final occurrence of a duplicate key. A forged raw
+response can therefore contain an unvalidated first value while passing a
+recomputed file SHA-256 and the previous semantic row checks. The approved
+live writer already fsyncs canonical single-line JSON followed by LF.
+
+Strict completed-lineage ingestion now requires every original JSONL byte to
+match its canonical parsed row, including field order and line termination.
+Recovery uses the same check **per intact prefix row**: a noncanonical row
+or duplicate-key payload stops validated-prefix counting at that point but
+is copied byte-for-byte into the quarantined recovery dataset, with a visible
+warning. This prevents a rehashed raw file from silently gaining source-valid
+custody; it does not establish that a model actually produced the text.
+The synthetic adversarial fixture checks both duplicate-key and trailing-space
+cases, and a forged complete 12-row lineage with matching journal, final file,
+and recomputed manifest digest. No original archived evidence is rewritten.
