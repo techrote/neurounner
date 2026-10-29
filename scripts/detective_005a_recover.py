@@ -209,9 +209,23 @@ def metadata_by_name(metadata_path: Path | None) -> dict[str, dict]:
     return found
 
 
+def load_api_for_custody(metadata_path: Path | None) -> tuple[dict[str, dict], bool]:
+    """Keep malformed *original* API bytes instead of aborting raw recovery.
+
+    Syntactic/shape failures are quarantined; an unreadable file still fails
+    because its original bytes cannot be preserved and verified.
+    """
+    if metadata_path is None:
+        return {}, False
+    try:
+        return metadata_by_name(metadata_path), False
+    except (ValueError, TypeError, AttributeError, KeyError):
+        return {}, True
+
+
 def bind_artifact_api(report: dict, name: str, api: dict[str, dict],
                       metadata_present: bool, head: str,
-                      run_id: str) -> dict:
+                      run_id: str, metadata_invalid: bool = False) -> dict:
     """Bind artifact ID/digest and prevent foreign/unknown API source admission.
 
     Keep the original raw files even when API identity fails. A damaged or
@@ -221,7 +235,9 @@ def bind_artifact_api(report: dict, name: str, api: dict[str, dict],
     report["artifact_name"] = name
     report["artifact_api"] = entry
     issues = report["custody_warnings"]
-    if entry is None and report["files"] and metadata_present:
+    if metadata_invalid and report["files"]:
+        issues.append("artifact_api_metadata_invalid")
+    elif entry is None and report["files"] and metadata_present:
         issues.append("downloaded_artifact_not_listed")
     if not metadata_present and report["status"] == "complete_lineage_recovered":
         # Local source integrity != independently verified Actions artifact
@@ -261,14 +277,16 @@ TRANSPORT_CUSTODY_WARNINGS = frozenset({
     "artifact_api_digest_missing",
     "artifact_api_expired_or_unknown",
     "artifact_api_metadata_unavailable",
+    "artifact_api_metadata_invalid",
 })
 
 
 def artifact_transport_complete(records: list[dict], api: dict[str, dict],
                                 metadata_present: bool,
-                                api_outcome: str, download_outcome: str) -> bool:
+                                api_outcome: str, download_outcome: str,
+                                metadata_invalid: bool = False) -> bool:
     """Complete *retrieval* custody only; never a complete 144-row screen."""
-    return (metadata_present and bool(api) and
+    return (metadata_present and not metadata_invalid and bool(api) and
             api_outcome == "success" and download_outcome == "success" and
             not any(TRANSPORT_CUSTODY_WARNINGS.intersection(
                 r["custody_warnings"]) for r in records))
@@ -287,7 +305,7 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
     cfg = screen.load_contract()
     screen.require(not out.exists(), "refuse overwrite of recovery archive")
     screen.require(artifacts.is_dir(), "downloaded artifact root missing")
-    api = metadata_by_name(metadata_path)
+    api, metadata_invalid = load_api_for_custody(metadata_path)
     records = []
     staged: list[tuple[str, dict[str, Path]]] = []
     for lineage in assemble.LINEAGES:
@@ -295,7 +313,8 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
         files = artifact_files(artifacts, lineage)
         report = bind_artifact_api(
             inspect_artifact(cfg, lineage, files, head, run_id),
-            name, api, metadata_path is not None, head, run_id)
+            name, api, metadata_path is not None, head, run_id,
+            metadata_invalid=metadata_invalid)
         staged.append((lineage, files))
         records.append(report)
 
@@ -315,7 +334,7 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
     count = sum(r["validated_raw_prefix_rows"] for r in records)
     transport_complete = artifact_transport_complete(
         records, api, metadata_path is not None,
-        artifact_api_outcome, download_outcome)
+        artifact_api_outcome, download_outcome, metadata_invalid)
     manifest = {
         "schema": "detective-005a-partial-recovery-v1",
         "experiment": "DETECTIVE-005A",
@@ -335,6 +354,7 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
         "validated_raw_prefix_rows": count,
         "artifact_api_outcome": artifact_api_outcome,
         "artifact_download_outcome": download_outcome,
+        "artifact_api_metadata_invalid": metadata_invalid,
         "artifact_transport_complete": transport_complete,
         "review_packet_generated": False,
         "training_admission": False,
@@ -349,6 +369,7 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
         "repository_head_sha": head,
         "actions_run_id": run_id,
         "metadata_available": metadata_path is not None,
+        "artifact_api_metadata_invalid": metadata_invalid,
         "lineages": records,
     })
     (out / "README.md").write_text(
@@ -406,7 +427,12 @@ def verify(path: Path) -> dict:
     screen.require(
         metadata_path.exists() == provenance.get("metadata_available"),
         "original artifact API availability drift")
-    api = metadata_by_name(metadata_path) if metadata_path.exists() else {}
+    api, metadata_invalid = load_api_for_custody(
+        metadata_path if metadata_path.exists() else None)
+    screen.require(
+        manifest.get("artifact_api_metadata_invalid") is metadata_invalid and
+        provenance.get("artifact_api_metadata_invalid") is metadata_invalid,
+        "recovery artifact API parse status drift")
     total = 0
     complete = 0
     with_artifacts = 0
@@ -429,7 +455,8 @@ def verify(path: Path) -> dict:
         artifact_name = f"detective005a-{lineage}"
         refreshed = bind_artifact_api(
             inspect_artifact(cfg, lineage, actual, head, run_id),
-            artifact_name, api, metadata_path.exists(), head, run_id)
+            artifact_name, api, metadata_path.exists(), head, run_id,
+            metadata_invalid=metadata_invalid)
         with_artifacts += bool(actual)
         for field in ("lineage", "status", "validated_raw_prefix_rows",
                       "journal_tail_problem", "custody_warnings", "files",
@@ -447,7 +474,7 @@ def verify(path: Path) -> dict:
         artifact_transport_complete(
             provenance["lineages"], api, metadata_path.exists(),
             manifest.get("artifact_api_outcome"),
-            manifest.get("artifact_download_outcome")),
+            manifest.get("artifact_download_outcome"), metadata_invalid),
         "recovery artifact transport gate drift")
     inventory = (path / "provenance" / "hashes.sha256").read_text(
         encoding="utf-8")
