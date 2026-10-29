@@ -108,6 +108,57 @@ class SprocketPostWarmupReconciliationTests(unittest.TestCase):
             "actions-decoded/initial-readback-formatter-hash-failure-job-122910071921.log",
             lambda b: b + b"\nFORGED NEGATIVE")
 
+
+    def test_archived_job_ids_are_bound_to_original_run_log_contents(self):
+        manifest = json.loads((recon.EVIDENCE / "manifest.json").read_text())
+        self.assertEqual(recon.check_archived_job_bindings(manifest), {
+            "source": 122892989282,
+            "chat": 122893504080,
+            "instruct": 122893504180,
+        })
+        report = recon.reconcile()
+        self.assertEqual(report["lanes"]["sprocket_chat"]["physical_job_id"],
+                         122893504080)
+        self.assertEqual(report["lanes"]["sprocket_instruct"]["physical_job_id"],
+                         122893504180)
+        for lane in report["lanes"].values():
+            self.assertEqual(lane["job_id_provenance"],
+                             "PINNED_GITHUB_ACTIONS_RUN_LEDGER_PLUS_ORIGINAL_DECODED_LOG")
+
+    def test_swapped_or_forged_original_job_id_ledger_refused(self):
+        manifest = json.loads((recon.EVIDENCE / "manifest.json").read_text())
+        changed = copy.deepcopy(manifest)
+        changed["original_decoded_actions_jobs"]["chat"] = 122893504180
+        with self.assertRaisesRegex(ValueError, "job-ID ledger changed"):
+            recon.check_archived_job_bindings(changed)
+
+    def test_archived_log_variant_or_job_source_substitution_refused(self):
+        manifest = json.loads((recon.EVIDENCE / "manifest.json").read_text())
+        logs = {}
+        for variant, job_id in recon.ORIGINAL_JOBS.items():
+            filename = "actions-decoded/" + (
+                "source-original-job-" if variant == "source"
+                else variant + "-original-job-"
+            ) + str(job_id) + ".log"
+            logs[variant] = (recon.EVIDENCE / filename).read_text(
+                encoding="utf-8-sig")
+        swapped = dict(logs)
+        swapped["chat"], swapped["instruct"] = logs["instruct"], logs["chat"]
+        with self.assertRaisesRegex(ValueError, "job log/source/variant"):
+            recon.check_archived_job_bindings(manifest, log_texts=swapped)
+        missing_source = dict(logs)
+        missing_source["chat"] = missing_source["chat"].replace(
+            recon.SOURCE_HEAD, "0" * 40)
+        with self.assertRaisesRegex(ValueError, "job log/source/variant"):
+            recon.check_archived_job_bindings(manifest, log_texts=missing_source)
+
+    def test_original_job_uploaded_zip_digest_ledger_forgery_refused(self):
+        manifest = json.loads((recon.EVIDENCE / "manifest.json").read_text())
+        modified = copy.deepcopy(manifest)
+        modified["original_actions_artifacts"]["instruct"]["zip_sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "artifact digest ledger changed"):
+            recon.check_archived_job_bindings(modified)
+
     def _mutate_file(self, name, change):
         with tempfile.TemporaryDirectory() as directory:
             dest = Path(directory)
