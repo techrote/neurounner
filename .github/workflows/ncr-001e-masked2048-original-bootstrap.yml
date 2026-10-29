@@ -24,7 +24,8 @@ jobs:
         run: |
           set -euo pipefail
           test "$GITHUB_REF_NAME" = "review/ncr001e-masked2048-original-custody-20261029"
-          test "$(git rev-parse HEAD^)" = "$ORIGINAL_HEAD"
+          git merge-base --is-ancestor "$ORIGINAL_HEAD" HEAD
+          test "$(git diff --name-only "$ORIGINAL_HEAD" HEAD)" = ".github/workflows/ncr-001e-masked2048-original-bootstrap.yml"
           test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
           test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
           python3 - <<'PY'
@@ -55,7 +56,7 @@ jobs:
           jobs={j['id']:j for j in json.loads((root/'jobs.json').read_text())['jobs']}
           assert all(jobs[j]['conclusion']=='success' for j in (123678411187,123678836606,123678836615))
           artifacts={a['id']:a for a in json.loads((root/'artifacts.json').read_text())['artifacts']}
-          wanted={12925688929:'a61769d08582dfb8f8dfc07c02a385c34380627cae3820889fece6e223',12927370503:'d0fac3a396c201d0f5377160381d47e101a62194e577dd0f3e7b51a4254a3753',12926034445:'59b65a0ef8be4191fe1ad63ec016694f5bc88f03dd647bece9635cfa5c2499fd'}
+          wanted={12925688929:'a61769d08582dfb8f8dfc07c02a385c34380627cae3822cb9820889fece6e223',12927370503:'d0fac3a396c201d0f5377160381d47e101a62194e577dd0f3e7b51a4254a3753',12926034445:'59b65a0ef8be4191fe1ad63ec016694f5bc88f03dd647bece9635cfa5c2499fd'}
           for aid,sha in wanted.items():
             assert artifacts[aid]['digest']=='sha256:'+sha and artifacts[aid]['workflow_run']['id']==40939386209 and not artifacts[aid]['expired']
           print('PASS_ORIGINAL_RUN_JOB_ARTIFACT_LEDGER')
@@ -74,7 +75,7 @@ jobs:
           api actions/jobs/123678836606/logs original-chat-job-123678836606.log
           api actions/jobs/123678836615/logs original-instruct-job-123678836615.log
           printf '%s\n' \
-            "a61769d08582dfb8f8dfc07c02a385c34380627cae3820889fece6e223  $DEST/original-source-12925688929.zip" \
+            "a61769d08582dfb8f8dfc07c02a385c34380627cae3822cb9820889fece6e223  $DEST/original-source-12925688929.zip" \
             "d0fac3a396c201d0f5377160381d47e101a62194e577dd0f3e7b51a4254a3753  $DEST/original-chat-12927370503.zip" \
             "59b65a0ef8be4191fe1ad63ec016694f5bc88f03dd647bece9635cfa5c2499fd  $DEST/original-instruct-12926034445.zip" | sha256sum -c
       - name: Build fail-closed provenance record and validate original phase witnesses
