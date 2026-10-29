@@ -105,10 +105,23 @@ def apply_structure_warnings(report: dict, warnings: list[str]) -> dict:
     return report
 
 
+def intact_prefix_or_quarantine(path: Path) -> tuple[int, str | None]:
+    """Quarantine parser-depth and integer-limit failures as original raw bytes.
+
+    json.loads can raise RecursionError/ValueError rather than JSONDecodeError.
+    Refuse to certify any prefix when parsing aborts unexpectedly; retaining
+    its exact raw file must not strand otherwise recoverable sibling outputs.
+    """
+    try:
+        return live.intact_partial_raw_rows(path)
+    except (ValueError, RecursionError, OverflowError):
+        return 0, "unparseable_raw_row"
+
+
 def inspect_raw(cfg: dict, lineage: str, source: Path,
                 head: str, run_id: str) -> tuple[int, str | None, list[str]]:
     """Validate only the intact canonical prefix; NEVER modify the original bytes."""
-    syntactic, tail_problem = live.intact_partial_raw_rows(source)
+    syntactic, tail_problem = intact_prefix_or_quarantine(source)
     errors: list[str] = []
     valid = 0
     expected = [(f"V-{lineage}-{s}", prompt["id"])
@@ -138,7 +151,8 @@ def inspect_raw(cfg: dict, lineage: str, source: Path,
                     runner.get("adapter_directory_sha256_verified") ==
                     frozen["adapter_directory_sha256"],
                     "response verified source hash mismatch")
-            except (ValueError, KeyError, TypeError, AttributeError) as exc:
+            except (ValueError, KeyError, TypeError, AttributeError,
+                    RecursionError, OverflowError) as exc:
                 errors.append(f"invalid_response_{offset + 1}:{type(exc).__name__}")
                 break
             valid += 1
@@ -164,7 +178,7 @@ def inspect_artifact(cfg: dict, lineage: str, files: dict[str, Path],
         if "interrupted.json" in files:
             try:
                 receipt = screen.read_json(files["interrupted.json"])
-                count = live.intact_partial_raw_rows(preferred)[0] if preferred else 0
+                count = intact_prefix_or_quarantine(preferred)[0] if preferred else 0
                 source_sha = screen.sha256_file(preferred) if preferred else None
                 screen.require(
                     receipt.get("schema") == "detective-005a-interrupted-lineage-v1"
@@ -181,7 +195,8 @@ def inspect_artifact(cfg: dict, lineage: str, files: dict[str, Path],
                     "interruption receipt source/hash/authority mismatch")
                 if preferred and "results.partial.jsonl" not in files:
                     errors.append("interrupted_receipt_without_partial_journal")
-            except (ValueError, KeyError, TypeError, AttributeError):
+            except (ValueError, KeyError, TypeError, AttributeError,
+                    RecursionError, OverflowError):
                 errors.append("invalid_interruption_receipt")
         else:
             if valid < 12 or tail_problem:
@@ -208,7 +223,7 @@ def inspect_artifact(cfg: dict, lineage: str, files: dict[str, Path],
                     if "interrupted.json" not in files and not errors:
                         status = "complete_lineage_recovered"
                 except (ValueError, KeyError, TypeError, AttributeError,
-                        OSError):
+                        OSError, RecursionError, OverflowError):
                     errors.append("invalid_complete_lineage_manifest")
         elif "manifest.json" in files or "results.jsonl" in files:
             errors.append("incomplete_final_lineage_pair")
@@ -299,7 +314,8 @@ def unexpected_artifact_sources(artifacts: Path | None,
                             name.startswith("detective005a-") and
                             name not in expected):
                         found.append("api:" + name)
-        except (ValueError, KeyError, TypeError, AttributeError):
+        except (ValueError, KeyError, TypeError, AttributeError,
+                RecursionError, OverflowError):
             # Malformed API metadata independently fails the transport gate.
             pass
     return sorted(set(found))
@@ -315,7 +331,8 @@ def load_api_for_custody(metadata_path: Path | None) -> tuple[dict[str, dict], b
         return {}, False
     try:
         return metadata_by_name(metadata_path), False
-    except (ValueError, TypeError, AttributeError, KeyError):
+    except (ValueError, TypeError, AttributeError, KeyError,
+            RecursionError, OverflowError):
         return {}, True
 
 
