@@ -516,6 +516,45 @@ class Detective005AFunScreenTests(unittest.TestCase):
                     "G01", out, RuntimeError("second-error"))
             self.assertEqual(receipt_path.read_bytes(), original)
 
+    def test_atomic_lineage_claim_refuses_empty_and_interleaved_reruns(self):
+        """One writer owns the output even when both preflights see it absent."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            empty = root / "empty-existing-output"
+            empty.mkdir()
+            with self.assertRaisesRegex(
+                    live.PreexistingLineageEvidence, "pre-existing"):
+                live.run_lineage("G01", empty, root / "downloads")
+            self.assertEqual(list(empty.iterdir()), [])
+
+            # Deterministic interleaving: main() preflight saw an absent
+            # target, then another process created its directory/receipt just
+            # before run_lineage() attempts the exclusive mkdir. No inference,
+            # receipt overwrite, or partial append is permitted.
+            raced = root / "interleaved"
+            original = b'{"owner":"first-worker","error":"original"}\n'
+            passes = []
+
+            def simulate_competitor(path):
+                passes.append(path)
+                if len(passes) == 2:
+                    path.mkdir(parents=True, exist_ok=False)
+                    (path / "interrupted.json").write_bytes(original)
+
+            with mock.patch.object(
+                    live, "refuse_existing_lineage_evidence",
+                    side_effect=simulate_competitor), mock.patch.object(
+                    sys, "argv", [
+                        "live.py", "--run", "--lineage", "G01",
+                        "--out", str(raced)]):
+                with self.assertRaisesRegex(
+                        live.PreexistingLineageEvidence, "concurrent"):
+                    live.main()
+            self.assertEqual(len(passes), 2)
+            self.assertEqual((raced / "interrupted.json").read_bytes(), original)
+            self.assertEqual(
+                [p.name for p in raced.iterdir()], ["interrupted.json"])
+
     def test_live_incremental_raw_and_failure_receipt_are_custodied(self):
         rows = self.synthetic_rows()[:2]
         with tempfile.TemporaryDirectory() as td:
