@@ -46,19 +46,37 @@ def mac_proxy(hidden: int, *, taps: int = 3, steps: int = 3,
     """Count dense projection/Conv2d MACs only; excludes all other operations."""
     for v in (hidden, taps, steps, grid, channels, bottleneck):
         require(type(v) is int and v > 0, "invalid static architecture integer")
+    # The weight/implementation Git blobs and protocol pin only this Sprocket
+    # geometry. Changing grid, channels or bottleneck while retaining static
+    # parameter formulas previously produced plausible but false fairness data.
+    # One step is the already-preregistered NCA ablation, not the 3-step primary.
+    require(hidden == 1280 and taps == 3 and steps in (1, 3)
+            and grid == 8 and channels == 4 and bottleneck == 256,
+            "unregistered Sprocket adapter geometry or cellular-step budget")
     field = grid * grid * channels
     conv = grid * grid * ((channels * 4) * channels * 9 +
                           (channels * 2) * (channels * 4))
     mlp = taps * 2 * hidden * bottleneck
     nca = taps * (2 * hidden * field + steps * conv)
+    # Count actual pinned module shapes, including biases and LayerNorm.
+    # NCA: LN(2H), observe(H*field + field), two Conv2d layers
+    # with biases, and bias-free readout(field*H).
+    nca_params = (2 * hidden + hidden * field + field +
+                  (channels * 4) * channels * 9 + channels * 4 +
+                  (channels * 2) * (channels * 4) + channels * 2 +
+                  field * hidden)
+    # Gated MLP: LN(2H), up(H*bottleneck + bottleneck),
+    # per-feature gate(bottleneck), bias-free down(bottleneck*H).
+    mlp_params = (2 * hidden + hidden * bottleneck +
+                  2 * bottleneck + bottleneck * hidden)
     return {
         "mlp_dense_mac_per_token": mlp,
         "nca_dense_conv_mac_per_token": nca,
         "nca_conv_mac_per_token": taps * steps * conv,
         "nca_minus_mlp_mac_per_token": nca - mlp,
         "nca_over_mlp_mac_ratio": round(nca / mlp, 8),
-        "nca_trainable_parameter_formula": 514 * hidden + 984,
-        "mlp_trainable_parameter_formula": 514 * hidden + 512,
+        "nca_trainable_parameter_formula": nca_params,
+        "mlp_trainable_parameter_formula": mlp_params,
         "nca_field_float32_bytes_per_token_one_field_only": field * 4,
     }
 
