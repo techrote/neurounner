@@ -16,6 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "experiments/ncr-001/controls-evidence/sprocket-adapter-cpu-microbench-20261029"
 ORIGINAL = "original-actions-40867677298.zip"
 ORIGINAL_SIZE = 5589
+ORIGINAL_JOB_LOG = "original-job-123426590154.log"
+ORIGINAL_JOB_GIT_BLOB = "7ec9f8443bb69ce69330088457c3e31bee19d512"
 ORIGINAL_SHA256 = "d5bad11d2e28a6b40aa9717046464f9436a5e07ef800559f8044e494c826eea0"
 ORIGINAL_GIT_BLOB = "38a428b1a0fae2c7b9163f200a2b83f37f369add"
 SOURCE_HEAD = "1f44c775c392cea430457c86253c1f00deea4e70"
@@ -149,7 +151,16 @@ def audit_zip(raw: bytes) -> dict:
 
 
 def audit(evidence: Path = EVIDENCE) -> dict:
-    return audit_zip((evidence / ORIGINAL).read_bytes())
+    result = audit_zip((evidence / ORIGINAL).read_bytes())
+    log = (evidence / ORIGINAL_JOB_LOG).read_bytes()
+    refuse(gitblob(log) == ORIGINAL_JOB_GIT_BLOB,
+           "complete decoded original job-log Git blob changed")
+    refuse(b"Ran 7 tests in 0.063s" in log
+           and b"ADAPTER_ONLY_MEASURED__REAL_MODEL_BUDGET_UNQUALIFIED__NO_TRAIN" in log
+           and b"Failed to initialize NumPy: No module named" in log,
+           "original GitHub job log positive/negative observations changed")
+    result["complete_original_decoded_job_log_git_blob"] = ORIGINAL_JOB_GIT_BLOB
+    return result
 
 
 if __name__ == "__main__":
