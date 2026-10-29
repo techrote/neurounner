@@ -21,7 +21,7 @@ env:
   TOKENIZERS_PARALLELISM: "false"
   OMP_NUM_THREADS: "4"
   MKL_NUM_THREADS: "4"
-  BASE_SHA: 5fb718e146fd547d47e4c3bc0787cc25aa4b2f5a
+  BASE_SHA: d9a9f5ee40f3601ff57087fc4fa1f66d1429a319
 
 jobs:
   integration:
@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 5fb718e146fd547d47e4c3bc0787cc25aa4b2f5a
+          ref: d9a9f5ee40f3601ff57087fc4fa1f66d1429a319
           fetch-depth: 0
           persist-credentials: false
       - name: Install repository-pinned CPU test dependency, no model libraries
@@ -60,8 +60,9 @@ jobs:
                   headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
               with urllib.request.urlopen(r, timeout=45) as response:
                   return json.load(response)
-          plan = [(87, 'c09d5739049f706914605de3245801cf13bcc4c0', '72e5f1a7e55c26a95163fc0e0fbf35a0ae0c6066'),
-                  (88, '4ea247e72ea88564b552e63effb558d753f9e770', 'c3ff138acb587b1dde152da320df1cdf9ced8399')]
+          plan = [(88, '1f5919120f25545a812941c882566aa8b35d8ce9', '41a5f3df2bc7c9251bd81ae2f1976d0b11a0397f'),
+                  (174, '3db74bd0bae6a9a64c3e3c69cfcae1c60b86ae0f', '9939e3d2a27ac731bcba1269b5ce73a9099fa1ec'),
+                  (44, '8a285193003627d83ab7938845f2714da852d528', 'e840da2d606a967d853830c67e908454a5a701a3')]
           main = read('/branches/main')
           assert main['commit']['sha'] == os.environ['BASE_SHA'], 'Main moved: re-audit'
           (out / 'main-before.json').write_text(json.dumps(main, indent=2) + '\n')
@@ -75,22 +76,27 @@ jobs:
               assert tree == expected_tree, (tree, expected_tree)
               run(['git', 'diff', '--check', 'HEAD^1', 'HEAD'], f'{number}-diff-check.log')
               run([sys.executable, 'scripts/ncr_001_protocol.py', 'validate'], f'{number}-protocol.json')
-              run([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_ncr_001*.py', '-v'], f'{number}-tests.log')
+              for group in ('ncr_001', 'detective_001', 'detective_005'):
+                  run([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', f'test_{group}*.py', '-v'], f'{number}-{group}-tests.log')
               run([sys.executable, 'scripts/ncr_001f_plan.py', '--out', str(out / f'{number}-control-plan.json')], f'{number}-plan.log')
-              checks = [(out / f'{number}-control-plan.json', pathlib.Path('experiments/ncr-001/controls-evidence/provenance.json'))]
-              if number == 88:
-                  run([sys.executable, 'scripts/ncr_001e_readback.py', '--out', str(out / '88-readback.json')], '88-readback.log')
-                  checks.append((out / '88-readback.json', pathlib.Path('experiments/ncr-001/evidence-review/audit-provenance.json')))
+              run([sys.executable, 'scripts/ncr_001e_readback.py', '--out', str(out / f'{number}-readback.json')], f'{number}-readback.log')
+              checks = [(out / f'{number}-control-plan.json', pathlib.Path('experiments/ncr-001/controls-evidence/provenance.json')),
+                        (out / f'{number}-readback.json', pathlib.Path('experiments/ncr-001/evidence-review/audit-provenance.json'))]
               hashes = {}
               for report, source in checks:
                   got = hashlib.sha256(report.read_bytes()).hexdigest()
                   expected = json.loads(source.read_text())['source']['original_uncompressed_report_sha256']
                   assert got == expected, (report, got, expected)
                   hashes[report.name] = got
+              if number == 44:
+                  run([sys.executable, 'scripts/verify_story_001_v2.py'], '44-archive-verification.log')
+                  for variant in ('story_001', 'story_001_v2'):
+                      directory = variant.replace('_', '-')
+                      run([sys.executable, f'scripts/{variant}.py', '--config', f'experiments/{directory}/config.json', 'self-test'], f'44-{variant}-selftest.log')
               stages.append({'pr': number, 'head': head, 'integration_tree': tree, 'passed': True, 'original_report_sha256': hashes})
               (out / 'stages.json').write_text(json.dumps(stages, indent=2) + '\n')
           assert json.loads(pathlib.Path('experiments/ncr-001/protocol.json').read_text())['train_authorized'] is False
-          print('No model loading, heldout evaluation, comparative training, repository writes or scientific admission.')
+          print('No model loading, heldout evaluation, comparative training, provider calls, repository writes or scientific admission.')
           PY
       - name: Preserve success and failure logs
         if: always()
