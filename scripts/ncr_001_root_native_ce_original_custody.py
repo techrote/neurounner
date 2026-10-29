@@ -177,7 +177,7 @@ def audit(evidence: Path = EVIDENCE) -> dict:
            "full original physical GitHub job log changed")
     b64 = (evidence / ARCHIVE).read_bytes().strip()
     compressed = base64.b64decode(b64, validate=True)
-    original = lzma.decompress(compressed, memlimit=64*1024*1024)
+    original = lzma.decompress(compressed, memlimit=256*1024*1024)
     result = validate_zip(original)
     return {"status": "PASS_ORIGINAL_FULL_ZIP_AND_LOG_GIT_CUSTODY__72_BLOCKED",
             "decoded_full_job_blob": JOB_BLOB,
