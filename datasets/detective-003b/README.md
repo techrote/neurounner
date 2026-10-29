@@ -1,0 +1,3 @@
+# DETECTIVE-003B live two-witness session smoke
+
+Source-bound no-training integration of V-G02-A C3 and V-G09-C C2 through the DETECTIVE-003A authoritative interview ledger. Raw model dialogue is untrusted. The only automatic claim annotation is a fixture-local literal HH:MM extractor: exactly one distinct time emits a game-owned statement claim; zero or multiple times emit no claim. No canonical-truth/scorer lookup is used. Public transfer-card evidence is presented by game authority between turns. The archive does not admit either model for production/game use and does not access R1 hidden mappings or any learner-final prompts.

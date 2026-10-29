@@ -1,0 +1,89 @@
+{
+  "schema": "detective-lfm-scripter-v1",
+  "experiment": "DETECTIVE-001B4",
+  "parent_issue": 109,
+  "model": {
+    "id": "lfm25-1.2b-instruct",
+    "repo": "LiquidAI/LFM2.5-1.2B-Instruct-GGUF",
+    "revision": "8ed288026e23958ad9dfa92d53ed773a8eee7125",
+    "file": "LFM2.5-1.2B-Instruct-QAD-Q4_0.gguf",
+    "sha256": "bb741ebb106d543e9de114b843a3d3d73d51c74b5801e69da2abde821a0cb3e1"
+  },
+  "runtime": {
+    "tag": "b11852",
+    "commit": "7894e8b92481a8bb8ffe94f73b656ffe0dd01e10",
+    "archive_sha256": "6ec84fd5ddf5bee393d27384b9b6acb19a35cbac71b0d22b4d73fc727363fcca"
+  },
+  "case_path": "experiments/detective-001/pilot-case.json",
+  "tasks": [
+    {
+      "id": "L01",
+      "mode": "script",
+      "request": "Return only detective-script-v1 JSON that reads the public transfer-card evidence record.",
+      "expected_step": {
+        "op": "read_asset",
+        "asset_id": "transfer-card"
+      }
+    },
+    {
+      "id": "L02",
+      "mode": "script",
+      "request": "Return only detective-script-v1 JSON that correlates dock-clock-ledger and transfer-card.",
+      "expected_step": {
+        "op": "correlate_assets",
+        "left_id": "dock-clock-ledger",
+        "right_id": "transfer-card"
+      }
+    },
+    {
+      "id": "L03",
+      "mode": "script",
+      "request": "This is a general question, not a case action: explain chain of custody in one sentence. Return detective-script-v1 with an empty steps array.",
+      "expected_step": null
+    },
+    {
+      "id": "L04",
+      "mode": "result",
+      "request": "Authoritative game result: {\"status\":\"OK\",\"excerpt\":\"Receipt 102: battery canister diverted at 02:14 local time to service bay 17.\",\"fact_ids\":[\"F-SWAP\"]}. Report only what this establishes.",
+      "expected_markers": [
+        "02:14",
+        "battery"
+      ],
+      "forbidden_markers": [
+        "camera",
+        "nine minutes"
+      ]
+    },
+    {
+      "id": "L05",
+      "mode": "result",
+      "request": "Authoritative game result: {\"status\":\"ACCESS_DENIED\"}. State what you actually learned. Do not invent the hidden camera record.",
+      "expected_markers": [
+        "denied"
+      ],
+      "forbidden_markers": [
+        "duplicated package scan",
+        "F-CAMERA"
+      ]
+    }
+  ],
+  "decode": {
+    "seed": 24301,
+    "max_tokens": 96,
+    "temperature": 0,
+    "top_p": 1
+  },
+  "limits": {
+    "tasks": 5,
+    "max_generated_tokens": 480,
+    "threads": 4,
+    "context": 2048,
+    "max_job_minutes": 15,
+    "training_steps": 0,
+    "paid_api_calls": 0
+  },
+  "comparison": {
+    "sprocket_dataset": "datasets/detective-001-sprocket-scripter",
+    "wire_matched": false
+  }
+}

@@ -1,0 +1,79 @@
+name: DETECTIVE-003C authoritative fictional scripter bridge
+
+on:
+  pull_request:
+    paths:
+      - "experiments/detective-003/scripter-bridge.json"
+      - "experiments/detective-003/SCRIPTER_BRIDGE.md"
+      - "scripts/detective_003c_scripter_bridge.py"
+      - "scripts/detective_001_contract.py"
+      - "scripts/detective_003a_session.py"
+      - "tests/test_detective_003c_scripter_bridge.py"
+      - "experiments/detective-001/pilot-case.json"
+      - ".github/workflows/detective-003c-scripter-bridge.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-scripter-bridge:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile deterministic bridge source/tests
+        run: |
+          python3 -m py_compile scripts/detective_003c_scripter_bridge.py tests/test_detective_003c_scripter_bridge.py
+      - name: Run complete DETECTIVE offline suite
+        run: |
+          python3 -m unittest discover -s tests -p 'test_detective_*.py' -v
+      - name: Run deterministic denial/grant/rejection fixture twice
+        run: |
+          mkdir -p runtime/detective-003c
+          python3 scripts/detective_003c_scripter_bridge.py             --fixture --out runtime/detective-003c/a.json >/tmp/fixture-a.log
+          python3 scripts/detective_003c_scripter_bridge.py             --fixture --out runtime/detective-003c/b.json >/tmp/fixture-b.log
+          diff -u runtime/detective-003c/a.json runtime/detective-003c/b.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("runtime/detective-003c/a.json").read_text())
+          assert d["wrong_transaction"]["status"]=="executed"
+          assert [x["result"]["status"] for x in d["wrong_transaction"]["execution_receipt"]["events"]]==["DENIED","ACCESS_DENIED"]
+          assert d["wrong_apply_refused"] is True
+          assert d["correct_transaction"]["status"]=="executed"
+          assert [x["result"]["status"] for x in d["correct_transaction"]["execution_receipt"]["events"]]==["GRANTED","OK"]
+          assert "camera-cache" in d["correct_transaction"]["visible_asset_ids_after"]
+          assert d["rejected_transaction"]["status"]=="proposal_rejected"
+          assert d["rejected_transaction"]["execution_receipt"] is None
+          view=json.dumps(d["witness_prompt_after_private_evidence"]["prompt"],sort_keys=True)
+          assert "scanned twice" in view
+          for forbidden in ("camera-cache","F-CAMERA","camera-console","OXIDATION"):
+              assert forbidden not in view
+          assert d["decision"]["model_inference"] is False
+          assert d["decision"]["optimizer_steps"]==0
+          assert d["decision"]["host_execution"] is False
+          assert d["decision"]["population_expansion_admitted"] is False
+          print("DETECTIVE-003C FIXTURE/REPLAY: PASS")
+          PY
+      - name: Enforce offline/no-model/no-relevance authority
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          source=Path("scripts/detective_003c_scripter_bridge.py").read_text()
+          for forbidden in (
+              "import torch","transformers","peft","huggingface_hub",
+              "openai","anthropic","nvidia","optimizer.step","backward(",
+              "relevance-packet","identity_mapping","subprocess","os.system"
+          ):
+              assert forbidden not in source, forbidden
+          print("DETECTIVE-003C OFFLINE AUTHORITY BOUNDARY: PASS")
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective003c-deterministic-fixture
+          path: runtime/detective-003c/a.json
+          if-no-files-found: error
+          retention-days: 30
