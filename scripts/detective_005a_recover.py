@@ -411,6 +411,34 @@ def artifact_transport_complete(records: list[dict], api: dict[str, dict],
                 r["custody_warnings"]) for r in records))
 
 
+def recovery_readme_text(head: str, run_id: str) -> str:
+    """Reproducible public recovery README; no appended private payload."""
+    return (
+        "# DETECTIVE-005A failed-run raw custody\n\n"
+        f"Source commit: `{head}`. GitHub Actions run: `{run_id}`.\n\n"
+        "This is a **recovery archive, not a complete experiment**. "
+        "Each available permitted raw file is copied byte-for-byte, including "
+        "torn JSONL suffixes, error receipts and successful full lineages. "
+        "Missing artifacts or invalid rows are identified without fabricating "
+        "outputs or altering original bytes. Incomplete data never produces "
+        "a fun-rating packet, model admission, training or cast expansion.\n\n"
+        "The archive must be reviewed before retrying a failed lineage. "
+        "The artifact_transport_complete flag describes only same-run API "
+        "retrieval/download reconciliation, not semantic output validity. "
+        "A false value is a BLOCKING custody gap even when this best-effort "
+        "archive branch was pushed; recover the remaining original bytes "
+        "before any retry. Unexpected artifact paths or API names are " 
+        "recorded but NOT copied because they may contain private data; " 
+        "inspect original artifacts separately before retry or expiry. " 
+        "Unexpected files, symlinks, duplicated raw names and unpacked "
+        "weight directories are NOT archived: source_structure_warnings "
+        "blocks transport completion and requires separate inspection of "
+        "the expiring original artifact even when safe sibling raw files "
+        "were preserved. Entire-workflow cancellation may prevent this "
+        "job from starting; inspect the original Actions artifacts.\n"
+    )
+
+
 def recover(artifacts: Path, out: Path, head: str, run_id: str,
             metadata_path: Path | None = None,
             artifact_api_outcome: str = "unknown",
@@ -497,32 +525,33 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
         "lineages": records,
     })
     (out / "README.md").write_text(
-        "# DETECTIVE-005A failed-run raw custody\n\n"
-        f"Source commit: `{head}`. GitHub Actions run: `{run_id}`.\n\n"
-        "This is a **recovery archive, not a complete experiment**. "
-        "Each available permitted raw file is copied byte-for-byte, including "
-        "torn JSONL suffixes, error receipts and successful full lineages. "
-        "Missing artifacts or invalid rows are identified without fabricating "
-        "outputs or altering original bytes. Incomplete data never produces "
-        "a fun-rating packet, model admission, training or cast expansion.\n\n"
-        "The archive must be reviewed before retrying a failed lineage. "
-        "The artifact_transport_complete flag describes only same-run API "
-        "retrieval/download reconciliation, not semantic output validity. "
-        "A false value is a BLOCKING custody gap even when this best-effort "
-        "archive branch was pushed; recover the remaining original bytes "
-        "before any retry. Unexpected artifact paths or API names are " 
-        "recorded but NOT copied because they may contain private data; " 
-        "inspect original artifacts separately before retry or expiry. " 
-        "Unexpected files, symlinks, duplicated raw names and unpacked "
-        "weight directories are NOT archived: source_structure_warnings "
-        "blocks transport completion and requires separate inspection of "
-        "the expiring original artifact even when safe sibling raw files "
-        "were preserved. Entire-workflow cancellation may prevent this "
-        "job from starting; inspect the original Actions artifacts.\n",
-        encoding="utf-8")
+        recovery_readme_text(head, run_id), encoding="utf-8")
     (out / "provenance" / "hashes.sha256").write_text(
         assemble.hash_inventory(out), encoding="utf-8")
     return manifest
+
+
+RECOVERY_MANIFEST_KEYS = {
+    "schema", "experiment", "issue", "status", "repository_head_sha",
+    "actions_run_id", "actions_run_url", "source_config_sha256",
+    "runner_script_sha256", "recovery_script_sha256", "lineages_reported",
+    "lineages_with_artifacts", "complete_lineage_artifacts",
+    "validated_raw_prefix_rows", "artifact_api_outcome",
+    "artifact_download_outcome", "artifact_api_metadata_invalid",
+    "unexpected_artifact_sources", "artifact_transport_complete",
+    "review_packet_generated", "training_admission", "production_admission",
+    "population_expansion_admitted", "optimizer_steps", "model_judge_calls",
+}
+RECOVERY_PROVENANCE_KEYS = {
+    "schema", "repository_head_sha", "actions_run_id",
+    "metadata_available", "artifact_api_metadata_invalid",
+    "unexpected_artifact_sources", "lineages",
+}
+RECOVERY_LINEAGE_KEYS = {
+    "lineage", "status", "validated_raw_prefix_rows",
+    "journal_tail_problem", "custody_warnings", "files",
+    "source_structure_warnings", "artifact_name", "artifact_api",
+}
 
 
 def verify(path: Path) -> dict:
@@ -533,7 +562,13 @@ def verify(path: Path) -> dict:
                    "recovery archive root must be a physical directory")
     screen.require(all(not entry.is_symlink() for entry in path.rglob("*")),
                    "recovery archive contains symlink; not self-contained custody")
-    manifest = screen.read_json(path / "manifest.json")
+    manifest_path = path / "manifest.json"
+    manifest = screen.read_json(manifest_path)
+    screen.require(type(manifest) is dict and
+                   set(manifest) == RECOVERY_MANIFEST_KEYS,
+                   "recovery manifest field-set drift")
+    assemble.require_canonical_json(
+        manifest_path, manifest, "recovery manifest")
     screen.require(manifest.get("schema") == "detective-005a-partial-recovery-v1" and
                    manifest.get("status") == "raw_recovery_only_not_a_complete_screen" and
                    manifest.get("review_packet_generated") is False and
@@ -546,6 +581,20 @@ def verify(path: Path) -> dict:
     head = manifest["repository_head_sha"]
     run_id = manifest["actions_run_id"]
     ensure_identity(head, run_id)
+    screen.require(
+        manifest.get("experiment") == "DETECTIVE-005A" and
+        manifest.get("issue") == 176 and
+        manifest.get("lineages_reported") == len(assemble.LINEAGES) and
+        manifest.get("actions_run_url") ==
+            f"https://github.com/techrote/neurounner/actions/runs/{run_id}" and
+        manifest.get("artifact_api_outcome") in
+            {"success", "failure", "skipped", "cancelled", "unknown"} and
+        manifest.get("artifact_download_outcome") in
+            {"success", "failure", "skipped", "cancelled", "unknown"},
+        "recovery identity, Actions URL or transport outcome drift")
+    screen.require((path / "README.md").read_text(encoding="utf-8") ==
+                   recovery_readme_text(head, run_id),
+                   "recovery README content drift")
     screen.require(manifest.get("source_config_sha256") ==
                    screen.sha256_file(screen.CONFIG) and
                    manifest.get("runner_script_sha256") ==
@@ -553,7 +602,13 @@ def verify(path: Path) -> dict:
                    manifest.get("recovery_script_sha256") ==
                    screen.sha256_file(Path(__file__)),
                    "recovery source hash mismatch")
-    provenance = screen.read_json(path / "provenance" / "source-artifacts.json")
+    provenance_path = path / "provenance" / "source-artifacts.json"
+    provenance = screen.read_json(provenance_path)
+    screen.require(type(provenance) is dict and
+                   set(provenance) == RECOVERY_PROVENANCE_KEYS,
+                   "recovery source provenance field-set drift")
+    assemble.require_canonical_json(
+        provenance_path, provenance, "recovery source provenance")
     screen.require(provenance.get("schema") ==
                    "detective-005a-recovery-source-artifacts-v1" and
                    provenance.get("repository_head_sha") == head and
@@ -589,7 +644,8 @@ def verify(path: Path) -> dict:
         # rehashed archive (not even inside an expected G01..G12 directory).
         # Recovery itself copies only these four root-level raw names.
         screen.require(
-            isinstance(saved, dict) and
+            type(saved) is dict and
+            set(saved) == RECOVERY_LINEAGE_KEYS and
             saved.get("lineage") in assemble.LINEAGES and
             isinstance(saved.get("files"), list) and
             all(isinstance(item, dict) and

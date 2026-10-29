@@ -156,6 +156,14 @@ PR #196 adds synthetic adversarial tests for these custody defects. These are
 authenticated GitHub evidence-branch persistence. No private blinding key,
 identity mapping, human ratings or real villager outputs were produced.
 
+The **public failed-run recovery envelope** now also rejects extra/duplicate
+fields in derived metadata, noncanonical manifest/provenance JSON, forged
+original Actions URLs, and appended README data, even if an attacker recomputes
+the self-reported SHA inventory. The exact original raw journals and GitHub
+artifact API response remain byte-preserved, including malformed and negative
+evidence. This does not establish authenticated GitHub branch persistence or
+real cancellation recovery.
+
 ## Failed-workflow durable recovery (source merged; live unqualified)
 
 As of 29 October 2026, source custody PRs #180, #183 and #189 have

@@ -870,6 +870,65 @@ class Detective005ARecoveryTests(unittest.TestCase):
                     screen.ScreenError, "unapproved recovery file provenance"):
                 recover.require_complete_transport(out)
 
+    def test_rehashed_recovery_envelope_metadata_is_rejected(self):
+        """Source-inventory rehash must not legalize hidden reviewer metadata."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src = root / "artifacts" / "detective005a-G01"
+            src.mkdir(parents=True)
+            original_raw = (screen.canonical(self.row()) + "\n").encode()
+            (src / "results.partial.jsonl").write_bytes(original_raw)
+            out = root / "archive"
+            recover.recover(root / "artifacts", out, HEAD, RUN)
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 1)
+            manifest = out / "manifest.json"
+            provenance = out / "provenance/source-artifacts.json"
+            readme = out / "README.md"
+            originals = {p: p.read_bytes() for p in (manifest, provenance, readme)}
+
+            for attack in ("extra_manifest", "duplicate_schema",
+                           "extra_provenance", "nested_lineage",
+                           "wrong_run_url", "appended_readme"):
+                with self.subTest(attack=attack):
+                    for path, data in originals.items():
+                        path.write_bytes(data)
+                    if attack == "duplicate_schema":
+                        content = manifest.read_text(encoding="utf-8")
+                        manifest.write_text(
+                            content.replace('{\\n', '{\\n  "schema": "shadow",\\n', 1),
+                            encoding="utf-8")
+                    elif attack == "appended_readme":
+                        readme.write_bytes(
+                            readme.read_bytes() + b"private-fun-map\\n")
+                    else:
+                        path = (provenance if attack in
+                                ("extra_provenance", "nested_lineage") else manifest)
+                        value = screen.read_json(path)
+                        if attack == "extra_manifest":
+                            value["private_blind_key"] = "synthetic"
+                        elif attack == "extra_provenance":
+                            value["private_identity_map"] = {"opaque": "V-G01-A"}
+                        elif attack == "nested_lineage":
+                            value["lineages"][0]["private_note"] = "synthetic"
+                        elif attack == "wrong_run_url":
+                            value["actions_run_url"] = (
+                                "https://github.com/techrote/neurounner/actions/runs/999")
+                        assemble.write_json(path, value)
+                    (out / "provenance/hashes.sha256").write_text(
+                        assemble.hash_inventory(out), encoding="utf-8")
+                    self.assertEqual(
+                        (out / "raw/G01/results.partial.jsonl").read_bytes(),
+                        original_raw)
+                    with self.assertRaises(screen.ScreenError):
+                        recover.verify(out)
+
+            for path, data in originals.items():
+                path.write_bytes(data)
+            (out / "provenance/hashes.sha256").write_text(
+                assemble.hash_inventory(out), encoding="utf-8")
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 1)
+
+
     def test_tampered_archive_bytes_fail_readback(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
