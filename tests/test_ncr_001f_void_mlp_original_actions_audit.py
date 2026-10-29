@@ -30,7 +30,12 @@ class ExactOriginalActionsCustody(unittest.TestCase):
         self.assertFalse(result["train_authorized"])
 
     def test_zip_blob_whitespace_mutation_refused(self):
-        self.mutate(audit.ZIP_FILE, lambda p: p.write_bytes(p.read_bytes() + b"\\n"))
+        self.mutate(audit.ZIP_FILE, lambda p: p.write_bytes(p.read_bytes() + b"\n"))
+
+    def test_original_manifest_equivalent_newline_refused(self):
+        # Parsed JSON is unchanged: only the committed Git blob differs.
+        self.mutate(audit.MANIFEST_FILE,
+                    lambda p: p.write_bytes(p.read_bytes() + b"\n"))
 
     def test_original_source_job_log_mutation_refused(self):
         self.mutate("original-source-job-122256460886.log",
@@ -40,7 +45,7 @@ class ExactOriginalActionsCustody(unittest.TestCase):
         self.mutate("original-model-job-122256966798.log",
                     lambda p: p.write_bytes(p.read_bytes() + b"FORGED"))
 
-    def test_rehashed_false_scientific_manifest_refused(self):
+    def test_reformatted_false_scientific_manifest_refused(self):
         def change(p):
             import json
             d = __import__("json").loads(p.read_text())

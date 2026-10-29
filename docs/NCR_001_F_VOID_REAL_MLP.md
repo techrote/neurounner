@@ -67,3 +67,20 @@ This source-only archival extension follows existing #99 original exact physical
 [Original ZIP/job auditor](../scripts/ncr_001f_void_mlp_original_actions_audit.py) is strictly additive to the primary source/receipt auditor; it independently checks committed Git blobs, ZIP container and member SHA-256s/lengths, byte equality with the prior original-JSON custody, source/run/artifact identity, both complete job logs, unchanged EOS ID **258**, and closed training/scientific gates. [Adversarial tests](../tests/test_ncr_001f_void_mlp_original_actions_audit.py) cover archive/manifest/log mutation and substituted/truncated ZIP. The workflow remains `contents: read`, exact-head checkout and frozen protocol/source pin checked. **Current-head CI outcome must be checked separately after this archival commit**; no original physical-model execution, context expansion, separate-interpreter cold adapter, new optimizer step, heldout access, or four-lane #72 acceptance is implied. Previously recorded missing-custody wording above is a historical account superseded only as to these newly committed original ZIP/job files.
 
 `train_authorized=false`; `full_72_conformance_pass=false`; original TRAIN-002b EOS impact **UNMEASURED**. No dependency drafts merged.
+
+## 29 October 2026 — stronger nonsemantic-mutation sentinels
+
+A follow-up test review found that the six-test archival suite's named ZIP
+"whitespace mutation" appended literal backslash-plus-n bytes rather than an
+actual newline. Corrected it to append an LF. The ZIP auditor strips trailing
+whitespace before Base64 decoding, so the original decoded ZIP is unchanged:
+only its **committed Git blob** must trigger refusal. Added an analogous
+manifest LF mutation: the JSON object parses identically, but the committed
+manifest blob changes. Renamed the existing fabricated-scientific-claim test
+to avoid implying it had rehashed any trusted original. These are **seven**
+offline original-ZIP/log/manifest tests on this descendant commit, in addition
+to the existing 19 receipt tests; exact-head CI must verify the result.
+Original evidence ZIP, complete decoded logs, scientific flags, model source,
+historical failures and held-out material are not changed. The original
+physical-model run is not rerun. `train_authorized=false` and
+`full_72_conformance_pass=false` remain authoritative.
