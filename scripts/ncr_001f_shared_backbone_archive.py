@@ -83,16 +83,34 @@ def audit(*, record: dict | None = None, raw_log: bytes | None = None) -> dict:
         require(name in log and (name + " (") in log,
                 "original negative/refusal case missing: " + name)
 
-    # This workflow was necessarily extended *after* the original run to
-    # audit the archived log; read the original workflow's exact bytes from
-    # the immutable snapshot instead of requiring the extended workflow to
-    # have the old Git blob identity.
+    # This archive witnesses a historical execution. Later source fixes must
+    # never be compared against the old tested source; reconstruct the original
+    # immutable Git tree and fail if its ancestry is missing (CI fetch-depth: 0).
     original_workflow = ".github/workflows/ncr-001f-shared-backbone-ownership.yml"
+    require(set(p["source_git_blobs_sha1"]) == {
+        "scripts/ncr_001f_frozen_hooks.py",
+        "tests/test_ncr_001f_frozen_hooks.py",
+        "tests/test_ncr_001f_shared_backbone_ownership.py",
+        original_workflow,
+        "experiments/ncr-001/protocol.json",
+        "experiments/ncr-001/source-pins.json",
+    }, "original source inventory is incomplete or has extra files")
     for rel, expected in p["source_git_blobs_sha1"].items():
-        source = (ARCHIVE / "original-tested-workflow.yml"
-                  if rel == original_workflow else ROOT / rel)
-        require(git_blob_sha1(source) == expected,
-                "source file differs from original tested source: " + rel)
+        try:
+            original_blob = subprocess.check_output(
+                ["git", "rev-parse", "--verify", f"{EXPECTED_SOURCE}:{rel}"],
+                cwd=ROOT, text=True, stderr=subprocess.DEVNULL,
+            ).strip()
+        except subprocess.CalledProcessError as exc:
+            raise RuntimeError(
+                "NCR-001F original synthetic CI archive REFUSED: "
+                "original tested Git source unavailable: " + rel
+            ) from exc
+        require(original_blob == expected,
+                "historical tested source Git blob differs: " + rel)
+        if rel == original_workflow:
+            require(git_blob_sha1(ARCHIVE / "original-tested-workflow.yml") == expected,
+                    "preserved original tested workflow source differs")
     require(p["source_git_blobs_sha1"]["experiments/ncr-001/protocol.json"]
             == "14ce5fbaa38f8806c8c8738f19c01b91385eebaf",
             "frozen protocol blob substitution")
