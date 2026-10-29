@@ -1,0 +1,118 @@
+name: NCR-001F corrected original three-ZIP same-host custody READ ONLY (NO TRAIN)
+on:
+  pull_request:
+    branches: [review/ncr001f-postlease-samehost-budget-20261029]
+    paths:
+      - ".github/workflows/ncr-001f-corrected-samehost-custody.yml"
+      - "scripts/ncr_001f_corrected_samehost_custody.py"
+      - "tests/test_ncr_001f_corrected_samehost_custody.py"
+      - "docs/NCR_001_F_CORRECTED_SAMEHOST_CUSTODY.md"
+      - "RAG.md"
+      - "experiments/ncr-001/evidence-review/pr199-corrected-samehost/**"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: ncr001f-corrected-readonly-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  original-evidence-readonly:
+    if: github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.head.ref == 'review/ncr001f-corrected-samehost-custody-20261029'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_BASE: 2e2d7c86b066e96207afd6355ddbfbe535d3718e
+      DEST: experiments/ncr-001/evidence-review/pr199-corrected-samehost
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact original parent/branch and original protocol guardrails
+        run: |
+          set -euo pipefail
+          test "${{ github.event.pull_request.base.sha }}" = "$EXPECTED_BASE"
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          git merge-base --is-ancestor "$EXPECTED_BASE" HEAD
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          python3 - <<'PY'
+          import subprocess
+          original="2e2d7c86b066e96207afd6355ddbfbe535d3718e"
+          changed=set(subprocess.check_output(
+              ["git","diff","--name-only",original,"HEAD"],text=True).splitlines())
+          allowed={
+             ".github/workflows/ncr-001f-corrected-samehost-custody.yml",
+             "scripts/ncr_001f_corrected_samehost_custody.py",
+             "tests/test_ncr_001f_corrected_samehost_custody.py",
+             "docs/NCR_001_F_CORRECTED_SAMEHOST_CUSTODY.md",
+             "RAG.md",
+          }
+          assert changed and all(
+             p in allowed or p.startswith("experiments/ncr-001/evidence-review/pr199-corrected-samehost/")
+             for p in changed),changed
+          print("PASS_ORIGINAL_PARENT_PROTOCOL_NO_TRAIN_DRIFT")
+          PY
+      - name: Execute only offline custody auditor and mutation tests
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001f_corrected_samehost_custody.py tests/test_ncr_001f_corrected_samehost_custody.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001f_corrected_samehost_custody.py' -v
+          python3 scripts/ncr_001f_corrected_samehost_custody.py
+      - name: Independently validate original Actions run/job ledger
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 3 \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/techrote/neurounner/actions/runs/40904839128/jobs?per_page=100" \
+            -o /tmp/ncr-pr199-original-jobs.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.ncr_001f_corrected_samehost_custody import audit_original_job_ledger
+          result = audit_original_job_ledger(
+              json.loads(Path("/tmp/ncr-pr199-original-jobs.json").read_text()))
+          print(json.dumps(result, sort_keys=True))
+          PY
+      - name: Independently bind original ZIP artifact IDs to the original run and source
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 3 \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/techrote/neurounner/actions/runs/40904839128/artifacts?per_page=100" \
+            -o /tmp/ncr-pr199-original-artifacts.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.ncr_001f_corrected_samehost_custody import audit_original_artifact_ledger
+          result = audit_original_artifact_ledger(
+              json.loads(Path("/tmp/ncr-pr199-original-artifacts.json").read_text()))
+          print(json.dumps(result, sort_keys=True))
+          PY
+      - name: Independently redownload and byte-compare original Actions ZIPs and job logs
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ncr-original-readback
+          get() {
+            curl --fail --silent --show-error --location --retry 3 \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/techrote/neurounner/$1" -o "/tmp/ncr-original-readback/$2"
+          }
+          get actions/artifacts/12909664355/zip source.zip
+          get actions/artifacts/12912515626/zip chat.zip
+          get actions/artifacts/12911482430/zip instruct.zip
+          cmp "$DEST/original-source-12909664355.zip" /tmp/ncr-original-readback/source.zip
+          cmp "$DEST/original-chat-12912515626.zip" /tmp/ncr-original-readback/chat.zip
+          cmp "$DEST/original-instruct-12911482430.zip" /tmp/ncr-original-readback/instruct.zip
+          get actions/jobs/123556652980/logs source.log
+          get actions/jobs/123557075681/logs chat.log
+          get actions/jobs/123557076017/logs instruct.log
+          cmp "$DEST/original-source-job-123556652980.log" /tmp/ncr-original-readback/source.log
+          cmp "$DEST/original-chat-job-123557075681.log" /tmp/ncr-original-readback/chat.log
+          cmp "$DEST/original-instruct-job-123557076017.log" /tmp/ncr-original-readback/instruct.log
+          echo PASS_REDOWNLOADED_ALL_CORRECTED_ZIPS_AND_LOGS_BYTE_IDENTICAL
