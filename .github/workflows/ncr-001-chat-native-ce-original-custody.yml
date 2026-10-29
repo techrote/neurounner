@@ -1,0 +1,110 @@
+name: NCR-001 exact original CHAT native-CE artifact ZIP and job custody (NO TRAIN)
+on:
+  pull_request:
+    branches: [review/ncr001-chat-native-ce-20261029]
+    paths:
+      - ".github/workflows/ncr-001-chat-native-ce-original-custody.yml"
+      - "scripts/ncr_001_chat_native_ce_original_custody.py"
+      - "tests/test_ncr_001_chat_native_ce_original_custody.py"
+      - "experiments/ncr-001/controls-evidence/chat-native-ce-20261029/**"
+      - "docs/NCR_001_CHAT_NATIVE_CE_ORIGINAL_CUSTODY.md"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: ncr001-chat-native-archive-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  original-chat-archive:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.head.ref == 'review/ncr001-chat-native-ce-original-custody-20261029'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      ORIGINAL_SOURCE: 6ae912c02c8f9a44bde606b5daa2c73ff8f70567
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      EVIDENCE: experiments/ncr-001/controls-evidence/chat-native-ce-20261029
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: true
+          fetch-depth: 0
+      - name: Verify exact original PR source, distinct Chat/root model pins and closed training
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "techrote/neurounner"
+          test "$GITHUB_HEAD_REF" = "review/ncr001-chat-native-ce-original-custody-20261029"
+          test "$GITHUB_BASE_REF" = "review/ncr001-chat-native-ce-20261029"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "${{ github.event.pull_request.base.sha }}" = "$ORIGINAL_SOURCE"
+          git merge-base --is-ancestor "$ORIGINAL_SOURCE" "$EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          test "$(git hash-object "$EVIDENCE/original-physical-job-123202104527.log")" = 05c88bb48111b597d53fce011adfb2a0fa1de38c
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          q=json.load(open("experiments/ncr-001/source-pins.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"])==set(q["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          assert p["models"]["sprocket_chat"]["weight_file"] == "chat/model.safetensors"
+          assert p["models"]["sprocket_instruct"]["weight_file"] == "model.safetensors"
+          assert q["models"]["sprocket_chat"]["weight_declared_lfs_sha256_not_downloaded"] != q["models"]["sprocket_instruct"]["weight_declared_lfs_sha256_not_downloaded"]
+          PY
+      - name: Re-download original physical CHAT Actions ZIP, never synthesize or regenerate it
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-chat-native-original-custody
+          curl --retry 2 --connect-timeout 20 --fail --silent --show-error --location \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/techrote/neurounner/actions/artifacts/12865680062/zip" \
+            -o runtime/ncr001-chat-native-original-custody/original-actions.zip
+          test -s runtime/ncr001-chat-native-original-custody/original-actions.zip
+      - name: Verify unmodified six raw ZIP members, physical receipt and stage immutable Git evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001_chat_native_ce_original_custody.py tests/test_ncr_001_chat_native_ce_original_custody.py
+          python3 scripts/ncr_001_chat_native_ce_original_custody.py \
+            --stage runtime/ncr001-chat-native-original-custody/original-actions.zip \
+            2>&1 | tee runtime/ncr001-chat-native-original-custody/stage.json
+          python3 -m unittest discover -s tests -p test_ncr_001_chat_native_ce_original_custody.py -v \
+            2>&1 | tee runtime/ncr001-chat-native-original-custody/negative-tests.log
+          python3 scripts/ncr_001_chat_native_ce_original_custody.py \
+            2>&1 | tee runtime/ncr001-chat-native-original-custody/immutable-readback.json
+      - name: Commit only the original ZIP base64 and immutable manifest on this descendant draft
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git add -- "$EVIDENCE/original-actions-zip.base64" "$EVIDENCE/manifest.json"
+          python3 - <<'PY'
+          import subprocess
+          files=subprocess.check_output(["git","diff","--cached","--name-only"],text=True).splitlines()
+          assert set(files)<={
+            "experiments/ncr-001/controls-evidence/chat-native-ce-20261029/original-actions-zip.base64",
+            "experiments/ncr-001/controls-evidence/chat-native-ce-20261029/manifest.json",
+          },files
+          PY
+          if git diff --cached --quiet; then
+            echo "ORIGINAL_CHAT_ZIP_ALREADY_COMMITTED_NO_MUTATION"
+          else
+            git -c user.name="github-actions[bot]" \
+                -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+                commit -m "NCR-001E: permanently preserve original Chat frozen native-CE ZIP"
+            git push origin HEAD:refs/heads/review/ncr001-chat-native-ce-original-custody-20261029
+          fi
+      - name: Retain complete original staging, hashes, tests and failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-chat-native-ce-original-custody-a${{ github.run_attempt }}
+          path: runtime/ncr001-chat-native-original-custody/
+          if-no-files-found: warn
+          retention-days: 30
