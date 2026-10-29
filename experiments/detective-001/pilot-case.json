@@ -1,0 +1,130 @@
+{
+  "schema": "detective-case-v1",
+  "case_id": "bay-seventeen-shift",
+  "facts": [
+    {
+      "id": "F-CLOCK",
+      "text": "The dock clock was nine minutes fast during the blackout."
+    },
+    {
+      "id": "F-SWAP",
+      "text": "A battery canister was rerouted at 02:14 local time."
+    },
+    {
+      "id": "F-CAMERA",
+      "text": "The rail camera recorded a duplicated package scan."
+    },
+    {
+      "id": "F-PRIVATE",
+      "text": "The foreman's private key was copied before the incident."
+    }
+  ],
+  "npcs": [
+    {
+      "id": "V-G02-A",
+      "kind": "goblin",
+      "backstory": "A slag-dust clock mechanic whose implants were rebuilt from two incompatible time servers.",
+      "motivation": "Protect a union accomplice and keep the maintenance concession.",
+      "fault": "Timestamp memories drift; avoids admitting uncertainty; sometimes sells true facts as lies.",
+      "known_fact_ids": [
+        "F-CLOCK",
+        "F-SWAP"
+      ]
+    },
+    {
+      "id": "V-G09-C",
+      "kind": "robot",
+      "backstory": "A decommissioned rail-sorting unit hired as a night porter.",
+      "motivation": "Conceal its illegal memory lease while bargaining for spare capacitors.",
+      "fault": "Repeats the last plausible explanation whenever questioned under stress.",
+      "known_fact_ids": [
+        "F-CAMERA"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "id": "dock-clock-ledger",
+      "excerpt": "Service log: dock wall clock advanced by +00:09 after a failed maintenance patch.",
+      "fact_ids": [
+        "F-CLOCK"
+      ],
+      "public": true
+    },
+    {
+      "id": "transfer-card",
+      "excerpt": "Receipt 102: battery canister diverted at 02:14 local time to service bay 17.",
+      "fact_ids": [
+        "F-SWAP"
+      ],
+      "public": true
+    },
+    {
+      "id": "camera-cache",
+      "excerpt": "Archive fragment: package ID B-17 is scanned twice with no matching exit record.",
+      "fact_ids": [
+        "F-CAMERA"
+      ],
+      "public": false
+    }
+  ],
+  "terminals": [
+    {
+      "id": "camera-console",
+      "credential": "OXIDATION",
+      "grants": [
+        "camera-cache"
+      ]
+    }
+  ],
+  "leads": [
+    {
+      "fact_id": "F-CLOCK",
+      "mandatory": true,
+      "routes": [
+        {
+          "id": "W-CLOCK",
+          "kind": "witness",
+          "source": "V-G02-A"
+        },
+        {
+          "id": "A-CLOCK",
+          "kind": "asset",
+          "source": "dock-clock-ledger"
+        }
+      ]
+    },
+    {
+      "fact_id": "F-SWAP",
+      "mandatory": true,
+      "routes": [
+        {
+          "id": "W-SWAP",
+          "kind": "witness",
+          "source": "V-G02-A"
+        },
+        {
+          "id": "A-SWAP",
+          "kind": "asset",
+          "source": "transfer-card"
+        }
+      ]
+    },
+    {
+      "fact_id": "F-CAMERA",
+      "mandatory": false,
+      "routes": [
+        {
+          "id": "W-CAMERA",
+          "kind": "witness",
+          "source": "V-G09-C"
+        },
+        {
+          "id": "A-CAMERA",
+          "kind": "asset",
+          "source": "camera-cache"
+        }
+      ]
+    }
+  ]
+}

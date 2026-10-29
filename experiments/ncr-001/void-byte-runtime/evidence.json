@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001K",
+  "stage": "reviewed_byte_tokenizer_runtime",
+  "classification": "exact_pinned_source_runtime_semantics_pass__void_model_conformance_still_blocked",
+  "source_static": {
+    "pull_request": 90,
+    "workflow_run": "https://github.com/techrote/neurounner/actions/runs/40462933022",
+    "artifact_id": 12714879401,
+    "artifact_name": "ncr-001k-void-tokenizer-static-a1",
+    "artifact_zip_sha256": "aa7ff9d9e8d8ab21ca946e17ec51fe37527a73499c2e18d0c4231dc646c5fcf5",
+    "original_report_sha256": "14ac28204837d7615220981c5b3ec3c86b9effe548306047b012fed69e0efa1c",
+    "original_report_bytes": 6903,
+    "executed_pinned_python": false
+  },
+  "source_runtime": {
+    "pull_request": 91,
+    "first_workflow_run": "https://github.com/techrote/neurounner/actions/runs/40463695879",
+    "regression_workflow_run": "https://github.com/techrote/neurounner/actions/runs/40463929003",
+    "regression_source_commit": "465966d32b58ea22a7419956db87372d55e64504",
+    "artifact_id": 12715522343,
+    "artifact_name": "ncr-001k-byte-runtime-a1",
+    "artifact_zip_sha256": "5cfd97b0bc2ba6232f183fd37516031c7b697f645e0cf372deae5dec8cf15be6",
+    "original_runtime_report_sha256": "dd12dc7321bb0115bef01b16f5afa67b5d2d325154162bfef469ddfd1c1e4bb1",
+    "original_runtime_report_bytes": 9663,
+    "reviewer_python": "3.12.3",
+    "transformers_version": "4.57.6",
+    "fully_offline_runtime": true,
+    "model_weights_loaded": false,
+    "optimizer_steps": 0,
+    "regression_checks": 37,
+    "regression_checks_passed": 37
+  },
+  "exact_pin": {
+    "repository": "dotlabs/void.1",
+    "revision": "9c2be5087772867d45961abd11f6b35110617563",
+    "tokenizer_file": "tokenization_byte.py",
+    "tokenizer_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+    "byte_vocabulary_sha256": "57a1cd2e70dd5b7cc6fd2eaa12ebfcd173c1620fa5d45c2c6282511c29b6a5f6",
+    "pad_id": 256,
+    "bos_id": 257,
+    "eos_id": 258
+  },
+  "findings": {
+    "valid_unicode_exact_roundtrip": true,
+    "unicode_samples": [
+      "bolt-17",
+      "x=4;y=-2",
+      "café",
+      "café",
+      "πΩ",
+      "🔧",
+      "日本語",
+      "first\\nsecond\\tthird",
+      "don't",
+      "some literal <eos> text"
+    ],
+    "utf8_byte_tokens_equal_encoded_bytes": true,
+    "no_automatic_bos_or_eos": true,
+    "implicit_padding_side": "left",
+    "left_and_right_padding_valid": true,
+    "invalid_byte_sequences_decode_with_replacement": true,
+    "raw_special_eos_text": "<eos>",
+    "raw_special_eos_text_ids": [
+      60,
+      101,
+      111,
+      115,
+      62
+    ],
+    "raw_special_eos_text_is_eos_id": false,
+    "eos_special_token_id": 258,
+    "explicit_appended_eos_id_terminates": true,
+    "former_train002b_literal_eos_in_target_supervises_byte_sequence_not_id_258": true,
+    "utf8_symbol_streamed_one_byte_at_time_causes_replacement": true
+  },
+  "conclusion": "Tokenizer runtime semantics qualified within reviewed pinned source and Transformers 4.57.6; actual void Qwen3 text generation, cold cache/model conformance and training remain blocked.",
+  "related_defect_issue": 92,
+  "training_admitted": false,
+  "model_side_independent_conformance_pass": false
+}

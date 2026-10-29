@@ -1,0 +1,81 @@
+{
+  "schema": "detective-002c-lfm-runtime-v1",
+  "experiment": "DETECTIVE-002C",
+  "issue": 133,
+  "parent_issue": 103,
+  "source_authority": {
+    "stage_a_path": "experiments/detective-002/source-evidence/source-evidence.json",
+    "stage_a_git_blob_sha1": "a09003d37dd3ef4f2bcd0f6a8aafd1de6457c01c",
+    "stage_a_merge_commit": "0993f0dfd859f67e88353bde0eeb2f6f377ccfac",
+    "battery_path": "experiments/detective-002/runtime-smoke.json",
+    "battery_git_blob_sha1": "fc3e6eb91739d74aa87a714f8e22e603bf265b16",
+    "historical_result_path": "datasets/detective-002b/raw/lfm25-350m.json",
+    "historical_result_git_blob_sha1": "d4992105819ff14d0b39fcf5d01827842c066714"
+  },
+  "model": {
+    "candidate_id": "lfm25-350m",
+    "repo": "LiquidAI/LFM2.5-350M",
+    "revision": "9e6c6ccf47cd318696e137d381a7ded8fe4df09f",
+    "architecture": [
+      "Lfm2ForCausalLM"
+    ],
+    "model_type": "lfm2",
+    "safetensors_parameters": 354483968,
+    "weight_path": "model.safetensors",
+    "weight_sha256": "1c9c77a4471a7f590f85240f74ed1fc26df7fbde88c3006724e2f93ca993ea4e",
+    "weight_bytes": 708984464,
+    "tokenizer_config_sha256": "3701f370c70034d06e28947ff51c1063983393319f429e3ce58f06a45fae67cc",
+    "tokenizer_config_bytes": 595,
+    "chat_template_sha256": "ba551d58630afa3190b1be3602e28301f3d2e9bbac978dfc49d6d825171648b6",
+    "chat_template_bytes": 5487,
+    "config_sha256": "720b43d6ddc2ed25be23eed355aefcf342434a176dedad23dbe0a5e3ac24bbb8",
+    "config_bytes": 1281,
+    "license": "lfm1.0",
+    "production_license_gate": true
+  },
+  "historical_control": {
+    "experiment": "DETECTIVE-002B",
+    "actions_run_id": 40608478076,
+    "transformers": "4.57.6",
+    "status": "runtime_fail",
+    "error_type": "ValueError",
+    "error_contains": "Tokenizer class TokenizersBackend does not exist or is not currently imported."
+  },
+  "runtime": {
+    "os": "ubuntu-24.04",
+    "python": "3.12",
+    "torch_cpu": "2.14.1+cpu",
+    "transformers": "5.20.1",
+    "transformers_wheel_sha256": "5f51ce444193e5d0a751e3fa489ddbc2224ff12f6675a5cfefd4044b09757c19",
+    "threads": 4,
+    "seed": 260213,
+    "do_sample": false,
+    "max_prompt_tokens": 512,
+    "max_new_tokens_per_prompt": 64,
+    "max_generated_tokens_total": 256,
+    "max_minutes": 25,
+    "optimizer_steps": 0,
+    "paid_api_calls": 0,
+    "gpu_required": false,
+    "dtype": "float32"
+  },
+  "stages": {
+    "tokenizer_only_first": true,
+    "download_weight_only_after_tokenizer_pass": true,
+    "require_tokenizer_backend": "tokenizers",
+    "expected_tokenizer_class": "TokenizersBackend",
+    "same_battery_as_002b": true
+  },
+  "decisions": {
+    "allowed": [
+      "runtime_compatibility_pass",
+      "tokenizer_incompatible",
+      "model_runtime_incompatible"
+    ],
+    "source_integrity_fail_is_hard_error": true,
+    "population_expansion_admitted": false,
+    "training_selection_allowed": false,
+    "production_license_cleared": false,
+    "relevance_mapping_accessed": false
+  }
+}

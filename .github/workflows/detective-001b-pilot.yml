@@ -1,0 +1,134 @@
+name: DETECTIVE-001B bounded real-model source smoke
+
+on:
+  pull_request:
+    paths:
+      - "scripts/detective_001b_pilot.py"
+      - "scripts/detective_001b_verify.py"
+      - "tests/test_detective_001b_pilot.py"
+      - "experiments/detective-001/pilot-config.json"
+      - "experiments/detective-001/pilot-case.json"
+      - "experiments/detective-001/PILOT_001B.md"
+      - ".github/workflows/detective-001b-pilot.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: detective-001b-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile and run deterministic contract tests
+        run: |
+          python3 -m py_compile scripts/detective_001_contract.py scripts/detective_001b_pilot.py scripts/detective_001b_verify.py tests/test_detective_001b_pilot.py
+          python3 -m unittest discover -s tests -p 'test_detective_001*.py' -v
+          mkdir -p artifacts
+          python3 scripts/detective_001b_pilot.py --mode check > artifacts/detective001b-plan.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective001b-source-plan
+          path: artifacts/detective001b-plan.json
+          retention-days: 30
+
+  live-source-smoke:
+    needs: offline-contract
+    # This tightly scopes a single small research run, never all future PRs.
+    if: >-
+      ${{ github.event_name }} == 'pull_request' &&
+      ${{ github.head_ref }} == 'research/detective-001b-source-matched-smoke-20261027' &&
+      ${{ github.event.pull_request.head.repo.full_name }} == 'techrote/neurounner' &&
+      ${{ github.event.pull_request.user.login }} == 'techrote'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
+      TOKENIZERS_PARALLELISM: "false"
+      DETECTIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Re-check source and skip exact already-promoted smoke
+        id: already
+        run: |
+          if [ -f datasets/detective-001-smoke/manifest.json ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            python3 scripts/detective_001b_verify.py --dataset datasets/detective-001-smoke
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            python3 scripts/detective_001b_pilot.py --mode check
+          fi
+      - name: Install source-matched CPU runtime (no GPU or paid API)
+        if: steps.already.outputs.skip == 'false'
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "peft==0.21.2" "huggingface_hub==0.36.0"
+      - name: Download exactly two pinned 9MB SFT release archives
+        if: steps.already.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p downloads/detective-001b
+          for member in V-G02-A V-G09-C; do
+            gh release download village-001-sft-v1 \
+              --repo techrote/neurounner \
+              --pattern "village-001-sft-$member-smollm2-135m-lora.tar.gz" \
+              --dir downloads/detective-001b
+          done
+      - name: Run pinned native base and two immutable character adapters
+        if: steps.already.outputs.skip == 'false'
+        run: |
+          python3 scripts/detective_001b_pilot.py \
+            --mode smoke --out out/detective-001b \
+            --download-dir downloads/detective-001b
+      - name: Independent source/prompt/evidence readback
+        if: steps.already.outputs.skip == 'false'
+        run: |
+          python3 scripts/detective_001b_verify.py \
+            --dataset out/detective-001b/dataset
+      - name: Upload full raw evidence, including partial failures
+        if: always() && steps.already.outputs.skip == 'false'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective001b-source-matched-raw
+          path: |
+            out/detective-001b/raw
+            out/detective-001b/dataset
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Promote only verified complete raw evidence to persistent dataset
+        if: success() && steps.already.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          branch='research/detective-001b-source-matched-smoke-20261027'
+          remote_sha=$(git ls-remote --heads origin "refs/heads/$branch" | cut -f 1)
+          if [ "$remote_sha" != "$DETECTIVE_HEAD_SHA" ]; then
+            echo "PR head moved during bounded smoke; refusing stale evidence promotion"
+            exit 1
+          fi
+          test ! -e datasets/detective-001-smoke
+          mkdir -p datasets/detective-001-smoke
+          cp -a out/detective-001b/dataset/. datasets/detective-001-smoke/
+          python3 scripts/detective_001b_verify.py --dataset datasets/detective-001-smoke
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add datasets/detective-001-smoke
+          git commit -m "DETECTIVE-001B: promote hash-bound raw model smoke evidence"
+          git push origin HEAD:"refs/heads/$branch"

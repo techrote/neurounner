@@ -1,0 +1,314 @@
+name: Preserve failed VILLAGE-001D V-G08-C evidence
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/village-001d-preserve-g08c-failed-evidence.yml'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/village-001d-preserve-g08c-failed-evidence.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: neurounner-village-001d-preserve-g08c-failed-evidence
+  cancel-in-progress: false
+
+jobs:
+  preserve:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      SOURCE_RUN_ID: '40240732988'
+      SOURCE_HEAD_SHA: 'b0734d52b2524ffef57faa932434c4c5e87e12cc'
+      SOURCE_ARTIFACT_ID: '12619973436'
+      SOURCE_ARTIFACT_NAME: 'village001d-pairs-V-G08-C'
+      DATASET_ID: 'village-001d-recovery-v-g08-c'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Verify exact failed source and artifact identity
+        run: |
+          python3 - <<'PY'
+          import json,os,subprocess
+
+          repo=os.environ["GITHUB_REPOSITORY"]
+          run_id=os.environ["SOURCE_RUN_ID"]
+          expected_head=os.environ["SOURCE_HEAD_SHA"]
+          expected_artifact_id=int(os.environ["SOURCE_ARTIFACT_ID"])
+          expected_name=os.environ["SOURCE_ARTIFACT_NAME"]
+
+          run=json.loads(subprocess.check_output([
+              "gh","api",f"repos/{repo}/actions/runs/{run_id}"
+          ]))
+          assert run["status"]=="completed",run
+          assert run["conclusion"]=="failure",run
+          assert run["head_sha"]==expected_head,(run["head_sha"],expected_head)
+
+          artifacts=json.loads(subprocess.check_output([
+              "gh","api",
+              f"repos/{repo}/actions/runs/{run_id}/artifacts?per_page=100"
+          ]))["artifacts"]
+          matches=[
+              x for x in artifacts
+              if x["id"]==expected_artifact_id and x["name"]==expected_name
+          ]
+          assert len(matches)==1,matches
+          assert not matches[0]["expired"],matches[0]
+          print(json.dumps({
+              "run_id":int(run_id),
+              "head_sha":run["head_sha"],
+              "artifact_id":matches[0]["id"],
+              "artifact_name":matches[0]["name"],
+              "artifact_size_in_bytes":matches[0]["size_in_bytes"],
+          },indent=2))
+          PY
+
+      - name: Download and validate unique failed-run evidence
+        run: |
+          rm -rf /tmp/village001d-g08c-source
+          mkdir -p /tmp/village001d-g08c-source
+          gh run download "$SOURCE_RUN_ID"             --repo "$GITHUB_REPOSITORY"             --name "$SOURCE_ARTIFACT_NAME"             --dir /tmp/village001d-g08c-source
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          root=Path("/tmp/village001d-g08c-source")
+          partial=root/"pairs.partial.jsonl"
+          assert partial.is_file()
+          assert not (root/"pairs.jsonl").exists()
+          rows=[
+              json.loads(line)
+              for line in partial.read_text().splitlines()
+              if line.strip()
+          ]
+          assert len(rows)==40,len(rows)
+          assert len({x["pair_id"] for x in rows})==40
+
+          critic=json.loads((root/"quality/critic.partial.json").read_text())
+          adjudicator=json.loads((root/"quality/adjudicator.partial.json").read_text())
+          assert len(critic)==40,len(critic)
+          assert adjudicator==[],adjudicator
+
+          empties=[]
+          for path in sorted((root/"provider").glob(
+              "V-G08-C-pairs-chunk03-critic-r0-targeted-repair*-content.txt"
+          )):
+              if path.read_text().strip()=='{"reviews":[]}':
+                  empties.append(path.name)
+          assert len(empties)>=3,empties
+          assert any("repair2-b02" in p.name for p in (root/"provider").glob(
+              "V-G08-C-pairs-chunk03-critic-r0-targeted-repair*-content.txt"
+          ))
+          print("validated failed V-G08-C partial: 40/60")
+          print("empty critic repair responses:",*empties)
+          PY
+
+      - name: Build compliant durable recovery dataset
+        run: |
+          root="datasets/$DATASET_ID"
+          test ! -e "$root" || {
+            echo "$root already exists; refusing to rewrite durable raw evidence"
+            exit 1
+          }
+          mkdir -p "$root/raw" "$root/provenance"
+          cp -a /tmp/village001d-g08c-source/. "$root/raw/"
+
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+
+          dataset_id=os.environ["DATASET_ID"]
+          root=Path("datasets")/dataset_id
+          raw=root/"raw"
+
+          def sha(path):
+              h=hashlib.sha256()
+              with path.open("rb") as fh:
+                  for chunk in iter(lambda:fh.read(1024*1024),b""):
+                      h.update(chunk)
+              return h.hexdigest()
+
+          files=sorted(p for p in raw.rglob("*") if p.is_file())
+          partial=[
+              json.loads(line)
+              for line in (raw/"pairs.partial.jsonl").read_text().splitlines()
+              if line.strip()
+          ]
+          empty_files=[
+              p.relative_to(raw).as_posix()
+              for p in sorted((raw/"provider").glob(
+                  "V-G08-C-pairs-chunk03-critic-r0-targeted-repair*-content.txt"
+              ))
+              if p.read_text().strip()=='{"reviews":[]}'
+          ]
+
+          manifest={
+              "schema_version":1,
+              "dataset_id":dataset_id,
+              "experiment":"VILLAGE-001D",
+              "stage":"failed-run-recovery-evidence",
+              "issue":13,
+              "member_id":"V-G08-C",
+              "source_run_id":int(os.environ["SOURCE_RUN_ID"]),
+              "source_head_sha":os.environ["SOURCE_HEAD_SHA"],
+              "source_artifact_id":int(os.environ["SOURCE_ARTIFACT_ID"]),
+              "source_artifact_name":os.environ["SOURCE_ARTIFACT_NAME"],
+              "accepted_partial_pairs":len(partial),
+              "expected_terminal_pairs":60,
+              "raw_file_count":len(files),
+              "failure_class":"critic_targeted_repair_empty_valid_json",
+              "empty_critic_repair_files":empty_files,
+              "raw_root":"raw",
+          }
+          (root/"manifest.json").write_text(
+              json.dumps(manifest,indent=2,sort_keys=True)+"\n"
+          )
+
+          source={
+              "schema_version":1,
+              "source_type":"github-actions-artifact",
+              "repository":os.environ["GITHUB_REPOSITORY"],
+              "workflow_run_id":int(os.environ["SOURCE_RUN_ID"]),
+              "workflow_run_url":(
+                  f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/"
+                  f"{os.environ['SOURCE_RUN_ID']}"
+              ),
+              "source_commit":os.environ["SOURCE_HEAD_SHA"],
+              "artifact_id":int(os.environ["SOURCE_ARTIFACT_ID"]),
+              "artifact_name":os.environ["SOURCE_ARTIFACT_NAME"],
+              "promotion_reason":(
+                  "The resumed V-G08-C lane reuses the partial artifact but provider "
+                  "calls use stable labels, so fresh chunk-3 calls can overwrite copied "
+                  "failed provider records. This standalone archive preserves the exact "
+                  "failed-run source before Actions retention expires."
+              ),
+          }
+          (root/"provenance/source-artifacts.json").write_text(
+              json.dumps(source,indent=2,sort_keys=True)+"\n"
+          )
+
+          readme="\\n".join([
+              "# VILLAGE-001D V-G08-C failed-run recovery evidence",
+              "",
+              "This standalone durable dataset preserves the exact textual contents of GitHub",
+              f"Actions artifact **{os.environ['SOURCE_ARTIFACT_NAME']}** from failed",
+              f"VILLAGE-001D run **{os.environ['SOURCE_RUN_ID']}**.",
+              "",
+              "The artifact contains a valid **40/60** preference-pair partial plus its raw",
+              "compiler/critic request-response history. The terminal blocker was repeated",
+              "HTTP-success critic output with the syntactically valid but empty payload",
+              "`{\\\"reviews\\\":[]}` during targeted repair of chunk 3.",
+              "",
+              "It is archived separately because the subsequent recovery run copies this",
+              "partial and then makes fresh provider calls using the same stable labels.",
+              "Those fresh calls may replace files inside the copied working directory. The",
+              "source run remains historical authority for the failure, and this dataset",
+              "makes that authority durable after Actions artifact expiry.",
+              "",
+              f"- Source commit: `{os.environ['SOURCE_HEAD_SHA']}`",
+              f"- Source artifact ID: `{os.environ['SOURCE_ARTIFACT_ID']}`",
+              "- Member: `V-G08-C`",
+              "- Accepted partial pairs: 40",
+              "- Expected terminal pairs: 60",
+              "- Raw files: `raw/`",
+              "- Machine-readable provenance: `provenance/source-artifacts.json`",
+              "",
+              "No repaired or resumed output is substituted for these raw records.",
+              "",
+          ])
+          (root/"README.md").write_text(readme)
+
+          hashes=[]
+          for path in sorted(p for p in root.rglob("*") if p.is_file()):
+              if path.relative_to(root).as_posix()=="provenance/hashes.sha256":
+                  continue
+              hashes.append(
+                  f"{sha(path)}  {path.relative_to(root).as_posix()}"
+              )
+          (root/"provenance/hashes.sha256").write_text("\n".join(hashes)+"\n")
+          print("durable recovery files:",len(hashes))
+          PY
+
+      - name: Verify archive integrity and add retrieval signposts
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+
+          root=Path("datasets")/os.environ["DATASET_ID"]
+          for line in (root/"provenance/hashes.sha256").read_text().splitlines():
+              expected,rel=line.split("  ",1)
+              actual=hashlib.sha256((root/rel).read_bytes()).hexdigest()
+              assert actual==expected,(rel,actual,expected)
+
+          manifest=json.loads((root/"manifest.json").read_text())
+          assert manifest["accepted_partial_pairs"]==40
+          assert manifest["expected_terminal_pairs"]==60
+          assert len(manifest["empty_critic_repair_files"])>=3
+
+          index=Path("datasets/README.md")
+          text=index.read_text()
+          row=(
+              "| [`village-001d-recovery-v-g08-c`]"
+              "(village-001d-recovery-v-g08-c/README.md) | "
+              "Exact failed-run V-G08-C 40/60 partial and raw provider evidence "
+              "from VILLAGE-001D run 40240732988 | archived |"
+          )
+          if row not in text:
+              marker="\nActions artifacts are staging only."
+              assert marker in text
+              text=text.replace(marker,"\n"+row+"\n"+marker)
+              index.write_text(text)
+
+          rag=Path("RAG.md")
+          text=rag.read_text()
+          bullet=(
+              "- **[VILLAGE-001D V-G08-C failed-run recovery archive]"
+              "(datasets/village-001d-recovery-v-g08-c/README.md)** — exact "
+              "40/60 partial plus raw compiler/critic requests and responses from "
+              "failed D run 40240732988, including repeated empty targeted-repair "
+              "critic outputs; preserved separately before resumed stable-label "
+              "calls can replace copied staging files."
+          )
+          if bullet not in text:
+              anchor=(
+                  "- **[VILLAGE-001 cybernetic goblin foundry]"
+                  "(docs/VILLAGE_001_CYBERGOBLIN_FOUNDRY.md)**"
+              )
+              pos=text.find(anchor)
+              assert pos>=0
+              end=text.find("\n",pos)
+              text=text[:end+1]+bullet+"\n"+text[end+1:]
+              rag.write_text(text)
+
+          print("archive integrity + retrieval signposts: PASS")
+          PY
+
+      - name: Commit durable failed-run evidence
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add             "datasets/$DATASET_ID"             datasets/README.md             RAG.md
+          # Raw provider text is immutable evidence and may legitimately contain
+          # trailing whitespace. Check only the generated metadata/signposts.
+          git diff --cached --check -- \
+            RAG.md \
+            datasets/README.md \
+            "datasets/$DATASET_ID/README.md" \
+            "datasets/$DATASET_ID/manifest.json" \
+            "datasets/$DATASET_ID/provenance/source-artifacts.json" \
+            "datasets/$DATASET_ID/provenance/hashes.sha256"
+          git commit -m "Archive failed V-G08-C preference evidence from run $SOURCE_RUN_ID"
+          git pull --rebase origin main
+          git push origin HEAD:main

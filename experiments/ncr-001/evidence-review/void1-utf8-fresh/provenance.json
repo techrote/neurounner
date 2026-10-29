@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001E",
+  "substage": "fresh_reviewer_void1_reviewed_tokenizer_real_utf8_text_cache_and_cold_adapter",
+  "status": "PASS_REVIEWED_VOID_UTF8_REAL_MODEL_CACHE_COLD_ADAPTER_PREPASS",
+  "source_run": {
+    "run_url": "https://github.com/techrote/neurounner/actions/runs/40464956343",
+    "run_id": 40464956343,
+    "executed_reviewer_commit": "ab1a6fe2eabb90a70ebb888d5b25370e8e005b14",
+    "job_id": 122058031968,
+    "pinned_original_implementation_commit": "5fa3dc8c0de153098d1800f7b0c809819620aef4",
+    "original_artifact_id": 12716546149,
+    "artifact_name": "ncr-001e-void-real-UTF8-fresh-a1",
+    "original_artifact_zip_sha256": "6714cbdababf999e1a2b9419609750dc41311d6c924a42ffb0b256247f7d5760",
+    "original_receipt_file": "void-real-text-fresh.json",
+    "original_receipt_sha256": "a595e5bc61762f35085fbaeb24c1a5a8d4e654ef3a344a1c56232046a51e7e51",
+    "original_receipt_bytes": 5288,
+    "archived_receipt_path": "experiments/ncr-001/evidence-review/void1-utf8-fresh/receipt.json",
+    "original_static_report_sha256": "14ac28204837d7615220981c5b3ec3c86b9effe548306047b012fed69e0efa1c",
+    "run_status": "success"
+  },
+  "model": {
+    "repo": "dotlabs/void.1",
+    "revision": "9c2be5087772867d45961abd11f6b35110617563",
+    "full_downloaded_weight_sha256": "ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3",
+    "full_weight_bytes": 360622744,
+    "source_tokenizer_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+    "source_tokenizer_review": "https://github.com/techrote/neurounner/pull/90",
+    "tokenizer_runtime_review": "https://github.com/techrote/neurounner/pull/91",
+    "tokenizer_executed_after_source_review": true,
+    "tokenizer_offline_runtime": true,
+    "bos_id": 257,
+    "eos_id": 258,
+    "pad_id": 256,
+    "frozen_model_params": 90148352,
+    "nca_params": 329944
+  },
+  "checks": {
+    "zero_init_16_64_128_utf8_max_abs": 0,
+    "left_and_right_padding_noop_max_abs": 0,
+    "zero_init_greedy_generation_equal": true,
+    "actual_eos_emitted_in_four_generated_units": false,
+    "manually_nontrained_nca_logits_max_abs": 0.062297821044921875,
+    "full_vs_true_incremental_cache_48_utf8_max_abs": 0.0000286102294921875,
+    "future_suffix_change_earlier_logits_max_abs": 0,
+    "A_B_A_request_state_exact": true,
+    "cold_new_adapter_same_frozen_model_exact": true,
+    "wrong_source_revision_metadata_rejected": true,
+    "optimizer_steps": 0,
+    "training_performed": false,
+    "independent_four_model_conformance_accepted": false
+  },
+  "limits": [
+    "Source-bound fresh reviewer model host with 16/64/128 positions, genuine tokenizer-generated Unicode and a same-process cold adapter",
+    "No fresh separate-process checkpoint reload, no multi-backbone independent final #72 admission",
+    "No learned NCA or MLP controls, no held-out model quality or speedup claims",
+    "Four generated token units without EOS is an observed outcome, not evidence of overall model stopping propensity"
+  ],
+  "explicit_training_gate": false
+}
