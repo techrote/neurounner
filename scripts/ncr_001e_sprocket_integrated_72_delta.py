@@ -232,7 +232,8 @@ def compose(diagnostic: dict, originals: dict) -> dict:
             "source_physical_2048_run": 40939386209,
             "source_diagnostic_19_unit_run": EXPECTED_DIAGNOSTIC_RUN,
             "observed_bounded": {
-                "masked_batch_2048_physical_positions": 2,
+                "masked_batch_size": 2,
+                "masked_sequence_physical_positions": 2048,
                 "short_row_true_tokens": 1536,
                 "actual_one_token_kv_increments": 4,
                 "masked_left_right_cache_max_abs": errors,
