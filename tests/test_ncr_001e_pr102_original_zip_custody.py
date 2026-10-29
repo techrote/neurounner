@@ -19,13 +19,13 @@ class OriginalZipTests(unittest.TestCase):
             with self.assertRaises((ValueError,FileNotFoundError)):
                 c.audit(p)
     def test_original_zip_append_refused(self):
-        self.mutate(c.ORIGINAL_ZIP.name,lambda b:b+b"\\n")
+        self.mutate(c.ORIGINAL_ZIP.name,lambda b:b+b"\n")
     def test_source_tar_append_refused(self):
-        self.mutate(c.ORIGINAL_TAR.name,lambda b:b+b"\\n")
+        self.mutate(c.ORIGINAL_TAR.name,lambda b:b+b"\n")
     def test_job_log_append_refused(self):
-        self.mutate(c.ORIGINAL_LOG.name,lambda b:b+b"\\nFORGED")
+        self.mutate(c.ORIGINAL_LOG.name,lambda b:b+b"\nFORGED")
     def test_manifest_extra_whitespace_refused(self):
-        self.mutate(c.MANIFEST.name,lambda b:b+b"\\n")
+        self.mutate(c.MANIFEST.name,lambda b:b+b"\n")
     def test_missing_archive_refused(self):
         with tempfile.TemporaryDirectory() as t:
             p=Path(t)

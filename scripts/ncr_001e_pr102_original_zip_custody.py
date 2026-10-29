@@ -20,8 +20,8 @@ ZIP_SHA = "7e38a9c8438701c460597fc87016f3a26ece2d12b97482cfbcb44b0e6974a2ab"
 ZIP_BLOB = "4a54a61b56ad0dc326082a157974c0737f28a294"
 TAR_SHA = "bb6109524362c8be1b19b420e7c646de4cc9a685ca7157e6afa55e0c203ae961"
 TAR_BLOB = "f56ae18f10afbe1ae87f579f422ba8d302a8d25a"
-# Filled only AFTER original GitHub-decoded log is committed and independently reviewed.
-ORIGINAL_LOG_BLOB = None
+# Independently pinned complete GitHub-decoded original job log Git blob; original log text, not HTTP log transport ZIP.
+ORIGINAL_LOG_BLOB = "7a377e6cd90ae2de16a3eacc8cc20da120ec3272"
 
 def refuse(ok: bool, why: str):
     if not ok:
