@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import binascii
 import hashlib
 import io
 import json
@@ -176,8 +177,11 @@ def audit(evidence: Path = EVIDENCE) -> dict:
            and b"Ran 6 tests" in logged,
            "full original physical GitHub job log changed")
     b64 = (evidence / ARCHIVE).read_bytes().strip()
-    compressed = base64.b64decode(b64, validate=True)
-    original = lzma.decompress(compressed, memlimit=256*1024*1024)
+    try:
+        compressed = base64.b64decode(b64, validate=True)
+        original = lzma.decompress(compressed, memlimit=256*1024*1024)
+    except (lzma.LZMAError, ValueError, binascii.Error) as exc:
+        raise ValueError("NCR001_ROOT_CE_ORIGINAL_REFUSED: compressed original archive cannot be decoded") from exc
     result = validate_zip(original)
     return {"status": "PASS_ORIGINAL_FULL_ZIP_AND_LOG_GIT_CUSTODY__72_BLOCKED",
             "decoded_full_job_blob": JOB_BLOB,
