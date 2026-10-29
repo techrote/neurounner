@@ -10,7 +10,7 @@ After the initial aggregation, the reviewer clarified the intended meaning of th
 
 The two original rating files are preserved **unchanged**. They must not be edited in place or silently discarded. `gameplay-reaction-summary.json` preserves their descriptive character/gameplay interpretation; `review-status.json` records that they have no relevance-gate authority.
 
-**Current objective relevance qualification: unresolved.** These scores do not decide it. Population expansion therefore remains blocked by the separate relevance gate, while the subjective reaction evidence can still inform character-design work.
+**Historical objective relevance qualification: unresolved.** These subjective scores do not decide it. The owner has **retired objective relevance nonregression as a population-expansion gate**; it cannot itself block later cast screening. This review still admits no population expansion, and separate source, leakage, game-authority, clue-route and execution gates remain in force.
 
 ## Subjective gameplay-reaction interpretation
 
@@ -60,6 +60,6 @@ The committed `relevance-summary.json` is required by the dedicated regression t
 
 G02's local regenerated C2-parent → C3 delta is `−0.25` (3.50 → 3.25); its C2 continuation mean was 3.50. G09 exceeds the maximum allowed regression (`0.5`) by `1.0`.
 
-**If interpreted through the relevance aggregator, these reclassified scores mechanically produce candidate-set FAIL. That is not a current relevance qualification verdict.** Their intended interpretation is the separate subjective gameplay-reaction summary. **Population expansion remains NOT ADMITTED** because objective relevance is unresolved. A relevance result cannot override proposition/leakage controls or source/lineage requirements; existing C1/C2/C3 learner-finals remain sealed. No training, fresh inference, label adjustment, hidden relevance access before rating freeze, or automatic model judging was performed here.
+**If interpreted through the relevance aggregator, these reclassified scores mechanically produce candidate-set FAIL. That is not a current relevance qualification verdict.** Their intended interpretation is the separate subjective gameplay-reaction summary. **Population expansion remains NOT ADMITTED by this review** because this review has no admission authority; objective relevance nonregression has been retired as a prerequisite, while separate source/policy, clue-route, game-authority and resource/execution gates remain. A relevance result cannot override proposition/leakage controls or source/lineage requirements; existing C1/C2/C3 learner-finals remain sealed. No training, fresh inference, label adjustment, hidden relevance access before rating freeze, or automatic model judging was performed here.
 
 Reviewing this PR is distinct from asserting objective relevance or rubric compliance. Source-matched CI qualifies the executable aggregation/custody and preserves the subjective reaction evidence; it does not convert those scores into relevance judgments.
