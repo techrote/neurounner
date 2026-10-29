@@ -99,6 +99,7 @@ jobs:
                   test([sys.executable,'-m','unittest','discover','-s','tests','-p',pattern,'-v'],f'{n}-{pattern}.log')
               if n==156:
                   test([sys.executable,'scripts/ncr_001_postlease_evidence_audit.py'],f'{n}-original-archive-audit.json')
+                  sys.path.insert(0,str(pathlib.Path('scripts').resolve()))
                   from ncr_001_postlease_evidence_audit import load
                   manifest,records=load()
                   originals=api('/actions/runs/40681920472/artifacts?per_page=100')['artifacts']
@@ -131,8 +132,6 @@ jobs:
                   assert set(sum((r['members'] for r in checked.values()),[]))==set(manifest['original_files'])
                   (out/'original-zip-readback.json').write_text(json.dumps(checked,indent=2)+'\n')
                   # Original real Sprocket sources remain byte-for-byte what was tested:
-                  import importlib
-                  import ncr_001_postlease_evidence_audit as audit
                   for lane in ('chat','instruct'):
                       d=json.loads(records[lane+'/producer.json'])
                       for source,expected in d['source_sha256'].items():
