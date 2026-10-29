@@ -125,6 +125,14 @@ def measure_schedule(callables: dict, *, repeats=REPEATS, warmups=WARMUPS) -> di
     }
 
 
+def require_runtime_threads(report: dict) -> None:
+    """Fail closed on the actual timing-path threads, not startup metadata."""
+    effective = torch.get_num_threads()
+    refuse(effective == 4 and
+           report["runner"].get("cpu_threads") == effective,
+           "four-thread CPU timing contract is not active or report is stale")
+
+
 def save(destination: Path, report: dict) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     report["peak_process_ru_maxrss_kib"] = resource.getrusage(
@@ -165,7 +173,8 @@ def base_report(variant: str) -> dict:
             "torch": torch.__version__,
             "transformers": transformers.__version__,
             "huggingface_hub": huggingface_hub.__version__,
-            "cpu_threads": torch.get_num_threads(),
+            "cpu_threads_at_report_start": torch.get_num_threads(),
+            "cpu_threads": None,  # set only after the actual four-thread contract is active
             "cpu_model": next(
                 (line.partition(":")[2].strip()
                  for line in Path("/proc/cpuinfo").read_text().splitlines()
@@ -190,6 +199,8 @@ def run(variant: str, destination: Path, report: dict) -> None:
         text=True).strip() == FORMAT_HEAD,
         "immutable independent publisher ordinary-role formatter checkout changed")
     torch.set_num_threads(4)
+    report["runner"]["cpu_threads"] = torch.get_num_threads()
+    require_runtime_threads(report)
     torch.manual_seed(20261029)
     spec, protocol, pin = check_contract(variant)
     report["source_identity"] = {
@@ -240,6 +251,7 @@ def run(variant: str, destination: Path, report: dict) -> None:
             report[kind + "_manual_untrained_effect"] = effect
         save(destination, report)
         for length in LENGTHS:
+            require_runtime_threads(report)
             x = tokens[:, :length]
             callables = {
                 "frozen": lambda x=x: model(input_ids=x, use_cache=False).logits,
@@ -247,6 +259,7 @@ def run(variant: str, destination: Path, report: dict) -> None:
                 "mlp": lambda x=x: mlp(input_ids=x, use_cache=False).logits,
             }
             row = measure_schedule(callables)
+            require_runtime_threads(report)
             row["synthetic_shape"] = [1, length]
             report["synthetic_cases"].append(row)
             save(destination, report)

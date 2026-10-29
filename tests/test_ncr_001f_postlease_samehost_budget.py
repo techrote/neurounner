@@ -113,6 +113,21 @@ class SameHostBudgetTests(unittest.TestCase):
             self.assertEqual(r["optimizer_steps"], 0)
             self.assertFalse(r["frozen_host_loaded"])
 
+    def test_effective_timing_threads_not_misreported_from_startup(self):
+        r = budget.base_report("chat")
+        self.assertIsNone(r["runner"]["cpu_threads"])
+        self.assertIsInstance(r["runner"]["cpu_threads_at_report_start"], int)
+        r["runner"]["cpu_threads"] = 4
+        with patch.object(budget.torch, "get_num_threads", return_value=4):
+            budget.require_runtime_threads(r)
+        with patch.object(budget.torch, "get_num_threads", return_value=2):
+            with self.assertRaisesRegex(ValueError, "four-thread"):
+                budget.require_runtime_threads(r)
+        r["runner"]["cpu_threads"] = 2
+        with patch.object(budget.torch, "get_num_threads", return_value=4):
+            with self.assertRaisesRegex(ValueError, "four-thread"):
+                budget.require_runtime_threads(r)
+
     def test_wrong_variant_and_modified_protocol_are_refused(self):
         for variant in ("void1", "root", "sprocket_chat"):
             with self.subTest(variant=variant):
