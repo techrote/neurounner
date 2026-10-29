@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001E",
+  "stage": "fresh_Sprocket_source_documented_role_and_dual_frozen_model_prepass",
+  "status": "PASS_PINNED_ROLE_AND_SEPARATE_FROZEN_CHAT_INSTRUCT_SOURCE_CACHE_COLD_PREPASS",
+  "qualification_level": "source_bound_preliminary_only_not_final_NCR_001E",
+  "source_run": {
+    "workflow_url": "https://github.com/techrote/neurounner/actions/runs/40469703065",
+    "run_id": 40469703065,
+    "source_commit": "d25ceea2f15c637ef5de9b73c33272204cb494c8",
+    "published_current_branch_commit_unrelated": "source_run_commit_is_immutable_original_before_archival",
+    "format_job_id": 122073610885,
+    "chat_job_id": 122073729319,
+    "instruct_job_id": 122073729387,
+    "original_actions_result": "success",
+    "model_weights_downloaded_by_metadata_job": false,
+    "actual_model_optimizer_steps": 0
+  },
+  "source_identity": {
+    "repository": "kandivault/sprocket-500m",
+    "pinned_revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+    "model_card_sha256": "09aec879dc5b387bdc031dc3c74d77a9ba44362a55163f9a8b456761b68142c9",
+    "documented_user_role_id": 3,
+    "documented_end_role_id": 5,
+    "documented_assistant_role_id": 4,
+    "tool_call_token_id": 6,
+    "tool_result_token_id": 7,
+    "memory_read_token_id": 10,
+    "memory_write_token_id": 11,
+    "tool_and_memory_behavior_independently_qualified": false,
+    "chat_actual_weights_sha256": "551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97",
+    "instruct_actual_weights_sha256": "1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864",
+    "chat_original_implementation_sha": "83a56835a7476f17a17980d28dd1a7c14bb6f2f6",
+    "instruct_original_implementation_sha": "b95c010f9b2ba3cbd9f81317981316bb9c8acd19"
+  },
+  "original_sources": {
+    "pinned_role_inventory": {
+      "archive": "experiments/ncr-001/evidence-review/sprocket-fresh/original-role-inventory.json.gz.b64",
+      "original_file_name": "sprocket-pinned-role-inventory.json",
+      "original_raw_size_bytes": 8008,
+      "original_raw_sha256": "1e5dad585bf6ea07827df210dea3b24b43df20a241372525e1b42fa9d1818021",
+      "gzip_sha256": "63f50248b8bc71a73128f80ec9230c9e872e9d7d003c1b9874d97adb12e95bcc",
+      "original_actions_zip_sha256": "fee9688b330e3b8a210cd67b86ff564d1fa11d45d1e5b3ab07e5358ddf1c3a5c",
+      "artifact_id": 12718181942
+    },
+    "chat_fresh": {
+      "archive": "experiments/ncr-001/evidence-review/sprocket-fresh/original-chat.json.gz.b64",
+      "original_file_name": "sprocket-chat-fresh.json",
+      "original_raw_size_bytes": 6527,
+      "original_raw_sha256": "616d9f0876757b40c79b3c436fa89dbc4a199ad3ad16f3518532d64860309e1c",
+      "gzip_sha256": "a7b36272e0a48019dab30b834ae4e944c859ca26fbff32de517fd238d08afc14",
+      "original_actions_zip_sha256": "c8ef252e816a0c04199e724d7729c96287a88fdb356594343cd1b3077f3008ec",
+      "artifact_id": 12718485354
+    },
+    "instruct_fresh": {
+      "archive": "experiments/ncr-001/evidence-review/sprocket-fresh/original-instruct.json.gz.b64",
+      "original_file_name": "sprocket-instruct-fresh.json",
+      "original_raw_size_bytes": 6681,
+      "original_raw_sha256": "af1ccdfad8350e5f1dd6e0ba07b6c6dfd8ce1396ab5c33981a9609d3200f87c0",
+      "gzip_sha256": "697a89e4cc166830882b1fe841b521486ad543bdc82cd211519141b5d7182826",
+      "original_actions_zip_sha256": "8ae2e3aa6f55f7cb2fcfff8ab99406ab0e4d5f043252b812ab88abb6069fbc58",
+      "artifact_id": 12717688407
+    }
+  },
+  "observed_results": {
+    "meta_only_source_readback": true,
+    "source_card_plain_chat_template_verified": true,
+    "both_variant_role_token_ids_verified": true,
+    "genuine_model_runs_source_identical_variants_distinct_weight_hashes": true,
+    "zero_init_logits_exact_up_to_128_units_both": true,
+    "left_right_padded_batch_noop_pass_both": true,
+    "manually_activated_nca_chat_cache_max_abs": 0.000054836273193359375,
+    "manually_activated_nca_instruct_cache_max_abs": 0.00009918212890625,
+    "future_suffix_max_abs_both": 0,
+    "same_process_new_adapter_cold_reload_equal_both": true,
+    "A_B_A_request_isolation_equal_both": true,
+    "wrong_variant_weight_sha_revision_refused_both": true,
+    "training_performed": false,
+    "tool_and_memory_semantics_pass": false
+  },
+  "still_blocked": [
+    "Actual tool-call argument schema, tool result selection/consumption and memory write/read continuity not qualified",
+    "Both Chat/Instruct cold adapter reloads used the same live frozen backbone process",
+    "Longer/full-context adversarial conformance and formal independent reviewer acceptance not complete",
+    "No actual matched gated-MLP model hook training, no learned NCA, no held-out quality result",
+    "NCR protocol train_authorized=false and parent source PRs remain draft"
+  ]
+}

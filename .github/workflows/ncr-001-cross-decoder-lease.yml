@@ -1,0 +1,117 @@
+name: NCR-001 cross-NCA-MLP decoder lease no-training conformance
+
+on:
+  pull_request:
+    branches: [review/ncr001f-shared-backbone-ownership-20261028]
+    paths:
+      - ".github/workflows/ncr-001-cross-decoder-lease.yml"
+      - "scripts/ncr_001_backbone_lease.py"
+      - "scripts/ncr_001_smollm2.py"
+      - "scripts/ncr_001_sprocket_chat.py"
+      - "scripts/ncr_001_sprocket_instruct.py"
+      - "scripts/ncr_001_void1.py"
+      - "scripts/ncr_001f_frozen_hooks.py"
+      - "tests/test_ncr_001_cross_decoder_lease.py"
+      - "tests/test_ncr_001_cross_decoder_archive.py"
+      - "scripts/ncr_001_cross_decoder_archive.py"
+      - "docs/NCR_001_SHARED_DECODER_LEASE.md"
+      - "experiments/ncr-001/controls-evidence/cross-decoder-lease/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001-cross-decoder-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  synthetic-composition-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      OMP_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 0 # required to inspect historical tested source Git blobs
+      - name: Verify source and closed authorization
+        env:
+          NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("Four independent frozen-model identities; training remains forbidden")
+          PY
+      - name: Install CPU-only synthetic test dependency
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+      - name: Static syntax and synthetic cross-module negative tests
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p runtime/ncr001-cross-decoder
+          python3 -m py_compile scripts/ncr_001_backbone_lease.py scripts/ncr_001_smollm2.py \
+            scripts/ncr_001_sprocket_chat.py scripts/ncr_001_sprocket_instruct.py \
+            scripts/ncr_001_void1.py scripts/ncr_001f_frozen_hooks.py \
+            tests/test_ncr_001_cross_decoder_lease.py scripts/ncr_001_cross_decoder_archive.py tests/test_ncr_001_cross_decoder_archive.py
+          python3 -m unittest discover -s tests -p "test_ncr_001_cross_decoder_lease.py" -v 2>&1 \
+            | tee runtime/ncr001-cross-decoder/tests.log
+      - name: Independent original run archive integrity and adversarial refusals (no model)
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 scripts/ncr_001_cross_decoder_archive.py | tee runtime/ncr001-cross-decoder/original-archive-check.json
+          python3 -m unittest discover -s tests -p "test_ncr_001_cross_decoder_archive.py" -v 2>&1 \
+            | tee runtime/ncr001-cross-decoder/archive-tests.log
+      - name: Record exact-source, runner and negative-test evidence
+        if: always()
+        run: |
+          mkdir -p runtime/ncr001-cross-decoder
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,platform,subprocess
+          root=pathlib.Path("runtime/ncr001-cross-decoder")
+          paths=[
+            "scripts/ncr_001_backbone_lease.py", "scripts/ncr_001_smollm2.py",
+            "scripts/ncr_001_sprocket_chat.py", "scripts/ncr_001_sprocket_instruct.py",
+            "scripts/ncr_001_void1.py", "scripts/ncr_001f_frozen_hooks.py",
+            "tests/test_ncr_001_cross_decoder_lease.py",
+            "experiments/ncr-001/protocol.json", "experiments/ncr-001/source-pins.json"]
+          source={p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths}
+          log=(root/"tests.log").read_text(errors="replace") if (root/"tests.log").exists() else ""
+          obj={"schema_version":1,"experiment":"NCR-001","execution":"synthetic_cross_adapter_only",
+               "training_authorized":False,"optimizer_steps":0,"original_model_executed":False,
+               "head_sha":subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip(),
+               "run_id":os.environ.get("GITHUB_RUN_ID"),
+               "run_attempt":os.environ.get("GITHUB_RUN_ATTEMPT"),
+               "runner_name":os.environ.get("RUNNER_NAME"),
+               "runner_os":os.environ.get("RUNNER_OS"),
+               "runner_arch":os.environ.get("RUNNER_ARCH"),
+               "platform":platform.platform(),"python":platform.python_version(),
+               "source_sha256":source,
+               "log_sha256":hashlib.sha256(log.encode()).hexdigest() if log else None,
+               "test_log_has_OK":("OK" in log and "Ran 10 tests in" in log),
+               "limits":["not an original frozen HF execution","no optimizer or held-out",
+                         "direct unwrapped model use and cross-process calls not protected"]}
+          (root/"receipt.json").write_text(json.dumps(obj,indent=2,sort_keys=True)+chr(10))
+          print(json.dumps(obj,indent=2,sort_keys=True))
+          PY
+      - name: Preserve source-bound synthetic evidence on success/failure
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-cross-decoder-a${{ github.run_attempt }}
+          path: runtime/ncr001-cross-decoder/
+          if-no-files-found: warn
+          retention-days: 30

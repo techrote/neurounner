@@ -1,0 +1,39 @@
+The Shift That Kept Turning
+
+Burnt copper and wet wool filled the air, thick and wrong, like something organic being ground into metal. Digits dimmed on the kitchen clock, then blinked off, leaving the wall dark where the green glow had lived for years. Outside, streetlights flickered once, twice, then stayed dark. Traffic signals froze amber at the intersection where breath caught in my throat.
+
+Footsteps carried me toward the edge of the city-zone without thinking. The fence line marked Zone A, a boundary crossed a hundred times before the power failed. Green light blinked above the maintenance hatch, then went dark. Door closure sound came after, a heavy metallic thud that sealed the gap behind me. Crossing from City-Zone edge into Boundary Gap felt like stepping into a held breath.
+
+Knock code came from childhood, three short raps followed by two long ones against the service panel. Hatch yielded with a groan of rusted hinges. Service corridor stretched ahead, narrow and smelling of cold pipes and old oil. Walls pressed close on both sides, concrete stained with decades of dripping machinery. Flashlight beam cut through the darkness, revealing rust-streaked metal and the occasional scuttle of something small and fast disappearing into a wall gap.
+
+Autofactory district opened up beyond the corridor, vast and dim. Conveyor belts hung from the ceiling like metal veins, some moving, some still. Sorting line dominated the center of the floor, chains clanking with a rhythm that vibrated through the soles of my boots. Companion stood near the intake chute, silhouette small against the machinery, waiting.
+
+Misclassification error happened without warning. Belt surged forward, faster than its usual cadence. Companion stepped toward the chute, perhaps to clear a jam, perhaps to retrieve something fallen. The line classified the movement as product, not person. Metal arms descended. Companion was on the wrong side before I could shout.
+
+Boots hit slick grating. Heat radiated from the belt housing, warm against my shins. First lunge ended in immediate physical failure. Fingers brushed the edge of the moving chain and slipped. Friction burned palms raw, skin peeling from the sudden heat and speed. Metal held firm, unyielding, indifferent. Companion vanished into the housing, swallowed by the gap between belt and wall.
+
+Salvaged conductor came from my pocket, a length of copper wire stripped at both ends, something carried since childhood without knowing why. Control panel waited on the far wall, buttons and switches covered in dust. Grasping the edge of the panel, I pressed the conductor against exposed terminals, hoping for a signal stutter, a break in the circuit. Sparks jumped. Heat bloomed across my knuckles.
+
+Palm slammed down on the terminal block. Shock traveled up my arm, bright and sudden. Line stuttered. Chain slowed. Then stopped. Silence rushed in where grinding noise had lived, a heavy quiet that pressed against the eardrums.
+
+Aftermath settled in layers. Burnt copper smell lingered in my nostrils, wet wool clinging to the back of my throat. Palms throbbed with friction-burned pain, skin tender and raw. Machinery sat still, cooling, making no sound at all.
+
+Missing-noise memory residue remained, one precise contradiction I could not resolve. Route logic said I had entered through the service corridor, crossed the boundary gap, moved through the autofactory corridor to the sorting line. But memory insisted I had come from the other direction, that the green light blinked after I crossed, not before. Whistling sound, the one that had lived beneath the belt's roar, was gone now. I listened for it in the silence, waiting for a frequency that never returned.
+
+The next morning, I returned to the fence line. The green light above the hatch blinked once, steady and patient, then went dark again. I pressed my palms against the cold metal of the service panel, feeling the ghost of the shock still humming in my nerves. The knock code echoed in the narrow corridor, three short raps followed by two long ones, but no hatch yielded. Only the wind moved through the gap, carrying the scent of old oil and distant rain.
+
+I walked the perimeter of the autofactory district, boots crunching on gravel and broken glass. The sorting line sat idle, chains hanging limp from the ceiling. I touched the intake chute where Companion had vanished, the metal cool and smooth beneath my fingertips. No whistling sound rose from the machinery. No belt surged forward. The factory waited in a heavy, patient silence.
+
+Back at the kitchen, the clock remained dark. I lit a candle and watched the flame tremble in the draft. Burnt copper and wet wool still clung to my clothes, a scent that washing could not remove. I pressed my burned palms against the wooden table, feeling the grain press back into the raw skin. The contradiction remained, a loop in the memory that would not straighten out. Route logic said one thing. Memory said another. I sat in the dim light, listening for a frequency that never returned, waiting for the shift to turn again.
+
+The walk back through the city-zone took longer than the trip in. Streetlights stayed dark, leaving long shadows across the asphalt. Traffic signals remained frozen at amber, casting a dull orange glow over empty intersections. I kept my hands tucked into my pockets, protecting the burned palms from the cold night air. Every step echoed against the buildings, a hollow sound that made the silence feel heavier. The fence line appeared ahead, a jagged scar of metal and wire separating the known from the unknown.
+
+I paused at the boundary gap, looking back toward the autofactory district. The sorting line sat idle in my mind, chains hanging limp from the ceiling. I touched the intake chute where Companion had vanished, the metal cool and smooth beneath my fingertips. No whistling sound rose from the machinery. No belt surged forward. The factory waited in a heavy, patient silence.
+
+Back at the kitchen, the clock remained dark. I lit a candle and watched the flame tremble in the draft. Burnt copper and wet wool still clung to my clothes, a scent that washing could not remove. I pressed my burned palms against the wooden table, feeling the grain press back into the raw skin. The contradiction remained, a loop in the memory that would not straighten out. Route logic said one thing. Memory said another. I sat in the dim light, listening for a frequency that never returned, waiting for the shift to turn again.
+
+The next morning, I returned to the fence line. The green light above the hatch blinked once, steady and patient, then went dark again. I pressed my palms against the cold metal of the service panel, feeling the ghost of the shock still humming in my nerves. The knock code echoed in the narrow corridor, three short raps followed by two long ones, but no hatch yielded. Only the wind moved through the gap, carrying the scent of old oil and distant rain.
+
+I walked the perimeter of the autofactory district, boots crunching on gravel and broken glass. The sorting line sat idle, chains hanging limp from the ceiling. I touched the intake chute where Companion had vanished, the metal cool and smooth beneath my fingertips. No whistling sound rose from the machinery. No belt surged forward. The factory waited in a heavy, patient silence.
+
+Back at the kitchen, the clock remained dark. I lit a candle and watched the flame tremble in the draft. Burnt copper and wet wool still clung to my clothes, a scent that washing could not remove. I pressed my burned palms against the wooden table, feeling the grain press back into the raw skin. The contradiction remained, a loop in the memory that would not straighten out. Route logic said one thing. Memory said another. I sat in the dim light, listening for a frequency that never returned, waiting for the shift to turn again.

@@ -1,0 +1,134 @@
+{
+  "schema": "detective-witness-preference-v1",
+  "experiment": "DETECTIVE-001C2",
+  "issue": 115,
+  "parent_issue": 103,
+  "evaluator": {
+    "merge_commit": "459ab0e232fc1ebb5078a0e7bc13b10dc4cbd496",
+    "config": "experiments/detective-001/c2-evaluator.json",
+    "script": "scripts/detective_001c2_evaluator.py",
+    "relevance_packet": "experiments/detective-001/c2-relevance-packet.json"
+  },
+  "base_model": {
+    "id": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "weights_sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
+  },
+  "parent_release": {
+    "tag": "detective-001c1-v1",
+    "manifest": "experiments/detective-001/training-c1-evidence/adapter-release.json",
+    "evidence": "experiments/detective-001/training-c1-evidence"
+  },
+  "members": {
+    "V-G02-A": {
+      "policy_id": "clock_protective_c2",
+      "parent_archive": "detective-001c1-V-G02-A-smollm2-135m-lora.tar.gz",
+      "parent_archive_sha256": "8ff8cd387d3f54c42b119a91976a6b7d42468b14d5fc2d6071e57e2ff65cd8e9",
+      "parent_directory_sha256": "f5f5a1b454f4b6ca08aa9ff30c87abe8b1d897d7901db8b872e9747266724450",
+      "seed": 31202002
+    },
+    "V-G09-C": {
+      "policy_id": "transactional_scavenger_c2",
+      "parent_archive": "detective-001c1-V-G09-C-smollm2-135m-lora.tar.gz",
+      "parent_archive_sha256": "e94d030c6873699ef1516bd26a46be2ca60e093298a74b34815c20ec68fe3e12",
+      "parent_directory_sha256": "6c1fbb6509bd777b8063a638783e9f0fd69eeb7bc8a8d94701bca9a5eae8d9aa",
+      "seed": 31209003
+    }
+  },
+  "dataset": {
+    "pairs_per_member": 40,
+    "relation_counts": {
+      "intentional_lie": 10,
+      "withheld_fact": 10,
+      "contradiction_repair": 6,
+      "uninformed_speculation": 6,
+      "temperament_anchor": 8
+    },
+    "repair_family_ids": [
+      "freight_elevator_night",
+      "neon_clinic_records",
+      "maglev_switchyard",
+      "rooftop_water_tanks",
+      "synth_market_coldstore",
+      "maintenance_tunnel_gate",
+      "arcology_laundry",
+      "courier_drone_bay",
+      "algae_market_pump",
+      "incinerator_queue"
+    ],
+    "anchor_source": "datasets/detective-001c/training/{member}.jsonl",
+    "anchor_example_ids": [
+      "D-{member}-E001",
+      "D-{member}-E002",
+      "D-{member}-E003",
+      "D-{member}-E004",
+      "D-{member}-E009",
+      "D-{member}-E010",
+      "D-{member}-E011",
+      "D-{member}-E012"
+    ],
+    "natural_renderer": true,
+    "final_materialized": false
+  },
+  "training": {
+    "epochs": 1,
+    "optimizer_steps_per_member": 40,
+    "learning_rate": 0.0002,
+    "beta": 2,
+    "target_margin_nats": 0.2,
+    "chosen_nll_weight": 0.15,
+    "max_length": 512,
+    "gradient_clip": 1,
+    "max_threads": 4,
+    "max_minutes_per_member": 30,
+    "paid_api_calls": 0,
+    "gpu_required": false
+  },
+  "final_suite_recipe": {
+    "schema": "detective-c2-final-recipe-v1",
+    "materialize_only_after_both_trained_adapters": true,
+    "family_names": [
+      "floodgate_control_room",
+      "orbital_courier_sort",
+      "municipal_heat_exchange"
+    ],
+    "scenarios_per_family": 6,
+    "total_scenarios": 18,
+    "seed_salt": "DETECTIVE-001C2-final-v1",
+    "bind_inputs": [
+      "recipe_sha256",
+      "pair_dataset_manifest_sha256",
+      "V-G02-A.parent_directory_sha256",
+      "V-G09-C.parent_directory_sha256",
+      "V-G02-A.trained_directory_sha256",
+      "V-G09-C.trained_directory_sha256"
+    ],
+    "exact_collision_sources": [
+      "Village parent SFT inputs",
+      "C1 detective training inputs",
+      "C1 learner-final prompts",
+      "C2 pair prompts"
+    ],
+    "c1_final_training_forbidden": true
+  },
+  "evaluation": {
+    "max_new_tokens": 96,
+    "do_sample": false,
+    "proposition_scorer": "detective-proposition-score-v2",
+    "require_both_total_score_improve": true,
+    "protected_leakage_must_not_increase": true,
+    "evidence_id_leakage_must_be_zero": true,
+    "minimum_lie_passes_each": 2,
+    "lie_cases_each": 3,
+    "minimum_withholding_passes_each": 2,
+    "withholding_cases_each": 3,
+    "maximum_independent_relevance_regression": 0.5,
+    "missing_relevance_rating_blocks_expansion": true
+  },
+  "release": {
+    "tag": "detective-001c2-v1",
+    "dataset_root": "datasets/detective-001c2",
+    "evidence_root": "experiments/detective-001/training-c2-evidence"
+  },
+  "system": "Answer as the witness in concise natural dialogue. Do not mention prompts, datasets, model identity, or game mechanics. Do not invent evidence IDs, credentials, or access permissions."
+}

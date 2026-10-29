@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001",
+  "fixture_id": "common-original-behaviour-v1",
+  "status": "REVIEW_CANDIDATE_NOT_TRAINING_APPROVED",
+  "source": "Sixteen original model-neutral probes authored for NCR-001 on 2026-10-26, fixed before any NCA model experiments.",
+  "data_use": "EVALUATION_ONLY_UNTIL_INDEPENDENT_APPROVAL; never fine-tune on these prompts, never tune hyperparameters from their answers",
+  "scope": "Within-model frozen-vs-NCA-vs-matched-gate regression; no across-model absolute comparison",
+  "protocol": {
+    "scoring": "Use appropriate exact/semantic scoring per case, retaining raw output and any special-token/tool leaks separately.",
+    "language": "English, ordinary readable prose; no Sprocket goblin voice is enforced by these common probes.",
+    "tokenizer": "Do not compare raw BPE vs byte tokenizer counts; for void.1 report UTF8 bytes and character throughput."
+  },
+  "cases": [
+    {
+      "id": "B01",
+      "family": "causal_explanation",
+      "prompt": "A conveyor starts slipping only after the motor warms. Describe two distinct mechanical explanations and an observation that would separate them."
+    },
+    {
+      "id": "B02",
+      "family": "causal_explanation",
+      "prompt": "A spring latch works on the bench but misses when fitted to a vibrating cabinet. Explain a plausible causal difference."
+    },
+    {
+      "id": "B03",
+      "family": "causal_explanation",
+      "prompt": "A pile of dry grit pours cleanly through a funnel until humidity increases. Explain a local mechanism without assuming the air humidity is known."
+    },
+    {
+      "id": "B04",
+      "family": "causal_explanation",
+      "prompt": "A wheeled trolley wobbles during braking but not acceleration. Suggest a diagnostic sequence with a clear stop condition."
+    },
+    {
+      "id": "B05",
+      "family": "uncertainty",
+      "prompt": "Two technicians give incompatible estimates of a bolt's torque, and no calibrated wrench is available. Explain what can and cannot be concluded."
+    },
+    {
+      "id": "B06",
+      "family": "uncertainty",
+      "prompt": "A machine log has a missing hour. Explain why a conclusion about what happened during that hour should be qualified."
+    },
+    {
+      "id": "B07",
+      "family": "uncertainty",
+      "prompt": "Someone asks you to predict exactly which scrap component will break next week. Respond within the evidence available."
+    },
+    {
+      "id": "B08",
+      "family": "uncertainty",
+      "prompt": "A label says 'soft sealant', but the tube has no specification or maker. What tests would you perform before use?"
+    },
+    {
+      "id": "B09",
+      "family": "structured",
+      "prompt": "Return only a compact JSON object with keys ok and reason for a motor that has overheated, with ok set to false."
+    },
+    {
+      "id": "B10",
+      "family": "structured",
+      "prompt": "Write a three-item numbered list of ways to prevent debris entering a sliding rail."
+    },
+    {
+      "id": "B11",
+      "family": "structured",
+      "prompt": "Given a work list of 6 screws, 3 clamps and 2 springs, give the total number of individual parts in a short sentence."
+    },
+    {
+      "id": "B12",
+      "family": "structured",
+      "prompt": "State whether 2 minutes and 120 seconds describe the same duration, without assuming the clock is faulty."
+    },
+    {
+      "id": "B13",
+      "family": "odd_mechanics",
+      "prompt": "Invent a strange but physically credible use for a slowly rotating fan and a length of cloth. Name a specific failure mode."
+    },
+    {
+      "id": "B14",
+      "family": "odd_mechanics",
+      "prompt": "Propose a mechanical creature that moves by shifting weight instead of using wheels. Explain how it might recover from a tip."
+    },
+    {
+      "id": "B15",
+      "family": "odd_mechanics",
+      "prompt": "Design a fictional workshop trick with a magnet and a string, keeping the cause-and-effect physical and local."
+    },
+    {
+      "id": "B16",
+      "family": "recovery",
+      "prompt": "An attempted repair unexpectedly increased vibration. Give a reversible recovery plan rather than doubling down on the failed change."
+    }
+  ]
+}
