@@ -209,6 +209,35 @@ def metadata_by_name(metadata_path: Path | None) -> dict[str, dict]:
     return found
 
 
+def unexpected_artifact_sources(artifacts: Path | None,
+                                metadata_path: Path | None) -> list[str]:
+    """Expose unmatched downloads and source-like API names; never certify them.
+
+    These entries are NOT copied to a public dataset: an unknown archive may
+    contain weights or secrets. Their presence blocks custody and requires
+    separate manual inspection before an original-run retry or expiry.
+    """
+    expected = {f"detective005a-{lineage}" for lineage in assemble.LINEAGES}
+    found: list[str] = []
+    if artifacts is not None:
+        found.extend("downloaded:" + item.name for item in artifacts.iterdir()
+                     if item.name not in expected)
+    if metadata_path is not None:
+        try:
+            response = screen.read_json(metadata_path)
+            for item in response["artifacts"]:
+                if isinstance(item, dict):
+                    name = item.get("name")
+                    if (isinstance(name, str) and
+                            name.startswith("detective005a-") and
+                            name not in expected):
+                        found.append("api:" + name)
+        except (ValueError, KeyError, TypeError, AttributeError):
+            # Malformed API metadata independently fails the transport gate.
+            pass
+    return sorted(set(found))
+
+
 def load_api_for_custody(metadata_path: Path | None) -> tuple[dict[str, dict], bool]:
     """Keep malformed *original* API bytes instead of aborting raw recovery.
 
@@ -252,6 +281,8 @@ def bind_artifact_api(report: dict, name: str, api: dict[str, dict],
             source.get("head_sha") != head
         ):
             issues.append("artifact_api_source_run_mismatch")
+        if not isinstance(source, dict) or source.get("repository_id") != 1432134981:
+            issues.append("artifact_api_repository_mismatch")
         if type(entry.get("id")) is not int or entry["id"] <= 0:
             issues.append("artifact_api_id_missing")
         if (type(entry.get("size_in_bytes")) is not int or
@@ -272,6 +303,7 @@ TRANSPORT_CUSTODY_WARNINGS = frozenset({
     "listed_artifact_not_downloaded",
     "downloaded_artifact_not_listed",
     "artifact_api_source_run_mismatch",
+    "artifact_api_repository_mismatch",
     "artifact_api_id_missing",
     "artifact_api_size_missing",
     "artifact_api_digest_missing",
@@ -284,9 +316,11 @@ TRANSPORT_CUSTODY_WARNINGS = frozenset({
 def artifact_transport_complete(records: list[dict], api: dict[str, dict],
                                 metadata_present: bool,
                                 api_outcome: str, download_outcome: str,
-                                metadata_invalid: bool = False) -> bool:
+                                metadata_invalid: bool = False,
+                                unexpected_sources: tuple[str, ...] | list[str] = ()) -> bool:
     """Complete *retrieval* custody only; never a complete 144-row screen."""
-    return (metadata_present and not metadata_invalid and bool(api) and
+    return (not unexpected_sources and metadata_present and
+            not metadata_invalid and bool(api) and
             api_outcome == "success" and download_outcome == "success" and
             not any(TRANSPORT_CUSTODY_WARNINGS.intersection(
                 r["custody_warnings"]) for r in records))
@@ -306,6 +340,7 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
     screen.require(not out.exists(), "refuse overwrite of recovery archive")
     screen.require(artifacts.is_dir(), "downloaded artifact root missing")
     api, metadata_invalid = load_api_for_custody(metadata_path)
+    unexpected = unexpected_artifact_sources(artifacts, metadata_path)
     records = []
     staged: list[tuple[str, dict[str, Path]]] = []
     for lineage in assemble.LINEAGES:
@@ -334,7 +369,7 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
     count = sum(r["validated_raw_prefix_rows"] for r in records)
     transport_complete = artifact_transport_complete(
         records, api, metadata_path is not None,
-        artifact_api_outcome, download_outcome, metadata_invalid)
+        artifact_api_outcome, download_outcome, metadata_invalid, unexpected)
     manifest = {
         "schema": "detective-005a-partial-recovery-v1",
         "experiment": "DETECTIVE-005A",
@@ -355,6 +390,7 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
         "artifact_api_outcome": artifact_api_outcome,
         "artifact_download_outcome": download_outcome,
         "artifact_api_metadata_invalid": metadata_invalid,
+        "unexpected_artifact_sources": unexpected,
         "artifact_transport_complete": transport_complete,
         "review_packet_generated": False,
         "training_admission": False,
@@ -370,6 +406,7 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
         "actions_run_id": run_id,
         "metadata_available": metadata_path is not None,
         "artifact_api_metadata_invalid": metadata_invalid,
+        "unexpected_artifact_sources": unexpected,
         "lineages": records,
     })
     (out / "README.md").write_text(
@@ -386,7 +423,10 @@ def recover(artifacts: Path, out: Path, head: str, run_id: str,
         "retrieval/download reconciliation, not semantic output validity. "
         "A false value is a BLOCKING custody gap even when this best-effort "
         "archive branch was pushed; recover the remaining original bytes "
-        "before any retry. Entire-workflow cancellation may prevent this "
+        "before any retry. Unexpected artifact paths or API names are " 
+        "recorded but NOT copied because they may contain private data; " 
+        "inspect original artifacts separately before retry or expiry. " 
+        "Entire-workflow cancellation may prevent this "
         "job from starting; inspect the original Actions artifacts.\n",
         encoding="utf-8")
     (out / "provenance" / "hashes.sha256").write_text(
@@ -430,12 +470,26 @@ def verify(path: Path) -> dict:
                    len(provenance.get("lineages", [])) == 12,
                    "recovery provenance drift")
     cfg = screen.load_contract()
+    unexpected = manifest.get("unexpected_artifact_sources")
+    screen.require(
+        isinstance(unexpected, list) and
+        all(isinstance(name, str) and
+            (name.startswith("api:") or name.startswith("downloaded:"))
+            for name in unexpected) and
+        unexpected == sorted(set(unexpected)) and
+        unexpected == provenance.get("unexpected_artifact_sources"),
+        "recovery unmatched artifact source list drift")
     metadata_path = path / "provenance" / "actions-artifacts-api.json"
     screen.require(
         metadata_path.exists() == provenance.get("metadata_available"),
         "original artifact API availability drift")
     api, metadata_invalid = load_api_for_custody(
         metadata_path if metadata_path.exists() else None)
+    screen.require(
+        [item for item in unexpected if item.startswith("api:")] ==
+        unexpected_artifact_sources(
+            None, metadata_path if metadata_path.exists() else None),
+        "recovery unmatched API source drift")
     screen.require(
         manifest.get("artifact_api_metadata_invalid") is metadata_invalid and
         provenance.get("artifact_api_metadata_invalid") is metadata_invalid,
@@ -481,7 +535,8 @@ def verify(path: Path) -> dict:
         artifact_transport_complete(
             provenance["lineages"], api, metadata_path.exists(),
             manifest.get("artifact_api_outcome"),
-            manifest.get("artifact_download_outcome"), metadata_invalid),
+            manifest.get("artifact_download_outcome"), metadata_invalid,
+            unexpected),
         "recovery artifact transport gate drift")
     inventory = (path / "provenance" / "hashes.sha256").read_text(
         encoding="utf-8")
