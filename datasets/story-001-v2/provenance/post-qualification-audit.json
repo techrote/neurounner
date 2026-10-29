@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "experiment": "STORY-001-V2",
+  "audit_kind": "post-qualification semantic deduplication",
+  "source_workflow_run_id": "40247262042",
+  "provider_pre_audit": {
+    "story_sha256": "3101cd115384d69282cbdd30e23a230f591080c5b64775befb92b21904b6aaea",
+    "word_count": 3322,
+    "standalone_i_count": 66
+  },
+  "issue_detected": {
+    "description": "The mechanically qualified provider output still repeated the central rescue sequence in near-verbatim paragraphs, reproducing the stitched-variant failure mode rejected by the user.",
+    "near_duplicate_pairs": [
+      {
+        "paragraph_a": 27,
+        "paragraph_b": 33,
+        "jaccard": 0.966
+      },
+      {
+        "paragraph_a": 26,
+        "paragraph_b": 32,
+        "jaccard": 0.746
+      },
+      {
+        "paragraph_a": 25,
+        "paragraph_b": 31,
+        "jaccard": 0.738
+      }
+    ]
+  },
+  "correction": {
+    "operation": "delete exact repeated paragraphs only",
+    "removed_provider_paragraph_indices": [
+      31,
+      32,
+      33
+    ],
+    "removed_paragraphs": [
+      "Burnt copper filled my nostrils, sharp against the wet wool scent that had clung to my clothes since the city-zone. My boots struck grating. Each step slid before catching, the surface slick beneath my soles, a thin film of oil and coolant making every footfall a gamble. Belt roar filled the corridor, a continuous grind that pressed against the eardrums, drowning out everything but the rhythmic thrum of the drive chain.",
+      "Heat radiated from the machinery ahead, washing over my face in waves that smelled of hot insulation and scorched wire. The air tasted thick, metallic. The companion stood on the wrong side of the moving metal. The belt ran between us, its surface a blur of oily steel carrying toward the intake chute. Their face was turned toward me, mouth open in a shape my ears could not translate over the chain roar. Hands gripped the edge of the grating, knuckles white against the cold steel, fingers trembling as they tried to find purchase on the vibrating floor.",
+      "I lunged forward, momentum carrying me across the slick grating. My palm slapped the moving chain. Friction burned instantly across the skin, a searing line of pain that shot up my wrist. I yanked hard, trying to drag them back across the boundary, but the metal held firm. The belt surged forward, indifferent, swallowing the gap between us. My grip slipped on the slick grating, palms slick with sweat and heat, and the rescue failed immediately. The line kept moving. The companion disappeared into the dark mouth of the chute, silent beneath the machinery's continuous cadence."
+    ],
+    "text_added": false
+  },
+  "accepted_post_audit": {
+    "story_sha256": "e9f010b40d81ab55e0a65c2b331284e5245c272f4142e4bb9558f467135d570f",
+    "word_count": 3057,
+    "standalone_i_count": 64,
+    "standalone_i_rate": 0.02093555773634282,
+    "variant_separator_count": 0,
+    "anchor_reset_count": 0,
+    "near_duplicate_pairs_at_jaccard_ge_0_28": [],
+    "minimum_word_gate_pass": true,
+    "standalone_i_gate_pass": true,
+    "prior_recorded_story_sha256": "ee163eb4ec14d0bb64edf6cd14c96edc143a583f19683d7f038ccf5d7dbb432a"
+  },
+  "hash_correction": {
+    "prior_recorded_story_sha256": "ee163eb4ec14d0bb64edf6cd14c96edc143a583f19683d7f038ccf5d7dbb432a",
+    "corrected_story_file_sha256": "e9f010b40d81ab55e0a65c2b331284e5245c272f4142e4bb9558f467135d570f",
+    "story_text_changed": false,
+    "reason": "Review found that the prior accepted-story bookkeeping digest did not match the committed story.md bytes. The accepted story remains exactly the provider pre-audit story minus the three recorded paragraphs."
+  }
+}

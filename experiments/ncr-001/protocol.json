@@ -175,7 +175,18 @@
     "readout": "additive residual projection from flattened field to hidden state, output projection initialized identically to zero",
     "backbone_policy": "four independent frozen HF base checkpoints and model-specific projections, shared algorithm only; base model variants never substituted; no GGUF gradient path",
     "cross_token_recurrence": false,
-    "dynamic_sparse_execution": false
+    "dynamic_sparse_execution": false,
+    "hidden_norm": "affine LayerNorm(hidden_size), independent per token",
+    "observation_projection": "linear H to 256, tanh bounding",
+    "observation_gain_first_tap": 1,
+    "observation_gain_after_first_tap": 0.2,
+    "perception": "Conv2d 4→16 channels, 3x3 zero-padded, shared all taps/iterations; SiLU nonlinearity",
+    "local_rule": "Conv2d 16→8 channels, 1x1, split tanh delta and sigmoid gate",
+    "update_gain": 0.25,
+    "update_bound": "tanh(field + update_gain*sigmoid(gate)*tanh(delta)), state in [-1,1]",
+    "readout_initialization": "Linear(256→H,bias=False), entire readout weight set to zero",
+    "trainable_parameters_formula": "514*hidden_size+984 for C=4/grid=8",
+    "model_adapter_instances": "Separate state_dict/weight sets for all four frozen bases; only architecture shared"
   },
   "comparisons": [
     "frozen_base_no_adapter",
@@ -192,7 +203,10 @@
     "record_actual_sequence_and_supervised_tokens": true,
     "no_cross_model_raw_token_perplexity_ranking": true,
     "sprocket_variant_pairing": "chat vs instruct is a descriptive across-checkpoint comparison only; each NCA effect computed relative to own checkpoint and control",
-    "byte_tokenizer": "void.1 byte-level tokenizer units are not comparable to other models' BPE tokens; report UTF-8 bytes/s, chars/s, EOS/truncation and byte-normalized CE separately"
+    "byte_tokenizer": "void.1 byte-level tokenizer units are not comparable to other models' BPE tokens; report UTF-8 bytes/s, chars/s, EOS/truncation and byte-normalized CE separately",
+    "conventional_adapter_bottleneck": 256,
+    "conventional_adapter_architecture": "LayerNorm + Linear(H,256) + gated SiLU + zero-readout Linear(256,H) residual; no cellular recurrence. Reconcile exact trainable count to NCA within 5% per model in NCR-001F.",
+    "trainable_parameter_fairness_target": "Within-model ordinary adapter 256 bottleneck yields roughly 514H+256 plus optional 256 gate weights, versus NCA 514H+984; record actual difference and estimated MACs."
   },
   "datasets": {
     "train_003": {
@@ -205,29 +219,32 @@
       "model_applicability": "within-model mechanic evaluation; not evidence of Sprocket-vs-SmolLM2 parity"
     },
     "natural_language_holdout": {
-      "state": "pending_licensed_provenance_and_hash_before_training",
-      "path": null,
-      "sha256": null
+      "state": "SHA256_FROZEN_PILOT_ORIGINAL_PROSE_PENDING_INDEPENDENT_REVIEW",
+      "path": "experiments/ncr-001/fixtures/natural-text-holdout.json",
+      "sha256": "3964caedd88017feb35c0cd2dfc9dbeae2a1614ef55a56909fb3f3f4aa262cde",
+      "source_type": "Original assistant-authored English prose, 20 sealed evaluation passages, five domains, 4/domain",
+      "benchmark_limitations": "Small LLM-authored/English-only domain-skewed pilot set, not external public natural-language authority; caution about effect size/coverage",
+      "evaluation_contract": "Compute conditional CE on exact passage UTF8 bytes under each pinned model tokenizer; report within-model NCA vs matched gate deltas; never compare raw BPE-vs-byte token CE across families."
     },
     "sprocket_chat_probes": {
-      "state": "pending_fixture_hash_before_training",
+      "state": "SHA256_FROZEN_EVAL_CANDIDATE_PENDING_INDEPENDENT_REVIEW",
       "path": "experiments/ncr-001/fixtures/sprocket-chat-probes.json",
-      "sha256": null
+      "sha256": "dbb3074bb6e38f65ed69644ab2d31b658faa5c7fbc7fe3e1423bedb02892f9f5"
     },
     "other_original_behaviour_probes": {
-      "state": "pending_fixture_hash_before_training",
+      "state": "SHA256_FROZEN_EVAL_CANDIDATE_PENDING_INDEPENDENT_REVIEW",
       "path": "experiments/ncr-001/fixtures/behaviour-regression.json",
-      "sha256": null
+      "sha256": "5c17cd63fba74215dd1efe943857a083c32dd2930891eac6fc0f275c781a6c4b"
     },
     "sprocket_instruct_probes": {
-      "state": "pending_fixture_hash_before_training",
+      "state": "SHA256_FROZEN_EVAL_CANDIDATE_PENDING_INDEPENDENT_REVIEW",
       "path": "experiments/ncr-001/fixtures/sprocket-instruct-probes.json",
-      "sha256": null
+      "sha256": "1814a5e27528d22d75c8e6d4da3193f8a215617f5e04bee6c2ac5b445515da00"
     },
     "void_byte_probes": {
-      "state": "pending_fixture_hash_before_training",
+      "state": "SHA256_FROZEN_EVAL_CANDIDATE_PENDING_INDEPENDENT_REVIEW",
       "path": "experiments/ncr-001/fixtures/void-byte-probes.json",
-      "sha256": null
+      "sha256": "59f76dafc850a0cf9401930bf26a4c86cfc55d9bc7a418b2cacb512f2df26c88"
     }
   },
   "training": {
@@ -243,12 +260,24 @@
     "initial_smoke_max_steps": 32,
     "primary_steps_per_seed": 192,
     "max_seq_tokens_per_sample": 256,
-    "optimizer": "AdamW; details fixed in NCR-001F before any training",
-    "optimizer_lr": null,
-    "optimizer_betas": null,
-    "weight_decay": null,
+    "optimizer": "AdamW",
+    "optimizer_lr": 0.0008,
+    "optimizer_betas": [
+      0.9,
+      0.95
+    ],
+    "weight_decay": 0.01,
     "preflight_gate": "no training while protocol.train_authorized=false or per-model NCR-001E fails",
-    "void1_tokenizer_unit_policy": "initial 256 training units per sample is provisional and may truncate even basic responses; must preflight actual byte length and preregister revised cap before training"
+    "void1_tokenizer_unit_policy": "Keep byte tokenizer separate; provisional upper bound 1024 tokenizer units per example and 768 decode units pending exact tokenized corpus-length preflight. Refuse/truncate no samples silently.",
+    "grad_clip_norm": 1,
+    "samples_scheduling": "Within-model baseline and NCA share deterministic sample order, assistant-only supervised mask where supported; frozen bases",
+    "per_model_sequence_unit_limits": {
+      "smollm2": 256,
+      "sprocket_chat": 256,
+      "sprocket_instruct": 256,
+      "void1": 1024
+    },
+    "transformer_weights_changed": false
   },
   "resource_watchdogs": {
     "max_peak_rss_gib": 12,
@@ -331,6 +360,36 @@
     "data_policy": "docs/DATASET_FILING_SYSTEM.md",
     "weight_policy": "docs/MODEL_STORAGE.md",
     "citation_authority": "RAG.md",
-    "staging_only": "GitHub Actions artifacts are not the durable archive"
+    "staging_only": "GitHub Actions artifacts are not the durable archive",
+    "protocol_frozen_optimizer_note": "Trainer hyperparameters fixed before any hosted LM training. Even after control/fixture lock, training remains independently gated by model-specific NCR-001E and train_authorized flag.",
+    "original_fixture_preflight": {
+      "run": "https://github.com/techrote/neurounner/actions/runs/40409733858",
+      "source_commit": "5000e3bba79d4e657a9f537918d6b30ba15ef1c8",
+      "method": "GitHub-hosted ubuntu-24.04 sha256sum over checked-out exact committed fixture bytes; 16 unique cases per three model-lane fixture sets",
+      "fixture_sha256": {
+        "sprocket_chat_probes": "dbb3074bb6e38f65ed69644ab2d31b658faa5c7fbc7fe3e1423bedb02892f9f5",
+        "sprocket_instruct_probes": "1814a5e27528d22d75c8e6d4da3193f8a215617f5e04bee6c2ac5b445515da00",
+        "void_byte_probes": "59f76dafc850a0cf9401930bf26a4c86cfc55d9bc7a418b2cacb512f2df26c88"
+      },
+      "note": "Fixture content hashes locked before real model training. Review of prompt semantics/instruct tool formatting/void tokenizer continues; training remains prohibited.",
+      "additional_common_probe": {
+        "run": "https://github.com/techrote/neurounner/actions/runs/40410019066",
+        "source_commit": "4ca862e86f1680995f42404033918d4e5e21d8c6",
+        "checked_out_file": "experiments/ncr-001/fixtures/behaviour-regression.json",
+        "sha256": "5c17cd63fba74215dd1efe943857a083c32dd2930891eac6fc0f275c781a6c4b",
+        "rows": 16,
+        "reviewed": false
+      }
+    },
+    "natural_prose_holdout_preflight": {
+      "run": "https://github.com/techrote/neurounner/actions/runs/40410511697",
+      "source_commit": "e5f6c6f6aecdd22ef69d155e685213f8fb27b8d7",
+      "path": "experiments/ncr-001/fixtures/natural-text-holdout.json",
+      "sha256": "3964caedd88017feb35c0cd2dfc9dbeae2a1614ef55a56909fb3f3f4aa262cde",
+      "cases": 20,
+      "domains": 5,
+      "verified": "Committed byte lengths 120..900 per paragraph, original fixed texts and unique IDs",
+      "training_authorized": false
+    }
   }
 }

@@ -1,0 +1,90 @@
+{
+  "schema": "detective-002d-lfm-v5-api-v1",
+  "experiment": "DETECTIVE-002D",
+  "issue": 135,
+  "parent_issue": 103,
+  "source_authority": {
+    "stage_a_path": "experiments/detective-002/source-evidence/source-evidence.json",
+    "stage_a_git_blob_sha1": "a09003d37dd3ef4f2bcd0f6a8aafd1de6457c01c",
+    "battery_path": "experiments/detective-002/runtime-smoke.json",
+    "battery_git_blob_sha1": "fc3e6eb91739d74aa87a714f8e22e603bf265b16",
+    "prior_config_path": "experiments/detective-002/lfm-v5-runtime.json",
+    "prior_config_git_blob_sha1": "1d42cdbefe4f15b2a68aed31f17b2b7b385e2dc4",
+    "prior_result_path": "datasets/detective-002c/result.json",
+    "prior_result_git_blob_sha1": "64a599c6ac9a1b2bc2f9140ffa8a6098bf5262dd",
+    "prior_merge_commit": "13bf4ce95772dfc5399b8767cdb8643962a71a66"
+  },
+  "model": {
+    "candidate_id": "lfm25-350m",
+    "repo": "LiquidAI/LFM2.5-350M",
+    "revision": "9e6c6ccf47cd318696e137d381a7ded8fe4df09f",
+    "weight_path": "model.safetensors",
+    "weight_sha256": "1c9c77a4471a7f590f85240f74ed1fc26df7fbde88c3006724e2f93ca993ea4e",
+    "weight_bytes": 708984464,
+    "tokenizer_config_sha256": "3701f370c70034d06e28947ff51c1063983393319f429e3ce58f06a45fae67cc",
+    "chat_template_sha256": "ba551d58630afa3190b1be3602e28301f3d2e9bbac978dfc49d6d825171648b6",
+    "config_sha256": "720b43d6ddc2ed25be23eed355aefcf342434a176dedad23dbe0a5e3ac24bbb8",
+    "license": "lfm1.0",
+    "production_license_gate": true
+  },
+  "prior_result": {
+    "experiment": "DETECTIVE-002C",
+    "status": "tokenizer_incompatible",
+    "transformers": "5.20.1",
+    "tokenizer_class": "TokenizersBackend",
+    "tokenizer_backend": "tokenizers",
+    "error_type": "AttributeError",
+    "error_message": "",
+    "weight_downloaded": false
+  },
+  "runtime": {
+    "os": "ubuntu-24.04",
+    "python": "3.12",
+    "torch_cpu": "2.14.1+cpu",
+    "transformers": "5.20.1",
+    "transformers_wheel_sha256": "5f51ce444193e5d0a751e3fa489ddbc2224ff12f6675a5cfefd4044b09757c19",
+    "threads": 4,
+    "seed": 260213,
+    "do_sample": false,
+    "max_prompt_tokens": 512,
+    "max_new_tokens_per_prompt": 64,
+    "max_generated_tokens_total": 256,
+    "max_minutes": 25,
+    "optimizer_steps": 0,
+    "paid_api_calls": 0,
+    "gpu_required": false,
+    "dtype": "float32"
+  },
+  "diagnostic": {
+    "text_render": {
+      "tokenize": false,
+      "add_generation_prompt": true,
+      "return_dict": false
+    },
+    "tokenized_render": {
+      "tokenize": true,
+      "add_generation_prompt": true,
+      "return_dict": true,
+      "return_tensors": "pt"
+    },
+    "require_mapping_keys": [
+      "input_ids"
+    ],
+    "compare_text_sha256": true,
+    "compare_input_id_sha256": true,
+    "download_weight_only_after_both_render_paths_pass": true
+  },
+  "decisions": {
+    "allowed": [
+      "runtime_compatibility_pass",
+      "template_render_incompatible",
+      "tokenization_api_incompatible",
+      "model_runtime_incompatible"
+    ],
+    "source_integrity_fail_is_hard_error": true,
+    "production_license_cleared": false,
+    "training_selection_allowed": false,
+    "population_expansion_admitted": false,
+    "relevance_mapping_accessed": false
+  }
+}

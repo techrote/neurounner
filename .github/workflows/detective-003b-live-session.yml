@@ -1,0 +1,141 @@
+name: DETECTIVE-003B live two-witness session smoke
+
+on:
+  pull_request:
+    paths:
+      - "experiments/detective-003/live-session-smoke.json"
+      - "experiments/detective-003/LIVE_SESSION_SMOKE.md"
+      - "scripts/detective_003b_live_session.py"
+      - "scripts/detective_003b_verify.py"
+      - "scripts/detective_003a_session.py"
+      - "tests/test_detective_003b_live_session.py"
+      - "experiments/detective-001/pilot-case.json"
+      - "experiments/detective-001/training-c2-evidence/adapter-release.json"
+      - "experiments/detective-001/training-c3-evidence/adapter-release.json"
+      - "datasets/detective-003b/**"
+      - ".github/workflows/detective-003b-live-session.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: detective-003b-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    outputs:
+      evidence_ready: ${{ steps.evidence.outputs.ready }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile live-session source/readback/tests
+        run: |
+          python3 -m py_compile scripts/detective_003b_live_session.py scripts/detective_003b_verify.py tests/test_detective_003b_live_session.py
+      - name: Run complete DETECTIVE offline suite
+        run: |
+          python3 -m unittest discover -s tests -p 'test_detective_*.py' -v
+      - name: Verify exact source/adapter/session authority before any model work
+        run: |
+          python3 - <<'PY'
+          from scripts.detective_003b_live_session import load_contract
+          cfg,case,c2,c3=load_contract()
+          assert cfg["runtime"]["optimizer_steps"]==0
+          assert cfg["acceptance"]["learner_final_accessed"] is False
+          assert cfg["acceptance"]["relevance_mapping_accessed"] is False
+          assert cfg["acceptance"]["population_expansion_admitted"] is False
+          assert case["case_id"]=="bay-seventeen-shift"
+          assert c3["assets"][0]["member_id"]=="V-G02-A"
+          assert any(x["member_id"]=="V-G09-C" for x in c2["assets"])
+          print("DETECTIVE-003B SOURCE/SESSION AUTHORITY: PASS")
+          PY
+      - name: Revalidate durable evidence if present
+        id: evidence
+        run: |
+          if [ -e datasets/detective-003b/manifest.json ]; then
+            python3 scripts/detective_003b_verify.py --evidence datasets/detective-003b
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  live-and-publish:
+    needs: offline-contract
+    if: ${{ needs.offline-contract.outputs.evidence_ready != 'true' && github.event_name == 'pull_request' && github.head_ref == 'research/detective-003b-live-session-20261028' && github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.user.login == 'techrote' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
+      TOKENIZERS_PARALLELISM: "false"
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      HF_HOME: /tmp/detective-003b-hf
+      DETECTIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned CPU inference/PEFT stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "peft==0.21.2" "huggingface_hub==0.36.2" "safetensors==0.8.0"
+      - name: Download exact released G02-C3 and G09-C2 adapter archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p downloads
+          gh release download detective-001c3-g02-v1             --repo "$GITHUB_REPOSITORY"             --pattern 'detective-001c3-V-G02-A-smollm2-135m-lora.tar.gz'             --dir downloads
+          gh release download detective-001c2-v1             --repo "$GITHUB_REPOSITORY"             --pattern 'detective-001c2-V-G09-C-smollm2-135m-lora.tar.gz'             --dir downloads
+      - name: Run three-turn live session through authoritative ledger
+        run: |
+          rm -rf out/detective-003b
+          python3 scripts/detective_003b_live_session.py             --g02-archive downloads/detective-001c3-V-G02-A-smollm2-135m-lora.tar.gz             --g09-archive downloads/detective-001c2-V-G09-C-smollm2-135m-lora.tar.gz             --out out/detective-003b
+      - name: Independent standard-library full session reconstruction
+        run: |
+          python3 scripts/detective_003b_verify.py             --evidence out/detective-003b/dataset
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: detective003b-live-session-${{ github.run_id }}
+          path: out/detective-003b
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Refuse stale source before durable publication
+        run: |
+          remote_sha=$(git ls-remote --heads origin refs/heads/research/detective-003b-live-session-20261028 | cut -f1)
+          test "$remote_sha" = "$DETECTIVE_HEAD_SHA"
+      - name: Promote independently verified live-session evidence
+        run: |
+          test ! -e datasets/detective-003b
+          mkdir -p datasets/detective-003b
+          cp -a out/detective-003b/dataset/. datasets/detective-003b/
+          python3 scripts/detective_003b_verify.py --evidence datasets/detective-003b
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add datasets/detective-003b
+          git commit -m "DETECTIVE-003B: archive live two-witness session evidence"
+          git push origin HEAD:research/detective-003b-live-session-20261028
+
+  evidence-readback:
+    needs: offline-contract
+    if: ${{ needs.offline-contract.outputs.evidence_ready == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Replay committed live-session evidence only
+        run: |
+          python3 scripts/detective_003b_verify.py --evidence datasets/detective-003b

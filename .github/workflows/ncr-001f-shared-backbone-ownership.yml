@@ -1,0 +1,56 @@
+name: NCR-001F matched-MLP shared frozen-backbone ownership guards
+
+on:
+  pull_request:
+    branches: [review/ncr-001f-pinned-four-mlp-hooks-20261027]
+    paths:
+      - ".github/workflows/ncr-001f-shared-backbone-ownership.yml"
+      - "scripts/ncr_001f_frozen_hooks.py"
+      - "tests/test_ncr_001f_shared_backbone_ownership.py"
+      - "tests/test_ncr_001f_shared_backbone_archive.py"
+      - "scripts/ncr_001f_shared_backbone_archive.py"
+      - "experiments/ncr-001/controls-evidence/shared-backbone-ownership/**"
+      - "tests/test_ncr_001f_frozen_hooks.py"
+      - "docs/NCR_001_F_FROZEN_MLP_HOOKS.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001f-shared-owner-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  no-training-ownership-regressions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Assert exact checkout and closed training admission
+        env:
+          NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          PY
+      - name: Install CPU-only test runtime
+        run: python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+      - name: Syntax-check shared-backbone code and test
+        run: |
+          python3 -m py_compile scripts/ncr_001f_frozen_hooks.py tests/test_ncr_001f_shared_backbone_ownership.py
+      - name: Existing four-lane frozen-model layout tests (synthetic only)
+        run: python3 -m unittest discover -s tests -p 'test_ncr_001f_frozen_hooks.py' -v
+      - name: New cross-wrapper/disabled-path refusal tests (synthetic only)
+        run: python3 -m unittest discover -s tests -p 'test_ncr_001f_shared_backbone_ownership.py' -v
+      - name: Offline exact-source original CI log, runner and refusal-claim audit
+        run: |
+          python3 scripts/ncr_001f_shared_backbone_archive.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001f_shared_backbone_archive.py' -v
