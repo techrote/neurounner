@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE = ROOT / "experiments/ncr-001/controls-evidence/sprocket-learning-20261028"
 ORIGINAL_HEAD = "df8479aae34550cba014d910a73e30e59cd493e2"
 ORIGINAL_RUN = 40710171622
+MANIFEST_GIT_BLOB = "afd9fec5a60702ed6a99274470125e52f2c9c38c"
 ORIGINALS = {
     "source": (12826525345, 1024,
        "c66706d3e541925638e901d37232f204c480f0016aba393023fa925c67a61242",
@@ -80,7 +81,10 @@ def check_zip(lane: str, raw: bytes) -> dict[str, bytes]:
 
 
 def audit(evidence: Path = EVIDENCE) -> dict:
-    manifest = json.loads((evidence / "manifest.json").read_bytes())
+    raw_manifest = (evidence / "manifest.json").read_bytes()
+    refuse(gitblob(raw_manifest) == MANIFEST_GIT_BLOB,
+           "committed original source/member manifest blob altered")
+    manifest = json.loads(raw_manifest)
     refuse(manifest["original_source_head"] == ORIGINAL_HEAD
            and manifest["original_run_id"] == ORIGINAL_RUN
            and manifest["train_authorized"] is False
