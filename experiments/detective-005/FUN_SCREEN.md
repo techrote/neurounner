@@ -153,6 +153,15 @@ Both complete and failed-run live promotion steps now require a remote
 branch fetch, exact pushed-commit identity and raw-archive verification
 after git push. These are source safeguards until exercised on real runs.
 
+An additional adversarial offline test now creates a fresh **local bare Git**
+repository, commits an interrupted raw journal, pushes/fetches an isolated
+evidence ref, extracts `git archive FETCH_HEAD`, verifies the original
+bytes even after the working copy is changed, and refuses a tampered
+extracted journal. This exercises actual local Git persistence/verification
+rather than static workflow string checks. **Local Git is not GitHub Actions**:
+remote authentication, permissions, cancellation and hosted branch durability
+remain unqualified until the separately reviewed main-only synthetic probe.
+
 **Artifact API pagination safeguard (source-only):** the live recovery job
 requests `?per_page=100`. An HTTP-success first-page response does not prove
 all original artifacts were listed. Recovery requires a non-boolean integer
