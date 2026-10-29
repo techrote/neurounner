@@ -49,7 +49,8 @@ class SourceMatchedSprocketDeltaTests(unittest.TestCase):
         r = gate.compose(self.diag, self.originals)
         for lane in r["lanes"].values():
             observed = lane["observed_bounded"]
-            self.assertEqual(observed["masked_batch_2048_physical_positions"], 2)
+            self.assertEqual(observed["masked_batch_size"], 2)
+            self.assertEqual(observed["masked_sequence_physical_positions"], 2048)
             self.assertEqual(observed["short_row_true_tokens"], 1536)
             self.assertEqual(observed["actual_one_token_kv_increments"], 4)
             self.assertTrue(observed["cold_new_python_same_runner_last_four_logits_exact"])
