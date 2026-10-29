@@ -432,3 +432,15 @@ Synthetic adversarial checks reject rehashed false-clean member verdicts,
 inflated token counts and unauthorized identity-bearing metadata fields.
 These checks do not reconstruct missing model outputs, prove host execution or
 qualify authenticated GitHub remote persistence.
+
+### Public-archive allowlisted-file content verification (draft PR #196)
+
+An exact pathname allowlist and self-rehashed inventory alone cannot keep
+unregistered *contents* out of otherwise permitted public files. Full readback
+now enforces exact dataset/provenance metadata field sets, exact source-run URL,
+canonical JSON bytes (rejecting duplicate-key smuggling) for dataset, source
+provenance and lineage manifests, and byte-identical generated README text.
+Synthetic adversarial tests inject private-looking mappings, duplicate JSON
+keys and README appendages with recomputed hash inventories. These checks do
+not authenticate a model execution, prevent a model from emitting secrets in
+dialogue, or qualify remote GitHub persistence.

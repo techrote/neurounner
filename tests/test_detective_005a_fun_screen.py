@@ -482,6 +482,74 @@ class Detective005AFunScreenTests(unittest.TestCase):
             inventory_path.write_bytes(original_inventory)
             self.assertEqual(assemble.verify_dataset(out)["raw_results"], 144)
 
+            # A rehashed inventory is not permission to embed private mappings
+            # in ALLOWLISTED metadata files or the public README. Strict parsed
+            # schemas alone also miss JSON duplicate keys whose first value
+            # can carry hidden bytes but whose last value parses as expected.
+            for rel in ("manifest.json", "provenance/source-artifacts.json"):
+                with self.subTest(metadata_smuggling=rel):
+                    metadata_path = out / rel
+                    original_bytes = metadata_path.read_bytes()
+                    forged = screen.read_json(metadata_path)
+                    forged["private_identity_map"] = "synthetic-secret"
+                    assemble.write_json(metadata_path, forged)
+                    inventory_path.write_text(assemble.hash_inventory(out),
+                                              encoding="utf-8")
+                    with self.assertRaisesRegex(
+                            screen.ScreenError, "field-set"):
+                        assemble.verify_dataset(out)
+                    metadata_path.write_bytes(original_bytes)
+                    inventory_path.write_bytes(original_inventory)
+
+            provenance_path = out / "provenance/source-artifacts.json"
+            original_provenance_bytes = provenance_path.read_bytes()
+            forged_provenance = screen.read_json(provenance_path)
+            forged_provenance["actions_run_url"] = (
+                "https://example.invalid/foreign-run")
+            assemble.write_json(provenance_path, forged_provenance)
+            inventory_path.write_text(assemble.hash_inventory(out),
+                                      encoding="utf-8")
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "metadata field-set or URL drift"):
+                assemble.verify_dataset(out)
+            provenance_path.write_bytes(original_provenance_bytes)
+            inventory_path.write_bytes(original_inventory)
+
+            # Two schema keys parse to the second value with plain json.loads.
+            # Their extra raw bytes must not be archived as private metadata.
+            for rel in ("manifest.json", "provenance/source-artifacts.json",
+                        "raw/lineage-manifests/G01.json"):
+                with self.subTest(duplicate_json_member=rel):
+                    metadata_path = out / rel
+                    original_bytes = metadata_path.read_bytes()
+                    original_text = original_bytes.decode("utf-8")
+                    self.assertIn('  "schema": ', original_text)
+                    injected = original_text.replace(
+                        '  "schema": ',
+                        '  "schema": "synthetic-private-material",\\n  "schema": ',
+                        1)
+                    metadata_path.write_text(injected, encoding="utf-8")
+                    inventory_path.write_text(assemble.hash_inventory(out),
+                                              encoding="utf-8")
+                    with self.assertRaisesRegex(
+                            screen.ScreenError, "noncanonical JSON"):
+                        assemble.verify_dataset(out)
+                    metadata_path.write_bytes(original_bytes)
+                    inventory_path.write_bytes(original_inventory)
+
+            readme_path = out / "README.md"
+            original_readme_bytes = readme_path.read_bytes()
+            readme_path.write_bytes(original_readme_bytes +
+                                    b"Private reviewer mapping: fake-secret\\n")
+            inventory_path.write_text(assemble.hash_inventory(out),
+                                      encoding="utf-8")
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "README content drift"):
+                assemble.verify_dataset(out)
+            readme_path.write_bytes(original_readme_bytes)
+            inventory_path.write_bytes(original_inventory)
+            self.assertEqual(assemble.verify_dataset(out)["raw_results"], 144)
+
             provenance = screen.read_json(
                 out / "provenance" / "source-artifacts.json")
             self.assertEqual(len(provenance["source_artifacts"]), 12)

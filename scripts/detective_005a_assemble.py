@@ -181,6 +181,48 @@ def hash_inventory(root: Path) -> str:
     return "\n".join(rows) + "\n"
 
 
+
+DATASET_MANIFEST_KEYS = {
+    "schema", "experiment", "issue", "repository_head_sha", "actions_run_id",
+    "source_config_sha256", "release_tag", "release_manifest_git_blob_sha1",
+    "member_contract_sha256", "members", "prompts_per_member", "raw_results",
+    "raw_results_sha256", "review_packet_sha256", "private_blind_review_status",
+    "review_packet_generated", "hard_floor_failures",
+    "hard_floor_clean_results", "objective_relevance_threshold",
+    "subjective_fun_ratings_present", "model_judge_calls", "optimizer_steps",
+    "production_admission", "training_admission",
+    "population_expansion_admitted",
+}
+SOURCE_ARTIFACT_PROVENANCE_KEYS = {
+    "schema", "repository_head_sha", "actions_run_id", "actions_run_url",
+    "source_artifacts", "artifact_ids_unavailable_at_assembly",
+}
+
+
+def require_canonical_json(path: Path, value, label: str) -> None:
+    """Reject hidden duplicate JSON keys and noncanonical extra raw bytes."""
+    expected = (json.dumps(value, indent=2, sort_keys=True,
+                           ensure_ascii=False) + "\n").encode("utf-8")
+    screen.require(path.read_bytes() == expected,
+                   label + " noncanonical JSON or duplicate members")
+
+
+def public_readme_text() -> str:
+    return (
+        "# DETECTIVE-005A raw fun-first cast screen\n\n"
+        "Complete source-bound raw outputs for the 36 VILLAGE-001C SFT "
+        "villagers on four matched detective gameplay prompts. This archive "
+        "contains no subjective scores and NO review packet. The old public "
+        "fixed-salt item ordering was reconstructible. A separate private "
+        "custodian must prepare a random-key blinded packet outside the "
+        "repository, retain mapping/key in private custody, freeze all human "
+        "ratings, and only then authorize identity unblinding. Never hand "
+        "this raw archive to a supposedly blind reviewer. Wrong or incoherent "
+        "answers are not automatically bad. Mechanical hard authority/leakage "
+        "floors remain separate from subjective fun. No training, model judge "
+        "or production admission occurs here.\n"
+    )
+
 def assemble(artifacts: Path, out: Path) -> dict:
     cfg = screen.load_contract()
     screen.require(not out.exists(), "output dataset already exists")
@@ -273,20 +315,7 @@ def assemble(artifacts: Path, out: Path) -> dict:
         "population_expansion_admitted": False,
     }
     write_json(out / "manifest.json", manifest)
-    (out / "README.md").write_text(
-        "# DETECTIVE-005A raw fun-first cast screen\n\n"
-        "Complete source-bound raw outputs for the 36 VILLAGE-001C SFT "
-        "villagers on four matched detective gameplay prompts. This archive "
-        "contains no subjective scores and NO review packet. The old public "
-        "fixed-salt item ordering was reconstructible. A separate private "
-        "custodian must prepare a random-key blinded packet outside the "
-        "repository, retain mapping/key in private custody, freeze all human "
-        "ratings, and only then authorize identity unblinding. Never hand "
-        "this raw archive to a supposedly blind reviewer. Wrong or incoherent "
-        "answers are not automatically bad. Mechanical hard authority/leakage "
-        "floors remain separate from subjective fun. No training, model judge "
-        "or production admission occurs here.\n",
-        encoding="utf-8")
+    (out / "README.md").write_text(public_readme_text(), encoding="utf-8")
     (out / "provenance" / "hashes.sha256").write_text(
         hash_inventory(out), encoding="utf-8")
     return manifest
@@ -314,9 +343,17 @@ def verify_dataset(path: Path) -> dict:
     }
     screen.require(actual_files == expected_files,
                    "full-screen archive has unregistered or missing files")
+    screen.require((path / "README.md").read_text(encoding="utf-8") ==
+                   public_readme_text(),
+                   "full-screen README content drift")
 
     cfg = screen.load_contract()
-    manifest = screen.read_json(path / "manifest.json")
+    manifest_path = path / "manifest.json"
+    manifest = screen.read_json(manifest_path)
+    screen.require(isinstance(manifest, dict) and
+                   set(manifest) == DATASET_MANIFEST_KEYS,
+                   "full-screen dataset manifest field-set drift")
+    require_canonical_json(manifest_path, manifest, "dataset manifest")
     screen.require(manifest.get("schema") ==
                    "detective-005a-dataset-manifest-v1",
                    "wrong dataset manifest")
@@ -364,7 +401,14 @@ def verify_dataset(path: Path) -> dict:
         (manifest.get("repository_head_sha"),
          manifest.get("actions_run_id")) == (head, run_id),
         "dataset source/run identity drift")
-    provenance = screen.read_json(path / "provenance" / "source-artifacts.json")
+    provenance_path = path / "provenance" / "source-artifacts.json"
+    provenance = screen.read_json(provenance_path)
+    screen.require(isinstance(provenance, dict) and
+                   set(provenance) == SOURCE_ARTIFACT_PROVENANCE_KEYS and
+                   provenance.get("actions_run_url") ==
+                       f"https://github.com/techrote/neurounner/actions/runs/{run_id}",
+                   "full-screen source-artifact metadata field-set or URL drift")
+    require_canonical_json(provenance_path, provenance, "source provenance")
     screen.require(
         provenance.get("schema") == "detective-005a-source-artifacts-v1" and
         provenance.get("repository_head_sha") == head and
@@ -374,8 +418,11 @@ def verify_dataset(path: Path) -> dict:
                    "full-screen source-artifact transport provenance drift")
     expected_artifacts = []
     for lineage in LINEAGES:
-        lineage_manifest = screen.read_json(
-            path / "raw" / "lineage-manifests" / f"{lineage}.json")
+        lineage_manifest_path = (path / "raw" / "lineage-manifests" /
+                                 f"{lineage}.json")
+        lineage_manifest = screen.read_json(lineage_manifest_path)
+        require_canonical_json(lineage_manifest_path, lineage_manifest,
+                               "lineage manifest")
         lineage_rows = [r for r in results
                         if r["member_id"].split("-")[1] == lineage]
         recreated_sha = screen.sha256_bytes(
