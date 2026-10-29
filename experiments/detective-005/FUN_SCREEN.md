@@ -53,7 +53,7 @@ Those properties are enforced by the existing DETECTIVE game/session/transaction
 
 ## Subjective review
 
-After all **144** raw generations exist, the standard-library protocol creates a deterministic identity-blind packet.
+Only after all **144** raw generations exist and pass source-bound dataset readback may a trusted, separate custodian prepare the reviewer-only packet. The old publicly deterministic item ordering is disabled: a fresh 32-byte private key permutes item identities. The raw dataset contains **no packet**; the key and identity mapping must remain outside the repository until ratings have been sealed.
 
 Reviewer question:
 
@@ -94,7 +94,7 @@ Current Stage A consists only of:
 - prompt/decode contract;
 - raw evidence schema;
 - mechanical hard-floor checks;
-- deterministic opaque review packet/rating schema/aggregation;
+- private-key deterministic review packet/rating schema/aggregation, with post-rating unblinding;
 - adversarial standard-library tests.
 
 It downloads no weights or adapters, performs no inference/training, opens no sealed C1/C2/C3 finals and accesses no hidden R1 identity mapping.
@@ -195,38 +195,27 @@ The standard-library `scripts/detective_005a_recover.py`:
   inventory, then independently re-verifies the archived bytes before push;
 - never builds a subjective fun packet or grants any admission.
 
-`complete_lineage_recovered` now requires 12 raw results, a source-valid
-manifest, **byte-identical fsynced incremental journal and final JSONL**,
-and a matching same-run GitHub Actions artifact API record. This means only
-that one lineage was recovered from a failed workflow, **not** that the whole
-144-response screen passed. A source-valid local lineage without API metadata
-is deliberately demoted to `recovery_only` with
-`artifact_api_metadata_unavailable`, retaining every original byte.
-A missing or mismatched journal similarly prevents complete-lineage custody.
+`complete_lineage_recovered` requires all 12 source-valid raw results,
+a valid original manifest, a present byte-identical **fsynced incremental
+journal**, and a matching same-run GitHub Actions artifact API identity.
+It applies to **one recovered lineage only**, not the 144-response screen.
+A locally complete lineage without API metadata is `recovery_only`, not
+certified custody. Invalid/foreign rows remain retained but quarantined.
 
-If the same-run artifact API returns truncated JSON, a wrong schema, or
-ambiguous duplicate lineage identities, recovery no longer aborts before
-archiving the **downloaded original raw files**. The exact malformed API
-response bytes are kept under `provenance/actions-artifacts-api.json` and
-SHA-inventoried, while `artifact_api_metadata_invalid` quarantines the
-metadata claim and the transport gate remains **RED**. This does not recover
-artifacts whose download itself failed, and cannot prove no-output.
+Truncated, malformed or ambiguous GitHub artifact API metadata does not
+abort preservation of already-downloaded raw files. The original broken
+API bytes are retained and SHA-inventoried, with
+`artifact_api_metadata_invalid` recorded. The retrieval gate remains
+**RED**; this does not prove missing artifacts were recovered.
 
-The archive's separate `artifact_transport_complete` flag is a retrieval
-gate: the API lookup and artifact download actions must both report success,
-API-listed same-run lineage artifacts must actually be downloaded, no
-downloaded lineage can lack an API binding, and artifact identity/digest/size
-metadata must pass the declared checks. The workflow **always tries to
-preserve and push available original bytes first**, but its final recovery
-job explicitly **fails** when this flag is false. The run-scoped evidence
-branch is non-overwriting; such a red recovery requires manual investigation
-and supplementary custody outside the original branch before any inference
-retry. A green synthetic transfer never authorizes a live retry.
-
-A valid `artifact_transport_complete` flag is **not** a 144-generation
-completion, model-output accuracy claim or guarantee that a cancelled job
-ran its recovery path. Invalid or foreign rows remain quarantined and can
-never be counted as accepted results.
+`artifact_transport_complete` measures only same-run artifact retrieval,
+not a valid full screen: the API and download steps must report success;
+listed original lineage artifacts must be present, and every downloaded
+artifact needs a valid API-bound source-run identity. A failed download
+or invalid API response can still produce a best-effort archive, but
+**cannot leave the final recovery job green**. No rerun is permitted
+until original surviving evidence is durably promoted or a verified
+no-output determination is documented.
 
 **Push-failure fallback (source-only, not live-qualified):** after the
 recovery dataset passes local readback, the workflow attempts a separate
@@ -275,3 +264,107 @@ Successful synthetic upload/download/readback establishes GitHub Actions
 artifact *transport* compatibility, not the success of a real failed-run
 recovery job, not guaranteed handling of entire-workflow cancellation, and not
 the durable promotion of any of the 144 future model responses.
+
+## Private blinded-review custody — proposed correction for issue #187
+
+The Stage-A public fixed `REVIEW_SALT` was insufficient for genuine blinded
+human review: the known 36×4 roster and code could reconstruct R001–R144
+ordering. The proposed replacement requires a **fresh random 32-byte key** and
+HMAC-SHA256 ordering. The key and complete mapping are not published in
+`datasets/detective-005a`. Even though public code can now reproduce the
+algorithm, it cannot recover the ordering from public information alone.
+
+The complete 144-response evidence assembler stores **only the raw dataset,
+source/lineage provenance, SHA-256 inventory and mechanical hard floors**.
+Its verification refuses a public review/ folder or reviewer packet. It
+continues to require all 12 source-matched lineages from one exact run.
+
+After complete evidence is committed, an authorized trusted custodian uses
+`scripts/detective_005a_blind.py` locally, with directories **outside
+the checkout and separated from each other**, never in public GitHub Actions:
+
+1. `prepare` verifies the raw dataset, generates a CSPRNG 256-bit key,
+   constructs an opaque 144-item reviewer packet and blank 0–4 rating
+   template, and retains the seed plus exact item-to-member mapping in a
+   distinct permission-restricted private directory. The public packet holds
+   a binding hash commitment, not the key or the mapping.
+2. The independent human reviewer gets only the packet and template; they
+   must not have access to the raw archive, full source output histories or
+   private custodian directory while scoring. The custodian verifies all 144
+   ratings against the packet hash and original item order.
+3. `freeze` preserves the **original rating bytes** and a SHA-256 receipt,
+   still without member IDs or seed. A missing score or changed packet refuses.
+4. Only an explicitly confirmed `reveal` after freeze can authenticate the
+   private commitment, verify unchanged source/packet/rating hashes, and
+   reconstruct member scores/shortlist in a separate custodian-only output.
+   Admission/training gates remain false.
+
+The private custodian requires POSIX permission controls on a vetted
+local filesystem. On Linux/WSL it checks the most-specific mount in
+`/proc/self/mountinfo` and rejects Windows-backed DrvFs/9p/NTFS,
+FUSE and network filesystems (including CIFS/NFS). **WSL on /mnt/c
+must not hold the key**: `os.name == "posix"` and `chmod(0600)`
+do not establish a private Windows ACL. Use a trusted local ext4
+filesystem (e.g. WSL's native Linux filesystem); unknown Linux
+mounts fail closed. Native Windows remains unsupported until an
+independently reviewed ACL implementation exists.
+The local `freeze` receipt is not a trusted timestamp or proof of rating
+independence by itself. The hash of the unpublished map/packet must be
+externally committed before ratings, and the signed/independently witnessed
+rating-file SHA must be recorded before disclosure to establish an audit
+timeline. Do not include the private key or mapping in either public receipt.
+
+The mapped packet cannot be considered cryptographically anonymous to a
+reviewer with access to the original, labelled raw records, whose response
+text can be matched against the packet. This is an **operational access
+separation requirement**. The repository does not provide such a controlled
+reviewer distribution channel automatically: the custodian must share only
+the sanitized packet through a separate authorized channel. A public GitHub
+review comment or publicly committed packet alongside raw data cannot
+establish blindness.
+
+This proposal does not prepare any actual reviewer packet, generate model
+responses or use unrelated DETECTIVE-001R1 mappings. It is a new, distinct
+review gate stacked after PR #183. The existing 0/144 live evidence status and
+the separate independent source reviews/explicit runtime authorization are
+unchanged.
+
+## Private-custodian CLI example (after full 144-row evidence and review)
+
+Run locally on an access-controlled POSIX environment with a vetted local
+filesystem (WSL native ext4, **not** /mnt/c DrvFs), with paths outside the
+repository and reviewer distribution channel. Do not run these commands
+in GitHub-hosted public CI or publish the custodian directory.
+
+```sh
+python3 scripts/detective_005a_blind.py prepare \
+  --dataset datasets/detective-005a \
+  --reviewer-dir /secure/reviewer-005a \
+  --custody-dir /secure/owner-005a
+
+# Give ONLY reviewer-005a/fun-packet.json and its matching blank ratings
+# template to the independent human reviewer; do not share the raw dataset.
+
+python3 scripts/detective_005a_blind.py freeze \
+  --dataset datasets/detective-005a \
+  --reviewer-dir /secure/reviewer-005a \
+  --custody-dir /secure/owner-005a \
+  --ratings /secure/received-human-ratings.json \
+  --freeze-dir /secure/frozen-005a
+
+# Witness and record the original ratings SHA and prior mapping/packet
+# commitment through an independent archival channel before any reveal.
+
+python3 scripts/detective_005a_blind.py reveal \
+  --dataset datasets/detective-005a \
+  --reviewer-dir /secure/reviewer-005a \
+  --custody-dir /secure/owner-005a \
+  --freeze-dir /secure/frozen-005a \
+  --out-dir /secure/unblinded-005a \
+  --confirm UNBLIND-AFTER-FROZEN-144-RATINGS
+```
+
+These are instructions, **not evidence of performed runs**. All 144 scores
+must originate from a human reviewer, and the owner must document their
+independence and their lack of raw/identity access before interpreting scores
+as blinded. The output is a subjective candidate shortlist only.
