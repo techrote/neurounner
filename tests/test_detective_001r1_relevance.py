@@ -151,7 +151,7 @@ class RelevanceReviewTests(unittest.TestCase):
         # Direct equality is the core custody check; don't mutate repository.
         self.assertNotEqual(changed["items"],packet["items"])
 
-    def test_no_repo_rating_file_or_self_scoring_exists(self):
+    def test_reserved_blind_workspace_has_no_filled_ratings_or_self_scoring(self):
         review_root=r.ROOT/"experiments/detective-001/relevance-review"
         if review_root.exists():
             names={p.name for p in review_root.iterdir() if p.is_file()}
@@ -160,6 +160,92 @@ class RelevanceReviewTests(unittest.TestCase):
         for forbidden in ("openai", "anthropic", "nvidia", "transformers",
                           "torch", "score_response"):
             self.assertNotIn(forbidden,source)
+
+
+    def test_reclassified_external_gameplay_reaction_scores_20261028(self):
+        # External human-supplied scores, copied without changing any rating.
+        # This test never scores a model or admits population expansion.
+        root=r.ROOT/"experiments/detective-001/independent-relevance-review"
+        c2=root/"c2-ratings.json";c3=root/"c3-ratings.json"
+        self.assertEqual(r.sha_file(c2),
+            "d5285982eee8f232a1ced9e04ad712230a3a5c72ff581e29019ae7ce45509d67")
+        self.assertEqual(r.sha_file(c3),
+            "da0c8ae93e574d52bf34293571e0010ab707dd5b95d72421d7ee1af322f917f7")
+        a=r.read(c2);b=r.read(c3)
+        self.assertEqual([row["score_0_to_4"] for row in a["ratings"]],
+            [4,3,4,2,4,4,4,4,4,2,4,4,4,4,4,0])
+        self.assertEqual([row["score_0_to_4"] for row in b["ratings"]],
+            [2,3,3,4,3,4,4,4])
+        # Calls the exact repository validator and post-rating mapping.
+        result=r.aggregate(c2,c3)
+        self.assertEqual(r.read(root/"relevance-summary.json"),result)
+        self.assertEqual(result["g02"]["c3_minus_original_c1"],-0.5)
+        self.assertTrue(result["g02"]["cumulative_nonregression_pass"])
+        self.assertEqual(result["g09"]["c2_minus_original_c1"],-1.5)
+        self.assertFalse(result["g09"]["nonregression_pass"])
+        self.assertFalse(result["candidate_set_relevance_gate"])
+        self.assertFalse(result["population_expansion_admitted_by_this_review"])
+        status=r.read(root/"review-status.json")
+        self.assertEqual(status["status"],"reclassified")
+        self.assertEqual(status["reason_code"],"subjective-gameplay-reaction-not-objective-relevance")
+        self.assertEqual(status["evidence_class"],"subjective_gameplay_reaction")
+        self.assertTrue(status["descriptive_evidence_retained"])
+        self.assertFalse(status["authoritative_for_relevance_gate"])
+        self.assertFalse(status["current_valid_external_relevance_review"])
+        self.assertFalse(status["corrected_scores_present"])
+        self.assertEqual(status["original_rating_file_sha256"]["C2"],r.sha_file(c2))
+        self.assertEqual(status["original_rating_file_sha256"]["C3"],r.sha_file(c3))
+        self.assertFalse(status["population_expansion_admitted"])
+        self.assertFalse(status["training_admitted"])
+        self.assertFalse(status["new_inference_performed"])
+        reaction=r.read(root/"gameplay-reaction-summary.json")
+        self.assertEqual(reaction["source_rating_file_sha256"]["C2"],r.sha_file(c2))
+        self.assertEqual(reaction["source_rating_file_sha256"]["C3"],r.sha_file(c3))
+        self.assertFalse(reaction["relevance_gate_authority"])
+        self.assertFalse(reaction["proposition_gate_authority"])
+        self.assertFalse(reaction["training_admitted"])
+        self.assertFalse(reaction["population_expansion_admitted"])
+        self.assertFalse(reaction["scores_modified"])
+        policy=r.read(root/"policy-decision.json")
+        self.assertEqual(policy["r1_gate_status"],"retired")
+        self.assertFalse(policy["r1_blocks_population_expansion"])
+        self.assertFalse(policy["population_expansion_admitted_by_this_decision"])
+        self.assertTrue(policy["historical_r1_aggregator_preserved"])
+        self.assertTrue(policy["historical_scores_preserved"])
+        self.assertEqual(policy["historical_scores_reclassified_as"],"subjective_gameplay_reaction")
+        self.assertIn("source_and_lineage_custody",policy["remaining_authoritative_gates"])
+        self.assertIn("protected_fact_and_evidence_leakage",policy["remaining_authoritative_gates"])
+        # A retired relevance threshold must not silently remain a blocker
+        # in the human-facing R1 filing. The original scores and historical
+        # aggregation stay untouched and non-admitting.
+        readme=(root/"README.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "retired objective relevance nonregression as a population-expansion gate",
+            readme)
+        self.assertIn("remains NOT ADMITTED by this review", readme)
+        self.assertNotIn("remains blocked by the separate relevance gate", readme)
+        self.assertNotIn("because objective relevance is unresolved", readme)
+        names=sorted(p.name for p in root.iterdir() if p.is_file())
+        self.assertEqual(names,[
+            "README.md","c2-ratings.json","c3-ratings.json",
+            "gameplay-reaction-summary.json","policy-decision.json",
+            "relevance-summary.json","review-status.json"])
+
+
+    def test_historical_review_protocol_cannot_reactivate_retired_gate(self):
+        # Guard the primary R1 protocol, not only its later filing README.
+        # Do not alter scores, historical aggregation, or sealed finals.
+        path=r.ROOT/"experiments/detective-001/RELEVANCE_REVIEW_001R1.md"
+        document=path.read_text(encoding="utf-8")
+        self.assertIn("Current policy: historical relevance protocol, retired gate",document)
+        self.assertIn(
+            "retire objective prompt-relevance nonregression as a population-expansion gate",
+            document)
+        self.assertIn("subjective gameplay-reaction evidence",document)
+        self.assertIn("candidate-set relevance FAIL",document)
+        self.assertIn("C1/C2/C3 learner-finals stay sealed",document)
+        self.assertIn("historical research/provenance instructions only",document)
+        self.assertIn("The historical sections below are intentionally retained",document)
 
 
 if __name__=="__main__":
