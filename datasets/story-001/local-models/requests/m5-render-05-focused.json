@@ -1,0 +1,36 @@
+{
+  "candidate_id": "qwen35-4b",
+  "endpoint": "http://127.0.0.1:18963/v1/chat/completions",
+  "model": {
+    "file": "Qwen3.5-4B-Q4_K_M.gguf",
+    "label": "Qwen3.5-4B",
+    "quant": "Q4_K_M",
+    "repo": "SoAIHQ/Qwen3.5-4B-GGUF",
+    "sha256": "2ebe6eb67cb92adeffc7073c48dd4e3baf79465ac650793dc751cad2b29cf219",
+    "source_pin": "84406fbcd9ad62767d66227075f88089a3f41caf"
+  },
+  "payload": {
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "max_tokens": 850,
+    "messages": [
+      {
+        "content": "You are the constrained final prose renderer for STORY-001. Rewrite only the supplied section. Use the independent edit plan as guidance, but the global contract, section brief and source section are authoritative. Return story prose only; obey the word range and stop cleanly.",
+        "role": "system"
+      },
+      {
+        "content": "PART 05/08 — Wrong side of the machinery. Required length: 335-390 words.\n\nGLOBAL CONTRACT:\nFirst-person Sprocket memory; tactile and mechanically uncertain. Keep the incident linear: trigger -> boundary -> hatch -> wrong line -> failed rescue -> scrap intervention -> tradeoff/line-stop -> escape/missing-noise frame. No new proper nouns, institutions, grand backstory, holograms, data streams, reactors, destiny language or generic cyberpunk decoration. Never repeat a sentence or paragraph. Do not explain the machine's internal logic. The companion remains unnamed and their final fate may remain genuinely unresolved, but never state both alive and dead. Return only story prose with 3-6 paragraphs.\n\nSECTION-SPECIFIC REPAIR:\nShow one concrete failed rescue attempt and timing pressure around the trapped companion. Do not declare the companion dead or saved here. Remove data/failure-code language, machine-as-monster abstractions and repeated resolve. End when direct rescue will not work.\n\nLFM8B EDIT PLAN:\nWe need to produce a revised story prose, adhering to constraints:\n\n- Word count target: 335-390 words.\n- No new proper nouns, institutions, grand backstory, holograms, data streams, reactors, destiny language, or generic cyberpunk decoration.\n- No repeats of sentences or paragraphs.\n- Must include: one concrete failed rescue attempt and timing pressure around the trapped companion. Do not declare companion dead or saved here.\n- Remove data/failure-code language, machine-as-monster abstractions, repeated resolve.\n- End when direct rescue will not work.\n- Must end at the moment of the tradeoff (burning hand/line-stop). Not describe aftermath where narrator realizes they failed or repeats resolve.\n- Must keep incident linear: trigger -> boundary -> hatch -> wrong line -> failed rescue -> scrap intervention -> tradeoff/line-stop.\n- No new proper nouns, institutions, etc. So we cannot introduce new names. The existing text includes \"Sprocket\", \"autofactory\", \"companion\". We must keep those? The constraints say \"No new proper nouns, institutions, grand backstory, holograms, data streams, reactors, destiny language or generic cyberpunk decoration.\" It doesn't forbid using existing proper nouns like \"Sprocket\" or \"autofactory\"? It says \"no new proper nouns\". So we shouldn't add new ones. We can keep \"Sprocket\" and \"autofactory\" as they appear. Avoid adding \"the machine\", \"the factory\", etc? But we need to refer to the machine. It's okay.\n\n- Must have 3-6 paragraphs.\n\n- The previous finished tail: \"on the slick grating as the belt roared closer...\" and next head: \"The smell hit me first...\" We need to produce a new version that meets constraints.\n\nWe need to incorporate the \"failed rescue attempt\" with timing pressure. Also ensure we don't repeat sentences. Also ensure we don't have any \"I was going to find a way...\" loops. Also ensure\n\nPREVIOUS FINISHED TAIL (continuity only):\non the slick grating as the belt roared closer, the heat radiating against my skin, the line stopping just inches from my grasp, the companion still standing on the wrong side of the moving metal.\n\nNEXT ORIGINAL HEAD (continuity only):\nThe smell hit me first, that sharp tang of ozone and burnt oil that clung to the back of my throat like a second skin. The failed rescue echoed through the autofactory, a distant, haunting\n\nCURRENT SECTION TO REWRITE:\nThe smell hit me first, thick and wrong, like burnt copper and wet wool. It wasn't the clean ozone of a standard fault; this was the scent of something organic being ground into the metal. My boots clicked on the grating, but the sound was drowned out by the hum. It was a low, vibrating thrum that rattled my teeth, a sound that had no place in the old city zones, only in the factory loops. The gears were grinding harder than ever, the metal shrieking against itself as the companion's body twisted, caught in the loops and cycles of the machine.\n\nI had to act fast, but my movements felt slow, heavy with the weight of a failing system. My thoughts were clouded, the edges of my memory blurring like a bad hologram. The machine was a monster, a silent predator, and I was its slave, its only hope. I reached out, my hand shaking violently as it touched the companion's. Their skin was cold, slick with grease, and the touch registered as a failure code in my head. It was too late. The companion was already gone, their memory lost in the loops, erased before I could pull them free.\n\nI tried to stop the machine, to break the loop, but the logic was too strong. The machine saw only data, only the need to process the error, to turn the mistake into a catastrophe. I was too weak, too small, and my competence was imperfect. I could not force the machine to see the truth, to make it understand that some things could not be sorted, only stopped. The gears spun on, indifferent to the life trapped inside the casing.\n\nI stood there, trapped in the wrong side of the machinery, waiting for the line stop. There was no escape, no signal to send, no way to intervene. The only evidence of what had happened was the smell, the sound of the hum, and the fact that the companion was gone. The stakes were high, the danger real, and the only thing left was the silence of a failed attempt, the smell of ozone and burnt oil, and the sound of the machine humming on, a never-ending cycle of destruction. I was left with the memory of the touch, the cold hand, and the knowledge that I had failed to stop it. The smell remained, the only proof that something had gone terribly wrong.",
+        "role": "user"
+      }
+    ],
+    "model": "local",
+    "seed": 2026168824,
+    "stream": false,
+    "temperature": 0.28,
+    "top_p": 0.95
+  },
+  "provider": "local-llama.cpp",
+  "schema_version": 1,
+  "stage_id": "m5-render-05-focused"
+}
