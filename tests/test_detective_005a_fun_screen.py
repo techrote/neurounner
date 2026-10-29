@@ -190,7 +190,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
             "peft": "synthetic", "threads": 2,
             "base_weights_sha256_verified": row["source"]["base_weights_sha256"],
             "prompt_token_ids": [7] * row["response"]["prompt_tokens"],
-            "prompt_ids_sha256": "a" * 64,
+            "prompt_ids_sha256": screen.prompt_ids_sha256([7] * row["response"]["prompt_tokens"]),
             "adapter_archive_sha256_verified": row["source"]["asset_sha256"],
             "adapter_directory_sha256_verified":
                 row["source"]["adapter_directory_sha256"],
@@ -199,6 +199,8 @@ class Detective005AFunScreenTests(unittest.TestCase):
         for mutate in (
             lambda r: r.update(actions_run_url="https://example.com/private"),
             lambda r: r.update(prompt_token_ids=[7]),
+            lambda r: r.update(prompt_token_ids=[8] + r["prompt_token_ids"][1:]),
+            lambda r: r.update(prompt_ids_sha256="0" * 64),
             lambda r: r.update(threads=99),
         ):
             with self.subTest(native_receipt=mutate):
@@ -416,14 +418,27 @@ class Detective005AFunScreenTests(unittest.TestCase):
                     json.dumps(manifest, indent=2, sort_keys=True) + "\n",
                     encoding="utf-8")
             out = root / "dataset"
-            manifest = assemble.assemble(artifacts, out)
+            manifest = assemble.assemble(artifacts, out,
+                                        allow_synthetic_test_only=True)
             self.assertEqual(manifest["raw_results"], 144)
             self.assertEqual(manifest["hard_floor_clean_results"], 144)
             self.assertFalse(manifest["subjective_fun_ratings_present"])
             self.assertFalse((out / "review").exists())
             self.assertFalse(manifest["review_packet_generated"])
             self.assertIsNone(manifest["review_packet_sha256"])
-            verified = assemble.verify_dataset(out)
+            # Production entry points must refuse our clearly labelled
+            # no-model synthetic archive. Only this explicit Python-only
+            # fixture switch admits it to isolated test assertions.
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "synthetic-only runner"):
+                assemble.verify_dataset(out)
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "synthetic-only runner"):
+                assemble.read_lineage(self.cfg, "G01", artifacts / "G01")
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "synthetic-only runner"):
+                assemble.assemble(artifacts, root / "real-production-refused")
+            verified = assemble.verify_dataset(out, allow_synthetic_test_only=True)
             self.assertEqual(verified["raw_results"], 144)
             self.assertEqual(verified["packet_items"], 0)
             self.assertFalse(verified["review_packet_generated"])
@@ -431,6 +446,42 @@ class Detective005AFunScreenTests(unittest.TestCase):
             self.assertFalse(verified["production_admission"])
             self.assertEqual(manifest["repository_head_sha"], "1" * 40)
             self.assertEqual(manifest["actions_run_id"], "123456")
+
+            # The combined original aggregate must be byte-canonical even
+            # if both the aggregate SHA and inventory are recomputed. Checking
+            # unchanged per-lineage journals against parsed/re-serialized
+            # objects alone cannot detect a shadow duplicate JSON key.
+            aggregate_path = out / "raw/results.jsonl"
+            orig_aggregate = aggregate_path.read_bytes()
+            manifest_path = out / "manifest.json"
+            orig_manifest_bytes = manifest_path.read_bytes()
+            inventory_path = out / "provenance/hashes.sha256"
+            orig_inventory_bytes = inventory_path.read_bytes()
+            for label, changed in (
+                ("shadow_duplicate_key", orig_aggregate.replace(
+                    b'"experiment":"DETECTIVE-005A"',
+                    b'"experiment":"private-shadow","experiment":"DETECTIVE-005A"',
+                    1)),
+                ("extra_blank_line", orig_aggregate.replace(b"\\n", b"\\n\\n", 1)),
+            ):
+                with self.subTest(aggregate_noncanonical=label):
+                    self.assertNotEqual(changed, orig_aggregate)
+                    aggregate_path.write_bytes(changed)
+                    revised = screen.read_json(manifest_path)
+                    revised["raw_results_sha256"] = screen.sha256_file(aggregate_path)
+                    assemble.write_json(manifest_path, revised)
+                    inventory_path.write_text(assemble.hash_inventory(out),
+                                              encoding="utf-8")
+                    with self.assertRaisesRegex(
+                            screen.ScreenError, "combined raw JSONL noncanonical"):
+                        assemble.verify_dataset(
+                            out, allow_synthetic_test_only=True)
+                    aggregate_path.write_bytes(orig_aggregate)
+                    manifest_path.write_bytes(orig_manifest_bytes)
+                    inventory_path.write_bytes(orig_inventory_bytes)
+            self.assertEqual(
+                assemble.verify_dataset(
+                    out, allow_synthetic_test_only=True)["raw_results"], 144)
 
             # The archive verifier must not accept self-rehashed extraneous
             # files such as a private reviewer HMAC key or identity map. A
@@ -444,7 +495,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
                                       encoding="utf-8")
             with self.assertRaisesRegex(
                     screen.ScreenError, "unregistered or missing files"):
-                assemble.verify_dataset(out)
+                assemble.verify_dataset(out, allow_synthetic_test_only=True)
             smuggled.unlink()
             inventory_path.write_bytes(original_inventory)
 
@@ -457,7 +508,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
             journal.unlink()
             journal.symlink_to(external_journal)
             with self.assertRaisesRegex(screen.ScreenError, "symlink"):
-                assemble.verify_dataset(out)
+                assemble.verify_dataset(out, allow_synthetic_test_only=True)
             journal.unlink()
             journal.write_bytes(original_journal)
             self.assertEqual(inventory_path.read_bytes(), original_inventory)
@@ -481,7 +532,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
                                               encoding="utf-8")
                     with self.assertRaisesRegex(screen.ScreenError,
                                                 diagnostic):
-                        assemble.verify_dataset(out)
+                        assemble.verify_dataset(out, allow_synthetic_test_only=True)
             assemble.write_json(manifest_path, original_manifest)
             inventory_path.write_bytes(original_inventory)
 
@@ -496,7 +547,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
                                       encoding="utf-8")
             with self.assertRaisesRegex(screen.ScreenError,
                                         "archived lineage raw/source/authority"):
-                assemble.verify_dataset(out)
+                assemble.verify_dataset(out, allow_synthetic_test_only=True)
             assemble.write_json(g01_path, g01_original)
             inventory_path.write_bytes(original_inventory)
             # A recomputed inventory must not launder fabricated lineage
@@ -521,10 +572,10 @@ class Detective005AFunScreenTests(unittest.TestCase):
                                               encoding="utf-8")
                     with self.assertRaisesRegex(
                             screen.ScreenError, "lineage .* drift"):
-                        assemble.verify_dataset(out)
+                        assemble.verify_dataset(out, allow_synthetic_test_only=True)
             assemble.write_json(g01_path, g01_original)
             inventory_path.write_bytes(original_inventory)
-            self.assertEqual(assemble.verify_dataset(out)["raw_results"], 144)
+            self.assertEqual(assemble.verify_dataset(out, allow_synthetic_test_only=True)["raw_results"], 144)
 
             # A rehashed inventory is not permission to embed private mappings
             # in ALLOWLISTED metadata files or the public README. Strict parsed
@@ -541,7 +592,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
                                               encoding="utf-8")
                     with self.assertRaisesRegex(
                             screen.ScreenError, "field-set"):
-                        assemble.verify_dataset(out)
+                        assemble.verify_dataset(out, allow_synthetic_test_only=True)
                     metadata_path.write_bytes(original_bytes)
                     inventory_path.write_bytes(original_inventory)
 
@@ -555,7 +606,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
                                       encoding="utf-8")
             with self.assertRaisesRegex(screen.ScreenError,
                                         "metadata field-set or URL drift"):
-                assemble.verify_dataset(out)
+                assemble.verify_dataset(out, allow_synthetic_test_only=True)
             provenance_path.write_bytes(original_provenance_bytes)
             inventory_path.write_bytes(original_inventory)
 
@@ -577,7 +628,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
                                               encoding="utf-8")
                     with self.assertRaisesRegex(
                             screen.ScreenError, "noncanonical JSON"):
-                        assemble.verify_dataset(out)
+                        assemble.verify_dataset(out, allow_synthetic_test_only=True)
                     metadata_path.write_bytes(original_bytes)
                     inventory_path.write_bytes(original_inventory)
 
@@ -589,10 +640,10 @@ class Detective005AFunScreenTests(unittest.TestCase):
                                       encoding="utf-8")
             with self.assertRaisesRegex(screen.ScreenError,
                                         "README content drift"):
-                assemble.verify_dataset(out)
+                assemble.verify_dataset(out, allow_synthetic_test_only=True)
             readme_path.write_bytes(original_readme_bytes)
             inventory_path.write_bytes(original_inventory)
-            self.assertEqual(assemble.verify_dataset(out)["raw_results"], 144)
+            self.assertEqual(assemble.verify_dataset(out, allow_synthetic_test_only=True)["raw_results"], 144)
 
             provenance = screen.read_json(
                 out / "provenance" / "source-artifacts.json")
@@ -606,7 +657,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
             assemble.write_json(provenance_path, bad_provenance)
             with self.assertRaisesRegex(
                     screen.ScreenError, "source-artifact manifest/hash"):
-                assemble.verify_dataset(out)
+                assemble.verify_dataset(out, allow_synthetic_test_only=True)
             assemble.write_json(provenance_path, provenance)
 
             # A substituted runner hash must fail readback.
@@ -615,7 +666,8 @@ class Detective005AFunScreenTests(unittest.TestCase):
             altered["runner_script_sha256"] = "a" * 64
             first.write_text(json.dumps(altered), encoding="utf-8")
             with self.assertRaisesRegex(screen.ScreenError, "runner source hash"):
-                assemble.read_lineage(self.cfg, "G01", first.parent)
+                assemble.read_lineage(self.cfg, "G01", first.parent,
+                                      allow_synthetic_test_only=True)
 
             # A duplicated lineage folder must never be silently selected.
             duplicate = artifacts / "duplicate" / "G01"
@@ -679,15 +731,18 @@ class Detective005AFunScreenTests(unittest.TestCase):
                 json.dumps(manifest), encoding="utf-8")
             with self.assertRaisesRegex(
                     screen.ScreenError, "fsynced journal missing"):
-                assemble.read_lineage(self.cfg, "G01", folder)
+                assemble.read_lineage(self.cfg, "G01", folder,
+                                      allow_synthetic_test_only=True)
             journal = folder / "results.partial.jsonl"
             journal.write_bytes(raw.read_bytes()[:-1])
             with self.assertRaisesRegex(
                     screen.ScreenError, "journal/final bytes mismatch"):
-                assemble.read_lineage(self.cfg, "G01", folder)
+                assemble.read_lineage(self.cfg, "G01", folder,
+                                      allow_synthetic_test_only=True)
             journal.write_bytes(raw.read_bytes())
             result_manifest, observed = assemble.read_lineage(
-                self.cfg, "G01", folder)
+                self.cfg, "G01", folder,
+                allow_synthetic_test_only=True)
             self.assertEqual(len(observed), 12)
             self.assertEqual(result_manifest["lineage"], "G01")
 
@@ -725,7 +780,8 @@ class Detective005AFunScreenTests(unittest.TestCase):
             }
             archive_manifest = folder / "manifest.json"
             assemble.write_json(archive_manifest, manifest)
-            self.assertEqual(assemble.read_lineage(self.cfg, "G01", folder)[1],
+            self.assertEqual(assemble.read_lineage(self.cfg, "G01", folder,
+                                      allow_synthetic_test_only=True)[1],
                              line_rows)
             for label in ("hard_floor", "prompt_failures", "tokens",
                           "total_tokens", "peak_rss", "private_field"):
@@ -746,9 +802,11 @@ class Detective005AFunScreenTests(unittest.TestCase):
                     assemble.write_json(archive_manifest, bad)
                     with self.assertRaisesRegex(
                             screen.ScreenError, "lineage .* drift"):
-                        assemble.read_lineage(self.cfg, "G01", folder)
+                        assemble.read_lineage(self.cfg, "G01", folder,
+                                      allow_synthetic_test_only=True)
             assemble.write_json(archive_manifest, manifest)
-            assemble.read_lineage(self.cfg, "G01", folder)
+            assemble.read_lineage(self.cfg, "G01", folder,
+                                      allow_synthetic_test_only=True)
 
 
     def test_refused_rerun_preserves_old_receipts_and_work_bytes(self):
