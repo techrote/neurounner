@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001",
+  "kind": "read_only_source_metadata_evidence_four_model_verified_file_presence",
+  "created_utc": "2026-10-26T21:06:59.816933+00:00",
+  "source": {
+    "workflow_run": "https://github.com/techrote/neurounner/actions/runs/40401534069",
+    "workflow_id": 397554745,
+    "artifact_id": 12689227086,
+    "artifact_name": "ncr-001a-preflight-1",
+    "artifact_zip_digest": "sha256:f8e267f22eeaf1764a16482a19c76e5d69316c8d1e0532af9677c58527d8c6cf",
+    "source_report_sha256": "48be3da955464c0b9b520d487921149287c81fd450c3695ace5c193617ebc5f9",
+    "source_commit": "c3fe3bf991e8d0b88f7297f19f654c8832af84be",
+    "original_protocol_sha256": "938da72fe0c8aee1ce53bfe7314b62b1122a209b3b676ad7d209122dd80a0f27",
+    "method": "HfApi.model_info(files_metadata=True) with exact pinned revisions; hf_hub_download of small config/tokenizer metadata only",
+    "model_weights_downloaded": false,
+    "tokenizer_config_verified_as_runtime_equivalent": false,
+    "training_performed": false,
+    "extension_note": "Sprocket instruct and void1 are newly added lane candidates. Their hash fields are null until a pinned hosted preflight and a source-bound readback are committed. Old source metadata hashes retained, not revalidated here.",
+    "four_model_amendment": {
+      "workflow_run": "https://github.com/techrote/neurounner/actions/runs/40405051395",
+      "workflow_run_id": 40405051395,
+      "artifact_id": 12690252257,
+      "artifact_name": "ncr-001a-preflight-1",
+      "artifact_zip_digest": "sha256:8df2ada91d438101a95037c963d70228d9c50e608fd64ad4aab741101d88b270",
+      "source_report_sha256": "4c8953eccf1b1c78be6e148789c5c75250668565c9d214ee60d4f532ec17589b",
+      "source_report_protocol_sha256": "2e294750a17b1bfb3eba448f8a5b55344c72aff700587351bd10da1af38885ab",
+      "source_commit": "d5261dde4c84c5a1b4947f4e65bcaa2ea06f75ab",
+      "recorded_at_utc": "2026-10-26T21:31:40.040501+00:00",
+      "method": "same read-only exact-revision HF model_info metadata and small config/tokenizer download; report independently read back from saved Actions artifact zip; model weights not downloaded; remote tokenizer code treated as untrusted source text and not executed",
+      "weight_bytes_downloaded": 0,
+      "training_performed": false
+    }
+  },
+  "models": {
+    "smollm2": {
+      "repo_id": "HuggingFaceTB/SmolLM2-135M-Instruct",
+      "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+      "variant": "instruct",
+      "hf_weight_file": "model.safetensors",
+      "weight_present": true,
+      "weight_declared_lfs_sha256_not_downloaded": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+      "weight_bytes": 269060552,
+      "config_sha256": "8eb740e8bbe4cff95ea7b4588d17a2432deb16e8075bc5828ff7ba9be94d982a",
+      "tokenizer_sha256": "9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c",
+      "tokenizer_config_sha256": "4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df",
+      "chat_template_in_tokenizer_config": true,
+      "chat_template_sha256": "872be49dbb638044ad01b60388f48d469ff2980e5f0dccdc22ec907db54d0788",
+      "architecture": {
+        "layers": 30,
+        "hidden": 576,
+        "heads": 9,
+        "kv_heads": 3,
+        "vocab": 49152,
+        "context": 8192
+      },
+      "tap_indices_post_block_zero_based": [
+        9,
+        19,
+        29
+      ],
+      "metadata_status": "PASS; actual HF weight contents/full-load parity pending"
+    },
+    "sprocket_chat": {
+      "repo_id": "kandivault/sprocket-500m",
+      "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+      "variant": "chat",
+      "hf_weight_file": "chat/model.safetensors",
+      "weight_present": true,
+      "weight_declared_lfs_sha256_not_downloaded": "551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97",
+      "weight_bytes": 1002207984,
+      "chat_config_sha256": "557aacbcb7e23a322221ab91b62c4343dd22130388efc3eb4dcdfe1edfd8d1b7",
+      "chat_tokenizer_sha256": "178a63d94a7de4aa273a6a9c218180c3b7d1912f5a18a91be34bab252f7277eb",
+      "chat_tokenizer_config_sha256": "1d1c0733848e0c78a2ec48a7f20cd55ec5ee0b4cbcda9785249af9e489823408",
+      "chat_tokenizer_same_hash_as_root": true,
+      "chat_tokenizer_config_same_hash_as_root": true,
+      "chat_template_in_tokenizer_config": false,
+      "reference_gguf_f16_declared_sha256": "3b556c9488db4dfcddb5bfeaa5e065a9f52b7b839cb5c5271283c97b845f0ede",
+      "reference_gguf_q4_declared_sha256": "edc2ac323a2513fa6f8e3e54adf120243de0f7a6b8cc11b349b3e6ad61494a09",
+      "root_instruct_safetensors_exists_but_not_allowed_as_chat": true,
+      "architecture": {
+        "layers": 26,
+        "hidden": 1280,
+        "heads": 20,
+        "kv_heads": 4,
+        "vocab": 32000,
+        "context": 2048
+      },
+      "tap_indices_post_block_zero_based": [
+        7,
+        16,
+        25
+      ],
+      "metadata_status": "CHAT_HF_FILE_PRESENT; tokenizer chat-template equivalence and actual HF weight contents/parity pending"
+    },
+    "sprocket_instruct": {
+      "repo_id": "kandivault/sprocket-500m",
+      "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+      "variant": "instruct",
+      "hf_weight_file": "model.safetensors",
+      "weight_present": true,
+      "weight_declared_lfs_sha256_not_downloaded": "1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864",
+      "weight_bytes": 1002207984,
+      "config_sha256": "557aacbcb7e23a322221ab91b62c4343dd22130388efc3eb4dcdfe1edfd8d1b7",
+      "tokenizer_sha256": "178a63d94a7de4aa273a6a9c218180c3b7d1912f5a18a91be34bab252f7277eb",
+      "tokenizer_config_sha256": "1d1c0733848e0c78a2ec48a7f20cd55ec5ee0b4cbcda9785249af9e489823408",
+      "architecture": {
+        "layers": 26,
+        "hidden": 1280,
+        "heads": 20,
+        "kv_heads": 4,
+        "vocab": 32000,
+        "context": 2048
+      },
+      "tap_indices_post_block_zero_based": [
+        7,
+        16,
+        25
+      ],
+      "metadata_status": "PASS_EXACT_PINNED_HF_SOURCE_AND_BYTE_HASHED_TOKENIZER_CONFIG; actual model checkpoint bytes, formatted control tokens and forward/noop/cache still unverified",
+      "evidence_type": "source-bound Actions artifact metadata, not full weight byte verification",
+      "special_tokens_map_sha256": "c575235775a1998faf1256ea0b6f791116ea9d89cc34238ea3bd532b8190773b",
+      "chat_template_in_tokenizer_config": false,
+      "source_report_sha256": "4c8953eccf1b1c78be6e148789c5c75250668565c9d214ee60d4f532ec17589b"
+    },
+    "void1": {
+      "repo_id": "dotlabs/void.1",
+      "revision": "9c2be5087772867d45961abd11f6b35110617563",
+      "variant": "base_byte",
+      "hf_weight_file": "model.safetensors",
+      "weight_present": true,
+      "weight_declared_lfs_sha256_not_downloaded": "ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3",
+      "weight_bytes": 360622744,
+      "config_sha256": "cbc72137da3dae65085a2a8c39ad7634d16bf92d785ca00d283ee82fe32b37e7",
+      "tokenizer_config_sha256": "0ecbd4fd39e35125800d806af981ba0cacd8a7ba5f02c9e729c4ecc54af6d300",
+      "tokenization_byte_py_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+      "byte_vocab_sha256": "57a1cd2e70dd5b7cc6fd2eaa12ebfcd173c1620fa5d45c2c6282511c29b6a5f6",
+      "train002b_tokenizer_source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+      "architecture": {
+        "layers": 24,
+        "hidden": 640,
+        "heads": 10,
+        "kv_heads": 2,
+        "vocab": 259,
+        "context": 2048
+      },
+      "tap_indices_post_block_zero_based": [
+        7,
+        15,
+        23
+      ],
+      "metadata_status": "PASS_EXACT_PINNED_QWEN3_SOURCE_AND_BYTE_TOKENIZER_CODE_HASH; actual weights/model-load/cache semantics and review of remote Python code still unverified",
+      "evidence_type": "source-bound Actions artifact; tokenizer bytes hashed but NEVER executed by preflight",
+      "special_tokens_map_sha256": "20d4b94d0e657c3f44d9123522c106e7315b6c1a1b6d259478f17bd2918b1263",
+      "tokenizer_python_byte_sha_matches_train002b": true,
+      "source_report_sha256": "4c8953eccf1b1c78be6e148789c5c75250668565c9d214ee60d4f532ec17589b"
+    }
+  },
+  "interpretation": "All four HF model weight filenames exist at exact revisions; config/tokenizer/source file SHA-256 values are independently computed on fetched small-file bytes. LFS weight hashes reflect publisher file metadata only, NOT independent downloaded model-byte verification. No training, tokenizer remote-code execution, or model-forward/cache conformance was performed. Chat and Instruct Sprocket have equal architecture/tokenizer metadata hashes but DIFFERENT model.safetensors hashes/weights and must be separate lanes.",
+  "checkpoints_for_next_phase": [
+    "Review Sprocket special tokens and explicit chat-template semantics before model training",
+    "Independently verify each fetched model checkpoint against its declared LFS SHA256 during #70/#71",
+    "Qualify prefill vs cached incremental equivalence and no-op frozen logits in #72",
+    "Audit void.1 ByteTokenizer pinned custom source and test token-unit-to-UTF8 accounting independently",
+    "Read back 2026-10-26 four-lane source artifact and compare all live configs/tokenizers against this durable record before taking source-based decisions",
+    "In #78 review Sprocket instruct root formatter/tool control tokens (chat-template absent) and verify full checkpoint actual bytes against declared LFS hash",
+    "In #79 review pinned void.1 tokenization_byte.py remote code (matches TRAIN-002b source), run byte roundtrip test, verify full checkpoint actual bytes",
+    "Four independent model-specific #72 causal/cache and frozen/noop gates required before any #74/#75/#80/#81 training"
+  ]
+}
