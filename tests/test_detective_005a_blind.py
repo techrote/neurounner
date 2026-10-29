@@ -250,6 +250,43 @@ class Detective005ABlindCustodyTests(unittest.TestCase):
             with self.assertRaisesRegex(screen.ScreenError, "disjoint"):
                 blind.prepare(dataset, dataset / "reviewer", root / "secret")
 
+    def test_wsl_drvfs_ntfs_and_network_mounts_refuse_private_custody(self):
+        # WSL reports os.name == "posix" even when /mnt/c uses an NTFS-
+        # backed DrvFs mount; chmod cannot establish a private Windows ACL.
+        if os.name != "posix":
+            self.skipTest("POSIX-only mount security negative")
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            dataset = self.make_dataset(root)
+            for filesystem in ("9p", "drvfs", "ntfs3", "fuseblk",
+                               "nfs4", "cifs", "smb3"):
+                with self.subTest(filesystem=filesystem):
+                    with mock.patch.object(blind.sys, "platform", "linux"), \
+                         mock.patch.object(blind, "_linux_mount_type",
+                                           return_value=filesystem):
+                        with self.assertRaisesRegex(
+                                screen.ScreenError, "vetted local filesystem"):
+                            blind.prepare(dataset, root / "review",
+                                          root / "custody")
+                    self.assertFalse((root / "review").exists())
+                    self.assertFalse((root / "custody").exists())
+
+    def test_mountinfo_uses_deepest_matching_mount(self):
+        if os.name != "posix":
+            self.skipTest("Linux-only mount qualification")
+        example = (
+            "21 0 0:1 / / rw - overlay overlay rw\\n"
+            "22 21 0:2 / /mnt/c rw - 9p C: rw,aname=drvfs\\n"
+            "23 22 0:3 / /mnt/c/secrets rw - ntfs3 /dev/sda rw\\n"
+        )
+        with mock.patch.object(blind.Path, "read_text", return_value=example):
+            self.assertEqual(blind._linux_mount_type(
+                Path("/mnt/c/secrets/owner")), "ntfs3")
+            self.assertEqual(blind._linux_mount_type(
+                Path("/mnt/c/owner")), "9p")
+            self.assertEqual(blind._linux_mount_type(
+                Path("/home/owner")), "overlay")
+
     def test_unverified_windows_acl_custody_refuses(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
