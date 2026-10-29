@@ -37,13 +37,14 @@ class Detective005AFunScreenTests(unittest.TestCase):
                     f"The relay sounds offended today. Prompt {prompt['id']} "
                     "gets my best theory: blame the vending hatch's imaginary union."
                 )
+                source = screen.expected_source(
+                    self.cfg, member["member_id"])
                 rows.append({
                     "schema": "detective-005a-raw-response-v1",
                     "experiment": "DETECTIVE-005A",
                     "member_id": member["member_id"],
                     "prompt_id": prompt["id"],
-                    "source": screen.expected_source(
-                        self.cfg, member["member_id"]),
+                    "source": source,
                     "request": screen.expected_request(
                         self.cfg, prompt["id"]),
                     "response": {
@@ -60,6 +61,10 @@ class Detective005AFunScreenTests(unittest.TestCase):
                         "cpu": "none",
                         "repository_head_sha": "1" * 40,
                         "actions_run_id": "123456",
+                        "base_weights_sha256_verified": source["base_weights_sha256"],
+                        "adapter_archive_sha256_verified": source["asset_sha256"],
+                        "adapter_directory_sha256_verified":
+                            source["adapter_directory_sha256"],
                     },
                 })
         return rows
@@ -143,6 +148,21 @@ class Detective005AFunScreenTests(unittest.TestCase):
         bad["request"]["max_new_tokens"] = 95
         with self.assertRaisesRegex(screen.ScreenError, "request/decode"):
             screen.validate_result(self.cfg, bad)
+        # Labels can remain untouched while a forged receipt claims a
+        # different downloaded model; never certify the frozen cohort.
+        for field in ("base_weights_sha256_verified",
+                      "adapter_archive_sha256_verified",
+                      "adapter_directory_sha256_verified"):
+            with self.subTest(forged_verified_hash=field):
+                bad = copy.deepcopy(row)
+                bad["runner"][field] = "0" * 64
+                with self.assertRaisesRegex(
+                        screen.ScreenError, "base/adapter verification receipt"):
+                    screen.validate_result(self.cfg, bad)
+                bad["runner"].pop(field)
+                with self.assertRaisesRegex(
+                        screen.ScreenError, "base/adapter verification receipt"):
+                    screen.validate_result(self.cfg, bad)
 
     def test_review_packet_is_identity_blind_and_reconstructible(self):
         rows = self.synthetic_rows()
