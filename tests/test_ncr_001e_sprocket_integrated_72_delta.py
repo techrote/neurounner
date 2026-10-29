@@ -111,6 +111,16 @@ class SourceMatchedSprocketDeltaTests(unittest.TestCase):
             "sprocket_chat"].__setitem__("head", "0"*40))
         self.changed(lambda d: d.pop("chat"), originals=True)
 
+    def test_permanent_original_source_decision_is_blob_pinned_and_reproduced(self):
+        raw = gate.PUBLISHED_REPORT.read_bytes()
+        self.assertEqual(gate.gitblob(raw), gate.PUBLISHED_REPORT_GIT_BLOB)
+        committed = json.loads(raw)
+        regenerated = gate.compose(self.diag, self.originals)
+        self.assertEqual(committed, regenerated)
+        self.assertFalse(committed["full_72_conformance_pass"])
+        self.assertFalse(committed["train_authorized"])
+        self.assertNotEqual(gate.gitblob(raw + b" "), gate.PUBLISHED_REPORT_GIT_BLOB)
+
     def test_no_model_or_comparative_optimizer_invocation_in_delta(self):
         script = (ROOT / "scripts/ncr_001e_sprocket_integrated_72_delta.py").read_text()
         self.assertNotIn("optimizer.step(", script)
