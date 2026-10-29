@@ -462,7 +462,7 @@ class Detective005AFunScreenTests(unittest.TestCase):
                     b'"experiment":"DETECTIVE-005A"',
                     b'"experiment":"private-shadow","experiment":"DETECTIVE-005A"',
                     1)),
-                ("extra_blank_line", orig_aggregate.replace(b"\\n", b"\\n\\n", 1)),
+                ("extra_blank_line", orig_aggregate.replace(bytes([10]), bytes([10, 10]), 1)),
             ):
                 with self.subTest(aggregate_noncanonical=label):
                     self.assertNotEqual(changed, orig_aggregate)
