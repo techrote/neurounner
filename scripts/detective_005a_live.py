@@ -140,6 +140,19 @@ def intact_partial_raw_rows(path: Path) -> tuple[int, str | None]:
     return count, None
 
 
+class PreexistingLineageEvidence(screen.ScreenError):
+    """Refused rerun: absolutely no output bytes may be changed."""
+
+
+def refuse_existing_lineage_evidence(out: Path) -> None:
+    """Check for any existing receipt, work tree, partial or final output."""
+    if out.is_symlink():
+        raise PreexistingLineageEvidence("refuse symlink lineage output")
+    if out.exists() and (not out.is_dir() or any(out.iterdir())):
+        raise PreexistingLineageEvidence(
+            "refuse to overwrite pre-existing lineage evidence")
+
+
 def write_interrupted_receipt(lineage: str, out: Path, error: Exception) -> dict:
     """Make a failed model/load run visible in the always-uploaded artifact."""
     out.mkdir(parents=True, exist_ok=True)
@@ -168,7 +181,13 @@ def write_interrupted_receipt(lineage: str, out: Path, error: Exception) -> dict
         "durably_promoted": False,
         "status": "incomplete_artifact_only",
     }
-    write_json(out / "interrupted.json", receipt)
+    # Exclusive creation: never replace the original failure identity, even
+    # if another process races a writer between preflight and exception.
+    with (out / "interrupted.json").open("x", encoding="utf-8") as fh:
+        fh.write(json.dumps(receipt, indent=2, sort_keys=True,
+                            ensure_ascii=False) + "\n")
+        fh.flush()
+        os.fsync(fh.fileno())
     return receipt
 
 
@@ -218,13 +237,9 @@ def run_lineage(lineage: str, out: Path, download_dir: Path) -> dict:
     cfg = screen.load_contract()
     plan = source_plan(lineage)
     member_ids = plan["member_ids"]
+    refuse_existing_lineage_evidence(out)
     out.mkdir(parents=True, exist_ok=True)
     partial_path = out / "results.partial.jsonl"
-    screen.require(
-        not partial_path.exists() and
-        not (out / "results.jsonl").exists() and
-        not (out / "manifest.json").exists(),
-        "refuse to overwrite pre-existing lineage evidence")
 
     from huggingface_hub import snapshot_download
     from peft import PeftModel
@@ -425,8 +440,14 @@ def main() -> None:
                     default=Path("downloads/detective-005a"))
     args = ap.parse_args()
     if args.run:
+        # This first guard is OUTSIDE the receipt-writing handler: any old
+        # failure receipt or unpacked work must remain strictly read-only.
+        refuse_existing_lineage_evidence(args.out)
         try:
             result = run_lineage(args.lineage, args.out, args.download_dir)
+        except PreexistingLineageEvidence:
+            # A concurrent collision must also never write a new receipt.
+            raise
         except Exception as exc:
             write_interrupted_receipt(args.lineage, args.out, exc)
             raise
