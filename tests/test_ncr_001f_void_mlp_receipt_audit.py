@@ -6,6 +6,8 @@ from __future__ import annotations
 import base64
 import copy
 import json
+import shutil
+import tempfile
 from pathlib import Path
 import sys
 import unittest
@@ -13,7 +15,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from ncr_001f_void_mlp_receipt_audit import (
-    ARCHIVE, PROVENANCE, audit, read_original_bytes, validate_receipts,
+    ARCHIVE, PROVENANCE, EVIDENCE, EXPECTED_CLASSIFICATION, audit,
+    read_original_bytes, validate_receipts,
 )
 
 
@@ -34,12 +37,41 @@ class OriginalVoidMlpCustodySentinels(unittest.TestCase):
         with self.assertRaises((ValueError, KeyError, TypeError)):
             validate_receipts(pref, host, prov)
 
+    def mutate_committed_evidence(self, name, mutator):
+        with tempfile.TemporaryDirectory() as temp:
+            evidence = Path(temp) / "original-evidence"
+            shutil.copytree(EVIDENCE, evidence)
+            mutator(evidence / name)
+            with self.assertRaisesRegex(ValueError, "committed"):
+                audit(evidence)
+
     def test_original_source_and_runtime_admitted_as_prepass_only(self):
         r = audit()
         self.assertEqual(r["original_run"], "40523446884")
+        self.assertEqual(r["classification"], EXPECTED_CLASSIFICATION)
         self.assertEqual(r["optimizer_steps"], 0)
         self.assertFalse(r["training_admitted"])
         self.assertLessEqual(r["cached_max_abs"], 0.0005)
+
+    def test_encoded_original_json_archive_whitespace_drift_refused(self):
+        self.mutate_committed_evidence(
+            ARCHIVE.name, lambda p: p.write_bytes(p.read_bytes() + b"\n"))
+
+    def test_committed_provenance_whitespace_drift_refused(self):
+        self.mutate_committed_evidence(
+            PROVENANCE.name, lambda p: p.write_bytes(p.read_bytes() + b"\n"))
+
+    def test_rehashed_false_classification_and_archive_claim_refused(self):
+        def change(p):
+            d = json.loads(p.read_text(encoding="utf-8"))
+            d["classification"] = "FALSE_FOUR_MODEL_72_PASS"
+            d["archive"]["original_jsons_tar_gz_sha256"] = "0" * 64
+            p.write_text(json.dumps(d), encoding="utf-8")
+        self.mutate_committed_evidence(PROVENANCE.name, change)
+
+    def test_false_classification_refused_by_receipt_validator(self):
+        self.altered(lambda prov, pref, host:
+                     prov.__setitem__("classification", "FALSE_FOUR_MODEL_72_PASS"))
 
     def test_original_zip_hash_guard(self):
         self.altered(lambda prov, pref, host:

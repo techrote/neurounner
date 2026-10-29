@@ -8,6 +8,10 @@ on:
       - "scripts/ncr_001f_void_mlp_receipt_audit.py"
       - "tests/test_ncr_001f_void_mlp_receipt_audit.py"
       - "experiments/ncr-001/controls-evidence/real-void1-mlp/**"
+      - "docs/NCR_001_F_VOID_REAL_MLP.md"
+      - "RAG.md"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/source-pins.json"
   workflow_dispatch:
 
 permissions:
@@ -21,12 +25,31 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: ${{ github.sha }}
           persist-credentials: false
+      - name: Verify exact push head and frozen protocol/source Git blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "techrote/neurounner"
+          test "$GITHUB_REF" = "refs/heads/review/ncr-001f-void-byte-mlp-real-20261027"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
       - name: Run isolated standard-library archival and mutation audit
         run: |
           python3 -m py_compile scripts/ncr_001f_void_mlp_receipt_audit.py tests/test_ncr_001f_void_mlp_receipt_audit.py
           python3 -m unittest discover -s tests -p "test_ncr_001f_void_mlp_receipt_audit.py" -v
           python3 scripts/ncr_001f_void_mlp_receipt_audit.py
+      - name: Assert committed original JSON archive/provenance unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          d=experiments/ncr-001/controls-evidence/real-void1-mlp
+          test "$(git hash-object "$d/provenance.json")" = 6d1f6f8aaca641501e57762225c22b3a9d87a33d
+          test "$(git hash-object "$d/original-jsons.tar.gz.b64")" = 2bc9f809206507f893dacf1940748e630502a958
+          test -z "$(git status --porcelain -- "$d/provenance.json" "$d/original-jsons.tar.gz.b64")"
+          echo "IMMUTABLE_ORIGINAL_VOID_MLP_JSON_CUSTODY__READ_ONLY"
       - name: Assert frozen protocol untouched and no comparative training approval
         run: |
           python3 - <<'PY'

@@ -24,6 +24,9 @@ EXPECTED_SHA = "35c4eb966f12965c7640d1fd8a0c6d896b075791"
 EXPECTED_MODEL_SHA = "ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3"
 EXPECTED_TOKENIZER_SHA = "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03"
 EXPECTED_REVIEW = "1fdc2e7e5c7b7b77923dbc4b47dcafa132aef47a"
+EXPECTED_CLASSIFICATION = "ACTUAL_FROZEN_VOID1_MLP_SOURCE_PREPASS_PASS__FULL_72_GATE_BLOCKED"
+PROVENANCE_GIT_BLOB = "6d1f6f8aaca641501e57762225c22b3a9d87a33d"
+ARCHIVE_GIT_BLOB = "2bc9f809206507f893dacf1940748e630502a958"
 
 
 def require(predicate: bool, why: str) -> None:
@@ -33,6 +36,11 @@ def require(predicate: bool, why: str) -> None:
 
 def sha(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
+
+
+def gitblob(raw: bytes) -> str:
+    """Hash exact committed raw bytes, including otherwise-ignored whitespace."""
+    return hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\x00" + raw).hexdigest()
 
 
 def read_original_bytes(encoded: bytes, manifest: dict) -> dict[str, bytes]:
@@ -60,6 +68,8 @@ def read_original_bytes(encoded: bytes, manifest: dict) -> dict[str, bytes]:
 
 
 def validate_receipts(prefetch: dict, host: dict, prov: dict) -> dict:
+    require(prov["classification"] == EXPECTED_CLASSIFICATION,
+            "provenance classification cannot promote #72 or training")
     require(prov["training_authorized"] is False
             and prov["optimizer_steps"] == 0
             and prov["heldout_data_opened"] is False
@@ -202,9 +212,15 @@ def validate_receipts(prefetch: dict, host: dict, prov: dict) -> dict:
     }
 
 
-def audit() -> dict:
-    prov = json.loads(PROVENANCE.read_text(encoding="utf-8"))
-    originals = read_original_bytes(ARCHIVE.read_bytes().strip(), prov)
+def audit(evidence: Path = EVIDENCE) -> dict:
+    provenance_raw = (evidence / PROVENANCE.name).read_bytes()
+    archive_raw = (evidence / ARCHIVE.name).read_bytes()
+    require(gitblob(provenance_raw) == PROVENANCE_GIT_BLOB,
+            "committed provenance Git blob changed, even if internally rehashed")
+    require(gitblob(archive_raw) == ARCHIVE_GIT_BLOB,
+            "committed encoded original-JSON archive Git blob changed")
+    prov = json.loads(provenance_raw)
+    originals = read_original_bytes(archive_raw.strip(), prov)
     pref = json.loads(originals["void1-source-prefetch.json"])
     host = json.loads(originals["void1-real-mlp.json"])
     return validate_receipts(pref, host, prov)
