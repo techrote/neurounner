@@ -1,0 +1,112 @@
+name: NCR-001F one-time original samehost evidence custody bootstrap (NO TRAIN)
+on:
+  pull_request:
+    branches: [review/ncr001f-postlease-samehost-budget-20261029]
+    paths:
+      - ".github/workflows/ncr-001f-original-samehost-custody.yml"
+permissions:
+  actions: read
+  contents: write
+concurrency:
+  group: ncr001f-original-bootstrap-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  original-archive-bootstrap:
+    if: github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.head.ref == 'review/ncr001f-samehost-original-custody-20261029'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_BASE: 2e2d7c86b066e96207afd6355ddbfbe535d3718e
+      ORIGINAL_SOURCE: 94a00a0794f952c2209c6f50be6b091f674eb993
+      DEST: experiments/ncr-001/evidence-review/pr199-original-samehost
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require unchanged source parent and original provenance
+        run: |
+          set -euo pipefail
+          test "${{ github.event.pull_request.base.sha }}" = "$EXPECTED_BASE"
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          git merge-base --is-ancestor "$EXPECTED_BASE" HEAD
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+      - name: Download original three entire Actions ZIPs and complete job logs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$DEST"
+          if test -f "$DEST/original-chat-12906278294.zip"; then
+            echo "Original bytes already archived: do not write again"
+            exit 0
+          fi
+          get() {
+            local api="$1" path="$2"
+            curl --fail --silent --show-error --location --retry 3 \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/techrote/neurounner/${api}" -o "$path"
+          }
+          get actions/artifacts/12906327157/zip "$DEST/original-source-12906327157.zip"
+          get actions/artifacts/12906278294/zip "$DEST/original-chat-12906278294.zip"
+          get actions/artifacts/12905509227/zip "$DEST/original-instruct-12905509227.zip"
+          echo "aeacfc7e765003e608e0b37241fdba4ab441fd31967d7d7573fe97c064f8f460  $DEST/original-source-12906327157.zip
+          6e497b56c698a6401494a18d6a66ebd300eaad826db6d45083a10edf338faf31  $DEST/original-chat-12906278294.zip
+          f07c50a9d55bb76131ceb40599a655369ce85e8e5311aff51c7baa3c5ebe451d  $DEST/original-instruct-12905509227.zip" | sha256sum --check
+          get actions/jobs/123520141035/logs "$DEST/original-source-job-123520141035.log"
+          get actions/jobs/123520644340/logs "$DEST/original-chat-job-123520644340.log"
+          get actions/jobs/123520644292/logs "$DEST/original-instruct-job-123520644292.log"
+          grep -F "Ran 8 tests" "$DEST/original-source-job-123520141035.log" > /dev/null
+          grep -F 'PASS_MEASURED_SAME_HOST_FORWARD_ONLY__SCIENTIFIC_GATES_BLOCKED' "$DEST/original-chat-job-123520644340.log" > /dev/null
+          grep -F 'PASS_MEASURED_SAME_HOST_FORWARD_ONLY__SCIENTIFIC_GATES_BLOCKED' "$DEST/original-instruct-job-123520644292.log" > /dev/null
+          python3 - <<'PY'
+          import zipfile,json,hashlib,os
+          p=os.environ["DEST"]
+          for variant,artifact,weight,report_sha in [
+              ("chat",12906278294,"chat/model.safetensors","7d843aaaa6ec10a5cec096d855642f5087dba0e1f842a3c71eee77bb9ca04e20"),
+              ("instruct",12905509227,"model.safetensors","0d898c0e7c54b915bc90cc636b236d0f87a659b0e4df91b0580a7be477192c50")]:
+              z=zipfile.ZipFile(f"{p}/original-{variant}-{artifact}.zip")
+              assert set(z.namelist())=={"head.txt","lscpu.txt","model.log","pip-freeze.txt","prefetch.log","report.json","uname.txt"}
+              raw=z.read("report.json")
+              assert hashlib.sha256(raw).hexdigest()==report_sha
+              r=json.loads(raw)
+              assert r["variant"]==variant and r["runner"]["expected_pr_head"]==os.environ["ORIGINAL_SOURCE"]
+              assert r["source_identity"]["weight_path"]==weight
+              assert r["status"]=="MEASURED_SAME_FROZEN_HOST_SYNTHETIC_FORWARD_ONLY__BUDGET_NOT_ADMITTED"
+              assert r["frozen_backbone_before_sha256"]==r["frozen_backbone_after_sha256"]
+              assert r["runner"]["cpu_threads"]==2  # historical startup metadata defect; never rewrite
+              assert len(r["synthetic_cases"])==2
+              assert r["train_authorized"] is False and r["full_72_conformance_pass"] is False
+          print("PASS_ORIGINAL_THREE_ACTIONS_ZIPS_LOGS_VERIFIED_NOT_SCIENTIFIC_ADMISSION")
+          PY
+      - name: Publish original immutable bytes only to this branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-tree -r --name-only HEAD "$DEST" | grep -q .; then
+            echo "Already committed; no re-write"; exit 0
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "$DEST"
+          git diff --cached --quiet && exit 0
+          git commit -m "NCR-001F: byte-preserve original #199 three ZIPs and complete job logs (NO TRAIN)"
+          BASIC="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git -c "http.extraheader=AUTHORIZATION: basic $BASIC" push -q \
+            https://github.com/techrote/neurounner.git HEAD:refs/heads/review/ncr001f-samehost-original-custody-20261029
+      - name: Always retain bootstrap provenance and errors as temporary staging
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p /tmp/ncr-bootstrap
+          git rev-parse HEAD >/tmp/ncr-bootstrap/attempt-head.txt || true
+          git status --short >/tmp/ncr-bootstrap/status.txt || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: ncr001f-original-custody-bootstrap-attempt
+          path: /tmp/ncr-bootstrap/
+          retention-days: 30
