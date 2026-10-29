@@ -70,7 +70,9 @@ def discover_lineages(root: Path) -> dict[str, Path]:
     return {k: v[0] for k, v in found.items()}
 
 
-def read_lineage(cfg: dict, lineage: str, folder: Path) -> tuple[dict, list[dict]]:
+def read_lineage(cfg: dict, lineage: str, folder: Path,
+                 *, allow_synthetic_test_only: bool = False
+                 ) -> tuple[dict, list[dict]]:
     manifest = screen.read_json(folder / "manifest.json")
     results_path = folder / "results.jsonl"
     journal_path = folder / "results.partial.jsonl"
@@ -108,6 +110,8 @@ def read_lineage(cfg: dict, lineage: str, folder: Path) -> tuple[dict, list[dict
         "".join(screen.canonical(row) + "\n" for row in rows).encode("utf-8"),
         "lineage raw JSONL noncanonical or duplicate keys")
     screen.require(len(rows) == 12, "lineage raw result count drift")
+    screen.require_native_results(
+        rows, allow_synthetic_test_only=allow_synthetic_test_only)
     expected_members = live.lineage_member_ids(cfg, lineage)
     screen.require(
         {(r.get("member_id"), r.get("prompt_id")) for r in rows} ==
@@ -230,13 +234,16 @@ def public_readme_text() -> str:
         "or production admission occurs here.\n"
     )
 
-def assemble(artifacts: Path, out: Path) -> dict:
+def assemble(artifacts: Path, out: Path,
+             *, allow_synthetic_test_only: bool = False) -> dict:
     cfg = screen.load_contract()
     screen.require(not out.exists(), "output dataset already exists")
     found = discover_lineages(artifacts)
     manifests, rows = {}, []
     for lineage in LINEAGES:
-        manifest, lineage_rows = read_lineage(cfg, lineage, found[lineage])
+        manifest, lineage_rows = read_lineage(
+            cfg, lineage, found[lineage],
+            allow_synthetic_test_only=allow_synthetic_test_only)
         manifests[lineage] = manifest
         rows.extend(lineage_rows)
     observations = screen.validate_complete_results(cfg, rows)
@@ -328,7 +335,8 @@ def assemble(artifacts: Path, out: Path) -> dict:
     return manifest
 
 
-def verify_dataset(path: Path) -> dict:
+def verify_dataset(path: Path, *,
+                   allow_synthetic_test_only: bool = False) -> dict:
     # A rehashed SHA inventory is self-reported. It cannot authorize extra
     # files (including a private HMAC key/mapping) or external symlink targets.
     # Git archives symlinks as links, not the underlying original raw bytes.
@@ -390,7 +398,18 @@ def verify_dataset(path: Path) -> dict:
         manifest.get("training_admission") is False and
         manifest.get("population_expansion_admitted") is False,
         "full-screen rating/resource/admission authority drift")
-    results = screen.read_results(path / "raw" / "results.jsonl")
+    results_path = path / "raw" / "results.jsonl"
+    results = screen.read_results(results_path)
+    # The archive's original aggregate is untrusted, even if its SHA inventory
+    # and individual fsynced lineage journals were later rehashed. Disallow
+    # shadow duplicate keys, blank lines and noncanonical whitespace at the
+    # exact original-byte boundary before any 144-row admission.
+    screen.require(
+        results_path.read_bytes() ==
+            "".join(screen.canonical(row) + "\n" for row in results).encode("utf-8"),
+        "combined raw JSONL noncanonical or duplicate keys")
+    screen.require_native_results(
+        results, allow_synthetic_test_only=allow_synthetic_test_only)
     observations = screen.validate_complete_results(cfg, results)
     expected_floor_failures = [
         {"member_id": x["member_id"], "prompt_id": x["prompt_id"],
