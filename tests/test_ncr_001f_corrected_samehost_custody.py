@@ -147,5 +147,64 @@ class CorrectedOriginalCustodyTests(unittest.TestCase):
                 custody.audit_original_job_ledger(tampered)
 
 
+    def test_original_live_artifact_ledger_and_adversarial_substitutions(self):
+        m = json.loads((custody.EVIDENCE/custody.MANIFEST).read_text())
+        names = {
+            "source": "ncr001f-samehost-source-and-negatives",
+            "chat": "ncr001f-samehost-chat-raw-and-failures",
+            "instruct": "ncr001f-samehost-instruct-raw-and-failures",
+        }
+        payload = {"total_count": 3, "artifacts": [
+            {
+                "id": m["artifacts"][variant]["id"], "name": name,
+                "size_in_bytes": m["artifacts"][variant]["bytes"],
+                "digest": "sha256:" + m["artifacts"][variant]["sha256"],
+                "expired": False,
+                "workflow_run": {
+                    "id": 40904839128, "repository_id": 1432134981,
+                    "head_repository_id": 1432134981,
+                    "head_branch": "review/ncr001f-postlease-samehost-budget-20261029",
+                    "head_sha": custody.ORIGINAL_SOURCE,
+                }
+            }
+            for variant, name in names.items()
+        ]}
+        self.assertEqual(
+            custody.audit_original_artifact_ledger(payload)["artifacts_checked"], 3)
+        alterations = [
+            ("id", -1), ("name", "forged-artifact"),
+            ("size_in_bytes", 1), ("digest", "sha256:" + "0"*64),
+            ("expired", True),
+        ]
+        for field, value in alterations:
+            x = copy.deepcopy(payload)
+            x["artifacts"][1][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, "REFUSED"):
+                custody.audit_original_artifact_ledger(x)
+        for field, value in (
+            ("id", 40894595108), ("head_sha", "0"*40),
+            ("head_branch", "unexpected-branch"),
+            ("repository_id", 999), ("head_repository_id", 999),
+        ):
+            x = copy.deepcopy(payload)
+            x["artifacts"][1]["workflow_run"][field] = value
+            with self.subTest(origin_field=field), self.assertRaisesRegex(ValueError, "REFUSED"):
+                custody.audit_original_artifact_ledger(x)
+        for mutation in ("missing", "extra", "duplicate", "count"):
+            x = copy.deepcopy(payload)
+            if mutation == "missing":
+                x["artifacts"].pop()
+                x["total_count"] = 2
+            elif mutation == "extra":
+                x["artifacts"].append(copy.deepcopy(x["artifacts"][0]))
+                x["total_count"] = 4
+            elif mutation == "duplicate":
+                x["artifacts"][1]["id"] = x["artifacts"][0]["id"]
+            else:
+                x["total_count"] = 2
+            with self.subTest(mutation=mutation), self.assertRaisesRegex(ValueError, "REFUSED"):
+                custody.audit_original_artifact_ledger(x)
+
+
 if __name__=="__main__":
     unittest.main()

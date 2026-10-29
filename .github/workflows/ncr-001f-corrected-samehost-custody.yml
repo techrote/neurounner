@@ -77,6 +77,22 @@ jobs:
               json.loads(Path("/tmp/ncr-pr199-original-jobs.json").read_text()))
           print(json.dumps(result, sort_keys=True))
           PY
+      - name: Independently bind original ZIP artifact IDs to the original run and source
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 3 \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/techrote/neurounner/actions/runs/40904839128/artifacts?per_page=100" \
+            -o /tmp/ncr-pr199-original-artifacts.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.ncr_001f_corrected_samehost_custody import audit_original_artifact_ledger
+          result = audit_original_artifact_ledger(
+              json.loads(Path("/tmp/ncr-pr199-original-artifacts.json").read_text()))
+          print(json.dumps(result, sort_keys=True))
+          PY
       - name: Independently redownload and byte-compare original Actions ZIPs and job logs
         run: |
           set -euo pipefail

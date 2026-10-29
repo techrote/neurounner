@@ -193,5 +193,51 @@ def audit_original_job_ledger(payload: dict, evidence: Path = EVIDENCE) -> dict:
             "run": int(ORIGINAL_RUN), "jobs_checked": len(actual)}
 
 
+def audit_original_artifact_ledger(payload: dict, evidence: Path = EVIDENCE) -> dict:
+    """Bind each original ZIP metadata record to the source-matched Actions run.
+
+    Online-only provenance strengthening; the permanently committed ZIP/log
+    auditor remains independently usable after ephemeral Actions expiry.
+    """
+    raw_manifest = (evidence / MANIFEST).read_bytes()
+    refuse(gitblob(raw_manifest) == MANIFEST_BLOB,
+           "immutable manifest changed before artifact-ledger audit")
+    manifest = json.loads(raw_manifest)
+    refuse(manifest["original_run"] == int(ORIGINAL_RUN),
+           "original artifact ledger run drift")
+    artifacts = payload.get("artifacts") if type(payload) is dict else None
+    refuse(type(artifacts) is list and len(artifacts) == 3 and
+           payload.get("total_count") == 3,
+           "original artifact ledger missing, duplicated or extra inventory")
+    actual = {a.get("id"): a for a in artifacts if type(a) is dict}
+    refuse(len(actual) == 3, "duplicate or malformed artifact IDs")
+    expected_names = {
+        "source": "ncr001f-samehost-source-and-negatives",
+        "chat": "ncr001f-samehost-chat-raw-and-failures",
+        "instruct": "ncr001f-samehost-instruct-raw-and-failures",
+    }
+    for variant, expected_name in expected_names.items():
+        item = manifest["artifacts"][variant]
+        artifact = actual.get(item["id"])
+        refuse(type(artifact) is dict and
+               artifact.get("name") == expected_name and
+               artifact.get("size_in_bytes") == item["bytes"] and
+               artifact.get("digest") == "sha256:" + item["sha256"] and
+               artifact.get("expired") is False,
+               variant + " original artifact ID/name/ZIP digest/availability drift")
+        origin = artifact.get("workflow_run")
+        refuse(type(origin) is dict and
+               origin.get("id") == int(ORIGINAL_RUN) and
+               origin.get("head_sha") == ORIGINAL_SOURCE and
+               origin.get("head_branch") ==
+                   "review/ncr001f-postlease-samehost-budget-20261029" and
+               origin.get("repository_id") == 1432134981 and
+               origin.get("head_repository_id") == 1432134981,
+               variant + " original artifact belongs to wrong run/source/repository")
+    return {"status": "PASS_ORIGINAL_GITHUB_ARTIFACTS_RUN_AND_SOURCE_BINDING",
+            "run": int(ORIGINAL_RUN), "artifacts_checked": len(actual),
+            "new_model_execution": False}
+
+
 if __name__ == "__main__":
     print(json.dumps(audit(), indent=2, sort_keys=True))
