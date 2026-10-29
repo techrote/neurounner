@@ -250,6 +250,18 @@ class Detective005ABlindCustodyTests(unittest.TestCase):
             with self.assertRaisesRegex(screen.ScreenError, "disjoint"):
                 blind.prepare(dataset, dataset / "reviewer", root / "secret")
 
+    def test_unverified_windows_acl_custody_refuses(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            dataset = self.make_dataset(root)
+            with mock.patch.object(blind, "secure_custody_available",
+                                   return_value=False):
+                with self.assertRaisesRegex(screen.ScreenError,
+                                            "requires POSIX permissions"):
+                    blind.prepare(dataset, root / "review", root / "custody")
+            self.assertFalse((root / "review").exists())
+            self.assertFalse((root / "custody").exists())
+
     def test_public_archive_fails_closed_if_review_packet_added(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
