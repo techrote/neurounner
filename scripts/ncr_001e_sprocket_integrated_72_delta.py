@@ -30,6 +30,8 @@ EXPECTED_MASKED_SCRIPT_GIT_BLOB = "c92a410dc6605fa1878ded44265906e0a9769d08"
 EXPECTED_DIAGNOSTIC_HEAD = "e5ac7fb0659bd2e640a3007e8cf798820069fc2d"
 EXPECTED_DIAGNOSTIC_SOURCE = "df8479aae34550cba014d910a73e30e59cd493e2"
 EXPECTED_DIAGNOSTIC_RUN = 40710171622
+PUBLISHED_REPORT = ROOT / "experiments/ncr-001/adjudication/sprocket-source-matched-2048-delta-20261029.json"
+PUBLISHED_REPORT_GIT_BLOB = "2aef9415f1cd1c6fcc324aaf25e0f5ebbfc7b805"
 CACHE_ATOL = 0.0005
 CACHE_RTOL = 0.0005
 EVIDENCE_ONLY = "BLOCKED_FULL_72_SCIENTIFIC_CONFORMANCE__BOUNDED_TWO_SPROCKET_DELTA"
@@ -297,6 +299,11 @@ def main() -> None:
     diagnostic = json.loads(report_path.read_text(encoding="utf-8"))
     authoritative_source_gate()
     result = compose(diagnostic, original_masked_receipts())
+    raw_published = PUBLISHED_REPORT.read_bytes()
+    refuse(gitblob(raw_published) == PUBLISHED_REPORT_GIT_BLOB,
+           "permanent independently derived scientific-delta report Git blob changed")
+    refuse(json.loads(raw_published) == result,
+           "regenerated original-source scientific-delta differs from committed report")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n",
                            encoding="utf-8")
