@@ -365,6 +365,76 @@ class Detective005AFunScreenTests(unittest.TestCase):
             self.assertFalse(verified["production_admission"])
             self.assertEqual(manifest["repository_head_sha"], "1" * 40)
             self.assertEqual(manifest["actions_run_id"], "123456")
+
+            # The archive verifier must not accept self-rehashed extraneous
+            # files such as a private reviewer HMAC key or identity map. A
+            # SHA inventory is NOT a file allowlist or a custody authority.
+            inventory_path = out / "provenance" / "hashes.sha256"
+            original_inventory = inventory_path.read_bytes()
+            smuggled = out / "private-identity-map.json"
+            smuggled.write_text('{"synthetic_secret":"DO NOT ARCHIVE"}\\n',
+                                encoding="utf-8")
+            inventory_path.write_text(assemble.hash_inventory(out),
+                                      encoding="utf-8")
+            with self.assertRaisesRegex(
+                    screen.ScreenError, "unregistered or missing files"):
+                assemble.verify_dataset(out)
+            smuggled.unlink()
+            inventory_path.write_bytes(original_inventory)
+
+            # A symlink to correct bytes OUTSIDE the archive can satisfy
+            # hashes locally, but Git persists the link, not the raw bytes.
+            journal = out / "raw/lineage-journals/G01.jsonl"
+            original_journal = journal.read_bytes()
+            external_journal = root / "external-original-journal.jsonl"
+            external_journal.write_bytes(original_journal)
+            journal.unlink()
+            journal.symlink_to(external_journal)
+            with self.assertRaisesRegex(screen.ScreenError, "symlink"):
+                assemble.verify_dataset(out)
+            journal.unlink()
+            journal.write_bytes(original_journal)
+            self.assertEqual(inventory_path.read_bytes(), original_inventory)
+
+            # Rehashing a forged manifest must not fabricate successful
+            # human ratings, admit characters, hide hard-floor failures or
+            # change the exact source cohort without a verifier refusal.
+            manifest_path = out / "manifest.json"
+            original_manifest = screen.read_json(manifest_path)
+            for field, value, diagnostic in (
+                ("subjective_fun_ratings_present", True, "authority drift"),
+                ("production_admission", True, "authority drift"),
+                ("hard_floor_clean_results", 143, "hard-floor summary drift"),
+                ("source_config_sha256", "0" * 64, "frozen source/size"),
+            ):
+                with self.subTest(forged_manifest=field):
+                    forged = copy.deepcopy(original_manifest)
+                    forged[field] = value
+                    assemble.write_json(manifest_path, forged)
+                    inventory_path.write_text(assemble.hash_inventory(out),
+                                              encoding="utf-8")
+                    with self.assertRaisesRegex(screen.ScreenError,
+                                                diagnostic):
+                        assemble.verify_dataset(out)
+            assemble.write_json(manifest_path, original_manifest)
+            inventory_path.write_bytes(original_inventory)
+
+            # Even a rehashed lineage manifest plus edited provenance must
+            # not override the exact checked-out runner-script fingerprint.
+            g01_path = out / "raw/lineage-manifests/G01.json"
+            g01_original = screen.read_json(g01_path)
+            g01_forged = copy.deepcopy(g01_original)
+            g01_forged["runner_script_sha256"] = "0" * 64
+            assemble.write_json(g01_path, g01_forged)
+            inventory_path.write_text(assemble.hash_inventory(out),
+                                      encoding="utf-8")
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "archived lineage raw/source/authority"):
+                assemble.verify_dataset(out)
+            assemble.write_json(g01_path, g01_original)
+            inventory_path.write_bytes(original_inventory)
+            self.assertEqual(assemble.verify_dataset(out)["raw_results"], 144)
+
             provenance = screen.read_json(
                 out / "provenance" / "source-artifacts.json")
             self.assertEqual(len(provenance["source_artifacts"]), 12)
