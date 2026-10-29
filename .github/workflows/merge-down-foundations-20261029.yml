@@ -101,6 +101,7 @@ jobs:
               if number==195:
                   test([sys.executable,'scripts/ncr_001_sprocket_original_zip_custody.py'],f'{number}-original-full-zip-audit.json')
                   test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001_sprocket_original_zip_custody.py','-v'],f'{number}-9-adversarial-original-zip-tests.log')
+                  sys.path.insert(0,str(pathlib.Path('scripts').resolve()))
                   import ncr_001_sprocket_original_zip_custody as audit
                   from ncr_001_sprocket_learning_git_custody import load_archive
                   _,original_members=load_archive()
