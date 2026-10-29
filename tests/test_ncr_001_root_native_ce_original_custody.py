@@ -88,6 +88,25 @@ class OriginalFrozenCESourceCustodyTests(unittest.TestCase):
             p.write_bytes(p.read_bytes() + b"\\nFORGED SUCCESS\\n")
         self.with_evidence(corrupt)
 
+
+    def test_successful_original_archive_job_log_mutation_refused(self):
+        def corrupt(dst):
+            p = dst / audit.SUCCESSFUL_ARCHIVE_JOB
+            p.write_bytes(p.read_bytes() + b"\\nFORGED ARCHIVAL SUCCESS\\n")
+        self.with_evidence(corrupt)
+
+    def test_original_manifest_whitespace_only_drift_refused(self):
+        def corrupt(dst):
+            p = dst / audit.MANIFEST
+            p.write_bytes(p.read_bytes() + b"\\n")
+        self.with_evidence(corrupt)
+
+    def test_encoded_zip_whitespace_only_drift_refused(self):
+        def corrupt(dst):
+            p = dst / audit.ARCHIVE
+            p.write_bytes(p.read_bytes() + b"\\n")
+        self.with_evidence(corrupt)
+
     def test_original_zip_bundle_mutation_refused(self):
         def corrupt(dst):
             p=dst / audit.ARCHIVE

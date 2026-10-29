@@ -28,6 +28,10 @@ SOURCE = "1178b896848df0984a0670180c62d6f8e9b9a512"
 ROOT_WEIGHT = "1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864"
 CHAT_WEIGHT = "551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97"
 JOB_BLOB = "43ffa04c411f4672ed04c693cab5ece36a462f69"
+ARCHIVE_GIT_BLOB = "721ceec68e6a17714e8d083fcc5fd82fbb918b38"
+MANIFEST_GIT_BLOB = "56028544f354b4fabfca0d05a93c896c6834fa3d"
+SUCCESSFUL_ARCHIVE_JOB = "successful-archive-job-123196740909.log"
+SUCCESSFUL_ARCHIVE_JOB_GIT_BLOB = "6c3c78d6b0be7a129e0ea090cb3aaeb578dc6975"
 FAILED_ARCHIVE_JOBS = {
     "failed-archive-job-123195596157.log":
         ("a0bb9a0dd5c5ee273c168e027edbc730f70ae4bc", b"Memory usage limit exceeded"),
@@ -177,7 +181,10 @@ def immutable_manifest() -> dict:
 
 
 def audit(evidence: Path = EVIDENCE) -> dict:
-    found = json.loads((evidence / MANIFEST).read_text(encoding="utf-8"))
+    manifest_raw = (evidence / MANIFEST).read_bytes()
+    refuse(gitblob(manifest_raw) == MANIFEST_GIT_BLOB,
+           "committed original manifest raw Git blob changed")
+    found = json.loads(manifest_raw)
     refuse(found == immutable_manifest(), "original manifest changed, including negative results")
     logged = (evidence / JOB).read_bytes()
     refuse(gitblob(logged) == JOB_BLOB and
@@ -189,7 +196,15 @@ def audit(evidence: Path = EVIDENCE) -> dict:
         refuse(gitblob(archived_log) == pinned_git_blob
                and negative_witness in archived_log,
                "retained failed archival Actions job changed: " + name)
-    b64 = (evidence / ARCHIVE).read_bytes().strip()
+    successful_log = (evidence / SUCCESSFUL_ARCHIVE_JOB).read_bytes()
+    refuse(gitblob(successful_log) == SUCCESSFUL_ARCHIVE_JOB_GIT_BLOB
+           and b"Ran 13 tests" in successful_log
+           and b"PASS_ORIGINAL_FULL_ZIP_AND_LOG_GIT_CUSTODY__72_BLOCKED" in successful_log,
+           "committed successful original archival job log changed")
+    archive_raw = (evidence / ARCHIVE).read_bytes()
+    refuse(gitblob(archive_raw) == ARCHIVE_GIT_BLOB,
+           "committed original XZ/base64 Git blob changed")
+    b64 = archive_raw.strip()
     try:
         compressed = base64.b64decode(b64, validate=True)
         original = lzma.decompress(compressed, memlimit=256*1024*1024)
@@ -199,6 +214,9 @@ def audit(evidence: Path = EVIDENCE) -> dict:
     return {"status": "PASS_ORIGINAL_FULL_ZIP_AND_LOG_GIT_CUSTODY__72_BLOCKED",
             "decoded_full_job_blob": JOB_BLOB,
             "retained_archival_failed_jobs_verified": len(FAILED_ARCHIVE_JOBS),
+            "successful_archival_job_git_blob": SUCCESSFUL_ARCHIVE_JOB_GIT_BLOB,
+            "immutable_manifest_git_blob": MANIFEST_GIT_BLOB,
+            "immutable_encoded_zip_git_blob": ARCHIVE_GIT_BLOB,
             "source_and_original_zip": result, "train_authorized": False,
             "full_72_conformance_pass": False, "new_model_executed": False,
             "optimizer_steps": 0}
