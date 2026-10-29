@@ -28,11 +28,13 @@ class IndependentMaskedCE(unittest.TestCase):
         self.assertAlmostEqual(loss, math.log(8), places=5)
 
     def test_predecessor_logits_not_target_logits_drive_loss(self):
-        self.logits[1, :45, 1] = 10.0
-        old, _ = witness.independent_shifted_ce(self.logits, self.labels)
-        self.logits[1, 1:46, 1] = 10.0
+        original, _ = witness.independent_shifted_ce(self.logits, self.labels)
+        self.logits[1, 45, 1] = 10.0  # No supervised target uses logits at j=45.
+        unused, _ = witness.independent_shifted_ce(self.logits, self.labels)
+        self.assertEqual(original, unused)
+        self.logits[1, 0, 1] = 10.0  # Target j=1 is predicted by logits j=0.
         changed, _ = witness.independent_shifted_ce(self.logits, self.labels)
-        self.assertNotEqual(old, changed)
+        self.assertNotEqual(original, changed)
 
     def test_host_target_forgery_refused(self):
         self.labels[0, 4] = 1
