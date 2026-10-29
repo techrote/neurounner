@@ -47,6 +47,7 @@ class OriginalFrozenCESourceCustodyTests(unittest.TestCase):
         self.assertEqual(report["source_and_original_zip"]["targets"], 45)
         self.assertFalse(report["train_authorized"])
         self.assertFalse(report["full_72_conformance_pass"])
+        self.assertEqual(report["retained_archival_failed_jobs_verified"], 3)
 
     def test_unsafe_training_admission_is_rejected(self):
         self.mutate(lambda x: x.__setitem__("train_authorized", True))
@@ -79,6 +80,12 @@ class OriginalFrozenCESourceCustodyTests(unittest.TestCase):
         def corrupt(dst):
             log=dst / audit.JOB
             log.write_bytes(log.read_bytes()+b"\nFORGED")
+        self.with_evidence(corrupt)
+
+    def test_retained_failed_archive_job_log_mutation_refused(self):
+        def corrupt(dst):
+            p = dst / "failed-archive-job-123196038745.log"
+            p.write_bytes(p.read_bytes() + b"\\nFORGED SUCCESS\\n")
         self.with_evidence(corrupt)
 
     def test_original_zip_bundle_mutation_refused(self):
