@@ -21,7 +21,7 @@ class OriginalFrozenCESourceCustodyTests(unittest.TestCase):
     def setUpClass(cls):
         z = audit.lzma.decompress(
             audit.base64.b64decode((audit.EVIDENCE / audit.ARCHIVE).read_bytes().strip()),
-            memlimit=64*1024*1024,
+            memlimit=256*1024*1024,
         )
         cls.original_zip = z
         with zipfile.ZipFile(io.BytesIO(z)) as f:
