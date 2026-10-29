@@ -114,5 +114,38 @@ class CorrectedOriginalCustodyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"REFUSED"):
             custody.check_model_report(x,"chat",item)
 
+
+    def test_original_live_job_ledger_binding_and_adversarial_substitutions(self):
+        manifest = json.loads((custody.EVIDENCE/custody.MANIFEST).read_text())
+        names = {
+            "source": "offline-source-and-refusals",
+            "chat": "real-separate-frozen-variant (chat)",
+            "instruct": "real-separate-frozen-variant (instruct)",
+        }
+        payload = {"jobs": [
+            {"id": manifest["artifacts"][v]["job_id"], "name": name,
+             "run_id": 40904839128, "status": "completed", "conclusion": "success"}
+            for v, name in names.items()
+        ]}
+        self.assertEqual(custody.audit_original_job_ledger(payload)["jobs_checked"], 3)
+        for field, value in (("id", -1), ("name", "swapped chat host"),
+                             ("run_id", 40894595108), ("status", "in_progress"),
+                             ("conclusion", "failure")):
+            tampered = copy.deepcopy(payload)
+            tampered["jobs"][1][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, "REFUSED"):
+                custody.audit_original_job_ledger(tampered)
+        for mutation in ("missing", "duplicate", "extra"):
+            tampered = copy.deepcopy(payload)
+            if mutation == "missing":
+                tampered["jobs"].pop()
+            elif mutation == "duplicate":
+                tampered["jobs"][1]["id"] = tampered["jobs"][0]["id"]
+            else:
+                tampered["jobs"].append(dict(tampered["jobs"][0]))
+            with self.subTest(mutation=mutation), self.assertRaisesRegex(ValueError, "REFUSED"):
+                custody.audit_original_job_ledger(tampered)
+
+
 if __name__=="__main__":
     unittest.main()
