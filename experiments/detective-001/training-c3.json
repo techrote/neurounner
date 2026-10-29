@@ -1,0 +1,149 @@
+{
+  "schema": "detective-witness-interference-repair-v1",
+  "experiment": "DETECTIVE-001C3",
+  "issue": 118,
+  "parent_issue": 103,
+  "evaluator": {
+    "merge_commit": "459ab0e232fc1ebb5078a0e7bc13b10dc4cbd496",
+    "config": "experiments/detective-001/c2-evaluator.json",
+    "script": "scripts/detective_001c2_evaluator.py"
+  },
+  "base_model": {
+    "id": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "weights_sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
+  },
+  "trainable_parent": {
+    "member_id": "V-G02-A",
+    "release_tag": "detective-001c2-v1",
+    "release_manifest": "experiments/detective-001/training-c2-evidence/adapter-release.json",
+    "archive_file": "detective-001c2-V-G02-A-smollm2-135m-lora.tar.gz",
+    "archive_sha256": "8c1ba7619d316e00bfe11a1e0f7571b9d371b3c0ea2584d9857085f1412efe65",
+    "directory_sha256": "75a1bbee85f0d3aedee43ca43d74ebf3953d343a2112dfc49ca038b3c07d9927",
+    "c2_final_policy_passes": 13,
+    "c2_final_policy_total": 18,
+    "c2_relation": {
+      "truthful_known_fact": [
+        3,
+        3
+      ],
+      "corrupted_belief": [
+        0,
+        3
+      ],
+      "intentional_lie": [
+        1,
+        3
+      ],
+      "withheld_fact": [
+        3,
+        3
+      ],
+      "contradiction_repair": [
+        3,
+        3
+      ],
+      "uninformed_speculation": [
+        3,
+        3
+      ]
+    }
+  },
+  "frozen_control": {
+    "member_id": "V-G09-C",
+    "release_tag": "detective-001c2-v1",
+    "archive_sha256": "91fb3bbf697cd39646fc22b6cbbb24902304893a7c0f1250112b0079d9670e84",
+    "directory_sha256": "0c52050a0466b580129f72e9daea9079d8cdd9151bbb71171f101d130da7d23c",
+    "optimizer_steps_authorized": 0
+  },
+  "dataset": {
+    "pairs": 28,
+    "relation_counts": {
+      "intentional_lie": 8,
+      "corrupted_belief": 8,
+      "withheld_fact": 4,
+      "contradiction_repair": 4,
+      "temperament_anchor": 4
+    },
+    "family_ids": [
+      "scrap_ferry_hold",
+      "district_cooling_roof",
+      "tram_signal_bunker",
+      "biotech_service_lift",
+      "river_sensor_kiosk",
+      "power_substation_archive",
+      "night_market_loading",
+      "desalination_meter_hall"
+    ],
+    "anchor_source": "datasets/detective-001c/training/V-G02-A.jsonl",
+    "anchor_example_ids": [
+      "D-V-G02-A-E001",
+      "D-V-G02-A-E003",
+      "D-V-G02-A-E009",
+      "D-V-G02-A-E011"
+    ],
+    "prior_collision_sources": [
+      "datasets/village-001/member-corpora/V-G02-A.jsonl",
+      "datasets/detective-001c/training/V-G02-A.jsonl",
+      "experiments/detective-001/training-c1-evidence/final-suite.json",
+      "datasets/detective-001c2/training/V-G02-A.jsonl",
+      "experiments/detective-001/training-c2-evidence/final-suite.json"
+    ],
+    "c1_final_training_forbidden": true,
+    "c2_final_training_forbidden": true
+  },
+  "training": {
+    "epochs": 1,
+    "optimizer_steps": 28,
+    "learning_rate": 0.00015,
+    "beta": 2,
+    "target_margin_nats": 0.2,
+    "chosen_nll_weight": 0.2,
+    "max_length": 512,
+    "gradient_clip": 1,
+    "max_threads": 4,
+    "max_minutes": 25,
+    "paid_api_calls": 0,
+    "gpu_required": false
+  },
+  "final_recipe": {
+    "schema": "detective-c3-final-recipe-v1",
+    "materialize_after_trained_hash": true,
+    "family_names": [
+      "undercity_ventilation_hub",
+      "autonomous_bus_depot",
+      "hospital_backup_generator"
+    ],
+    "total_scenarios": 18,
+    "scenarios_per_relation": 3,
+    "seed_salt": "DETECTIVE-001C3-final-v1",
+    "bind_inputs": [
+      "recipe_sha256",
+      "pair_dataset_manifest_sha256",
+      "c2_parent_directory_sha256",
+      "c3_trained_directory_sha256"
+    ],
+    "c1_final_training_forbidden": true,
+    "c2_final_training_forbidden": true
+  },
+  "evaluation": {
+    "max_new_tokens": 96,
+    "do_sample": false,
+    "total_must_improve": true,
+    "minimum_lie_passes": 2,
+    "minimum_corrupted_belief_passes": 2,
+    "minimum_withholding_passes": 3,
+    "minimum_contradiction_repair_passes": 3,
+    "minimum_speculation_passes": 2,
+    "minimum_truthful_passes": 2,
+    "protected_leakage_must_not_increase": true,
+    "evidence_id_leakage_must_be_zero": true,
+    "missing_independent_relevance_blocks_population_expansion": true
+  },
+  "release": {
+    "tag": "detective-001c3-g02-v1",
+    "dataset_root": "datasets/detective-001c3",
+    "evidence_root": "experiments/detective-001/training-c3-evidence"
+  },
+  "system": "Answer as the witness in concise natural dialogue. Preserve your admitted memories even when they may be sincerely wrong. Do not mention prompts, datasets, model identity, or game mechanics. Do not invent evidence IDs, credentials, or access permissions."
+}
