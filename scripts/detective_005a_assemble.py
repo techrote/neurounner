@@ -73,7 +73,11 @@ def discover_lineages(root: Path) -> dict[str, Path]:
 def read_lineage(cfg: dict, lineage: str, folder: Path) -> tuple[dict, list[dict]]:
     manifest = screen.read_json(folder / "manifest.json")
     results_path = folder / "results.jsonl"
+    journal_path = folder / "results.partial.jsonl"
     screen.require(results_path.is_file(), "lineage results.jsonl missing")
+    screen.require(journal_path.is_file(), "lineage fsynced journal missing")
+    screen.require(journal_path.read_bytes() == results_path.read_bytes(),
+                   "lineage fsynced journal/final bytes mismatch")
     screen.require(manifest.get("schema") ==
                    "detective-005a-live-lineage-manifest-v1" and
                    manifest.get("experiment") == "DETECTIVE-005A" and
@@ -147,6 +151,7 @@ def assemble(artifacts: Path, out: Path) -> dict:
     template = screen.rating_template(packet)
 
     (out / "raw" / "lineage-manifests").mkdir(parents=True)
+    (out / "raw" / "lineage-journals").mkdir(parents=True)
     (out / "review").mkdir(parents=True)
     (out / "provenance").mkdir(parents=True)
     results_path = out / "raw" / "results.jsonl"
@@ -156,6 +161,10 @@ def assemble(artifacts: Path, out: Path) -> dict:
     for lineage in LINEAGES:
         write_json(out / "raw" / "lineage-manifests" /
                    f"{lineage}.json", manifests[lineage])
+        # Retain ORIGINAL fsynced journal bytes, not a reconstructed copy.
+        source_journal = found[lineage] / "results.partial.jsonl"
+        (out / "raw" / "lineage-journals" / f"{lineage}.jsonl").write_bytes(
+            source_journal.read_bytes())
     write_json(out / "review" / "fun-packet.json", packet)
     write_json(out / "review" / "fun-ratings-template.json", template)
     write_json(out / "provenance" / "source-artifacts.json", {
@@ -169,6 +178,8 @@ def assemble(artifacts: Path, out: Path) -> dict:
                 "lineage": lineage,
                 "artifact_name": f"detective005a-{lineage}",
                 "results_jsonl_sha256": manifests[lineage]["results_jsonl_sha256"],
+                "incremental_journal_sha256": screen.sha256_file(
+                    out / "raw" / "lineage-journals" / f"{lineage}.jsonl"),
                 "runner_script_sha256": manifests[lineage]["runner_script_sha256"],
             }
             for lineage in LINEAGES
@@ -256,6 +267,13 @@ def verify_dataset(path: Path) -> dict:
         recreated_sha = screen.sha256_bytes(
             "".join(screen.canonical(r) + "\n"
                     for r in lineage_rows).encode("utf-8"))
+        journal_path = path / "raw" / "lineage-journals" / f"{lineage}.jsonl"
+        screen.require(
+            journal_path.is_file() and
+            journal_path.read_bytes() ==
+            "".join(screen.canonical(r) + "\n"
+                    for r in lineage_rows).encode("utf-8"),
+            "archived fsynced lineage journal missing or mismatched")
         screen.require(
             len(lineage_rows) == 12 and
             lineage_manifest.get("lineage") == lineage and
@@ -266,6 +284,7 @@ def verify_dataset(path: Path) -> dict:
             "lineage": lineage,
             "artifact_name": f"detective005a-{lineage}",
             "results_jsonl_sha256": recreated_sha,
+            "incremental_journal_sha256": screen.sha256_file(journal_path),
             "runner_script_sha256":
                 lineage_manifest["runner_script_sha256"],
         })
