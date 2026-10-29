@@ -138,3 +138,140 @@ they must be retrieved and archived under `datasets/` before expiration.
 The 144-response assembler remains strict: no incomplete lineage is accepted,
 no subjective packet is constructed from partial results, and no training,
 model judging or population admission is authorized.
+
+## Failed-workflow durable recovery design (draft; not yet executed)
+
+**Artifact API pagination safeguard (source-only):** the live recovery job
+requests `?per_page=100`. An HTTP-success first-page response does not prove
+all original artifacts were listed. Recovery requires a non-boolean integer
+`total_count` equal to the returned `artifacts` count; missing or inconsistent
+counts are quarantined as invalid metadata. Surviving downloaded raw files
+and original API response bytes are preserved, but `artifact_transport_complete`
+remains false and the final custody gate RED. Unlisted originals require
+independent retrieval before retry; this is not live cancellation/push proof.
+
+**Recursive/oversized untrusted JSON (source-only):** a downloaded raw
+JSONL journal, interruption receipt, final manifest or same-run artifact API
+response can exceed Python's JSON parser nesting or integer-conversion limits.
+These can raise `RecursionError` or `ValueError` rather than
+`JSONDecodeError`. Recovery conservatively validates zero prefix rows for
+an unparseable journal, quarantines recursive receipt/manifest/API metadata,
+preserves all allowed original raw bytes and surviving independent lineages,
+and fails transport certification for invalid metadata. Two adversarial
+no-model tests cover deeply nested JSON across all four custody surfaces and
+an oversized integer literal. This is source-only validation, not proof of
+real failed-run archival or an authorized inference retry.
+
+**Artifact identity uniqueness (source-only):** GitHub Actions artifact IDs must
+be positive, non-boolean integers and unique across the *entire* returned API
+page, not merely unique within one expected lineage name. Two different
+lineage artifact names sharing an ID cannot establish two original sources;
+that listing is quarantined as invalid and the transport gate remains RED.
+This rule preserves all safely recovered raw siblings and the unmodified API
+response for later review. The adversarial no-model test exercises both the
+collision refusal and a valid distinct-ID control. It does not prove a real
+failed/cancelled workflow or successful remote evidence-branch promotion.
+
+The proposed `recover-failed-evidence` job is strictly conditional: it runs
+only after a confirmed-main `RUN-144-NO-TRAINING` plan succeeds and the
+lineage matrix or full evidence assembler fails. It does **not** initiate any
+generation or permit a retry. It retrieves already-uploaded, same-run
+`detective005a-G*` artifacts, records their GitHub metadata and copies
+the original bytes into `datasets/detective-005a-recovery-<run-id>/` on an
+isolated new branch `evidence/detective-005a-partial-<run-id>`.
+
+The standard-library `scripts/detective_005a_recover.py`:
+
+- refuses unexpected files, symlinks, unpacked weight directories and
+  duplicate per-lineage filenames;
+- keeps raw `results.partial.jsonl`, `results.jsonl`,
+  `manifest.json` and `interrupted.json` **byte-identical**,
+  including any torn or unparseable tail;
+- validates intact, source-matched rows against exact member/prompt order,
+  adapter/base weight hashes, dispatch commit and Actions run;
+- separately records missing artifacts, absent interruption receipts,
+  malformed rows, identity mismatches and incomplete versus complete lineages;
+- writes a run-specific manifest, source API provenance and full SHA-256
+  inventory, then independently re-verifies the archived bytes before push;
+- never builds a subjective fun packet or grants any admission.
+
+`complete_lineage_recovered` now requires 12 raw results, a source-valid
+manifest, **byte-identical fsynced incremental journal and final JSONL**,
+and a matching same-run GitHub Actions artifact API record. This means only
+that one lineage was recovered from a failed workflow, **not** that the whole
+144-response screen passed. A source-valid local lineage without API metadata
+is deliberately demoted to `recovery_only` with
+`artifact_api_metadata_unavailable`, retaining every original byte.
+A missing or mismatched journal similarly prevents complete-lineage custody.
+
+If the same-run artifact API returns truncated JSON, a wrong schema, or
+ambiguous duplicate lineage identities, recovery no longer aborts before
+archiving the **downloaded original raw files**. The exact malformed API
+response bytes are kept under `provenance/actions-artifacts-api.json` and
+SHA-inventoried, while `artifact_api_metadata_invalid` quarantines the
+metadata claim and the transport gate remains **RED**. This does not recover
+artifacts whose download itself failed, and cannot prove no-output.
+
+The archive's separate `artifact_transport_complete` flag is a retrieval
+gate: the API lookup and artifact download actions must both report success,
+API-listed same-run lineage artifacts must actually be downloaded, no
+downloaded lineage can lack an API binding, and artifact identity/digest/size
+metadata must pass the declared checks. The workflow **always tries to
+preserve and push available original bytes first**, but its final recovery
+job explicitly **fails** when this flag is false. The run-scoped evidence
+branch is non-overwriting; such a red recovery requires manual investigation
+and supplementary custody outside the original branch before any inference
+retry. A green synthetic transfer never authorizes a live retry.
+
+A valid `artifact_transport_complete` flag is **not** a 144-generation
+completion, model-output accuracy claim or guarantee that a cancelled job
+ran its recovery path. Invalid or foreign rows remain quarantined and can
+never be counted as accepted results.
+
+**Push-failure fallback (source-only, not live-qualified):** after the
+recovery dataset passes local readback, the workflow attempts a separate
+`detective005a-recovery-fallback-<run-id>` Actions upload **before** the
+non-overwriting Git push. Its 30-day staging retention may preserve an
+additional copy if the evidence-branch push fails; upload failure does not
+prevent the durable push attempt. Neither this transient fallback nor a
+passing offline test proves successful branch promotion, verifies the
+original Actions ZIP bytes, or permits lineage reruns. Confirm a durable
+archive (or independently establish no output) before any retry.
+
+**Operational limits:** cancellation of the entire workflow may also cancel
+the recovery job, and artifact retrieval or branch push can fail. Such red runs
+need manual investigation; a recorded failure is never evidence of successful
+archival. Reruns must await verified durable preservation or a documented
+no-output determination. This design remains behind independent source-review
+and merge gates for PR #180 and its dependent draft and has not processed a
+live run.
+
+## GitHub Actions synthetic transport qualification (NOT a live model run)
+
+A separate pair of no-model jobs in the DETECTIVE-005A offline protocol
+exercises the **real pinned** `actions/upload-artifact` and
+`actions/download-artifact` actions using exactly the live workflow's positive
+path, exclusion glob and `detective005a-G*` naming scheme. It constructs one
+synthetic, source-contract-shaped response, appends a deliberately torn JSONL
+tail and writes an interruption receipt. A second GitHub-hosted job independently
+reads the same-run artifact API, downloads the ZIP, verifies byte equality of
+both files and runs the recovery/archive SHA-inventory verifier. The synthetic
+`work/` file must be excluded. No model files, inference or training are used,
+and CI transport artifacts are **never** promoted as live research evidence.
+
+The GitHub artifact API includes `workflow_run.id` and
+`workflow_run.head_sha`. Both are checked against the source-run identity;
+invalid/missing artifact ID, SHA-256 digest, size or expiry metadata remain
+explicit warnings, and a would-be complete lineage is demoted to
+`recovery_only` rather than silently admitted. Raw bytes are still preserved.
+A `pull_request` Actions event uses a synthetic merge SHA for `github.sha`
+while the artifact API reports the PR branch HEAD, so this **synthetic-only**
+test pins checkout and receipt to `github.event.pull_request.head.sha`. The
+actual DETECTIVE live workflow continues to require `workflow_dispatch` on
+`main`, where the dispatch SHA is the verified source head. Do not relax that
+rule.
+
+Successful synthetic upload/download/readback establishes GitHub Actions
+artifact *transport* compatibility, not the success of a real failed-run
+recovery job, not guaranteed handling of entire-workflow cancellation, and not
+the durable promotion of any of the 144 future model responses.
