@@ -173,6 +173,14 @@ is deliberately demoted to `recovery_only` with
 `artifact_api_metadata_unavailable`, retaining every original byte.
 A missing or mismatched journal similarly prevents complete-lineage custody.
 
+If the same-run artifact API returns truncated JSON, a wrong schema, or
+ambiguous duplicate lineage identities, recovery no longer aborts before
+archiving the **downloaded original raw files**. The exact malformed API
+response bytes are kept under `provenance/actions-artifacts-api.json` and
+SHA-inventoried, while `artifact_api_metadata_invalid` quarantines the
+metadata claim and the transport gate remains **RED**. This does not recover
+artifacts whose download itself failed, and cannot prove no-output.
+
 The archive's separate `artifact_transport_complete` flag is a retrieval
 gate: the API lookup and artifact download actions must both report success,
 API-listed same-run lineage artifacts must actually be downloaded, no
