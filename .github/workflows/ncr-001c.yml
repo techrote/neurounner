@@ -1,0 +1,96 @@
+name: NCR-001C frozen SmolLM2 hook qualification
+
+on:
+  pull_request:
+    branches: [main, research/ncr-001b-pure-torch-core]
+    paths:
+      - ".github/workflows/ncr-001c.yml"
+      - "scripts/ncr_001_smollm2.py"
+      - "scripts/ncr_001c_smollm2_preflight.py"
+      - "tests/test_ncr_001_smollm2.py"
+      - "scripts/ncr_001_core.py"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/source-pins.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neurounner-ncr-001c-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  TOKENIZERS_PARALLELISM: "false"
+  HF_HOME: /tmp/ncr-001c-hf
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  frozen-hook-toy:
+    name: Local hook lifecycle + frozen toy gradients
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU torch
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+      - name: Compile and test hook lifecycle without external model
+        run: |
+          python3 -m py_compile scripts/ncr_001_core.py \
+            scripts/ncr_001_smollm2.py scripts/ncr_001c_smollm2_preflight.py \
+            tests/test_ncr_001_smollm2.py
+          python3 -m unittest discover -s tests -p "test_ncr_001_smollm2.py" -v
+
+      - name: Verify exact promoted hosted model-source receipt
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path("experiments/ncr-001/smollm2-preflight")
+          report=root/"receipt.json"
+          provenance=json.loads((root/"provenance.json").read_text())
+          expected=provenance["source_run"]["original_report_sha256"]
+          actual=hashlib.sha256(report.read_bytes()).hexdigest()
+          assert actual==expected,(actual,expected)
+          d=json.loads(report.read_text())
+          assert d["status"]=="PASS_PRELIMINARY_SOURCE_BOUND_SMOLLM2_HOOK_CONFORMANCE"
+          assert d["model_training_performed"] is False
+          assert d["optimizer_steps"]==0
+          assert d["source_files"]["model.safetensors"]["sha256"]==provenance["original_model"]["model_safetensors_actual_downloaded_sha256"]
+          assert d["checks"]["nonzero_nca_full_vs_incremental_cache"]["close"] is True
+          print("Original model-source receipt SHA-256 verified:",actual)
+          PY
+
+  pinned-real-model:
+    name: Pinned frozen 135M checkpoint + KV-cache prepass
+    needs: frozen-hook-toy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install exact training-precedent CPU model stack
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Pin files, prove zero-init parity and run no-train decoder conformance
+        run: |
+          python3 scripts/ncr_001c_smollm2_preflight.py
+      - name: Preserve partial or successful independent source receipt
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr-001c-smollm2-source-conformance-a${{ github.run_attempt }}
+          path: runtime/ncr-001/smollm2-preflight.json
+          if-no-files-found: warn
+          retention-days: 30
