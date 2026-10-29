@@ -456,6 +456,55 @@ class Detective005ARecoveryTests(unittest.TestCase):
                         screen.ScreenError, "hash inventory"):
                     recover.verify(out)
 
+    def test_nested_raw_impostor_and_extra_archived_files_fail_custody(self):
+        """Neither a nested input nor a rehashed foreign output is admissible."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "artifacts/detective005a-G01"
+            source.mkdir(parents=True)
+            original = screen.canonical(self.row()).encode() + bytes([10])
+            (source / "results.partial.jsonl").write_bytes(original)
+            nested = source / "nested"
+            nested.mkdir()
+            (nested / "results.jsonl").write_bytes(
+                b"synthetic-foreign-raw-impostor")
+            metadata = root / "api.json"
+            metadata.write_text(json.dumps({"total_count": 1, "artifacts": [{
+                "name": "detective005a-G01", "id": 1001,
+                "digest": "sha256:" + "a" * 64,
+                "size_in_bytes": 100, "expired": False,
+                "workflow_run": {"id": int(RUN), "head_sha": HEAD,
+                                 "repository_id": 1432134981},
+            }]}), encoding="utf-8")
+            out = root / "recovery"
+            result = recover.recover(root / "artifacts", out, HEAD, RUN,
+                                     metadata, "success", "success")
+            self.assertEqual(result["validated_raw_prefix_rows"], 1)
+            self.assertFalse(result["artifact_transport_complete"])
+            self.assertEqual(
+                (out / "raw/G01/results.partial.jsonl").read_bytes(), original)
+            self.assertFalse((out / "raw/G01/results.jsonl").exists())
+            self.assertFalse((out / "raw/G01/nested").exists())
+            provenance = screen.read_json(
+                out / "provenance/source-artifacts.json")
+            self.assertEqual(
+                provenance["lineages"][0]["source_structure_warnings"],
+                [recover.STRUCTURE_WARNING])
+            self.assertEqual(recover.verify(out)["validated_raw_prefix_rows"], 1)
+            with self.assertRaisesRegex(screen.ScreenError,
+                                        "incomplete original lineage"):
+                recover.require_complete_transport(out)
+
+            # A new file plus a recalculated SHA inventory still must fail:
+            # it was never part of the original artifact/provenance contract.
+            foreign = out / "raw/G13/foreign.jsonl"
+            foreign.parent.mkdir(parents=True)
+            foreign.write_bytes(b"unregistered-synthetic-data")
+            (out / "provenance/hashes.sha256").write_text(
+                assemble.hash_inventory(out), encoding="utf-8")
+            with self.assertRaisesRegex(screen.ScreenError, "unregistered"):
+                recover.verify(out)
+
     def test_no_artifacts_never_claims_work_or_review(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
