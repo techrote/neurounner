@@ -215,6 +215,16 @@ class RelevanceReviewTests(unittest.TestCase):
         self.assertEqual(policy["historical_scores_reclassified_as"],"subjective_gameplay_reaction")
         self.assertIn("source_and_lineage_custody",policy["remaining_authoritative_gates"])
         self.assertIn("protected_fact_and_evidence_leakage",policy["remaining_authoritative_gates"])
+        # A retired relevance threshold must not silently remain a blocker
+        # in the human-facing R1 filing. The original scores and historical
+        # aggregation stay untouched and non-admitting.
+        readme=(root/"README.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "retired objective relevance nonregression as a population-expansion gate",
+            readme)
+        self.assertIn("remains NOT ADMITTED by this review", readme)
+        self.assertNotIn("remains blocked by the separate relevance gate", readme)
+        self.assertNotIn("because objective relevance is unresolved", readme)
         names=sorted(p.name for p in root.iterdir() if p.is_file())
         self.assertEqual(names,[
             "README.md","c2-ratings.json","c3-ratings.json",
