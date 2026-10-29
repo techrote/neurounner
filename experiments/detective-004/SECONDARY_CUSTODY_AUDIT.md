@@ -2,6 +2,12 @@
 
 This check supplements [Stage A](STAGE_A.md) and [draft PR #149](https://github.com/techrote/neurounner/pull/149). **It is not independent review and does not grant Stage B, learner-final materialization, production admission or cast expansion.**
 
+## Current owner policy supersedes historical #121 relevance blockers (29 October 2026)
+
+The owner retired **objective relevance nonregression as a population-expansion gate** in [issue #121](https://github.com/techrote/neurounner/issues/121) on 28 October 2026; 24 externally supplied ratings were reclassified as **subjective gameplay-reaction evidence** and preserved unchanged on draft [PR #174](https://github.com/techrote/neurounner/pull/174). Older #121 reviewer-blocker wording in this author-side audit is historical, **not** an active veto. This decision grants no Stage-A scripter approval, training, model admission or cast expansion. Source/lineage, leakage, clue-route, typed authority and explicit resource/execution gates remain independent.
+
+The hash-bound `future_training.stage_b_approved_only_after_merge=true` field is a sequencing prerequisite, **not a positive optimizer-authorization flag**. Stage B additionally needs a separately frozen executable optimizer contract, authentic model/tokenizer supervision and source/adapter/runner custody. Frozen generator/config/corpus and raw negative evidence stay unchanged.
+
 ## Specific gap addressed
 
 The original producer validator validates the separate `row["view"]` structure and the rendered turn sequence, but does not itself prove that the view used for permission/argument checks exactly matches the JSON embedded in the **actual model-visible user message**. A modified row can therefore contain a broader audit-side view than the model was shown. The committed generator still deterministically produces matched rows; this is an adversarial verifier gap, not evidence that the original 36-row archive was corrupted.
@@ -23,7 +29,7 @@ A distinct independent reviewer must still qualify the source-native role/assist
 
 The current `adapter_dir_sha256` helper binds file-path/size/hash identity; merely naming two files does not prove a genuine trained adapter or correct base ancestry. Any future Stage-B final custodian must independently authenticate the actual adapter, optimizer receipt, root-weight identity and the posthash final before allowing the evaluator to be interpreted as evidence. A naked `admission_gate` result on arbitrary task objects is not qualification.
 
-DETECTIVE-001R1 #121 remains separately reviewer-blocked: no opaque relevance ratings, no population expansion.
+Historical #121 objective relevance reviewer-blocker retired; 24 external ratings now count only as subjective gameplay-reaction evidence. No population expansion is admitted by this Stage-A custody audit.
 
 
 ## Future Stage-B scoring-layout guard (no final opened)
@@ -176,8 +182,8 @@ publisher SFT implementation before authorizing Stage B.
 
 No independent approval has been obtained, and this author-side hardening
 must not be represented as training or learner-final authorization. Draft
-PR #149 remains review-gated; separate blind relevance issue #121 still blocks
-population expansion. All Stage-A generator/config/source Git blobs, committed
+PR #149 remains review-gated; #121's historical objective relevance gate is retired,
+but source/lineage, protected-fact leakage, clue-route, game-authority and resource gates still restrict population expansion. All Stage-A generator/config/source Git blobs, committed
 36-row corpus, manifest, archive hashes and historical model failures remain
 unchanged.
 
@@ -284,9 +290,9 @@ offline CI, archive verification and author-side adversarial tests do
 not satisfy the distinct-review requirement. Until that review is submitted
 and Stage A merges, **Stage B is unauthorized**. Even after Stage A
 approval, actual tokenizer/mask/length and adapter/final custody must
-separately pass before optimization or final interpretation. Independent
-DETECTIVE-001R1 opaque relevance ratings are still required for any
-population expansion.
+separately pass before optimization or final interpretation. The old requirement for independent DETECTIVE-001R1 objective relevance ratings
+was retired on 28 October 2026; that retirement does not clear other
+population-expansion or training gates.
 
 
 ## Publisher-native token supervision preflight (prepared, not executed with weights)
@@ -354,8 +360,8 @@ qualification.** PR #149 still needs an independent reviewer before merging.
 Actual frozen-tokenizer loss labels and 512-token measurement remain
 unverified until a genuine pinned-tokenizer run; source/adapter ancestry,
 optimizer receipts, raw inference and posthash final custody are separate
-gates. Witness relevance review #121 still requires independent external
-scores. No training, model inference, sealed learner-final materialization,
+gates. Witness relevance review #121's original objective relevance scoring prerequisite
+was retired; its 24 submitted scores remain preserved as subjective gameplay reactions. No training, model inference, sealed learner-final materialization,
 hidden relevance-map access, production admission or population expansion.
 
 ## Future 36-step single-example input custody (source-only preparation)
