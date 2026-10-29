@@ -58,11 +58,25 @@ jobs:
       - name: Authority boundary sentinels
         run: |
           python3 - <<'PY'
+          import ast
           from pathlib import Path
           src=Path("scripts/detective_005a_fun_screen.py").read_text()
+          # Check actual imports rather than substring occurrences: the
+          # frozen raw runner receipt legitimately names library-version
+          # fields, but this standard-library protocol may not load them.
+          imported=set()
+          for node in ast.walk(ast.parse(src)):
+              if isinstance(node, ast.Import):
+                  imported.update(x.name.split(".", 1)[0] for x in node.names)
+              elif isinstance(node, ast.ImportFrom) and node.module:
+                  imported.add(node.module.split(".", 1)[0])
           for forbidden in (
-              "import torch","transformers","peft","huggingface_hub",
-              "optimizer.step","loss.backward","openai","anthropic","nvidia_api",
+              "torch", "transformers", "peft", "huggingface_hub",
+              "openai", "anthropic",
+          ):
+              assert forbidden not in imported, forbidden
+          for forbidden in (
+              "optimizer.step", "loss.backward", "nvidia_api",
               "training-c2-evidence/relevance-packet",
               "training-c3-evidence/relevance-packet",
           ):
