@@ -1,0 +1,224 @@
+{
+  "camera_cache_visible_after_transaction": false,
+  "case_sha256": "66292469cf712e1a3b18042b783bc23ae56c8b904e1ffe0433bdc1fbbf4978fa",
+  "decision": {
+    "access_granted": false,
+    "body_selection_made": false,
+    "correct_tool_selection_required": false,
+    "evidence_applied": false,
+    "exact_probe_selected": false,
+    "host_execution": false,
+    "learner_final_accessed": false,
+    "population_expansion_admitted": false,
+    "relevance_mapping_accessed": false,
+    "training_admitted": false
+  },
+  "environment": {
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "cpu_count": 4,
+    "cuda_available": false,
+    "model_load_seconds": 0.32747489000000485,
+    "peak_rss_kib": 3319180,
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "rss_after_load_kib": 2394212,
+    "torch": "2.14.1+cpu",
+    "torch_interop_threads": 1,
+    "torch_threads": 4,
+    "transformers": "4.57.6"
+  },
+  "evidence_application": {
+    "applied": false,
+    "selected_asset_id": null,
+    "witness_id": null
+  },
+  "exact_probe_selected": false,
+  "experiment": "DETECTIVE-003D",
+  "final_session": {
+    "case_id": "bay-seventeen-shift",
+    "events": [],
+    "participants": [
+      "V-G02-A",
+      "V-G09-C"
+    ],
+    "schema": "detective-interview-session-v1",
+    "session_id": "S-0e2738805c6773f3dfe1",
+    "session_key": "bay17-sprocket-live-scripter-v1",
+    "sha256": "7cb2c8b3e9ad1ad455769b2160e013edbae5db981bdefcab983d129013d1764d"
+  },
+  "generation": {
+    "completion_tokens_per_second": 4.206007890439799,
+    "generated_token_ids": [
+      6,
+      106,
+      17,
+      5270,
+      22753,
+      17,
+      943,
+      78,
+      31440,
+      14465,
+      17,
+      1642,
+      22434,
+      3440,
+      22753,
+      106,
+      17,
+      421,
+      2039,
+      22753,
+      17,
+      85,
+      908,
+      26013,
+      3956,
+      2942,
+      344,
+      277,
+      7524,
+      571,
+      11875,
+      17,
+      108,
+      108,
+      5
+    ],
+    "generated_tokens": 35,
+    "generation_seconds": 8.321429942999998,
+    "hit_max_new_tokens": false,
+    "raw_output_with_special_tokens": "<|tool_call|>{\"name\":\"get_database\",\"arguments\":{\"query\":\"fictitious native tools for the player's terminal\"}}<|end|>"
+  },
+  "issue": 146,
+  "normalization": {
+    "error": "tool not admitted by game",
+    "error_type": "ContractError",
+    "native_call": {
+      "arguments": {
+        "query": "fictitious native tools for the player's terminal"
+      },
+      "name": "get_database"
+    },
+    "native_parse_status": "parsed",
+    "normalization_status": "rejected",
+    "program": null,
+    "program_text": null
+  },
+  "outcome": "native_or_normalization_rejected",
+  "prompt_token_count": 657,
+  "prompt_token_sha256": "a7d3fd1bb4f99596ff336f71915deb372178cdde9f383a847e795374780d45d4",
+  "publisher_prompt_text": "<|system|>You have access to these tools:\n{\"name\":\"read_asset\",\"description\":\"Read a fictional detective-case evidence record that the game currently permits.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"asset_id\":{\"type\":\"string\"}},\"required\":[\"asset_id\"]}}\n{\"name\":\"correlate_assets\",\"description\":\"Compare two currently permitted fictional evidence records for shared canonical fact IDs.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"left_id\":{\"type\":\"string\"},\"right_id\":{\"type\":\"string\"}},\"required\":[\"left_id\",\"right_id\"]}}\n{\"name\":\"probe_terminal\",\"description\":\"Attempt a fictional terminal access using a credential supplied by the player. Never invent a real credential.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"terminal_id\":{\"type\":\"string\"},\"credential\":{\"type\":\"string\"}},\"required\":[\"terminal_id\",\"credential\"]}}<|end|><|user|>Return exactly one publisher-native tool call. Use only the fictional tools, IDs and player-known credentials in the supplied game view. Do not invent host/file/network tools. Stop after one call.\n\nPlayer request:\nUse the disclosed credential on the disclosed terminal. If access grants new evidence, stop and let the game inspect the receipt.\n\nCurrent fictional game view:\n{\"allowed_operations\":[{\"fields\":[\"asset_id\"],\"op\":\"read_asset\"},{\"fields\":[\"left_id\",\"right_id\"],\"op\":\"correlate_assets\"},{\"fields\":[\"terminal_id\",\"credential\"],\"op\":\"probe_terminal\"}],\"case_id\":\"bay-seventeen-shift\",\"disclosed_terminals\":[{\"player_known_credential\":\"OXIDATION\",\"terminal_id\":\"camera-console\"}],\"player_request\":\"Use the disclosed credential on the disclosed terminal. If access grants new evidence, stop and let the game inspect the receipt.\",\"schema\":\"detective-scripter-view-v1\",\"visible_assets\":[{\"asset_id\":\"dock-clock-ledger\",\"excerpt\":\"Service log: dock wall clock advanced by +00:09 after a failed maintenance patch.\"},{\"asset_id\":\"transfer-card\",\"excerpt\":\"Receipt 102: battery canister diverted at 02:14 local time to service bay 17.\"}]}<|end|><|assistant|>",
+  "publisher_turns": [
+    {
+      "content": "You have access to these tools:\n{\"name\":\"read_asset\",\"description\":\"Read a fictional detective-case evidence record that the game currently permits.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"asset_id\":{\"type\":\"string\"}},\"required\":[\"asset_id\"]}}\n{\"name\":\"correlate_assets\",\"description\":\"Compare two currently permitted fictional evidence records for shared canonical fact IDs.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"left_id\":{\"type\":\"string\"},\"right_id\":{\"type\":\"string\"}},\"required\":[\"left_id\",\"right_id\"]}}\n{\"name\":\"probe_terminal\",\"description\":\"Attempt a fictional terminal access using a credential supplied by the player. Never invent a real credential.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"terminal_id\":{\"type\":\"string\"},\"credential\":{\"type\":\"string\"}},\"required\":[\"terminal_id\",\"credential\"]}}",
+      "role": "system"
+    },
+    {
+      "content": "Return exactly one publisher-native tool call. Use only the fictional tools, IDs and player-known credentials in the supplied game view. Do not invent host/file/network tools. Stop after one call.\n\nPlayer request:\nUse the disclosed credential on the disclosed terminal. If access grants new evidence, stop and let the game inspect the receipt.\n\nCurrent fictional game view:\n{\"allowed_operations\":[{\"fields\":[\"asset_id\"],\"op\":\"read_asset\"},{\"fields\":[\"left_id\",\"right_id\"],\"op\":\"correlate_assets\"},{\"fields\":[\"terminal_id\",\"credential\"],\"op\":\"probe_terminal\"}],\"case_id\":\"bay-seventeen-shift\",\"disclosed_terminals\":[{\"player_known_credential\":\"OXIDATION\",\"terminal_id\":\"camera-console\"}],\"player_request\":\"Use the disclosed credential on the disclosed terminal. If access grants new evidence, stop and let the game inspect the receipt.\",\"schema\":\"detective-scripter-view-v1\",\"visible_assets\":[{\"asset_id\":\"dock-clock-ledger\",\"excerpt\":\"Service log: dock wall clock advanced by +00:09 after a failed maintenance patch.\"},{\"asset_id\":\"transfer-card\",\"excerpt\":\"Receipt 102: battery canister diverted at 02:14 local time to service bay 17.\"}]}",
+      "role": "user"
+    }
+  ],
+  "repository": {
+    "head_sha": "6a2274568a63219211b1e50b70f4bb341f860917",
+    "run_id": "40618669330",
+    "run_url": "https://github.com/techrote/neurounner/actions/runs/40618669330"
+  },
+  "request_receipt": {
+    "disclosed_terminal_ids": [
+      "camera-console"
+    ],
+    "player_known_credentials": {
+      "camera-console": "OXIDATION"
+    },
+    "player_request": "Use the disclosed credential on the disclosed terminal. If access grants new evidence, stop and let the game inspect the receipt.",
+    "request_id": "SR-3a3c8212426b79510f51",
+    "schema": "detective-scripter-request-receipt-v1",
+    "session_id": "S-0e2738805c6773f3dfe1",
+    "session_sha256": "7cb2c8b3e9ad1ad455769b2160e013edbae5db981bdefcab983d129013d1764d",
+    "sha256": "b8c43f3f8cf196f624886445d101ae7c9144b46a538bb44bccfe8cf057e40513",
+    "view": {
+      "allowed_operations": [
+        {
+          "fields": [
+            "asset_id"
+          ],
+          "op": "read_asset"
+        },
+        {
+          "fields": [
+            "left_id",
+            "right_id"
+          ],
+          "op": "correlate_assets"
+        },
+        {
+          "fields": [
+            "terminal_id",
+            "credential"
+          ],
+          "op": "probe_terminal"
+        }
+      ],
+      "case_id": "bay-seventeen-shift",
+      "disclosed_terminals": [
+        {
+          "player_known_credential": "OXIDATION",
+          "terminal_id": "camera-console"
+        }
+      ],
+      "player_request": "Use the disclosed credential on the disclosed terminal. If access grants new evidence, stop and let the game inspect the receipt.",
+      "schema": "detective-scripter-view-v1",
+      "visible_assets": [
+        {
+          "asset_id": "dock-clock-ledger",
+          "excerpt": "Service log: dock wall clock advanced by +00:09 after a failed maintenance patch."
+        },
+        {
+          "asset_id": "transfer-card",
+          "excerpt": "Receipt 102: battery canister diverted at 02:14 local time to service bay 17."
+        }
+      ]
+    },
+    "view_sha256": "9cd9871450bd014329f45a9048c77c5d117864e09a3ae95ca39962ad6d367dbe",
+    "visible_asset_ids": [
+      "dock-clock-ledger",
+      "transfer-card"
+    ]
+  },
+  "schema": "detective-003d-sprocket-live-run-v1",
+  "source": {
+    "model_files": {
+      "config.json": {
+        "bytes": 689,
+        "sha256": "557aacbcb7e23a322221ab91b62c4343dd22130388efc3eb4dcdfe1edfd8d1b7"
+      },
+      "model.safetensors": {
+        "bytes": 1002207984,
+        "sha256": "1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864"
+      },
+      "special_tokens_map.json": {
+        "bytes": 333,
+        "sha256": "c575235775a1998faf1256ea0b6f791116ea9d89cc34238ea3bd532b8190773b"
+      },
+      "tokenizer.json": {
+        "bytes": 2269469,
+        "sha256": "178a63d94a7de4aa273a6a9c218180c3b7d1912f5a18a91be34bab252f7277eb"
+      },
+      "tokenizer_config.json": {
+        "bytes": 3325,
+        "sha256": "1d1c0733848e0c78a2ec48a7f20cd55ec5ee0b4cbcda9785249af9e489823408"
+      }
+    },
+    "publisher_checkout": {
+      "commit": "a003767e70d766bc14b40c89792543ee8641c8bc",
+      "git_blobs": {
+        "scripts/harvest_round.py": "97811aa4245ad3f05f66ce0c2d8aa8c353619267",
+        "src/train/sft_data.py": "90bddf8976b9d6410fe7c5c1f084708e1cebab73"
+      }
+    }
+  },
+  "status": "integration_pass",
+  "transaction": null,
+  "witness_prompt_after_application": null
+}

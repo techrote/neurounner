@@ -1,0 +1,135 @@
+name: NCR-001E fresh void.1 reviewed UTF-8 text/model/cache
+
+on:
+  pull_request:
+    branches: [main, review/ncr-001k-void-byte-runtime-parity]
+    paths:
+      - ".github/workflows/ncr-001e-void-text-fresh.yml"
+      - "scripts/ncr_001e_void_text_fresh.py"
+      - "scripts/ncr_001k_byte_runtime.py"
+      - "scripts/ncr_001k_byte_source_audit.py"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/source-pins.json"
+      - "experiments/ncr-001/evidence-review/void1-utf8-fresh/**"
+      - "docs/NCR_001_E_VOID_UTF8_FRESH.md"
+      - "RAG.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001e-void-text-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  HF_HOME: /tmp/ncr-001e-void-source
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+  TOKENIZERS_PARALLELISM: "false"
+
+jobs:
+  reviewed-real-void:
+    name: Reviewed ByteTokenizer + real frozen Qwen3 text/cache cold adapter
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Check out exact original void.1 integration implementation
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 5fa3dc8c0de153098d1800f7b0c809819620aef4
+          path: implementation
+          persist-credentials: false
+      - name: Verify original implementation source and training block
+        run: |
+          test "$(git -C implementation rev-parse HEAD)" = \
+            "5fa3dc8c0de153098d1800f7b0c809819620aef4"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          assert p["train_authorized"] is False
+          assert p["models"]["void1"]["revision"]=="9c2be5087772867d45961abd11f6b35110617563"
+          print("Fresh reviewer bound exact frozen Qwen3 and no-training protocol")
+          PY
+      - name: Verify independently archived prior fresh Qwen3 receipt source identity
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path("experiments/ncr-001/evidence-review/void1-utf8-fresh")
+          receipt=root/"receipt.json"
+          provenance=json.loads((root/"provenance.json").read_text())
+          actual=hashlib.sha256(receipt.read_bytes()).hexdigest()
+          original=provenance["source_run"]["original_receipt_sha256"]
+          assert actual==original,(actual,original)
+          d=json.loads(receipt.read_text())
+          assert d["status"]=="PASS_REVIEWED_VOID_UTF8_REAL_MODEL_CACHE_COLD_ADAPTER_PREPASS"
+          assert d["source"]["implementation_sha"]==provenance["source_run"]["pinned_original_implementation_commit"]
+          assert d["source_files"]["model.safetensors"]["sha256"]==provenance["model"]["full_downloaded_weight_sha256"]
+          assert d["tokenizer_identity"]["source_sha256"]==provenance["model"]["source_tokenizer_sha256"]
+          assert d["checks"]["nonzero_48_UTF8_full_vs_KV_cache"]["within"] is True
+          assert d["checks"]["request_A_B_A_UTF8_isolation"]["exact"] is True
+          assert d["checks"]["cold_wrong_checkpoint_metadata_rejected"]["rejected"] is True
+          assert d["model_training_performed"] is False
+          print("Original fresh void.1 source/UTF-8/cold receipt matches SHA-256:",actual)
+          PY
+      - name: Install CPU-only exact package set
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Prefetch model source bytes and reviewer-audit ByteTokenizer before execution
+        run: |
+          python3 scripts/ncr_001k_byte_source_audit.py
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          pins=json.loads(Path("experiments/ncr-001/source-pins.json").read_text())["models"]["void1"]
+          for file,key in [
+              ("config.json","config_sha256"),
+              ("model.safetensors","weight_declared_lfs_sha256_not_downloaded")
+          ]:
+              p=Path(hf_hub_download(pins["repo_id"],filename=file,revision=pins["revision"]))
+              d=hashlib.sha256(p.read_bytes()).hexdigest()
+              assert d==pins[key],(file,d,pins[key])
+              print("Pinned source bytes verified, before runtime:",file,d,p.stat().st_size)
+          PY
+      - name: Fresh offline actual Qwen3 text-cache, request and cold-adapter reviewer test
+        run: |
+          python3 -m py_compile scripts/ncr_001e_void_text_fresh.py
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001e_void_text_fresh.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("runtime/ncr-001/void-real-text-fresh.json")
+          d=json.loads(p.read_text())
+          assert d["status"]=="PASS_REVIEWED_VOID_UTF8_REAL_MODEL_CACHE_COLD_ADAPTER_PREPASS"
+          assert d["actual_byte_tokenizer_executed_after_review"] is True
+          assert d["model_training_performed"] is False
+          assert d["optimizer_steps"] == 0
+          assert d["comparative_training_admitted"] is False
+          assert d["full_four_model_conformance_pass"] is False
+          assert d["checks"]["request_A_B_A_UTF8_isolation"]["exact"] is True
+          assert d["checks"]["cold_wrong_checkpoint_metadata_rejected"]["rejected"] is True
+          print("Fresh real-model void UTF-8 evidence PASS, full admission blocked")
+          PY
+      - name: Preserve source-bound success or failure receipt
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr-001e-void-real-UTF8-fresh-a${{ github.run_attempt }}
+          path: |
+            runtime/ncr-001/void-real-text-fresh.json
+            runtime/ncr-001/void-byte-source-audit.json
+          retention-days: 30
+          if-no-files-found: warn

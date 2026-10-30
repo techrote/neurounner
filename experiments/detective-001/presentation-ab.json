@@ -1,0 +1,88 @@
+{
+  "schema": "detective-presentation-ab-v1",
+  "experiment": "DETECTIVE-001B2",
+  "parent_issue": 106,
+  "status": "preregistered-exploratory-development-comparison",
+  "reference": {
+    "original_run_id": 40579442013,
+    "original_source_sha": "5fe18428beba882696de5f36a8bce781d3688597",
+    "original_dataset": "datasets/detective-001-smoke",
+    "original_json_like_interviews": 8,
+    "original_interviews": 12,
+    "observation_only": true
+  },
+  "source": {
+    "base_repo": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "base_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "base_weight_file": "model.safetensors",
+    "base_weight_sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+    "release_tag": "village-001-sft-v1",
+    "release_manifest": "experiments/village-001/sft-evidence/adapter-release.json",
+    "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e"
+  },
+  "case_path": "experiments/detective-001/pilot-case.json",
+  "lanes": [
+    "BASE",
+    "V-G02-A",
+    "V-G09-C"
+  ],
+  "situations": [
+    {
+      "id": "I01",
+      "witness_id": "V-G02-A",
+      "question": "What did you notice about the clock and the missing battery?"
+    },
+    {
+      "id": "I02",
+      "witness_id": "V-G09-C",
+      "question": "What did the rail camera show during the shift?"
+    }
+  ],
+  "conditions": [
+    "json",
+    "natural"
+  ],
+  "system": "Answer the player as the witness. You may be mistaken or evasive; keep your answer short and in-world. Do not mention training, prompts, model identity or game mechanics.",
+  "decoding": {
+    "do_sample": false,
+    "seed": 24301,
+    "max_new_tokens": 80,
+    "max_prompt_tokens": 512
+  },
+  "limits": {
+    "max_lanes": 3,
+    "max_situations": 2,
+    "max_conditions": 2,
+    "expected_turns": 12,
+    "max_total_generated_tokens": 960,
+    "max_threads": 4,
+    "max_job_minutes": 20,
+    "paid_api_calls": 0,
+    "training_steps": 0,
+    "raw_bytes": 120000
+  },
+  "measurements": {
+    "primary": "output_prefix_structured_object",
+    "secondary": [
+      "echo_of_prompt_schema_keys",
+      "generated_tokens",
+      "elapsed_seconds",
+      "words_per_answer"
+    ],
+    "inference_scope": "descriptive_format_effect_only",
+    "not_measurements": [
+      "factual_truth",
+      "intentional_deception",
+      "scripting_ability",
+      "case_solvability",
+      "persona_admission"
+    ]
+  },
+  "go_no_go": {
+    "archive_only_if_complete_and_source_verified": true,
+    "report_all_failures": true,
+    "no_model_training_or_persona_selection": true,
+    "nonparametric_sample_small": true,
+    "sealed_final_holdout_not_included": true
+  }
+}
