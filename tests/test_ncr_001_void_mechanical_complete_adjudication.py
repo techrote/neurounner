@@ -1,4 +1,5 @@
 import copy,json,sys,unittest
+from unittest import mock
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/"scripts"))
 import ncr_001_void_mechanical_complete_adjudication as gate
@@ -8,7 +9,7 @@ class T(unittest.TestCase):
  def test_prior_final_admission_stays_false(self):
   orig=gate.prior.build_report
   x=orig();x["per_model_conformance_pass"]=True
-  with unittest.mock.patch.object(gate.prior,"build_report",return_value=x):
+  with mock.patch.object(gate.prior,"build_report",return_value=x):
    with self.assertRaisesRegex(ValueError,"REFUSED"):gate.build()
  def test_masked_values_are_bounded(self):
   r=gate.build();self.assertLessEqual(r["masked_B2_left_full_vs_cached_max_abs"],5e-4);self.assertLessEqual(r["masked_B2_right_full_vs_cached_max_abs"],5e-4)
