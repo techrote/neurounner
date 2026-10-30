@@ -147,7 +147,8 @@ class Poststep2048AdjudicationTests(unittest.TestCase):
         self.refused(lambda x: x["consumer"]["poststep_2048_all_position_cache"]
                      ["trace_checkpoints"][0]["trace"].__setitem__(
                          "state_shape", [2,1,4,8,8]))
-        self.refused(lambda x: x["producer"]["diagnostic_optimizer_steps"].__class__)
+        self.refused(lambda x: x["producer"].__setitem__(
+            "diagnostic_optimizer_steps", 2))
         # The explicit boolean-as-int case:
         self.refused(lambda x: x["producer"].__setitem__(
             "diagnostic_optimizer_steps", True))
