@@ -1,0 +1,119 @@
+{
+  "base_frozen": true,
+  "base_parameters": 501090560,
+  "checks": {
+    "frozen_base_readout_gradient": {
+      "base_grads_none": true,
+      "loss": 4.726962089538574,
+      "optimizer_steps": 0,
+      "readout_grad_l1": 2592.0615234375
+    },
+    "nonzero_nca_full_vs_incremental_cache": {
+      "atol": 0.0005,
+      "close": true,
+      "max_abs": 2.8133392333984375e-05,
+      "mean_abs": 2.2238559722609352e-06,
+      "rtol": 0.0005
+    },
+    "nonzero_nca_future_suffix_invariance": {
+      "atol": 0.0005,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0005
+    },
+    "nonzero_untrained_readout_changes_logits": {
+      "max_abs": 0.007289886474609375,
+      "training": false
+    },
+    "zero_init_greedy_generation": {
+      "equal": true,
+      "generated_tokens": 3,
+      "nca_decoder_forward_calls": 3
+    },
+    "zero_init_logits_batch2_padded": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "zero_init_logits_length_13": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "zero_init_logits_length_4": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "zero_init_logits_length_9": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    }
+  },
+  "classification": "real_frozen_HF_hook_and_cache_conformance_prepass",
+  "comparative_evaluation_performed": false,
+  "experiment": "NCR-001D",
+  "model": "kandivault/sprocket-500m",
+  "model_training_performed": false,
+  "model_variant": "chat",
+  "nca_parameters": 658904,
+  "optimizer_steps": 0,
+  "peak_rss_kib": 3312512,
+  "protocol_sha256": "2e294750a17b1bfb3eba448f8a5b55344c72aff700587351bd10da1af38885ab",
+  "qualification_limitations": [
+    "One model only (Sprocket Chat); four-model NCR conformance not complete",
+    "No optimizer step on the full HF model; test was readout-gradient only",
+    "Nonzero readout was manually perturbed, not learned",
+    "Additional independent #72 tests for longer contexts, request boundaries and cold reload needed",
+    "No MLP-vs-NCA held-out task comparison or performance conclusion"
+  ],
+  "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+  "runner": {
+    "cpu": "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+    "huggingface_hub": "0.36.2",
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "threads": 4,
+    "torch": "2.14.1+cpu",
+    "transformers": "4.57.6"
+  },
+  "source_files": {
+    "chat/config.json": {
+      "bytes": 689,
+      "expected_sha256": "557aacbcb7e23a322221ab91b62c4343dd22130388efc3eb4dcdfe1edfd8d1b7",
+      "filename": "chat/config.json",
+      "sha256": "557aacbcb7e23a322221ab91b62c4343dd22130388efc3eb4dcdfe1edfd8d1b7"
+    },
+    "chat/model.safetensors": {
+      "bytes": 1002207984,
+      "expected_sha256": "551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97",
+      "filename": "chat/model.safetensors",
+      "sha256": "551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97"
+    },
+    "chat/tokenizer.json": {
+      "bytes": 2269469,
+      "expected_sha256": "178a63d94a7de4aa273a6a9c218180c3b7d1912f5a18a91be34bab252f7277eb",
+      "filename": "chat/tokenizer.json",
+      "sha256": "178a63d94a7de4aa273a6a9c218180c3b7d1912f5a18a91be34bab252f7277eb"
+    },
+    "chat/tokenizer_config.json": {
+      "bytes": 3325,
+      "expected_sha256": "1d1c0733848e0c78a2ec48a7f20cd55ec5ee0b4cbcda9785249af9e489823408",
+      "filename": "chat/tokenizer_config.json",
+      "sha256": "1d1c0733848e0c78a2ec48a7f20cd55ec5ee0b4cbcda9785249af9e489823408"
+    }
+  },
+  "source_pins_sha256": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1",
+  "status": "PASS_PRELIMINARY_SOURCE_BOUND_SPROCKET_CHAT_HOOK_CONFORMANCE",
+  "weight_path": "chat/model.safetensors"
+}

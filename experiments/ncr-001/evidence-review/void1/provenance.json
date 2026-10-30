@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001K",
+  "source_run": {
+    "run_url": "https://github.com/techrote/neurounner/actions/runs/40424675239",
+    "run_id": 40424675239,
+    "tested_source_commit": "7f15a6136d830a4b98f125af88a38ed8cb62bac1",
+    "toy_job_id": 121927348832,
+    "real_source_job_id": 121927512282,
+    "source_artifact_id": 12699635195,
+    "source_artifact_name": "ncr-001k-void1-source-conformance-a1",
+    "artifact_zip_sha256": "54ddca8acf5a6b3c0150d238880d006d24d6140f887895eaad0e3952d4f77deb",
+    "original_report_sha256": "1aaa45cb5942c6d033c8fc69da13d5bd76232a240da1fd4e76f1b31f132399c3",
+    "original_report_bytes": 4319,
+    "promoted_report": "experiments/ncr-001/void1-preflight/receipt.json",
+    "test_status": "success",
+    "protocol_sha256": "2e294750a17b1bfb3eba448f8a5b55344c72aff700587351bd10da1af38885ab",
+    "source_pins_sha256": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1"
+  },
+  "model": {
+    "id": "dotlabs/void.1",
+    "revision": "9c2be5087772867d45961abd11f6b35110617563",
+    "config_family": "Qwen3ForCausalLM",
+    "actual_model_safetensors_sha256": "ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3",
+    "actual_checkpoint_bytes": 360622744,
+    "custom_tokenizer_python_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+    "tokenizer_py_matches_prior_train002b": true,
+    "custom_tokenizer_python_executed": false,
+    "byte_vocab_sha256": "57a1cd2e70dd5b7cc6fd2eaa12ebfcd173c1620fa5d45c2c6282511c29b6a5f6",
+    "hidden_size": 640,
+    "num_hidden_layers": 24,
+    "taps": [
+      7,
+      15,
+      23
+    ],
+    "frozen_base_parameters": 90148352,
+    "trainable_nca_parameters": 329944
+  },
+  "findings": {
+    "status": "PASS_PRELIMINARY_VOID1_QWEN3_HOOK_CONFORMANCE",
+    "zero_readout_logits_max_abs": 0,
+    "manual_nontrained_readout_changes_logits_max_abs": 0.022034883499145508,
+    "full_vs_incremental_cache_max_abs": 0.00001049041748046875,
+    "future_suffix_max_abs": 0,
+    "readout_grad_l1": 4867.96435546875,
+    "optimizer_steps": 0,
+    "peak_rss_kib": 749736,
+    "source_model_weights_verified_by_bytes": true
+  },
+  "limitations": [
+    "Only syntactically valid raw vocabulary IDs, not text encoded by the custom ByteTokenizer",
+    "Downloaded Python source hashed but not executed or independently security/semantics reviewed",
+    "No Unicode byte round-trip, BOS/EOS/EOS-budget qualification; no natural text or held-out score",
+    "Nonzero readout is a manual diagnostic perturbation, not learned; no model training",
+    "Incomplete four-backbone independent #72 qualification; model-specific STOP gates still apply"
+  ]
+}

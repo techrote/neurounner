@@ -1,0 +1,99 @@
+name: NCR-001F pinned frozen gated MLP depth hooks
+
+on:
+  push:
+    branches: [review/ncr-001f-pinned-four-mlp-hooks-20261027]
+  pull_request:
+    branches: [research/ncr-001f-matched-controls-prepass]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001f-frozen-hooks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  TOKENIZERS_PARALLELISM: "false"
+  HF_HOME: /tmp/ncr001f-mlp-source-hf
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  source-and-toy:
+    name: Four pinned identities, three true postblock taps and negative guards
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU torch
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+      - name: Fail closed on protocol admission
+        run: |
+          python3 - <<'PY'
+          import json
+          d=json.load(open("experiments/ncr-001/protocol.json"))
+          assert d["train_authorized"] is False
+          assert set(d["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("NO NCR training admission; all four variants remain distinct.")
+          PY
+      - name: Independently read back exact original 5,505-byte source-bound model receipt and negative gates
+        run: |
+          python3 -m py_compile scripts/ncr_001f_mlp_receipt_audit.py tests/test_ncr_001f_mlp_receipt_audit.py
+          python3 -m unittest discover -s tests -p "test_ncr_001f_mlp_receipt_audit.py" -v
+          python3 scripts/ncr_001f_mlp_receipt_audit.py
+      - name: Compile and run source-layout, lifecycle, gradient-only and checkpoint refusals
+        run: |
+          python3 -m py_compile scripts/ncr_001f_controls.py \
+            scripts/ncr_001f_frozen_hooks.py \
+            scripts/ncr_001f_real_smollm2.py \
+            tests/test_ncr_001f_frozen_hooks.py
+          python3 -m unittest discover -s tests \
+            -p "test_ncr_001f_frozen_hooks.py" -v
+
+  source-pinned-smollm2:
+    name: Real pinned 135M frozen checkpoint MLP no-op, KV-cache and cold adapter
+    needs: source-and-toy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install exact source-precedent CPU model stack
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Read-only real model source hash and matched MLP KV-cache smoke
+        run: |
+          python3 scripts/ncr_001f_real_smollm2.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("runtime/ncr-001f/real-smollm2-mlp.json").read_text())
+          assert d["status"]=="PASS_SOURCE_BOUND_REAL_SMOLLM2_MLP_HOOK_PREPASS__TRAINING_BLOCKED"
+          assert d["train_authorized"] is False
+          assert d["model_training_performed"] is False and d["optimizer_steps"]==0
+          assert d["comparative_training_performed"] is False
+          assert d["four_model_actual_host_mlp_qualified"] is False
+          assert d["checks"]["full_base_tensor_bytes_unchanged"] is True
+          assert d["checks"]["nontrained_48_token_full_vs_real_incremental_KV"]["close"] is True
+          print("MLP on actual source-bound frozen 135M: preliminary only; all training blocked")
+          PY
+      - name: Preserve full original raw receipt, including failure and runner identity
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001f-real-smollm2-mlp-a${{ github.run_attempt }}
+          path: runtime/ncr-001f/real-smollm2-mlp.json
+          retention-days: 30
+          if-no-files-found: warn

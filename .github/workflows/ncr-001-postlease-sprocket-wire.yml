@@ -1,0 +1,170 @@
+name: NCR-001 post-lease Instruct publisher wire (no training)
+on:
+  pull_request:
+    branches: [review/ncr001-sprocket-learning-original-readback-20261028]
+    paths:
+      - ".github/workflows/ncr-001-postlease-sprocket-wire.yml"
+      - "scripts/ncr_001_postlease_sprocket_wire.py"
+      - "tests/test_ncr_001_postlease_sprocket_wire.py"
+      - "docs/NCR_001_POSTLEASE_SPROCKET_WIRE.md"
+      - "RAG.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001-postlease-wire-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+  HF_HOME: /tmp/ncr001-postlease-publisher-wire-hf
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  source-wire-sentinels:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: techrote/neurounner
+          ref: 3592841802d85c442ca2521479b5d8795bee7233
+          path: wire-authority
+          persist-credentials: false
+      - name: Verify exact source, publisher renderer and unmodified training gate
+        run: |
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git -C wire-authority rev-parse HEAD)" = "3592841802d85c442ca2521479b5d8795bee7233"
+          test "$(git -C wire-authority hash-object scripts/ncr_001e_sprocket_publisher_wire.py)" = "4e558ae530a1b79050e22bee587b3caf056e4563"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          PY
+      - name: Install pinned source-test dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Run source-only serializer/safety sentinels with failure logging
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p runtime/ncr001-postlease-publisher-wire/source
+          python3 -m py_compile scripts/ncr_001_postlease_sprocket_wire.py tests/test_ncr_001_postlease_sprocket_wire.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001_postlease_sprocket_wire.py' -v \
+            2>&1 | tee runtime/ncr001-postlease-publisher-wire/source/source-tests.log
+          python3 -m unittest discover -s tests -p 'test_ncr_001_cross_decoder_lease.py' -v \
+            2>&1 | tee runtime/ncr001-postlease-publisher-wire/source/lease-tests.log
+      - name: Preserve source logs including negatives
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-postlease-wire-source-a${{ github.run_attempt }}
+          path: runtime/ncr001-postlease-publisher-wire/source/
+          if-no-files-found: warn
+          retention-days: 30
+
+  original-frozen-instruct-wire:
+    needs: source-wire-sentinels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: techrote/neurounner
+          ref: 2271218d625e1462b2cf218445da975efe17fe32
+          path: format-authority
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: techrote/neurounner
+          ref: 3592841802d85c442ca2521479b5d8795bee7233
+          path: wire-authority
+          persist-credentials: false
+      - name: Verify exact source/checkouts and frozen protocol
+        run: |
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git -C format-authority rev-parse HEAD)" = "2271218d625e1462b2cf218445da975efe17fe32"
+          test "$(git -C wire-authority rev-parse HEAD)" = "3592841802d85c442ca2521479b5d8795bee7233"
+          test "$(git -C wire-authority hash-object scripts/ncr_001e_sprocket_publisher_wire.py)" = "4e558ae530a1b79050e22bee587b3caf056e4563"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          PY
+      - name: Install pinned original-host CPU dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Download and SHA-verify exact distinct ROOT Instruct original source
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          p=json.load(open("experiments/ncr-001/source-pins.json"))["models"]["sprocket_instruct"]
+          q=json.load(open("experiments/ncr-001/source-pins.json"))["models"]["sprocket_chat"]
+          assert p["repo_id"] == "kandivault/sprocket-500m"
+          assert p["revision"] == "eb157d4ddddc4619e661d4a2426bb2dd000fc668"
+          assert p["hf_weight_file"] == "model.safetensors" and q["hf_weight_file"] == "chat/model.safetensors"
+          assert p["weight_declared_lfs_sha256_not_downloaded"] != q["weight_declared_lfs_sha256_not_downloaded"]
+          names = ["README.md","config.json","tokenizer.json",
+                   "tokenizer_config.json","special_tokens_map.json","model.safetensors"]
+          fields = {"config.json":"config_sha256","tokenizer.json":"tokenizer_sha256",
+                    "tokenizer_config.json":"tokenizer_config_sha256",
+                    "special_tokens_map.json":"special_tokens_map_sha256"}
+          for name in names:
+              path=Path(hf_hub_download(p["repo_id"],name,revision=p["revision"]))
+              h=hashlib.sha256()
+              with path.open("rb") as f:
+                  for block in iter(lambda:f.read(4*1024*1024),b""):h.update(block)
+              expected=("09aec879dc5b387bdc031dc3c74d77a9ba44362a55163f9a8b456761b68142c9"
+                        if name=="README.md" else
+                        p["weight_declared_lfs_sha256_not_downloaded"]
+                        if name=="model.safetensors" else p[fields[name]])
+              assert h.hexdigest()==expected,(name,h.hexdigest(),expected)
+              if name=="model.safetensors":assert path.stat().st_size==1002207984
+              print("PINNED_ROOT_INSTRUCT_SHA256",name,h.hexdigest(),path.stat().st_size,flush=True)
+          PY
+      - name: Source-structured original frozen host, NCA and MLP, no optimizer
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p runtime/ncr001-postlease-publisher-wire/instruct
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001_postlease_sprocket_wire.py \
+            2>&1 | tee runtime/ncr001-postlease-publisher-wire/instruct/host.log
+      - name: Preserve all physical receipts and logs even if FAIL
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-postlease-wire-instruct-a${{ github.run_attempt }}
+          path: runtime/ncr001-postlease-publisher-wire/instruct/
+          if-no-files-found: warn
+          retention-days: 30
