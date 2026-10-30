@@ -1,4 +1,4 @@
-name: NCR-001 publisher wire original-source merge-down
+name: BYTE-EOS corrected causal source plus original Qwen archive merge-down
 on:
   push:
     branches: [integration/merge-down-foundations-20261029]
@@ -8,7 +8,7 @@ permissions:
   pull-requests: read
   actions: read
 concurrency:
-  group: ncr-wire-merge-down-20261030
+  group: byte-eos-merge-down-20261030
   cancel-in-progress: false
 env:
   PYTHONDONTWRITEBYTECODE: "1"
@@ -18,15 +18,15 @@ env:
   TOKENIZERS_PARALLELISM: "false"
   OMP_NUM_THREADS: "4"
   MKL_NUM_THREADS: "4"
-  BASE_SHA: 4959c5e0420861b812d95611d8285af271082ed7
+  BASE_SHA: c41841809e55cfcfa722a929d34585ba12aad265
 jobs:
   integration:
     runs-on: ubuntu-24.04
-    timeout-minutes: 18
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 4959c5e0420861b812d95611d8285af271082ed7
+          ref: c41841809e55cfcfa722a929d34585ba12aad265
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -35,122 +35,130 @@ jobs:
           ref: 3592841802d85c442ca2521479b5d8795bee7233
           path: wire-authority
           persist-credentials: false
-      - name: Install synthetic pinned CPU tests only
+      - name: Install pinned synthetic CPU test stack (no Qwen3 weights)
         run: |
           python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
           python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "huggingface_hub==0.36.2" "safetensors==0.8.0" "sentencepiece>=0.2,<1"
           python3 -c 'import torch,transformers; assert torch.__version__=="2.14.1+cpu" and transformers.__version__=="4.57.6" and not torch.cuda.is_available()'
-      - name: Resolve exact original PR ancestry, source and readback without model inference
+      - name: Reconstruct all five source heads, receipt hashes and shifted-label tests without model loading
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git config user.name "Read-only source integration review"
-          git config user.email "source-review@example.invalid"
-          mkdir -p "$RUNNER_TEMP/wire-merge-down"
+          git config user.name 'Source-only BYTE-EOS merge-down'
+          git config user.email 'source-only@example.invalid'
+          mkdir -p "$RUNNER_TEMP/byte-eos-merge-down"
           python3 - <<'PY'
-          import hashlib,io,json,os,pathlib,subprocess,sys,urllib.request,zipfile
-          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'wire-merge-down'
-          def run(argv,name,check=True):
-              p=subprocess.run(argv,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
-              (out/name).write_text(p.stdout)
-              print(name,p.returncode,p.stdout,flush=True)
-              if check and p.returncode:raise RuntimeError(name+' exited '+str(p.returncode))
+          import base64,hashlib,io,json,os,pathlib,subprocess,sys,tarfile,urllib.request,zipfile
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'byte-eos-merge-down'
+          def run(argv,label,check=True):
+              p=subprocess.run(argv,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+              (out/label).write_text(p.stdout)
+              print(label,p.returncode,p.stdout,flush=True)
+              if check and p.returncode:raise RuntimeError(f'{label}: {p.returncode}')
               return p
-          def api(path):
-              q=urllib.request.Request('https://api.github.com/repos/techrote/neurounner'+path,headers={
-                  'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
-              with urllib.request.urlopen(q,timeout=45) as r:return json.load(r)
-          def test(argv,name):
-              env=dict(os.environ,PYTHONPATH=str(pathlib.Path('scripts').resolve()))
-              p=subprocess.run(argv,env=env,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
-              (out/name).write_text(p.stdout)
-              print(name,p.returncode,p.stdout,flush=True)
-              if p.returncode:raise RuntimeError(name+' tests failed')
+          def test(argv,label):
+              e=dict(os.environ,PYTHONPATH=str(pathlib.Path('scripts').resolve()))
+              p=subprocess.run(argv,env=e,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+              (out/label).write_text(p.stdout)
+              print(label,p.returncode,p.stdout,flush=True)
+              if p.returncode:raise RuntimeError('Source/archival test failed: '+label)
               return p.stdout
-          assert api('/branches/main')['commit']['sha']==os.environ['BASE_SHA'],'main advanced'
-          assert run(['git','rev-parse','HEAD'],'start-head.txt').stdout.strip()==os.environ['BASE_SHA']
-          assert run(['git','-C','wire-authority','rev-parse','HEAD'],'publisher-head.txt').stdout.strip()=='3592841802d85c442ca2521479b5d8795bee7233'
-          assert run(['git','-C','wire-authority','hash-object','scripts/ncr_001e_sprocket_publisher_wire.py'],'publisher-blob.txt').stdout.strip()=='4e558ae530a1b79050e22bee587b3caf056e4563'
-          plan=[(161,'aadbfe823c9778066acac0a0869e0c559a533f05'),
-                (162,'4cf8c052c5ad91c384f2e15b68793a92c9a80cfe')]
+          def api(path):
+              request=urllib.request.Request('https://api.github.com/repos/techrote/neurounner'+path,
+                  headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(request,timeout=45) as response:return json.load(response)
+          plan=[(94,'b1c558f7d46f5d7c76b4e6336a37143886d16c08'),
+                (163,'9fbdee880697903aaf5b91cc29442c9e53479e50'),
+                (164,'796408aff6b56c1d9b732329d957749634a0830b'),
+                (165,'06b858a70d7019398cdc7a3f205ae24423f57c67'),
+                (166,'47c714e6247a08b241b1f0be5083a3ff37621ac2')]
+          main=api('/branches/main')
+          assert main['commit']['sha']==os.environ['BASE_SHA'],'main advanced before run'
+          assert run(['git','rev-parse','HEAD'],'original-main.txt').stdout.strip()==os.environ['BASE_SHA']
           for n,head in plan:
-              pr=api('/pulls/'+str(n))
-              assert pr['state']=='open' and pr['head']['sha']==head,(n,pr['head']['sha'])
-              (out/f'{n}-metadata.json').write_text(json.dumps({'head':head,'base':pr['base']['ref'],'draft':pr['draft']},indent=2)+'\n')
+              p=api('/pulls/'+str(n))
+              assert p['state']=='open' and p['head']['sha']==head,(n,p['head']['sha'])
+              (out/f'{n}-pr.json').write_text(json.dumps({'head':head,'base':p['base']['ref'],'draft':p['draft']},indent=2)+'\n')
           stages=[]
           for n,head in plan:
-              p=run(['git','merge','--no-ff','--no-commit',head],f'{n}-merge-proposal.log',check=False)
+              merged=run(['git','merge','--no-ff','--no-commit',head],f'{n}-merge-proposal.log',check=False)
               conflicts=run(['git','diff','--name-only','--diff-filter=U'],f'{n}-conflicts.txt').stdout.splitlines()
               if conflicts==['RAG.md']:
                   ours=run(['git','show','HEAD:RAG.md'],f'{n}-RAG-current.md').stdout
                   theirs=run(['git','show','MERGE_HEAD:RAG.md'],f'{n}-RAG-original.md').stdout
-                  # Only source-gated addenda may be brought forward; preserve current main.
-                  new=[s for s in theirs.splitlines() if s.startswith('- **[NCR-001E ') and
-                       (('publisher wire witness' in s) or ('publisher-wire readback' in s))]
-                  assert len(new)>=1,new
+                  source=[line for line in theirs.splitlines() if line.startswith('- **[BYTE-EOS-001')]
                   result=ours.rstrip()+'\n'
-                  for line in new:
+                  introduced=0
+                  for line in source:
                       key=line.split(']')[0]+']'
-                      match=next((v for v in result.splitlines() if v.startswith(key)),None)
-                      if match:result=result.replace(match,line)
-                      else:result+=line+'\n'
-                  pathlib.Path('RAG.md').write_text(result,encoding='utf-8')
+                      old=next((l for l in result.splitlines() if l.startswith(key)),None)
+                      if old is None:result+=line+'\n';introduced+=1
+                      elif old!=line:result=result.replace(old,line)
+                  assert introduced in (0,1) and source,(n,introduced,source)
+                  pathlib.Path('RAG.md').write_text(result)
                   run(['git','add','RAG.md'],f'{n}-RAG-resolve.log')
-              elif conflicts or p.returncode:raise RuntimeError('Unreviewed conflict '+str(n)+': '+str(conflicts))
-              run(['git','diff','--cached','--check','--','.',':(exclude,glob)**/*.md',':(exclude,glob)**/*.log'],f'{n}-diff-check-source.log')
+              elif conflicts or merged.returncode:
+                  raise RuntimeError('Unreviewed merge error '+str(n)+': '+str(conflicts))
+              run(['git','diff','--cached','--check','--','.',':(exclude,glob)**/*.md',':(exclude,glob)**/*.log'],f'{n}-nonarchive-diff-check.log')
               run(['git','commit','--no-edit'],f'{n}-merge-commit.log')
               tree=run(['git','rev-parse','HEAD^{tree}'],f'{n}-tree.txt').stdout.strip()
-              (out/f'{n}-merged-RAG.md').write_bytes(pathlib.Path('RAG.md').read_bytes())
-              for file in api('/pulls/'+str(n)+'/files?per_page=100'):
-                  name=file['filename']
+              (out/f'{n}-RAG.md').write_bytes(pathlib.Path('RAG.md').read_bytes())
+              for item in api('/pulls/'+str(n)+'/files?per_page=100'):
+                  name=item['filename']
                   if name=='RAG.md':continue
-                  actual=run(['git','rev-parse','HEAD:'+name],f'{n}-current-blob.txt').stdout.strip()
+                  current=run(['git','rev-parse','HEAD:'+name],f'{n}-current-blob.txt').stdout.strip()
                   original=run(['git','rev-parse',head+':'+name],f'{n}-original-blob.txt').stdout.strip()
-                  assert actual==original,(n,name,'original source or receipt bytes modified')
-              test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001_postlease_sprocket_wire.py','-v'],f'{n}-wire-source-tests.log')
-              test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001_cross_decoder_lease.py','-v'],f'{n}-lease-tests.log')
-              if n==162:
-                  test([sys.executable,'scripts/ncr_001_postlease_wire_evidence_audit.py','--json'],'162-original-wire-audit.json')
-                  test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001_postlease_wire_evidence_audit.py','-v'],'162-16-adversarial-tests.log')
-                  sys.path.insert(0,str(pathlib.Path('scripts').resolve()))
-                  import ncr_001_postlease_wire_evidence_audit as audit
-                  archived=audit.original_zip_bytes()
-                  class StripAuth(urllib.request.HTTPRedirectHandler):
-                      def redirect_request(self,req,fp,code,msg,headers,newurl):
-                          r=super().redirect_request(req,fp,code,msg,headers,newurl)
-                          if r is not None:r.remove_header('Authorization')
-                          return r
-                  opener=urllib.request.build_opener(StripAuth())
-                  items={a['id']:a for run_id in (40718706396,40718490313)
-                    for a in api(f'/actions/runs/{run_id}/artifacts?per_page=100')['artifacts']}
-                  checks={}
-                  for filename,meta in audit.ORIGINAL_ZIPS.items():
-                      id=int(filename.split('-')[1].split('.')[0])
-                      source=items[id]
-                      assert not source['expired'] and source['digest']=='sha256:'+meta['sha256']
-                      req=urllib.request.Request(f'https://api.github.com/repos/techrote/neurounner/actions/artifacts/{id}/zip',
-                          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
-                      with opener.open(req,timeout=90) as r:raw=r.read(100000)
-                      assert raw==archived[filename] and len(raw)==source['size_in_bytes']
-                      assert hashlib.sha256(raw).hexdigest()==meta['sha256']
-                      parts=audit.raw_zip_members(raw,meta)
-                      checks[filename]={'sha256':meta['sha256'],'bytes':len(raw),'members':sorted(parts)}
-                  assert sum(len(x['members']) for x in checks.values())==5
-                  (out/'original-Actions-ZIP-readback.json').write_text(json.dumps(checks,indent=2)+'\n')
+                  assert current==original,(n,name,'original source or evidence blob modified')
+              for pattern in ('test_byte_eos_001_void_labels.py','test_byte_eos_001_causal_shift.py'):
+                  if pathlib.Path('tests',pattern).exists():
+                      test([sys.executable,'-m','unittest','discover','-s','tests','-p',pattern,'-v'],f'{n}-{pattern}.log')
+              raw=pathlib.Path('experiments/ncr-001/byte-eos-001/receipt.json')
+              assert hashlib.sha256(raw.read_bytes()).hexdigest()=='6c611bdc0f021f6d9e2fa39d91b7e141d937844f2b849f9ae437151254572922'
+              if n>=164:
+                  test([sys.executable,'scripts/byte_eos_001_causal_evidence_audit.py'],f'{n}-original-two-zip-audit.json')
+                  test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_byte_eos_001_causal_evidence_audit.py','-v'],f'{n}-causal-archive-negatives.log')
+              if n>=165:
+                  test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_byte_eos_001_frozen_qwen_loss.py','-v'],f'{n}-qwen-source-refusals.log')
+              if n==166:
+                  test([sys.executable,'scripts/byte_eos_001_frozen_evidence_audit.py'],f'{n}-qwen-original-byte-readback.json')
+                  test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_byte_eos_001_frozen_evidence_audit.py','-v'],f'{n}-qwen-byte-negatives.log')
               assert json.loads(pathlib.Path('experiments/ncr-001/protocol.json').read_text())['train_authorized'] is False
-              stages.append({'pr':n,'source_head':head,'tested_tree':tree,'original_bytes_unchanged':True,
-                  'frozen_model_loaded_in_this_job':False,'train_authorized':False})
+              stages.append({'pr':n,'original_head':head,'tested_tree':tree,'original_source_blobs_unchanged':True,
+                             'frozen_model_loaded_in_this_run':False,'training_authorized':False})
               (out/'stages.json').write_text(json.dumps(stages,indent=2)+'\n')
-          test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001*.py','-v'],'full-NCR-suite.log')
-          test([sys.executable,'scripts/ncr_001_protocol.py','validate'],'protocol-gate.json')
-          print('FINAL INTEGRATED TREE',stages[-1]['tested_tree'],'NO NEW MODEL INFERENCE OR OPTIMIZER')
+          # Original complete Actions ZIPs: re-fetch only source/Qwen evidence, never model weights.
+          class StripAuth(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,req,fp,code,msg,headers,newurl):
+                  r=super().redirect_request(req,fp,code,msg,headers,newurl)
+                  if r is not None:r.remove_header('Authorization')
+                  return r
+          opener=urllib.request.build_opener(StripAuth())
+          evidence=[(40728812489,12834486813,'7df1511725b79cd38ac3a1ea713b6d2191eeb5fd8fde474f19e75cfdda1690e3'),
+                    (40728952524,12833498055,'4a6cb4b5c32fc336bee68a61bce5c7de186e6aa18ec0ef96dfade70fbe68504e'),
+                    (40738222796,12838158155,'23f0c5bbca8cfacf9050656ed3a972ca4d716ce0c9db04c40a7bcb524c03f770')]
+          checked=[]
+          for runid,artid,sha in evidence:
+              entries={a['id']:a for a in api(f'/actions/runs/{runid}/artifacts?per_page=100')['artifacts']}
+              art=entries[artid]
+              assert not art['expired'] and art['digest']=='sha256:'+sha
+              req=urllib.request.Request(f'https://api.github.com/repos/techrote/neurounner/actions/artifacts/{artid}/zip',
+                  headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              with opener.open(req,timeout=90) as response:raw=response.read(1000000)
+              assert len(raw)==art['size_in_bytes'] and hashlib.sha256(raw).hexdigest()==sha
+              with zipfile.ZipFile(io.BytesIO(raw)) as z:names=sorted(z.namelist())
+              checked.append({'run':runid,'id':artid,'sha256':sha,'bytes':len(raw),'members':names})
+          (out/'original-Actions-ZIPs.json').write_text(json.dumps(checked,indent=2)+'\n')
+          test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_byte_eos_001*.py','-v'],'all-byte-eos-tests.log')
+          test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001*.py','-v'],'all-NCR-tests.log')
+          test([sys.executable,'scripts/ncr_001_protocol.py','validate'],'protocol-validation.json')
+          print('FINAL EXACT TREE',stages[-1]['tested_tree'],'NO NEW PHYSICAL MODEL OR OPTIMIZER')
           PY
-      - name: Preserve complete source validation, original ZIP hashes and failures
+      - name: Retain source-matched trees, all original ZIP checks and failures
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: ncr-wire-merge-down-${{ github.run_id }}
-          path: ${{ runner.temp }}/wire-merge-down/
+          name: byte-eos-merge-down-${{ github.run_id }}
+          path: ${{ runner.temp }}/byte-eos-merge-down
           if-no-files-found: warn
           retention-days: 30
