@@ -74,3 +74,31 @@ competence, historical TRAIN-002b correction impact or a full #72 PASS.
 `train_authorized=false`, `per_model_gate=false`,
 `full_72_conformance_pass=false`. Preserve the original failed archival
 runs and prior source-only attempts in Actions history.
+
+## Decoded original-job log Git-blob custody — 30 October 2026
+
+The pre-existing #173 primary readback verified the two original *compressed*
+Actions ZIP streams and their members, and searched decoded job logs for
+source/head/status markers. That left an integrity gap for the separate four
+committed decoded `.log` files: an edited log could preserve every searched
+substring while silently changing bytes. The source-only #175 auditor now
+checks the **literal Git blob identity computed from the complete raw bytes**
+of each original decoded job log, before reconstructing the historical matrix:
+
+| Unaltered original decoded log | Expected Git blob SHA-1 |
+|---|---|
+| `source-original-job.log` | `69851a6f9861708f429ba88361031b5998259455` |
+| `host-original-job.log` | `47bd1a9ad14a993210ae4c937805a54c1a8db936` |
+| `failed-initial-custody-40766098835.log` | `e9b92de4c69aad3b4b34aa8c1d2f294109914108` |
+| `failed-second-custody-40766312502.log` | `c950dbb1f1286808fc7baa95c1a50f34a268e03f` |
+
+This verifies Git's canonical `blob <byte-length>\\0<raw bytes>`
+object identity, not a digest that can be recomputed from a modified
+manifest. The new offline tests independently reject one-byte-tail changes
+and appended content for **each of the four logs** while preserving the
+original run/head/status text. The original ZIPs, decoded logs, two failed
+custody runs, the physical result, source pins, protocol and prior adjudication
+remain untouched. The only changes are to the derived #175 auditor, offline
+tests and this documentation. The new source-level Git blob checks do not
+constitute a new physical-host experiment, scientific #72 PASS, EOS skill
+measurement, training permission or draft-stack merge.
