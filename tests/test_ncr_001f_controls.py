@@ -137,6 +137,36 @@ class MatchAndLeakageTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             matched_control_contract(576, nca_parameters=297048, limit=0.1)
 
+    def test_locked_pretraining_gates_fail_closed_under_optimization(self):
+        """Must reject changed preregistration even when Python strips asserts."""
+        original = load_json(ROOT / "experiments/ncr-001/protocol.json")
+        cases = (
+            ("field scalar count", ("architecture", "state_geometry", "scalars_per_token"), 128),
+            ("tap count", ("architecture", "tap_count"), 2),
+            ("steps per tap", ("architecture", "nca_steps_per_tap"), 1),
+            ("optimizer", ("training", "optimizer"), "SGD"),
+            ("optimizer learning rate", ("training", "optimizer_lr"), 0.08),
+            ("optimizer betas", ("training", "optimizer_betas"), [0.9, 0.9]),
+            ("weight decay", ("training", "weight_decay"), 0.1),
+            ("gradient clip", ("training", "grad_clip_norm"), 2),
+            ("gradient clip", ("training", "grad_clip_norm"), True),
+            ("MLP bottleneck", ("match_constraints", "conventional_adapter_bottleneck"), 128),
+        )
+        for label, keys, replacement in cases:
+            with self.subTest(gate=label, replacement=replacement):
+                changed = json.loads(json.dumps(original))
+                current = changed
+                for key in keys[:-1]:
+                    current = current[key]
+                current[keys[-1]] = replacement
+                with tempfile.TemporaryDirectory() as td:
+                    path = Path(td) / "altered-protocol.json"
+                    path.write_text(json.dumps(changed), encoding="utf-8")
+                    with self.assertRaisesRegex(
+                        RuntimeError, f"NCR-001F preregistered {label} drift"
+                    ):
+                        build_plan(protocol_path=path)
+
     def test_train_heldout_family_collision_is_blocking(self):
         m = {"train_examples": 1, "heldout_examples": 1,
              "train_family_count": 1, "heldout_family_count": 1,

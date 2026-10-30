@@ -116,15 +116,26 @@ def build_plan(protocol_path: Path = PROTOCOL, dataset_root: Path = DATASET_ROOT
         if got != expected:
             raise RuntimeError(f"Evaluation fixture {name} SHA-256 drift")
         fixtures[name] = {"path": cfg["path"], "sha256": got, "used_for_training": False}
+    # These are admission-critical preregistration gates. Python -O removes
+    # assert statements, so use unconditional, type-strict runtime checks.
     a = p["architecture"]
-    assert a["state_geometry"]["scalars_per_token"] == 256
-    assert a["tap_count"] == 3 and a["nca_steps_per_tap"] == 3
-    assert p["training"]["optimizer"] == "AdamW"
-    assert p["training"]["optimizer_lr"] == 0.0008
-    assert p["training"]["optimizer_betas"] == [0.9, 0.95]
-    assert p["training"]["weight_decay"] == 0.01
-    assert p["training"]["grad_clip_norm"] == 1
-    assert p["match_constraints"]["conventional_adapter_bottleneck"] == 256
+    locked = (
+        ("field scalar count", a["state_geometry"]["scalars_per_token"], 256),
+        ("tap count", a["tap_count"], 3),
+        ("steps per tap", a["nca_steps_per_tap"], 3),
+        ("optimizer", p["training"]["optimizer"], "AdamW"),
+        ("optimizer learning rate", p["training"]["optimizer_lr"], 0.0008),
+        ("optimizer betas", p["training"]["optimizer_betas"], [0.9, 0.95]),
+        ("weight decay", p["training"]["weight_decay"], 0.01),
+        ("gradient clip", p["training"]["grad_clip_norm"], 1),
+        ("MLP bottleneck", p["match_constraints"]["conventional_adapter_bottleneck"], 256),
+    )
+    for label, observed, expected in locked:
+        if type(observed) is not type(expected) or observed != expected:
+            raise RuntimeError(
+                f"NCR-001F preregistered {label} drift: "
+                f"expected {expected!r}, received {observed!r}"
+            )
     seeds = p["training"]["seed_list"]
     steps = p["training"]["primary_steps_per_seed"]
     if len(seeds) != 3 or steps != 192:
