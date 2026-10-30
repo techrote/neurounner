@@ -1,0 +1,61 @@
+name: NCR-001K void.1 exact ByteTokenizer static source audit
+
+on:
+  pull_request:
+    branches: [main, research/ncr-001k-void1-qwen3-hook-preflight]
+    paths:
+      - ".github/workflows/ncr-001k-byte-source.yml"
+      - "scripts/ncr_001k_byte_source_audit.py"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/source-pins.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001k-byte-source-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  HF_HOME: /tmp/ncr-001k-source-only
+  HF_HUB_DISABLE_TELEMETRY: "1"
+
+jobs:
+  static-source:
+    name: Exact pinned source SHA, AST and public read-only code inventory
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install small metadata client (no torch/model weights)
+        run: |
+          python3 -m pip install --disable-pip-version-check "huggingface_hub==0.36.2"
+      - name: Compile source-only reviewer and reject code execution
+        run: |
+          python3 -m py_compile scripts/ncr_001k_byte_source_audit.py
+          python3 scripts/ncr_001k_byte_source_audit.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("runtime/ncr-001/void-byte-source-audit.json")
+          result=json.loads(p.read_text())
+          assert result["status"]=="PASS_SOURCE_HASH_AND_AST_INVENTORY_ONLY__RUNTIME_BLOCKED"
+          assert result["remote_python_executed"] is False
+          assert result["tokenizer_runtime_qualified"] is False
+          assert result["byte_tokenizer_behavior_qualified"] is False
+          assert result["model_training_performed"] is False
+          assert len(result["files"])==4
+          print("NCR source review passed; semantic approval is deliberately BLOCKED")
+          PY
+      - name: Stage exact static source report (not approval)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr-001k-void-tokenizer-static-a${{ github.run_attempt }}
+          path: runtime/ncr-001/void-byte-source-audit.json
+          retention-days: 30
+          if-no-files-found: warn

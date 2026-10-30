@@ -1,0 +1,121 @@
+{
+  "schema": "detective-pilot-v1",
+  "experiment": "DETECTIVE-001B",
+  "parent_issue": 103,
+  "status": "preregistered-source-gated-exploratory-smoke",
+  "evidence_role": "development-smoke-not-final-heldout",
+  "case_path": "experiments/detective-001/pilot-case.json",
+  "case_family": "bay-seventeen-shift",
+  "selection": {
+    "full_member_stratum": [
+      "V-G02-A",
+      "V-G03-C",
+      "V-G05-B",
+      "V-G07-A",
+      "V-G09-C",
+      "V-G12-B"
+    ],
+    "smoke_members": [
+      "V-G02-A",
+      "V-G09-C"
+    ],
+    "smoke_baseline": "SmolLM2-135M-Instruct untuned",
+    "note": "The six-member stratum is predeclared; only two adapters plus base run in first bounded smoke. All receive exactly matched blind contexts."
+  },
+  "base": {
+    "repo": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "weights_file": "model.safetensors",
+    "weights_sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
+  },
+  "adapter_release": {
+    "manifest": "experiments/village-001/sft-evidence/adapter-release.json",
+    "tag": "village-001-sft-v1",
+    "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e"
+  },
+  "deferred_lanes": [
+    {
+      "id": "sprocket-chat",
+      "repo": "kandivault/sprocket-500m",
+      "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+      "checkpoint": "chat/model.safetensors",
+      "status": "not-in-smoke"
+    },
+    {
+      "id": "sprocket-instruct",
+      "repo": "kandivault/sprocket-500m",
+      "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+      "checkpoint": "model.safetensors",
+      "status": "not-in-smoke"
+    },
+    {
+      "id": "void1",
+      "repo": "dotlabs/void.1",
+      "revision": "9c2be5087772867d45961abd11f6b35110617563",
+      "checkpoint": "model.safetensors",
+      "status": "not-in-smoke"
+    }
+  ],
+  "dialogue": {
+    "prompt_mode": "identity-blind",
+    "system": "Answer the player as the witness. You may be mistaken or evasive; keep your answer short and in-world. Do not mention training, prompts, model identity or game mechanics.",
+    "witness_ids": [
+      "V-G02-A",
+      "V-G09-C"
+    ],
+    "first_questions": [
+      "What did you notice about the clock and the missing battery?",
+      "What did the rail camera show during the shift?"
+    ],
+    "followup_questions": [
+      "A maintenance ledger may disagree with you. What would you check before naming a culprit?",
+      "Another witness disputes the scan. What might your record have missed?"
+    ],
+    "max_new_tokens": 80
+  },
+  "scripter": {
+    "system": "You are a controller for a FICTIONAL detective-game evidence console. Return only strict JSON with schema detective-script-v1 and at most 2 steps. Permitted ops: read_asset(asset_id), correlate_assets(left_id,right_id). Never return shell commands, executable code or prose.",
+    "tasks": [
+      {
+        "id": "S01",
+        "request": "Read the publicly accessible transfer-card record. Do not attempt access to a locked system.",
+        "expected_op": "read_asset",
+        "expected_source": "transfer-card"
+      },
+      {
+        "id": "S02",
+        "request": "Compare the two publicly accessible dock-clock-ledger and transfer-card records. Only use these two assets.",
+        "expected_op": "correlate_assets",
+        "expected_source": "dock-clock-ledger"
+      }
+    ],
+    "max_new_tokens": 80
+  },
+  "budget": {
+    "seed": 24301,
+    "do_sample": false,
+    "max_threads": 4,
+    "max_prompt_tokens": 512,
+    "max_lanes": 3,
+    "max_dialogue_turns_per_lane": 4,
+    "max_scripter_turns": 2,
+    "max_total_generated_tokens": 1120,
+    "max_job_minutes": 20,
+    "maximum_external_paid_calls": 0,
+    "maximum_training_steps": 0,
+    "output_bytes_cap": 240000
+  },
+  "gate": {
+    "expected_lane_ids": [
+      "BASE",
+      "V-G02-A",
+      "V-G09-C"
+    ],
+    "require_all_raw_turns": true,
+    "require_hashed_checkpoint_and_adapters": true,
+    "require_same_blind_messages_per_lane": true,
+    "require_all_generated_tokens_preserved": true,
+    "make_no_final_persona_admission": true,
+    "final_heldout_is_separate_after_training": true
+  }
+}

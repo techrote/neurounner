@@ -1,0 +1,56 @@
+name: BYTE-EOS-001 permanent original frozen Qwen3 evidence audit
+
+on:
+  pull_request:
+    branches: [review/byte-eos-001-frozen-qwen-forward-20261028]
+    paths:
+      - '.github/workflows/byte-eos-001-frozen-evidence-audit.yml'
+      - 'scripts/byte_eos_001_frozen_evidence_audit.py'
+      - 'tests/test_byte_eos_001_frozen_evidence_audit.py'
+      - 'experiments/ncr-001/byte-eos-001/frozen-forward-evidence/**'
+      - 'docs/BYTE_EOS_001_FROZEN_QWEN_EVIDENCE.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: byte-eos-original-readback-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  exact-original-byte-readback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Check checkout identities, original frozen sources and training prohibition
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "dddfb416b765ef6cf23e1cdd326f8834f9f1417c"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git hash-object scripts/byte_eos_001_void_labels.py)" = "4c00c78b6776ade6901a99eee9a42e7ca61c698b"
+          test "$(git hash-object scripts/byte_eos_001_frozen_qwen_loss.py)" = "a84a29e0f43984b5ece1fe956431cd6cb5de07ad"
+          python3 - <<'PY'
+          import json
+          p=json.load(open('experiments/ncr-001/protocol.json'))
+          assert p['train_authorized'] is False
+          assert set(p['models'])=={'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          print('No-training 4 frozen checkpoints and exact original physical source locked')
+          PY
+      - name: Read original Git ZIP bytes and full decoded CI logs; adversarially test false admission
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/byte_eos_001_frozen_evidence_audit.py
+          python3 scripts/byte_eos_001_frozen_evidence_audit.py
+          python3 -m unittest discover -s tests -p 'test_byte_eos_001_frozen_evidence_audit.py' -v
