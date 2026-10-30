@@ -1,0 +1,41 @@
+# NCR-001 — independently checked original Sprocket NCA diagnostic gates
+
+**Research issue:** [#72](https://github.com/techrote/neurounner/issues/72), parent [#67](https://github.com/techrote/neurounner/issues/67). **Draft evidence review** stacked on [PR #159](https://github.com/techrote/neurounner/pull/159) at exact original physical source `df8479aae34550cba014d910a73e30e59cd493e2`; #159 in turn depends on #154–#158. This review does **not** repeat physical execution, train models, view held-out evaluation, approve a model lane or merge anything. 
+
+## Original physical execution and distinct identities
+
+[Original Actions run 40710171622](https://github.com/techrote/neurounner/actions/runs/40710171622), 28 October 2026, all three jobs succeeded at exact original source head: source sentinels 10/10, shared decoder lease 10/10, and actual pinned CPU Sprocket Chat/Instruct separate jobs. Each original model loaded all source/config/tokenizer and full safetensors with publisher revision `eb157d4ddddc4619e661d4a2426bb2dd000fc668`. Original execution used PyTorch 2.14.1+cpu, Transformers 4.57.6, and ordinary-role formatter commit `2271218d625e1462b2cf218445da975efe17fe32`.
+
+| Source-bound observation | Sprocket Chat (subfolder) | Sprocket Instruct (root) |
+| --- | --- | --- |
+| Original exact safetensors SHA-256 | `551c6e262ec4561dda7c74c9ef7cb73bd1a555ad1e05e37e6600c84a5acefe97` | `1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864` |
+| Original readout-first synthetic supervised CE | 3.286933183670044 | 4.1148858070373535 |
+| CE after exactly one NCA-only diagnostic update | 1.8742421865463257 | 2.7516422271728516 |
+| Post-warmup observe.weight gradient L1 | 126.608711 | 642.517761 |
+| Post-warmup perception.weight gradient L1 | 0.234632 | 0.675514 |
+| Post-warmup rule.weight gradient L1 | 0.078960 | 0.172469 |
+| Original immutable backbone SHA-256, both before/after | `828166c92e6ebc43aa5e9c0643da22389e77de19bf6ec6170d5e94b150e985ff` | `2b74a745899820d912879734cfb50269c6ec8ea563263e7818c5a734b511d399` |
+| Original physical Actions job ID | 122893504080 | 122893504180 |
+
+Each original receipt confirms one *in-memory NCA-only diagnostic* SGD update, no MLP update, pre-optimizer zero-readout exact frozen-reference parity, zero initial NCA-upstream gradient, nonzero post-warmup readout/observe/perception/rule gradients, three distinct ordered within-token persistent-depth fields, and a byte-identical frozen model after the single step. Synthetic 19-unit ordinary assistant-only sample: 12 prompt units, seven supervised units, genuine role terminal ID 5, all-ones explicit mask. **Neither loss is a generalization/quality score.**
+
+No Chat-versus-Instruct behavior comparison was performed; models are distinct and remain independently gated. This isolated #72 diagnostic is not the preregistered NCA-versus-MLP 192-step comparison.
+
+## Artifact readback and retention
+
+Three **original unmodified Actions artifact ZIP files** were separately downloaded for independent inspection. Source: artifact #12826525345 SHA-256 `c66706d3e541925638e901d37232f204c480f0016aba393023fa925c67a61242`; Chat: #12826246889 SHA-256 `e040e1ce982a1c0f0c5e99e014cada04cc41b334f1755d60cf37fd0bb909a05b`; Instruct: #12825942600 SHA-256 `9656ff3f8019f497cff62d816276f44bdc33f149c07072357bd5cfd9c90d0f93`. These artifacts are expected to expire **27 November 2026**.
+
+Original receipt byte identities:
+
+- Chat `receipt.json`, 5,978 bytes, SHA-256 `27a0a2890d427f39b8214cf0d16a2a4530f9965d597708133be74df87157e3b5`.
+- Instruct `receipt.json`, 6,097 bytes, SHA-256 `3dd6c391137dc1e6561360a0587b84c9cf55b4d4a7872d73c089eacdbda31b9a`.
+- Original source `source-tests.log`, 1,729 bytes, SHA-256 `6e93487ad1984eec8bb80c5a5e55534cc303acc878ec0a14acd5577ba3465a35`; `lease-tests.log`, 1,883 bytes, SHA-256 `f6fadaaac9cf97dcf63c39f2dcbb14b42cb08ad6a285903bacf2fd50234eb70d`.
+- Original host logs: Chat 237 bytes, SHA-256 `24bc76df7bbf527ce16ac679c9be346827d02945979c9bfffb009a76333b5ed1`; Instruct 241 bytes, SHA-256 `2960eb4eb8a173fd4756be6a4d9563408c573ba2fc84b38f9b582228eeac4f66`.
+
+Complete original **decoded GitHub Actions job logs** (different from the six ZIP members) are byte-preserved as individual tracked files: [original source job](../experiments/ncr-001/controls-evidence/sprocket-learning-20261028/actions-decoded/source-original-job-122892989282.log), [Chat original-host job](../experiments/ncr-001/controls-evidence/sprocket-learning-20261028/actions-decoded/chat-original-job-122893504080.log), and [Instruct original-host job](../experiments/ncr-001/controls-evidence/sprocket-learning-20261028/actions-decoded/instruct-original-job-122893504180.log). These include all GitHub-host execution and error messages, runner image identity, pinned dependency installation and post-job reporting. They do not replace the original physical JSON receipts.
+
+The [offline original-artifact auditor](../scripts/ncr_001_sprocket_learning_artifact_readback.py) refuses a modified whole ZIP, a changed original member size/sha, mismatched original source-head or code SHA, collapsed variants, missing first/second gradient paths, a missing EOS-supervised synthetic fixture, false frozen-weight integrity, more than one diagnostic NCA step, or false independent-review/training admissions. Twelve adversarial semantic mutation fixtures must be rejected. The [exact-head readback CI](../.github/workflows/ncr-001-sprocket-learning-readback.yml) downloads **only** the three original artifacts with read-only Actions permission and verifies the original bytes; it performs no model downloads or optimizer operations. Its emitted artifact includes copies of those original ZIPs and the generated offline audit report. **All six original unmodified ZIP members have now been byte-for-byte promoted into Git** as a deterministic gzip-compressed JSON bundle in three ASCII base64 chunks ([part001](../experiments/ncr-001/controls-evidence/sprocket-learning-20261028/original-receipt-bundle.part001.b64), [part002](../experiments/ncr-001/controls-evidence/sprocket-learning-20261028/original-receipt-bundle.part002.b64), [part003](../experiments/ncr-001/controls-evidence/sprocket-learning-20261028/original-receipt-bundle.part003.b64)), with an explicit [source/artifact/member manifest](../experiments/ncr-001/controls-evidence/sprocket-learning-20261028/manifest.json). Archive gzip SHA-256 `dc3aef656ab5b3cc51fc169c93892d9bed9826d0b9846946d1dad1604ecb961a`; decompressed canonical JSON SHA-256 `68982cc3654c458b91a9355d1c8692cc56e19b534375c6379e61de5fe9d1596d`. The separate [offline Git-custody verifier](../scripts/ncr_001_sprocket_learning_git_custody.py) validates all six original member bytes, provenance, original source SHA, physical metrics and 12 actual adversarial semantic mutations **without** contacting Actions; it does not restore the original ZIP container metadata/byte streams, which remain hashed in the manifest and staged in Actions. The initial readback [run 40714975304](https://github.com/techrote/neurounner/actions/runs/40714975304) failed because the reviewer script had a typo in the formatter SHA constant; its complete [decoded failed log](../experiments/ncr-001/controls-evidence/sprocket-learning-20261028/actions-decoded/initial-readback-formatter-hash-failure-job-122910071921.log) is retained unchanged. The corrected exact-source hosted [readback run 40715759476](https://github.com/techrote/neurounner/actions/runs/40715759476) passed both independent Git-custody and original ZIP re-download/readback jobs. Distinct scientific review is still pending.
+
+## Explicit non-admissions
+
+The four-model protocol and source pins are unchanged; `train_authorized=false`, `comparative_training_performed=false`, `full_72_conformance_pass=false`, `independent_scientific_review=false`. Passing original-host loss/update/grads and independent receipt readback is **not** an independent scientific reviewer sign-off, Sprocket tool/argument/result/memory semantic qualification, SmolLM2 or void.1 acceptance, BYTE-EOS-001 #92 closure, or authorization to evaluate held-out cases or start comparative training. All draft PRs remain unmerged. Independent scientific review, four-source reconciliation and explicit protocol admission are still necessary.

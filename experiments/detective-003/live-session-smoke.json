@@ -1,0 +1,143 @@
+{
+  "schema": "detective-003b-live-session-v1",
+  "experiment": "DETECTIVE-003B",
+  "issue": 142,
+  "parent_issue": 103,
+  "authority": {
+    "session_module": {
+      "path": "scripts/detective_003a_session.py",
+      "git_blob_sha1": "73801ea59ce0f6160acc7027bd6aeaa085950236"
+    },
+    "case": {
+      "path": "experiments/detective-001/pilot-case.json",
+      "git_blob_sha1": "bbe5e0b3991a8296033376147bf830b05d33d4bb",
+      "case_id": "bay-seventeen-shift"
+    },
+    "c2_release": {
+      "path": "experiments/detective-001/training-c2-evidence/adapter-release.json",
+      "git_blob_sha1": "e6c7c8ffa9abea0d09bf1a5b9286e2cb828aa5a4"
+    },
+    "c3_release": {
+      "path": "experiments/detective-001/training-c3-evidence/adapter-release.json",
+      "git_blob_sha1": "3e5d8386d3f7ec96f4190cac352d729e36e5b96d"
+    }
+  },
+  "base_model": {
+    "repo": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "weight_file": "model.safetensors",
+    "weight_sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
+  },
+  "witnesses": {
+    "V-G02-A": {
+      "adapter_name": "g02_c3",
+      "release_tag": "detective-001c3-g02-v1",
+      "release_manifest": "c3_release",
+      "archive_file": "detective-001c3-V-G02-A-smollm2-135m-lora.tar.gz",
+      "archive_sha256": "8b0f93e51750d09bc02e464f1327028c415ad738968f26e3ea6934540df4a57a",
+      "archive_bytes": 9076990,
+      "directory_sha256": "a3185187e81634e11079aa6eb58ee87b495dac260fc3b2dd17120eed8a9d2ae3",
+      "source_experiment": "DETECTIVE-001C3"
+    },
+    "V-G09-C": {
+      "adapter_name": "g09_c2",
+      "release_tag": "detective-001c2-v1",
+      "release_manifest": "c2_release",
+      "archive_file": "detective-001c2-V-G09-C-smollm2-135m-lora.tar.gz",
+      "archive_sha256": "91fb3bbf697cd39646fc22b6cbbb24902304893a7c0f1250112b0079d9670e84",
+      "archive_bytes": 9077419,
+      "directory_sha256": "0c52050a0466b580129f72e9daea9079d8cdd9151bbb71171f101d130da7d23c",
+      "source_experiment": "DETECTIVE-001C2"
+    }
+  },
+  "runtime": {
+    "os": "ubuntu-24.04",
+    "python": "3.12",
+    "torch_cpu": "2.14.1+cpu",
+    "transformers": "4.57.6",
+    "peft": "0.21.2",
+    "huggingface_hub": "0.36.2",
+    "safetensors": "0.8.0",
+    "threads": 4,
+    "seed": 30303,
+    "do_sample": false,
+    "max_new_tokens_per_turn": 96,
+    "model_turns": 3,
+    "max_generated_tokens_total": 288,
+    "max_prompt_tokens": 768,
+    "max_job_minutes": 20,
+    "optimizer_steps": 0,
+    "paid_api_calls": 0,
+    "gpu_required": false
+  },
+  "prompt_renderer": {
+    "schema": "detective-session-natural-render-v1",
+    "system": "Answer as the current witness in concise natural dialogue. Use only the admitted memories, evidence excerpts, prior same-witness dialogue, and current player question supplied below. Memory may be fallible. Do not invent evidence IDs, credentials, hidden records, or facts not supplied.",
+    "section_order": [
+      "Admitted memories",
+      "Presented evidence",
+      "Prior same-witness dialogue",
+      "Player question"
+    ]
+  },
+  "annotation": {
+    "schema": "detective-literal-time-annotation-v1",
+    "proposition_key": "handoff-time",
+    "regex": "\\b(?:[01]\\d|2[0-3]):[0-5]\\d\\b",
+    "one_distinct_time": "statement",
+    "zero_times": "no_time",
+    "multiple_distinct_times": "ambiguous_times",
+    "canonical_truth_accessed": false,
+    "scorer_accessed": false
+  },
+  "session": {
+    "session_key": "bay17-live-two-witness-v1",
+    "participants": [
+      "V-G02-A",
+      "V-G09-C"
+    ],
+    "sequence": [
+      {
+        "id": "L01",
+        "action": "turn",
+        "npc_id": "V-G02-A",
+        "question": "What time do you remember the battery handoff happening?",
+        "include_history": false
+      },
+      {
+        "id": "L02",
+        "action": "turn",
+        "npc_id": "V-G09-C",
+        "question": "What time was the battery handoff?",
+        "include_history": false
+      },
+      {
+        "id": "L03",
+        "action": "evidence",
+        "npc_id": "V-G02-A",
+        "asset_id": "transfer-card",
+        "challenge_policy": "all_prior_same_witness_handoff_time_claims"
+      },
+      {
+        "id": "L04",
+        "action": "turn",
+        "npc_id": "V-G02-A",
+        "question": "The physical receipt is now in front of you. Does your account change?",
+        "include_history": true
+      }
+    ]
+  },
+  "acceptance": {
+    "require_three_generations": true,
+    "require_session_replay": true,
+    "require_case_sha_unchanged": true,
+    "require_public_mandatory_routes_intact": true,
+    "minimum_claim_count": 0,
+    "minimum_contradiction_count": 0,
+    "relevance_mapping_accessed": false,
+    "learner_final_accessed": false,
+    "body_selection_made": false,
+    "population_expansion_admitted": false,
+    "training_admitted": false
+  }
+}

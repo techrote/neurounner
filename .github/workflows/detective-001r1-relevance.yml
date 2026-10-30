@@ -1,0 +1,73 @@
+name: DETECTIVE-001R1 blind relevance review custody
+
+on:
+  pull_request:
+    paths:
+      - "scripts/detective_001r1_relevance.py"
+      - "tests/test_detective_001r1_relevance.py"
+      - "experiments/detective-001/RELEVANCE_REVIEW_001R1.md"
+      - "experiments/detective-001/independent-relevance-review/**"
+      - ".github/workflows/detective-001r1-relevance.yml"
+      - "experiments/detective-001/training-c2-evidence/relevance-packet.json"
+      - "experiments/detective-001/training-c3-evidence/relevance-packet.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  blind-review-custody:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile no-model relevance custody code
+        run: |
+          python3 -m py_compile scripts/detective_001r1_relevance.py tests/test_detective_001r1_relevance.py
+      - name: Run all detective contracts
+        run: |
+          python3 -m unittest discover -s tests -p 'test_detective_001*.py' -v
+      - name: Reconstruct opaque packets from raw evidence
+        run: |
+          python3 scripts/detective_001r1_relevance.py
+      - name: Generate reviewer-facing blank templates only
+        run: |
+          mkdir -p runtime/detective-001r1
+          python3 scripts/detective_001r1_relevance.py --make-template C2 --out runtime/detective-001r1/c2-ratings-template.json
+          python3 scripts/detective_001r1_relevance.py --make-template C3 --out runtime/detective-001r1/c3-ratings-template.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for p,n in [(Path("runtime/detective-001r1/c2-ratings-template.json"),16),
+                      (Path("runtime/detective-001r1/c3-ratings-template.json"),8)]:
+              d=json.loads(p.read_text())
+              assert len(d["ratings"])==n
+              assert all(x["score_0_to_4"] is None for x in d["ratings"])
+              blob=json.dumps(d,sort_keys=True)
+              for secret in ("V-G02-A","V-G09-C","member_id","lane_kind"):
+                  assert secret not in blob
+          print("BLIND_REVIEW_TEMPLATES_PASS")
+          PY
+      - name: Refuse self-scoring dependencies and pre-submission rating leakage
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          src=Path("scripts/detective_001r1_relevance.py").read_text()
+          for forbidden in ("import torch","transformers","peft","openai","anthropic","nvidia"):
+              assert forbidden not in src
+          # This reserved path is the pre-submission/blind-review workspace.
+          # Completed externally supplied ratings, once frozen, live only in
+          # independent-relevance-review/ and are hash-pinned by the tests.
+          root=Path("experiments/detective-001/relevance-review")
+          if root.exists():
+              assert not any("ratings" in p.name.casefold() for p in root.iterdir() if p.is_file())
+          print("NO_SELF_SCORING_DEPENDENCY_PASS")
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective001r1-blank-review-templates
+          path: runtime/detective-001r1
+          if-no-files-found: error
+          retention-days: 30

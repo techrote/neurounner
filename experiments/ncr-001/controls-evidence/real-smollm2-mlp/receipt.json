@@ -1,0 +1,164 @@
+{
+  "base_frozen_parameters": 134515008,
+  "checks": {
+    "full_base_tensor_bytes_unchanged": true,
+    "future_suffix_causal_invariance": {
+      "atol": 0.0005,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0005
+    },
+    "new_adapter_same_base_cold_reload": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "nontrained_48_token_full_vs_real_incremental_KV": {
+      "atol": 0.0005,
+      "close": true,
+      "max_abs": 8.869171142578125e-05,
+      "mean_abs": 1.1999682101304643e-05,
+      "rtol": 0.0005
+    },
+    "nontrained_readout_effect": {
+      "max_abs": 0.0021839141845703125
+    },
+    "readout_gradient_only_no_optimizer": {
+      "frozen_base_grads_none": true,
+      "grad_l1": 339.102783203125,
+      "loss": 12.515302658081055,
+      "optimizer_steps": 0
+    },
+    "request_A_B_A_reset": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "wrong_checkpoint_variant_refusal": true,
+    "zero_init_128_tokens": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "zero_init_16_tokens": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "zero_init_64_tokens": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "zero_init_greedy_generate": {
+      "decoder_forwards": 3,
+      "equal": true,
+      "generated": 3
+    },
+    "zero_init_masked_batch2_left": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "zero_init_masked_batch2_right": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    }
+  },
+  "comparative_training_performed": false,
+  "experiment": "NCR-001F",
+  "four_model_actual_host_mlp_qualified": false,
+  "frozen_base_in_memory_sha256_after": "f2bf4fb1ff77f0fb74d49020170bc0ce7f0a141c4d039653030d57059fdbf086",
+  "frozen_base_in_memory_sha256_before": "f2bf4fb1ff77f0fb74d49020170bc0ce7f0a141c4d039653030d57059fdbf086",
+  "gated_mlp_trainable_parameters": 296576,
+  "heldout_data_opened": false,
+  "independent_ncr_001e_conformance_pass": false,
+  "limits": [
+    "Only SmolLM2 135M has an actual independent pinned MLP model invocation",
+    "Sprocket Chat/Instruct and void.1 MLP hooks have only synthetic layouts",
+    "Only same-process new adapter reload on the same original model",
+    "No tool or memory serialization claimed",
+    "Full four-model #72 acceptance not established",
+    "No optimizer created, no learned NCA or MLP, no held-out quality result"
+  ],
+  "model_training_performed": false,
+  "nca_trainable_parameters_reference": 297048,
+  "nca_training_performed": false,
+  "optimizer_steps": 0,
+  "peak_rss_kib": 1148296,
+  "runner": {
+    "cpu_threads": 4,
+    "github_job": "source-pinned-smollm2",
+    "github_run_attempt": "1",
+    "github_run_id": "40491265310",
+    "github_sha": "1840fdfa9ac0488bfd7b0a50d36ceb8a160532e7",
+    "huggingface_hub": "0.36.2",
+    "os": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "runner_os": "Linux",
+    "torch": "2.14.1+cpu",
+    "transformers": "4.57.6"
+  },
+  "scope": "fresh_exact_SmolLM2_frozen_MLP_postblock_hooks_no_train_prepass",
+  "source_files": {
+    "config.json": {
+      "bytes": 861,
+      "expected_sha256": "8eb740e8bbe4cff95ea7b4588d17a2432deb16e8075bc5828ff7ba9be94d982a",
+      "sha256": "8eb740e8bbe4cff95ea7b4588d17a2432deb16e8075bc5828ff7ba9be94d982a"
+    },
+    "model.safetensors": {
+      "bytes": 269060552,
+      "expected_sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+      "sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
+    },
+    "tokenizer.json": {
+      "bytes": 2104556,
+      "expected_sha256": "9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c",
+      "sha256": "9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c"
+    },
+    "tokenizer_config.json": {
+      "bytes": 3764,
+      "expected_sha256": "4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df",
+      "sha256": "4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df"
+    }
+  },
+  "source_identity": {
+    "layers": 30,
+    "model_id": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "model_type": "llama",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "taps": [
+      9,
+      19,
+      29
+    ],
+    "weight_path": "model.safetensors",
+    "weight_sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+    "width": 576
+  },
+  "source_sha256": {
+    "experiments/ncr-001/protocol.json": "a76d38f80a57012ca8e62fba183d1cf2e91fd0986032f1adcdfb0aef843bf0b4",
+    "experiments/ncr-001/source-pins.json": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1",
+    "scripts/ncr_001f_controls.py": "f3ab5828c09c588d6309a804dbd33f12324a5df9a569b2e67978c0928b67aed8",
+    "scripts/ncr_001f_frozen_hooks.py": "a11c9ffa9853b300bb24ad827e4d550539007d057c03e6370b11cbab5a5f15c6",
+    "scripts/ncr_001f_real_smollm2.py": "131db3e5332d0fc8a4627bbcc296b61be1b90f926fbf747924328cd8a18aa91f"
+  },
+  "status": "PASS_SOURCE_BOUND_REAL_SMOLLM2_MLP_HOOK_PREPASS__TRAINING_BLOCKED",
+  "train_authorized": false
+}
