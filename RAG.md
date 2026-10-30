@@ -84,6 +84,10 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 
 - **[BYTE-EOS-001 causal-shift correction and full original CI custody](docs/BYTE_EOS_001_CAUSAL_EVIDENCE.md)** — future-only strict label builder now refuses empty prompt because decoder-only shifted CE would lose the first supervised target. Distinct [source-only negative tests](tests/test_byte_eos_001_causal_shift.py), [full original Actions ZIP + decoded job log archive](experiments/ncr-001/byte-eos-001/causal-shift-evidence/manifest.json), and [offline byte auditor](scripts/byte_eos_001_causal_evidence_audit.py) keep the original mistaken merge-SHA receipt as a negative. No Qwen3 model execution, training or #72 acceptance.
 
+- **[BYTE-EOS-001 independent future serializer acceptance](docs/BYTE_EOS_001_INDEPENDENT_ACCEPTANCE.md)** — historical draft #126 source review preserved byte-for-byte for superseded #94 semantics; its empty-prompt acceptance is explicitly historical only. The corrected source path is reviewed separately below. No model weights, training or historical TRAIN-002b reinterpretation; impact remains **UNMEASURED**.
+
+- **[BYTE-EOS-001 corrected #163 postshift independent reviewer + whole original CI custody](docs/BYTE_EOS_001_POSTSHIFT_REVIEW.md)** — source-only corrected causal-shift review on existing #126 rejects empty prompts, checks the exact pinned real void.1 ByteTokenizer and EOS **258**, and permanently preserves the complete original corrected-review ZIP/job log. This is future serializer correctness/custody only: `train_authorized=false`, `full_72_conformance_pass=false`, no Qwen3 model execution or comparative NCA/MLP training.
+
 ## Retrieval rules
 
 1. Prefer primary dataset records over prose summaries when answering questions about exact prompts or outputs.

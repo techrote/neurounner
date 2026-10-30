@@ -1,0 +1,129 @@
+name: BYTE-EOS-001 independent future serializer acceptance (no model, no training)
+
+on:
+  pull_request:
+    branches:
+      - research/byte-eos-001-strict-void-labels
+    paths:
+      - '.github/workflows/byte-eos-001-independent-review.yml'
+      - 'scripts/byte_eos_001_independent_review.py'
+      - 'tests/test_byte_eos_001_independent_review.py'
+      - 'scripts/byte_eos_001_void_labels.py'
+      - 'scripts/ncr_001k_byte_source_audit.py'
+      - 'experiments/ncr-001/byte-eos-001/**'
+      - 'experiments/ncr-001/source-pins.json'
+      - 'experiments/ncr-001/protocol.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  HF_HOME: /tmp/byte-eos-independent
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+
+jobs:
+  source-oracle:
+    name: Independent pure-byte oracle and immutable candidate/prereg gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: a1b41c358d215974ea9ef2748baa13c3872b0fbb
+          path: prereg
+          persist-credentials: false
+      - name: Refuse candidate, original evidence or preregistration drift
+        run: |
+          set -euo pipefail
+          test "$(git hash-object scripts/byte_eos_001_void_labels.py)" = "724a5040d2fc9eb06ef0b17143d44daa36a4aa89"
+          test "$(git -C prereg rev-parse HEAD)" = "a1b41c358d215974ea9ef2748baa13c3872b0fbb"
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          p=json.load(open('experiments/ncr-001/protocol.json'))
+          pins=json.load(open('experiments/ncr-001/source-pins.json'))
+          pre=json.load(open('prereg/experiments/ncr-001/protocol.json'))
+          assert p['train_authorized'] is pre['train_authorized'] is False
+          assert set(p['models']) == {'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          assert pre['training']['per_model_sequence_unit_limits']['void1'] == 1024
+          assert pins['models']['void1']['tokenization_byte_py_sha256'] == '279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03'
+          receipt=Path('experiments/ncr-001/byte-eos-001/receipt.json')
+          prov=json.load(open('experiments/ncr-001/byte-eos-001/provenance.json'))
+          assert hashlib.sha256(receipt.read_bytes()).hexdigest() == prov['original_raw_report_sha256'] == '6c611bdc0f021f6d9e2fa39d91b7e141d937844f2b849f9ae437151254572922'
+          assert prov['boundaries']['optimizer_steps'] == 0
+          assert prov['boundaries']['NCR_training_authorized'] is False
+          print('BYTE_EOS_INDEPENDENT_SOURCE exact candidate/prereg/original receipt; no training')
+          PY
+      - name: Pure independent oracle and false-admission negative tests
+        run: |
+          python3 -m py_compile scripts/byte_eos_001_independent_review.py
+          python3 -m unittest discover -s tests -p 'test_byte_eos_001_independent_review.py' -v
+
+  real-tokenizer:
+    needs: source-oracle
+    name: Exact reviewed pinned ByteTokenizer independent source-oracle parity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: a1b41c358d215974ea9ef2748baa13c3872b0fbb
+          path: prereg
+          persist-credentials: false
+      - name: Install exact tokenizer runtime only
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            'transformers==4.57.6' 'huggingface_hub==0.36.2' 'safetensors==0.8.0'
+      - name: Static source audit and cache all tokenizer/config inputs, no model weights
+        run: |
+          python3 scripts/ncr_001k_byte_source_audit.py
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          p=json.load(open('experiments/ncr-001/source-pins.json'))['models']['void1']
+          for name,key in (
+              ('config.json','config_sha256'),
+              ('tokenization_byte.py','tokenization_byte_py_sha256'),
+              ('byte_vocab.json','byte_vocab_sha256'),
+              ('tokenizer_config.json','tokenizer_config_sha256'),
+              ('special_tokens_map.json','special_tokens_map_sha256'),
+          ):
+              path=Path(hf_hub_download(p['repo_id'],name,revision=p['revision']))
+              actual=hashlib.sha256(path.read_bytes()).hexdigest()
+              assert actual==p[key],(name,actual,p[key])
+              print('PINNED_VOID_TOKENIZER_SOURCE',name,actual,path.stat().st_size)
+          print('No model.safetensors downloaded by BYTE-EOS independent review')
+          PY
+      - name: Offline actual ByteTokenizer vs independent UTF-8 oracle
+        run: |
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/byte_eos_001_independent_review.py
+      - name: Preserve PASS/FAIL report and exact source hashes
+        if: always()
+        run: |
+          mkdir -p runtime/ncr-001
+          git rev-parse HEAD > runtime/ncr-001/byte-eos-independent-source-commit.txt
+          sha256sum scripts/byte_eos_001_void_labels.py \
+            scripts/byte_eos_001_independent_review.py \
+            experiments/ncr-001/byte-eos-001/receipt.json \
+            experiments/ncr-001/byte-eos-001/provenance.json \
+            experiments/ncr-001/source-pins.json \
+            prereg/experiments/ncr-001/protocol.json \
+            > runtime/ncr-001/byte-eos-independent-source-hashes.sha256
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: byte-eos-001-independent-review-a${{ github.run_attempt }}
+          path: runtime/ncr-001/byte-eos-*
+          if-no-files-found: warn
+          retention-days: 30
