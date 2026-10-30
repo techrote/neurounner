@@ -81,7 +81,9 @@ def compose(prior: dict, masked: dict, streaming: dict) -> dict:
            and streaming.get("full_72_conformance_pass") is False,
            "immutable original B1 all-token 3ZIP/3log audit absent")
     refuse(set(prior.get("lanes", {})) == set(MODEL)
-           and set(streaming.get("lanes", {})) == {"chat", "instruct"},
+           and set(streaming.get("lanes", {})) == {"source", "chat", "instruct"}
+           and streaming["lanes"]["source"] ==
+               {"original_physical_model": False, "source_tests": 12},
            "two independently frozen Sprocket variants required")
     lanes = {}
     for name, (variant, path, sha, b1_max, left, right) in MODEL.items():
