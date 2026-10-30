@@ -10,8 +10,10 @@ or enable comparative NCA/MLP training.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
+import struct
 from pathlib import Path
 
 import ncr_001e_void1_postlease_adjudication as prior
@@ -53,6 +55,38 @@ def finite_measurement(value: object) -> bool:
 def exact_int(value: object, expected: int) -> bool:
     """Reject bool-as-int for optimizer steps, taps, and causal-label counts."""
     return type(value) is int and value == expected
+
+
+# Separate stdlib oracle for the exact public diagnostic sample in original
+# immutable #172 source (no ByteTokenizer, Torch, model or heldout imported).
+# Original torch.long on the recorded Linux x86_64 runner is signed LE int64.
+ORIGINAL_PROMPT = "Q: π?\\nA: "
+ORIGINAL_COMPLETION = "🔧 café 日本語"
+
+
+def original_synthetic_oracle() -> dict:
+    prompt = list(ORIGINAL_PROMPT.encode("utf-8", errors="strict"))
+    completion = list(ORIGINAL_COMPLETION.encode("utf-8", errors="strict"))
+    ids = prompt + completion + [258]
+    labels = [-100] * len(prompt) + completion + [258]
+    mask = [1] * len(ids)
+
+    def tensor_sha(values: list[int]) -> str:
+        # Matches source-pinned original.tensor_sha(torch.int64_tensor),
+        # whose SHA256 input was contiguous little-endian int64 bytes.
+        return hashlib.sha256(struct.pack("<" + "q" * len(values), *values)).hexdigest()
+
+    return {
+        "prompt_bytes": len(prompt),
+        "supervised_after_shift": len(labels[1:]) - (len(prompt) - 1),
+        "total_units": len(ids),
+        "real_eos_id": 258,
+        "supervised_eos_id": 258,
+        "source_text_utf8_bytes": len(prompt) + len(completion),
+        "ids_sha256": tensor_sha(ids),
+        "labels_sha256": tensor_sha(labels),
+        "mask_sha256": tensor_sha(mask),
+    }
 
 
 def check_inputs(legacy: dict, receipt: dict, manifest: dict, policy: dict) -> None:
@@ -144,6 +178,18 @@ def check_inputs(legacy: dict, receipt: dict, manifest: dict, policy: dict) -> N
            and exact_int(sample["supervised_after_shift"], 21)
            and exact_int(sample["total_units"], 31),
            "source sample is not the fixed public shifted-EOS diagnostic")
+    # The historical source audited the id/label digests; independently
+    # reconstruct all *three* original int64 tensor hashes, including the
+    # attention mask, from pinned public Unicode/UTF-8 text and true EOS 258.
+    # A readable literal "<eos>" is ordinary bytes, never terminal EOS.
+    expected_sample = original_synthetic_oracle()
+    refuse(all(sample.get(name) == value
+               and (type(sample.get(name)) is int if name in {
+                   "prompt_bytes", "supervised_after_shift", "total_units",
+                   "real_eos_id", "supervised_eos_id",
+                   "source_text_utf8_bytes"} else True)
+               for name, value in expected_sample.items()),
+           "independent UTF-8/causal shifted EOS int64 tensor oracle mismatch")
     warm, post = receipt["warmup"], receipt["post_warmup"]
     refuse(warm["optimizer"] == "NCA-only SGD"
            and warm["learning_rate"] == 0.005
