@@ -16,7 +16,6 @@ concurrency:
   cancel-in-progress: true
 env:
   NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
-  NCR_BASE_HEAD: f828f8463aa4125f1953fcfa1a8665e8e4131d10
   HF_HOME: /tmp/ncr001-chat-native-ce-hf
   HF_HUB_DISABLE_TELEMETRY: "1"
   TOKENIZERS_PARALLELISM: "false"
@@ -45,11 +44,12 @@ jobs:
           set -euo pipefail
           test "$GITHUB_EVENT_NAME" = pull_request
           test "$GITHUB_BASE_REF" = "main"
-          test "${{ github.event.pull_request.base.sha }}" = "$NCR_BASE_HEAD"
           test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
           test "$(git -C format-authority rev-parse HEAD)" = 2271218d625e1462b2cf218445da975efe17fe32
           test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
           test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          test "$(git hash-object scripts/ncr_001_postlease_sprocket.py)" = 66e6b4d97eea5e917339b8e7bfb5d1c191db4a2d
+          test "$(git hash-object scripts/ncr_001_postlease_evidence_audit.py)" = 96122861fc18962ac2d255f3dd5282bc0bf8f929
           python3 - <<'PY'
           import json
           p=json.load(open("experiments/ncr-001/protocol.json"))
