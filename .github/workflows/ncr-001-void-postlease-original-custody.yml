@@ -1,0 +1,145 @@
+name: NCR-001 void1 original postlease Actions evidence custody (NO TRAIN)
+
+on:
+  pull_request:
+    branches: [review/ncr001-void-postlease-eos-nca-mlp-20261028]
+    paths:
+      - ".github/workflows/ncr-001-void-postlease-original-custody.yml"
+      - "scripts/ncr_001_void_postlease_original_audit.py"
+      - "docs/NCR_001_VOID_POSTLEASE_ORIGINAL_CUSTODY.md"
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  original-byte-custody:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'review/ncr001-void-postlease-original-custody-20261028' && github.event.pull_request.head.sha == '3a77ebdfe412a2ccfb6477ea3310fef5b5bebb77'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      ORIGINAL_HEAD: 9aed5ca0574a6885c5d60c07d16561e0f73d5043
+      BRANCH: review/ncr001-void-postlease-original-custody-20261028
+      EVIDENCE_DIR: experiments/ncr-001/controls-evidence/void-postlease-20261028
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: true
+          fetch-depth: 0
+      - name: Refuse source drift, wrong PR, reopened training or existing custody
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git merge-base --is-ancestor "$ORIGINAL_HEAD" HEAD
+          test ! -e "$EVIDENCE_DIR/source-original.zip"
+          test ! -e "$EVIDENCE_DIR/qwen-original.zip"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          PY
+      - name: Download original immutable Actions artifact ZIP containers and full decoded job logs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE_DIR"
+          auth="Authorization: Bearer $GH_TOKEN"
+          accept="Accept: application/vnd.github+json"
+          curl -fsSL --retry 3 -H "$auth" -H "$accept" \
+            "https://api.github.com/repos/techrote/neurounner/actions/artifacts/12842890264/zip" \
+            -o "$EVIDENCE_DIR/source-original.zip"
+          curl -fsSL --retry 3 -H "$auth" -H "$accept" \
+            "https://api.github.com/repos/techrote/neurounner/actions/artifacts/12840998564/zip" \
+            -o "$EVIDENCE_DIR/qwen-original.zip"
+          curl -fsSL --retry 3 -H "$auth" -H "$accept" \
+            "https://api.github.com/repos/techrote/neurounner/actions/jobs/123023455576/logs" \
+            -o "$EVIDENCE_DIR/source-original-job.log"
+          curl -fsSL --retry 3 -H "$auth" -H "$accept" \
+            "https://api.github.com/repos/techrote/neurounner/actions/jobs/123023557881/logs" \
+            -o "$EVIDENCE_DIR/qwen-original-job.log"
+      - name: Audit unchanged original ZIP bytes, receipt semantics, binary adapters and negative mutations
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001_void_postlease_original_audit.py
+          python3 scripts/ncr_001_void_postlease_original_audit.py \
+            "$EVIDENCE_DIR/source-original.zip" "$EVIDENCE_DIR/qwen-original.zip" \
+            | tee "$EVIDENCE_DIR/offline-audit.log"
+      - name: Bind original source, GitHub jobs, runner, logs and evidence custody manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,os
+          d=Path(os.environ["EVIDENCE_DIR"])
+          def sha(path): return hashlib.sha256(path.read_bytes()).hexdigest()
+          src=d/"source-original-job.log"
+          host=d/"qwen-original-job.log"
+          assert b"Current runner version" in src.read_bytes()
+          assert b"Current runner version" in host.read_bytes()
+          assert b"PASS_ORIGINAL_VOID1_POSTLEASE_EOS_NCA_MLP" in host.read_bytes()
+          assert b"PASS_ORIGINAL_VOID1_POSTLEASE_COLD_RELOAD" in host.read_bytes()
+          import zipfile
+          with zipfile.ZipFile(d/"qwen-original.zip") as z:
+              prod=json.loads(z.read("producer.json"))
+              cons=json.loads(z.read("consumer.json"))
+          assert prod["runner"]["expected_head"] == cons["runner"]["expected_head"] == os.environ["ORIGINAL_HEAD"]
+          original={
+              "schema":"ncr001-void-postlease-original-custody-v1",
+              "scientific_status":"SOURCE_BOUND_FORWARD_ONLY__72_FINAL_BLOCKED",
+              "training_authorized":False,
+              "comparative_training_performed":False,
+              "original_source_head":os.environ["ORIGINAL_HEAD"],
+              "evidence_branch_source_head":os.environ["EXPECTED_HEAD"],
+              "original_run":40747035876,"original_run_attempt":1,
+              "original_artifact_ids":{"source":12842890264,"qwen":12840998564},
+              "original_job_ids":{"source":123023455576,"qwen":123023557881},
+              "source_checkout":{"corrected_eos":prod["source"]["serializer_commit"],
+                                 "main":prod["source"]["main_commit"]},
+              "producer_runner":prod["runner"],"consumer_runner":cons["runner"],
+              "pinned_source_hashes":prod["source"],
+              "actual_source_files":prod["actual_source_files"],
+              "files":{x.name:{"sha256":sha(x),"bytes":x.stat().st_size}
+                       for x in sorted(d.iterdir()) if x.is_file()},
+              "negative_mutations":11,
+              "limitations":["No model-level training admission","Only 32/128-unit cache probes",
+                             "Manual nontrained residual effect","No independent scientific review",
+                             "No learned EOS stopping behavior","Not full 2048-unit context"],
+          }
+          (d/"manifest.json").write_text(json.dumps(original,indent=2,sort_keys=True)+"\n")
+          PY
+      - name: Commit only original immutable evidence to draft branch without force or protocol changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -f "$EVIDENCE_DIR/source-original.zip" "$EVIDENCE_DIR/qwen-original.zip"
+          git add "$EVIDENCE_DIR/manifest.json" "$EVIDENCE_DIR/source-original-job.log" \
+                  "$EVIDENCE_DIR/qwen-original-job.log" "$EVIDENCE_DIR/offline-audit.log"
+          test "$(git diff --cached --name-only | wc -l)" -eq 6
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "NCR-001: byte-preserve original void1 postlease physical Actions evidence"
+          python3 scripts/ncr_001_void_postlease_original_audit.py \
+            "$EVIDENCE_DIR/source-original.zip" "$EVIDENCE_DIR/qwen-original.zip"
+          test -z "$(git status --porcelain)"
+          git fetch origin "$BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$EXPECTED_HEAD"
+          git push origin "HEAD:refs/heads/$BRANCH"
+          echo "PUBLISHED_CUSTODY_COMMIT=$(git rev-parse HEAD)"
+      - name: Verify published exact evidence tree and no source mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "$BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$(git rev-parse HEAD)"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          git show --format="%H %s" --no-patch HEAD
