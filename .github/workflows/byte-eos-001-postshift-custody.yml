@@ -26,8 +26,13 @@ jobs:
           fetch-depth: 2
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: 05f88eafbf8c04698e85a2689b058369ed9fee5a
+          path: historical126
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
           ref: a1b41c358d215974ea9ef2748baa13c3872b0fbb
-          path: prereg
+          path: historical126/prereg
           persist-credentials: false
       - name: Fail-closed exact source, whole compressed ZIP, original job log, source-only semantics
         run: |
@@ -38,5 +43,8 @@ jobs:
       - name: Historical original #126 ZIP preservation audit still passes
         run: |
           set -euo pipefail
-          python3 scripts/byte_eos_001_independent_archive_audit.py
-          python3 -m unittest discover -s tests -p 'test_byte_eos_001_independent_archive_audit.py' -v
+          test "$(git -C historical126 rev-parse HEAD)" = "05f88eafbf8c04698e85a2689b058369ed9fee5a"
+          test "$(git -C historical126 hash-object scripts/byte_eos_001_void_labels.py)" = "724a5040d2fc9eb06ef0b17143d44daa36a4aa89"
+          test "$(git -C historical126/prereg rev-parse HEAD)" = "a1b41c358d215974ea9ef2748baa13c3872b0fbb"
+          python3 historical126/scripts/byte_eos_001_independent_archive_audit.py
+          python3 -m unittest discover -s historical126/tests -p 'test_byte_eos_001_independent_archive_audit.py' -v
