@@ -14,6 +14,7 @@ import hashlib
 import json
 import math
 import struct
+import subprocess
 from pathlib import Path
 
 import ncr_001e_void1_postlease_adjudication as prior
@@ -256,12 +257,29 @@ def assert_original_decoded_git_blobs(root: Path | None = None) -> None:
     """
     base = custody.EVIDENCE if root is None else root
     for name, expected_git_blob in ORIGINAL_DECODED_LOG_BLOBS.items():
-        data = (base / name).read_bytes()
+        path = base / name
+        # Dereferenced bytes are insufficient: a Git-tracked symlink to an
+        # identical duplicate could preserve the content hash while replacing
+        # the original committed Git blob at this path.
+        refuse(not path.is_symlink() and path.is_file(),
+               "committed original decoded job-log is not a regular file: " + name)
+        if root is None:
+            # Bind to the actual HEAD tree, including ordinary-file mode.
+            # This refuses worktree filter substitutions and tree-mode drift.
+            rel = path.relative_to(ROOT).as_posix()
+            tree = subprocess.run(
+                ["git", "-C", str(ROOT), "ls-tree", "HEAD", "--", rel],
+                capture_output=True, text=True, check=False,
+            )
+            refuse(tree.returncode == 0
+                   and tree.stdout ==
+                   f"100644 blob {expected_git_blob}\t{rel}\n",
+                   "committed original decoded job-log Git tree object/mode drift: " + name)
+        data = path.read_bytes()
         header = b"blob " + str(len(data)).encode("ascii") + b"\0"
         actual_git_blob = hashlib.sha1(header + data).hexdigest()
         refuse(actual_git_blob == expected_git_blob,
                "committed original decoded job-log Git blob drift: " + name)
-
 
 def build_report() -> dict:
     assert_original_decoded_git_blobs()
