@@ -1,0 +1,59 @@
+name: NCR-001E void1 locked mechanical coverage adjudication (NO MODEL)
+on:
+  pull_request:
+    branches: [review/ncr001e-void-poststep2048-masked-kv-custody-20261030]
+    paths:
+      - ".github/workflows/ncr-001-void-mechanical-complete-adjudication.yml"
+      - "scripts/ncr_001_void_mechanical_complete_adjudication.py"
+      - "tests/test_ncr_001_void_mechanical_complete_adjudication.py"
+      - "experiments/ncr-001/adjudication/void1-mechanical-coverage-complete-20261030.json"
+      - "docs/NCR_001_VOID_MECHANICAL_COMPLETE_ADJUDICATION.md"
+      - "RAG.md"
+permissions:
+  contents: read
+jobs:
+  source-adjudication:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Refuse parent/protocol/decision/evidence drift
+        run: |
+          set -euo pipefail
+          test "${{ github.event.pull_request.base.sha }}" = "d48b005cefbb95e22be9dc45c4fc5de819a4c448"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git hash-object experiments/ncr-001/adjudication/void1-poststep2048-scientific-boundary-20261030.json)" = "27b28cc7c0d878e4999458331c17340ec6037531"
+          test "$(git hash-object experiments/ncr-001/controls-evidence/void-poststep2048-masked-kv-20261030/manifest.json)" = "439584bd144c5b640cbc49807200ea3845b384cb"
+      - name: Rebuild all prior evidence and adjudicate masked cache
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-void-mechanical-final
+          python3 -m py_compile scripts/ncr_001_void_mechanical_complete_adjudication.py tests/test_ncr_001_void_mechanical_complete_adjudication.py
+          python3 -m unittest discover -s tests -p "test_ncr_001_void_mechanical_complete_adjudication.py" -v \
+            2>&1 | tee runtime/ncr001-void-mechanical-final/tests.log
+          python3 scripts/ncr_001_void_mechanical_complete_adjudication.py --out runtime/ncr001-void-mechanical-final/decision.json \
+            2>&1 | tee runtime/ncr001-void-mechanical-final/audit.log
+          if test -f experiments/ncr-001/adjudication/void1-mechanical-coverage-complete-20261030.json; then
+            python3 scripts/ncr_001_void_mechanical_complete_adjudication.py --check
+          fi
+          python3 - <<'PY'
+          import json
+          x=json.load(open("runtime/ncr001-void-mechanical-final/decision.json"))
+          assert x["known_locked_72_mechanical_evidence_gap"] is None
+          assert x["masked_B2_incremental_cache_measured"] is True
+          assert x["independent_scientific_72_admission"] is False
+          assert x["per_model_conformance_pass"] is False
+          assert x["train_authorized"] is False
+          print("PASS_MECHANICAL_COVERAGE_COMPLETE_WITHOUT_FALSE_SCIENTIFIC_ADMISSION")
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: ncr001-void-mechanical-complete-source-adjudication
+          path: runtime/ncr001-void-mechanical-final/
+          retention-days: 30
