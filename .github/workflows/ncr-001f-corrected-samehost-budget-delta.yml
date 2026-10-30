@@ -8,6 +8,7 @@ on:
       - "docs/NCR_001_F_CORRECTED_SAMEHOST_BUDGET_DELTA.md"
       - ".github/workflows/ncr-001f-corrected-samehost-budget-delta.yml"
       - "RAG.md"
+      - "experiments/ncr-001/adjudication/sprocket-original-fourthread-wall-budget-delta-20261030.json"
 permissions:
   contents: read
 concurrency:
@@ -42,7 +43,8 @@ jobs:
                    "tests/test_ncr_001f_corrected_samehost_budget_delta.py",
                    "docs/NCR_001_F_CORRECTED_SAMEHOST_BUDGET_DELTA.md",
                    ".github/workflows/ncr-001f-corrected-samehost-budget-delta.yml",
-                   "RAG.md"}
+                   "RAG.md",
+                   "experiments/ncr-001/adjudication/sprocket-original-fourthread-wall-budget-delta-20261030.json"}
           assert changed and changed<=allowed,changed
           print("PASS_NO_ORIGINAL_SOURCE_EVIDENCE_MODEL_OR_FIXTURE_CHANGED")
           PY
