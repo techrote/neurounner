@@ -38,6 +38,23 @@ SOURCES = {
 }
 OBSERVED = "DIAGNOSTIC_EVIDENCE_PRESENT__DISTINCT_SCIENTIFIC_REVIEW_PENDING"
 
+# Literal original #171 nine-check decision, with per-check ORIGINAL run ownership.
+# Distinct later #172 diagnostic evidence must never be retroactively inserted
+# into the historical 0-step postlease execution or called a final #72 PASS.
+NINE_HISTORICAL = (
+    ("same_base_logits", "PASS", (40747035876, 40755894558)),
+    ("base_weight_unchanged_after_step", "BLOCKED_BY_TRAINING_POLICY", ()),
+    ("causal_suffix_invariance", "PASS", (40747035876, 40755894558)),
+    ("full_prefix_vs_incremental_cache", "PASS", (40747035876, 40755894558)),
+    ("per_token_isolation", "PASS_SOURCE_RUNTIME", (40747035876, 40755894558)),
+    ("per_request_reset", "PASS", (40747035876,)),
+    ("nonzero_adapter_gradient_after_warmup", "BLOCKED_BY_TRAINING_POLICY", ()),
+    ("finite_state_and_loss", "PARTIAL_BLOCKED_WARMUP_LOSS",
+     (40747035876, 40755894558)),
+    ("cold_reload_state_dict", "PASS_PRETRAIN", (40747035876,)),
+)
+
+
 # Exact Git-blob identities of the ORIGINAL decoded Actions jobs, including
 # both failed initial archival attempts. This is a separate byte-integrity
 # requirement from the original compressed ZIP/member SHA-256 custody: a
@@ -281,6 +298,51 @@ def assert_original_decoded_git_blobs(root: Path | None = None) -> None:
         refuse(actual_git_blob == expected_git_blob,
                "committed original decoded job-log Git blob drift: " + name)
 
+def nine_check_original_cohort_crosswalk(
+        legacy: dict, policy: dict, manifest: dict) -> dict:
+    """Reconcile ALL nine preregistered checks without synthesizing a combined run.
+
+    The six original postlease source/runtime checks keep their original
+    evidence scopes. The three subsequent one-example learning observations
+    are recorded as a separate later physical cohort, never as historical
+    #171 optimizer activity or independent scientific acceptance.
+    """
+    names = policy["conformance"]["required_checks"]
+    expected = [name for name, _, _ in NINE_HISTORICAL]
+    refuse(type(names) is list and names == expected
+           and type(legacy["matrix"]) is dict
+           and set(legacy["matrix"]) == set(expected)
+           and legacy["per_model_gate"] is False
+           and legacy["independent_scientific_review"] is False
+           and legacy["optimizer_steps_observed"] == 0
+           and legacy["backward_executed"] is False,
+           "nine-check historical #171/protocol ordering or admission drift")
+    refuse(type(manifest["original_run"]) is int
+           and manifest["original_run"] == 40765025332
+           and manifest["physical_result"]["diagnostic_optimizer_steps"] == 1
+           and manifest["boundary"]["full_72_conformance_pass"] is False,
+           "separate #172 one-step diagnostic run or boundary drift")
+    crosswalk = {}
+    for name, original_status, original_runs in NINE_HISTORICAL:
+        item = legacy["matrix"][name]
+        runs = item["evidence_runs"]
+        refuse(item["status"] == original_status and type(runs) is list
+               and all(type(run) is int for run in runs)
+               and runs == list(original_runs),
+               "historical nine-check original-run/status substitution: " + name)
+        candidate = name in THREE
+        crosswalk[name] = {
+            "historical_171_status": original_status,
+            "historical_171_original_runs": list(original_runs),
+            "later_172_one_step_original_run":
+                manifest["original_run"] if candidate else None,
+            "later_172_observation":
+                OBSERVED if candidate else "NOT_CLAIMED_BY_DIAGNOSTIC",
+            "final_scientific_check_admitted": False,
+        }
+    return crosswalk
+
+
 def build_report() -> dict:
     assert_original_decoded_git_blobs()
     # Rebuild the historical matrix from the two ORIGINAL post-lease archives.
@@ -294,7 +356,9 @@ def build_report() -> dict:
            and adversarial["full_72_conformance_pass"] is False,
            "custody's original adversarial refusal suite regressed")
     manifest = read(MANIFEST)
-    check_inputs(legacy, receipt, manifest, read(PROTOCOL))
+    policy = read(PROTOCOL)
+    check_inputs(legacy, receipt, manifest, policy)
+    crosswalk = nine_check_original_cohort_crosswalk(legacy, policy, manifest)
 
     return {
         "schema_version": 1,
@@ -328,6 +392,7 @@ def build_report() -> dict:
             "custody_adversarial_mutations_refused": 14,
         },
         "candidate_required_check_evidence": {name: OBSERVED for name in THREE},
+        "nine_check_original_cohort_crosswalk": crosswalk,
         "unaccepted_required_checks": list(THREE),
         "independent_scientific_review": False,
         "per_model_gate": False,

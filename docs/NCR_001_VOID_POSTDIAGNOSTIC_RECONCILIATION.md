@@ -130,3 +130,51 @@ including both failed original custody-job logs, remain unchanged. A
 successful literal-head workflow is required before treating this correction
 as source-qualified; no Qwen3 inference, optimizer, held-out evaluation,
 four-model scientific admission, training permission, or draft merge follows.
+
+## Explicit nine-check original-cohort crosswalk — 30 October 2026
+
+The original #171 source-only matrix at immutable source head
+`1738ac2b6bc6105d57d6a5b4c35f4beaad94ff86` has **nine preregistered
+requirements**, not three. Its earlier physical observations derive from
+runs [40747035876](https://github.com/techrote/neurounner/actions/runs/40747035876)
+and [40755894558](https://github.com/techrote/neurounner/actions/runs/40755894558).
+The subsequent original frozen-Qwen3 diagnostic in
+[40765025332](https://github.com/techrote/neurounner/actions/runs/40765025332)
+is **another physical execution** and supplied only the three synthetic
+learning/update/loss observations; it is not a retrospective ninth-check
+retest of all prior source/cache/reset/cold experiments.
+
+| Locked #72 check | Unmodified #171 source/runtime status | Later #172 diagnostic scope |
+|---|---|---|
+| `same_base_logits` | PASS | Not retested as a source/cache cohort |
+| `base_weight_unchanged_after_step` | BLOCKED_BY_TRAINING_POLICY | One NCA-only synthetic SGD step; candidate |
+| `causal_suffix_invariance` | PASS | Not retested as a source/cache cohort |
+| `full_prefix_vs_incremental_cache` | PASS | Not retested as a source/cache cohort |
+| `per_token_isolation` | PASS_SOURCE_RUNTIME | Not retested as a source/cache cohort |
+| `per_request_reset` | PASS | Not retested as a source/cache cohort |
+| `nonzero_adapter_gradient_after_warmup` | BLOCKED_BY_TRAINING_POLICY | Postwarmup backward on one synthetic case; candidate |
+| `finite_state_and_loss` | PARTIAL_BLOCKED_WARMUP_LOSS | Finite three depth fields and supervised synthetic loss; candidate |
+| `cold_reload_state_dict` | PASS_PRETRAIN | Not retested as a source/cache cohort |
+
+The derived `nine_check_original_cohort_crosswalk` is machine-readable and
+regenerated from immutable #171 records and the original #172/#173 manifest.
+It binds **each check to its actual older original run IDs** and reports
+the later #172 original run *only* for the three narrowly observed checks.
+No value named `final_scientific_check_admitted` can be true. The new
+source-only tests reject seven mutations: changed suite order/length,
+a false historical PASS, physical-run conflation, boolean-as-run, wrong
+diagnostic run and false scientific admission.
+
+This does **not** rewrite #171's original blocked matrix, change the
+three #175 candidate fields, turn #172's scoped
+[COMMENTED review](https://github.com/techrote/neurounner/pull/172#pullrequestreview-5711102841)
+into GitHub APPROVED or a formal model-scientific admission, or imply that
+the two source/cache physical runs and the later one-step diagnostic were
+one matched experiment. Original ZIPs, complete failed/success decoded logs,
+weight/tokenizer/serializer source pins, protocol and held-out fixtures remain
+unchanged. Void.1's 12 historical four-step EOS-258 non-emissions and the
+TRAIN-002b historical EOS impact **UNMEASURED** remain intact.
+`per_model_gate=false`, `full_72_conformance_pass=false`,
+`train_authorized=false`; #73 learned-quality and actual-compute
+qualification remain blocked. No optimizer, weight loading, held-out
+access, comparative training, or merge occurs in this source-only correction.

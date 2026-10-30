@@ -58,6 +58,63 @@ class PostDiagnosticVoid1ReconciliationTests(unittest.TestCase):
         self.assertTrue(all(value == check.OBSERVED for value in
                             result["candidate_required_check_evidence"].values()))
 
+    def test_nine_check_original_cohort_crosswalk_covers_entire_locked_suite(self):
+        # Exact per-check original run ownership, not a synthetic combined
+        # nine-check original-host execution or final scientific acceptance.
+        result = check.build_report()
+        rows = result["nine_check_original_cohort_crosswalk"]
+        required = self.protocol["conformance"]["required_checks"]
+        self.assertEqual(list(rows), required)
+        self.assertEqual(len(rows), 9)
+        self.assertEqual(set(rows), set(self.legacy["matrix"]))
+        for name, historical_status, historical_runs in check.NINE_HISTORICAL:
+            with self.subTest(check=name):
+                entry = rows[name]
+                self.assertEqual(entry["historical_171_status"], historical_status)
+                self.assertEqual(entry["historical_171_original_runs"],
+                                 list(historical_runs))
+                self.assertIs(entry["final_scientific_check_admitted"], False)
+                if name in check.THREE:
+                    self.assertEqual(entry["later_172_one_step_original_run"],
+                                     40765025332)
+                    self.assertEqual(entry["later_172_observation"], check.OBSERVED)
+                else:
+                    self.assertIsNone(entry["later_172_one_step_original_run"])
+                    self.assertEqual(entry["later_172_observation"],
+                                     "NOT_CLAIMED_BY_DIAGNOSTIC")
+        self.assertFalse(result["per_model_gate"])
+        self.assertFalse(result["full_72_conformance_pass"])
+        self.assertFalse(result["train_authorized"])
+
+    def test_nine_check_original_cohort_crosswalk_refuses_scope_substitutions(self):
+        # A source-only green report must not mix diagnostic/old physical
+        # runs, reorder the preregistered suite or promote any check to PASS.
+        mutations = (
+            ("duplicate_required_check",
+             lambda l, p, m: p["conformance"]["required_checks"].append("same_base_logits")),
+            ("reordered_required_checks",
+             lambda l, p, m: p["conformance"]["required_checks"].reverse()),
+            ("invented_historical_learning_pass",
+             lambda l, p, m: l["matrix"]["base_weight_unchanged_after_step"].__setitem__("status", "PASS")),
+            ("later_run_falsely_merged_into_cache",
+             lambda l, p, m: l["matrix"]["full_prefix_vs_incremental_cache"]["evidence_runs"].append(40765025332)),
+            ("bool_as_original_run",
+             lambda l, p, m: l["matrix"]["per_request_reset"].__setitem__("evidence_runs", [True])),
+            ("swapped_diagnostic_run",
+             lambda l, p, m: m.__setitem__("original_run", 40765025333)),
+            ("false_scientific_admission",
+             lambda l, p, m: l.__setitem__("per_model_gate", True)),
+        )
+        for label, mutate in mutations:
+            with self.subTest(mutation=label):
+                legacy = copy.deepcopy(self.legacy)
+                policy = copy.deepcopy(self.protocol)
+                manifest = copy.deepcopy(self.manifest)
+                mutate(legacy, policy, manifest)
+                with self.assertRaisesRegex(RuntimeError, "REFUSED"):
+                    check.nine_check_original_cohort_crosswalk(
+                        legacy, policy, manifest)
+
     def test_source_and_frozen_original_host_are_distinct_from_old_audit(self):
         result = check.build_report()
         self.assertEqual(result["original_physical_run"], 40765025332)
