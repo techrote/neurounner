@@ -64,7 +64,7 @@ def compose(prior: dict, masked: dict, streaming: dict) -> dict:
                "PASS_ORIGINAL_PR202_3ZIP_3LOG_GIT_BLOB_SOURCE_AND_NUMERIC_RECEIPT"
            and masked.get("source_sha") ==
                "b52af229dbfd0220d8d89f0d18e58733a2c3b56b"
-           and masked.get("original_run") == PR202_RUN
+           and masked.get("source_run") == PR202_RUN
            and masked.get("original_zip_count") == 3
            and masked.get("original_decoded_log_count") == 3
            and masked.get("train_authorized") is False
