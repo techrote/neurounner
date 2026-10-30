@@ -223,6 +223,11 @@ def interpret(s: dict) -> dict:
            and c["post_warmup"]["native_causal_eos_loss"] == cobs["post_warmup_loss"]
            and cobs["first_loss"] > cobs["post_warmup_loss"] > 0,
            "C original update/gradient/finite-loss observations changed")
+    refuse(m["scientific_boundary"] == new_custody.BOUNDARY
+           and m["retention_of_original_zips_and_logs"] == "permanent_git_bytes"
+           and m["physical_host_run_job_success"] is True
+           and m["source_only_run_job_success"] is True,
+           "D original manifest scientific/retention scope falsely promoted")
     refuse(d["status"] ==
            "PASS_ORIGINAL_POSTSTEP_COLD_BYTES__SCIENTIFIC_72_BLOCKED"
            and d["original_run"] == m["run"] == RUNS["D_poststep_cold"][0]
