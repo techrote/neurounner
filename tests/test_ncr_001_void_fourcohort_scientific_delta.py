@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import sys
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -142,6 +143,27 @@ class FourCohortScientificBoundary(unittest.TestCase):
             "actual_eos_258_emitted_in_four_step_probe", True))
         self.refused(lambda x: x["historical"]["evidence"].__setitem__(
             "max_context_generation_records", 0))
+
+    def test_refuse_changed_git_tree_mode_even_if_worktree_bytes_match(self):
+        delta.require_blob(delta.HISTORICAL, delta.HISTORICAL_BLOB)
+        for mode, blob in (("120000", delta.HISTORICAL_BLOB),
+                           ("100755", delta.HISTORICAL_BLOB),
+                           ("100644", "f"*40)):
+            with self.subTest(mode=mode, blob=blob):
+                rel=delta.HISTORICAL.relative_to(delta.ROOT).as_posix()
+                fake=mock.Mock(returncode=0,
+                               stdout=f"{mode} blob {blob}\\t{rel}\\n")
+                with mock.patch.object(delta.subprocess, "run", return_value=fake):
+                    with self.assertRaisesRegex(ValueError, "REFUSED"):
+                        delta.require_blob(delta.HISTORICAL, delta.HISTORICAL_BLOB)
+
+    def test_refuse_boolean_optimizer_step_as_numerical_evidence(self):
+        self.refused(lambda x: x["producer"].__setitem__(
+            "diagnostic_optimizer_steps", True))
+        self.refused(lambda x: x["consumer"].__setitem__(
+            "diagnostic_optimizer_steps", False))
+        self.refused(lambda x: x["intermediate"].__setitem__(
+            "diagnostic_optimizer_steps", True))
 
     def test_immutable_committed_scientific_report_matches_originals_when_present(self):
         if not delta.OUTPUT.is_file():
