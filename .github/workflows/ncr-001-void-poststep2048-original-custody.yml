@@ -1,0 +1,106 @@
+name: NCR-001E original poststep2048 ZIP/log custody read-only audit
+on:
+  pull_request:
+    branches: [review/ncr001e-void-poststep2048-20261030]
+    paths:
+      - ".github/workflows/ncr-001-void-poststep2048-original-custody.yml"
+      - "scripts/ncr_001_void_poststep2048_bootstrap_custody.py"
+      - "scripts/ncr_001_void_poststep2048_original_custody.py"
+      - "tests/test_ncr_001_void_poststep2048_original_custody.py"
+      - "docs/NCR_001_VOID_POSTSTEP2048_ORIGINAL_CUSTODY.md"
+      - "experiments/ncr-001/controls-evidence/void-poststep2048-20261030/**"
+      - "RAG.md"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: ncr001-void-poststep2048-custody-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  original-byte-custody:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Exact head, source parent, immutable evidence-only diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "${{ github.event.pull_request.base.sha }}" = "520c4ae5b3152aff8d94760dab2e3103746f7334"
+          git merge-base --is-ancestor 520c4ae5b3152aff8d94760dab2e3103746f7334 HEAD
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git hash-object experiments/ncr-001/controls-evidence/void-poststep2048-20261030/manifest.json)" = "462a43cf3e56b5edefe9dcf14ffc6dae199a3158"
+          test ! -e .github/workflows/ncr-001-void-poststep2048-bootstrap-custody.yml
+          python3 - <<'PY'
+          import subprocess
+          changed=set(subprocess.check_output([
+              "git","diff","--name-only",
+              "520c4ae5b3152aff8d94760dab2e3103746f7334","HEAD"
+          ],text=True).splitlines())
+          allowed={
+            "scripts/ncr_001_void_poststep2048_bootstrap_custody.py",
+            "scripts/ncr_001_void_poststep2048_original_custody.py",
+            "tests/test_ncr_001_void_poststep2048_original_custody.py",
+            "docs/NCR_001_VOID_POSTSTEP2048_ORIGINAL_CUSTODY.md",
+            ".github/workflows/ncr-001-void-poststep2048-original-custody.yml",
+            "RAG.md",
+            "experiments/ncr-001/controls-evidence/void-poststep2048-20261030/manifest.json",
+            "experiments/ncr-001/controls-evidence/void-poststep2048-20261030/source-original.zip",
+            "experiments/ncr-001/controls-evidence/void-poststep2048-20261030/host-original.zip",
+            "experiments/ncr-001/controls-evidence/void-poststep2048-20261030/source-original-job.log",
+            "experiments/ncr-001/controls-evidence/void-poststep2048-20261030/host-original-job.log",
+          }
+          assert changed and changed<=allowed,changed
+          print("PASS_ONLY_ORIGINAL_CUSTODY_SOURCE_TEST_DOC_AND_READONLY_CI_CHANGED")
+          PY
+      - name: Offline literal Git-blob/ZIP/log and adversarial tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-void-poststep2048-custody
+          python3 -m py_compile scripts/ncr_001_void_poststep2048_bootstrap_custody.py scripts/ncr_001_void_poststep2048_original_custody.py tests/test_ncr_001_void_poststep2048_original_custody.py
+          python3 -m unittest discover -s tests -p "test_ncr_001_void_poststep2048_original_custody.py" -v \
+            2>&1 | tee runtime/ncr001-void-poststep2048-custody/tests.log
+          python3 scripts/ncr_001_void_poststep2048_original_custody.py \
+            > runtime/ncr001-void-poststep2048-custody/offline-audit.json
+      - name: Re-download immutable original Actions ZIPs and complete decoded logs byte-for-byte
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/ncr_001_void_poststep2048_original_custody.py --live \
+            > runtime/ncr001-void-poststep2048-custody/live-audit.json
+          python3 - <<'PY'
+          import json
+          x=json.load(open("runtime/ncr001-void-poststep2048-custody/live-audit.json"))
+          assert x["status"]=="PASS_ORIGINAL_POSTSTEP2048_COMPLETE_BYTES__SCIENTIFIC_72_UNADMITTED"
+          assert x["original_ledger_freshly_rechecked"] is True
+          assert x["physical_result"]["poststep_2048_incremental_positions"]==2048
+          assert x["physical_result"]["poststep_2048_cache_max_abs"]<=5e-4
+          assert x["physical_result"]["future_suffix_earlier_exact"] is True
+          assert x["train_authorized"] is False
+          assert x["full_72_conformance_pass"] is False
+          print("PASS_LIVE_ORIGINAL_ZIP_AND_FULL_LOG_BYTES_EQUAL_GIT_CUSTODY")
+          PY
+      - name: Preserve derived source-only audit logs
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p runtime/ncr001-void-poststep2048-custody
+          git rev-parse HEAD > runtime/ncr001-void-poststep2048-custody/head.txt
+          uname -a > runtime/ncr001-void-poststep2048-custody/runner.txt
+          python3 --version > runtime/ncr001-void-poststep2048-custody/python.txt 2>&1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: ncr001-void-poststep2048-original-custody-audit
+          path: runtime/ncr001-void-poststep2048-custody/
+          retention-days: 30
+          if-no-files-found: warn

@@ -1,0 +1,782 @@
+﻿2026-10-30T21:46:25.8210742Z Current runner version: '2.338.2'
+2026-10-30T21:46:25.8243848Z ##[group]Runner Image Provisioner
+2026-10-30T21:46:25.8245143Z Hosted Compute Agent
+2026-10-30T21:46:25.8246150Z Version: 20261021.618
+2026-10-30T21:46:25.8247556Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-30T21:46:25.8248810Z Build Date: 2026-10-21T00:45:21Z
+2026-10-30T21:46:25.8250043Z Worker ID: {e1a0ae65-d5eb-4ff1-aa39-30646cd99900}
+2026-10-30T21:46:25.8251269Z Region: eastus2
+2026-10-30T21:46:25.8252160Z Cloud: Azure
+2026-10-30T21:46:25.8253145Z ##[endgroup]
+2026-10-30T21:46:25.8255442Z ##[group]Operating System
+2026-10-30T21:46:25.8256939Z Ubuntu
+2026-10-30T21:46:25.8257928Z 24.04.5
+2026-10-30T21:46:25.8258818Z LTS
+2026-10-30T21:46:25.8259738Z ##[endgroup]
+2026-10-30T21:46:25.8260686Z ##[group]Runner Image
+2026-10-30T21:46:25.8261809Z Image: ubuntu-24.04
+2026-10-30T21:46:25.8262706Z Version: 20261025.353.1
+2026-10-30T21:46:25.8264888Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261025.353/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-30T21:46:25.8267868Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261025.353
+2026-10-30T21:46:25.8269712Z ##[endgroup]
+2026-10-30T21:46:25.8271550Z ##[group]GITHUB_TOKEN Permissions
+2026-10-30T21:46:25.8274310Z Contents: read
+2026-10-30T21:46:25.8275412Z Metadata: read
+2026-10-30T21:46:25.8276436Z ##[endgroup]
+2026-10-30T21:46:25.8280056Z Secret source: Actions
+2026-10-30T21:46:25.8281641Z Cache mode: write
+2026-10-30T21:46:25.8283084Z Prepare workflow directory
+2026-10-30T21:46:25.9028089Z Prepare all required actions
+2026-10-30T21:46:25.9101808Z Getting action download info
+2026-10-30T21:46:26.0979744Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-30T21:46:26.1995662Z Download action repository 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-30T21:46:26.3770131Z Complete job name: physical-poststep2048
+2026-10-30T21:46:26.4613000Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-30T21:46:26.4614067Z with:
+2026-10-30T21:46:26.4614538Z   ref: 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:46:26.4615145Z   persist-credentials: false
+2026-10-30T21:46:26.4615657Z   fetch-depth: 0
+2026-10-30T21:46:26.4616113Z   repository: techrote/neurounner
+2026-10-30T21:46:26.4620197Z   token: ***
+2026-10-30T21:46:26.4620637Z   ssh-strict: true
+2026-10-30T21:46:26.4621066Z   ssh-user: git
+2026-10-30T21:46:26.4621476Z   clean: true
+2026-10-30T21:46:26.4621921Z   sparse-checkout-cone-mode: true
+2026-10-30T21:46:26.4622448Z   fetch-tags: false
+2026-10-30T21:46:26.4622889Z   show-progress: true
+2026-10-30T21:46:26.4623328Z   lfs: false
+2026-10-30T21:46:26.4623731Z   submodules: false
+2026-10-30T21:46:26.4624172Z   set-safe-directory: true
+2026-10-30T21:46:26.4624674Z   allow-unsafe-pr-checkout: false
+2026-10-30T21:46:26.4625479Z env:
+2026-10-30T21:46:26.4626055Z   NCR_EXPECTED_HEAD: 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:46:26.4627048Z   HF_HOME: /tmp/ncr001-void-poststep2048-hf
+2026-10-30T21:46:26.4627654Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-30T21:46:26.4628164Z   TOKENIZERS_PARALLELISM: false
+2026-10-30T21:46:26.4628664Z   OMP_NUM_THREADS: 4
+2026-10-30T21:46:26.4629101Z   MKL_NUM_THREADS: 4
+2026-10-30T21:46:26.4629562Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-30T21:46:26.4630070Z ##[endgroup]
+2026-10-30T21:46:26.8047890Z Syncing repository: techrote/neurounner
+2026-10-30T21:46:26.8050771Z ##[group]Getting Git version info
+2026-10-30T21:46:26.8051712Z Working directory is '/home/runner/work/neurounner/neurounner'
+2026-10-30T21:46:26.8052854Z [command]/usr/bin/git version
+2026-10-30T21:46:26.8164248Z git version 2.56.0
+2026-10-30T21:46:26.8198546Z ##[endgroup]
+2026-10-30T21:46:26.8218557Z Temporarily overriding HOME='/home/runner/work/_temp/577c2f69-e397-4f06-a67c-62c9eaa12f8f' before making global git config changes
+2026-10-30T21:46:26.8225716Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T21:46:26.8227896Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner
+2026-10-30T21:46:26.8314506Z Deleting the contents of '/home/runner/work/neurounner/neurounner'
+2026-10-30T21:46:26.8318924Z ##[group]Determining repository object format
+2026-10-30T21:46:26.8327620Z ##[endgroup]
+2026-10-30T21:46:26.8329188Z ##[group]Initializing the repository
+2026-10-30T21:46:26.8331357Z [command]/usr/bin/git init /home/runner/work/neurounner/neurounner
+2026-10-30T21:46:26.8495197Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-30T21:46:26.8497884Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-30T21:46:26.8501522Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-30T21:46:26.8503204Z hint: call:
+2026-10-30T21:46:26.8504134Z hint:
+2026-10-30T21:46:26.8505751Z hint: 	git config --global init.defaultBranch <name>
+2026-10-30T21:46:26.8507352Z hint:
+2026-10-30T21:46:26.8508697Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-30T21:46:26.8511404Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-30T21:46:26.8513164Z hint:
+2026-10-30T21:46:26.8514311Z hint: 	git branch -m <name>
+2026-10-30T21:46:26.8520626Z hint:
+2026-10-30T21:46:26.8522194Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-30T21:46:26.8524670Z Initialized empty Git repository in /home/runner/work/neurounner/neurounner/.git/
+2026-10-30T21:46:26.8537778Z [command]/usr/bin/git remote add origin https://github.com/techrote/neurounner
+2026-10-30T21:46:26.8599988Z ##[endgroup]
+2026-10-30T21:46:26.8602042Z ##[group]Disabling automatic garbage collection
+2026-10-30T21:46:26.8609348Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-30T21:46:26.8648750Z ##[endgroup]
+2026-10-30T21:46:26.8650760Z ##[group]Setting up auth
+2026-10-30T21:46:26.8652449Z Removing SSH command configuration
+2026-10-30T21:46:26.8658750Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T21:46:26.8718839Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T21:46:26.9213913Z Removing HTTP extra header
+2026-10-30T21:46:26.9219743Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T21:46:26.9266140Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T21:46:26.9534493Z Removing includeIf entries pointing to credentials config files
+2026-10-30T21:46:26.9540652Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T21:46:26.9586411Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-30T21:46:26.9829532Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-a4100112-48d1-46ee-b409-0e985d766696.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-30T21:46:26.9879511Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/.git.path /home/runner/work/_temp/git-credentials-a4100112-48d1-46ee-b409-0e985d766696.config
+2026-10-30T21:46:26.9926430Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-a4100112-48d1-46ee-b409-0e985d766696.config
+2026-10-30T21:46:26.9972629Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-a4100112-48d1-46ee-b409-0e985d766696.config
+2026-10-30T21:46:27.0018763Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-a4100112-48d1-46ee-b409-0e985d766696.config
+2026-10-30T21:46:27.0061657Z ##[endgroup]
+2026-10-30T21:46:27.0063301Z ##[group]Fetching the repository
+2026-10-30T21:46:27.0070022Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-10-30T21:46:27.9115242Z From https://github.com/techrote/neurounner
+2026-10-30T21:46:27.9118816Z  * [new branch]      cancel-redundant-village-d-40230237679 -> origin/cancel-redundant-village-d-40230237679
+2026-10-30T21:46:27.9121784Z  * [new branch]      docs/detective-fun-policy-20261028 -> origin/docs/detective-fun-policy-20261028
+2026-10-30T21:46:27.9217627Z  * [new branch]      evidence/detective-005a-40974067617 -> origin/evidence/detective-005a-40974067617
+2026-10-30T21:46:27.9221046Z  * [new branch]      evidence/detective-005a-synthetic-probe-40968747033 -> origin/evidence/detective-005a-synthetic-probe-40968747033
+2026-10-30T21:46:27.9225081Z  * [new branch]      fix-village-001b-duplicate-recovery -> origin/fix-village-001b-duplicate-recovery
+2026-10-30T21:46:27.9228073Z  * [new branch]      fix-village-001b-duplicate-trait-refs -> origin/fix-village-001b-duplicate-trait-refs
+2026-10-30T21:46:27.9230484Z  * [new branch]      fix-village-evidence-results -> origin/fix-village-evidence-results
+2026-10-30T21:46:27.9233282Z  * [new branch]      fix/detective-005a-main-dispatch-20261028 -> origin/fix/detective-005a-main-dispatch-20261028
+2026-10-30T21:46:27.9237131Z  * [new branch]      fix/detective-005a-partial-raw-custody-20261028 -> origin/fix/detective-005a-partial-raw-custody-20261028
+2026-10-30T21:46:27.9240747Z  * [new branch]      integration/merge-down-foundations-20261029 -> origin/integration/merge-down-foundations-20261029
+2026-10-30T21:46:27.9243436Z  * [new branch]      main                   -> origin/main
+2026-10-30T21:46:27.9246237Z  * [new branch]      repair-village-c-results-publication -> origin/repair-village-c-results-publication
+2026-10-30T21:46:27.9250067Z  * [new branch]      research/byte-eos-001-strict-void-labels -> origin/research/byte-eos-001-strict-void-labels
+2026-10-30T21:46:27.9253986Z  * [new branch]      research/detective-001a-case-contract-20261027 -> origin/research/detective-001a-case-contract-20261027
+2026-10-30T21:46:27.9259154Z  * [new branch]      research/detective-001b-source-matched-smoke-20261027 -> origin/research/detective-001b-source-matched-smoke-20261027
+2026-10-30T21:46:27.9266566Z  * [new branch]      research/detective-001b2-presentation-ab-20261027 -> origin/research/detective-001b2-presentation-ab-20261027
+2026-10-30T21:46:27.9274688Z  * [new branch]      research/detective-001b3-sprocket-instruct-scripter-20261027 -> origin/research/detective-001b3-sprocket-instruct-scripter-20261027
+2026-10-30T21:46:27.9281990Z  * [new branch]      research/detective-001b4-lfm-control-20261027 -> origin/research/detective-001b4-lfm-control-20261027
+2026-10-30T21:46:27.9288006Z  * [new branch]      research/detective-001c1-witness-policy-20261027 -> origin/research/detective-001c1-witness-policy-20261027
+2026-10-30T21:46:27.9291942Z  * [new branch]      research/detective-001c2-evaluator-20261027 -> origin/research/detective-001c2-evaluator-20261027
+2026-10-30T21:46:27.9295539Z  * [new branch]      research/detective-001c2-pairwise-20261027 -> origin/research/detective-001c2-pairwise-20261027
+2026-10-30T21:46:27.9300640Z  * [new branch]      research/detective-001c3-g02-interference-20261027 -> origin/research/detective-001c3-g02-interference-20261027
+2026-10-30T21:46:27.9305231Z  * [new branch]      research/detective-001r1-relevance-20261027 -> origin/research/detective-001r1-relevance-20261027
+2026-10-30T21:46:27.9309344Z  * [new branch]      research/detective-002a-body-sources-20261027 -> origin/research/detective-002a-body-sources-20261027
+2026-10-30T21:46:27.9313396Z  * [new branch]      research/detective-002b-runtime-matrix-20261028 -> origin/research/detective-002b-runtime-matrix-20261028
+2026-10-30T21:46:27.9317938Z  * [new branch]      research/detective-002b-runtime-smoke-20261027 -> origin/research/detective-002b-runtime-smoke-20261027
+2026-10-30T21:46:27.9321905Z  * [new branch]      research/detective-002c-lfm-v5-runtime-20261028 -> origin/research/detective-002c-lfm-v5-runtime-20261028
+2026-10-30T21:46:27.9325747Z  * [new branch]      research/detective-002d-lfm-v5-api-20261028 -> origin/research/detective-002d-lfm-v5-api-20261028
+2026-10-30T21:46:27.9330031Z  * [new branch]      research/detective-003a-session-ledger-20261028 -> origin/research/detective-003a-session-ledger-20261028
+2026-10-30T21:46:27.9336887Z  * [new branch]      research/detective-003a-session-ledger-current-20261028 -> origin/research/detective-003a-session-ledger-current-20261028
+2026-10-30T21:46:27.9344309Z  * [new branch]      research/detective-003b-live-session-20261028 -> origin/research/detective-003b-live-session-20261028
+2026-10-30T21:46:27.9351125Z  * [new branch]      research/detective-003c-scripter-bridge-20261028 -> origin/research/detective-003c-scripter-bridge-20261028
+2026-10-30T21:46:27.9358687Z  * [new branch]      research/detective-003d-sprocket-live-bridge-20261028 -> origin/research/detective-003d-sprocket-live-bridge-20261028
+2026-10-30T21:46:27.9364137Z  * [new branch]      research/detective-004a-sprocket-specialization-contract-20261028 -> origin/research/detective-004a-sprocket-specialization-contract-20261028
+2026-10-30T21:46:27.9369186Z  * [new branch]      research/detective-004a-stage-a-20261028 -> origin/research/detective-004a-stage-a-20261028
+2026-10-30T21:46:27.9374536Z  * [new branch]      research/detective-005a-failed-artifact-archive-20261028 -> origin/research/detective-005a-failed-artifact-archive-20261028
+2026-10-30T21:46:27.9379322Z  * [new branch]      research/detective-005a-fun-screen-20261028 -> origin/research/detective-005a-fun-screen-20261028
+2026-10-30T21:46:27.9384038Z  * [new branch]      research/detective-005a-private-blinding-custody-20261029 -> origin/research/detective-005a-private-blinding-custody-20261029
+2026-10-30T21:46:27.9389154Z  * [new branch]      research/detective-005a-synthetic-remote-push-20261029 -> origin/research/detective-005a-synthetic-remote-push-20261029
+2026-10-30T21:46:27.9393157Z  * [new branch]      research/ncr-001a-protocol-preflight -> origin/research/ncr-001a-protocol-preflight
+2026-10-30T21:46:27.9396361Z  * [new branch]      research/ncr-001b-pure-torch-core -> origin/research/ncr-001b-pure-torch-core
+2026-10-30T21:46:27.9400020Z  * [new branch]      research/ncr-001c-smollm2-hook-conformance -> origin/research/ncr-001c-smollm2-hook-conformance
+2026-10-30T21:46:27.9403880Z  * [new branch]      research/ncr-001d-sprocket-chat-hook-preflight -> origin/research/ncr-001d-sprocket-chat-hook-preflight
+2026-10-30T21:46:27.9407883Z  * [new branch]      research/ncr-001f-matched-controls-prepass -> origin/research/ncr-001f-matched-controls-prepass
+2026-10-30T21:46:27.9411844Z  * [new branch]      research/ncr-001j-sprocket-instruct-hook-preflight -> origin/research/ncr-001j-sprocket-instruct-hook-preflight
+2026-10-30T21:46:27.9415771Z  * [new branch]      research/ncr-001k-void1-qwen3-hook-preflight -> origin/research/ncr-001k-void1-qwen3-hook-preflight
+2026-10-30T21:46:27.9419811Z  * [new branch]      review/byte-eos-001-causal-label-shift-20261028 -> origin/review/byte-eos-001-causal-label-shift-20261028
+2026-10-30T21:46:27.9423568Z  * [new branch]      review/byte-eos-001-causal-readback-20261028 -> origin/review/byte-eos-001-causal-readback-20261028
+2026-10-30T21:46:27.9427599Z  * [new branch]      review/byte-eos-001-frozen-qwen-forward-20261028 -> origin/review/byte-eos-001-frozen-qwen-forward-20261028
+2026-10-30T21:46:27.9431629Z  * [new branch]      review/byte-eos-001-independent-acceptance-20261027 -> origin/review/byte-eos-001-independent-acceptance-20261027
+2026-10-30T21:46:27.9436153Z  * [new branch]      review/byte-eos-001-qwen-forward-original-readback-20261028 -> origin/review/byte-eos-001-qwen-forward-original-readback-20261028
+2026-10-30T21:46:27.9441146Z  * [new branch]      review/detective-001r1-independent-ratings-20261028 -> origin/review/detective-001r1-independent-ratings-20261028
+2026-10-30T21:46:27.9445175Z  * [new branch]      review/ncr-001e-four-model-prepass-readback -> origin/review/ncr-001e-four-model-prepass-readback
+2026-10-30T21:46:27.9448913Z  * [new branch]      review/ncr-001e-smollm2-fresh-cold-cache -> origin/review/ncr-001e-smollm2-fresh-cold-cache
+2026-10-30T21:46:27.9452669Z  * [new branch]      review/ncr-001e-sprocket-extended-context-20261027 -> origin/review/ncr-001e-sprocket-extended-context-20261027
+2026-10-30T21:46:27.9456882Z  * [new branch]      review/ncr-001e-sprocket-publisher-wire-20261027 -> origin/review/ncr-001e-sprocket-publisher-wire-20261027
+2026-10-30T21:46:27.9461054Z  * [new branch]      review/ncr-001e-sprocket-source-formatter-cold-cache -> origin/review/ncr-001e-sprocket-source-formatter-cold-cache
+2026-10-30T21:46:27.9465296Z  * [new branch]      review/ncr-001e-sprocket-two-process-restart-20261027 -> origin/review/ncr-001e-sprocket-two-process-restart-20261027
+2026-10-30T21:46:27.9469177Z  * [new branch]      review/ncr-001e-void-real-text-cache -> origin/review/ncr-001e-void-real-text-cache
+2026-10-30T21:46:27.9472378Z  * [new branch]      review/ncr-001e-void-two-process-20261027 -> origin/review/ncr-001e-void-two-process-20261027
+2026-10-30T21:46:27.9476031Z  * [new branch]      review/ncr-001e-void-two-process-restart-20261027 -> origin/review/ncr-001e-void-two-process-restart-20261027
+2026-10-30T21:46:27.9480138Z  * [new branch]      review/ncr-001f-pinned-four-mlp-hooks-20261027 -> origin/review/ncr-001f-pinned-four-mlp-hooks-20261027
+2026-10-30T21:46:27.9483744Z  * [new branch]      review/ncr-001f-sprocket-real-mlp-20261027 -> origin/review/ncr-001f-sprocket-real-mlp-20261027
+2026-10-30T21:46:27.9487614Z  * [new branch]      review/ncr-001f-void-byte-mlp-real-20261027 -> origin/review/ncr-001f-void-byte-mlp-real-20261027
+2026-10-30T21:46:27.9491126Z  * [new branch]      review/ncr-001k-void-byte-runtime-parity -> origin/review/ncr-001k-void-byte-runtime-parity
+2026-10-30T21:46:27.9494632Z  * [new branch]      review/ncr-001k-void-tokenizer-source-audit -> origin/review/ncr-001k-void-tokenizer-source-audit
+2026-10-30T21:46:27.9498182Z  * [new branch]      review/ncr001-chat-native-ce-20261029 -> origin/review/ncr001-chat-native-ce-20261029
+2026-10-30T21:46:27.9501900Z  * [new branch]      review/ncr001-chat-native-ce-original-custody-20261029 -> origin/review/ncr001-chat-native-ce-original-custody-20261029
+2026-10-30T21:46:27.9505958Z  * [new branch]      review/ncr001-cross-adapter-decoder-lease-20261028 -> origin/review/ncr001-cross-adapter-decoder-lease-20261028
+2026-10-30T21:46:27.9510320Z  * [new branch]      review/ncr001-postlease-decoded-log-failclosed-20261028 -> origin/review/ncr001-postlease-decoded-log-failclosed-20261028
+2026-10-30T21:46:27.9514764Z  * [new branch]      review/ncr001-postlease-sprocket-evidence-custody-20261028 -> origin/review/ncr001-postlease-sprocket-evidence-custody-20261028
+2026-10-30T21:46:27.9519263Z  * [new branch]      review/ncr001-postlease-sprocket-real-host-20261028 -> origin/review/ncr001-postlease-sprocket-real-host-20261028
+2026-10-30T21:46:27.9523424Z  * [new branch]      review/ncr001-postlease-wire-original-readback-20261028 -> origin/review/ncr001-postlease-wire-original-readback-20261028
+2026-10-30T21:46:27.9527986Z  * [new branch]      review/ncr001-pr102-original-zip-source-custody-20261029 -> origin/review/ncr001-pr102-original-zip-source-custody-20261029
+2026-10-30T21:46:27.9532196Z  * [new branch]      review/ncr001-pr113-original-actions-custody-20261029 -> origin/review/ncr001-pr113-original-actions-custody-20261029
+2026-10-30T21:46:27.9536331Z  * [new branch]      review/ncr001-root-instruct-native-masked-ce-20261028 -> origin/review/ncr001-root-instruct-native-masked-ce-20261028
+2026-10-30T21:46:27.9540740Z  * [new branch]      review/ncr001-root-native-ce-original-custody-20261029 -> origin/review/ncr001-root-native-ce-original-custody-20261029
+2026-10-30T21:46:27.9545130Z  * [new branch]      review/ncr001-sprocket-complete-original-zips-20261029 -> origin/review/ncr001-sprocket-complete-original-zips-20261029
+2026-10-30T21:46:27.9549681Z  * [new branch]      review/ncr001-sprocket-explicit-attention-mask-20261028 -> origin/review/ncr001-sprocket-explicit-attention-mask-20261028
+2026-10-30T21:46:27.9553701Z  * [new branch]      review/ncr001-sprocket-learning-evidence-20261028 -> origin/review/ncr001-sprocket-learning-evidence-20261028
+2026-10-30T21:46:27.9557957Z  * [new branch]      review/ncr001-sprocket-learning-original-readback-20261028 -> origin/review/ncr001-sprocket-learning-original-readback-20261028
+2026-10-30T21:46:27.9562261Z  * [new branch]      review/ncr001-sprocket-mask-original-evidence-20261028 -> origin/review/ncr001-sprocket-mask-original-evidence-20261028
+2026-10-30T21:46:27.9566263Z  * [new branch]      review/ncr001-sprocket-nca-learning-gate-20261028 -> origin/review/ncr001-sprocket-nca-learning-gate-20261028
+2026-10-30T21:46:27.9570481Z  * [new branch]      review/ncr001-sprocket-postlease-publisher-wire-20261028 -> origin/review/ncr001-sprocket-postlease-publisher-wire-20261028
+2026-10-30T21:46:27.9575026Z  * [new branch]      review/ncr001-sprocket-postwarmup-diag-reconciliation-20261029 -> origin/review/ncr001-sprocket-postwarmup-diag-reconciliation-20261029
+2026-10-30T21:46:27.9579185Z  * [new branch]      review/ncr001-sprocket-wire-fullmask-20261028 -> origin/review/ncr001-sprocket-wire-fullmask-20261028
+2026-10-30T21:46:27.9582911Z  * [new branch]      review/ncr001-sprocket-wire-fullmask-custody-20261028 -> origin/review/ncr001-sprocket-wire-fullmask-custody-20261028
+2026-10-30T21:46:27.9586948Z  * [new branch]      review/ncr001-sprocket-wire-shifted-custody-20261028 -> origin/review/ncr001-sprocket-wire-shifted-custody-20261028
+2026-10-30T21:46:27.9590946Z  * [new branch]      review/ncr001-sprocket-wire-shifted-loss-20261028 -> origin/review/ncr001-sprocket-wire-shifted-loss-20261028
+2026-10-30T21:46:27.9594964Z  * [new branch]      review/ncr001-void-nca-learning-original-custody-20261028 -> origin/review/ncr001-void-nca-learning-original-custody-20261028
+2026-10-30T21:46:27.9599529Z  * [new branch]      review/ncr001-void-postdiagnostic-reconciliation-20261028 -> origin/review/ncr001-void-postdiagnostic-reconciliation-20261028
+2026-10-30T21:46:27.9603521Z  * [new branch]      review/ncr001-void-postlease-eos-nca-mlp-20261028 -> origin/review/ncr001-void-postlease-eos-nca-mlp-20261028
+2026-10-30T21:46:27.9607237Z  * [new branch]      review/ncr001-void-postlease-maxctx-20261028 -> origin/review/ncr001-void-postlease-maxctx-20261028
+2026-10-30T21:46:27.9611342Z  * [new branch]      review/ncr001-void-postlease-maxctx-original-custody-20261028 -> origin/review/ncr001-void-postlease-maxctx-original-custody-20261028
+2026-10-30T21:46:27.9615449Z  * [new branch]      review/ncr001-void-postlease-nca-learning-20261028 -> origin/review/ncr001-void-postlease-nca-learning-20261028
+2026-10-30T21:46:27.9619404Z  * [new branch]      review/ncr001-void-postlease-original-custody-20261028 -> origin/review/ncr001-void-postlease-original-custody-20261028
+2026-10-30T21:46:27.9623307Z  * [new branch]      review/ncr001e-alltoken2048-original-custody-20261030 -> origin/review/ncr001e-alltoken2048-original-custody-20261030
+2026-10-30T21:46:27.9626969Z  * [new branch]      review/ncr001e-decoded-log-main-port-20261030 -> origin/review/ncr001e-decoded-log-main-port-20261030
+2026-10-30T21:46:27.9630266Z  * [new branch]      review/ncr001e-integrated-main-pin-20261030 -> origin/review/ncr001e-integrated-main-pin-20261030
+2026-10-30T21:46:27.9633708Z  * [new branch]      review/ncr001e-masked2048-original-custody-20261029 -> origin/review/ncr001e-masked2048-original-custody-20261029
+2026-10-30T21:46:27.9637830Z  * [new branch]      review/ncr001e-pr102-independent-masked-batch-20261027 -> origin/review/ncr001e-pr102-independent-masked-batch-20261027
+2026-10-30T21:46:27.9641769Z  * [new branch]      review/ncr001e-smol-2048-cold-generation-20261028 -> origin/review/ncr001e-smol-2048-cold-generation-20261028
+2026-10-30T21:46:27.9645501Z  * [new branch]      review/ncr001e-smol-shared-backbone-isolation-20261028 -> origin/review/ncr001e-smol-shared-backbone-isolation-20261028
+2026-10-30T21:46:27.9649912Z  * [new branch]      review/ncr001e-smol-source-runtime-adjudication-20261028 -> origin/review/ncr001e-smol-source-runtime-adjudication-20261028
+2026-10-30T21:46:27.9653572Z  * [new branch]      review/ncr001e-smollm2-adjudication-20261028 -> origin/review/ncr001e-smollm2-adjudication-20261028
+2026-10-30T21:46:27.9657263Z  * [new branch]      review/ncr001e-sprocket-alltoken-streaming-20261030 -> origin/review/ncr001e-sprocket-alltoken-streaming-20261030
+2026-10-30T21:46:27.9660931Z  * [new branch]      review/ncr001e-sprocket-chat-adjudication-20261027 -> origin/review/ncr001e-sprocket-chat-adjudication-20261027
+2026-10-30T21:46:27.9664443Z  * [new branch]      review/ncr001e-sprocket-chat-generate-20261027 -> origin/review/ncr001e-sprocket-chat-generate-20261027
+2026-10-30T21:46:27.9668188Z  * [new branch]      review/ncr001e-sprocket-instruct-adjudication-20261027 -> origin/review/ncr001e-sprocket-instruct-adjudication-20261027
+2026-10-30T21:46:27.9671847Z  * [new branch]      review/ncr001e-sprocket-masked2048-cold-20261029 -> origin/review/ncr001e-sprocket-masked2048-cold-20261029
+2026-10-30T21:46:27.9675636Z  * [new branch]      review/ncr001e-sprocket-source-matched-lane-delta-20261029 -> origin/review/ncr001e-sprocket-source-matched-lane-delta-20261029
+2026-10-30T21:46:27.9679600Z  * [new branch]      review/ncr001e-three-cohort-source-delta-20261030 -> origin/review/ncr001e-three-cohort-source-delta-20261030
+2026-10-30T21:46:27.9683052Z  * [new branch]      review/ncr001e-void-fourcohort-science-20261030 -> origin/review/ncr001e-void-fourcohort-science-20261030
+2026-10-30T21:46:27.9686807Z  * [new branch]      review/ncr001e-void-poststep-cold-replay-20261030 -> origin/review/ncr001e-void-poststep-cold-replay-20261030
+2026-10-30T21:46:27.9690755Z  * [new branch]      review/ncr001e-void-poststep-original-custody-20261030 -> origin/review/ncr001e-void-poststep-original-custody-20261030
+2026-10-30T21:46:27.9694215Z  * [new branch]      review/ncr001e-void-poststep2048-20261030 -> origin/review/ncr001e-void-poststep2048-20261030
+2026-10-30T21:46:27.9697555Z  * [new branch]      review/ncr001e-void1-2048-context-20261027 -> origin/review/ncr001e-void1-2048-context-20261027
+2026-10-30T21:46:27.9700624Z  * [new branch]      review/ncr001e-void1-adjudication-20261028 -> origin/review/ncr001e-void1-adjudication-20261028
+2026-10-30T21:46:27.9704078Z  * [new branch]      review/ncr001e-void1-postlease-adjudication-20261028 -> origin/review/ncr001e-void1-postlease-adjudication-20261028
+2026-10-30T21:46:27.9707823Z  * [new branch]      review/ncr001f-corrected-cpu-custody-20261029 -> origin/review/ncr001f-corrected-cpu-custody-20261029
+2026-10-30T21:46:27.9711756Z  * [new branch]      review/ncr001f-corrected-samehost-budget-interpretation-20261030 -> origin/review/ncr001f-corrected-samehost-budget-interpretation-20261030
+2026-10-30T21:46:27.9715790Z  * [new branch]      review/ncr001f-corrected-samehost-custody-20261029 -> origin/review/ncr001f-corrected-samehost-custody-20261029
+2026-10-30T21:46:27.9719657Z  * [new branch]      review/ncr001f-fourlane-phase-budget-preflight-20261030 -> origin/review/ncr001f-fourlane-phase-budget-preflight-20261030
+2026-10-30T21:46:27.9723321Z  * [new branch]      review/ncr001f-postlease-samehost-budget-20261029 -> origin/review/ncr001f-postlease-samehost-budget-20261029
+2026-10-30T21:46:27.9726916Z  * [new branch]      review/ncr001f-samehost-original-custody-20261029 -> origin/review/ncr001f-samehost-original-custody-20261029
+2026-10-30T21:46:27.9730387Z  * [new branch]      review/ncr001f-shared-backbone-ownership-20261028 -> origin/review/ncr001f-shared-backbone-ownership-20261028
+2026-10-30T21:46:27.9733339Z  * [new branch]      runner-001-cross-platform -> origin/runner-001-cross-platform
+2026-10-30T21:46:27.9735663Z  * [new branch]      scheduswarm/adopt-policy-20261030 -> origin/scheduswarm/adopt-policy-20261030
+2026-10-30T21:46:27.9738125Z  * [new branch]      scheduswarm/queue      -> origin/scheduswarm/queue
+2026-10-30T21:46:27.9740202Z  * [new branch]      scheduswarm/v2-policy-20261030 -> origin/scheduswarm/v2-policy-20261030
+2026-10-30T21:46:27.9742537Z  * [new branch]      story-001-autofactory-kickoff -> origin/story-001-autofactory-kickoff
+2026-10-30T21:46:27.9744786Z  * [new branch]      train-003-semantic-compiler -> origin/train-003-semantic-compiler
+2026-10-30T21:46:27.9747143Z  * [new branch]      train-004-full-parameter -> origin/train-004-full-parameter
+2026-10-30T21:46:27.9749478Z  * [new branch]      village-001-cybergoblin-foundry -> origin/village-001-cybergoblin-foundry
+2026-10-30T21:46:27.9751939Z  * [new branch]      village-001-repromotion-hygiene -> origin/village-001-repromotion-hygiene
+2026-10-30T21:46:27.9754368Z  * [new branch]      village-001-workflow-run-chain -> origin/village-001-workflow-run-chain
+2026-10-30T21:46:27.9756500Z  * [new branch]      village-001a-contract  -> origin/village-001a-contract
+2026-10-30T21:46:27.9758933Z  * [new branch]      village-001a-provider-finalization -> origin/village-001a-provider-finalization
+2026-10-30T21:46:27.9761768Z  * [new branch]      village-001b-auto-resume-superseded-runs -> origin/village-001b-auto-resume-superseded-runs
+2026-10-30T21:46:27.9764355Z  * [new branch]      village-001b-member-corpora -> origin/village-001b-member-corpora
+2026-10-30T21:46:27.9766765Z  * [new branch]      village-001c-bound-auto-resume -> origin/village-001c-bound-auto-resume
+2026-10-30T21:46:27.9769056Z  * [new branch]      village-001c-result-custody -> origin/village-001c-result-custody
+2026-10-30T21:46:27.9771201Z  * [new branch]      village-001c-sft-training -> origin/village-001c-sft-training
+2026-10-30T21:46:27.9773852Z  * [new branch]      village-001d-adjudicator-output-budget -> origin/village-001d-adjudicator-output-budget
+2026-10-30T21:46:27.9776558Z  * [new branch]      village-001d-adjudicator-salvage -> origin/village-001d-adjudicator-salvage
+2026-10-30T21:46:27.9779595Z  * [new branch]      village-001d-bind-pairs-to-feedback-hash -> origin/village-001d-bind-pairs-to-feedback-hash
+2026-10-30T21:46:27.9782576Z  * [new branch]      village-001d-bind-training-checkpoints -> origin/village-001d-bind-training-checkpoints
+2026-10-30T21:46:27.9785127Z  * [new branch]      village-001d-bound-recovery -> origin/village-001d-bound-recovery
+2026-10-30T21:46:27.9787804Z  * [new branch]      village-001d-canonical-parent-rejected -> origin/village-001d-canonical-parent-rejected
+2026-10-30T21:46:27.9790484Z  * [new branch]      village-001d-cascading-recovery -> origin/village-001d-cascading-recovery
+2026-10-30T21:46:27.9793151Z  * [new branch]      village-001d-clean-restart-refreshed-c -> origin/village-001d-clean-restart-refreshed-c
+2026-10-30T21:46:27.9795958Z  * [new branch]      village-001d-compare-review-salvage -> origin/village-001d-compare-review-salvage
+2026-10-30T21:46:27.9798974Z  * [new branch]      village-001d-critic-cache-repair-20261028 -> origin/village-001d-critic-cache-repair-20261028
+2026-10-30T21:46:27.9802123Z  * [new branch]      village-001d-document-production-hardening -> origin/village-001d-document-production-hardening
+2026-10-30T21:46:27.9805534Z  * [new branch]      village-001d-preserve-g08c-failed-evidence-20261028 -> origin/village-001d-preserve-g08c-failed-evidence-20261028
+2026-10-30T21:46:27.9809287Z  * [new branch]      village-001d-preserve-g08c-raw-whitespace-20261028 -> origin/village-001d-preserve-g08c-raw-whitespace-20261028
+2026-10-30T21:46:27.9812329Z  * [new branch]      village-001d-probe-pair-contract -> origin/village-001d-probe-pair-contract
+2026-10-30T21:46:27.9815097Z  * [new branch]      village-001d-provider-curation-hardening -> origin/village-001d-provider-curation-hardening
+2026-10-30T21:46:27.9818167Z  * [new branch]      village-001d-recover-adjudicator -> origin/village-001d-recover-adjudicator
+2026-10-30T21:46:27.9820893Z  * [new branch]      village-001d-recover-adjudicator-budget -> origin/village-001d-recover-adjudicator-budget
+2026-10-30T21:46:27.9823786Z  * [new branch]      village-001d-recover-after-pair-repair -> origin/village-001d-recover-after-pair-repair
+2026-10-30T21:46:27.9826733Z  * [new branch]      village-001d-recover-canonical-parent -> origin/village-001d-recover-canonical-parent
+2026-10-30T21:46:27.9829274Z  * [new branch]      village-001d-recover-cascade -> origin/village-001d-recover-cascade
+2026-10-30T21:46:27.9831869Z  * [new branch]      village-001d-recover-curation-hardening -> origin/village-001d-recover-curation-hardening
+2026-10-30T21:46:27.9834668Z  * [new branch]      village-001d-recover-probe-contract -> origin/village-001d-recover-probe-contract
+2026-10-30T21:46:27.9837898Z  * [new branch]      village-001d-reject-incompatible-feedback-resume -> origin/village-001d-reject-incompatible-feedback-resume
+2026-10-30T21:46:27.9840923Z  * [new branch]      village-001d-sprocket-preference -> origin/village-001d-sprocket-preference
+2026-10-30T21:46:27.9843488Z  * [new branch]      village-001d-targeted-pair-repair -> origin/village-001d-targeted-pair-repair
+2026-10-30T21:46:27.9846454Z  * [new branch]      village-001d-use-member-probes-in-preferences -> origin/village-001d-use-member-probes-in-preferences
+2026-10-30T21:46:27.9850063Z  * [new branch]      village-001e-explicit-lineage-contamination-audit -> origin/village-001e-explicit-lineage-contamination-audit
+2026-10-30T21:46:27.9853146Z  * [new branch]      village-001e-final-qualification -> origin/village-001e-final-qualification
+2026-10-30T21:46:27.9855843Z  * [new branch]      village-001e-final-qualification-main -> origin/village-001e-final-qualification-main
+2026-10-30T21:46:27.9858628Z  * [new branch]      village-001e-fresh-final-heldout -> origin/village-001e-fresh-final-heldout
+2026-10-30T21:46:27.9861500Z  * [new branch]      village-001e-neutral-final-release-tag -> origin/village-001e-neutral-final-release-tag
+2026-10-30T21:46:27.9864180Z  * [new branch]      village-001e-post-d-final-suite -> origin/village-001e-post-d-final-suite
+2026-10-30T21:46:27.9867144Z  * [new branch]      village-001e-promote-final-dataset-evidence -> origin/village-001e-promote-final-dataset-evidence
+2026-10-30T21:46:27.9870299Z  * [new branch]      village-001e-self-contained-model-registry -> origin/village-001e-self-contained-model-registry
+2026-10-30T21:46:27.9873616Z  * [new branch]      village-001e-use-final-tournament-quality-scores -> origin/village-001e-use-final-tournament-quality-scores
+2026-10-30T21:46:27.9876530Z  * [new branch]      village-dataset-stage-readmes -> origin/village-dataset-stage-readmes
+2026-10-30T21:46:27.9879091Z  * [new branch]      village-release-before-trigger -> origin/village-release-before-trigger
+2026-10-30T21:46:27.9881144Z  * [new tag]         detective-001c1-v1     -> detective-001c1-v1
+2026-10-30T21:46:27.9882781Z  * [new tag]         detective-001c2-v1     -> detective-001c2-v1
+2026-10-30T21:46:27.9884430Z  * [new tag]         detective-001c3-g02-v1 -> detective-001c3-g02-v1
+2026-10-30T21:46:27.9886068Z  * [new tag]         persona-001-v1         -> persona-001-v1
+2026-10-30T21:46:27.9887738Z  * [new tag]         persona-002-v1         -> persona-002-v1
+2026-10-30T21:46:27.9889322Z  * [new tag]         village-001-sft-v1     -> village-001-sft-v1
+2026-10-30T21:46:27.9893132Z [command]/usr/bin/git rev-parse --verify --quiet 520c4ae5b3152aff8d94760dab2e3103746f7334^{object}
+2026-10-30T21:46:27.9895092Z 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:46:27.9898222Z ##[endgroup]
+2026-10-30T21:46:27.9899784Z ##[group]Determining the checkout info
+2026-10-30T21:46:27.9901561Z ##[endgroup]
+2026-10-30T21:46:27.9902633Z [command]/usr/bin/git sparse-checkout disable
+2026-10-30T21:46:27.9905503Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-30T21:46:27.9909344Z ##[group]Checking out the ref
+2026-10-30T21:46:27.9911041Z [command]/usr/bin/git checkout --progress --force 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:46:28.1568738Z Note: switching to '520c4ae5b3152aff8d94760dab2e3103746f7334'.
+2026-10-30T21:46:28.1569485Z 
+2026-10-30T21:46:28.1569824Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-30T21:46:28.1570408Z changes and commit them, and you can discard any commits you make in this
+2026-10-30T21:46:28.1570980Z state without impacting any branches by switching back to a branch.
+2026-10-30T21:46:28.1571297Z 
+2026-10-30T21:46:28.1571539Z If you want to create a new branch to retain commits you create, you may
+2026-10-30T21:46:28.1572064Z do so (now or later) by using -c with the switch command. Example:
+2026-10-30T21:46:28.1572349Z 
+2026-10-30T21:46:28.1572495Z   git switch -c <new-branch-name>
+2026-10-30T21:46:28.1572705Z 
+2026-10-30T21:46:28.1572840Z Or undo this operation with:
+2026-10-30T21:46:28.1573072Z 
+2026-10-30T21:46:28.1573195Z   git switch -
+2026-10-30T21:46:28.1573348Z 
+2026-10-30T21:46:28.1573622Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-30T21:46:28.1573964Z 
+2026-10-30T21:46:28.1574263Z HEAD is now at 520c4ae NCR-001E: repair GitHub expression braces in poststep2048 workflow
+2026-10-30T21:46:28.1599656Z ##[endgroup]
+2026-10-30T21:46:28.1668678Z [command]/usr/bin/git log -1 --format=%H
+2026-10-30T21:46:28.1710520Z 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:46:28.1720081Z ##[group]Removing auth
+2026-10-30T21:46:28.1720424Z Removing SSH command configuration
+2026-10-30T21:46:28.1724351Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T21:46:28.1770867Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T21:46:28.2017678Z Removing HTTP extra header
+2026-10-30T21:46:28.2021731Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T21:46:28.2065287Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T21:46:28.2309487Z Removing includeIf entries pointing to credentials config files
+2026-10-30T21:46:28.2313560Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T21:46:28.2353352Z includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path
+2026-10-30T21:46:28.2354334Z includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path
+2026-10-30T21:46:28.2354830Z includeif.gitdir:/github/workspace/.git.path
+2026-10-30T21:46:28.2355223Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-30T21:46:28.2369807Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path
+2026-10-30T21:46:28.2406156Z /home/runner/work/_temp/git-credentials-a4100112-48d1-46ee-b409-0e985d766696.config
+2026-10-30T21:46:28.2416175Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-a4100112\-48d1\-46ee\-b409\-0e985d766696\.config
+2026-10-30T21:46:28.2462453Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path
+2026-10-30T21:46:28.2499320Z /home/runner/work/_temp/git-credentials-a4100112-48d1-46ee-b409-0e985d766696.config
+2026-10-30T21:46:28.2511175Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-a4100112\-48d1\-46ee\-b409\-0e985d766696\.config
+2026-10-30T21:46:28.2559037Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-30T21:46:28.2595616Z /github/runner_temp/git-credentials-a4100112-48d1-46ee-b409-0e985d766696.config
+2026-10-30T21:46:28.2603307Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-a4100112\-48d1\-46ee\-b409\-0e985d766696\.config
+2026-10-30T21:46:28.2652545Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-30T21:46:28.2687693Z /github/runner_temp/git-credentials-a4100112-48d1-46ee-b409-0e985d766696.config
+2026-10-30T21:46:28.2696411Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-a4100112\-48d1\-46ee\-b409\-0e985d766696\.config
+2026-10-30T21:46:28.2744826Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-30T21:46:28.2989351Z Removing credentials config '/home/runner/work/_temp/git-credentials-a4100112-48d1-46ee-b409-0e985d766696.config'
+2026-10-30T21:46:28.2999544Z ##[endgroup]
+2026-10-30T21:46:28.3272653Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-30T21:46:28.3273087Z with:
+2026-10-30T21:46:28.3273360Z   ref: 9fbdee880697903aaf5b91cc29442c9e53479e50
+2026-10-30T21:46:28.3273698Z   path: byte-eos-authority
+2026-10-30T21:46:28.3273982Z   persist-credentials: false
+2026-10-30T21:46:28.3274270Z   repository: techrote/neurounner
+2026-10-30T21:46:28.3277065Z   token: ***
+2026-10-30T21:46:28.3277307Z   ssh-strict: true
+2026-10-30T21:46:28.3277546Z   ssh-user: git
+2026-10-30T21:46:28.3277771Z   clean: true
+2026-10-30T21:46:28.3278107Z   sparse-checkout-cone-mode: true
+2026-10-30T21:46:28.3278401Z   fetch-depth: 1
+2026-10-30T21:46:28.3278630Z   fetch-tags: false
+2026-10-30T21:46:28.3278870Z   show-progress: true
+2026-10-30T21:46:28.3279111Z   lfs: false
+2026-10-30T21:46:28.3279326Z   submodules: false
+2026-10-30T21:46:28.3279575Z   set-safe-directory: true
+2026-10-30T21:46:28.3279883Z   allow-unsafe-pr-checkout: false
+2026-10-30T21:46:28.3280169Z env:
+2026-10-30T21:46:28.3280489Z   NCR_EXPECTED_HEAD: 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:46:28.3280892Z   HF_HOME: /tmp/ncr001-void-poststep2048-hf
+2026-10-30T21:46:28.3281212Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-30T21:46:28.3281492Z   TOKENIZERS_PARALLELISM: false
+2026-10-30T21:46:28.3281770Z   OMP_NUM_THREADS: 4
+2026-10-30T21:46:28.3282003Z   MKL_NUM_THREADS: 4
+2026-10-30T21:46:28.3282254Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-30T21:46:28.3282517Z ##[endgroup]
+2026-10-30T21:46:28.4129038Z Syncing repository: techrote/neurounner
+2026-10-30T21:46:28.4142867Z ##[group]Getting Git version info
+2026-10-30T21:46:28.4143703Z Working directory is '/home/runner/work/neurounner/neurounner/byte-eos-authority'
+2026-10-30T21:46:28.4183671Z [command]/usr/bin/git version
+2026-10-30T21:46:28.4229510Z git version 2.56.0
+2026-10-30T21:46:28.4250492Z ##[endgroup]
+2026-10-30T21:46:28.4260635Z Temporarily overriding HOME='/home/runner/work/_temp/58099548-339b-4eed-81cb-bdb1ec73ac31' before making global git config changes
+2026-10-30T21:46:28.4262036Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T21:46:28.4298441Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner/byte-eos-authority
+2026-10-30T21:46:28.4334448Z ##[group]Determining repository object format
+2026-10-30T21:46:28.4336243Z ##[endgroup]
+2026-10-30T21:46:28.4337306Z ##[group]Initializing the repository
+2026-10-30T21:46:28.4342018Z [command]/usr/bin/git init /home/runner/work/neurounner/neurounner/byte-eos-authority
+2026-10-30T21:46:28.4391147Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-30T21:46:28.4392425Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-30T21:46:28.4394623Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-30T21:46:28.4395843Z hint: call:
+2026-10-30T21:46:28.4396337Z hint:
+2026-10-30T21:46:28.4397208Z hint: 	git config --global init.defaultBranch <name>
+2026-10-30T21:46:28.4397939Z hint:
+2026-10-30T21:46:28.4398610Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-30T21:46:28.4400364Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-30T21:46:28.4401233Z hint:
+2026-10-30T21:46:28.4401852Z hint: 	git branch -m <name>
+2026-10-30T21:46:28.4402415Z hint:
+2026-10-30T21:46:28.4403312Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-30T21:46:28.4405578Z Initialized empty Git repository in /home/runner/work/neurounner/neurounner/byte-eos-authority/.git/
+2026-10-30T21:46:28.4408153Z [command]/usr/bin/git remote add origin https://github.com/techrote/neurounner
+2026-10-30T21:46:28.4441430Z ##[endgroup]
+2026-10-30T21:46:28.4442150Z ##[group]Disabling automatic garbage collection
+2026-10-30T21:46:28.4446188Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-30T21:46:28.4481012Z ##[endgroup]
+2026-10-30T21:46:28.4482150Z ##[group]Setting up auth
+2026-10-30T21:46:28.4483020Z Removing SSH command configuration
+2026-10-30T21:46:28.4488036Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T21:46:28.4530606Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T21:46:28.4794978Z Removing HTTP extra header
+2026-10-30T21:46:28.4802268Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T21:46:28.4845577Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T21:46:28.5129057Z Removing includeIf entries pointing to credentials config files
+2026-10-30T21:46:28.5136400Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T21:46:28.5182992Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-30T21:46:28.5432005Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-7ecee00c-dddf-49a0-af5f-3c3564e77d41.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-30T21:46:28.5480025Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/byte-eos-authority/.git.path /home/runner/work/_temp/git-credentials-7ecee00c-dddf-49a0-af5f-3c3564e77d41.config
+2026-10-30T21:46:28.5522287Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/byte-eos-authority/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-7ecee00c-dddf-49a0-af5f-3c3564e77d41.config
+2026-10-30T21:46:28.5565582Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/byte-eos-authority/.git.path /github/runner_temp/git-credentials-7ecee00c-dddf-49a0-af5f-3c3564e77d41.config
+2026-10-30T21:46:28.5608594Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/byte-eos-authority/.git/worktrees/*.path /github/runner_temp/git-credentials-7ecee00c-dddf-49a0-af5f-3c3564e77d41.config
+2026-10-30T21:46:28.5649460Z ##[endgroup]
+2026-10-30T21:46:28.5649938Z ##[group]Fetching the repository
+2026-10-30T21:46:28.5655984Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin 9fbdee880697903aaf5b91cc29442c9e53479e50
+2026-10-30T21:46:29.0951748Z From https://github.com/techrote/neurounner
+2026-10-30T21:46:29.0952443Z  * branch            9fbdee880697903aaf5b91cc29442c9e53479e50 -> FETCH_HEAD
+2026-10-30T21:46:29.0962290Z [command]/usr/bin/git rev-parse --verify --quiet 9fbdee880697903aaf5b91cc29442c9e53479e50^{object}
+2026-10-30T21:46:29.1000274Z 9fbdee880697903aaf5b91cc29442c9e53479e50
+2026-10-30T21:46:29.1004433Z ##[endgroup]
+2026-10-30T21:46:29.1005387Z ##[group]Determining the checkout info
+2026-10-30T21:46:29.1006028Z ##[endgroup]
+2026-10-30T21:46:29.1009831Z [command]/usr/bin/git sparse-checkout disable
+2026-10-30T21:46:29.1062520Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-30T21:46:29.1104529Z ##[group]Checking out the ref
+2026-10-30T21:46:29.1109487Z [command]/usr/bin/git checkout --progress --force 9fbdee880697903aaf5b91cc29442c9e53479e50
+2026-10-30T21:46:29.3175324Z Note: switching to '9fbdee880697903aaf5b91cc29442c9e53479e50'.
+2026-10-30T21:46:29.3175827Z 
+2026-10-30T21:46:29.3176178Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-30T21:46:29.3177253Z changes and commit them, and you can discard any commits you make in this
+2026-10-30T21:46:29.3178067Z state without impacting any branches by switching back to a branch.
+2026-10-30T21:46:29.3178549Z 
+2026-10-30T21:46:29.3178896Z If you want to create a new branch to retain commits you create, you may
+2026-10-30T21:46:29.3179878Z do so (now or later) by using -c with the switch command. Example:
+2026-10-30T21:46:29.3180339Z 
+2026-10-30T21:46:29.3180519Z   git switch -c <new-branch-name>
+2026-10-30T21:46:29.3180913Z 
+2026-10-30T21:46:29.3181087Z Or undo this operation with:
+2026-10-30T21:46:29.3181359Z 
+2026-10-30T21:46:29.3181503Z   git switch -
+2026-10-30T21:46:29.3181699Z 
+2026-10-30T21:46:29.3182066Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-30T21:46:29.3182607Z 
+2026-10-30T21:46:29.3183162Z HEAD is now at 9fbdee8 Fix Actions receipt to identify exact checkout SHA separately from synthetic merge SHA
+2026-10-30T21:46:29.3196498Z ##[endgroup]
+2026-10-30T21:46:29.3256420Z [command]/usr/bin/git log -1 --format=%H
+2026-10-30T21:46:29.3296310Z 9fbdee880697903aaf5b91cc29442c9e53479e50
+2026-10-30T21:46:29.3305267Z ##[group]Removing auth
+2026-10-30T21:46:29.3305977Z Removing SSH command configuration
+2026-10-30T21:46:29.3311591Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T21:46:29.3362198Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T21:46:29.3607657Z Removing HTTP extra header
+2026-10-30T21:46:29.3612169Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T21:46:29.3656260Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T21:46:29.3897087Z Removing includeIf entries pointing to credentials config files
+2026-10-30T21:46:29.3900621Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T21:46:29.3935782Z includeif.gitdir:/home/runner/work/neurounner/neurounner/byte-eos-authority/.git.path
+2026-10-30T21:46:29.3937002Z includeif.gitdir:/home/runner/work/neurounner/neurounner/byte-eos-authority/.git/worktrees/*.path
+2026-10-30T21:46:29.3937627Z includeif.gitdir:/github/workspace/byte-eos-authority/.git.path
+2026-10-30T21:46:29.3938372Z includeif.gitdir:/github/workspace/byte-eos-authority/.git/worktrees/*.path
+2026-10-30T21:46:29.3958760Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/byte-eos-authority/.git.path
+2026-10-30T21:46:29.3995051Z /home/runner/work/_temp/git-credentials-7ecee00c-dddf-49a0-af5f-3c3564e77d41.config
+2026-10-30T21:46:29.4009076Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/byte-eos-authority/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-7ecee00c\-dddf\-49a0\-af5f\-3c3564e77d41\.config
+2026-10-30T21:46:29.4062216Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/byte-eos-authority/.git/worktrees/*.path
+2026-10-30T21:46:29.4099677Z /home/runner/work/_temp/git-credentials-7ecee00c-dddf-49a0-af5f-3c3564e77d41.config
+2026-10-30T21:46:29.4109493Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/byte-eos-authority/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-7ecee00c\-dddf\-49a0\-af5f\-3c3564e77d41\.config
+2026-10-30T21:46:29.4155015Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/byte-eos-authority/.git.path
+2026-10-30T21:46:29.4189191Z /github/runner_temp/git-credentials-7ecee00c-dddf-49a0-af5f-3c3564e77d41.config
+2026-10-30T21:46:29.4197725Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/byte-eos-authority/.git.path \/github\/runner_temp\/git\-credentials\-7ecee00c\-dddf\-49a0\-af5f\-3c3564e77d41\.config
+2026-10-30T21:46:29.4245017Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/byte-eos-authority/.git/worktrees/*.path
+2026-10-30T21:46:29.4278536Z /github/runner_temp/git-credentials-7ecee00c-dddf-49a0-af5f-3c3564e77d41.config
+2026-10-30T21:46:29.4287425Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/byte-eos-authority/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-7ecee00c\-dddf\-49a0\-af5f\-3c3564e77d41\.config
+2026-10-30T21:46:29.4332927Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-30T21:46:29.4575482Z Removing credentials config '/home/runner/work/_temp/git-credentials-7ecee00c-dddf-49a0-af5f-3c3564e77d41.config'
+2026-10-30T21:46:29.4588173Z ##[endgroup]
+2026-10-30T21:46:29.4748762Z ##[group]Run set -euo pipefail
+2026-10-30T21:46:29.4749149Z [36;1mset -euo pipefail[0m
+2026-10-30T21:46:29.4749473Z [36;1mtest "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"[0m
+2026-10-30T21:46:29.4750038Z [36;1mtest "$(git -C byte-eos-authority rev-parse HEAD)" = "9fbdee880697903aaf5b91cc29442c9e53479e50"[0m
+2026-10-30T21:46:29.4750791Z [36;1mtest "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"[0m
+2026-10-30T21:46:29.4751546Z [36;1mtest "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"[0m
+2026-10-30T21:46:29.4752311Z [36;1mtest "$(git hash-object scripts/ncr_001_void_nca_learning_gate.py)" = "672fede7cb488bb33315b067bba5292678435644"[0m
+2026-10-30T21:46:29.4753061Z [36;1mtest "$(git hash-object scripts/ncr_001_void_eos_postlease.py)" = "45d170472f3b37c6e13088212deab60bf2b223d7"[0m
+2026-10-30T21:46:29.4753845Z [36;1mtest "$(git hash-object scripts/ncr_001_void_postlease_maxctx.py)" = "b9ade1ad56591707b291eaa31dcb3a99ff428a8f"[0m
+2026-10-30T21:46:29.4779675Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T21:46:29.4780020Z env:
+2026-10-30T21:46:29.4780282Z   NCR_EXPECTED_HEAD: 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:46:29.4780654Z   HF_HOME: /tmp/ncr001-void-poststep2048-hf
+2026-10-30T21:46:29.4780944Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-30T21:46:29.4781187Z   TOKENIZERS_PARALLELISM: false
+2026-10-30T21:46:29.4781420Z   OMP_NUM_THREADS: 4
+2026-10-30T21:46:29.4781618Z   MKL_NUM_THREADS: 4
+2026-10-30T21:46:29.4781835Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-30T21:46:29.4782058Z ##[endgroup]
+2026-10-30T21:46:29.5000064Z ##[group]Run python3 -m pip install --disable-pip-version-check \
+2026-10-30T21:46:29.5000561Z [36;1mpython3 -m pip install --disable-pip-version-check \[0m
+2026-10-30T21:46:29.5001049Z [36;1m  --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"[0m
+2026-10-30T21:46:29.5001523Z [36;1mpython3 -m pip install --disable-pip-version-check \[0m
+2026-10-30T21:46:29.5001913Z [36;1m  "transformers==4.57.6" "huggingface_hub==0.36.2" \[0m
+2026-10-30T21:46:29.5002280Z [36;1m  "safetensors==0.8.0" "sentencepiece>=0.2,<1"[0m
+2026-10-30T21:46:29.5020643Z shell: /usr/bin/bash -e {0}
+2026-10-30T21:46:29.5021060Z env:
+2026-10-30T21:46:29.5021322Z   NCR_EXPECTED_HEAD: 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:46:29.5021686Z   HF_HOME: /tmp/ncr001-void-poststep2048-hf
+2026-10-30T21:46:29.5021974Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-30T21:46:29.5022221Z   TOKENIZERS_PARALLELISM: false
+2026-10-30T21:46:29.5022460Z   OMP_NUM_THREADS: 4
+2026-10-30T21:46:29.5022693Z   MKL_NUM_THREADS: 4
+2026-10-30T21:46:29.5022904Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-30T21:46:29.5023132Z ##[endgroup]
+2026-10-30T21:46:30.7778418Z Defaulting to user installation because normal site-packages is not writeable
+2026-10-30T21:46:31.4683027Z Looking in indexes: https://download.pytorch.org/whl/cpu
+2026-10-30T21:46:31.7574379Z Collecting torch==2.14.1+cpu
+2026-10-30T21:46:31.8150020Z   Downloading https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl.metadata (37 kB)
+2026-10-30T21:46:31.8269771Z Requirement already satisfied: filelock in /usr/local/lib/python3.12/dist-packages (from torch==2.14.1+cpu) (4.2.4)
+2026-10-30T21:46:31.8280256Z Requirement already satisfied: typing-extensions>=4.10.0 in /usr/lib/python3/dist-packages (from torch==2.14.1+cpu) (4.10.0)
+2026-10-30T21:46:31.8469354Z Collecting setuptools>=77.0.3 (from torch==2.14.1+cpu)
+2026-10-30T21:46:31.8553198Z   Downloading https://download.pytorch.org/whl/setuptools-78.1.0-py3-none-any.whl.metadata (6.6 kB)
+2026-10-30T21:46:31.8895821Z Collecting sympy>=1.13.3 (from torch==2.14.1+cpu)
+2026-10-30T21:46:31.9337185Z   Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+2026-10-30T21:46:31.9793626Z Collecting networkx>=2.5.1 (from torch==2.14.1+cpu)
+2026-10-30T21:46:31.9870992Z   Downloading networkx-3.7-py3-none-any.whl.metadata (6.7 kB)
+2026-10-30T21:46:31.9915544Z Requirement already satisfied: jinja2 in /usr/lib/python3/dist-packages (from torch==2.14.1+cpu) (3.1.2)
+2026-10-30T21:46:32.0362802Z Collecting fsspec>=0.8.5 (from torch==2.14.1+cpu)
+2026-10-30T21:46:32.0435185Z   Downloading fsspec-2026.9.0-py3-none-any.whl.metadata (10 kB)
+2026-10-30T21:46:32.1827371Z Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch==2.14.1+cpu)
+2026-10-30T21:46:32.1899191Z   Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+2026-10-30T21:46:32.2191582Z Downloading https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl (196.3 MB)
+2026-10-30T21:46:33.4205646Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 196.3/196.3 MB 25.0 MB/s eta 0:00:00
+2026-10-30T21:46:33.4285930Z Downloading fsspec-2026.9.0-py3-none-any.whl (221 kB)
+2026-10-30T21:46:33.4447347Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 221.7/221.7 kB 14.8 MB/s eta 0:00:00
+2026-10-30T21:46:33.4523342Z Downloading networkx-3.7-py3-none-any.whl (2.1 MB)
+2026-10-30T21:46:33.4767826Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 93.9 MB/s eta 0:00:00
+2026-10-30T21:46:33.4889724Z Downloading https://download.pytorch.org/whl/setuptools-78.1.0-py3-none-any.whl (1.3 MB)
+2026-10-30T21:46:33.5043647Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 90.5 MB/s eta 0:00:00
+2026-10-30T21:46:33.5117644Z Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+2026-10-30T21:46:33.5771362Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 99.4 MB/s eta 0:00:00
+2026-10-30T21:46:33.5851239Z Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+2026-10-30T21:46:33.5914286Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 121.1 MB/s eta 0:00:00
+2026-10-30T21:46:34.3127862Z Installing collected packages: mpmath, sympy, setuptools, networkx, fsspec, torch
+2026-10-30T21:46:52.4721976Z Successfully installed fsspec-2026.9.0 mpmath-1.3.0 networkx-3.7 setuptools-78.1.0 sympy-1.14.0 torch-2.14.1+cpu
+2026-10-30T21:46:52.8382211Z Defaulting to user installation because normal site-packages is not writeable
+2026-10-30T21:46:53.1005575Z Collecting transformers==4.57.6
+2026-10-30T21:46:53.1616548Z   Downloading transformers-4.57.6-py3-none-any.whl.metadata (43 kB)
+2026-10-30T21:46:53.1768611Z      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.0/44.0 kB 2.7 MB/s eta 0:00:00
+2026-10-30T21:46:53.2905985Z Collecting huggingface_hub==0.36.2
+2026-10-30T21:46:53.3057719Z   Downloading huggingface_hub-0.36.2-py3-none-any.whl.metadata (15 kB)
+2026-10-30T21:46:53.4706565Z Collecting safetensors==0.8.0
+2026-10-30T21:46:53.4845552Z   Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.2 kB)
+2026-10-30T21:46:53.5563230Z Collecting sentencepiece<1,>=0.2
+2026-10-30T21:46:53.5712803Z   Downloading sentencepiece-0.2.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (33 kB)
+2026-10-30T21:46:53.8445343Z Requirement already satisfied: filelock in /usr/local/lib/python3.12/dist-packages (from transformers==4.57.6) (4.2.4)
+2026-10-30T21:46:54.1369677Z Collecting numpy>=1.17 (from transformers==4.57.6)
+2026-10-30T21:46:54.1509118Z   Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+2026-10-30T21:46:54.1552748Z Requirement already satisfied: packaging>=20.0 in /usr/lib/python3/dist-packages (from transformers==4.57.6) (24.0)
+2026-10-30T21:46:54.1561815Z Requirement already satisfied: pyyaml>=5.1 in /usr/lib/python3/dist-packages (from transformers==4.57.6) (6.0.1)
+2026-10-30T21:46:54.6148198Z Collecting regex!=2019.12.17 (from transformers==4.57.6)
+2026-10-30T21:46:54.6289466Z   Downloading regex-2026.9.29-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+2026-10-30T21:46:54.6341311Z      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.6/40.6 kB 9.1 MB/s eta 0:00:00
+2026-10-30T21:46:54.6376582Z Requirement already satisfied: requests in /usr/lib/python3/dist-packages (from transformers==4.57.6) (2.31.0)
+2026-10-30T21:46:54.8044783Z Collecting tokenizers<=0.23.0,>=0.22.0 (from transformers==4.57.6)
+2026-10-30T21:46:54.8186247Z   Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+2026-10-30T21:46:54.9306406Z Collecting tqdm>=4.27 (from transformers==4.57.6)
+2026-10-30T21:46:54.9444374Z   Downloading tqdm-4.70.1-py3-none-any.whl.metadata (57 kB)
+2026-10-30T21:46:54.9510029Z      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 57.4/57.4 kB 10.2 MB/s eta 0:00:00
+2026-10-30T21:46:55.0280883Z Requirement already satisfied: fsspec>=2023.5.0 in /home/runner/.local/lib/python3.12/site-packages (from huggingface_hub==0.36.2) (2026.9.0)
+2026-10-30T21:46:55.1009987Z Collecting hf-xet<2.0.0,>=1.1.3 (from huggingface_hub==0.36.2)
+2026-10-30T21:46:55.1180324Z   Downloading hf_xet-1.8.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+2026-10-30T21:46:55.1355935Z Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/lib/python3/dist-packages (from huggingface_hub==0.36.2) (4.10.0)
+2026-10-30T21:46:55.2697586Z Downloading transformers-4.57.6-py3-none-any.whl (12.0 MB)
+2026-10-30T21:46:55.3797999Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.0/12.0 MB 154.7 MB/s eta 0:00:00
+2026-10-30T21:46:55.3939959Z Downloading huggingface_hub-0.36.2-py3-none-any.whl (566 kB)
+2026-10-30T21:46:55.4003171Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 566.4/566.4 kB 125.9 MB/s eta 0:00:00
+2026-10-30T21:46:55.4142505Z Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (516 kB)
+2026-10-30T21:46:55.4201493Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 516.0/516.0 kB 123.5 MB/s eta 0:00:00
+2026-10-30T21:46:55.4342732Z Downloading sentencepiece-0.2.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (1.4 MB)
+2026-10-30T21:46:55.4465706Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 130.0 MB/s eta 0:00:00
+2026-10-30T21:46:55.4607268Z Downloading hf_xet-1.8.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.3 MB)
+2026-10-30T21:46:55.4846572Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.3/4.3 MB 193.4 MB/s eta 0:00:00
+2026-10-30T21:46:55.4990729Z Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
+2026-10-30T21:46:55.5890604Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 170.1 MB/s eta 0:00:00
+2026-10-30T21:46:55.6031167Z Downloading regex-2026.9.29-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+2026-10-30T21:46:55.6105288Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 807.8/807.8 kB 143.3 MB/s eta 0:00:00
+2026-10-30T21:46:55.6245680Z Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.3 MB)
+2026-10-30T21:46:55.6445329Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 187.1 MB/s eta 0:00:00
+2026-10-30T21:46:55.6582504Z Downloading tqdm-4.70.1-py3-none-any.whl (80 kB)
+2026-10-30T21:46:55.6621193Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 80.2/80.2 kB 31.9 MB/s eta 0:00:00
+2026-10-30T21:46:56.4421480Z Installing collected packages: tqdm, sentencepiece, safetensors, regex, numpy, hf-xet, huggingface_hub, tokenizers, transformers
+2026-10-30T21:47:05.0320616Z Successfully installed hf-xet-1.8.0 huggingface_hub-0.36.2 numpy-2.5.4 regex-2026.9.29 safetensors-0.8.0 sentencepiece-0.2.2 tokenizers-0.22.2 tqdm-4.70.1 transformers-4.57.6
+2026-10-30T21:47:05.2492296Z ##[group]Run set -euo pipefail
+2026-10-30T21:47:05.2492652Z [36;1mset -euo pipefail[0m
+2026-10-30T21:47:05.2492941Z [36;1mmkdir -p runtime/ncr001-void-poststep2048[0m
+2026-10-30T21:47:05.2493376Z [36;1mpython3 - <<'PY' 2>&1 | tee runtime/ncr001-void-poststep2048/prefetch.log[0m
+2026-10-30T21:47:05.2493765Z [36;1mimport hashlib,json[0m
+2026-10-30T21:47:05.2494007Z [36;1mfrom pathlib import Path[0m
+2026-10-30T21:47:05.2494300Z [36;1mfrom huggingface_hub import hf_hub_download[0m
+2026-10-30T21:47:05.2494726Z [36;1mp=json.load(open("experiments/ncr-001/source-pins.json"))["models"]["void1"][0m
+2026-10-30T21:47:05.2495162Z [36;1massert p["repo_id"]=="dotlabs/void.1"[0m
+2026-10-30T21:47:05.2495545Z [36;1massert p["revision"]=="9c2be5087772867d45961abd11f6b35110617563"[0m
+2026-10-30T21:47:05.2495901Z [36;1mnames={[0m
+2026-10-30T21:47:05.2496214Z [36;1m  "model.safetensors":"weight_declared_lfs_sha256_not_downloaded",[0m
+2026-10-30T21:47:05.2496646Z [36;1m  "config.json":"config_sha256",[0m
+2026-10-30T21:47:05.2497297Z [36;1m  "tokenization_byte.py":"tokenization_byte_py_sha256",[0m
+2026-10-30T21:47:05.2497656Z [36;1m  "byte_vocab.json":"byte_vocab_sha256",[0m
+2026-10-30T21:47:05.2498010Z [36;1m  "tokenizer_config.json":"tokenizer_config_sha256",[0m
+2026-10-30T21:47:05.2498400Z [36;1m  "special_tokens_map.json":"special_tokens_map_sha256",[0m
+2026-10-30T21:47:05.2498720Z [36;1m}[0m
+2026-10-30T21:47:05.2498924Z [36;1mfor name,key in names.items():[0m
+2026-10-30T21:47:05.2499295Z [36;1m    f=Path(hf_hub_download(p["repo_id"],name,revision=p["revision"]))[0m
+2026-10-30T21:47:05.2499667Z [36;1m    h=hashlib.sha256()[0m
+2026-10-30T21:47:05.2499919Z [36;1m    with f.open("rb") as stream:[0m
+2026-10-30T21:47:05.2500252Z [36;1m        for chunk in iter(lambda:stream.read(4*1024*1024),b""):[0m
+2026-10-30T21:47:05.2500590Z [36;1m            h.update(chunk)[0m
+2026-10-30T21:47:05.2500846Z [36;1m    digest=h.hexdigest()[0m
+2026-10-30T21:47:05.2501341Z [36;1m    assert digest==p[key],(name,digest,p[key])[0m
+2026-10-30T21:47:05.2501665Z [36;1m    if name=="model.safetensors":[0m
+2026-10-30T21:47:05.2501957Z [36;1m        assert f.stat().st_size==360622744[0m
+2026-10-30T21:47:05.2502336Z [36;1m    print("SOURCE_SHA256",name,digest,f.stat().st_size,flush=True)[0m
+2026-10-30T21:47:05.2502685Z [36;1mPY[0m
+2026-10-30T21:47:05.2523462Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T21:47:05.2523785Z env:
+2026-10-30T21:47:05.2524050Z   NCR_EXPECTED_HEAD: 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:47:05.2524407Z   HF_HOME: /tmp/ncr001-void-poststep2048-hf
+2026-10-30T21:47:05.2524695Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-30T21:47:05.2524936Z   TOKENIZERS_PARALLELISM: false
+2026-10-30T21:47:05.2525172Z   OMP_NUM_THREADS: 4
+2026-10-30T21:47:05.2525371Z   MKL_NUM_THREADS: 4
+2026-10-30T21:47:05.2525581Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-30T21:47:05.2525807Z ##[endgroup]
+2026-10-30T21:47:07.4801619Z SOURCE_SHA256 model.safetensors ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3 360622744
+2026-10-30T21:47:07.5257015Z SOURCE_SHA256 config.json cbc72137da3dae65085a2a8c39ad7634d16bf92d785ca00d283ee82fe32b37e7 1284
+2026-10-30T21:47:07.5837568Z SOURCE_SHA256 tokenization_byte.py 279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03 4458
+2026-10-30T21:47:07.6334379Z SOURCE_SHA256 byte_vocab.json 57a1cd2e70dd5b7cc6fd2eaa12ebfcd173c1620fa5d45c2c6282511c29b6a5f6 4292
+2026-10-30T21:47:07.6796493Z SOURCE_SHA256 tokenizer_config.json 0ecbd4fd39e35125800d806af981ba0cacd8a7ba5f02c9e729c4ecc54af6d300 932
+2026-10-30T21:47:07.7274391Z SOURCE_SHA256 special_tokens_map.json 20d4b94d0e657c3f44d9123522c106e7315b6c1a1b6d259478f17bd2918b1263 75
+2026-10-30T21:47:07.7578914Z ##[group]Run set -euo pipefail
+2026-10-30T21:47:07.7579245Z [36;1mset -euo pipefail[0m
+2026-10-30T21:47:07.7579568Z [36;1muname -a > runtime/ncr001-void-poststep2048/runner.txt[0m
+2026-10-30T21:47:07.7579999Z [36;1mlscpu >> runtime/ncr001-void-poststep2048/runner.txt[0m
+2026-10-30T21:47:07.7580451Z [36;1mpython3 --version >> runtime/ncr001-void-poststep2048/runner.txt 2>&1[0m
+2026-10-30T21:47:07.7601136Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T21:47:07.7601470Z env:
+2026-10-30T21:47:07.7601737Z   NCR_EXPECTED_HEAD: 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:47:07.7602097Z   HF_HOME: /tmp/ncr001-void-poststep2048-hf
+2026-10-30T21:47:07.7602386Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-30T21:47:07.7602634Z   TOKENIZERS_PARALLELISM: false
+2026-10-30T21:47:07.7602870Z   OMP_NUM_THREADS: 4
+2026-10-30T21:47:07.7603075Z   MKL_NUM_THREADS: 4
+2026-10-30T21:47:07.7603291Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-30T21:47:07.7603522Z ##[endgroup]
+2026-10-30T21:47:07.7741717Z ##[group]Run set -o pipefail
+2026-10-30T21:47:07.7742010Z [36;1mset -o pipefail[0m
+2026-10-30T21:47:07.7742284Z [36;1mHF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \[0m
+2026-10-30T21:47:07.7742706Z [36;1m  python3 scripts/ncr_001_void_poststep2048.py --phase producer \[0m
+2026-10-30T21:47:07.7743176Z [36;1m  2>&1 | tee runtime/ncr001-void-poststep2048/producer.log[0m
+2026-10-30T21:47:07.7761762Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T21:47:07.7762086Z env:
+2026-10-30T21:47:07.7762349Z   NCR_EXPECTED_HEAD: 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:47:07.7762706Z   HF_HOME: /tmp/ncr001-void-poststep2048-hf
+2026-10-30T21:47:07.7762993Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-30T21:47:07.7763240Z   TOKENIZERS_PARALLELISM: false
+2026-10-30T21:47:07.7763474Z   OMP_NUM_THREADS: 4
+2026-10-30T21:47:07.7763675Z   MKL_NUM_THREADS: 4
+2026-10-30T21:47:07.7763887Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-30T21:47:07.7764125Z ##[endgroup]
+2026-10-30T21:47:11.1318273Z `torch_dtype` is deprecated! Use `dtype` instead!
+2026-10-30T21:47:13.5437359Z {"diagnostic_optimizer_steps": 1, "phase": "producer", "status": "POSTSTEP2048_UPDATED_ADAPTER_READY__SCIENTIFIC_72_UNADMITTED", "train_authorized": false}
+2026-10-30T21:47:14.0254311Z ##[group]Run set -o pipefail
+2026-10-30T21:47:14.0254797Z [36;1mset -o pipefail[0m
+2026-10-30T21:47:14.0255307Z [36;1mHF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \[0m
+2026-10-30T21:47:14.0255900Z [36;1m  python3 scripts/ncr_001_void_poststep2048.py --phase consumer \[0m
+2026-10-30T21:47:14.0256520Z [36;1m  2>&1 | tee runtime/ncr001-void-poststep2048/consumer.log[0m
+2026-10-30T21:47:14.0277950Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T21:47:14.0278510Z env:
+2026-10-30T21:47:14.0278947Z   NCR_EXPECTED_HEAD: 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:47:14.0339309Z   HF_HOME: /tmp/ncr001-void-poststep2048-hf
+2026-10-30T21:47:14.0339682Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-30T21:47:14.0339971Z   TOKENIZERS_PARALLELISM: false
+2026-10-30T21:47:14.0340425Z   OMP_NUM_THREADS: 4
+2026-10-30T21:47:14.0340780Z   MKL_NUM_THREADS: 4
+2026-10-30T21:47:14.0341168Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-30T21:47:14.0341601Z ##[endgroup]
+2026-10-30T21:47:17.3367930Z `torch_dtype` is deprecated! Use `dtype` instead!
+2026-10-30T21:47:18.3352808Z Token indices sequence length is longer than the specified maximum sequence length for this model (8512 > 2048). Running this sequence through the model will result in indexing errors
+2026-10-30T21:52:03.7110494Z {"context_units": 2048, "full_72_conformance_pass": false, "incremental_positions": 2048, "phase": "consumer", "status": "PASS_POSTSTEP2048_CACHE_MASK_SUFFIX_GENERATE__SCIENTIFIC_72_UNADMITTED", "train_authorized": false}
+2026-10-30T21:52:04.2014276Z ##[group]Run rm -rf runtime/ncr001-void-poststep2048/nca-after-one-public-synthetic-step
+2026-10-30T21:52:04.2014951Z [36;1mrm -rf runtime/ncr001-void-poststep2048/nca-after-one-public-synthetic-step[0m
+2026-10-30T21:52:04.2015552Z [36;1mtest ! -e runtime/ncr001-void-poststep2048/nca-after-one-public-synthetic-step[0m
+2026-10-30T21:52:04.2035897Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-30T21:52:04.2036278Z env:
+2026-10-30T21:52:04.2036558Z   NCR_EXPECTED_HEAD: 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:52:04.2037200Z   HF_HOME: /tmp/ncr001-void-poststep2048-hf
+2026-10-30T21:52:04.2037491Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-30T21:52:04.2037735Z   TOKENIZERS_PARALLELISM: false
+2026-10-30T21:52:04.2037972Z   OMP_NUM_THREADS: 4
+2026-10-30T21:52:04.2038170Z   MKL_NUM_THREADS: 4
+2026-10-30T21:52:04.2038387Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-30T21:52:04.2038621Z ##[endgroup]
+2026-10-30T21:52:04.2188870Z ##[group]Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+2026-10-30T21:52:04.2189292Z with:
+2026-10-30T21:52:04.2189518Z   name: ncr001-void-poststep2048-host-a1
+2026-10-30T21:52:04.2190205Z   path: runtime/ncr001-void-poststep2048/
+runtime/ncr001-void-nca-learning/receipt.json
+runtime/ncr001-void-postlease/poststep-cold.json
+
+2026-10-30T21:52:04.2190832Z   if-no-files-found: warn
+2026-10-30T21:52:04.2191062Z   retention-days: 30
+2026-10-30T21:52:04.2191271Z   compression-level: 6
+2026-10-30T21:52:04.2191491Z   overwrite: false
+2026-10-30T21:52:04.2191703Z   include-hidden-files: false
+2026-10-30T21:52:04.2191934Z   archive: true
+2026-10-30T21:52:04.2192117Z env:
+2026-10-30T21:52:04.2192357Z   NCR_EXPECTED_HEAD: 520c4ae5b3152aff8d94760dab2e3103746f7334
+2026-10-30T21:52:04.2192713Z   HF_HOME: /tmp/ncr001-void-poststep2048-hf
+2026-10-30T21:52:04.2192995Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-30T21:52:04.2193233Z   TOKENIZERS_PARALLELISM: false
+2026-10-30T21:52:04.2193488Z   OMP_NUM_THREADS: 4
+2026-10-30T21:52:04.2193688Z   MKL_NUM_THREADS: 4
+2026-10-30T21:52:04.2193898Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-30T21:52:04.2194122Z ##[endgroup]
+2026-10-30T21:52:04.3851317Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-10-30T21:52:04.3853525Z The least common ancestor is /home/runner/work/neurounner/neurounner/runtime. This will be the root directory of the artifact
+2026-10-30T21:52:04.3854537Z With the provided path, there will be 8 files uploaded
+2026-10-30T21:52:04.3859946Z Artifact name is valid!
+2026-10-30T21:52:04.3860553Z Root directory input is valid!
+2026-10-30T21:52:04.6119494Z Uploading artifact: ncr001-void-poststep2048-host-a1.zip
+2026-10-30T21:52:04.6163522Z Beginning upload of artifact content to blob storage
+2026-10-30T21:52:04.7224526Z Uploaded bytes 10002
+2026-10-30T21:52:04.7425665Z Finished uploading artifact content to blob storage!
+2026-10-30T21:52:04.7427343Z SHA256 digest of uploaded artifact is db66de004d26a6c24539b08898f85df88b3be7631ba300655a82bd021de71145
+2026-10-30T21:52:04.7428292Z Finalizing artifact upload
+2026-10-30T21:52:05.1763651Z Artifact ncr001-void-poststep2048-host-a1 successfully finalized. Artifact ID 13014123159
+2026-10-30T21:52:05.1765400Z Artifact ncr001-void-poststep2048-host-a1 has been successfully uploaded! Final size is 10002 bytes. Artifact ID is 13014123159
+2026-10-30T21:52:05.1769431Z Artifact download URL: https://github.com/techrote/neurounner/actions/runs/41133450850/artifacts/13014123159
+2026-10-30T21:52:05.1974323Z Post job cleanup.
+2026-10-30T21:52:05.2863133Z [command]/usr/bin/git version
+2026-10-30T21:52:05.2902921Z git version 2.56.0
+2026-10-30T21:52:05.2974578Z Temporarily overriding HOME='/home/runner/work/_temp/aef66514-8034-4dde-a72f-f5d95fddb10c' before making global git config changes
+2026-10-30T21:52:05.2976147Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T21:52:05.2981211Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner/byte-eos-authority
+2026-10-30T21:52:05.3017256Z Removing SSH command configuration
+2026-10-30T21:52:05.3024415Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T21:52:05.3065666Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T21:52:05.3327049Z Removing HTTP extra header
+2026-10-30T21:52:05.3332721Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T21:52:05.3394484Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T21:52:05.3644434Z Removing includeIf entries pointing to credentials config files
+2026-10-30T21:52:05.3653765Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T21:52:05.3708325Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-30T21:52:05.4193766Z Post job cleanup.
+2026-10-30T21:52:05.5090192Z [command]/usr/bin/git version
+2026-10-30T21:52:05.5141167Z git version 2.56.0
+2026-10-30T21:52:05.5179853Z Temporarily overriding HOME='/home/runner/work/_temp/26a4c96f-451d-4b2f-84a6-3f7e42bff7f2' before making global git config changes
+2026-10-30T21:52:05.5181397Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-30T21:52:05.5186478Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner
+2026-10-30T21:52:05.5223641Z Removing SSH command configuration
+2026-10-30T21:52:05.5231461Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-30T21:52:05.5274878Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-30T21:52:05.5552741Z Removing HTTP extra header
+2026-10-30T21:52:05.5560366Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-30T21:52:05.5610456Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-30T21:52:05.5895736Z Removing includeIf entries pointing to credentials config files
+2026-10-30T21:52:05.5905750Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-30T21:52:05.5959862Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-30T21:52:05.6395653Z Cleaning up orphan processes
