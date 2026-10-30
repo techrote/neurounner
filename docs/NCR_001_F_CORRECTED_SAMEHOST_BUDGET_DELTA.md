@@ -33,3 +33,10 @@ Distinct frozen lanes outside these two models (SmolLM2 and void.1) retain their
 **Decision:** source-only description of original within-model untrained full-host timing samples and independent MAC arithmetic. **NOT** actual matched training compute, learned usefulness, final #72 source/runtime scientific admission, generated tool/memory semantics, four-model synthesis or training permission.
 
 train_authorized=false; full_72_conformance_pass=false; actual_compute_budget_qualified=false.
+
+
+## Permanent derived decision versus original raw custody
+
+The new [source-only machine decision](../experiments/ncr-001/adjudication/sprocket-original-fourthread-wall-budget-delta-20261030.json) is permanently committed **separately** from all six original physical ZIP/log streams. The eight-method offline suite recomputes its entire JSON object from the already immutably custodied original report.json members; a forged, missing, edited or otherwise mismatched derived decision fails CI rather than silently superseding the original results.
+
+The observed unpaired NCA/MLP ratio spans are Chat 512 **1.00558–1.02115**, Chat 2048 **0.98234–1.00889**, root Instruct 512 **1.00227–1.01012**, root Instruct 2048 **0.99966–1.01245**. The two 2048 spans include unity and the two 512 spans do not; **neither observation is a statistical confidence statement, statistical significance claim or compute match**. The immutable original source payload, including negative startup-thread history, outranks this source-only derived report. The new workflow's ephemeral CI artifact merely corroborates reproducibility; the committed derived JSON and parent Git archives are the durable records.
