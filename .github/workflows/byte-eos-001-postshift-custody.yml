@@ -1,0 +1,42 @@
+name: BYTE-EOS original corrected postshift ZIP/log Git custody (NO MODEL)
+
+on:
+  push:
+    branches:
+      - review/byte-eos-001-independent-acceptance-20261027
+    paths:
+      - '.github/workflows/byte-eos-001-postshift-custody.yml'
+      - 'scripts/byte_eos_001_postshift_git_custody.py'
+      - 'tests/test_byte_eos_001_postshift_git_custody.py'
+      - 'experiments/ncr-001/byte-eos-001/postshift-original-20261030/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  custody:
+    name: Immutable complete original source-only Actions ZIP/log readback
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: a1b41c358d215974ea9ef2748baa13c3872b0fbb
+          path: prereg
+          persist-credentials: false
+      - name: Fail-closed exact source, whole compressed ZIP, original job log, source-only semantics
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/byte_eos_001_postshift_git_custody.py
+          python3 scripts/byte_eos_001_postshift_git_custody.py
+          python3 -m unittest discover -s tests -p 'test_byte_eos_001_postshift_git_custody.py' -v
+      - name: Historical original #126 ZIP preservation audit still passes
+        run: |
+          set -euo pipefail
+          python3 scripts/byte_eos_001_independent_archive_audit.py
+          python3 -m unittest discover -s tests -p 'test_byte_eos_001_independent_archive_audit.py' -v
