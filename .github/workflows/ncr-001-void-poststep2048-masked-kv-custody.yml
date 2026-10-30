@@ -1,0 +1,82 @@
+name: NCR-001E original poststep B2 masked-KV custody read-only audit
+on:
+  pull_request:
+    branches: [review/ncr001e-void-poststep2048-masked-kv-20261030]
+    paths:
+      - ".github/workflows/ncr-001-void-poststep2048-masked-kv-custody.yml"
+      - "scripts/ncr_001_void_poststep2048_masked_kv_bootstrap_custody.py"
+      - "scripts/ncr_001_void_poststep2048_masked_kv_original_custody.py"
+      - "tests/test_ncr_001_void_poststep2048_masked_kv_original_custody.py"
+      - "docs/NCR_001_VOID_POSTSTEP2048_MASKED_KV_CUSTODY.md"
+      - "experiments/ncr-001/controls-evidence/void-poststep2048-masked-kv-20261030/**"
+      - "RAG.md"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: ncr001-void-masked-kv-custody-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  original-byte-custody:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Refuse source parent, protocol or evidence-surface drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "${{ github.event.pull_request.base.sha }}" = "b3e9e6a05e007297de19f3955b59e2a9eb118996"
+          git merge-base --is-ancestor b3e9e6a05e007297de19f3955b59e2a9eb118996 HEAD
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git hash-object experiments/ncr-001/controls-evidence/void-poststep2048-masked-kv-20261030/manifest.json)" = "439584bd144c5b640cbc49807200ea3845b384cb"
+          test ! -e .github/workflows/ncr-001-void-poststep2048-masked-kv-bootstrap-custody.yml
+      - name: Offline literal raw-byte and adversarial audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-void-masked-kv-custody
+          python3 -m py_compile scripts/ncr_001_void_poststep2048_masked_kv_bootstrap_custody.py scripts/ncr_001_void_poststep2048_masked_kv_original_custody.py tests/test_ncr_001_void_poststep2048_masked_kv_original_custody.py
+          python3 -m unittest discover -s tests -p "test_ncr_001_void_poststep2048_masked_kv_original_custody.py" -v \
+            2>&1 | tee runtime/ncr001-void-masked-kv-custody/tests.log
+          python3 scripts/ncr_001_void_poststep2048_masked_kv_original_custody.py \
+            > runtime/ncr001-void-masked-kv-custody/offline.json
+      - name: Live re-download all four complete original streams
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/ncr_001_void_poststep2048_masked_kv_original_custody.py --live \
+            > runtime/ncr001-void-masked-kv-custody/live.json
+          python3 - <<'PY'
+          import json
+          x=json.load(open("runtime/ncr001-void-masked-kv-custody/live.json"))
+          assert x["status"]=="PASS_ORIGINAL_POSTSTEP_B2_MASKED_KV_BYTES__SCIENTIFIC_72_UNADMITTED"
+          assert x["original_ledger_freshly_rechecked"] is True
+          assert x["physical_result"]["sides"]["left"]["genuine_B2_incremental_steps"]==64
+          assert x["physical_result"]["sides"]["right"]["genuine_B2_incremental_steps"]==64
+          assert x["train_authorized"] is False
+          assert x["full_72_conformance_pass"] is False
+          print("PASS_LIVE_MASKED_KV_ORIGINAL_STREAMS_EQUAL_PERMANENT_GIT_BYTES")
+          PY
+      - name: Preserve derived source-only audit logs
+        if: always()
+        shell: bash
+        run: |
+          git rev-parse HEAD > runtime/ncr001-void-masked-kv-custody/head.txt
+          uname -a > runtime/ncr001-void-masked-kv-custody/runner.txt
+          python3 --version > runtime/ncr001-void-masked-kv-custody/python.txt 2>&1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: ncr001-void-masked-kv-original-custody-audit
+          path: runtime/ncr001-void-masked-kv-custody/
+          retention-days: 30
+          if-no-files-found: warn
