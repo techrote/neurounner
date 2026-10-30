@@ -5,6 +5,10 @@ on:
     branches: [review/ncr001e-void-poststep-original-custody-20261030]
     paths:
       - ".github/workflows/ncr-001-void-poststep-bootstrap-custody.yml"
+  pull_request:
+    branches: [review/ncr001e-void-poststep-cold-replay-20261030]
+    paths:
+      - ".github/workflows/ncr-001-void-poststep-bootstrap-custody.yml"
 
 permissions:
   contents: write
@@ -14,6 +18,10 @@ concurrency:
   group: ncr001-void-poststep-original-archive-once
   cancel-in-progress: false
 
+env:
+  ARCHIVE_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
+  EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   one-shot-readback-and-git-archive:
     runs-on: ubuntu-24.04
@@ -21,16 +29,16 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ env.ARCHIVE_REF }}
           persist-credentials: true
           fetch-depth: 0
       - name: Verify source exact and refuse repeating archival
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           test "$GITHUB_REPOSITORY" = "techrote/neurounner"
-          test "$GITHUB_REF_NAME" = "review/ncr001e-void-poststep-original-custody-20261030"
+          test "$ARCHIVE_REF" = "review/ncr001e-void-poststep-original-custody-20261030"
           git merge-base --is-ancestor f78d302ab6062c3739315c3e04317a9a97b97191 HEAD
           test ! -e experiments/ncr-001/controls-evidence/void-poststep-cold-20261030/manifest.json
           test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
@@ -54,7 +62,7 @@ jobs:
           test "$(git diff --cached --name-only | wc -l)" -eq 5
           git diff --cached --name-only | grep -v '^experiments/ncr-001/controls-evidence/void-poststep-cold-20261030/' && exit 1 || :
           git commit -m "NCR-001E: permanently preserve original PR210 physical ZIPs and full decoded job logs"
-          git push origin "HEAD:$GITHUB_REF_NAME"
+          git push origin "HEAD:$ARCHIVE_REF"
       - name: Archive the one-shot bootstrap log even on failure
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
