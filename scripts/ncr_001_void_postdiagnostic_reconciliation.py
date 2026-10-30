@@ -45,6 +45,16 @@ def read(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def finite_measurement(value: object) -> bool:
+    """Measured losses/gradients must be real numbers, never bool or strings."""
+    return type(value) in (int, float) and math.isfinite(value)
+
+
+def exact_int(value: object, expected: int) -> bool:
+    """Reject bool-as-int for optimizer steps, taps, and causal-label counts."""
+    return type(value) is int and value == expected
+
+
 def check_inputs(legacy: dict, receipt: dict, manifest: dict, policy: dict) -> None:
     """Require consistent source-bound receipts, not a self-certified final PASS."""
     refuse(policy["experiment"] == "NCR-001"
@@ -102,7 +112,7 @@ def check_inputs(legacy: dict, receipt: dict, manifest: dict, policy: dict) -> N
            "PASS_VOID1_ONE_STEP_NCA_DIAGNOSTIC__72_SCIENTIFIC_ADMISSION_BLOCKED"
            and receipt["runner"]["expected_head"] == SOURCES["original_physical_head"]
            and receipt["runner"]["run_id"] == str(manifest["original_run"])
-           and receipt["diagnostic_optimizer_steps"] == 1
+           and exact_int(receipt["diagnostic_optimizer_steps"], 1)
            and receipt["model_training_experiment"] is False
            and receipt["independent_scientific_review"] is False
            and receipt["comparative_training_performed"] is False
@@ -128,36 +138,46 @@ def check_inputs(legacy: dict, receipt: dict, manifest: dict, policy: dict) -> N
            "source weights/logits altered during single diagnostic update")
     sample = receipt["synthetic_sample"]
     refuse(sample["heldout"] is False
-           and sample["real_eos_id"] == sample["supervised_eos_id"] == 258
-           and sample["prompt_bytes"] == 10
-           and sample["supervised_after_shift"] == 21
-           and sample["total_units"] == 31,
+           and exact_int(sample["real_eos_id"], 258)
+           and exact_int(sample["supervised_eos_id"], 258)
+           and exact_int(sample["prompt_bytes"], 10)
+           and exact_int(sample["supervised_after_shift"], 21)
+           and exact_int(sample["total_units"], 31),
            "source sample is not the fixed public shifted-EOS diagnostic")
     warm, post = receipt["warmup"], receipt["post_warmup"]
     refuse(warm["optimizer"] == "NCA-only SGD"
            and warm["learning_rate"] == 0.005
            and warm["readout_before_sha256"] != warm["readout_after_sha256"]
-           and all(math.isfinite(v) and v > 0 for v in
+           and all(finite_measurement(v) and v > 0 for v in
                    (warm["native_causal_eos_loss"], post["native_causal_eos_loss"]))
            and warm["native_causal_eos_loss"] ==
            manifest["physical_result"]["initial_native_loss"]
            and post["native_causal_eos_loss"] ==
            manifest["physical_result"]["post_warmup_native_loss"],
            "single NCA-only step/finite teacher-forced loss not established")
-    refuse(warm["gradient_l1"]["readout.weight"] > 0
-           and all(warm["gradient_l1"][key] == 0 for key in
+    refuse(finite_measurement(warm["gradient_l1"]["readout.weight"])
+           and warm["gradient_l1"]["readout.weight"] > 0
+           and all(finite_measurement(warm["gradient_l1"][key])
+                   and warm["gradient_l1"][key] == 0 for key in
                    ("observe.weight", "perception.weight",
                     "rule.weight", "input_norm.weight"))
-           and all(math.isfinite(post["gradient_l1"][key])
+           and all(finite_measurement(post["gradient_l1"][key])
                    and post["gradient_l1"][key] > 0 for key in
                    ("readout.weight", "observe.weight",
                     "perception.weight", "rule.weight", "input_norm.weight")),
            "zero-readout warmup or upstream post-warmup gradient invalid")
     fields = post["ordered_field_trace"]
-    refuse([f["tap_index"] for f in fields] == [0, 1, 2]
-           and [f["next_tap"] for f in fields] == [1, 2, 3]
-           and len({f["field_sha256"] for f in fields}) == 3
-           and all(f["shape"] == [1, 31, 4, 8, 8] for f in fields),
+    refuse(type(fields) is list and len(fields) == 3
+           and all(type(f) is dict and exact_int(f["tap_index"], i)
+                   and exact_int(f["next_tap"], i + 1)
+                   and type(f["shape"]) is list
+                   and all(type(n) is int for n in f["shape"])
+                   and f["shape"] == [1, 31, 4, 8, 8]
+                   and type(f["field_sha256"]) is str
+                   and len(f["field_sha256"]) == 64
+                   and all(c in "0123456789abcdef" for c in f["field_sha256"])
+                   for i, f in enumerate(fields))
+           and len({f["field_sha256"] for f in fields}) == 3,
            "depth-field order/identity not demonstrated")
     refuse(set(receipt["checks"]) == {
         "backbone_unchanged_after_one_step", "disabled_source_logits_unchanged",

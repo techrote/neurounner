@@ -131,6 +131,31 @@ class PostDiagnosticVoid1ReconciliationTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "REFUSED"):
                     check.check_inputs(*original)
 
+    def test_typed_numeric_and_field_evidence_rejects_bool_and_string_forgery(self):
+        # Python bool is an int subclass: True==1 and False==0. Neither is
+        # an original measured loss, gradient, count or ordered field index.
+        mutations = (
+            ("bool_step", lambda r: r.__setitem__("diagnostic_optimizer_steps", True)),
+            ("bool_readout", lambda r: r["warmup"]["gradient_l1"].__setitem__("readout.weight", True)),
+            ("bool_zero_gradient", lambda r: r["warmup"]["gradient_l1"].__setitem__("rule.weight", False)),
+            ("bool_post_gradient", lambda r: r["post_warmup"]["gradient_l1"].__setitem__("observe.weight", True)),
+            ("numeric_string_gradient", lambda r: r["post_warmup"]["gradient_l1"].__setitem__("rule.weight", "1.0")),
+            ("boolean_eos", lambda r: r["synthetic_sample"].__setitem__("real_eos_id", True)),
+            ("boolean_tap", lambda r: r["post_warmup"]["ordered_field_trace"][1].__setitem__("tap_index", True)),
+            ("boolean_next_tap", lambda r: r["post_warmup"]["ordered_field_trace"][0].__setitem__("next_tap", True)),
+            ("boolean_shape", lambda r: r["post_warmup"]["ordered_field_trace"][0]["shape"].__setitem__(0, True)),
+            ("invalid_digest", lambda r: r["post_warmup"]["ordered_field_trace"][0].__setitem__("field_sha256", "not-a-hash")),
+        )
+        for name, mutate in mutations:
+            with self.subTest(name=name):
+                arguments = [copy.deepcopy(self.legacy),
+                             copy.deepcopy(self.original),
+                             copy.deepcopy(self.manifest),
+                             copy.deepcopy(self.protocol)]
+                mutate(arguments[1])
+                with self.assertRaisesRegex(RuntimeError, "REFUSED"):
+                    check.check_inputs(*arguments)
+
     def test_unmodified_archives_pass_cross_receipt_validator(self):
         check.check_inputs(self.legacy, self.original,
                            self.manifest, self.protocol)
