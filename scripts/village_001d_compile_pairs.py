@@ -529,6 +529,14 @@ def validate_reviews(raw: str, expected: list[str]) -> list[dict]:
     return [out[pair_id] for pair_id in expected]
 
 
+def critic_repair_batch_size(repair_round: int) -> int:
+    """Shrink repeated targeted critic repairs to defeat bad cached batch answers."""
+    schedule = (10, 5, 1)
+    if not 1 <= repair_round <= len(schedule):
+        raise ValueError(f"unsupported critic repair round: {repair_round}")
+    return schedule[repair_round - 1]
+
+
 def run_critic(
     *,
     key: str,
@@ -574,17 +582,22 @@ def run_critic(
     labels = [label]
 
     # Provider outputs often truncate near the end of a 20-review JSON object.
-    # Keep every valid review and request only the missing IDs in <=10-row batches.
+    # Keep every valid review and request only missing IDs. If a targeted repair
+    # returns an empty-but-valid JSON object, repeating the identical 10-row
+    # request can hit the same cached provider answer. Deterministically narrow
+    # 10 -> 5 -> 1 so later rounds are genuinely different while remaining
+    # bounded and preserving all accepted evidence.
     for repair_round in range(1, 4):
         missing = [pair_id for pair_id in expected if pair_id not in parsed]
         if not missing:
             break
-        for batch_index in range(0, len(missing), 10):
-            batch_ids = missing[batch_index : batch_index + 10]
+        batch_size = critic_repair_batch_size(repair_round)
+        for batch_index in range(0, len(missing), batch_size):
+            batch_ids = missing[batch_index : batch_index + batch_size]
             batch_rows = [by_id[pair_id] for pair_id in batch_ids]
             repair_label = (
                 f"{label}-targeted-repair{repair_round}-"
-                f"b{batch_index // 10 + 1:02d}"
+                f"b{batch_index // batch_size + 1:02d}"
             )
             repair_payload = {
                 "model": model["id"],
@@ -592,8 +605,11 @@ def run_critic(
                     {
                         "role": "system",
                         "content": (
-                            "Score only the supplied missing preference-pair IDs. "
-                            "Use the explicit 0..4 anchors. Return JSON only."
+                            f"Targeted critic repair round {repair_round}. "
+                            f"Return exactly {len(batch_ids)} review objects, one for "
+                            f"each required pair_id: {json.dumps(batch_ids)}. "
+                            "Do not return an empty reviews list. Use the explicit "
+                            "0..4 anchors. Return JSON only."
                         ),
                     },
                     {

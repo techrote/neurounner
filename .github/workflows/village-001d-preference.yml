@@ -118,11 +118,22 @@ jobs:
           import village_001b_generate_member as provider
           from village_001d_compile_pairs import (
               critic_prompt,
+              critic_repair_batch_size,
               parse_adjudicator_partial,
               parse_compiler,
               parse_reviews_partial,
               remove_duplicate_compiled,
           )
+
+          # Repeated empty-but-valid critic repairs must not resend the same
+          # cached 10-row request forever. The bounded fallback schedule narrows.
+          assert [critic_repair_batch_size(x) for x in (1, 2, 3)] == [10, 5, 1]
+          try:
+              critic_repair_batch_size(4)
+          except ValueError:
+              pass
+          else:
+              raise AssertionError("critic repair schedule accepted an unbounded round")
 
           # A dropped HTTPS connection is transport-retryable rather than terminal.
           calls={"n":0}
