@@ -1,0 +1,150 @@
+name: DETECTIVE-003D source-native Sprocket live bridge
+
+on:
+  pull_request:
+    paths:
+      - "experiments/detective-003/sprocket-live-scripter.json"
+      - "experiments/detective-003/SPROCKET_LIVE_BRIDGE.md"
+      - "experiments/detective-001/sprocket-scripter.json"
+      - "scripts/detective_001b3_sprocket.py"
+      - "scripts/detective_003c_scripter_bridge.py"
+      - "experiments/detective-003/scripter-bridge.json"
+      - "scripts/detective_003a_session.py"
+      - "experiments/detective-001/pilot-case.json"
+      - "scripts/detective_003d_sprocket_live.py"
+      - "scripts/detective_003d_verify.py"
+      - "tests/test_detective_003d_sprocket_live.py"
+      - "datasets/detective-003d/**"
+      - ".github/workflows/detective-003d-sprocket-live.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: detective-003d-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    outputs:
+      evidence_ready: ${{ steps.evidence.outputs.ready }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile source-native bridge source/readback/tests
+        run: |
+          python3 -m py_compile scripts/detective_003d_sprocket_live.py scripts/detective_003d_verify.py tests/test_detective_003d_sprocket_live.py
+      - name: Run complete DETECTIVE offline suite
+        run: |
+          python3 -m unittest discover -s tests -p 'test_detective_*.py' -v
+      - name: Verify frozen B3/003C authority without model download
+        run: |
+          python3 - <<'PY'
+          from scripts.detective_003d_sprocket_live import load_contract, build_request, render_native_turns
+          cfg,case,b3=load_contract()
+          session,request=build_request(cfg,case)
+          turns,prompt=render_native_turns(cfg,request)
+          assert cfg["model"]["weight_file"]=="model.safetensors"
+          assert cfg["model"]["chat_checkpoint_forbidden"]=="chat/model.safetensors"
+          assert len(turns)==2 and prompt.endswith("<|assistant|>")
+          assert "camera-cache" not in prompt
+          assert "OXIDATION" in prompt
+          assert cfg["runtime"]["optimizer_steps"]==0
+          assert cfg["acceptance"]["correct_tool_selection_required"] is False
+          assert cfg["acceptance"]["population_expansion_admitted"] is False
+          print("DETECTIVE-003D OFFLINE SOURCE/BRIDGE CONTRACT: PASS")
+          PY
+      - name: Revalidate durable evidence if present
+        id: evidence
+        run: |
+          if [ -e datasets/detective-003d/manifest.json ]; then
+            python3 scripts/detective_003d_verify.py --evidence datasets/detective-003d
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  live-and-publish:
+    needs: offline-contract
+    if: ${{ needs.offline-contract.outputs.evidence_ready != 'true' && github.event_name == 'pull_request' && github.head_ref == 'research/detective-003d-sprocket-live-bridge-20261028' && github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.user.login == 'techrote' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      OMP_NUM_THREADS: "4"
+      MKL_NUM_THREADS: "4"
+      TOKENIZERS_PARALLELISM: "false"
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      HF_HOME: /tmp/detective-003d-hf
+      DETECTIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: kandivault-source/Sprocket-500M
+          ref: a003767e70d766bc14b40c89792543ee8641c8bc
+          path: publisher
+          persist-credentials: false
+      - name: Verify exact publisher source before model dependencies
+        run: |
+          test "$(git -C publisher rev-parse HEAD)" = "a003767e70d766bc14b40c89792543ee8641c8bc"
+          test "$(git -C publisher hash-object src/train/sft_data.py)" = "90bddf8976b9d6410fe7c5c1f084708e1cebab73"
+          test "$(git -C publisher hash-object scripts/harvest_round.py)" = "97811aa4245ad3f05f66ce0c2d8aa8c353619267"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned CPU source-native inference stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "huggingface_hub==0.36.2" "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Run one source-native Sprocket generation through 003C
+        run: |
+          rm -rf out/detective-003d
+          python3 scripts/detective_003d_sprocket_live.py             --publisher-dir publisher             --out out/detective-003d
+      - name: Independent model-free native/transaction/session replay
+        run: |
+          python3 scripts/detective_003d_verify.py             --evidence out/detective-003d/dataset
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: detective003d-sprocket-live-${{ github.run_id }}
+          path: out/detective-003d
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Refuse stale source before durable publication
+        run: |
+          remote_sha=$(git ls-remote --heads origin refs/heads/research/detective-003d-sprocket-live-bridge-20261028 | cut -f1)
+          test "$remote_sha" = "$DETECTIVE_HEAD_SHA"
+      - name: Promote independently verified Sprocket bridge evidence
+        run: |
+          test ! -e datasets/detective-003d
+          mkdir -p datasets/detective-003d
+          cp -a out/detective-003d/dataset/. datasets/detective-003d/
+          python3 scripts/detective_003d_verify.py --evidence datasets/detective-003d
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add datasets/detective-003d
+          git commit -m "DETECTIVE-003D: archive source-native Sprocket live bridge evidence"
+          git push origin HEAD:research/detective-003d-sprocket-live-bridge-20261028
+
+  evidence-readback:
+    needs: offline-contract
+    if: ${{ needs.offline-contract.outputs.evidence_ready == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Replay committed Sprocket live evidence only
+        run: |
+          python3 scripts/detective_003d_verify.py --evidence datasets/detective-003d

@@ -1,0 +1,92 @@
+{
+  "config_sha256": "3bda2571726fcb6b7610f5a6033e1c9fa1ce9916086a6911120c469f9cdcfccf",
+  "experiment": "STORY-001",
+  "fail_closed": true,
+  "github": {
+    "actor": "techrote",
+    "ref": "refs/heads/story-001-autofactory-kickoff",
+    "run_attempt": "1",
+    "run_id": "40242589104",
+    "workflow": "STORY-001 Sprocket autofactory memory"
+  },
+  "local_models": {
+    "budgets": {
+      "draft_max_tokens": 8192,
+      "draft_segment_max_tokens": 800,
+      "edit_max_tokens": 8192,
+      "edit_segment_max_tokens": 1000,
+      "normalizer_segment_max_tokens": 1000,
+      "review_max_tokens": 3200,
+      "storyboard_max_tokens": 3200
+    },
+    "candidates": {
+      "lfm25-8b-a1b": {
+        "file": "LFM2.5-8B-A1B-Q4_K_M.gguf",
+        "label": "LFM2.5-8B-A1B",
+        "path_env": "STORY001_LFM8B",
+        "quant": "Q4_K_M",
+        "repo": "LiquidAI/LFM2.5-8B-A1B-GGUF",
+        "sha256": "4923ec14f06b968b74d663e5949867d2d9c3bf13a20b8be1a9f9af39989b2bb0",
+        "source_pin": "content-sha256"
+      },
+      "qwen-storyteller-q4": {
+        "file": "QwenStoryteller.Q4_K_M.gguf",
+        "label": "QwenStoryteller Q4_K_M",
+        "path_env": "STORY001_QWEN_STORYTELLER",
+        "quant": "Q4_K_M",
+        "repo": "mradermacher/QwenStoryteller-GGUF",
+        "sha256": "ddad9dd5b41138f3dc7e1209dda9778949291eeefa5f5537f6f5b72c3ed042a1",
+        "source_pin": "content-sha256"
+      },
+      "qwen35-4b": {
+        "file": "Qwen3.5-4B-Q4_K_M.gguf",
+        "label": "Qwen3.5-4B",
+        "path_env": "STORY001_QWEN35_4B",
+        "quant": "Q4_K_M",
+        "repo": "SoAIHQ/Qwen3.5-4B-GGUF",
+        "sha256": "2ebe6eb67cb92adeffc7073c48dd4e3baf79465ac650793dc751cad2b29cf219",
+        "source_pin": "84406fbcd9ad62767d66227075f88089a3f41caf"
+      }
+    },
+    "context": 12288,
+    "download_hash_verification_required": true,
+    "max_parallel": 1,
+    "remote_provider_used": false,
+    "roles": {
+      "drafter": "qwen-storyteller-q4",
+      "edit_planner": "lfm25-8b-a1b",
+      "editor": "qwen35-4b",
+      "reviewer": "qwen35-4b",
+      "storyboard": "qwen35-4b"
+    },
+    "runtime": "llama.cpp b11852",
+    "threads": 4
+  },
+  "milestone": "M0",
+  "runner": {
+    "arch": "X64",
+    "cpu_count": 4,
+    "cpu_model": "AMD EPYC 7763 64-Core Processor",
+    "image": "ubuntu-24.04",
+    "name": "GitHub Actions 1000044469",
+    "os": "Linux",
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39"
+  },
+  "schema_version": 1,
+  "source_sha": "af694f7d3f86e53989462d6134ad1071ad5341a0",
+  "sprocket": {
+    "file": "sprocket-500m-chat-q4_k_m.gguf",
+    "llama_archive_sha256": "6ec84fd5ddf5bee393d27384b9b6acb19a35cbac71b0d22b4d73fc727363fcca",
+    "llama_commit": "7894e8b92481a8bb8ffe94f73b656ffe0dd01e10",
+    "llama_tag": "b11852",
+    "repo": "kandivault/sprocket-500m",
+    "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+    "sha256": "edc2ac323a2513fa6f8e3e54adf120243de0f7a6b8cc11b349b3e6ad61494a09"
+  },
+  "target_words": {
+    "maximum": 3300,
+    "minimum": 2700,
+    "preferred_maximum": 3150,
+    "preferred_minimum": 2850
+  }
+}
