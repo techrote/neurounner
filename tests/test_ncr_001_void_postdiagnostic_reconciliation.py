@@ -156,6 +156,42 @@ class PostDiagnosticVoid1ReconciliationTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "REFUSED"):
                     check.check_inputs(*arguments)
 
+    def test_independent_original_utf8_eos_tensor_oracle(self):
+        # An independent stdlib int64 witness for the original #172 public
+        # unicode diagnostic, not a new tokenizer or physical-model run.
+        expected = check.original_synthetic_oracle()
+        self.assertEqual(expected["prompt_bytes"], 10)
+        self.assertEqual(expected["source_text_utf8_bytes"], 30)
+        self.assertEqual(expected["total_units"], 31)
+        self.assertEqual(expected["supervised_after_shift"], 21)
+        self.assertEqual(expected["real_eos_id"], 258)
+        self.assertEqual(expected["ids_sha256"],
+                         "ee6fa2a893301b858b7fdac7fe2b9190cd1fc786ddff1ffdf906da757488c09e")
+        self.assertEqual(expected["labels_sha256"],
+                         "260dec3e7622aeada51e0483e005ad9d59cbae8f186d41432c381f2c35835241")
+        self.assertEqual(expected["mask_sha256"],
+                         "88986881ba52ad36b430e41cd24497b9cf9a64f8e6a979290ebdee36b1b6f85c")
+        observed = self.original["synthetic_sample"]
+        self.assertEqual({k: observed[k] for k in expected}, expected)
+
+    def test_original_int64_tensor_and_mask_mutations_refused(self):
+        # In particular mask_sha256 was recorded by original #172 but NOT
+        # independently reconstructed in the earlier custody #173 validator.
+        mutations = (
+            ("ids_sha256", "0" * 64),
+            ("labels_sha256", "0" * 64),
+            ("mask_sha256", "0" * 64),
+            ("source_text_utf8_bytes", 29),
+            ("source_text_utf8_bytes", True),
+        )
+        for field, forged in mutations:
+            with self.subTest(field=field, forged=forged):
+                original = copy.deepcopy(self.original)
+                original["synthetic_sample"][field] = forged
+                with self.assertRaisesRegex(RuntimeError, "REFUSED"):
+                    check.check_inputs(self.legacy, original,
+                                       self.manifest, self.protocol)
+
     def test_unmodified_archives_pass_cross_receipt_validator(self):
         check.check_inputs(self.legacy, self.original,
                            self.manifest, self.protocol)
