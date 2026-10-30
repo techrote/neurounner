@@ -34,6 +34,12 @@ jobs:
           ref: 9fbdee880697903aaf5b91cc29442c9e53479e50
           path: byte-eos-authority
           persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: techrote/neurounner
+          ref: 3592841802d85c442ca2521479b5d8795bee7233
+          path: wire-authority
+          persist-credentials: false
       - name: Install pinned synthetic-only test CPU stack, no model weights
         run: |
           python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
@@ -77,6 +83,8 @@ jobs:
           assert run(['git','rev-parse','HEAD'],'starting-head.txt').stdout.strip()==os.environ['BASE_SHA']
           assert run(['git','-C','byte-eos-authority','rev-parse','HEAD'],'eos-authority-head.txt').stdout.strip()=='9fbdee880697903aaf5b91cc29442c9e53479e50'
           assert run(['git','-C','byte-eos-authority','hash-object','scripts/byte_eos_001_void_labels.py'],'eos-authority-source-blob.txt').stdout.strip()=='4c00c78b6776ade6901a99eee9a42e7ca61c698b'
+          assert run(['git','-C','wire-authority','rev-parse','HEAD'],'publisher-authority-head.txt').stdout.strip()=='3592841802d85c442ca2521479b5d8795bee7233'
+          assert run(['git','-C','wire-authority','hash-object','scripts/ncr_001e_sprocket_publisher_wire.py'],'publisher-authority-source-blob.txt').stdout.strip()=='4e558ae530a1b79050e22bee587b3caf056e4563'
           for n,head in plan:
               pr=api('/pulls/'+str(n))
               assert pr['state']=='open' and pr['head']['sha']==head,(n,pr['head']['sha'])
