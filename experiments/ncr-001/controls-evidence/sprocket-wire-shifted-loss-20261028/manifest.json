@@ -1,0 +1,116 @@
+{
+  "schema": "ncr001-sprocket-wire-shifted-loss-original-custody-v1",
+  "experiment": "NCR-001E",
+  "lane": "sprocket_instruct",
+  "status": "ORIGINAL_SOURCE_TOKENIZER_ONLY__FINAL_72_SCIENCE_BLOCKED",
+  "parent_pr": 184,
+  "parent_head": "adfc3cb3ba2b2b6b54b0b10e3aa1ae19d4ff10ba",
+  "producer_chain": {
+    "source_original_pr": 161,
+    "source_original_model_run": 40718706396,
+    "source_original_failure_run": 40718490313,
+    "full_position_pr": 181,
+    "full_position_run": 40782101613,
+    "full_position_custody_pr": 182,
+    "full_position_custody_run": 40783012701
+  },
+  "attempts": {
+    "failed_checkout": {
+      "run_id": 40788806988,
+      "job_id": 123168595600,
+      "source_head": "e6673ff5b53ec702799d4134181dc55b49692d34",
+      "conclusion": "failure",
+      "phase": "actions_checkout_before_any_tests",
+      "reason": "malformed GitHub expression used literal ${ github.event.pull_request.head.sha || github.sha }} instead of evaluated head",
+      "decoded_job_log": "job-123168595600-failed-checkout.log",
+      "git_blob_sha": "5a8324c5e33f38f0098fe9cd95699a3d98bd772b"
+    },
+    "passed": {
+      "run_id": 40788864348,
+      "job_id": 123168786515,
+      "source_head": "adfc3cb3ba2b2b6b54b0b10e3aa1ae19d4ff10ba",
+      "conclusion": "success",
+      "source_tests_passed": 14,
+      "runner_name": "GitHub Actions 1000047035",
+      "python": "3.12.3",
+      "decoded_job_log": "job-123168786515-passed-tokenizer.log",
+      "git_blob_sha": "7e824e04f542de36ad4c372c58fe921c55afdaa1"
+    }
+  },
+  "artifact": {
+    "id": 12859838740,
+    "run_id": 40788864348,
+    "name": "ncr001-wire-shifted-loss-a1",
+    "zip_bytes": 5179,
+    "zip_sha256": "f077715068453c3a043b4269dd020ecca5f369770539116d88b39c806db65520",
+    "original_zip_xz_base64": "original-actions-zip.xz.base64",
+    "archive_git_blob": "b62955d7eca53ae6933b10fddd0bdd7689374e0d",
+    "xz_bytes": 4920,
+    "xz_sha256": "8305071494df3450ae2d6fa2e62700ce0bc355af3609357cc55be904a9616b94",
+    "members": {
+      "install.log": {
+        "bytes": 5251,
+        "sha256": "7f35101d483358774f432847026c3a2650b9bfd043aafb9e34b5bbdb7f27924e"
+      },
+      "original-custody-readback.json": {
+        "bytes": 964,
+        "sha256": "b3a36f30f356981db8cde41d24a72b326d96a2cf16afec857bcf64a945d884ea"
+      },
+      "real-tokenizer.log": {
+        "bytes": 2350,
+        "sha256": "71fcbe8652bf5cc23c35be3d7d9b94c081dcdb7dff4d718fa111212b86ece3ca"
+      },
+      "receipt.json": {
+        "bytes": 2405,
+        "sha256": "0f2a051cc81a3eb77f8af0ac7a959b0e5743e11cb4def12afaebc65db1e14909"
+      },
+      "source-tests.log": {
+        "bytes": 2333,
+        "sha256": "10a129310946ffc55998314ad0b830a21c9d3ed64f6eae6bae0d8f40b06fb4f7"
+      }
+    }
+  },
+  "receipt": {
+    "status": "PASS_CAUSAL_SHIFTED_MASK_SOURCE_ONLY__FINAL_72_BLOCKED",
+    "source_head": "adfc3cb3ba2b2b6b54b0b10e3aa1ae19d4ff10ba",
+    "original_physical_run": 40718706396,
+    "original_source_fullmask_run": 40782101613,
+    "original_custody_run": 40783012701,
+    "runner": "GitHub Actions 1000047035",
+    "long_units": 123,
+    "short_units": 26,
+    "left_pad_units": 97,
+    "assistant_supervised_units": 45,
+    "real_end_id": 5,
+    "real_end_units_long": 12,
+    "causal_shifted_labels_sha256": "f8453abe8ee1780ecd9f536a90f6eb1cc114af7e704f52110889165ffecc85a4",
+    "padded_attention_sha256": "fafee010cc27daeb6996b93f5d110b7943b85d8ee704032f80d1ef7be5e7b4cd",
+    "unshifted_labels_sha256": "24b4289e273e579d166411baae776ec83d2d534036e595eb47322681c792d97c",
+    "naive_pad_equals_end_refused": true
+  },
+  "source_gates": {
+    "protocol_git_blob": "14ce5fbaa38f8806c8c8738f19c01b91385eebaf",
+    "source_pins_git_blob": "59fff1aed872b5563aa6898171983973e0cdb02c",
+    "model_variants": [
+      "smollm2",
+      "sprocket_chat",
+      "sprocket_instruct",
+      "void1"
+    ],
+    "sprocket_chat_weight_file": "chat/model.safetensors",
+    "sprocket_instruct_weight_file": "model.safetensors"
+  },
+  "scientific_gates": {
+    "train_authorized": false,
+    "full_72_conformance_pass": false,
+    "independent_scientific_review": false,
+    "new_physical_model_execution": false,
+    "model_weights_downloaded": false,
+    "optimizer_steps": 0,
+    "comparative_training": false,
+    "heldouts_opened": false,
+    "model_generated_tool_memory_semantics_qualified": false,
+    "historical_incomplete_six_token_tool_call_retained": true,
+    "historical_void_byte_eos_effect_measured": false
+  }
+}
