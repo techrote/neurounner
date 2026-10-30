@@ -170,9 +170,12 @@ def read_and_check(evidence: Path = EVIDENCE, *, verify_git: bool = False) -> tu
            # persisted checks that never existed in the original artifact.
            isinstance(diag.get("post_warmup"), dict) and
            isinstance(diag["post_warmup"].get("gradient_l1"), dict) and
-           all(isinstance(value, (int, float)) and
-               math.isfinite(value) and value > 0
-               for value in diag["post_warmup"]["gradient_l1"].values()) and
+           all(isinstance(diag["post_warmup"]["gradient_l1"].get(name), (int, float)) and
+               math.isfinite(diag["post_warmup"]["gradient_l1"][name]) and
+               diag["post_warmup"]["gradient_l1"][name] > 0
+               for name in ("readout.weight", "observe.weight",
+                            "perception.weight", "rule.weight",
+                            "input_norm.weight")) and
            isinstance(diag["post_warmup"].get("ordered_field_trace"), list) and
            len(diag["post_warmup"]["ordered_field_trace"]) == 3 and
            isinstance(diag["post_warmup"].get("native_causal_eos_loss"), (int, float)) and
