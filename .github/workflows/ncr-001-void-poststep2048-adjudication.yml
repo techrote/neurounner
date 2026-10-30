@@ -1,0 +1,99 @@
+name: NCR-001E void1 poststep2048 independent source adjudication (NO MODEL)
+on:
+  pull_request:
+    branches: [review/ncr001e-void-poststep2048-original-custody-20261030]
+    paths:
+      - ".github/workflows/ncr-001-void-poststep2048-adjudication.yml"
+      - "scripts/ncr_001_void_poststep2048_adjudication.py"
+      - "tests/test_ncr_001_void_poststep2048_adjudication.py"
+      - "experiments/ncr-001/adjudication/void1-poststep2048-scientific-boundary-20261030.json"
+      - "docs/NCR_001_VOID_POSTSTEP2048_ADJUDICATION.md"
+      - "RAG.md"
+permissions:
+  contents: read
+concurrency:
+  group: ncr001-void-poststep2048-adjudication-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  original-evidence-source-adjudication:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Refuse parent, protocol, original decision or evidence drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "${{ github.event.pull_request.base.sha }}" = "058ed306e9ea13395c08b8513265363da179fa4e"
+          git merge-base --is-ancestor 058ed306e9ea13395c08b8513265363da179fa4e HEAD
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git hash-object experiments/ncr-001/adjudication/void1-fourcohort-scientific-boundary-20261030.json)" = "7dfa8e7e38367e2eada34897d781e0a5dc41b682"
+          test "$(git hash-object experiments/ncr-001/controls-evidence/void-poststep2048-20261030/manifest.json)" = "462a43cf3e56b5edefe9dcf14ffc6dae199a3158"
+          python3 - <<'PY'
+          import subprocess
+          changed=set(subprocess.check_output([
+              "git","diff","--name-only",
+              "058ed306e9ea13395c08b8513265363da179fa4e","HEAD"
+          ],text=True).splitlines())
+          allowed={
+              ".github/workflows/ncr-001-void-poststep2048-adjudication.yml",
+              "scripts/ncr_001_void_poststep2048_adjudication.py",
+              "tests/test_ncr_001_void_poststep2048_adjudication.py",
+              "experiments/ncr-001/adjudication/void1-poststep2048-scientific-boundary-20261030.json",
+              "docs/NCR_001_VOID_POSTSTEP2048_ADJUDICATION.md",
+              "RAG.md",
+          }
+          assert changed and changed<=allowed,changed
+          print("PASS_BOUNDED_SOURCE_ONLY_ADJUDICATION_DIFF")
+          PY
+      - name: Re-audit A/B/C/D/E originals and adversarially refuse false scientific promotion
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-void-poststep2048-adjudication
+          python3 -m py_compile scripts/ncr_001_void_poststep2048_adjudication.py tests/test_ncr_001_void_poststep2048_adjudication.py
+          python3 -m unittest discover -s tests -p "test_ncr_001_void_poststep2048_adjudication.py" -v \
+            2>&1 | tee runtime/ncr001-void-poststep2048-adjudication/tests.log
+          python3 scripts/ncr_001_void_poststep2048_adjudication.py \
+            --out runtime/ncr001-void-poststep2048-adjudication/source-decision.json \
+            2>&1 | tee runtime/ncr001-void-poststep2048-adjudication/audit.log
+          if test -f experiments/ncr-001/adjudication/void1-poststep2048-scientific-boundary-20261030.json; then
+            python3 scripts/ncr_001_void_poststep2048_adjudication.py --check \
+              > runtime/ncr001-void-poststep2048-adjudication/committed-decision-readback.log
+          fi
+          python3 - <<'PY'
+          import json
+          x=json.load(open("runtime/ncr001-void-poststep2048-adjudication/source-decision.json"))
+          assert x["status"]=="VOID1_NINE_CHECK_BOUNDED_PHYSICAL_EVIDENCE_PRESENT__MASKED_CACHE_AND_FINAL_SCIENTIFIC_ADMISSION_PENDING"
+          assert x["largest_prior_joint_gap_poststep_2048"]=="CLOSED_BY_COHORT_E"
+          assert x["all_nine_have_bounded_source_bound_physical_observations"] is True
+          assert x["masked_B2_full_forward_isolation_measured"] is True
+          assert x["masked_B2_incremental_cache_measured"] is False
+          assert x["independent_scientific_72_admission"] is False
+          assert x["per_model_conformance_pass"] is False
+          assert x["train_authorized"] is False
+          assert x["fresh_physical_execution_in_this_adjudication"] is False
+          assert x["new_optimizer_steps_in_this_adjudication"]==0
+          print("PASS_POSTSTEP2048_ADVANCES_MECHANICS_WITHOUT_FALSE_FINAL_ADMISSION")
+          PY
+      - name: Preserve source-only adjudication logs
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p runtime/ncr001-void-poststep2048-adjudication
+          git rev-parse HEAD > runtime/ncr001-void-poststep2048-adjudication/head.txt
+          uname -a > runtime/ncr001-void-poststep2048-adjudication/runner.txt
+          python3 --version > runtime/ncr001-void-poststep2048-adjudication/python.txt 2>&1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: ncr001-void-poststep2048-source-adjudication
+          path: runtime/ncr001-void-poststep2048-adjudication/
+          retention-days: 30
+          if-no-files-found: warn
