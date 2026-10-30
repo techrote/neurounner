@@ -99,6 +99,12 @@ def git_blob(data: bytes) -> str:
 def require_blob(path: Path, sha: str) -> None:
     refuse(path.is_file() and not path.is_symlink() and git_blob(path.read_bytes()) == sha,
            "immutable original source or report bytes changed: " + str(path))
+    rel = path.relative_to(ROOT).as_posix()
+    original = subprocess.run(["git", "-C", str(ROOT), "ls-tree", "HEAD", "--", rel],
+                              capture_output=True, text=True, check=False)
+    refuse(original.returncode == 0
+           and original.stdout == f"100644 blob {sha}\t{rel}\n",
+           "immutable committed Git tree type/mode/blob changed: " + rel)
 
 
 def source_inputs() -> dict:
@@ -248,9 +254,12 @@ def interpret(s: dict) -> dict:
            "D original post-update cold/KV source or scope replaced")
     refuse(prod["status"] == cons["status"] ==
            "POSTSTEP_COLD_DIAGNOSTIC_ONLY__SCIENTIFIC_72_BLOCKED"
+           and type(prod["diagnostic_optimizer_steps"]) is int
            and prod["diagnostic_optimizer_steps"] == 1
+           and type(cons["diagnostic_optimizer_steps"]) is int
            and cons["diagnostic_optimizer_steps"] == 0
            and intermediate["status"] == "NEW_DIAGNOSTIC_NOT_ORIGINAL_172"
+           and type(intermediate["diagnostic_optimizer_steps"]) is int
            and intermediate["diagnostic_optimizer_steps"] == 1
            and prod["sample"] == cons["sample"] == intermediate["synthetic_sample"]
            and all(prod["sample"][k] == c["synthetic_sample"][k]
