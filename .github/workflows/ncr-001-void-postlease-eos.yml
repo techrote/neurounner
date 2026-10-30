@@ -1,0 +1,152 @@
+name: NCR-001 void1 corrected EOS post-lease NCA/MLP frozen host (NO TRAIN)
+
+on:
+  pull_request:
+    branches: [review/ncr001-postlease-wire-original-readback-20261028]
+    paths:
+      - ".github/workflows/ncr-001-void-postlease-eos.yml"
+      - "scripts/ncr_001_void_eos_postlease.py"
+      - "tests/test_ncr_001_void_eos_postlease.py"
+      - "docs/NCR_001_VOID_POSTLEASE_EOS.md"
+      - "scripts/ncr_001_void1.py"
+      - "scripts/ncr_001f_frozen_hooks.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+  HF_HOME: /tmp/ncr001-void-postlease-hf
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  source-negative:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact source, frozen four-lane identities, and no training
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          PY
+      - name: Compile and adversarially test the read-only runner contract
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p runtime/ncr001-void-postlease
+          python3 -m py_compile scripts/ncr_001_void_eos_postlease.py tests/test_ncr_001_void_eos_postlease.py
+          python3 -m unittest discover -s tests -p "test_ncr_001_void_eos_postlease.py" -v \
+            2>&1 | tee runtime/ncr001-void-postlease/source-tests.log
+      - name: Preserve source pass/fail evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-void-postlease-source-a${{ github.run_attempt }}
+          path: runtime/ncr001-void-postlease/
+          if-no-files-found: warn
+          retention-days: 30
+
+  original-qwen3-no-train:
+    needs: source-negative
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 9fbdee880697903aaf5b91cc29442c9e53479e50
+          path: byte-eos-authority
+          persist-credentials: false
+      - name: Refuse any source drift before network fetch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git -C byte-eos-authority rev-parse HEAD)" = "9fbdee880697903aaf5b91cc29442c9e53479e50"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          PY
+      - name: Install pinned original-host CPU dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Fetch and hash original Qwen3/ByteTokenizer files before offline model execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-void-postlease
+          python3 - <<'PY' 2>&1 | tee runtime/ncr001-void-postlease/prefetch.log
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          p=json.load(open("experiments/ncr-001/source-pins.json"))["models"]["void1"]
+          assert p["repo_id"]=="dotlabs/void.1"
+          assert p["revision"]=="9c2be5087772867d45961abd11f6b35110617563"
+          names={"model.safetensors":"weight_declared_lfs_sha256_not_downloaded",
+                 "config.json":"config_sha256",
+                 "tokenization_byte.py":"tokenization_byte_py_sha256",
+                 "byte_vocab.json":"byte_vocab_sha256",
+                 "tokenizer_config.json":"tokenizer_config_sha256",
+                 "special_tokens_map.json":"special_tokens_map_sha256"}
+          for name,key in names.items():
+              f=Path(hf_hub_download(p["repo_id"],name,revision=p["revision"]))
+              h=hashlib.sha256()
+              with f.open("rb") as stream:
+                  for block in iter(lambda:stream.read(4*1024*1024),b""):
+                      h.update(block)
+              digest=h.hexdigest()
+              assert digest==p[key],(name,digest,p[key])
+              if name=="model.safetensors":
+                  assert f.stat().st_size==360622744
+              print("SOURCE_SHA256",name,digest,f.stat().st_size,flush=True)
+          PY
+      - name: Original frozen void1 NCA+MLP causal EOS and cached forward
+        shell: bash
+        run: |
+          set -o pipefail
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001_void_eos_postlease.py --phase producer \
+            2>&1 | tee runtime/ncr001-void-postlease/producer.log
+      - name: Independent Python interpreter cold untrained adapter replay
+        shell: bash
+        run: |
+          set -o pipefail
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001_void_eos_postlease.py --phase consumer \
+            2>&1 | tee runtime/ncr001-void-postlease/consumer.log
+      - name: Preserve raw original-host logs, receipts, binary untrained adapters, and failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-void-postlease-original-qwen-a${{ github.run_attempt }}
+          path: runtime/ncr001-void-postlease/
+          if-no-files-found: warn
+          retention-days: 30
