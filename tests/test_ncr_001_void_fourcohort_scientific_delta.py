@@ -152,7 +152,7 @@ class FourCohortScientificBoundary(unittest.TestCase):
             with self.subTest(mode=mode, blob=blob):
                 rel=delta.HISTORICAL.relative_to(delta.ROOT).as_posix()
                 fake=mock.Mock(returncode=0,
-                               stdout=f"{mode} blob {blob}\\t{rel}\\n")
+                               stdout=f"{mode} blob {blob}"+chr(9)+rel+chr(10))
                 with mock.patch.object(delta.subprocess, "run", return_value=fake):
                     with self.assertRaisesRegex(ValueError, "REFUSED"):
                         delta.require_blob(delta.HISTORICAL, delta.HISTORICAL_BLOB)
