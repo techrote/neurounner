@@ -1,0 +1,141 @@
+{
+  "schema": "detective-004a-stage-a-v1",
+  "experiment": "DETECTIVE-004A",
+  "issue": 148,
+  "parent_issue": 103,
+  "authority": {
+    "b3_spec": {
+      "path": "experiments/detective-001/sprocket-scripter.json",
+      "git_blob_sha1": "b2a4eaff9194160d2afd5455c6d658d9434d90b0"
+    },
+    "b3_runner": {
+      "path": "scripts/detective_001b3_sprocket.py",
+      "git_blob_sha1": "214c16301075113b51123db4afeca550b4226fb9"
+    },
+    "bridge_config": {
+      "path": "experiments/detective-003/scripter-bridge.json",
+      "git_blob_sha1": "31af5060cc66230c2f4740af5f5c35400d7e99cc"
+    },
+    "model": {
+      "repo": "kandivault/sprocket-500m",
+      "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+      "variant": "root-instruct",
+      "weight_file": "model.safetensors",
+      "weight_bytes": 1002207984,
+      "weight_sha256": "1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864",
+      "chat_checkpoint_forbidden": "chat/model.safetensors"
+    },
+    "publisher": {
+      "repo": "kandivault-source/Sprocket-500M",
+      "commit": "a003767e70d766bc14b40c89792543ee8641c8bc",
+      "sft_git_blob": "90bddf8976b9d6410fe7c5c1f084708e1cebab73",
+      "harvest_git_blob": "97811aa4245ad3f05f66ce0c2d8aa8c353619267",
+      "source_is_training_build_attestation": false
+    },
+    "special_token_ids": {
+      "<|endoftext|>": 0,
+      "<|pad|>": 1,
+      "<|system|>": 2,
+      "<|user|>": 3,
+      "<|assistant|>": 4,
+      "<|end|>": 5,
+      "<|tool_call|>": 6,
+      "<|tool_result|>": 7,
+      "<think>": 8,
+      "</think>": 9,
+      "<|memory_read|>": 10,
+      "<|memory_write|>": 11
+    }
+  },
+  "corpus": {
+    "dataset_dir": "datasets/detective-004a",
+    "num_examples": 36,
+    "training_families": [
+      "amber-quay",
+      "cinder-span",
+      "ferrite-yard",
+      "opal-canal",
+      "signal-orchard",
+      "violet-works"
+    ],
+    "tool_selection_per_family": 4,
+    "restraint_per_family": 1,
+    "result_per_family": 1,
+    "tool_selection_counts": {
+      "read_asset": 8,
+      "correlate_assets": 8,
+      "probe_terminal": 8
+    },
+    "result_counts": {
+      "success": 3,
+      "denied": 3
+    },
+    "case_namespace": "fiction-only-d004a",
+    "seed": 14836
+  },
+  "future_training": {
+    "stage_a_optimizer_steps": 0,
+    "stage_b_approved_only_after_merge": true,
+    "adapter_count": 1,
+    "rank": 8,
+    "alpha": 16,
+    "dropout": 0,
+    "target_modules": [
+      "q_proj",
+      "v_proj"
+    ],
+    "epochs": 1,
+    "optimizer_steps": 36,
+    "learning_rate": 0.0002,
+    "optimizer": "AdamW",
+    "max_length": 512,
+    "gradient_clip": 1,
+    "threads": 4,
+    "max_minutes": 35,
+    "paid_api_calls": 0,
+    "gpu": false,
+    "weight_frozen": true
+  },
+  "final_recipe": {
+    "schema": "detective-004a-posthash-recipe-v1",
+    "family_slugs": [
+      "ravel-gate",
+      "lumen-vault",
+      "boreal-bridge"
+    ],
+    "fixed_salt": "DETECTIVE-004A-sealed-v1-20261028",
+    "tasks": {
+      "read_asset": 3,
+      "correlate_assets": 3,
+      "probe_terminal": 3,
+      "restraint": 1,
+      "result_success": 1,
+      "result_denied": 1
+    },
+    "adapter_directory_sha256_required": true,
+    "training_manifest_sha256_required": true,
+    "materialize_pretraining": false
+  },
+  "gate": {
+    "tool_selection_min": 7,
+    "per_tool_min": 2,
+    "restraint_min": 1,
+    "result_use_min": 2,
+    "improvement_over_base_min": 4,
+    "required_tool_total": 9,
+    "required_restraint_total": 1,
+    "required_result_total": 2,
+    "no_out_of_view_ids": true
+  },
+  "invariants": {
+    "training_case_from_bay_seventeen": false,
+    "final_case_family_overlap": false,
+    "hidden_relevance_access": false,
+    "learner_final_access": false,
+    "model_generation": false,
+    "provider_calls": false,
+    "host_execution": false,
+    "body_selection": false,
+    "population_expansion": false
+  }
+}
