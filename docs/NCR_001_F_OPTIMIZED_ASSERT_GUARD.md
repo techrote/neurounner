@@ -6,7 +6,7 @@ Parent [NCR-001 #67](https://github.com/techrote/neurounner/issues/67), matched-
 
 At baseline Neurounner `main` `12f7bf0475aefb61227f676ea377134734fa5072`, `scripts/ncr_001f_plan.py::build_plan` used eight Python `assert` statements (covering nine locked invariants) to validate preregistered NCA geometry, tap/step counts, optimizer type and hyperparameters, and matched MLP bottleneck. Running `python3 -O` strips these statements. Thus an otherwise internally consistent but altered protocol could bypass these specific source-only gates, while the planner could still produce a `PASS_COMPARISON_PLAN_PRECHECK__BLOCKED_FOR_TRAINING` receipt. This does not demonstrate an actual training or physical-model bypass.
 
-This change replaces exactly those nine assertions with **explicit fail-closed RuntimeError checks**, including strict Python type matching (so `True` cannot masquerade as integer 1). It does not loosen source/fixture hashes, change the immutable protocol, mutate any held-out content, load model weights, run a model or execute an optimizer.
+This change replaces those eight assertions (covering nine predicates) with **explicit fail-closed RuntimeError checks**, including strict Python type matching (so `True` cannot masquerade as integer 1). It does not loosen source/fixture hashes, change the immutable protocol, mutate any held-out content, load model weights, run a model or execute an optimizer.
 
 ## Executable negative sentinels
 
