@@ -1,0 +1,86 @@
+name: NCR-001F original Sprocket same-host wall envelope (NO TRAIN)
+on:
+  pull_request:
+    branches: [review/ncr001f-corrected-samehost-custody-20261029]
+    paths:
+      - "scripts/ncr_001f_corrected_samehost_budget_delta.py"
+      - "tests/test_ncr_001f_corrected_samehost_budget_delta.py"
+      - "docs/NCR_001_F_CORRECTED_SAMEHOST_BUDGET_DELTA.md"
+      - ".github/workflows/ncr-001f-corrected-samehost-budget-delta.yml"
+      - "RAG.md"
+      - "experiments/ncr-001/adjudication/sprocket-original-fourthread-wall-budget-delta-20261030.json"
+permissions:
+  contents: read
+concurrency:
+  group: ncr001f-budget-delta-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  original-zips-and-source-only-sample-arithmetic:
+    if: github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.head.ref == 'review/ncr001f-corrected-samehost-budget-interpretation-20261030'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact-head and original dependency/source preservation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_BASE_REF" = review/ncr001f-corrected-samehost-custody-20261029
+          test "${{ github.event.pull_request.base.sha }}" = 55026d914efd3ef4548da0644ccd27bb8de3074f
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          git merge-base --is-ancestor 55026d914efd3ef4548da0644ccd27bb8de3074f HEAD
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          python3 - <<'PY'
+          import subprocess
+          changed=set(subprocess.check_output(["git","diff","--name-only",
+              "55026d914efd3ef4548da0644ccd27bb8de3074f","HEAD"],text=True).splitlines())
+          allowed={"scripts/ncr_001f_corrected_samehost_budget_delta.py",
+                   "tests/test_ncr_001f_corrected_samehost_budget_delta.py",
+                   "docs/NCR_001_F_CORRECTED_SAMEHOST_BUDGET_DELTA.md",
+                   ".github/workflows/ncr-001f-corrected-samehost-budget-delta.yml",
+                   "RAG.md",
+                   "experiments/ncr-001/adjudication/sprocket-original-fourthread-wall-budget-delta-20261030.json"}
+          assert changed and changed<=allowed,changed
+          print("PASS_NO_ORIGINAL_SOURCE_EVIDENCE_MODEL_OR_FIXTURE_CHANGED")
+          PY
+      - name: Read-only original ZIP/log audit and adversarial no-training tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001f-samehost-delta
+          python3 -m py_compile scripts/ncr_001f_corrected_samehost_budget_delta.py tests/test_ncr_001f_corrected_samehost_budget_delta.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001f_corrected_samehost_budget_delta.py' -v 2>&1 | tee runtime/ncr001f-samehost-delta/tests.log
+          python3 scripts/ncr_001f_corrected_samehost_budget_delta.py --out runtime/ncr001f-samehost-delta/source-only-decision.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("runtime/ncr001f-samehost-delta/source-only-decision.json").read_text())
+          assert r["status"]=="SOURCE_BOUND_CORRECTED_SPROCKET_WALL_ENVELOPES__BUDGET_NOT_ADMITTED"
+          assert set(r["lanes"])=={"sprocket_chat","sprocket_instruct"}
+          assert r["model_proxy"]["source_only_nca_over_mlp_mac_ratio"]==1.20625
+          assert r["train_authorized"] is False
+          assert r["full_72_conformance_pass"] is False
+          assert r["actual_compute_budget_qualified"] is False
+          assert r["new_physical_execution"] is False
+          print("PASS_ORIGINAL_GIT_ZIP_LOG_AND_BUDGET_NONADMISSION")
+          PY
+      - name: Capture runner identity on success and failure
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p runtime/ncr001f-samehost-delta
+          git rev-parse HEAD > runtime/ncr001f-samehost-delta/head.txt
+          uname -a > runtime/ncr001f-samehost-delta/uname.txt
+          python3 --version > runtime/ncr001f-samehost-delta/python.txt 2>&1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: ncr001f-source-only-original-host-budget-delta
+          path: runtime/ncr001f-samehost-delta/
+          retention-days: 30
+          if-no-files-found: warn
