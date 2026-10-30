@@ -8,6 +8,8 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 import sys
 import tempfile
 import unittest
@@ -226,6 +228,41 @@ class PostDiagnosticVoid1ReconciliationTests(unittest.TestCase):
                         check.assert_original_decoded_git_blobs(replica)
                     (replica / name).write_bytes(raw)
             check.assert_original_decoded_git_blobs(replica)
+
+    def test_identical_content_symlink_cannot_impersonate_committed_log(self):
+        # Previous content-only blob recomputation followed symlinks. The
+        # original committed Git entry could be a symlink yet pass the hash.
+        with tempfile.TemporaryDirectory() as temporary:
+            replica = Path(temporary)
+            for name in check.ORIGINAL_DECODED_LOG_BLOBS:
+                (replica / name).write_bytes((custody.EVIDENCE / name).read_bytes())
+            check.assert_original_decoded_git_blobs(replica)
+            name = next(iter(check.ORIGINAL_DECODED_LOG_BLOBS))
+            shadow = replica / "identical-original-content.log"
+            shadow.write_bytes((replica / name).read_bytes())
+            (replica / name).unlink()
+            (replica / name).symlink_to(shadow.name)
+            with self.assertRaisesRegex(RuntimeError, "not a regular file"):
+                check.assert_original_decoded_git_blobs(replica)
+
+    def test_git_head_tree_refuses_mode_blob_and_missing_entry_mutations(self):
+        # Files with unchanged *working-tree bytes* must still refuse a
+        # different committed tree object or non-ordinary-file Git mode.
+        name, blob = next(iter(check.ORIGINAL_DECODED_LOG_BLOBS.items()))
+        rel = (custody.EVIDENCE / name).relative_to(check.ROOT).as_posix()
+        cases = (
+            ("executable_mode", f"100755 blob {blob}\t{rel}\n", 0),
+            ("symlink_mode", f"120000 blob {blob}\t{rel}\n", 0),
+            ("different_tree_blob", f"100644 blob {'0' * 40}\t{rel}\n", 0),
+            ("missing_tree_entry", "", 0),
+            ("git_lookup_failure", "", 1),
+        )
+        for label, output, returncode in cases:
+            with self.subTest(mutation=label):
+                result = SimpleNamespace(returncode=returncode, stdout=output)
+                with mock.patch.object(check.subprocess, "run", return_value=result):
+                    with self.assertRaisesRegex(RuntimeError, "Git tree object/mode drift"):
+                        check.assert_original_decoded_git_blobs()
 
     def test_unmodified_archives_pass_cross_receipt_validator(self):
         check.check_inputs(self.legacy, self.original,
