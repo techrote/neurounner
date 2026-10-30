@@ -2,6 +2,7 @@
 from __future__ import annotations
 import copy
 import math
+import json
 import sys
 from pathlib import Path
 import unittest
@@ -56,6 +57,18 @@ class CorrectedBudgetDelta(unittest.TestCase):
         self.assertIs(x["reference_script_executed"],False)
         self.assertIs(x["measured_flops"],False)
         self.assertIs(x["matched_training_compute"],False)
+
+    def test_committed_source_only_decision_matches_permanent_originals(self):
+        path=(ROOT/"experiments/ncr-001/adjudication/"
+              "sprocket-original-fourthread-wall-budget-delta-20261030.json")
+        committed=json.loads(path.read_text(encoding="utf-8"))
+        recomputed=delta.audit()
+        self.assertEqual(committed,recomputed)
+        self.assertEqual(committed["original_run"],40904839128)
+        self.assertIs(committed["new_physical_execution"],False)
+        self.assertIs(committed["train_authorized"],False)
+        self.assertIs(committed["full_72_conformance_pass"],False)
+        self.assertIs(committed["actual_compute_budget_qualified"],False)
 
     def test_unregistered_proxy_geometries_or_ablation_refused(self):
         for kwargs in ({"hidden":576},{"taps":2},{"steps":1},{"steps":2},
