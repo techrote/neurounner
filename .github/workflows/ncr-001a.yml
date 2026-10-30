@@ -38,6 +38,34 @@ jobs:
         run: python3 scripts/ncr_001_protocol.py validate
       - name: Synthetic source-security and protocol tests (no network)
         run: python3 -m unittest discover -s tests -p "test_ncr_001_protocol.py" -v
+      - name: Inventory model-specific fixed prompts (not training admission)
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("experiments/ncr-001/fixtures")
+          expect={"sprocket-chat-probes.json":16,
+                  "sprocket-instruct-probes.json":16,
+                  "void-byte-probes.json":16,
+                  "behaviour-regression.json":16,
+                  "natural-text-holdout.json":20}
+          for name,n in expect.items():
+              data=json.loads((root/name).read_text(encoding="utf-8"))
+              rows=data["cases"]
+              assert len(rows)==n,(name,len(rows))
+              assert len(set(x["id"] for x in rows))==n,name
+              assert all(isinstance(x.get("id"),str) for x in rows),name
+              if name=="natural-text-holdout.json":
+                  sizes=[len(x["text"].encode("utf-8")) for x in rows]
+                  assert all(120<=size<=900 for size in sizes),sizes
+                  assert set(x["domain"] for x in rows)=={"daily_life","nature","culture","science","work"}
+              print(name, "rows",len(rows),"status",data.get("status"))
+          PY
+          sha256sum experiments/ncr-001/fixtures/sprocket-chat-probes.json
+          sha256sum experiments/ncr-001/fixtures/sprocket-instruct-probes.json
+          sha256sum experiments/ncr-001/fixtures/void-byte-probes.json
+          sha256sum experiments/ncr-001/fixtures/behaviour-regression.json
+          sha256sum experiments/ncr-001/fixtures/natural-text-holdout.json
 
   sources:
     name: Read-only upstream metadata inventory

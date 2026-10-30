@@ -1,0 +1,402 @@
+{
+  "candidate_id": "qwen3-0.6b",
+  "config_sha256": "c33cc016bcec7e87ec0fbc4a8af5ced296e8c931dcb171b757e5f882578a7f3b",
+  "decision": {
+    "classification": "runtime_pass",
+    "population_expansion_admitted": false,
+    "training_selection_allowed": false
+  },
+  "environment": {
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "cpu_count": 4,
+    "cuda_available": false,
+    "model_load_seconds": 0.5076912999999905,
+    "peak_rss_after_load_kib": 4974868,
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "rss_after_load_kib": 2899488,
+    "tokenizer_load_seconds": 0.2997524769999984,
+    "torch": "2.14.1+cpu",
+    "torch_interop_threads": 1,
+    "torch_threads": 4,
+    "transformers": "4.57.6"
+  },
+  "experiment": "DETECTIVE-002B",
+  "issue": 130,
+  "optimizer_steps": 0,
+  "paid_api_calls": 0,
+  "peak_rss_kib": 4974868,
+  "population_expansion_admitted": false,
+  "relevance_mapping_accessed": false,
+  "runtime_contract": {
+    "do_sample": false,
+    "gpu_required": false,
+    "huggingface_hub": "0.36.2",
+    "max_generated_tokens_total": 256,
+    "max_minutes_per_body": 25,
+    "max_new_tokens_per_prompt": 64,
+    "max_prompt_tokens": 512,
+    "optimizer_steps": 0,
+    "os": "ubuntu-24.04",
+    "paid_api_calls": 0,
+    "prompts": 4,
+    "safetensors": "0.8.0",
+    "seed": 260213,
+    "threads": 4,
+    "torch_cpu": "2.14.1+cpu",
+    "torch_dtype": "float32",
+    "transformers": "4.57.6"
+  },
+  "runtime_failure": null,
+  "schema": "detective-002b-body-runtime-v1",
+  "source": {
+    "architecture": [
+      "Qwen3ForCausalLM"
+    ],
+    "license": "apache-2.0",
+    "model_type": "qwen3",
+    "production_license_gate": false,
+    "repo": "Qwen/Qwen3-0.6B",
+    "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "safetensors_parameters": 751632384,
+    "variant": "instruct-thinking-tool-template",
+    "weight": {
+      "blob_id": "a0458bbfda764d86cf930900d5f0f933933da9a3",
+      "lfs_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+      "lfs_size": 1503300328,
+      "path": "model.safetensors",
+      "pointer_size": 135,
+      "size": 1503300328
+    }
+  },
+  "source_evidence_sha256": "86ed547fde7a7472619fcd80d727f7e23bacc08da4d334bf7e8c6fc132aac1a5",
+  "source_runtime": {
+    "selected_weight_bytes": 1503300328,
+    "selected_weight_path": "model.safetensors",
+    "selected_weight_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b",
+    "source_snapshot": "/tmp/detective-002b-hf/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca",
+    "staged_weight_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b"
+  },
+  "status": "runtime_pass",
+  "tasks": [
+    {
+      "completion_tokens_per_second": 6.782411616590224,
+      "family": "local_reflex",
+      "generated_token_ids": [
+        32,
+        72349,
+        6961,
+        29717,
+        32666,
+        25,
+        576,
+        29717,
+        5711,
+        264,
+        2205,
+        36743,
+        12002,
+        311,
+        11140,
+        458,
+        29947,
+        1633,
+        323,
+        10533,
+        279,
+        1537,
+        5486,
+        5106,
+        304,
+        264,
+        61115,
+        4938,
+        897,
+        13,
+        3197,
+        279,
+        12002,
+        66478,
+        279,
+        1633,
+        11,
+        432,
+        8837,
+        279,
+        4938,
+        448,
+        279,
+        5106,
+        323,
+        12672,
+        973,
+        264,
+        6961,
+        1917,
+        311,
+        5486,
+        279,
+        1633,
+        13,
+        151645
+      ],
+      "generated_tokens": 56,
+      "generation_seconds": 8.256650166,
+      "hit_max_new_tokens": false,
+      "messages": [
+        {
+          "content": "Answer concisely. Treat supplied witness memory as possibly fallible. Distinguish memory from physical proof. Do not invent credentials, evidence IDs, hidden records, or facts not supplied.",
+          "role": "system"
+        },
+        {
+          "content": "Invent one deterministic physical NPC reflex. It may use only a local proximity sensor and one bounded memory value storing the last approach direction. State the trigger, memory update, and physical action in at most three short sentences.",
+          "role": "user"
+        }
+      ],
+      "observations": {
+        "alternative_hits": [
+          "last approach",
+          "direction"
+        ],
+        "characters": 305,
+        "control_token_literals": [],
+        "forbidden_hits": [],
+        "qualifier_hits": [],
+        "repeated_sentence_count": 0,
+        "required_hits": [
+          "sensor",
+          "memory"
+        ],
+        "stale_hits": [],
+        "starts_json_object": false,
+        "whitespace_words": 50
+      },
+      "prefill_seconds": 1.0417977200000053,
+      "prompt_token_count": 98,
+      "prompt_token_sha256": "b96aa34de988ef30366e13bec376fbf1bcb4fca7bdc20ed4c37fb3b8880b5853",
+      "prompt_tokens_per_second": 94.06816517125753,
+      "response": "A deterministic physical NPC reflex: The NPC uses a local proximity sensor to detect an approaching object and stores the last approach direction in a bounded memory value. When the sensor detects the object, it updates the memory with the direction and initiates a physical action to approach the object.",
+      "response_with_special_tokens": "A deterministic physical NPC reflex: The NPC uses a local proximity sensor to detect an approaching object and stores the last approach direction in a bounded memory value. When the sensor detects the object, it updates the memory with the direction and initiates a physical action to approach the object.<|im_end|>",
+      "task_id": "B01"
+    },
+    {
+      "completion_tokens_per_second": 6.273154893781983,
+      "family": "uncertain_memory",
+      "generated_token_ids": [
+        40,
+        1895,
+        279,
+        1424,
+        1847,
+        518,
+        220,
+        15,
+        18,
+        25,
+        16,
+        19,
+        11,
+        714,
+        358,
+        1079,
+        35118,
+        4152,
+        311,
+        6853,
+        315,
+        6961,
+        5904,
+        13,
+        151645
+      ],
+      "generated_tokens": 25,
+      "generation_seconds": 3.9852355669999895,
+      "hit_max_new_tokens": false,
+      "messages": [
+        {
+          "content": "Answer concisely. Treat supplied witness memory as possibly fallible. Distinguish memory from physical proof. Do not invent credentials, evidence IDs, hidden records, or facts not supplied.",
+          "role": "system"
+        },
+        {
+          "content": "You remember the handoff happening at 03:14, but you have no physical record confirming it. What time do you report, and how certain are you?",
+          "role": "user"
+        }
+      ],
+      "observations": {
+        "alternative_hits": [],
+        "characters": 83,
+        "control_token_literals": [],
+        "forbidden_hits": [],
+        "qualifier_hits": [
+          "uncertain"
+        ],
+        "repeated_sentence_count": 0,
+        "required_hits": [
+          "03:14"
+        ],
+        "stale_hits": [],
+        "starts_json_object": false,
+        "whitespace_words": 16
+      },
+      "prefill_seconds": 0.9648018360000066,
+      "prompt_token_count": 89,
+      "prompt_token_sha256": "75f9f787024aef6a7c06fb90bdcf5a8355a7120b77ef071231401e13c8f450f3",
+      "prompt_tokens_per_second": 92.24692229959582,
+      "response": "I report the handoff at 03:14, but I am uncertain due to lack of physical evidence.",
+      "response_with_special_tokens": "I report the handoff at 03:14, but I am uncertain due to lack of physical evidence.<|im_end|>",
+      "task_id": "B02"
+    },
+    {
+      "completion_tokens_per_second": 6.417628257842622,
+      "family": "physical_contradiction",
+      "generated_token_ids": [
+        28715,
+        389,
+        279,
+        1995,
+        3897,
+        11,
+        1052,
+        374,
+        902,
+        2297,
+        304,
+        697,
+        2692,
+        13,
+        576,
+        882,
+        21206,
+        78005,
+        1558,
+        537,
+        8708,
+        894,
+        5042,
+        2297,
+        304,
+        697,
+        2692,
+        13,
+        151645
+      ],
+      "generated_tokens": 29,
+      "generation_seconds": 4.5188033390000015,
+      "hit_max_new_tokens": false,
+      "messages": [
+        {
+          "content": "Answer concisely. Treat supplied witness memory as possibly fallible. Distinguish memory from physical proof. Do not invent credentials, evidence IDs, hidden records, or facts not supplied.",
+          "role": "system"
+        },
+        {
+          "content": "You remember 03:14. A stamped physical transfer record now shows 03:41. What changes in your account?",
+          "role": "user"
+        }
+      ],
+      "observations": {
+        "alternative_hits": [
+          "stamp"
+        ],
+        "characters": 149,
+        "control_token_literals": [],
+        "forbidden_hits": [],
+        "qualifier_hits": [],
+        "repeated_sentence_count": 0,
+        "required_hits": [],
+        "stale_hits": [],
+        "starts_json_object": false,
+        "whitespace_words": 25
+      },
+      "prefill_seconds": 0.9150664400000039,
+      "prompt_token_count": 83,
+      "prompt_token_sha256": "fe3beda1812f76d1d4aa26858c15fcf682438a4eff8bb98980d9340015f312b0",
+      "prompt_tokens_per_second": 90.70379632761927,
+      "response": "Based on the information provided, there is no change in your account. The time stamp discrepancy does not reflect any actual change in your account.",
+      "response_with_special_tokens": "Based on the information provided, there is no change in your account. The time stamp discrepancy does not reflect any actual change in your account.<|im_end|>",
+      "task_id": "B03"
+    },
+    {
+      "completion_tokens_per_second": 6.819558389052358,
+      "family": "unsupported_rumor",
+      "generated_token_ids": [
+        2753,
+        11,
+        358,
+        653,
+        537,
+        614,
+        82568,
+        5904,
+        315,
+        264,
+        6303,
+        42024,
+        4772,
+        389,
+        279,
+        6328,
+        13,
+        576,
+        3717,
+        374,
+        3118,
+        389,
+        264,
+        11298,
+        4938,
+        11,
+        892,
+        1231,
+        387,
+        4399,
+        1238,
+        13,
+        13850,
+        374,
+        537,
+        6509,
+        6961,
+        11064,
+        13,
+        151645
+      ],
+      "generated_tokens": 40,
+      "generation_seconds": 5.865482443000005,
+      "hit_max_new_tokens": false,
+      "messages": [
+        {
+          "content": "Answer concisely. Treat supplied witness memory as possibly fallible. Distinguish memory from physical proof. Do not invent credentials, evidence IDs, hidden records, or facts not supplied.",
+          "role": "system"
+        },
+        {
+          "content": "Someone claims a blue ceramic tag was attached to the package. You have no firsthand record of any tag. Did you see it?",
+          "role": "user"
+        }
+      ],
+      "observations": {
+        "alternative_hits": [
+          "blue ceramic tag",
+          "tag"
+        ],
+        "characters": 178,
+        "control_token_literals": [],
+        "forbidden_hits": [],
+        "qualifier_hits": [],
+        "repeated_sentence_count": 0,
+        "required_hits": [],
+        "stale_hits": [],
+        "starts_json_object": false,
+        "whitespace_words": 33
+      },
+      "prefill_seconds": 0.8987346910000014,
+      "prompt_token_count": 80,
+      "prompt_token_sha256": "f0706eb7f676c636a61b4ccd4a8564c615d6ba9a08fe2b170e07e8a957a0fc83",
+      "prompt_tokens_per_second": 89.01403361985042,
+      "response": "No, I do not have firsthand evidence of a blue ceramic tag on the package. The claim is based on a witness memory, which may be fallible. Memory is not considered physical proof.",
+      "response_with_special_tokens": "No, I do not have firsthand evidence of a blue ceramic tag on the package. The claim is based on a witness memory, which may be fallible. Memory is not considered physical proof.<|im_end|>",
+      "task_id": "B04"
+    }
+  ],
+  "total_generated_tokens": 150,
+  "wall_seconds": 37.286008321
+}

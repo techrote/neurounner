@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001",
+  "fixture_id": "natural-text-heldout-original-pilot-v1",
+  "status": "PILOT_ORIGINAL_PROSE_CANDIDATE_NOT_GENERAL_PPL_BENCHMARK",
+  "source": "20 original English prose passages written specifically for NCR-001 on 2026-10-26 before model NCA training. No third-party corpus or license is required; this is intentionally a small pilot, not a representation of broad natural language.",
+  "data_use": "EVAL_ONLY_FOR_FROZEN_BASE_VS_NCA_VS_MATCHED_CONTROL; not used for adapter training, prompt selection or tuning",
+  "scoring": {
+    "primary": "Causal teacher-forced negative log likelihood on exact original text, average by available conditioned tokenizer units within model; exclude unconditioned first symbol.",
+    "secondary": "Normalise by original UTF-8 source bytes for descriptive within-model comparison; count actual model-token units and Python Unicode characters separately.",
+    "comparability": "Only compare NCA vs own frozen model vs matched noncellular adapter under the SAME tokenizer; void.1 raw byte-token CE never directly ranked against SmolLM2/Sprocket BPE token CE.",
+    "warnings": [
+      "Small LLM-authored fixed set, narrow vocabulary and thematic overlap; not independent human-authored general language benchmark",
+      "Do not run CE until model forward+KV-cache conformance and source tokenizer verified",
+      "Do not report overly precise cross-model PPL"
+    ]
+  },
+  "cases": [
+    {
+      "id": "N01",
+      "domain": "daily_life",
+      "text": "At the end of the street, a narrow shop kept a box of umbrellas beside the entrance. On rainy mornings the owner counted them twice, not because anyone was stealing, but because hurried customers sometimes left a broken one in exchange for a working one. A small notebook on the counter recorded which handles needed repair. The system was imperfect, yet by autumn the pile of abandoned umbrellas had become much smaller."
+    },
+    {
+      "id": "N02",
+      "domain": "daily_life",
+      "text": "The apartment above the bakery was warm long before sunrise. Every morning the tenant heard the shutters rattle, followed by the dull thump of flour sacks moving across the floor. She learned to distinguish the sounds well enough to know when the ovens had been lit. On weekends she stayed in bed until the first delivery bicycle stopped outside, which was usually a more reliable alarm than the clock."
+    },
+    {
+      "id": "N03",
+      "domain": "daily_life",
+      "text": "A neighbour organised a shared shelf for tools that were useful only once or twice a year. People could borrow a ladder, a wallpaper scraper, or a hand drill by writing their initials in a ledger. The arrangement worked until somebody borrowed the ladder during a holiday and forgot to return it. The group then added a return date, which solved most disputes without requiring a complicated booking system."
+    },
+    {
+      "id": "N04",
+      "domain": "daily_life",
+      "text": "The bus arrived seven minutes late, but nobody complained because the driver had stopped to help an elderly passenger find the right platform. Several commuters watched the minutes change on their phones. When the vehicle finally pulled away, a child pointed out that the traffic lights seemed to turn red at exactly the wrong moment. The driver laughed and explained that a delay can make ordinary coincidences feel personal."
+    },
+    {
+      "id": "N05",
+      "domain": "nature",
+      "text": "After a week of dry weather, the first heavy rain ran across the garden rather than soaking into it. Tiny channels formed between the stones and carried soil towards the drain. The gardener scattered leaves over the bare ground and placed a shallow bowl beneath the downpipe. By the next storm the water spread more slowly, and a damp patch remained in the beds long after the rain had stopped."
+    },
+    {
+      "id": "N06",
+      "domain": "nature",
+      "text": "The birds gathered on the telephone wire every afternoon, although the number and order changed. One would hop aside when another landed, and occasionally the entire group lifted into the air without an obvious cause. A patient observer wrote down the times and weather rather than inventing an explanation. After several weeks, the notebook showed a pattern around sunset, but it still did not reveal why the birds chose that particular wire."
+    },
+    {
+      "id": "N07",
+      "domain": "nature",
+      "text": "A narrow path crossed the dunes towards the sea. It looked unchanged from a distance, but each winter storm moved the sand enough to bury signs and reveal old fence posts. Walkers who relied on last year's landmarks sometimes found themselves near a steep drop. The local volunteers replaced rigid route markers with movable stakes, allowing the path to respond to the coastline without pretending the shore was permanent."
+    },
+    {
+      "id": "N08",
+      "domain": "nature",
+      "text": "The pond froze around its edges overnight while the centre remained dark and open. Fallen leaves were visible beneath the thin ice, and small ripples formed when wind crossed the unfrozen water. A child asked whether the whole pond would be solid by morning. Her father said that it depended on temperature, depth and moving water, and they returned the next day to see which parts of that prediction held up."
+    },
+    {
+      "id": "N09",
+      "domain": "culture",
+      "text": "Inside the small museum, every object had two labels. The first described what the curators knew from records, while the second listed questions that had not been settled. Visitors often spent longer reading the questions, especially beside a worn copper instrument with an unidentified attachment. The curators resisted the temptation to invent a dramatic origin story, and instead invited people to compare the tool marks with photographs from the archive."
+    },
+    {
+      "id": "N10",
+      "domain": "culture",
+      "text": "The community theatre rehearsed without scenery for almost a month. Actors carried chairs into position and imagined walls that had not yet been built. When the stage crew finally installed the set, the new door was a little narrower than expected. Everyone had to adjust their entrances, and a quiet scene suddenly became funny because the characters kept reaching for a handle just outside their rehearsed positions."
+    },
+    {
+      "id": "N11",
+      "domain": "culture",
+      "text": "A translator found two versions of an old letter in the town archive. One was elegant and polished, while the other retained awkward phrases that seemed closer to the author's voice. The editor wanted a single definitive translation, but the translator proposed printing both with notes. The difference mattered because a sentence that sounded confident in one version was hesitant in the other, changing how readers understood the decision it described."
+    },
+    {
+      "id": "N12",
+      "domain": "culture",
+      "text": "During the evening concert, a violin string broke halfway through the second piece. The musician stopped, smiled briefly, and took a spare instrument from the player beside her. The audience waited quietly, unsure whether the music would begin again from the start. Instead, the conductor counted a short measure and the orchestra resumed at a natural phrase boundary, leaving the interruption as a small part of the performance."
+    },
+    {
+      "id": "N13",
+      "domain": "science",
+      "text": "The students built a simple weather station on the school roof. At first they believed the readings because every number arrived with several decimal places. Then the temperature sensor began reporting a suspiciously regular pattern each afternoon. They moved a spare thermometer into the shade and discovered that sunlight reflected from a nearby window was heating the original instrument. The class kept both records to show how precise measurements can still be misleading."
+    },
+    {
+      "id": "N14",
+      "domain": "science",
+      "text": "Two jars of water were placed on the classroom table. The first looked perfectly clear, while the second contained a faint cloud of sediment. Rather than guessing which was cleaner, the teacher asked the students to name what appearance could and could not establish. They discussed dissolved substances, microbes and the limits of their instruments. Their final chart contained more unanswered questions than conclusions, which the teacher regarded as useful progress."
+    },
+    {
+      "id": "N15",
+      "domain": "science",
+      "text": "A survey team measured the same hill from opposite sides and returned with slightly different heights. They checked the reference point, the time of day and the instruments before averaging anything. It turned out that one measurement used a temporary mark placed on a movable stone. The discrepancy was small enough to have been ignored, but resolving it taught the team why agreement between numbers is not the same as agreement between methods."
+    },
+    {
+      "id": "N16",
+      "domain": "science",
+      "text": "The radio operator listened to a weak signal that rose above the static once every few minutes. A colleague suggested that the transmitter was rotating, but the pattern might also have come from interference along the path. They recorded the signal strength and local conditions while moving the receiver a short distance. The variations became less regular, weakening the original idea without proving any single alternative explanation."
+    },
+    {
+      "id": "N17",
+      "domain": "work",
+      "text": "On the first day of the new delivery route, the courier underestimated the time spent finding entrances. The streets were familiar, but service doors were hidden behind courtyards or shared with other buildings. Instead of racing to recover lost minutes, he marked each difficult entrance on a paper map. Within a week the route grew quicker, not because he travelled faster, but because he stopped making the same uncertain turns."
+    },
+    {
+      "id": "N18",
+      "domain": "work",
+      "text": "A librarian decided to repair damaged books rather than discard them immediately. She created three trays: safe to lend, needs a minor repair, and requires specialist attention. Volunteers could work on the middle tray without guessing at the condition of the most fragile volumes. The system also made shortages visible. When tape ran low, the library knew exactly which repairs could continue and which should wait."
+    },
+    {
+      "id": "N19",
+      "domain": "work",
+      "text": "The workshop's new machine was quieter than its predecessor, which everyone initially welcomed. After a few days the operators noticed that the old machine's loud clack had warned them when a part was misaligned. They did not want to recreate the noise, so they added a simple indicator light and a checklist. The change preserved useful feedback without confusing discomfort with information."
+    },
+    {
+      "id": "N20",
+      "domain": "work",
+      "text": "At the morning handover, the incoming team found a note that simply said the pump had behaved strangely. Nobody knew whether the writer meant pressure, vibration or sound. The supervisor asked each shift to record one observation, one attempted change and one remaining question. The new notes took less than a minute to write, but they saved hours of repeated investigation over the following month."
+    }
+  ]
+}
