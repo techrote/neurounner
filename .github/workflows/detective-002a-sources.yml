@@ -1,0 +1,98 @@
+name: DETECTIVE-002A compact NPC body source qualification
+
+on:
+  pull_request:
+    paths:
+      - "experiments/detective-002/body-cohort.json"
+      - "experiments/detective-002/SOURCE_QUALIFICATION.md"
+      - "experiments/detective-002/source-evidence/**"
+      - "scripts/detective_002a_sources.py"
+      - "tests/test_detective_002a_sources.py"
+      - ".github/workflows/detective-002a-sources.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: detective-002a-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      evidence_ready: ${{ steps.evidence.outputs.ready }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile source resolver and run detective contracts
+        run: |
+          python3 -m py_compile scripts/detective_002a_sources.py tests/test_detective_002a_sources.py
+          python3 -m unittest discover -s tests -p 'test_detective_*.py' -v
+      - name: Verify zero-training source contract
+        run: python3 scripts/detective_002a_sources.py
+      - name: Revalidate frozen source evidence if present
+        id: evidence
+        run: |
+          if [ -e experiments/detective-002/source-evidence/source-evidence.json ]; then
+            python3 scripts/detective_002a_sources.py               --verify-dir experiments/detective-002/source-evidence
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  resolve-and-freeze:
+    needs: offline-contract
+    if: ${{ needs.offline-contract.outputs.evidence_ready != 'true' && github.event_name == 'pull_request' && github.head_ref == 'research/detective-002a-body-sources-20261027' && github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.user.login == 'techrote' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Resolve source metadata without model weight downloads
+        run: |
+          rm -rf runtime/detective-002a-source
+          python3 scripts/detective_002a_sources.py             --resolve-dir runtime/detective-002a-source
+          python3 scripts/detective_002a_sources.py             --verify-dir runtime/detective-002a-source
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          e=json.loads(Path("runtime/detective-002a-source/source-evidence.json").read_text())
+          assert e["weight_bytes_downloaded"]==0
+          assert e["training_steps"]==0
+          assert e["paid_api_calls"]==0
+          assert e["relevance_mapping_accessed"] is False
+          assert e["population_expansion_admitted"] is False
+          assert len(e["candidates"])==9
+          print("DETECTIVE_002A_NETWORK_RESOLUTION_PASS")
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective002a-source-evidence-${{ github.run_id }}
+          path: runtime/detective-002a-source
+          if-no-files-found: error
+          retention-days: 30
+      - name: Refuse stale PR source before persistent source freeze
+        run: |
+          remote_sha=$(git ls-remote --heads origin             refs/heads/research/detective-002a-body-sources-20261027 | cut -f1)
+          test "$remote_sha" = "${{ github.event.pull_request.head.sha }}"
+      - name: Commit exact source evidence to PR branch
+        run: |
+          rm -rf experiments/detective-002/source-evidence
+          mkdir -p experiments/detective-002
+          cp -a runtime/detective-002a-source             experiments/detective-002/source-evidence
+          python3 scripts/detective_002a_sources.py             --verify-dir experiments/detective-002/source-evidence
+          git config user.name "neurounner source qualification bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add experiments/detective-002/source-evidence
+          git diff --cached --quiet && { echo "expected new source evidence"; exit 1; }
+          git commit -m "DETECTIVE-002A: freeze exact compact-body source evidence"
+          git push origin HEAD:research/detective-002a-body-sources-20261027

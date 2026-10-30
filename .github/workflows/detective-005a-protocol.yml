@@ -1,0 +1,294 @@
+name: DETECTIVE-005A fun-first screen protocol (offline)
+
+on:
+  pull_request:
+    paths:
+      - "experiments/detective-005/**"
+      - "scripts/detective_005a_fun_screen.py"
+      - "scripts/detective_005a_live.py"
+      - "scripts/detective_005a_assemble.py"
+      - "scripts/detective_005a_recover.py"
+      - "scripts/detective_005a_blind.py"
+      - "tests/test_detective_005a_fun_screen.py"
+      - "tests/test_detective_005a_recovery.py"
+      - "tests/test_detective_005a_blind.py"
+      - "RAG.md"
+      - ".github/workflows/detective-005a-protocol.yml"
+      - ".github/workflows/detective-005a-live.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  offline-protocol:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile protocol
+        run: |
+          python3 -m py_compile scripts/detective_005a_fun_screen.py scripts/detective_005a_live.py scripts/detective_005a_assemble.py scripts/detective_005a_recover.py scripts/detective_005a_blind.py tests/test_detective_005a_fun_screen.py tests/test_detective_005a_recovery.py tests/test_detective_005a_blind.py
+      - name: Run DETECTIVE-005A tests
+        run: |
+          python3 -m unittest tests.test_detective_005a_fun_screen tests.test_detective_005a_recovery tests.test_detective_005a_blind -v
+      - name: Verify frozen source cohort and zero-training contract
+        run: |
+          python3 scripts/detective_005a_fun_screen.py
+          for lineage in G01 G02 G03 G04 G05 G06 G07 G08 G09 G10 G11 G12; do
+            python3 scripts/detective_005a_live.py --lineage "$lineage" >/dev/null
+          done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          cfg=json.loads(Path("experiments/detective-005/fun-screen.json").read_text())
+          members=cfg["source_population"]["members"]
+          assert len(members)==36
+          assert len({x["member_id"] for x in members})==36
+          assert len({x["asset_sha256"] for x in members})==36
+          assert cfg["limits"]["total_generations"]==144
+          assert cfg["limits"]["optimizer_steps"]==0
+          assert cfg["outcome"]["objective_relevance_threshold"] is None
+          assert cfg["subjective_review"]["model_judge"] is False
+          print("DETECTIVE-005A 36 SOURCE ASSETS / SUBJECTIVE FUN / ZERO TRAINING: PASS")
+          PY
+      - name: Authority boundary sentinels
+        run: |
+          python3 - <<'PY'
+          import ast
+          from pathlib import Path
+          src=Path("scripts/detective_005a_fun_screen.py").read_text()
+          # Check actual imports rather than substring occurrences: the
+          # frozen raw runner receipt legitimately names library-version
+          # fields, but this standard-library protocol may not load them.
+          imported=set()
+          for node in ast.walk(ast.parse(src)):
+              if isinstance(node, ast.Import):
+                  imported.update(x.name.split(".", 1)[0] for x in node.names)
+              elif isinstance(node, ast.ImportFrom) and node.module:
+                  imported.add(node.module.split(".", 1)[0])
+          for forbidden in (
+              "torch", "transformers", "peft", "huggingface_hub",
+              "openai", "anthropic",
+          ):
+              assert forbidden not in imported, forbidden
+          for forbidden in (
+              "optimizer.step", "loss.backward", "nvidia_api",
+              "training-c2-evidence/relevance-packet",
+              "training-c3-evidence/relevance-packet",
+          ):
+              assert forbidden not in src, forbidden
+          assert not any(Path("experiments/detective-005").glob("*final*.jsonl"))
+          print("DETECTIVE-005A NO MODEL / NO TRAINING / NO SEALED FINAL: PASS")
+          PY
+
+
+  synthetic-artifact-produce:
+    # Verify Actions transport mechanics with a tiny FAKE response. No models,
+    # adapters, hidden mappings, training, or actual DETECTIVE evidence.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          # On PR runs github.sha is the synthetic merge commit, but GitHub's
+          # artifact API workflow_run.head_sha identifies the PR branch head.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Construct a synthetic one-row interrupted lineage
+        env:
+          DETECTIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from tests.test_detective_005a_recovery import Detective005ARecoveryTests
+          from scripts import detective_005a_fun_screen as screen
+          from scripts import detective_005a_live as live
+
+          example = Detective005ARecoveryTests()
+          example.cfg = screen.load_contract()
+          row = example.row()
+          row["runner"]["repository_head_sha"] = os.environ["DETECTIVE_HEAD_SHA"]
+          row["runner"]["actions_run_id"] = os.environ["GITHUB_RUN_ID"]
+          root = Path("out/G01")
+          partial = root / "results.partial.jsonl"
+          live.append_completed_raw(partial, row)
+          with partial.open("ab") as fp:
+              fp.write(b'{"synthetic_torn_record":')
+          live.write_interrupted_receipt(
+              "G01", root, RuntimeError("synthetic-only transport probe"))
+          # Must be excluded by the identical negative upload glob.
+          (root / "work").mkdir()
+          (root / "work" / "synthetic-excluded.txt").write_text(
+              "NO MODEL WEIGHTS\n", encoding="utf-8")
+          print("SYNTHETIC DETECTIVE-005A ARTIFACT PRODUCED; 0 MODEL CALLS")
+          PY
+      - name: Upload via exact live-lineage artifact path and exclusions
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: detective005a-G01
+          path: |
+            out/G01/
+            !out/G01/work/**
+          if-no-files-found: error
+          retention-days: 3
+
+  synthetic-artifact-readback:
+    needs: synthetic-artifact-produce
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          # On PR runs github.sha is the synthetic merge commit, but GitHub's
+          # artifact API workflow_run.head_sha identifies the PR branch head.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Fetch same-run GitHub artifact API identities
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100" \
+            > artifacts-api.json
+      - name: Download through exact live-workflow action/pattern
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: detective005a-G*
+          path: artifacts
+      - name: Verify raw-byte transport, API metadata and quarantine-only archive
+        env:
+          DETECTIVE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          python3 scripts/detective_005a_recover.py \
+            --artifacts artifacts \
+            --artifact-metadata artifacts-api.json \
+            --source-head "$DETECTIVE_HEAD_SHA" \
+            --run-id "$GITHUB_RUN_ID" \
+            --out staged/detective-005a-synthetic-transport
+          python3 scripts/detective_005a_recover.py \
+            --verify staged/detective-005a-synthetic-transport
+          python3 - <<'PY'
+          from pathlib import Path
+          from scripts import detective_005a_fun_screen as screen
+          from scripts import detective_005a_recover as recover
+
+          files = recover.artifact_files(Path("artifacts"), "G01")
+          assert set(files) == {"results.partial.jsonl", "interrupted.json"}, files
+          dataset = Path("staged/detective-005a-synthetic-transport")
+          manifest = screen.read_json(dataset / "manifest.json")
+          provenance = screen.read_json(dataset / "provenance/source-artifacts.json")
+          record = provenance["lineages"][0]
+          assert record["status"] == "recovery_only", record
+          assert record["validated_raw_prefix_rows"] == 1, record
+          assert record["journal_tail_problem"] == "unterminated_raw_row", record
+          assert record["custody_warnings"] == [], record
+          assert record["artifact_api"]["id"] is not None, record
+          assert record["artifact_api"]["name"] == "detective005a-G01", record
+          assert record["artifact_api"]["workflow_run"]["id"] == int(__import__("os").environ["GITHUB_RUN_ID"]), record
+          assert record["artifact_api"]["workflow_run"]["head_sha"] == __import__("os").environ["DETECTIVE_HEAD_SHA"], record
+          assert record["artifact_api"]["digest"].startswith("sha256:"), record
+          assert manifest["lineages_with_artifacts"] == 1, manifest
+          assert manifest["validated_raw_prefix_rows"] == 1, manifest
+          assert manifest["complete_lineage_artifacts"] == 0, manifest
+          assert manifest["review_packet_generated"] is False, manifest
+          assert manifest["optimizer_steps"] == 0, manifest
+          for name, path in files.items():
+              preserved = dataset / "raw" / "G01" / name
+              assert path.read_bytes() == preserved.read_bytes(), name
+          assert not (dataset / "review" / "fun-packet.json").exists()
+          print("SYNTHETIC ACTIONS ARTIFACT ROUNDTRIP PASS; NOT LIVE EVIDENCE")
+          PY
+
+  synthetic-durable-branch-probe:
+    # Never grant a PR a write token. Only an explicitly dispatched main run
+    # may prove remote Git push/fetch using a FAKE torn journal, without models.
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    needs: synthetic-artifact-readback
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    env:
+      TARGET_BRANCH: evidence/detective-005a-synthetic-probe-${{ github.run_id }}
+      TARGET_DATASET: datasets/detective-005a-synthetic-probe-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Download only the synthetic lineage artifact produced in this run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: detective005a-G*
+          path: artifacts
+      - name: Bind synthetic fixture to same-run GitHub artifact API
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100" \
+            > artifacts-api.json
+      - name: Verify and remotely promote a synthetic-only recovery archive
+        run: |
+          set -euo pipefail
+          python3 scripts/detective_005a_recover.py \
+            --artifacts artifacts \
+            --artifact-metadata artifacts-api.json \
+            --artifact-api-outcome success \
+            --download-outcome success \
+            --source-head "$GITHUB_SHA" \
+            --run-id "$GITHUB_RUN_ID" \
+            --out staged/detective-005a-synthetic-probe
+          python3 scripts/detective_005a_recover.py \
+            --verify staged/detective-005a-synthetic-probe \
+            --original-artifacts artifacts \
+            --original-artifact-api artifacts-api.json \
+            --require-complete-transport
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path("staged/detective-005a-synthetic-probe/manifest.json").read_text())
+          assert m["validated_raw_prefix_rows"] == 1
+          assert m["complete_lineage_artifacts"] == 0
+          assert m["optimizer_steps"] == 0
+          assert m["review_packet_generated"] is False
+          assert m["status"] == "raw_recovery_only_not_a_complete_screen"
+          PY
+          test ! -e "$TARGET_DATASET"
+          mkdir -p "$TARGET_DATASET"
+          cp -a staged/detective-005a-synthetic-probe/. "$TARGET_DATASET/"
+          python3 scripts/detective_005a_recover.py --verify "$TARGET_DATASET"
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+          if git ls-remote --exit-code --heads origin "refs/heads/$TARGET_BRANCH" >/dev/null 2>&1; then
+            echo "Synthetic evidence branch already exists; refusing overwrite."
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+techrote@users.noreply.github.com'
+          git add "$TARGET_DATASET"
+          git commit -m "DETECTIVE-005A: synthetic NO MODEL remote custody probe ${GITHUB_RUN_ID}"
+          git push --force-with-lease="refs/heads/$TARGET_BRANCH:" origin "HEAD:refs/heads/$TARGET_BRANCH"
+          # A fetch from GitHub and archived-byte verification are required.
+          git fetch --no-tags origin "refs/heads/$TARGET_BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$(git rev-parse HEAD)"
+          mkdir -p remote-readback
+          git archive FETCH_HEAD "$TARGET_DATASET" | tar -xf - -C remote-readback
+          python3 scripts/detective_005a_recover.py \
+            --verify "remote-readback/$TARGET_DATASET" \
+            --original-artifacts artifacts \
+            --original-artifact-api artifacts-api.json \
+            --require-complete-transport
+          echo "SYNTHETIC remote branch readback PASS; zero model calls, zero live responses"

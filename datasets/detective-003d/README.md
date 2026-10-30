@@ -1,0 +1,3 @@
+# DETECTIVE-003D source-native Sprocket live scripter bridge
+
+One exact root Sprocket-500M Instruct generation on its publisher-native tool-call wire, followed by strict native parsing and one-call normalization into DETECTIVE-003C. Correct detective tool selection is not required for integration PASS. Raw control-token output and token IDs are preserved. Any valid normalized programme executes only through the fictional DETECTIVE authority; evidence is presented to a witness only if the deterministic receipt actually grants it and the game explicitly applies it. No model training, host execution, hidden relevance/learner-final access or population admission occurs.
