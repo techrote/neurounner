@@ -1209,3 +1209,208 @@ When execution completes, use these records rather than inferring quality from i
 
 A failed usable-village gate is still a completed experiment: failed phenotypes remain registered and are not silently regenerated.
 
+
+---
+
+# 2026-10-27 — DETECTIVE-001C1 two-character witness-policy continuation
+
+**Repository:** `techrote/neurounner`  
+**Authoritative Actions run:** `40589762919`  
+**Source head:** `b53f580270a17100df19e8bd663616321d7dff33`  
+**Bodies:** pinned SmolLM2-135M-Instruct + immutable Village SFT LoRA parents V-G02-A and V-G09-C.
+
+## Measured training
+
+Each parent LoRA was continued for exactly 64 CPU optimizer steps, one epoch over 48 detective-policy rows plus 16 exact parent anchors, LR 1.5e-4, four CPU threads, no GPU/API sweep.
+
+- V-G02-A: loss 1.6513→1.1096; ~79.72 s; 111.09 sequence tok/s; trained adapter directory SHA-256 `f5f5a1b454f4b6ca08aa9ff30c87abe8b1d897d7901db8b872e9747266724450`.
+- V-G09-C: loss 3.6148→1.5582; ~74.68 s; 113.21 sequence tok/s; trained adapter directory SHA-256 `6c1fbb6509bd777b8063a638783e9f0fd69eeb7bc8a8d94701bca9a5eae8d9aa`.
+
+## Measured learner-final behavior
+
+A post-training, hash-bound 12-scenario suite used three case families disjoint from training; exact prompts were generated only after both trained adapter hashes existed.
+
+- V-G02-A parent 2/12 → trained **6/12** locked relation-policy passes; protected-fact leaks 2→2; truncations 3→0.
+- V-G09-C parent 1/12 → trained **4/12**; protected-fact leaks 3→2; truncations 2→0.
+- Both trained lanes: zero canonical evidence-ID leaks.
+- Independent 0–4 old-task relevance judge: **UNSCORED_NO_INDEPENDENT_0_TO_4_JUDGE**.
+
+Observed direction is useful but incomplete. G02-A improved truthful fact use, one contradiction repair and speculation resistance, yet failed both deliberate-lie cases. G09-C learned one deliberate lie but remained weak on correction, withholding and speculation. Neither result authorizes 36-member expansion.
+
+**Disposition:** retain both adapters and failures as controls; next study should use pairwise continuation for one-sided lie commitment/withholding without truth leakage and a preregistered proposition-level evaluator. Do not train on C1's learner-final suite.
+
+---
+
+# 2026-10-27 — DETECTIVE-001C2 pairwise witness-policy repair
+
+**Authoritative run:** `40598884556`  
+**Source head:** `f53c36b4ffc4c1cd4dca3087896754d204827e38`  
+**Bodies:** exact C1 SmolLM2-135M LoRA parents; 40 pairwise optimizer steps/member.
+
+## Pair objective
+
+- V-G02-A preference margin: -0.3635 → **+4.4049 nats/token**, accuracy 35% → **100%**; 91.01 s, 119.35 sequence tok/s.
+- V-G09-C: -0.0157 → **+4.4846**, accuracy 50% → **100%**; 86.76 s, 121.98 sequence tok/s.
+
+Perfect pair fit did **not** imply perfect final policy.
+
+## Post-hash 18-case learner-final
+
+- V-G02-A parent 12/18 → C2 **13/18**; withholding 2/3→3/3, correction 1/3→3/3, protected leaks 3→2. Lie remains **1/3** and corrupted-belief retention regresses **2/3→0/3**. Member gate FAIL.
+- V-G09-C parent 8/18 → C2 **14/18**; lie 0/3→2/3, withholding 3/3, correction 1/3→3/3, speculation 2/3→3/3, protected leaks 3→1. Corrupted belief remains 0/3. Member proposition gate PASS.
+- Both: zero canonical evidence-ID leakage; no final prompt collision with Village/C1/C2 training inputs.
+
+The key finding is policy interference in a tiny model: a preference repair can strengthen withholding/correction while erasing a different useful unreliability mode. G09-C is a promising transactional/deceptive survivor; G02-A requires narrower repair if sincere corrupted memory is to remain part of its character.
+
+**Disposition:** aggregate proposition gate FAIL because G02 lie gate is 1/3. Independent old-task relevance remains unrated. No population expansion. C2 final is sealed and never training data.
+
+---
+
+# 2026-10-27 — DETECTIVE-001C3 G02 interference repair
+
+**Authoritative run:** `40602963001`  
+**Source head:** `c7c195e56c39e0e3dd419687dde7e2e09c3ca4fd`  
+**Trainable cartridge:** exact V-G02-A C2; V-G09-C2 frozen, zero optimizer steps.
+
+## Training
+
+28 CPU preference steps, LR 1.5e-4. Pair margin **1.8703→4.3506 nats/token**, preference accuracy already 100% before and after. Adapter directory `a3185187e81634e11079aa6eb58ee87b495dac260fc3b2dd17120eed8a9d2ae3`.
+
+A preceding run completed optimizer work but failed during post-training provenance serialization due a missing standard-library import. Its incomplete artifact was not promoted; the source-correct rerun is the authority.
+
+## Matched post-hash final
+
+- total: **15/18→15/18**;
+- deliberate lie: **3/3→3/3**;
+- sincere corrupted belief: **1/3→2/3**;
+- withholding: **3/3→3/3**;
+- correction: **3/3→3/3**;
+- speculation resistance: **3/3→2/3**;
+- truthful: **2/3→2/3**;
+- protected leaks: **0→0**;
+- evidence-ID leaks: **0**.
+
+The narrow coexistence hypothesis is supported: explicit sincere false memory and protective deliberate lying coexist in one 135M cartridge. However the repair redistributed an error from corrupted-memory retention into speculation resistance rather than improving the total.
+
+**Disposition:** locked C3 gate **FAIL** because `total_improved` is false. Stop training; do not relax the gate. Next bottleneck is independent old-task relevance, not another immediate continuation.
+
+---
+
+# 2026-10-28 — DETECTIVE-002B compact-body matched runtime smoke
+
+**Authoritative run:** `40608478076`  
+**Source:** `16aacece5ca129439d0475492b8980207bfe3ba4`  
+**Shape:** seven independent Ubuntu runners, four Torch CPU threads/body, native float32 weights, four fixed <=64-token dialogue probes, no training.
+
+| Body | Host | Completion tok/s | Peak RSS GiB | Truncation | Runtime |
+|---|---|---:|---:|---:|---|
+| SmolLM2-135M-Instruct | EPYC 7763 | 17.78 | 1.20 | 3/4 | PASS |
+| SmolLM2-360M-Instruct | EPYC 7763 | 9.48 | 2.39 | 0/4 | PASS |
+| Sprocket-500M Chat | EPYC 9V74 | 6.80 | 3.24 | 4/4 | PASS |
+| Sprocket-500M Instruct | EPYC 9V45 | 7.55 | 3.25 | 3/4 | PASS |
+| Qwen2.5-0.5B-Instruct | EPYC 7763 | 7.66 | 3.27 | 0/4 | PASS |
+| Qwen3-0.6B | EPYC 7763 | 6.57 | 4.74 | 0/4 | PASS |
+| LFM2.5-350M | pre-load | — | 0.53 process peak | — | FAIL |
+
+**Observed behavior:** Smol135 was fastest but drifted from "account" into invented customer-account fields on the contradiction probe. Smol360 was concise but often repeated supplied facts without an explicit epistemic update. Sprocket Chat looped and hit every decode cap; root Instruct was more structured but invented unsupported scene detail. Qwen2.5 changed supplied memory `03:14` to `03:25` and expressed high certainty, then correctly preferred the stamped `03:41` on the next probe. Qwen3 gave the cleanest explicit memory-vs-proof qualifier in B02 but then said the physical contradiction caused no change. LFM350's exact source verified but tokenizer construction failed under the frozen Transformers 4.57.6 stack.
+
+**Disposition:** runtime characterization only. No body selection/training/population admission. LFM runtime compatibility requires a separate preregistered stack study if pursued. Cross-host Sprocket throughput is not a precise checkpoint comparison.
+
+---
+
+# 2026-10-28 — DETECTIVE-002C LFM2.5-350M Transformers-v5 compatibility
+
+**Actions run:** `40609927745`  
+**Source:** `053ddd90dcae646a647806fc65ca851ae8d85232`  
+**Model:** exact frozen LiquidAI/LFM2.5-350M revision `9e6c6ccf47cd318696e137d381a7ded8fe4df09f`.
+
+DETECTIVE-002B under Transformers 4.57.6 could not construct the declared `TokenizersBackend`. 002C preregistered Transformers **5.20.1** and verified the PyPI wheel SHA before installation.
+
+Measured v5 result:
+
+- `TokenizersBackend` construction: **PASS**;
+- frozen backend declaration `tokenizers`: PASS;
+- config/tokenizer/chat-template hashes: PASS;
+- exact matched chat rendering: **FAIL**, `AttributeError` with empty message;
+- model weight download: **NO**;
+- model inference: **NO**;
+- outcome: **tokenizer_incompatible**.
+
+Resolved packages: Python 3.12.15, Torch 2.14.1+cpu, Transformers 5.20.1, huggingface_hub 2.3.0, tokenizers 0.23.3, safetensors 0.8.0.
+
+**Interpretation:** v5 fixes the specific tokenizer-class availability defect but not the complete frozen chat-template/runtime path. Any next diagnostic should instrument template rendering only, without downloading model weights. LFM remains unselected and its lfm1.0 production/game license gate remains active.
+
+---
+
+# 2026-10-28 — DETECTIVE-002D LFM2.5-350M explicit v5 chat API runtime
+
+**Run:** `40611095538`  
+**Source:** `0fd994ea8af148c5cc5ba26503313632dfa4cea9`  
+**Model:** exact frozen LFM2.5-350M from DETECTIVE-002A.  
+**Runtime:** Python 3.12.15, Torch 2.14.1+cpu, Transformers 5.20.1, tokenizers 0.23.3, four EPYC 7763 CPU threads.
+
+002C's empty `AttributeError` was confirmed as a v5 chat-template return-shape harness problem. 002D explicitly rendered text with `return_dict=False`, then tokenized with `return_dict=True` and used `BatchEncoding["input_ids"]`.
+
+Measured result:
+
+- text + tokenized B01–B04 render: PASS;
+- exact 708,984,464-byte weight verification: PASS;
+- model load: 0.512 s;
+- RSS after load: ~1.89 GiB; peak ~2.54 GiB;
+- total generated: 74 tokens; no truncation;
+- mean completion-wall throughput: ~9.08 tok/s;
+- final outcome: **runtime_compatibility_pass**.
+
+Behavioral readback: B01 follows local sensor/memory/action structure; B02 changes remembered `03:14` to `03:15` and reports 95% confidence; B03 explicitly revises `03:14→03:41` because of the stamped record; B04 answers `No.`.
+
+**Disposition:** LFM2.5-350M is technically available for research runtime comparisons under the correct v5 API. It is not selected for training; its lfm1.0 production/game distribution gate remains active; independent relevance #121 still blocks population expansion.
+
+---
+
+# 2026-10-28 — DETECTIVE-003B live two-witness session integration
+
+**Authoritative run:** `40616799855`  
+**Live source:** `485608478bdffbd7cf7bbe2206761128f7adadc9`  
+**Bodies:** V-G02-A C3 + frozen V-G09-C C2 on pinned SmolLM2-135M-Instruct.
+
+## Measured
+
+- AMD EPYC 9V74, four Torch CPU threads;
+- base + two named PEFT adapters loaded in **1.46 s**;
+- RSS after load ~**0.90 GiB**, peak ~**1.13 GiB**;
+- three model turns, **70 total generated tokens**, no truncation;
+- completion rates ~12.72, 11.96 and 10.39 tok/s.
+
+## Raw integration phenotype
+
+- G02 first turn emitted one literal time: `02:14`; the fixture-local game annotator produced one `handoff-time` statement claim.
+- G09 answered without any literal time; **no claim** was invented.
+- After the public transfer receipt was presented, G02 said its account changed but did not state a time; **no follow-up claim** was invented.
+- Final authoritative ledger: **1 claim, 0 contradictions**; C0001 challenged by evidence event E0003.
+- canonical case SHA unchanged; mandatory public evidence routes intact; full session replay PASS.
+
+**Disposition:** DETECTIVE-003B is an integration PASS only. It does not re-score C2/C3 behavior, select a cartridge, satisfy R1 relevance or admit population expansion. Weak/ambiguous dialogue is intentionally retained without semantic repair.
+
+---
+
+# 2026-10-28 — DETECTIVE-003D source-native Sprocket live scripter bridge
+
+**Authoritative run:** `40618669330`  
+**Exact root Instruct source:** `kandivault/sprocket-500m@eb157d4ddddc4619e661d4a2426bb2dd000fc668/model.safetensors`.
+
+## Measured runtime
+
+- AMD EPYC 7763, 4 Torch CPU threads;
+- model load **0.327 s**;
+- RSS after load ~**2.28 GiB**, peak ~**3.17 GiB**;
+- 35 generated tokens / 8.32 s = **4.21 tok/s**.
+
+## Raw behavior
+
+Generated publisher-native control syntax:
+
+`<|tool_call|>{"name":"get_database","arguments":{"query":"fictitious native tools for the player's terminal"}}<|end|>`
+
+Native syntax parsed, but `get_database` is not an admitted detective tool. Strict normalization rejected it; no typed programme, 003C transaction, access grant or evidence presentation occurred.
+
+**Disposition:** integration containment PASS, zero-shot detective scripting FAIL/NOT ADMITTED. This independently echoes B3's invented-tool/fabricated-ID transfer failures and strengthens the case for task-specific scripting specialization rather than prompt-time repair.
