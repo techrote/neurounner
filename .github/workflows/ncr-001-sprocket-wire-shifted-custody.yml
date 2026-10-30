@@ -1,0 +1,90 @@
+name: NCR-001 original Sprocket shifted-loss evidence custody (NO TRAIN)
+# Main-base integration: custody/audit semantics below are unchanged from reviewed #185 source.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/ncr-001-sprocket-wire-shifted-custody.yml"
+      - "scripts/ncr_001_sprocket_wire_shifted_original_custody.py"
+      - "tests/test_ncr_001_sprocket_wire_shifted_original_custody.py"
+      - "experiments/ncr-001/controls-evidence/sprocket-wire-shifted-loss-20261028/**"
+      - "docs/NCR_001_SPROCKET_WIRE_SHIFTED_CUSTODY.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: ncr001-shifted-original-zip-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+  EXPECTED_SOURCE_HEAD: 943f08259f5b6cbb2a22fef7d68fb15e90014c4a
+  GH_TOKEN: ${{ github.token }}
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  original-actions-readback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify original source, four-model pins and closed training gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_EVENT_NAME" = pull_request
+          test "$GITHUB_BASE_REF" = main
+          test "${{ github.event.pull_request.base.sha }}" = "$EXPECTED_SOURCE_HEAD"
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          q=json.load(open("experiments/ncr-001/source-pins.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == set(q["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          assert p["models"]["sprocket_chat"]["weight_file"] == "chat/model.safetensors"
+          assert p["models"]["sprocket_instruct"]["weight_file"] == "model.safetensors"
+          PY
+      - name: Offline full original ZIP, complete failed/success logs and negative mutations
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-shifted-original-custody
+          python3 -m py_compile scripts/ncr_001_sprocket_wire_shifted_original_custody.py tests/test_ncr_001_sprocket_wire_shifted_original_custody.py
+          python3 -m unittest discover -s tests -p test_ncr_001_sprocket_wire_shifted_original_custody.py -v \
+            2>&1 | tee runtime/ncr001-shifted-original-custody/offline-tests.log
+          python3 scripts/ncr_001_sprocket_wire_shifted_original_custody.py \
+            2>&1 | tee runtime/ncr001-shifted-original-custody/offline-receipt.json
+      - name: Fresh original GitHub Actions artifact byte-for-byte comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --retry 2 --retry-delay 1 --fail --silent --show-error --location \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/techrote/neurounner/actions/artifacts/12859838740/zip \
+            --output runtime/ncr001-shifted-original-custody/original-from-github.zip
+          python3 - <<'PY' 2>&1 | tee runtime/ncr001-shifted-original-custody/live-compare.json
+          import json
+          from pathlib import Path
+          from scripts.ncr_001_sprocket_wire_shifted_original_custody import audit
+          raw=Path("runtime/ncr001-shifted-original-custody/original-from-github.zip").read_bytes()
+          print(json.dumps(audit(live_zip=raw),sort_keys=True))
+          PY
+      - name: Preserve passing and failed source, original custody and compare logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-shifted-original-custody-a${{ github.run_attempt }}
+          path: runtime/ncr001-shifted-original-custody/
+          if-no-files-found: warn
+          retention-days: 30
