@@ -248,6 +248,15 @@ def interpret(s: dict) -> dict:
         and new["original_zips_and_logs"] == 4
         and new["original_zip_members"] == 9
         and new["fresh_physical_execution"] is False
+        and new["train_authorized"] is False
+        and new["per_model_gate"] is False
+        and new["full_72_conformance_pass"] is False
+        and new["independent_scientific_review"] is False
+        and new["comparative_training"] is False
+        and new["heldouts_opened"] is False
+        and new["actual_compute_budget_qualified"] is False
+        and new["generated_eos_skill_qualified"] is False
+        and new["historical_train002b_eos_effect_measured"] is False
         and manifest["scientific_boundary"] == custody.BOUNDARY,
         "new original cohort custody/admission scope changed",
     )
