@@ -37,6 +37,19 @@ SOURCES = {
 }
 OBSERVED = "DIAGNOSTIC_EVIDENCE_PRESENT__DISTINCT_SCIENTIFIC_REVIEW_PENDING"
 
+# Exact Git-blob identities of the ORIGINAL decoded Actions jobs, including
+# both failed initial archival attempts. This is a separate byte-integrity
+# requirement from the original compressed ZIP/member SHA-256 custody: a
+# forged log can retain the expected run/head/status substrings.
+ORIGINAL_DECODED_LOG_BLOBS = {
+    "source-original-job.log": "69851a6f9861708f429ba88361031b5998259455",
+    "host-original-job.log": "47bd1a9ad14a993210ae4c937805a54c1a8db936",
+    "failed-initial-custody-40766098835.log":
+        "e9b92de4c69aad3b4b34aa8c1d2f294109914108",
+    "failed-second-custody-40766312502.log":
+        "c950dbb1f1286808fc7baa95c1a50f34a268e03f",
+}
+
 
 def refuse(ok: bool, reason: str) -> None:
     if not ok:
@@ -234,7 +247,24 @@ def check_inputs(legacy: dict, receipt: dict, manifest: dict, policy: dict) -> N
            "original diagnostic checks missing or false")
 
 
+def assert_original_decoded_git_blobs(root: Path | None = None) -> None:
+    """Fail closed on every committed original decoded job log byte.
+
+    Compute Git's canonical blob object ID over the actual file bytes;
+    do not accept rehashed, rewritten, truncated, or swapped original logs.
+    This is a read-only check; it never alters archive or result files.
+    """
+    base = custody.EVIDENCE if root is None else root
+    for name, expected_git_blob in ORIGINAL_DECODED_LOG_BLOBS.items():
+        data = (base / name).read_bytes()
+        header = b"blob " + str(len(data)).encode("ascii") + b"\\0"
+        actual_git_blob = hashlib.sha1(header + data).hexdigest()
+        refuse(actual_git_blob == expected_git_blob,
+               "committed original decoded job-log Git blob drift: " + name)
+
+
 def build_report() -> dict:
+    assert_original_decoded_git_blobs()
     # Rebuild the historical matrix from the two ORIGINAL post-lease archives.
     legacy = prior.build_report()
     refuse(legacy == read(LEGACY), "committed historical #171 matrix changed")
