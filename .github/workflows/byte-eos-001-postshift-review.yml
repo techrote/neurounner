@@ -1,0 +1,100 @@
+name: BYTE-EOS-001 corrected postshift independent source review (NO TRAIN)
+
+on:
+  pull_request:
+    branches:
+      - research/byte-eos-001-strict-void-labels
+    paths:
+      - '.github/workflows/byte-eos-001-postshift-review.yml'
+      - 'scripts/byte_eos_001_postshift_review.py'
+      - 'tests/test_byte_eos_001_postshift_review.py'
+      - 'docs/BYTE_EOS_001_POSTSHIFT_REVIEW.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  HF_HOME: /tmp/byte-eos-postshift
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+
+jobs:
+  postshift:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: bb60d700fe86cf530773f1f639a246cc24bc0943
+          path: corrected
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: a1b41c358d215974ea9ef2748baa13c3872b0fbb
+          path: prereg
+          persist-credentials: false
+      - name: Original #126 immutable ZIP and exact historical reviewer still valid
+        run: |
+          set -euo pipefail
+          python3 scripts/byte_eos_001_independent_archive_audit.py
+          python3 -m unittest discover -s tests -p 'test_byte_eos_001_independent_archive_audit.py' -v
+      - name: New independent corrected #163 shifted-byte oracle and negative cases
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_byte_eos_001_postshift_review.py' -v
+          python3 scripts/byte_eos_001_postshift_review.py
+      - name: Install pinned exact tokenizer-only runtime
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            'transformers==4.57.6' 'huggingface_hub==0.36.2' 'safetensors==0.8.0'
+      - name: Review pinned void tokenizer Python source and cache original metadata, NO weights
+        run: |
+          set -euo pipefail
+          python3 corrected/scripts/ncr_001k_byte_source_audit.py
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          p=json.load(open('corrected/experiments/ncr-001/source-pins.json'))['models']['void1']
+          assert p['repo_id']=='dotlabs/void.1'
+          assert p['revision']=='9c2be5087772867d45961abd11f6b35110617563'
+          for name,key in (
+              ('config.json','config_sha256'),
+              ('tokenization_byte.py','tokenization_byte_py_sha256'),
+              ('byte_vocab.json','byte_vocab_sha256'),
+              ('tokenizer_config.json','tokenizer_config_sha256'),
+              ('special_tokens_map.json','special_tokens_map_sha256'),
+          ):
+              path=Path(hf_hub_download(p['repo_id'],name,revision=p['revision']))
+              assert hashlib.sha256(path.read_bytes()).hexdigest()==p[key], name
+              print('EXACT_PINNED_TOKENIZER_SOURCE',name,path.stat().st_size,p[key])
+          print('MODEL_WEIGHTS_DOWNLOADED false')
+          PY
+      - name: Offline actual pinned ByteTokenizer vs corrected independent oracle
+        run: |
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/byte_eos_001_postshift_review.py --real-tokenizer
+      - name: Preserve source/reviewer hashes, run identity and reports even on failure
+        if: always()
+        run: |
+          mkdir -p runtime/ncr-001
+          git rev-parse HEAD > runtime/ncr-001/byte-eos-postshift-pr-checkout.txt
+          git -C corrected rev-parse HEAD > runtime/ncr-001/byte-eos-postshift-corrected-commit.txt
+          sha256sum scripts/byte_eos_001_postshift_review.py \
+            tests/test_byte_eos_001_postshift_review.py \
+            corrected/scripts/byte_eos_001_void_labels.py \
+            corrected/experiments/ncr-001/protocol.json \
+            corrected/experiments/ncr-001/source-pins.json \
+            > runtime/ncr-001/byte-eos-postshift-source-hashes.sha256
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: byte-eos-postshift-source-review-a${{ github.run_attempt }}
+          path: runtime/ncr-001/byte-eos-postshift-*
+          if-no-files-found: warn
+          retention-days: 30
