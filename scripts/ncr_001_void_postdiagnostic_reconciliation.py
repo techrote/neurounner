@@ -60,7 +60,7 @@ def exact_int(value: object, expected: int) -> bool:
 # Separate stdlib oracle for the exact public diagnostic sample in original
 # immutable #172 source (no ByteTokenizer, Torch, model or heldout imported).
 # Original torch.long on the recorded Linux x86_64 runner is signed LE int64.
-ORIGINAL_PROMPT = "Q: π?\\nA: "
+ORIGINAL_PROMPT = "Q: π?\nA: "
 ORIGINAL_COMPLETION = "🔧 café 日本語"
 
 
