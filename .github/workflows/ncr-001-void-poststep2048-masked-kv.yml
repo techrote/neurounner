@@ -1,0 +1,186 @@
+name: NCR-001E void1 post-update B2 masked incremental-KV (NO COMPARISON)
+on:
+  pull_request:
+    branches: [review/ncr001e-void-poststep2048-adjudication-20261030]
+    paths:
+      - ".github/workflows/ncr-001-void-poststep2048-masked-kv.yml"
+      - "scripts/ncr_001_void_poststep2048_masked_kv.py"
+      - "tests/test_ncr_001_void_poststep2048_masked_kv.py"
+      - "docs/NCR_001_VOID_POSTSTEP2048_MASKED_KV.md"
+      - "RAG.md"
+permissions:
+  contents: read
+concurrency:
+  group: ncr001-void-poststep2048-masked-kv-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+env:
+  NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+  HF_HOME: /tmp/ncr001-void-poststep2048-masked-kv-hf
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  PYTHONDONTWRITEBYTECODE: "1"
+jobs:
+  source-sentinels:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Refuse parent, protocol, fixtures or physical source drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "${{ github.event.pull_request.base.sha }}" = "ce4280f6f1cf2dbfb43eec973efa94bafde25496"
+          git merge-base --is-ancestor ce4280f6f1cf2dbfb43eec973efa94bafde25496 HEAD
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git hash-object scripts/ncr_001_void_poststep2048.py)" = "9d89e5c34c4a161b2c60a724b91a9a8889773010"
+          python3 - <<'PY'
+          import json,subprocess
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert p["conformance"]["full_vs_cached_prefill_atol"]==5e-4
+          assert p["conformance"]["full_vs_cached_prefill_rtol"]==5e-4
+          changed=set(subprocess.check_output([
+              "git","diff","--name-only",
+              "ce4280f6f1cf2dbfb43eec973efa94bafde25496","HEAD"
+          ],text=True).splitlines())
+          allowed={
+              ".github/workflows/ncr-001-void-poststep2048-masked-kv.yml",
+              "scripts/ncr_001_void_poststep2048_masked_kv.py",
+              "tests/test_ncr_001_void_poststep2048_masked_kv.py",
+              "docs/NCR_001_VOID_POSTSTEP2048_MASKED_KV.md",
+              "RAG.md",
+          }
+          assert changed and changed<=allowed,changed
+          print("PASS_BOUNDED_MASKED_KV_DIFF_NO_PROTOCOL_FIXTURE_OR_ORIGINAL_EVIDENCE_WRITES")
+          PY
+      - name: Compile and adversarially test producer + B2 masked-cache contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-void-poststep2048-masked-kv/source
+          python3 -m py_compile scripts/ncr_001_void_poststep2048.py scripts/ncr_001_void_poststep2048_masked_kv.py tests/test_ncr_001_void_poststep2048.py tests/test_ncr_001_void_poststep2048_masked_kv.py
+          python3 -m unittest discover -s tests -p "test_ncr_001_void_poststep2048.py" -v \
+            2>&1 | tee runtime/ncr001-void-poststep2048-masked-kv/source/producer-tests.log
+          python3 -m unittest discover -s tests -p "test_ncr_001_void_poststep2048_masked_kv.py" -v \
+            2>&1 | tee runtime/ncr001-void-poststep2048-masked-kv/source/masked-kv-tests.log
+      - name: Preserve source pass/fail evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-void-poststep2048-masked-kv-source-a${{ github.run_attempt }}
+          path: runtime/ncr001-void-poststep2048-masked-kv/source/
+          if-no-files-found: warn
+          retention-days: 30
+  physical-masked-kv:
+    needs: source-sentinels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 9fbdee880697903aaf5b91cc29442c9e53479e50
+          path: byte-eos-authority
+          persist-credentials: false
+      - name: Enforce exact Qwen3/ByteTokenizer and prior poststep source authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git -C byte-eos-authority rev-parse HEAD)" = "9fbdee880697903aaf5b91cc29442c9e53479e50"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git hash-object scripts/ncr_001_void_poststep2048.py)" = "9d89e5c34c4a161b2c60a724b91a9a8889773010"
+          test "$(git hash-object scripts/ncr_001_void_nca_learning_gate.py)" = "672fede7cb488bb33315b067bba5292678435644"
+      - name: Install exact original frozen CPU runtime
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Fetch/hash exact model and tokenizer source before offline execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-void-poststep2048-masked-kv
+          python3 - <<'PY' 2>&1 | tee runtime/ncr001-void-poststep2048-masked-kv/prefetch.log
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          p=json.load(open("experiments/ncr-001/source-pins.json"))["models"]["void1"]
+          assert p["repo_id"]=="dotlabs/void.1"
+          assert p["revision"]=="9c2be5087772867d45961abd11f6b35110617563"
+          names={
+            "model.safetensors":"weight_declared_lfs_sha256_not_downloaded",
+            "config.json":"config_sha256",
+            "tokenization_byte.py":"tokenization_byte_py_sha256",
+            "byte_vocab.json":"byte_vocab_sha256",
+            "tokenizer_config.json":"tokenizer_config_sha256",
+            "special_tokens_map.json":"special_tokens_map_sha256",
+          }
+          for name,key in names.items():
+              f=Path(hf_hub_download(p["repo_id"],name,revision=p["revision"]))
+              h=hashlib.sha256()
+              with f.open("rb") as stream:
+                  for chunk in iter(lambda:stream.read(4*1024*1024),b""):
+                      h.update(chunk)
+              digest=h.hexdigest()
+              assert digest==p[key],(name,digest,p[key])
+              if name=="model.safetensors":
+                  assert f.stat().st_size==360622744
+              print("SOURCE_SHA256",name,digest,f.stat().st_size,flush=True)
+          PY
+      - name: Record original runner/CPU identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          uname -a > runtime/ncr001-void-poststep2048-masked-kv/runner.txt
+          lscpu >> runtime/ncr001-void-poststep2048-masked-kv/runner.txt
+          python3 --version >> runtime/ncr001-void-poststep2048-masked-kv/runner.txt 2>&1
+      - name: Produce one public synthetic NCA-only post-update adapter
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p runtime/ncr001-void-poststep2048
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001_void_poststep2048.py --phase producer \
+            2>&1 | tee runtime/ncr001-void-poststep2048/producer.log
+      - name: New interpreter executes B2 left/right explicit-mask incremental-KV
+        shell: bash
+        run: |
+          set -o pipefail
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001_void_poststep2048_masked_kv.py --phase consumer \
+            2>&1 | tee runtime/ncr001-void-poststep2048-masked-kv/consumer.log
+      - name: Destroy temporary updated adapter before evidence upload
+        if: always()
+        shell: bash
+        run: |
+          rm -rf runtime/ncr001-void-poststep2048/nca-after-one-public-synthetic-step
+          test ! -e runtime/ncr001-void-poststep2048/nca-after-one-public-synthetic-step
+      - name: Preserve raw original receipts/logs/failures, never adapter weights
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-void-poststep2048-masked-kv-host-a${{ github.run_attempt }}
+          path: |
+            runtime/ncr001-void-poststep2048/producer.json
+            runtime/ncr001-void-poststep2048/producer.log
+            runtime/ncr001-void-poststep2048-masked-kv/
+            runtime/ncr001-void-nca-learning/receipt.json
+            runtime/ncr001-void-postlease/poststep-cold.json
+          if-no-files-found: warn
+          retention-days: 30
