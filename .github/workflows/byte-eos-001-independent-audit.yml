@@ -1,0 +1,53 @@
+name: BYTE-EOS-001 independent original review archive audit (no tokenizer/model)
+
+on:
+  pull_request:
+    branches:
+      - research/byte-eos-001-strict-void-labels
+    paths:
+      - '.github/workflows/byte-eos-001-independent-audit.yml'
+      - 'scripts/byte_eos_001_independent_archive_audit.py'
+      - 'tests/test_byte_eos_001_independent_archive_audit.py'
+      - 'experiments/ncr-001/byte-eos-001/independent-review/**'
+      - 'experiments/ncr-001/byte-eos-001/receipt.json'
+      - 'experiments/ncr-001/byte-eos-001/provenance.json'
+      - 'experiments/ncr-001/source-pins.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: a1b41c358d215974ea9ef2748baa13c3872b0fbb
+          path: prereg
+          persist-credentials: false
+      - name: Byte-exact complete original artifact and narrow-decision audit
+        run: |
+          set -euo pipefail
+          test "$(git -C prereg rev-parse HEAD)" = "a1b41c358d215974ea9ef2748baa13c3872b0fbb"
+          python3 -m py_compile scripts/byte_eos_001_independent_archive_audit.py
+          python3 scripts/byte_eos_001_independent_archive_audit.py
+          python3 -m unittest discover -s tests \
+            -p 'test_byte_eos_001_independent_archive_audit.py' -v
+      - name: Explicitly reassert no integration/training authority
+        run: |
+          python3 - <<'PY'
+          import json
+          p=json.load(open('experiments/ncr-001/byte-eos-001/independent-review/provenance.json'))
+          assert p['result']['future_serializer_source_accepted'] is True
+          assert p['result']['future_serializer_integrated_into_training'] is False
+          assert p['result']['historical_generation_effect_size'] == 'UNMEASURED'
+          assert p['boundaries']['training_authorized'] is False
+          assert p['boundaries']['optimizer_steps'] == 0
+          assert p['boundaries']['model_weights_loaded'] is False
+          print('BYTE_EOS_SOURCE_ACCEPTED__INTEGRATION_BLOCKED')
+          PY
