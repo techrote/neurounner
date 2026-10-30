@@ -368,6 +368,7 @@ def validate_consumer(row: dict, producer: dict) -> None:
         and row["tokenizer_sha256"] == base.TOKENIZER
         and row["frozen_backbone_sha256"] == base.FROZEN
         and row["source"] == producer["source"]
+        and row["masked_consumer_source"]["head"] == producer["source"]["head"]
         and row["producer_pid"] == producer["producer_pid"]
         and type(row["consumer_pid"]) is int and row["consumer_pid"] > 0
         and row["consumer_pid"] != row["producer_pid"]
@@ -452,10 +453,10 @@ def consumer() -> None:
     }
     save(row)
     try:
-        row["source"] = source_gate()
+        row["masked_consumer_source"] = source_gate()
+        row["source"] = producer["source"]
         require(
-            row["source"] == producer["source"]
-            and producer["source"]["head"] == row["source"]["head"]
+            producer["source"]["head"] == row["masked_consumer_source"]["head"]
             and producer["runner"]["run_id"] == row["runner"]["run_id"]
             and producer["producer_pid"] != row["consumer_pid"],
             "producer/consumer are not same source/run distinct interpreters",
