@@ -80,6 +80,8 @@ Raw records outrank derived summaries. Do not discard failed/malformed generatio
 
 - **[NCR-001E fresh pinned Sprocket Chat/Instruct ordinary-role/cache reviewers](docs/NCR_001_E_SPROCKET_FRESH.md)** — verify source-card user/end/assistant role markers and real tokenizer IDs before separately pinned full frozen Chat/root-Instruct long/cache/A→B→A and cold-adapter source tests. Tool/memory semantics remain unqualified; no trained adapters.
 
+- **[BYTE-EOS-001 future void.1 ID-correct supervised labels](docs/BYTE_EOS_001_FUTURE_LABELS.md)** — bug #92: historical text-appended `<eos>` encoded as five UTF-8 bytes rather than real EOS 258; new future-only strict masked-label serializer and [source-bound exact offline proof](experiments/ncr-001/byte-eos-001/receipt.json) with [provenance](experiments/ncr-001/byte-eos-001/provenance.json). Original TRAIN-002b evidence unchanged, no NCR training admitted.
+
 ## Retrieval rules
 
 1. Prefer primary dataset records over prose summaries when answering questions about exact prompts or outputs.
