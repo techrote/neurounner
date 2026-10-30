@@ -1,0 +1,78 @@
+name: NCR-001E void1 original poststep ZIP/log custody (NO MODEL)
+
+on:
+  pull_request:
+    branches: [review/ncr001e-void-poststep-cold-replay-20261030]
+    paths:
+      - ".github/workflows/ncr-001-void-poststep-original-custody.yml"
+      - "scripts/ncr_001_void_poststep_original_custody.py"
+      - "scripts/ncr_001_void_poststep_bootstrap_custody.py"
+      - "tests/test_ncr_001_void_poststep_original_custody.py"
+      - "experiments/ncr-001/controls-evidence/void-poststep-cold-20261030/**"
+      - "docs/NCR_001_VOID_POSTSTEP_ORIGINAL_CUSTODY.md"
+      - "RAG.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: ncr001-void-poststep-original-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  immutable-original-custody:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Require literal exact-head source and unchanged four-model protocol
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git hash-object scripts/ncr_001_void_nca_learning_gate.py)" = "672fede7cb488bb33315b067bba5292678435644"
+          git merge-base --is-ancestor f78d302ab6062c3739315c3e04317a9a97b97191 HEAD
+          python3 - <<'PY'
+          import json
+          p = json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2", "sprocket_chat", "sprocket_instruct", "void1"}
+          PY
+      - name: Run offline original SHA/Git blob auditor and adversarial tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-void-poststep-original
+          python3 -m py_compile scripts/ncr_001_void_poststep_original_custody.py scripts/ncr_001_void_poststep_bootstrap_custody.py tests/test_ncr_001_void_poststep_original_custody.py
+          python3 scripts/ncr_001_void_poststep_original_custody.py \
+            2>&1 | tee runtime/ncr001-void-poststep-original/offline-audit.log
+          python3 -m unittest discover -s tests -p 'test_ncr_001_void_poststep_original_custody.py' -v \
+            2>&1 | tee runtime/ncr001-void-poststep-original/tests.log
+      - name: Freshly compare both whole original ZIPs and both decoded original logs
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/ncr_001_void_poststep_original_custody.py --live \
+            2>&1 | tee runtime/ncr001-void-poststep-original/live-readback.log
+      - name: Preserve source-only pass/failure logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-void-poststep-original-custody-a${{ github.run_attempt }}
+          path: runtime/ncr001-void-poststep-original/
+          if-no-files-found: warn
+          retention-days: 30
