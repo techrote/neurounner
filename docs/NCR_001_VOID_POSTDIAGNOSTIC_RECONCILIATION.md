@@ -35,3 +35,42 @@ A later independent adversarial check identified a Python type-confusion hole in
 The amended `check_inputs` now requires exact integer types for the single diagnostic step, true EOS ID 258, byte/shift counts and ordered tap metadata; finite non-boolean real measurements for both native losses and first/post-warmup gradients; five exact integer field dimensions; and 64-character lowercase hexadecimal field digests. Ten direct adversarial substitutions are asserted to fail with the explicit `REFUSED` disposition. The primary immutable #173 ZIP/log custody auditor, historical #171 matrix, physical #172 code and receipts, original negative generation observations and four-lane policy are unchanged.
 
 This **does not** demonstrate an additional Qwen3 physical run, change any previously recorded numerical result, make the historical EOS effect measurable, approve science or authorize comparative training. Its test job is source-only and needs a successful literal-head workflow before claiming qualification. All existing #72/#73 admission and draft merge gates remain closed.
+
+## Independent original Unicode/EOS tensor oracle — 30 October 2026
+
+The original #172 frozen Qwen3 diagnostic records three SHA-256 fingerprints of
+its *public synthetic-only* input-ID, supervised-label and attention-mask
+`torch.long` tensors. The #173 primary custody validator already pins the
+original complete ZIPs/logs and the input-ID and label fingerprints, but did
+not independently recompute the attention-mask fingerprint. The #175
+cross-receipt validator now performs a **separate standard-library byte
+reconstruction** without importing Torch, the remote ByteTokenizer, a
+checkpoint or any held-out material.
+
+The exact immutable #172 source fixes prompt `"Q: π?\\nA: "` (10 UTF-8
+bytes) and completion `"🔧 café 日本語"` (20 UTF-8 bytes). The independent oracle
+constructs input IDs as 10 prompt bytes + 20 completion bytes + real
+integer **258**, labels as 10 `-100` positions + 20 completion bytes + real
+EOS **258**, and a full 31-position ones attention mask. Hugging Face's
+internal causal `labels[..., 1:]` shift therefore retains **21 supervised
+targets**, including terminal EOS. It hashes contiguous signed
+little-endian 64-bit integer bytes, matching the original Ubuntu x86_64
+`torch.long` tensor serialization. Fixed hashes (SHA-256):
+
+| Tensor | Independently reconstructed original digest |
+|---|---|
+| IDs | `ee6fa2a893301b858b7fdac7fe2b9190cd1fc786ddff1ffdf906da757488c09e` |
+| Labels | `260dec3e7622aeada51e0483e005ad9d59cbae8f186d41432c381f2c35835241` |
+| Attention mask | `88986881ba52ad36b430e41cd24497b9cf9a64f8e6a979290ebdee36b1b6f85c` |
+
+Two additional Python tests compare all eight reconstructed fields with
+the raw original archived host receipt and require **five independent
+mutation refusals** (including changing the previously un-reconstructed
+mask SHA, ID SHA, label SHA, UTF-8 source-byte count and bool-as-int byte
+count). This closes a specifically scoped source-replay integrity gap; the
+original physical receipt and #171 historical blocked decision remain
+unchanged. It cannot establish new model causality, generated EOS
+competence, historical TRAIN-002b correction impact or a full #72 PASS.
+`train_authorized=false`, `per_model_gate=false`,
+`full_72_conformance_pass=false`. Preserve the original failed archival
+runs and prior source-only attempts in Actions history.
