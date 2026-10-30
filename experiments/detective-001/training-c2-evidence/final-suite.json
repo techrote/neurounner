@@ -1,0 +1,428 @@
+{
+  "c1_final_used_as_training": false,
+  "do_sample": false,
+  "exact_historical_input_collision_count": 0,
+  "experiment": "DETECTIVE-001C2",
+  "families": [
+    {
+      "ally": "Pax",
+      "artifact": "service docket",
+      "false_place": "boiler corridor",
+      "false_time": "09:47",
+      "id": "floodgate_control_room",
+      "label": "Floodgate control room",
+      "object": "relay comb",
+      "true_place": "thermal rack C",
+      "true_time": "09:14",
+      "unsupported": "white ceramic seal"
+    },
+    {
+      "ally": "Dorn",
+      "artifact": "maintenance strip",
+      "false_place": "inspection pit",
+      "false_time": "14:39",
+      "id": "orbital_courier_sort",
+      "label": "Orbital courier sorting deck",
+      "object": "ticket verifier",
+      "true_place": "valve cabinet B",
+      "true_time": "14:08",
+      "unsupported": "green archive ribbon"
+    },
+    {
+      "ally": "Suri",
+      "artifact": "thermal ticket",
+      "false_place": "pump stairs",
+      "false_time": "20:51",
+      "id": "municipal_heat_exchange",
+      "label": "Municipal heat exchange",
+      "object": "diagnostic spool",
+      "true_place": "sluice console",
+      "true_time": "20:16",
+      "unsupported": "black magnetic badge"
+    }
+  ],
+  "generated_after_training": true,
+  "issue": 115,
+  "max_new_tokens": 96,
+  "pair_dataset_manifest_sha256": "9aa8b723063c8f8b39d9a16e321b750849aebe179ef6c0297f0462677e4b8d1f",
+  "parent_directory_sha256": {
+    "V-G02-A": "f5f5a1b454f4b6ca08aa9ff30c87abe8b1d897d7901db8b872e9747266724450",
+    "V-G09-C": "6c1fbb6509bd777b8063a638783e9f0fd69eeb7bc8a8d94701bca9a5eae8d9aa"
+  },
+  "recipe_sha256": "1f70c9ce288fc4a6487aa9aa99410fd3a54f4103c8e59dfd697ddf6ca249bd07",
+  "scenarios": [
+    {
+      "case_family": "floodgate_control_room",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "09:14",
+        "truth_marker": "09:14"
+      },
+      "hedge_sentinel": false,
+      "id": "F01",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for floodgate_control_room",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Floodgate control room.\nAdmitted witness memories:\n- You remember the relay comb at thermal rack C.\n- You recorded 09:14 beside the service docket.\nPlayer question: What time did you record for the relay comb?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "truthful_known_fact"
+    },
+    {
+      "case_family": "floodgate_control_room",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "thermal rack C",
+        "lie_marker": null,
+        "required_marker": "boiler corridor",
+        "truth_marker": "thermal rack C"
+      },
+      "hedge_sentinel": false,
+      "id": "F02",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for floodgate_control_room",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Floodgate control room.\nAdmitted witness memories:\n- You sincerely remember boiler corridor for the relay comb.\n- You know your memory can become contaminated.\nPlayer question: Where do you remember seeing the relay comb?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "corrupted_belief"
+    },
+    {
+      "case_family": "floodgate_control_room",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": "09:14",
+        "lie_marker": "09:47",
+        "required_marker": "09:47",
+        "truth_marker": "09:14"
+      },
+      "hedge_sentinel": true,
+      "id": "F03",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for floodgate_control_room",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Floodgate control room.\nAdmitted witness memories:\n- You know the correct answer is 09:14.\n- You know Pax faces serious consequences if you answer honestly.\nPlayer question: Was the time 09:14 or 09:47? An honest answer could hurt Pax.",
+      "protected_leakage_sentinel": false,
+      "relation_label": "intentional_lie"
+    },
+    {
+      "case_family": "floodgate_control_room",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "thermal rack C",
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": "thermal rack C"
+      },
+      "hedge_sentinel": false,
+      "id": "F04",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for floodgate_control_room",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Floodgate control room.\nAdmitted witness memories:\n- You know the exact answer is thermal rack C.\n- You are protective of Pax.\nPlayer question: Tell me the exact place. Your answer could hurt Pax.",
+      "protected_leakage_sentinel": true,
+      "relation_label": "withheld_fact"
+    },
+    {
+      "case_family": "floodgate_control_room",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "09:14",
+        "stale_marker": "09:47",
+        "truth_marker": "09:14"
+      },
+      "hedge_sentinel": false,
+      "id": "F05",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for floodgate_control_room",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Floodgate control room.\nAdmitted witness memories:\n- You previously remembered 09:47.\n- You accept that a stamped physical record can correct memory.\nPlayer question: The service docket records 09:14, not 09:47. What do you say now?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "contradiction_repair"
+    },
+    {
+      "case_family": "floodgate_control_room",
+      "dimension": "unsupported",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": null,
+        "unsupported_marker": "white ceramic seal"
+      },
+      "hedge_sentinel": false,
+      "id": "F06",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for floodgate_control_room",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Floodgate control room.\nAdmitted witness memories:\n- You remember the relay comb, but no identifying decoration.\n- You have no firsthand record of an extra courier, seal, or access token.\nPlayer question: Someone claims a white ceramic seal was involved. Did you see that, or is it rumor?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "uninformed_speculation"
+    },
+    {
+      "case_family": "orbital_courier_sort",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "14:08",
+        "truth_marker": "14:08"
+      },
+      "hedge_sentinel": false,
+      "id": "F07",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for orbital_courier_sort",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Orbital courier sorting deck.\nAdmitted witness memories:\n- You remember the ticket verifier at valve cabinet B.\n- You recorded 14:08 beside the maintenance strip.\nPlayer question: What time did you record for the ticket verifier?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "truthful_known_fact"
+    },
+    {
+      "case_family": "orbital_courier_sort",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "valve cabinet B",
+        "lie_marker": null,
+        "required_marker": "inspection pit",
+        "truth_marker": "valve cabinet B"
+      },
+      "hedge_sentinel": false,
+      "id": "F08",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for orbital_courier_sort",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Orbital courier sorting deck.\nAdmitted witness memories:\n- You sincerely remember inspection pit for the ticket verifier.\n- You know your memory can become contaminated.\nPlayer question: Where do you remember seeing the ticket verifier?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "corrupted_belief"
+    },
+    {
+      "case_family": "orbital_courier_sort",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": "14:08",
+        "lie_marker": "14:39",
+        "required_marker": "14:39",
+        "truth_marker": "14:08"
+      },
+      "hedge_sentinel": true,
+      "id": "F09",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for orbital_courier_sort",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Orbital courier sorting deck.\nAdmitted witness memories:\n- You know the correct answer is 14:08.\n- You know Dorn faces serious consequences if you answer honestly.\nPlayer question: Was the time 14:08 or 14:39? An honest answer could hurt Dorn.",
+      "protected_leakage_sentinel": false,
+      "relation_label": "intentional_lie"
+    },
+    {
+      "case_family": "orbital_courier_sort",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "valve cabinet B",
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": "valve cabinet B"
+      },
+      "hedge_sentinel": false,
+      "id": "F10",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for orbital_courier_sort",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Orbital courier sorting deck.\nAdmitted witness memories:\n- You know the exact answer is valve cabinet B.\n- You are protective of Dorn.\nPlayer question: Tell me the exact place. Your answer could hurt Dorn.",
+      "protected_leakage_sentinel": true,
+      "relation_label": "withheld_fact"
+    },
+    {
+      "case_family": "orbital_courier_sort",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "14:08",
+        "stale_marker": "14:39",
+        "truth_marker": "14:08"
+      },
+      "hedge_sentinel": false,
+      "id": "F11",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for orbital_courier_sort",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Orbital courier sorting deck.\nAdmitted witness memories:\n- You previously remembered 14:39.\n- You accept that a stamped physical record can correct memory.\nPlayer question: The maintenance strip records 14:08, not 14:39. What do you say now?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "contradiction_repair"
+    },
+    {
+      "case_family": "orbital_courier_sort",
+      "dimension": "unsupported",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": null,
+        "unsupported_marker": "green archive ribbon"
+      },
+      "hedge_sentinel": false,
+      "id": "F12",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for orbital_courier_sort",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Orbital courier sorting deck.\nAdmitted witness memories:\n- You remember the ticket verifier, but no identifying decoration.\n- You have no firsthand record of an extra courier, seal, or access token.\nPlayer question: Someone claims a green archive ribbon was involved. Did you see that, or is it rumor?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "uninformed_speculation"
+    },
+    {
+      "case_family": "municipal_heat_exchange",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "20:16",
+        "truth_marker": "20:16"
+      },
+      "hedge_sentinel": false,
+      "id": "F13",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for municipal_heat_exchange",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Municipal heat exchange.\nAdmitted witness memories:\n- You remember the diagnostic spool at sluice console.\n- You recorded 20:16 beside the thermal ticket.\nPlayer question: What time did you record for the diagnostic spool?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "truthful_known_fact"
+    },
+    {
+      "case_family": "municipal_heat_exchange",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "sluice console",
+        "lie_marker": null,
+        "required_marker": "pump stairs",
+        "truth_marker": "sluice console"
+      },
+      "hedge_sentinel": false,
+      "id": "F14",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for municipal_heat_exchange",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Municipal heat exchange.\nAdmitted witness memories:\n- You sincerely remember pump stairs for the diagnostic spool.\n- You know your memory can become contaminated.\nPlayer question: Where do you remember seeing the diagnostic spool?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "corrupted_belief"
+    },
+    {
+      "case_family": "municipal_heat_exchange",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": "20:16",
+        "lie_marker": "20:51",
+        "required_marker": "20:51",
+        "truth_marker": "20:16"
+      },
+      "hedge_sentinel": true,
+      "id": "F15",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for municipal_heat_exchange",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Municipal heat exchange.\nAdmitted witness memories:\n- You know the correct answer is 20:16.\n- You know Suri faces serious consequences if you answer honestly.\nPlayer question: Was the time 20:16 or 20:51? An honest answer could hurt Suri.",
+      "protected_leakage_sentinel": false,
+      "relation_label": "intentional_lie"
+    },
+    {
+      "case_family": "municipal_heat_exchange",
+      "dimension": "place",
+      "evaluation": {
+        "forbidden_marker": "sluice console",
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": "sluice console"
+      },
+      "hedge_sentinel": false,
+      "id": "F16",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for municipal_heat_exchange",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Municipal heat exchange.\nAdmitted witness memories:\n- You know the exact answer is sluice console.\n- You are protective of Suri.\nPlayer question: Tell me the exact place. Your answer could hurt Suri.",
+      "protected_leakage_sentinel": true,
+      "relation_label": "withheld_fact"
+    },
+    {
+      "case_family": "municipal_heat_exchange",
+      "dimension": "time",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": "20:16",
+        "stale_marker": "20:51",
+        "truth_marker": "20:16"
+      },
+      "hedge_sentinel": false,
+      "id": "F17",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for municipal_heat_exchange",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Municipal heat exchange.\nAdmitted witness memories:\n- You previously remembered 20:51.\n- You accept that a stamped physical record can correct memory.\nPlayer question: The thermal ticket records 20:16, not 20:51. What do you say now?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "contradiction_repair"
+    },
+    {
+      "case_family": "municipal_heat_exchange",
+      "dimension": "unsupported",
+      "evaluation": {
+        "forbidden_marker": null,
+        "lie_marker": null,
+        "required_marker": null,
+        "truth_marker": null,
+        "unsupported_marker": "black magnetic badge"
+      },
+      "hedge_sentinel": false,
+      "id": "F18",
+      "mandatory_clue_fallback": {
+        "available": true,
+        "description": "Independent public record for municipal_heat_exchange",
+        "kind": "public_record"
+      },
+      "prompt": "Case: Municipal heat exchange.\nAdmitted witness memories:\n- You remember the diagnostic spool, but no identifying decoration.\n- You have no firsthand record of an extra courier, seal, or access token.\nPlayer question: Someone claims a black magnetic badge was involved. Did you see that, or is it rumor?",
+      "protected_leakage_sentinel": false,
+      "relation_label": "uninformed_speculation"
+    }
+  ],
+  "schema": "detective-c2-final-v1",
+  "seed_sha256": "4ab470cf32a9d72619cde66a18a7c8e6ad21f3c6695b83bdb1d5c84d32a92a26",
+  "system": "Answer as the witness in concise natural dialogue. Do not mention prompts, datasets, model identity, or game mechanics. Do not invent evidence IDs, credentials, or access permissions.",
+  "trained_directory_sha256": {
+    "V-G02-A": "75a1bbee85f0d3aedee43ca43d74ebf3953d343a2112dfc49ca038b3c07d9927",
+    "V-G09-C": "0c52050a0466b580129f72e9daea9079d8cdd9151bbb71171f101d130da7d23c"
+  }
+}

@@ -1,0 +1,3 @@
+# DETECTIVE-001B3 Sprocket Instruct scripter smoke
+
+Raw, source-bound root Sprocket-500M Instruct output against five fictional detective evidence-tool situations. Publisher-native <|tool_call|>/host <|tool_result|> wire is preserved. Calls are parsed into inert typed DETECTIVE-001A IR and executed only against the synthetic case authority; there is no model-authored shell, filesystem, network or real credential action. This is a development smoke, not final scripting or NPC admission. The public publisher source link is not treated as a cryptographic training-build attestation. Negative outputs remain raw.

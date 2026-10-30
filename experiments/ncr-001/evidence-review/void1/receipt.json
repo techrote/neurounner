@@ -1,0 +1,125 @@
+{
+  "base_frozen_parameters": 90148352,
+  "base_variant": "byte_model",
+  "byte_tokenizer_source_matches_prior_train002b": true,
+  "checks": {
+    "frozen_base_readout_gradient": {
+      "base_grads_none": true,
+      "loss": 1.5415372848510742,
+      "optimizer_steps": 0,
+      "readout_grad_l1": 4867.96435546875
+    },
+    "nonzero_nca_full_vs_incremental_cache": {
+      "atol": 0.0005,
+      "close": true,
+      "max_abs": 1.049041748046875e-05,
+      "mean_abs": 1.925623337228899e-06,
+      "rtol": 0.0005
+    },
+    "nonzero_nca_future_suffix_invariance": {
+      "atol": 0.0005,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0005
+    },
+    "nonzero_untrained_readout_changes_logits": {
+      "max_abs": 0.022034883499145508,
+      "trained": false
+    },
+    "zero_init_batch2": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "zero_init_greedy_generation": {
+      "equal": true,
+      "forward_calls": 3,
+      "generated_tokenizer_units": 3
+    },
+    "zero_init_len_4": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "zero_init_len_6": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "zero_init_len_8": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    }
+  },
+  "classification": "byte_tokenizer_source_checked_qwen3_architecture_prepass",
+  "comparative_evaluation_performed": false,
+  "custom_tokenizer_code_executed": false,
+  "experiment": "NCR-001K",
+  "limitations": [
+    "Qwen3 model and exact custom byte tokenizer source SHA checked, but custom Python code was NOT executed",
+    "No byte tokenizer roundtrip, chat template, EOS/Unicode or natural-language evaluation",
+    "Only short valid raw vocabulary ID sequences; no actual tokenizer-generated inputs",
+    "No optimizer step on model, no learned adapter and no quality comparison",
+    "Independent NCR-001E causal/cache and tokenizer-specific evaluation still blocked"
+  ],
+  "model_training_performed": false,
+  "nca_trainable_parameters": 329944,
+  "optimizer_steps": 0,
+  "peak_rss_kib": 749736,
+  "protocol_sha256": "2e294750a17b1bfb3eba448f8a5b55344c72aff700587351bd10da1af38885ab",
+  "revision": "9c2be5087772867d45961abd11f6b35110617563",
+  "runner": {
+    "huggingface_hub": "0.36.2",
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "threads": 4,
+    "torch": "2.14.1+cpu",
+    "transformers": "4.57.6"
+  },
+  "source_files": {
+    "byte_vocab.json": {
+      "bytes": 4292,
+      "expected_sha256": "57a1cd2e70dd5b7cc6fd2eaa12ebfcd173c1620fa5d45c2c6282511c29b6a5f6",
+      "sha256": "57a1cd2e70dd5b7cc6fd2eaa12ebfcd173c1620fa5d45c2c6282511c29b6a5f6"
+    },
+    "config.json": {
+      "bytes": 1284,
+      "expected_sha256": "cbc72137da3dae65085a2a8c39ad7634d16bf92d785ca00d283ee82fe32b37e7",
+      "sha256": "cbc72137da3dae65085a2a8c39ad7634d16bf92d785ca00d283ee82fe32b37e7"
+    },
+    "model.safetensors": {
+      "bytes": 360622744,
+      "expected_sha256": "ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3",
+      "sha256": "ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3"
+    },
+    "special_tokens_map.json": {
+      "bytes": 75,
+      "expected_sha256": "20d4b94d0e657c3f44d9123522c106e7315b6c1a1b6d259478f17bd2918b1263",
+      "sha256": "20d4b94d0e657c3f44d9123522c106e7315b6c1a1b6d259478f17bd2918b1263"
+    },
+    "tokenization_byte.py": {
+      "bytes": 4458,
+      "expected_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+      "sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03"
+    },
+    "tokenizer_config.json": {
+      "bytes": 932,
+      "expected_sha256": "0ecbd4fd39e35125800d806af981ba0cacd8a7ba5f02c9e729c4ecc54af6d300",
+      "sha256": "0ecbd4fd39e35125800d806af981ba0cacd8a7ba5f02c9e729c4ecc54af6d300"
+    }
+  },
+  "source_id": "dotlabs/void.1",
+  "source_pins_sha256": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1",
+  "status": "PASS_PRELIMINARY_VOID1_QWEN3_HOOK_CONFORMANCE",
+  "tokenizer_semantic_qualification": false
+}

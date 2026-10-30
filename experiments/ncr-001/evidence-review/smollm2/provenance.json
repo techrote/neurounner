@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001C",
+  "qualification_class": "real_model_source_bound_integration_prepass_not_independent_NCR_001E",
+  "status": "PASS_PRELIMINARY_SOURCE_BOUND_SMOLLM2_HOOK_CONFORMANCE",
+  "source_run": {
+    "workflow_url": "https://github.com/techrote/neurounner/actions/runs/40422167066",
+    "run_id": 40422167066,
+    "original_source_commit": "513923250ea9660bf640a827b4a948a8a9a78ef0",
+    "jobs": {
+      "offline_toy_id": 121918989721,
+      "real_pinned_source_id": 121919193783
+    },
+    "artifact_id": 12698945189,
+    "artifact_name": "ncr-001c-smollm2-source-conformance-a1",
+    "artifact_zip_sha256": "acb1e4ff215d8f4db2308984029e34d8602c1a72f8b1ac7264162b12d2a0a4fc",
+    "original_report_sha256": "b607dabd1a2da866e37f5c96ec5cc2db49bbd4482caa1aad405a9ee61bc14e23",
+    "report_bytes": 3891,
+    "promoted_report": "experiments/ncr-001/smollm2-preflight/receipt.json",
+    "original_run_result": "success",
+    "offline_tests_passed": 6,
+    "protocol_snapshot_sha256": "2e294750a17b1bfb3eba448f8a5b55344c72aff700587351bd10da1af38885ab",
+    "source_pin_snapshot_sha256": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1"
+  },
+  "original_model": {
+    "id": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "model_safetensors_actual_downloaded_sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+    "actual_weight_bytes": 269060552,
+    "config_sha256": "8eb740e8bbe4cff95ea7b4588d17a2432deb16e8075bc5828ff7ba9be94d982a",
+    "tokenizer_json_sha256": "9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c",
+    "tokenizer_config_sha256": "4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df",
+    "architecture": {
+      "layers": 30,
+      "hidden_size": 576,
+      "taps_zero_based": [
+        9,
+        19,
+        29
+      ]
+    }
+  },
+  "readback": {
+    "zero_init_logits_max_abs": 0,
+    "padded_batch_logits_max_abs": 0,
+    "greedy_generation_equal": true,
+    "readout_grad_l1": 476.2667236328125,
+    "trained_weights": false,
+    "optimizer_steps": 0,
+    "nonzero_manual_readout_effect_max_abs": 0.0024089813232421875,
+    "full_vs_cached_max_abs": 0.00005245208740234375,
+    "future_suffix_max_abs": 0,
+    "process_peak_rss_kib": 1166016,
+    "cpu": "Intel Xeon Platinum 8370C (4 exposed threads)",
+    "torch": "2.14.1+cpu",
+    "transformers": "4.57.6"
+  },
+  "limitations": [
+    "Not independent #72 complete conformance; source/causal readback is an integration prepass",
+    "No NCA trained, no optimizer step, no matched MLP control and no quality score",
+    "Only short sequences and one real-model variant; cross-request and cold-checkpoint path requires independent review",
+    "Transient original artifact ZIP is not the archive; report and provenance are durable"
+  ]
+}

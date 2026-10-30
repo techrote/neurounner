@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001E",
+  "result": "PRELIMINARY_SOURCE_READBACK_PASS__FOUR_MODEL_CONFORMANCE_STILL_BLOCKED",
+  "audit_class": "separate_original_receipt_custody_and_numeric_sentinel_readback_not_fresh_model_execution",
+  "source": {
+    "pr": 88,
+    "original_validation_run": "https://github.com/techrote/neurounner/actions/runs/40436075444",
+    "original_run_id": 40436075444,
+    "source_commit": "bde0393b567e1649d24a1b0cc00f0f0c9c9e4537",
+    "tests_passed": 8,
+    "original_artifact_id": 12704322042,
+    "original_artifact_name": "ncr-001e-preliminary-source-readback-a1",
+    "artifact_zip_sha256": "0b01b7b7842d10c85bf42409c01f05b5bc8cb7bcc01afb2959ac4a131a10e2af",
+    "original_uncompressed_report_sha256": "bb533d2b12f2b3cfd1b0ee0a1a5b47b2225f064f604b8aff550046523c709ac2",
+    "report_regenerator": "python3 scripts/ncr_001e_readback.py --out runtime/ncr-001/four-model-prepass-readback.json",
+    "original_receipts_copied_from": {
+      "smollm2": {
+        "pr": 83,
+        "run_id": 40422167066,
+        "full_report_sha256": "b607dabd1a2da866e37f5c96ec5cc2db49bbd4482caa1aad405a9ee61bc14e23"
+      },
+      "sprocket_chat": {
+        "pr": 86,
+        "run_id": 40426220940,
+        "full_report_sha256": "62992ee8a63c40c9cd1ad8101e90131ff957f0fe268440cd06fc253157a3a48f"
+      },
+      "sprocket_instruct": {
+        "pr": 84,
+        "run_id": 40423957135,
+        "full_report_sha256": "cc7d677300b6b88e1b01a52a32fe9ae74ee111b9be58b3d9c006d0e346fc87f2"
+      },
+      "void1": {
+        "pr": 85,
+        "run_id": 40424675239,
+        "full_report_sha256": "1aaa45cb5942c6d033c8fc69da13d5bd76232a240da1fd4e76f1b31f132399c3"
+      }
+    }
+  },
+  "findings": {
+    "source_record_integrity": true,
+    "all_four_pinned_variant_checkpoint_hashes_agree": true,
+    "all_initial_frozen_logit_parity_checks_exact": true,
+    "all_short_manual_readout_cache_checks_under_predeclared_tolerance": true,
+    "all_short_causal_suffix_checks_zero_drift": true,
+    "manual_readout_gradients_present": true,
+    "actual_model_optimizer_steps": 0,
+    "no_model_training": true,
+    "independent_runtime_conformance_pass": false,
+    "comparative_training_admitted": false
+  },
+  "hard_blocks": [
+    "Reviewer has not rerun the actual source-bound host and long/partial/new-request cache tests",
+    "Cold adapter save/reload, multi-request state isolation and full-mask tests are incomplete",
+    "Sprocket Chat role/template and Instruct memory/tool control-token semantics need separate acceptance",
+    "void.1 ByteTokenizer source must be independently reviewed and used in real Unicode/byte tests",
+    "No matched NCA vs MLP model-quality comparison and no trained adapter"
+  ]
+}
