@@ -102,3 +102,31 @@ remain untouched. The only changes are to the derived #175 auditor, offline
 tests and this documentation. The new source-level Git blob checks do not
 constitute a new physical-host experiment, scientific #72 PASS, EOS skill
 measurement, training permission or draft-stack merge.
+
+## Original decoded-log Git **tree-entry** identity — 30 October 2026
+
+A further integrity distinction was found on independent source review: a
+working-tree content hash is not necessarily the **committed Git tree entry**.
+For example, changing a tracked log into a Git symlink to a byte-identical
+duplicate can make a dereferencing `read_bytes()` return unchanged content,
+even though the blob committed at that log path is now the symlink target
+text. Changing file mode to executable or using a checkout clean/smudge
+filter can likewise evade an auditor that checks only working-tree bytes.
+
+The `#175` source-only auditor now requires both **(1)** an ordinary,
+non-symlink regular file with the exact original raw-byte Git blob hash and
+**(2)** an actual `git ls-tree HEAD -- <path>` entry whose mode is exactly
+`100644`, type exactly `blob`, and object ID exactly the previously
+recorded literal original log blob SHA. It refuses a missing tree entry,
+Git-command failure, altered object SHA, executable/symlink mode, or
+same-byte symlink substitution. It does not follow an alternative checkout
+ref or accept a regenerated manifest as an authority.
+
+Two additional no-model test methods cover an identical-byte symlink and
+five independently forged tree-result cases, in addition to the existing
+four original logs' eight byte/append mutations. Only the derived auditor,
+its tests, and this explanation change. The actual archived originals,
+including both failed original custody-job logs, remain unchanged. A
+successful literal-head workflow is required before treating this correction
+as source-qualified; no Qwen3 inference, optimizer, held-out evaluation,
+four-model scientific admission, training permission, or draft merge follows.
