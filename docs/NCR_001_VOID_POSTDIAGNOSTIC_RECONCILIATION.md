@@ -47,7 +47,7 @@ cross-receipt validator now performs a **separate standard-library byte
 reconstruction** without importing Torch, the remote ByteTokenizer, a
 checkpoint or any held-out material.
 
-The exact immutable #172 source fixes prompt `"Q: π?\\nA: "` (10 UTF-8
+The exact immutable #172 source fixes prompt `"Q: π?\nA: "` (10 UTF-8
 bytes) and completion `"🔧 café 日本語"` (20 UTF-8 bytes). The independent oracle
 constructs input IDs as 10 prompt bytes + 20 completion bytes + real
 integer **258**, labels as 10 `-100` positions + 20 completion bytes + real
