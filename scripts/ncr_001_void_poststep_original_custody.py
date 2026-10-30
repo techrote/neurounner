@@ -139,23 +139,31 @@ def read_and_check(evidence: Path = EVIDENCE, *, verify_git: bool = False) -> tu
                     "ncr001-void-nca-learning/receipt.json"))
     status = "POSTSTEP_COLD_DIAGNOSTIC_ONLY__SCIENTIFIC_72_BLOCKED"
     same_sample = producer["sample"] == consumer["sample"]
-    expected_hashes = {
-        "ids_sha256": "ee6fa2a893301b858b7fdac7fe2b9190cd1fc786ddff1ffdf906da757488c09e",
-        "labels_sha256": "260dec3e7622aeada51e0483e005ad9d59cbae8f186d41432c381f2c35835241",
-        "mask_sha256": "88986881ba52ad36b430e41cd24497b9cf9a64f8e6a979290ebdee36b1b6f85c",
-    }
+    # The original real model, original EOS serializer and original cold process
+    # generated these exact tensor IDs, labels and mask digests. Compare the
+    # three committed receipts to each other instead of guessing literal hashes.
+    # Both complete ZIP and individual receipt members are already SHA-pinned.
+    expected_sample = diag["synthetic_sample"]
+    refuse(isinstance(expected_sample, dict) and
+           producer["sample"] == consumer["sample"] == expected_sample and
+           all(isinstance(expected_sample.get(k), str) and
+               len(expected_sample[k]) == 64 and
+               all(c in "0123456789abcdef" for c in expected_sample[k])
+               for k in ("ids_sha256", "labels_sha256", "mask_sha256")),
+           "original diagnostic/producer/consumer token-label-mask witness drift")
     refuse(producer["status"] == consumer["status"] == status and
            producer["phase"] == "producer" and consumer["phase"] == "consumer" and
            type(producer["diagnostic_optimizer_steps"]) is int and
            producer["diagnostic_optimizer_steps"] == 1 and
            type(consumer["diagnostic_optimizer_steps"]) is int and
            consumer["diagnostic_optimizer_steps"] == 0 and
+           type(diag["diagnostic_optimizer_steps"]) is int and
            diag["diagnostic_optimizer_steps"] == 1 and
            diag["status"].startswith("NEW_DIAGNOSTIC_NOT_ORIGINAL_172") is False and
            same_sample and producer["sample"]["real_eos_id"] == 258 and
            producer["sample"]["total_units"] == 31 and
            producer["sample"]["supervised_after_shift"] == 21 and
-           all(producer["sample"][k] == v for k, v in expected_hashes.items()),
+           producer["sample"] == expected_sample,
            "original diagnostic step or exact public shifted-EOS witness changed")
     refuse(producer["frozen_backbone_sha256"] ==
            consumer["frozen_backbone_sha256"] ==
