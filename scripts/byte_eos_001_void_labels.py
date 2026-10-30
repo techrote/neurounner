@@ -55,6 +55,13 @@ def encode_supervised_byte_completion(
         raise ValueError("Source-bound void.1 max_units must be 1..1024")
     prompt_bytes = prompt.encode("utf-8", errors="strict")
     completion_bytes = completion.encode("utf-8", errors="strict")
+    # A decoder-only causal LM shifts labels left by one position. Without a
+    # context token, the first target byte (or EOS for an empty completion)
+    # has no preceding logit and silently disappears from the actual loss.
+    # This pinned ByteTokenizer does not auto-insert BOS: fail closed rather
+    # than inventing a new special-token prefix or claiming false supervision.
+    if not prompt_bytes:
+        raise ValueError("Causal LM supervision requires at least one prompt byte; no implicit BOS")
     joined = prompt + completion
     joined_bytes = joined.encode("utf-8", errors="strict")
 
@@ -79,6 +86,11 @@ def encode_supervised_byte_completion(
               + [VOID_EOS])
     if len(labels) != len(input_ids) or labels[-1] != VOID_EOS:
         raise AssertionError("Real EOS terminal supervision must be preserved")
+    # Hugging Face causal loss uses labels[..., 1:] as targets. Verify the
+    # count *after that shift*, not just the unshifted mask in the receipt.
+    causal_targets = sum(v != -100 for v in labels[1:])
+    if causal_targets != len(completion_bytes) + 1:
+        raise AssertionError("Causal shift dropped a supervised completion/EOS unit")
     if any(v >= 256 for v in joined_ids):
         raise AssertionError("Printable target unexpectedly contains control token")
     if all(v == -100 for v in labels):
@@ -89,6 +101,7 @@ def encode_supervised_byte_completion(
         "labels": labels,
         "sequence_tokenizer_units": len(input_ids),
         "supervised_tokenizer_units": len(completion_bytes) + 1,
+        "causal_shift_supervised_units": causal_targets,
         "prompt_tokenizer_units": len(prompt_bytes),
         "utf8_source_bytes": len(joined_bytes),
         "source_characters": len(joined),
