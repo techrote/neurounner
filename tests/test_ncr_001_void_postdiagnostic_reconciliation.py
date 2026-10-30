@@ -9,6 +9,7 @@ import copy
 import json
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -191,6 +192,40 @@ class PostDiagnosticVoid1ReconciliationTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "REFUSED"):
                     check.check_inputs(self.legacy, original,
                                        self.manifest, self.protocol)
+
+    def test_all_original_decoded_logs_match_git_blobs(self):
+        # The four decoded files include both failed original custody runs.
+        # Original ZIP SHA-256 checks alone never protect these separate logs.
+        self.assertEqual(len(check.ORIGINAL_DECODED_LOG_BLOBS), 4)
+        check.assert_original_decoded_git_blobs()
+
+    def test_all_original_decoded_logs_refuse_single_byte_and_append_mutations(self):
+        # Preserve the existing run/head/status text when corrupting a tail
+        # byte. Substring-only original custody could otherwise pass.
+        with tempfile.TemporaryDirectory() as temporary:
+            replica = Path(temporary)
+            originals = {}
+            for name in check.ORIGINAL_DECODED_LOG_BLOBS:
+                raw = (custody.EVIDENCE / name).read_bytes()
+                self.assertTrue(raw, name)
+                (replica / name).write_bytes(raw)
+                originals[name] = raw
+            check.assert_original_decoded_git_blobs(replica)
+            for name, raw in originals.items():
+                with self.subTest(log=name, mutation="last-byte"):
+                    (replica / name).write_bytes(
+                        raw[:-1] + bytes([raw[-1] ^ 1]))
+                    with self.assertRaisesRegex(RuntimeError,
+                                                "original decoded job-log Git blob drift"):
+                        check.assert_original_decoded_git_blobs(replica)
+                    (replica / name).write_bytes(raw)
+                with self.subTest(log=name, mutation="append"):
+                    (replica / name).write_bytes(raw + b"forged\\n")
+                    with self.assertRaisesRegex(RuntimeError,
+                                                "original decoded job-log Git blob drift"):
+                        check.assert_original_decoded_git_blobs(replica)
+                    (replica / name).write_bytes(raw)
+            check.assert_original_decoded_git_blobs(replica)
 
     def test_unmodified_archives_pass_cross_receipt_validator(self):
         check.check_inputs(self.legacy, self.original,
