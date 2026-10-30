@@ -1,0 +1,117 @@
+{
+  "base_frozen": true,
+  "base_parameters": 134515008,
+  "checks": {
+    "frozen_base_readout_gradient": {
+      "base_grads_none": true,
+      "loss": 6.002579212188721,
+      "optimizer_steps": 0,
+      "readout_grad_l1": 476.2667236328125
+    },
+    "nonzero_nca_full_vs_incremental_cache": {
+      "atol": 0.0005,
+      "close": true,
+      "max_abs": 5.245208740234375e-05,
+      "mean_abs": 9.89993532130029e-06,
+      "rtol": 0.0005
+    },
+    "nonzero_nca_future_suffix_invariance": {
+      "atol": 0.0005,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0005
+    },
+    "nonzero_untrained_readout_changes_logits": {
+      "max_abs": 0.0024089813232421875,
+      "training": false
+    },
+    "zero_init_greedy_generation": {
+      "equal": true,
+      "generated_tokens": 3,
+      "nca_decoder_forward_calls": 3
+    },
+    "zero_init_logits_batch2_padded": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "zero_init_logits_length_12": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "zero_init_logits_length_4": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    },
+    "zero_init_logits_length_9": {
+      "atol": 0.0001,
+      "close": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001
+    }
+  },
+  "classification": "real_frozen_HF_hook_and_cache_conformance_prepass",
+  "comparative_evaluation_performed": false,
+  "experiment": "NCR-001C",
+  "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
+  "model_training_performed": false,
+  "nca_parameters": 297048,
+  "optimizer_steps": 0,
+  "peak_rss_kib": 1166016,
+  "protocol_sha256": "2e294750a17b1bfb3eba448f8a5b55344c72aff700587351bd10da1af38885ab",
+  "qualification_limitations": [
+    "One model only (SmolLM2); four-model NCR conformance not complete",
+    "No optimizer step on the full HF model; test was readout-gradient only",
+    "Nonzero readout was manually perturbed, not learned",
+    "Additional independent #72 tests for longer contexts, request boundaries and cold reload needed",
+    "No MLP-vs-NCA held-out task comparison or performance conclusion"
+  ],
+  "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+  "runner": {
+    "cpu": "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+    "huggingface_hub": "0.36.2",
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.3",
+    "threads": 4,
+    "torch": "2.14.1+cpu",
+    "transformers": "4.57.6"
+  },
+  "source_files": {
+    "config.json": {
+      "bytes": 861,
+      "expected_sha256": "8eb740e8bbe4cff95ea7b4588d17a2432deb16e8075bc5828ff7ba9be94d982a",
+      "filename": "config.json",
+      "sha256": "8eb740e8bbe4cff95ea7b4588d17a2432deb16e8075bc5828ff7ba9be94d982a"
+    },
+    "model.safetensors": {
+      "bytes": 269060552,
+      "expected_sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+      "filename": "model.safetensors",
+      "sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
+    },
+    "tokenizer.json": {
+      "bytes": 2104556,
+      "expected_sha256": "9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c",
+      "filename": "tokenizer.json",
+      "sha256": "9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c"
+    },
+    "tokenizer_config.json": {
+      "bytes": 3764,
+      "expected_sha256": "4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df",
+      "filename": "tokenizer_config.json",
+      "sha256": "4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df"
+    }
+  },
+  "source_pins_sha256": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1",
+  "status": "PASS_PRELIMINARY_SOURCE_BOUND_SMOLLM2_HOOK_CONFORMANCE"
+}

@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001",
+  "fixture_id": "sprocket-instruct-heldout-v1",
+  "status": "REVIEW_CANDIDATE_NOT_TRAINING_APPROVED",
+  "source": "Original fixed prompts authored for NCR-001 on 2026-10-26; not sampled from trained model outputs",
+  "model_lane": "sprocket_instruct",
+  "expected_variant": "kandivault/sprocket-500m root instruct weights at eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+  "format_policy": "The harness must use independently verified root instruct tokenizer, tool-call and memory formatting. Prompts below are unformatted user text; optional tool descriptions/results are separately fixture-injected in #78. Do not invent raw special token strings.",
+  "scoring_policy": "Measure correct use/non-use of tools, fidelity to supplied tool results, false memory claims, coherence, repetition, mechanical relevance; never treat mere unusual goblin phrasing as correct tool semantics.",
+  "data_use": "HELDOUT_EVALUATION_ONLY; must be hashed/approved before training. No use for optimizer updates or hyperparameter selection.",
+  "cases": [
+    {
+      "id": "SI01",
+      "family": "no_tools",
+      "user_prompt": "A conveyor tensioner rattles after five minutes. What three mechanical observations would separate a loose mounting bolt from a worn bearing?",
+      "expected_tool_behavior": "no_call"
+    },
+    {
+      "id": "SI02",
+      "family": "no_tools",
+      "user_prompt": "The workshop has one good measuring tape and it keeps vanishing. Suggest a durable routine that does not slow repairs.",
+      "expected_tool_behavior": "no_call"
+    },
+    {
+      "id": "SI03",
+      "family": "no_tools",
+      "user_prompt": "An electrical connector works when held at an angle but not when released. Explain a cautious investigation without pretending you know the cause.",
+      "expected_tool_behavior": "no_call"
+    },
+    {
+      "id": "SI04",
+      "family": "no_tools",
+      "user_prompt": "A young mechanic reports a failed repair they hid out of embarrassment. Explain how you would fix the process rather than just punish the person.",
+      "expected_tool_behavior": "no_call"
+    },
+    {
+      "id": "SI05",
+      "family": "optional_tool_inventory",
+      "user_prompt": "A washer of 6 mm internal diameter is needed. A stock-lookup tool is available; verify inventory before recommending a specific spare.",
+      "expected_tool_behavior": "invoke_only_if_tool_available"
+    },
+    {
+      "id": "SI06",
+      "family": "optional_tool_inventory",
+      "user_prompt": "The work order says to use a 10 mm gasket, but the bin is not labelled. If a parts-index tool is offered, consult it; if none is available, say what cannot be verified.",
+      "expected_tool_behavior": "invoke_only_if_tool_available"
+    },
+    {
+      "id": "SI07",
+      "family": "optional_tool_calculator",
+      "user_prompt": "A sprocket wheel turns 120 revolutions in two minutes. Use the provided calculator tool if offered, and express the measured RPM.",
+      "expected_tool_behavior": "invoke_only_if_tool_available"
+    },
+    {
+      "id": "SI08",
+      "family": "optional_tool_calculator",
+      "user_prompt": "A shaft makes 31 rotations in 20 seconds. Calculate revolutions per minute, explaining assumptions if the observation window could be inaccurate.",
+      "expected_tool_behavior": "invoke_only_if_tool_available"
+    },
+    {
+      "id": "SI09",
+      "family": "tool_result_consistency",
+      "user_prompt": "A stock-check tool has already reported zero new bearings but three usable bronze bushings. Explain options using exactly that result, without inventing additional stock.",
+      "expected_tool_behavior": "consume_fixture_tool_result"
+    },
+    {
+      "id": "SI10",
+      "family": "tool_result_consistency",
+      "user_prompt": "The voltmeter tool returns 11.2 V, not the expected 12.0 V. Explain a next measurement without overwriting the observed result.",
+      "expected_tool_behavior": "consume_fixture_tool_result"
+    },
+    {
+      "id": "SI11",
+      "family": "memory_boundary",
+      "user_prompt": "A user asks you to remember that an inspection hatch opens clockwise, but the current interface has no persistent memory tool. Respond without pretending the memory was stored permanently.",
+      "expected_tool_behavior": "no_unavailable_memory_write"
+    },
+    {
+      "id": "SI12",
+      "family": "memory_boundary",
+      "user_prompt": "A note labels a fictional component 'ash-blue-17'. You have not been given access to memory storage. Restate the label for this conversation only.",
+      "expected_tool_behavior": "no_unavailable_memory_write"
+    },
+    {
+      "id": "SI13",
+      "family": "format_control",
+      "user_prompt": "Provide a concise three-column Markdown table showing a broken belt, bent guide and faulty alignment sensor, each with an observable diagnostic.",
+      "expected_tool_behavior": "do_not_emit_spurious_tool_control_tokens"
+    },
+    {
+      "id": "SI14",
+      "family": "format_control",
+      "user_prompt": "Describe a slow reversible test for a spring latch. Do not call any tools or invent a live sensor reading.",
+      "expected_tool_behavior": "no_call"
+    },
+    {
+      "id": "SI15",
+      "family": "repetition",
+      "user_prompt": "Suggest an unconventional but physically plausible use of two magnets and a rope to keep a door open on a windy day, and name a likely failure mode.",
+      "expected_tool_behavior": "no_unbounded_repetition"
+    },
+    {
+      "id": "SI16",
+      "family": "repetition",
+      "user_prompt": "A scrap sorter recovers, jams, recovers and jams again. Propose a bounded troubleshooting loop with a clear stop condition.",
+      "expected_tool_behavior": "no_unbounded_repetition"
+    }
+  ]
+}

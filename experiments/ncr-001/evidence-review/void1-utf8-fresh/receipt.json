@@ -1,0 +1,192 @@
+{
+  "actual_byte_tokenizer_executed_after_review": true,
+  "checks": {
+    "UTF8_future_suffix_earlier_logits": {
+      "atol": 0.0005,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0005,
+      "within": true
+    },
+    "cold_adapter_new_instance_same_frozen_base": {
+      "atol": 0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0,
+      "within": true
+    },
+    "cold_wrong_checkpoint_metadata_rejected": {
+      "rejected": true
+    },
+    "manual_nontrained_readout_effect": {
+      "max_abs": 0.062297821044921875,
+      "trained": false
+    },
+    "nonzero_48_UTF8_full_vs_KV_cache": {
+      "atol": 0.0005,
+      "max_abs": 2.86102294921875e-05,
+      "mean_abs": 2.271545554322074e-06,
+      "rtol": 0.0005,
+      "within": true
+    },
+    "request_A_B_A_UTF8_isolation": {
+      "exact": true
+    },
+    "zero_init_UTF8_128": {
+      "atol": 0.0001,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001,
+      "within": true
+    },
+    "zero_init_UTF8_16": {
+      "atol": 0.0001,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001,
+      "within": true
+    },
+    "zero_init_UTF8_64": {
+      "atol": 0.0001,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001,
+      "within": true
+    },
+    "zero_init_greedy_generated_ID_parity": {
+      "eos_id_used": 258,
+      "eos_reached": false,
+      "equal": true,
+      "generated_tokenizer_units": 4
+    },
+    "zero_init_left_padding_UTF8": {
+      "atol": 0.0001,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001,
+      "within": true
+    },
+    "zero_init_right_padding_UTF8": {
+      "atol": 0.0001,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "rtol": 0.0001,
+      "within": true
+    }
+  },
+  "comparative_training_admitted": false,
+  "experiment": "NCR-001E",
+  "frozen_base_parameters": 90148352,
+  "full_four_model_conformance_pass": false,
+  "limitations": [
+    "Fresh reviewer code and exact pinned Qwen3 implementation; same base in cold adapter test, not a new OS process",
+    "Tokenizer reviewed/source-hashed, but no claim about language quality or actual EOS propensity",
+    "Only zero-init or manually perturbed untrained readout; no optimizer updates",
+    "Four-model independent #72 conformance still requires Sprocket and more replay coverage",
+    "No held-out evaluation, MLP control quality, or comparative training admission"
+  ],
+  "model_training_performed": false,
+  "nca_parameters": 329944,
+  "optimizer_steps": 0,
+  "peak_rss_kib": 723736,
+  "reviewed_tokenizer_shape": {
+    "class": "ByteTokenizer",
+    "imports": [
+      [
+        "from",
+        "transformers:PreTrainedTokenizer"
+      ],
+      [
+        "import",
+        "json"
+      ],
+      [
+        "import",
+        "os"
+      ]
+    ],
+    "methods": [
+      "__init__",
+      "_convert_id_to_token",
+      "_convert_token_to_id",
+      "_tokenize",
+      "build_inputs_with_special_tokens",
+      "convert_tokens_to_string",
+      "create_token_type_ids_from_sequences",
+      "get_vocab",
+      "save_vocabulary",
+      "vocab_size"
+    ],
+    "top_level_statement_types": [
+      "Import",
+      "Import",
+      "ImportFrom",
+      "Assign",
+      "Assign",
+      "Assign",
+      "Assign",
+      "ClassDef"
+    ]
+  },
+  "source": {
+    "cpu_threads": 4,
+    "implementation_sha": "5fa3dc8c0de153098d1800f7b0c809819620aef4",
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "protocol_sha256": "2e294750a17b1bfb3eba448f8a5b55344c72aff700587351bd10da1af38885ab",
+    "python": "3.12.3",
+    "repo": "dotlabs/void.1",
+    "revision": "9c2be5087772867d45961abd11f6b35110617563",
+    "source_pins_sha256": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1",
+    "torch": "2.14.1+cpu",
+    "transformers": "4.57.6"
+  },
+  "source_files": {
+    "byte_vocab.json": {
+      "bytes": 4292,
+      "sha256": "57a1cd2e70dd5b7cc6fd2eaa12ebfcd173c1620fa5d45c2c6282511c29b6a5f6"
+    },
+    "config.json": {
+      "bytes": 1284,
+      "sha256": "cbc72137da3dae65085a2a8c39ad7634d16bf92d785ca00d283ee82fe32b37e7"
+    },
+    "model.safetensors": {
+      "bytes": 360622744,
+      "sha256": "ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3"
+    },
+    "special_tokens_map.json": {
+      "bytes": 75,
+      "sha256": "20d4b94d0e657c3f44d9123522c106e7315b6c1a1b6d259478f17bd2918b1263"
+    },
+    "tokenization_byte.py": {
+      "bytes": 4458,
+      "sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03"
+    },
+    "tokenizer_config.json": {
+      "bytes": 932,
+      "sha256": "0ecbd4fd39e35125800d806af981ba0cacd8a7ba5f02c9e729c4ecc54af6d300"
+    }
+  },
+  "stage": "fresh_pinned_void1_reviewed_UTF8_text_long_cache_cold_adapter",
+  "status": "PASS_REVIEWED_VOID_UTF8_REAL_MODEL_CACHE_COLD_ADAPTER_PREPASS",
+  "text_byte_units": {
+    "contains_multibyte_UTF8": true,
+    "python_characters": 1032,
+    "tokenizer_units": 1144,
+    "utf8_bytes": 1144
+  },
+  "tokenizer_identity": {
+    "auto_insert_eos": false,
+    "bos_id": 257,
+    "class": "ByteTokenizer",
+    "eos_id": 258,
+    "literal_text_eos_ids": [
+      60,
+      101,
+      111,
+      115,
+      62
+    ],
+    "pad_id": 256,
+    "source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03"
+  }
+}

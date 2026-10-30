@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001E",
+  "substage": "independent_fresh_real_frozen_smolllm2_short_to_128_cache_mask_request_cold_adapter",
+  "conclusion": "PASS_REVIEWER_FRESH_SMOLLM2_FROZEN_CACHE_COLD_ADAPTER_PREPASS",
+  "source_run": {
+    "url": "https://github.com/techrote/neurounner/actions/runs/40436942220",
+    "run_id": 40436942220,
+    "tested_review_commit": "3fa59c86ac61483ee8fcdd452e917e205ed17bb7",
+    "job_id": 121967763621,
+    "pinned_implementation_commit": "ec0d4a80e15f203a06c26ee9c23858f78976370b",
+    "original_artifact_id": 12704378381,
+    "artifact_name": "ncr-001e-smol-fresh-frozen-cold-cache-a1",
+    "original_zip_sha256": "5c733249f6c5e689177361ca6491b02db947f43d87b9a03024c3d02fecc3c6a6",
+    "original_report_file": "smol-independent-fresh.json",
+    "original_report_sha256": "fb337b69d5533585dd93a1788c4236a6e08b14912ef8121b6ecd0c4a0bcab81f",
+    "original_report_bytes": 3335,
+    "saved_report": "experiments/ncr-001/evidence-review/smolllm2-fresh/receipt.json",
+    "result": "success"
+  },
+  "source_model": {
+    "repo": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "downloaded_full_weights_sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+    "downloaded_weights_bytes": 269060552,
+    "frozen_parameters": 134515008,
+    "nca_adapter_parameters": 297048
+  },
+  "findings": {
+    "zero_readout_logits_exact_lengths": [
+      16,
+      64,
+      128
+    ],
+    "zero_init_left_and_right_padded_batch_exact": true,
+    "greedy_five_token_output_unchanged": true,
+    "manual_untrained_readout_effect_max_abs": 0.006215572357177734,
+    "longer_48_token_full_vs_incremental_cache_max_abs": 0.00006389617919921875,
+    "changed_future_suffix_earlier_logits_max_abs": 0,
+    "request_A_B_A_output_same_exactly": true,
+    "newly_constructed_adapter_on_same_base_cold_reload_logits_exact": true,
+    "wrong_model_revision_metadata_rejected": true,
+    "optimizer_steps": 0,
+    "actual_model_training": false,
+    "peak_rss_kib": 1165512
+  },
+  "still_unqualified": [
+    "Only SmolLM2 fresh model checked, not Sprocket Chat/Instruct or void.1",
+    "Cold adapter reloaded on a new adapter instance but the same live base, not a fresh process/worker",
+    "Nonzero readout was manually perturbed, not learned or trained",
+    "No independent final four-model #72 or comparative training admission"
+  ]
+}

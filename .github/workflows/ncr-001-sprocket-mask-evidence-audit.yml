@@ -1,0 +1,54 @@
+name: NCR-001 Sprocket original mask evidence readback (offline, no training)
+
+on:
+  pull_request:
+    branches: [review/ncr001-sprocket-explicit-attention-mask-20261028]
+    paths:
+      - ".github/workflows/ncr-001-sprocket-mask-evidence-audit.yml"
+      - "scripts/ncr_001_sprocket_mask_evidence_audit.py"
+      - "experiments/ncr-001/controls-evidence/sprocket-explicit-mask-20261028/**"
+      - "docs/NCR_001_SPROCKET_MASK_EVIDENCE.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  archived-originals-offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact PR head and immutable four-model protocol
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          PY
+      - name: Original byte-exact archive, model-source identities and adversarial negative readback
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p runtime/ncr001-sprocket-mask-archive
+          python3 -m py_compile scripts/ncr_001_sprocket_mask_evidence_audit.py
+          python3 scripts/ncr_001_sprocket_mask_evidence_audit.py 2>&1 | tee runtime/ncr001-sprocket-mask-archive/audit.json.log
+      - name: Preserve original audit pass or failure log
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-sprocket-mask-archive-a${{ github.run_attempt }}
+          path: runtime/ncr001-sprocket-mask-archive/
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,36 @@
+{
+  "candidate_id": "qwen35-4b",
+  "endpoint": "http://127.0.0.1:18963/v1/chat/completions",
+  "model": {
+    "file": "Qwen3.5-4B-Q4_K_M.gguf",
+    "label": "Qwen3.5-4B",
+    "quant": "Q4_K_M",
+    "repo": "SoAIHQ/Qwen3.5-4B-GGUF",
+    "sha256": "2ebe6eb67cb92adeffc7073c48dd4e3baf79465ac650793dc751cad2b29cf219",
+    "source_pin": "84406fbcd9ad62767d66227075f88089a3f41caf"
+  },
+  "payload": {
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "max_tokens": 850,
+    "messages": [
+      {
+        "content": "You are the constrained final prose renderer for STORY-001. Rewrite only the supplied section. Use the independent edit plan as guidance, but the global contract, section brief and source section are authoritative. Return story prose only; obey the word range and stop cleanly.",
+        "role": "system"
+      },
+      {
+        "content": "PART 02/08 — City-zone edge. Required length: 320-370 words.\n\nGLOBAL CONTRACT:\nFirst-person Sprocket memory; tactile and mechanically uncertain. Keep the incident linear: trigger -> boundary -> hatch -> wrong line -> failed rescue -> scrap intervention -> tradeoff/line-stop -> escape/missing-noise frame. No new proper nouns, institutions, grand backstory, holograms, data streams, reactors, destiny language or generic cyberpunk decoration. Never repeat a sentence or paragraph. Do not explain the machine's internal logic. The companion remains unnamed and their final fate may remain genuinely unresolved, but never state both alive and dead. Return only story prose with 3-6 paragraphs.\n\nSECTION-SPECIFIC REPAIR:\nMake this the actual boundary crossing during the brownout. Give a practical reason to go with the unnamed companion, one barrier and one shortcut/long-way uncertainty. Remove reactor lore, heroic resolve and generic exploration language. End at the maintenance route.\n\nLFM8B EDIT PLAN:\nWe need to produce a revised version of the given section (PART 02/08 — City-zone edge) meeting constraints: 320-370 words, first-person Sprocket memory, tactile and mechanically uncertain, linear incident: trigger -> boundary -> hatch -> wrong line -> failed rescue -> scrap intervention -> tradeoff/line-stop -> escape/missing-noise frame. No new proper nouns, institutions, grand backstory, holograms, data streams, reactors, destiny language, generic cyberpunk decoration. No repeats of sentences or paragraphs. End at the maintenance route. Also need to incorporate the independent M4 review feedback: remove repetitive paragraphs, linearize timeline, ensure uncertainty, sensory anchors, decide outcome (companion dies), end on missing noise or cost, not resolution. Also need to follow \"Name, then Memory\" constraint? Actually earlier they said \"Name, then Memory\" constraint: \"The name, then memory\" maybe meaning mention name then memory? Not sure. The instruction: \"Name, then Memory\" constraint appears in the \"Generic Prose & Cyberpunk Tropes\" section: \"The name, then Memory\" maybe meaning each paragraph should start with a noun or sensory detail (Smell, Sound, Object) and not a verb or \"I felt\". Also \"Never repeat a sentence or paragraph.\" Also \"Do not explain the machine's internal logic.\" Also \"Never state both alive and dead.\" So we need to produce a compact, concrete editing plan? Wait the request: \"Produce a compact, concrete editing plan for this single section: what to cut, what causality or continuity to repair, what tactile details to preserve, and how to satisfy the supplied word range.\" But then they gave a review report and checklist. The final instruction: \"RECOMMENDATION: ... Rewrite the narrative from the beginning, adhering strictly to the 'Sprocket-ness' constraints ... and cutting the narrative loops immediately.\"\n\nThus we need to output the revised story prose, not the editing plan. The\n\nPREVIOUS FINISHED TAIL (continuity only):\nthe thing will remember. The sound was the evidence, the proof that something had happened. It was a moment of pure, unfiltered memory, a snapshot of a city that had long since forgotten its past.\n\nNEXT ORIGINAL HEAD (continuity only):\nThe air in the service corridor tasted like old oil and wet dust, thick enough to taste on the tongue. Flickering lights cast long, jerky shadows against the corrugated walls, making the space feel deeper\n\nCURRENT SECTION TO REWRITE:\nThe path isn't a straight line. It's a maze of old walls and shortcuts. I'm taking the long way around, the winding route that flows north to south, cutting through the main hub of the reactors. It's the only way through. The walls here are high, made of cold stone that feels like it's breathing. I push past them, my boots crunching on gravel and broken glass. The air is thick with dust, swirling in the weak current of the brownout.\n\nI keep moving, my heart pounding, trying to ignore the strange whistling sound that sometimes cuts through the silence. It's not a machine sound, not really. It's the sound of something old waking up, or maybe something trying to scream. I don't know what it is, just that I need to find my companion. The city walls seem to stretch on forever, a never-ending path that leads deeper into the industrial heart. But I keep going, my resolve unwavering. I have to find them before it's too late. The smell of old metal is everywhere, a reminder of the city's industrial past, and I'm determined to explore this world beyond the walls, even if the power is gone.",
+        "role": "user"
+      }
+    ],
+    "model": "local",
+    "seed": 2026142633,
+    "stream": false,
+    "temperature": 0.28,
+    "top_p": 0.95
+  },
+  "provider": "local-llama.cpp",
+  "schema_version": 1,
+  "stage_id": "m5-render-02-focused"
+}
