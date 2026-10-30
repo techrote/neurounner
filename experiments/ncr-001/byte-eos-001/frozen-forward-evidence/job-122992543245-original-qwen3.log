@@ -1,0 +1,650 @@
+﻿2026-10-28T17:42:30.9727081Z Current runner version: '2.338.0'
+2026-10-28T17:42:30.9762054Z ##[group]Runner Image Provisioner
+2026-10-28T17:42:30.9763051Z Hosted Compute Agent
+2026-10-28T17:42:30.9763728Z Version: 20261021.618
+2026-10-28T17:42:30.9764448Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-28T17:42:30.9765188Z Build Date: 2026-10-21T00:45:21Z
+2026-10-28T17:42:30.9765946Z Worker ID: {0a67ead5-9cbb-4e81-920e-5cd1a2ec15b1}
+2026-10-28T17:42:30.9766686Z Region: centralus
+2026-10-28T17:42:30.9767236Z Cloud: Azure
+2026-10-28T17:42:30.9768215Z ##[endgroup]
+2026-10-28T17:42:30.9769808Z ##[group]Operating System
+2026-10-28T17:42:30.9770595Z Ubuntu
+2026-10-28T17:42:30.9771151Z 24.04.5
+2026-10-28T17:42:30.9771658Z LTS
+2026-10-28T17:42:30.9772297Z ##[endgroup]
+2026-10-28T17:42:30.9772866Z ##[group]Runner Image
+2026-10-28T17:42:30.9773520Z Image: ubuntu-24.04
+2026-10-28T17:42:30.9774116Z Version: 20261025.353.1
+2026-10-28T17:42:30.9775449Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261025.353/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-28T17:42:30.9777051Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261025.353
+2026-10-28T17:42:30.9778432Z ##[endgroup]
+2026-10-28T17:42:30.9779640Z ##[group]GITHUB_TOKEN Permissions
+2026-10-28T17:42:30.9781660Z Contents: read
+2026-10-28T17:42:30.9782350Z Metadata: read
+2026-10-28T17:42:30.9782924Z ##[endgroup]
+2026-10-28T17:42:30.9785195Z Secret source: Actions
+2026-10-28T17:42:30.9786159Z Cache mode: write
+2026-10-28T17:42:30.9787017Z Prepare workflow directory
+2026-10-28T17:42:31.0498209Z Prepare all required actions
+2026-10-28T17:42:31.0570506Z Getting action download info
+2026-10-28T17:42:31.3463194Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-28T17:42:31.4680694Z Download action repository 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-28T17:42:31.6375985Z Complete job name: original-qwen3
+2026-10-28T17:42:31.7206953Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-28T17:42:31.7208310Z with:
+2026-10-28T17:42:31.7208812Z   ref: 06b858a70d7019398cdc7a3f205ae24423f57c67
+2026-10-28T17:42:31.7209445Z   persist-credentials: false
+2026-10-28T17:42:31.7209980Z   repository: techrote/neurounner
+2026-10-28T17:42:31.7213754Z   token: ***
+2026-10-28T17:42:31.7214185Z   ssh-strict: true
+2026-10-28T17:42:31.7214624Z   ssh-user: git
+2026-10-28T17:42:31.7215045Z   clean: true
+2026-10-28T17:42:31.7215502Z   sparse-checkout-cone-mode: true
+2026-10-28T17:42:31.7216093Z   fetch-depth: 1
+2026-10-28T17:42:31.7216532Z   fetch-tags: false
+2026-10-28T17:42:31.7216987Z   show-progress: true
+2026-10-28T17:42:31.7217434Z   lfs: false
+2026-10-28T17:42:31.7217997Z   submodules: false
+2026-10-28T17:42:31.7218459Z   set-safe-directory: true
+2026-10-28T17:42:31.7218971Z   allow-unsafe-pr-checkout: false
+2026-10-28T17:42:31.7219751Z env:
+2026-10-28T17:42:31.7220199Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-28T17:42:31.7220805Z   HF_HOME: /tmp/byte-eos-001-frozen-qwen
+2026-10-28T17:42:31.7221377Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-28T17:42:31.7221892Z   TOKENIZERS_PARALLELISM: false
+2026-10-28T17:42:31.7222396Z   OMP_NUM_THREADS: 4
+2026-10-28T17:42:31.7222841Z   MKL_NUM_THREADS: 4
+2026-10-28T17:42:31.7223378Z   EXPECTED_HEAD: 06b858a70d7019398cdc7a3f205ae24423f57c67
+2026-10-28T17:42:31.7224002Z ##[endgroup]
+2026-10-28T17:42:32.0778665Z Syncing repository: techrote/neurounner
+2026-10-28T17:42:32.0780523Z ##[group]Getting Git version info
+2026-10-28T17:42:32.0781287Z Working directory is '/home/runner/work/neurounner/neurounner'
+2026-10-28T17:42:32.0782864Z [command]/usr/bin/git version
+2026-10-28T17:42:32.0947377Z git version 2.56.0
+2026-10-28T17:42:32.0968535Z ##[endgroup]
+2026-10-28T17:42:32.0982092Z Temporarily overriding HOME='/home/runner/work/_temp/7c6e2c4a-f25b-418c-b93a-a28fc964013e' before making global git config changes
+2026-10-28T17:42:32.0984514Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-28T17:42:32.0990665Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner
+2026-10-28T17:42:32.1056268Z Deleting the contents of '/home/runner/work/neurounner/neurounner'
+2026-10-28T17:42:32.1061282Z ##[group]Determining repository object format
+2026-10-28T17:42:32.1063261Z ##[endgroup]
+2026-10-28T17:42:32.1064587Z ##[group]Initializing the repository
+2026-10-28T17:42:32.1069827Z [command]/usr/bin/git init /home/runner/work/neurounner/neurounner
+2026-10-28T17:42:32.1229022Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-28T17:42:32.1230438Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-28T17:42:32.1231477Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-28T17:42:32.1232271Z hint: call:
+2026-10-28T17:42:32.1232705Z hint:
+2026-10-28T17:42:32.1233293Z hint: 	git config --global init.defaultBranch <name>
+2026-10-28T17:42:32.1233972Z hint:
+2026-10-28T17:42:32.1234606Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-28T17:42:32.1235676Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-28T17:42:32.1236563Z hint:
+2026-10-28T17:42:32.1237031Z hint: 	git branch -m <name>
+2026-10-28T17:42:32.1237574Z hint:
+2026-10-28T17:42:32.1238990Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-28T17:42:32.1256357Z Initialized empty Git repository in /home/runner/work/neurounner/neurounner/.git/
+2026-10-28T17:42:32.1270291Z [command]/usr/bin/git remote add origin https://github.com/techrote/neurounner
+2026-10-28T17:42:32.1354873Z ##[endgroup]
+2026-10-28T17:42:32.1356096Z ##[group]Disabling automatic garbage collection
+2026-10-28T17:42:32.1358294Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-28T17:42:32.1428630Z ##[endgroup]
+2026-10-28T17:42:32.1430882Z ##[group]Setting up auth
+2026-10-28T17:42:32.1432582Z Removing SSH command configuration
+2026-10-28T17:42:32.1434166Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-28T17:42:32.1475750Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-28T17:42:32.1962106Z Removing HTTP extra header
+2026-10-28T17:42:32.1968397Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-28T17:42:32.2021365Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-28T17:42:32.2261809Z Removing includeIf entries pointing to credentials config files
+2026-10-28T17:42:32.2267382Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-28T17:42:32.2313992Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-28T17:42:32.2596195Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-2b0c5a66-0e7f-4040-a651-2578452c3dd8.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-28T17:42:32.2652917Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/.git.path /home/runner/work/_temp/git-credentials-2b0c5a66-0e7f-4040-a651-2578452c3dd8.config
+2026-10-28T17:42:32.2705744Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-2b0c5a66-0e7f-4040-a651-2578452c3dd8.config
+2026-10-28T17:42:32.2759280Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-2b0c5a66-0e7f-4040-a651-2578452c3dd8.config
+2026-10-28T17:42:32.2810766Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-2b0c5a66-0e7f-4040-a651-2578452c3dd8.config
+2026-10-28T17:42:32.2859393Z ##[endgroup]
+2026-10-28T17:42:32.2860163Z ##[group]Fetching the repository
+2026-10-28T17:42:32.2869775Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin 06b858a70d7019398cdc7a3f205ae24423f57c67
+2026-10-28T17:42:35.6625553Z From https://github.com/techrote/neurounner
+2026-10-28T17:42:35.6635259Z  * branch            06b858a70d7019398cdc7a3f205ae24423f57c67 -> FETCH_HEAD
+2026-10-28T17:42:35.6639757Z [command]/usr/bin/git rev-parse --verify --quiet 06b858a70d7019398cdc7a3f205ae24423f57c67^{object}
+2026-10-28T17:42:35.6675740Z 06b858a70d7019398cdc7a3f205ae24423f57c67
+2026-10-28T17:42:35.6682376Z ##[endgroup]
+2026-10-28T17:42:35.6683663Z ##[group]Determining the checkout info
+2026-10-28T17:42:35.6685025Z ##[endgroup]
+2026-10-28T17:42:35.6687584Z [command]/usr/bin/git sparse-checkout disable
+2026-10-28T17:42:35.6753903Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-28T17:42:35.6799371Z ##[group]Checking out the ref
+2026-10-28T17:42:35.6802867Z [command]/usr/bin/git checkout --progress --force 06b858a70d7019398cdc7a3f205ae24423f57c67
+2026-10-28T17:42:35.8868850Z Note: switching to '06b858a70d7019398cdc7a3f205ae24423f57c67'.
+2026-10-28T17:42:35.8869642Z 
+2026-10-28T17:42:35.8870083Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-28T17:42:35.8871101Z changes and commit them, and you can discard any commits you make in this
+2026-10-28T17:42:35.8871871Z state without impacting any branches by switching back to a branch.
+2026-10-28T17:42:35.8872224Z 
+2026-10-28T17:42:35.8872475Z If you want to create a new branch to retain commits you create, you may
+2026-10-28T17:42:35.8873085Z do so (now or later) by using -c with the switch command. Example:
+2026-10-28T17:42:35.8873410Z 
+2026-10-28T17:42:35.8873891Z   git switch -c <new-branch-name>
+2026-10-28T17:42:35.8874190Z 
+2026-10-28T17:42:35.8874407Z Or undo this operation with:
+2026-10-28T17:42:35.8874626Z 
+2026-10-28T17:42:35.8874756Z   git switch -
+2026-10-28T17:42:35.8874936Z 
+2026-10-28T17:42:35.8875214Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-28T17:42:35.8875597Z 
+2026-10-28T17:42:35.8875995Z HEAD is now at 06b858a Add pinned forward-only BYTE-EOS actual-host CI and explicit evidence/admission boundaries
+2026-10-28T17:42:35.8901643Z ##[endgroup]
+2026-10-28T17:42:35.8963334Z [command]/usr/bin/git log -1 --format=%H
+2026-10-28T17:42:35.9003656Z 06b858a70d7019398cdc7a3f205ae24423f57c67
+2026-10-28T17:42:35.9014005Z ##[group]Removing auth
+2026-10-28T17:42:35.9014726Z Removing SSH command configuration
+2026-10-28T17:42:35.9019600Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-28T17:42:35.9066154Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-28T17:42:35.9316137Z Removing HTTP extra header
+2026-10-28T17:42:35.9321466Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-28T17:42:35.9370279Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-28T17:42:35.9624508Z Removing includeIf entries pointing to credentials config files
+2026-10-28T17:42:35.9628889Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-28T17:42:35.9670720Z includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path
+2026-10-28T17:42:35.9671997Z includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path
+2026-10-28T17:42:35.9673110Z includeif.gitdir:/github/workspace/.git.path
+2026-10-28T17:42:35.9674570Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-28T17:42:35.9682862Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path
+2026-10-28T17:42:35.9724974Z /home/runner/work/_temp/git-credentials-2b0c5a66-0e7f-4040-a651-2578452c3dd8.config
+2026-10-28T17:42:35.9736773Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-2b0c5a66\-0e7f\-4040\-a651\-2578452c3dd8\.config
+2026-10-28T17:42:35.9785842Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path
+2026-10-28T17:42:35.9827063Z /home/runner/work/_temp/git-credentials-2b0c5a66-0e7f-4040-a651-2578452c3dd8.config
+2026-10-28T17:42:35.9840449Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-2b0c5a66\-0e7f\-4040\-a651\-2578452c3dd8\.config
+2026-10-28T17:42:35.9887089Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-28T17:42:35.9922660Z /github/runner_temp/git-credentials-2b0c5a66-0e7f-4040-a651-2578452c3dd8.config
+2026-10-28T17:42:35.9931802Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-2b0c5a66\-0e7f\-4040\-a651\-2578452c3dd8\.config
+2026-10-28T17:42:35.9978662Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-28T17:42:36.0014004Z /github/runner_temp/git-credentials-2b0c5a66-0e7f-4040-a651-2578452c3dd8.config
+2026-10-28T17:42:36.0022152Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-2b0c5a66\-0e7f\-4040\-a651\-2578452c3dd8\.config
+2026-10-28T17:42:36.0070237Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-28T17:42:36.0316979Z Removing credentials config '/home/runner/work/_temp/git-credentials-2b0c5a66-0e7f-4040-a651-2578452c3dd8.config'
+2026-10-28T17:42:36.0327132Z ##[endgroup]
+2026-10-28T17:42:36.0630712Z ##[group]Run set -euo pipefail
+2026-10-28T17:42:36.0631241Z [36;1mset -euo pipefail[0m
+2026-10-28T17:42:36.0631617Z [36;1mmkdir -p runtime/ncr-001[0m
+2026-10-28T17:42:36.0632058Z [36;1mtest "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"[0m
+2026-10-28T17:42:36.0632595Z [36;1mgit rev-parse HEAD > runtime/ncr-001/byte-eos-source-head.txt[0m
+2026-10-28T17:42:36.0633706Z [36;1msha256sum scripts/byte_eos_001_frozen_qwen_loss.py scripts/byte_eos_001_void_labels.py experiments/ncr-001/protocol.json experiments/ncr-001/source-pins.json > runtime/ncr-001/byte-eos-source-sha256.txt[0m
+2026-10-28T17:42:36.0659538Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-28T17:42:36.0660056Z env:
+2026-10-28T17:42:36.0660353Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-28T17:42:36.0660732Z   HF_HOME: /tmp/byte-eos-001-frozen-qwen
+2026-10-28T17:42:36.0661115Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-28T17:42:36.0661455Z   TOKENIZERS_PARALLELISM: false
+2026-10-28T17:42:36.0661829Z   OMP_NUM_THREADS: 4
+2026-10-28T17:42:36.0662127Z   MKL_NUM_THREADS: 4
+2026-10-28T17:42:36.0662480Z   EXPECTED_HEAD: 06b858a70d7019398cdc7a3f205ae24423f57c67
+2026-10-28T17:42:36.0662891Z ##[endgroup]
+2026-10-28T17:42:36.0855019Z ##[group]Run python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+2026-10-28T17:42:36.0856330Z [36;1mpython3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'[0m
+2026-10-28T17:42:36.0857606Z [36;1mpython3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub==0.36.2' 'safetensors==0.8.0' 'sentencepiece>=0.2,<1'[0m
+2026-10-28T17:42:36.0859082Z [36;1mpython3 -m pip freeze > runtime/ncr-001/byte-eos-packages.txt[0m
+2026-10-28T17:42:36.0879465Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-28T17:42:36.0879906Z env:
+2026-10-28T17:42:36.0880198Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-28T17:42:36.0880557Z   HF_HOME: /tmp/byte-eos-001-frozen-qwen
+2026-10-28T17:42:36.0880932Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-28T17:42:36.0881266Z   TOKENIZERS_PARALLELISM: false
+2026-10-28T17:42:36.0881640Z   OMP_NUM_THREADS: 4
+2026-10-28T17:42:36.0881960Z   MKL_NUM_THREADS: 4
+2026-10-28T17:42:36.0882347Z   EXPECTED_HEAD: 06b858a70d7019398cdc7a3f205ae24423f57c67
+2026-10-28T17:42:36.0882782Z ##[endgroup]
+2026-10-28T17:42:36.5540005Z Defaulting to user installation because normal site-packages is not writeable
+2026-10-28T17:42:36.9315925Z Looking in indexes: https://download.pytorch.org/whl/cpu
+2026-10-28T17:42:37.1443930Z Collecting torch==2.14.1+cpu
+2026-10-28T17:42:37.2268578Z   Downloading https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl.metadata (37 kB)
+2026-10-28T17:42:37.2386192Z Requirement already satisfied: filelock in /usr/local/lib/python3.12/dist-packages (from torch==2.14.1+cpu) (4.2.4)
+2026-10-28T17:42:37.2396708Z Requirement already satisfied: typing-extensions>=4.10.0 in /usr/lib/python3/dist-packages (from torch==2.14.1+cpu) (4.10.0)
+2026-10-28T17:42:37.2604138Z Collecting setuptools>=77.0.3 (from torch==2.14.1+cpu)
+2026-10-28T17:42:37.2720827Z   Downloading https://download.pytorch.org/whl/setuptools-78.1.0-py3-none-any.whl.metadata (6.6 kB)
+2026-10-28T17:42:37.3099717Z Collecting sympy>=1.13.3 (from torch==2.14.1+cpu)
+2026-10-28T17:42:37.3694488Z   Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+2026-10-28T17:42:37.4184548Z Collecting networkx>=2.5.1 (from torch==2.14.1+cpu)
+2026-10-28T17:42:37.4320680Z   Downloading networkx-3.7-py3-none-any.whl.metadata (6.7 kB)
+2026-10-28T17:42:37.4364030Z Requirement already satisfied: jinja2 in /usr/lib/python3/dist-packages (from torch==2.14.1+cpu) (3.1.2)
+2026-10-28T17:42:37.4822192Z Collecting fsspec>=0.8.5 (from torch==2.14.1+cpu)
+2026-10-28T17:42:37.4957623Z   Downloading fsspec-2026.9.0-py3-none-any.whl.metadata (10 kB)
+2026-10-28T17:42:37.6425314Z Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch==2.14.1+cpu)
+2026-10-28T17:42:37.6560257Z   Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+2026-10-28T17:42:37.7010101Z Downloading https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl (196.3 MB)
+2026-10-28T17:42:39.2422132Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 196.3/196.3 MB 23.8 MB/s eta 0:00:00
+2026-10-28T17:42:39.2560403Z Downloading fsspec-2026.9.0-py3-none-any.whl (221 kB)
+2026-10-28T17:42:39.2873106Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 221.7/221.7 kB 7.5 MB/s eta 0:00:00
+2026-10-28T17:42:39.3010290Z Downloading networkx-3.7-py3-none-any.whl (2.1 MB)
+2026-10-28T17:42:39.3461836Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 49.6 MB/s eta 0:00:00
+2026-10-28T17:42:39.3580555Z Downloading https://download.pytorch.org/whl/setuptools-78.1.0-py3-none-any.whl (1.3 MB)
+2026-10-28T17:42:39.3801037Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 61.9 MB/s eta 0:00:00
+2026-10-28T17:42:39.3945265Z Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+2026-10-28T17:42:39.4573056Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 105.1 MB/s eta 0:00:00
+2026-10-28T17:42:39.4730827Z Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+2026-10-28T17:42:39.4795671Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 118.1 MB/s eta 0:00:00
+2026-10-28T17:42:40.2051735Z Installing collected packages: mpmath, sympy, setuptools, networkx, fsspec, torch
+2026-10-28T17:42:59.0858489Z Successfully installed fsspec-2026.9.0 mpmath-1.3.0 networkx-3.7 setuptools-78.1.0 sympy-1.14.0 torch-2.14.1+cpu
+2026-10-28T17:42:59.4759021Z Defaulting to user installation because normal site-packages is not writeable
+2026-10-28T17:42:59.7351818Z Collecting transformers==4.57.6
+2026-10-28T17:42:59.7875981Z   Downloading transformers-4.57.6-py3-none-any.whl.metadata (43 kB)
+2026-10-28T17:42:59.7997034Z      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.0/44.0 kB 3.6 MB/s eta 0:00:00
+2026-10-28T17:42:59.9098812Z Collecting huggingface_hub==0.36.2
+2026-10-28T17:42:59.9210416Z   Downloading huggingface_hub-0.36.2-py3-none-any.whl.metadata (15 kB)
+2026-10-28T17:43:00.0824750Z Collecting safetensors==0.8.0
+2026-10-28T17:43:00.0937182Z   Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.2 kB)
+2026-10-28T17:43:00.1652169Z Collecting sentencepiece<1,>=0.2
+2026-10-28T17:43:00.1764917Z   Downloading sentencepiece-0.2.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (33 kB)
+2026-10-28T17:43:00.4536652Z Requirement already satisfied: filelock in /usr/local/lib/python3.12/dist-packages (from transformers==4.57.6) (4.2.4)
+2026-10-28T17:43:00.7528871Z Collecting numpy>=1.17 (from transformers==4.57.6)
+2026-10-28T17:43:00.7637445Z   Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+2026-10-28T17:43:00.7688289Z Requirement already satisfied: packaging>=20.0 in /usr/lib/python3/dist-packages (from transformers==4.57.6) (24.0)
+2026-10-28T17:43:00.7697160Z Requirement already satisfied: pyyaml>=5.1 in /usr/lib/python3/dist-packages (from transformers==4.57.6) (6.0.1)
+2026-10-28T17:43:01.2428365Z Collecting regex!=2019.12.17 (from transformers==4.57.6)
+2026-10-28T17:43:01.2538839Z   Downloading regex-2026.9.29-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+2026-10-28T17:43:01.2615608Z      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40.6/40.6 kB 5.3 MB/s eta 0:00:00
+2026-10-28T17:43:01.2651812Z Requirement already satisfied: requests in /usr/lib/python3/dist-packages (from transformers==4.57.6) (2.31.0)
+2026-10-28T17:43:01.4341698Z Collecting tokenizers<=0.23.0,>=0.22.0 (from transformers==4.57.6)
+2026-10-28T17:43:01.4452072Z   Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+2026-10-28T17:43:01.5628982Z Collecting tqdm>=4.27 (from transformers==4.57.6)
+2026-10-28T17:43:01.5738046Z   Downloading tqdm-4.70.1-py3-none-any.whl.metadata (57 kB)
+2026-10-28T17:43:01.5789858Z      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 57.4/57.4 kB 14.6 MB/s eta 0:00:00
+2026-10-28T17:43:01.6578633Z Requirement already satisfied: fsspec>=2023.5.0 in /home/runner/.local/lib/python3.12/site-packages (from huggingface_hub==0.36.2) (2026.9.0)
+2026-10-28T17:43:01.7264358Z Collecting hf-xet<2.0.0,>=1.1.3 (from huggingface_hub==0.36.2)
+2026-10-28T17:43:01.7374278Z   Downloading hf_xet-1.7.1-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+2026-10-28T17:43:01.7548235Z Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/lib/python3/dist-packages (from huggingface_hub==0.36.2) (4.10.0)
+2026-10-28T17:43:01.8948526Z Downloading transformers-4.57.6-py3-none-any.whl (12.0 MB)
+2026-10-28T17:43:01.9937608Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.0/12.0 MB 162.8 MB/s eta 0:00:00
+2026-10-28T17:43:02.0047514Z Downloading huggingface_hub-0.36.2-py3-none-any.whl (566 kB)
+2026-10-28T17:43:02.0114356Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 566.4/566.4 kB 119.3 MB/s eta 0:00:00
+2026-10-28T17:43:02.0224675Z Downloading safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (516 kB)
+2026-10-28T17:43:02.0290362Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 516.0/516.0 kB 115.0 MB/s eta 0:00:00
+2026-10-28T17:43:02.0403040Z Downloading sentencepiece-0.2.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (1.4 MB)
+2026-10-28T17:43:02.0507146Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 162.2 MB/s eta 0:00:00
+2026-10-28T17:43:02.0615015Z Downloading hf_xet-1.7.1-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.2 MB)
+2026-10-28T17:43:02.0856628Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.2/4.2 MB 191.6 MB/s eta 0:00:00
+2026-10-28T17:43:02.0971493Z Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
+2026-10-28T17:43:02.1881878Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 166.5 MB/s eta 0:00:00
+2026-10-28T17:43:02.1994125Z Downloading regex-2026.9.29-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+2026-10-28T17:43:02.2070790Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 807.8/807.8 kB 142.3 MB/s eta 0:00:00
+2026-10-28T17:43:02.2178759Z Downloading tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.3 MB)
+2026-10-28T17:43:02.2374127Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 187.0 MB/s eta 0:00:00
+2026-10-28T17:43:02.2478495Z Downloading tqdm-4.70.1-py3-none-any.whl (80 kB)
+2026-10-28T17:43:02.2547368Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 80.2/80.2 kB 13.6 MB/s eta 0:00:00
+2026-10-28T17:43:03.0539193Z Installing collected packages: tqdm, sentencepiece, safetensors, regex, numpy, hf-xet, huggingface_hub, tokenizers, transformers
+2026-10-28T17:43:11.9877231Z Successfully installed hf-xet-1.7.1 huggingface_hub-0.36.2 numpy-2.5.4 regex-2026.9.29 safetensors-0.8.0 sentencepiece-0.2.2 tokenizers-0.22.2 tqdm-4.70.1 transformers-4.57.6
+2026-10-28T17:43:12.8666095Z ##[group]Run python3 scripts/ncr_001k_byte_source_audit.py
+2026-10-28T17:43:12.8666575Z [36;1mpython3 scripts/ncr_001k_byte_source_audit.py[0m
+2026-10-28T17:43:12.8687529Z shell: /usr/bin/bash -e {0}
+2026-10-28T17:43:12.8688051Z env:
+2026-10-28T17:43:12.8688269Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-28T17:43:12.8688550Z   HF_HOME: /tmp/byte-eos-001-frozen-qwen
+2026-10-28T17:43:12.8688849Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-28T17:43:12.8689104Z   TOKENIZERS_PARALLELISM: false
+2026-10-28T17:43:12.8689365Z   OMP_NUM_THREADS: 4
+2026-10-28T17:43:12.8689577Z   MKL_NUM_THREADS: 4
+2026-10-28T17:43:12.8689855Z   EXPECTED_HEAD: 06b858a70d7019398cdc7a3f205ae24423f57c67
+2026-10-28T17:43:12.8690189Z ##[endgroup]
+2026-10-28T17:43:13.7087984Z BEGIN PINNED BYTE TOKENIZER STATIC SOURCE (NOT EXECUTED)
+2026-10-28T17:43:13.7089090Z 0001: import json
+2026-10-28T17:43:13.7089431Z 0002: import os
+2026-10-28T17:43:13.7089853Z 0003: from transformers import PreTrainedTokenizer
+2026-10-28T17:43:13.7090521Z 0004: 
+2026-10-28T17:43:13.7090911Z 0005: 
+2026-10-28T17:43:13.7091242Z 0006: BYTE_PREFIX = "<0x"
+2026-10-28T17:43:13.7091675Z 0007: PAD_TOKEN = "<pad>"
+2026-10-28T17:43:13.7092048Z 0008: BOS_TOKEN = "<bos>"
+2026-10-28T17:43:13.7092442Z 0009: EOS_TOKEN = "<eos>"
+2026-10-28T17:43:13.7092823Z 0010: 
+2026-10-28T17:43:13.7093132Z 0011: 
+2026-10-28T17:43:13.7093526Z 0012: class ByteTokenizer(PreTrainedTokenizer):
+2026-10-28T17:43:13.7094167Z 0013:     """Lossless UTF-8 byte tokenizer used by Qwen90M.
+2026-10-28T17:43:13.7094714Z 0014: 
+2026-10-28T17:43:13.7095028Z 0015:     IDs:
+2026-10-28T17:43:13.7095386Z 0016:       0..255 -> raw byte values
+2026-10-28T17:43:13.7095840Z 0017:       256    -> PAD
+2026-10-28T17:43:13.7096230Z 0018:       257    -> BOS
+2026-10-28T17:43:13.7096473Z 0019:       258    -> EOS
+2026-10-28T17:43:13.7096954Z 0020: 
+2026-10-28T17:43:13.7097334Z 0021:     No UNK token is required because every UTF-8 string is representable as bytes.
+2026-10-28T17:43:13.7098120Z 0022:     """
+2026-10-28T17:43:13.7098342Z 0023: 
+2026-10-28T17:43:13.7098639Z 0024:     vocab_files_names = {"vocab_file": "byte_vocab.json"}
+2026-10-28T17:43:13.7099069Z 0025:     model_input_names = ["input_ids", "attention_mask"]
+2026-10-28T17:43:13.7099378Z 0026: 
+2026-10-28T17:43:13.7099556Z 0027:     def __init__(
+2026-10-28T17:43:13.7099759Z 0028:         self,
+2026-10-28T17:43:13.7099956Z 0029:         vocab_file=None,
+2026-10-28T17:43:13.7100191Z 0030:         pad_token=PAD_TOKEN,
+2026-10-28T17:43:13.7100432Z 0031:         bos_token=BOS_TOKEN,
+2026-10-28T17:43:13.7100668Z 0032:         eos_token=EOS_TOKEN,
+2026-10-28T17:43:13.7100899Z 0033:         unk_token=None,
+2026-10-28T17:43:13.7101130Z 0034:         model_max_length=1024,
+2026-10-28T17:43:13.7101379Z 0035:         padding_side="left",
+2026-10-28T17:43:13.7101651Z 0036:         clean_up_tokenization_spaces=False,
+2026-10-28T17:43:13.7101926Z 0037:         **kwargs,
+2026-10-28T17:43:13.7102120Z 0038:     ):
+2026-10-28T17:43:13.7102425Z 0039:         # Transformers v5 loads values from tokenizer_config.json into this
+2026-10-28T17:43:13.7102915Z 0040:         # constructor. Make every value that we also forward to PythonBackend
+2026-10-28T17:43:13.7103400Z 0041:         # an explicit argument so it is consumed exactly once instead of being
+2026-10-28T17:43:13.7103787Z 0042:         # duplicated inside **kwargs.
+2026-10-28T17:43:13.7104069Z 0043:         self.vocab_file = vocab_file
+2026-10-28T17:43:13.7104396Z 0044:         kwargs.setdefault("split_special_tokens",True)
+2026-10-28T17:43:13.7104708Z 0045:         super().__init__(
+2026-10-28T17:43:13.7104947Z 0046:             pad_token=pad_token,
+2026-10-28T17:43:13.7105199Z 0047:             bos_token=bos_token,
+2026-10-28T17:43:13.7105440Z 0048:             eos_token=eos_token,
+2026-10-28T17:43:13.7105686Z 0049:             unk_token=unk_token,
+2026-10-28T17:43:13.7105957Z 0050:             model_max_length=model_max_length,
+2026-10-28T17:43:13.7106254Z 0051:             padding_side=padding_side,
+2026-10-28T17:43:13.7106830Z 0052:             clean_up_tokenization_spaces=clean_up_tokenization_spaces,
+2026-10-28T17:43:13.7107191Z 0053:             **kwargs,
+2026-10-28T17:43:13.7107410Z 0054:         )
+2026-10-28T17:43:13.7107591Z 0055: 
+2026-10-28T17:43:13.7108003Z 0056:     @property
+2026-10-28T17:43:13.7108229Z 0057:     def vocab_size(self):
+2026-10-28T17:43:13.7108464Z 0058:         return 259
+2026-10-28T17:43:13.7108665Z 0059: 
+2026-10-28T17:43:13.7108845Z 0060:     def get_vocab(self):
+2026-10-28T17:43:13.7109124Z 0061:         vocab = {f"<0x{i:02X}>": i for i in range(256)}
+2026-10-28T17:43:13.7109431Z 0062:         vocab[PAD_TOKEN] = 256
+2026-10-28T17:43:13.7109676Z 0063:         vocab[BOS_TOKEN] = 257
+2026-10-28T17:43:13.7109914Z 0064:         vocab[EOS_TOKEN] = 258
+2026-10-28T17:43:13.7110179Z 0065:         return vocab
+2026-10-28T17:43:13.7110473Z 0066: 
+2026-10-28T17:43:13.7110667Z 0067:     def _tokenize(self, text, **kwargs):
+2026-10-28T17:43:13.7111048Z 0068:         return [f"<0x{b:02X}>" for b in text.encode("utf-8", errors="replace")]
+2026-10-28T17:43:13.7111401Z 0069: 
+2026-10-28T17:43:13.7111600Z 0070:     def _convert_token_to_id(self, token):
+2026-10-28T17:43:13.7111879Z 0071:         if token == PAD_TOKEN:
+2026-10-28T17:43:13.7112133Z 0072:             return 256
+2026-10-28T17:43:13.7112361Z 0073:         if token == BOS_TOKEN:
+2026-10-28T17:43:13.7112597Z 0074:             return 257
+2026-10-28T17:43:13.7112817Z 0075:         if token == EOS_TOKEN:
+2026-10-28T17:43:13.7113046Z 0076:             return 258
+2026-10-28T17:43:13.7113440Z 0077:         if isinstance(token, str) and token.startswith(BYTE_PREFIX) and token.endswith(">"):
+2026-10-28T17:43:13.7113861Z 0078:             try:
+2026-10-28T17:43:13.7114120Z 0079:                 value = int(token[3:-1], 16)
+2026-10-28T17:43:13.7114563Z 0080:                 if 0 <= value <= 255:
+2026-10-28T17:43:13.7114825Z 0081:                     return value
+2026-10-28T17:43:13.7115069Z 0082:             except ValueError:
+2026-10-28T17:43:13.7115317Z 0083:                 pass
+2026-10-28T17:43:13.7115656Z 0084:         # This branch should be unreachable for text encoded by this tokenizer.
+2026-10-28T17:43:13.7116030Z 0085:         return 0
+2026-10-28T17:43:13.7116221Z 0086: 
+2026-10-28T17:43:13.7116420Z 0087:     def _convert_id_to_token(self, index):
+2026-10-28T17:43:13.7116695Z 0088:         index = int(index)
+2026-10-28T17:43:13.7116928Z 0089:         if 0 <= index <= 255:
+2026-10-28T17:43:13.7117181Z 0090:             return f"<0x{index:02X}>"
+2026-10-28T17:43:13.7117444Z 0091:         if index == 256:
+2026-10-28T17:43:13.7117676Z 0092:             return PAD_TOKEN
+2026-10-28T17:43:13.7118162Z 0093:         if index == 257:
+2026-10-28T17:43:13.7118396Z 0094:             return BOS_TOKEN
+2026-10-28T17:43:13.7118624Z 0095:         if index == 258:
+2026-10-28T17:43:13.7118855Z 0096:             return EOS_TOKEN
+2026-10-28T17:43:13.7119090Z 0097:         return "<0x00>"
+2026-10-28T17:43:13.7119301Z 0098: 
+2026-10-28T17:43:13.7119524Z 0099:     def convert_tokens_to_string(self, tokens):
+2026-10-28T17:43:13.7119808Z 0100:         out = []
+2026-10-28T17:43:13.7120009Z 0101:         buf = bytearray()
+2026-10-28T17:43:13.7120223Z 0102: 
+2026-10-28T17:43:13.7120392Z 0103:         def flush():
+2026-10-28T17:43:13.7120603Z 0104:             nonlocal buf
+2026-10-28T17:43:13.7120824Z 0105:             if buf:
+2026-10-28T17:43:13.7121122Z 0106:                 out.append(bytes(buf).decode("utf-8", errors="replace"))
+2026-10-28T17:43:13.7121501Z 0107:                 buf = bytearray()
+2026-10-28T17:43:13.7121741Z 0108: 
+2026-10-28T17:43:13.7121920Z 0109:         for token in tokens:
+2026-10-28T17:43:13.7122190Z 0110:             idx = self._convert_token_to_id(token)
+2026-10-28T17:43:13.7122626Z 0111:             if isinstance(token, str) and 0 <= idx <= 255 and token.startswith(BYTE_PREFIX):
+2026-10-28T17:43:13.7123049Z 0112:                 buf.append(idx)
+2026-10-28T17:43:13.7123302Z 0113:             else:
+2026-10-28T17:43:13.7123503Z 0114:                 flush()
+2026-10-28T17:43:13.7123889Z 0115:                 out.append(str(token))
+2026-10-28T17:43:13.7124154Z 0116:         flush()
+2026-10-28T17:43:13.7124360Z 0117:         return "".join(out)
+2026-10-28T17:43:13.7124581Z 0118: 
+2026-10-28T17:43:13.7124877Z 0119:     def build_inputs_with_special_tokens(self, token_ids_0, token_ids_1=None):
+2026-10-28T17:43:13.7125403Z 0120:         # BET pretraining did not automatically insert BOS/EOS around ordinary text.
+2026-10-28T17:43:13.7125805Z 0121:         if token_ids_1 is None:
+2026-10-28T17:43:13.7126061Z 0122:             return list(token_ids_0)
+2026-10-28T17:43:13.7126366Z 0123:         return list(token_ids_0) + list(token_ids_1)
+2026-10-28T17:43:13.7126646Z 0124: 
+2026-10-28T17:43:13.7126948Z 0125:     def create_token_type_ids_from_sequences(self, token_ids_0, token_ids_1=None):
+2026-10-28T17:43:13.7127462Z 0126:         n = len(token_ids_0) + (len(token_ids_1) if token_ids_1 is not None else 0)
+2026-10-28T17:43:13.7128062Z 0127:         return [0] * n
+2026-10-28T17:43:13.7128292Z 0128: 
+2026-10-28T17:43:13.7128578Z 0129:     def save_vocabulary(self, save_directory, filename_prefix=None):
+2026-10-28T17:43:13.7128986Z 0130:         os.makedirs(save_directory, exist_ok=True)
+2026-10-28T17:43:13.7129478Z 0131:         name = "byte_vocab.json" if filename_prefix is None else f"{filename_prefix}-byte_vocab.json"
+2026-10-28T17:43:13.7129976Z 0132:         path = os.path.join(save_directory, name)
+2026-10-28T17:43:13.7130317Z 0133:         vocab = {f"<0x{i:02X}>": i for i in range(256)}
+2026-10-28T17:43:13.7130711Z 0134:         vocab.update({PAD_TOKEN: 256, BOS_TOKEN: 257, EOS_TOKEN: 258})
+2026-10-28T17:43:13.7131109Z 0135:         with open(path, "w", encoding="utf-8") as f:
+2026-10-28T17:43:13.7131454Z 0136:             json.dump(vocab, f, indent=2, sort_keys=True)
+2026-10-28T17:43:13.7131899Z 0137:         return (path,)
+2026-10-28T17:43:13.7132110Z 0138: 
+2026-10-28T17:43:13.7132303Z END PINNED BYTE TOKENIZER STATIC SOURCE
+2026-10-28T17:43:13.7132865Z SOURCE VERIFIED (NOT EXECUTED): tokenization_byte.py sha256=279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03
+2026-10-28T17:43:13.7133693Z SOURCE VERIFIED (NOT EXECUTED): byte_vocab.json sha256=57a1cd2e70dd5b7cc6fd2eaa12ebfcd173c1620fa5d45c2c6282511c29b6a5f6
+2026-10-28T17:43:13.7134518Z SOURCE VERIFIED (NOT EXECUTED): tokenizer_config.json sha256=0ecbd4fd39e35125800d806af981ba0cacd8a7ba5f02c9e729c4ecc54af6d300
+2026-10-28T17:43:13.7135351Z SOURCE VERIFIED (NOT EXECUTED): special_tokens_map.json sha256=20d4b94d0e657c3f44d9123522c106e7315b6c1a1b6d259478f17bd2918b1263
+2026-10-28T17:43:13.7135895Z STATIC AUDIT SUMMARY {
+2026-10-28T17:43:13.7136207Z   "status": "PASS_SOURCE_HASH_AND_AST_INVENTORY_ONLY__RUNTIME_BLOCKED",
+2026-10-28T17:43:13.7136561Z   "class_methods": [
+2026-10-28T17:43:13.7136753Z     {
+2026-10-28T17:43:13.7136944Z       "name": "ByteTokenizer",
+2026-10-28T17:43:13.7137171Z       "bases": [
+2026-10-28T17:43:13.7137388Z         "PreTrainedTokenizer"
+2026-10-28T17:43:13.7137613Z       ],
+2026-10-28T17:43:13.7138063Z       "methods": [
+2026-10-28T17:43:13.7138262Z         {
+2026-10-28T17:43:13.7138442Z           "name": "__init__",
+2026-10-28T17:43:13.7138660Z           "line": 27
+2026-10-28T17:43:13.7138848Z         },
+2026-10-28T17:43:13.7139016Z         {
+2026-10-28T17:43:13.7139192Z           "name": "vocab_size",
+2026-10-28T17:43:13.7139413Z           "line": 57
+2026-10-28T17:43:13.7139595Z         },
+2026-10-28T17:43:13.7139760Z         {
+2026-10-28T17:43:13.7139942Z           "name": "get_vocab",
+2026-10-28T17:43:13.7140156Z           "line": 60
+2026-10-28T17:43:13.7140340Z         },
+2026-10-28T17:43:13.7140627Z         {
+2026-10-28T17:43:13.7140932Z           "name": "_tokenize",
+2026-10-28T17:43:13.7141311Z           "line": 67
+2026-10-28T17:43:13.7141625Z         },
+2026-10-28T17:43:13.7141920Z         {
+2026-10-28T17:43:13.7142205Z           "name": "_convert_token_to_id",
+2026-10-28T17:43:13.7142655Z           "line": 70
+2026-10-28T17:43:13.7142966Z         },
+2026-10-28T17:43:13.7143239Z         {
+2026-10-28T17:43:13.7143756Z           "name": "_convert_id_to_token",
+2026-10-28T17:43:13.7144067Z           "line": 87
+2026-10-28T17:43:13.7144257Z         },
+2026-10-28T17:43:13.7144423Z         {
+2026-10-28T17:43:13.7144618Z           "name": "convert_tokens_to_string",
+2026-10-28T17:43:13.7144883Z           "line": 99
+2026-10-28T17:43:13.7145069Z         },
+2026-10-28T17:43:13.7145232Z         {
+2026-10-28T17:43:13.7145439Z           "name": "build_inputs_with_special_tokens",
+2026-10-28T17:43:13.7145720Z           "line": 119
+2026-10-28T17:43:13.7145909Z         },
+2026-10-28T17:43:13.7146072Z         {
+2026-10-28T17:43:13.7146293Z           "name": "create_token_type_ids_from_sequences",
+2026-10-28T17:43:13.7146575Z           "line": 125
+2026-10-28T17:43:13.7146760Z         },
+2026-10-28T17:43:13.7146930Z         {
+2026-10-28T17:43:13.7147113Z           "name": "save_vocabulary",
+2026-10-28T17:43:13.7147358Z           "line": 129
+2026-10-28T17:43:13.7147541Z         }
+2026-10-28T17:43:13.7147976Z       ]
+2026-10-28T17:43:13.7148173Z     }
+2026-10-28T17:43:13.7148342Z   ],
+2026-10-28T17:43:13.7148510Z   "imports": [
+2026-10-28T17:43:13.7148692Z     {
+2026-10-28T17:43:13.7148864Z       "line": 1,
+2026-10-28T17:43:13.7149057Z       "import": "json",
+2026-10-28T17:43:13.7149263Z       "alias": null
+2026-10-28T17:43:13.7149447Z     },
+2026-10-28T17:43:13.7149608Z     {
+2026-10-28T17:43:13.7149773Z       "line": 2,
+2026-10-28T17:43:13.7149964Z       "import": "os",
+2026-10-28T17:43:13.7150161Z       "alias": null
+2026-10-28T17:43:13.7150342Z     },
+2026-10-28T17:43:13.7150500Z     {
+2026-10-28T17:43:13.7150660Z       "line": 3,
+2026-10-28T17:43:13.7150854Z       "from": "transformers",
+2026-10-28T17:43:13.7151076Z       "names": [
+2026-10-28T17:43:13.7151273Z         "PreTrainedTokenizer"
+2026-10-28T17:43:13.7151638Z       ]
+2026-10-28T17:43:13.7151800Z     }
+2026-10-28T17:43:13.7151964Z   ],
+2026-10-28T17:43:13.7152138Z   "flagged": [
+2026-10-28T17:43:13.7152324Z     {
+2026-10-28T17:43:13.7152498Z       "line": 130,
+2026-10-28T17:43:13.7152694Z       "call": "os.makedirs"
+2026-10-28T17:43:13.7152906Z     },
+2026-10-28T17:43:13.7153071Z     {
+2026-10-28T17:43:13.7153238Z       "line": 132,
+2026-10-28T17:43:13.7153437Z       "call": "os.path.join"
+2026-10-28T17:43:13.7153655Z     },
+2026-10-28T17:43:13.7153820Z     {
+2026-10-28T17:43:13.7153985Z       "line": 135,
+2026-10-28T17:43:13.7154170Z       "call": "open"
+2026-10-28T17:43:13.7154359Z     }
+2026-10-28T17:43:13.7154522Z   ],
+2026-10-28T17:43:13.7154700Z   "tokenizer_meta": {
+2026-10-28T17:43:13.7154926Z     "tokenizer_class": "ByteTokenizer",
+2026-10-28T17:43:13.7155183Z     "auto_map": {
+2026-10-28T17:43:13.7155384Z       "AutoTokenizer": [
+2026-10-28T17:43:13.7155630Z         "tokenization_byte.ByteTokenizer",
+2026-10-28T17:43:13.7155897Z         null
+2026-10-28T17:43:13.7156073Z       ]
+2026-10-28T17:43:13.7156241Z     },
+2026-10-28T17:43:13.7156414Z     "bos_token": "<bos>",
+2026-10-28T17:43:13.7156628Z     "eos_token": "<eos>",
+2026-10-28T17:43:13.7156843Z     "pad_token": "<pad>",
+2026-10-28T17:43:13.7157063Z     "add_bos_token": null,
+2026-10-28T17:43:13.7157288Z     "add_eos_token": null
+2026-10-28T17:43:13.7157484Z   },
+2026-10-28T17:43:13.7157667Z   "remote_python_executed": false
+2026-10-28T17:43:13.7158122Z }
+2026-10-28T17:43:13.7442473Z ##[group]Run set -euo pipefail
+2026-10-28T17:43:13.7442823Z [36;1mset -euo pipefail[0m
+2026-10-28T17:43:13.7443164Z [36;1mpython3 - <<'PY' | tee runtime/ncr-001/byte-eos-prefetch.log[0m
+2026-10-28T17:43:13.7443536Z [36;1mimport hashlib,json[0m
+2026-10-28T17:43:13.7443783Z [36;1mfrom pathlib import Path[0m
+2026-10-28T17:43:13.7444078Z [36;1mfrom huggingface_hub import hf_hub_download[0m
+2026-10-28T17:43:13.7444516Z [36;1mp=json.load(open('experiments/ncr-001/source-pins.json'))['models']['void1'][0m
+2026-10-28T17:43:13.7444953Z [36;1mfor filename,key in ([0m
+2026-10-28T17:43:13.7445321Z [36;1m    ('model.safetensors','weight_declared_lfs_sha256_not_downloaded'),[0m
+2026-10-28T17:43:13.7445727Z [36;1m    ('config.json','config_sha256'),[0m
+2026-10-28T17:43:13.7446085Z [36;1m    ('tokenization_byte.py','tokenization_byte_py_sha256'),[0m
+2026-10-28T17:43:13.7446463Z [36;1m    ('byte_vocab.json','byte_vocab_sha256'),[0m
+2026-10-28T17:43:13.7446855Z [36;1m    ('tokenizer_config.json','tokenizer_config_sha256'),[0m
+2026-10-28T17:43:13.7447259Z [36;1m    ('special_tokens_map.json','special_tokens_map_sha256')):[0m
+2026-10-28T17:43:13.7448036Z [36;1m    path=Path(hf_hub_download(p['repo_id'],filename=filename,revision=p['revision']))[0m
+2026-10-28T17:43:13.7448562Z [36;1m    h=hashlib.sha256(path.read_bytes()).hexdigest()[0m
+2026-10-28T17:43:13.7448921Z [36;1m    assert h==p[key],(filename,h,p[key])[0m
+2026-10-28T17:43:13.7449337Z [36;1m    if filename=='model.safetensors': assert path.stat().st_size==360622744[0m
+2026-10-28T17:43:13.7449850Z [36;1m    print('PINNED_FILE',filename,h,path.stat().st_size,flush=True)[0m
+2026-10-28T17:43:13.7450209Z [36;1mPY[0m
+2026-10-28T17:43:13.7470308Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-28T17:43:13.7470656Z env:
+2026-10-28T17:43:13.7470860Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-28T17:43:13.7471131Z   HF_HOME: /tmp/byte-eos-001-frozen-qwen
+2026-10-28T17:43:13.7471420Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-28T17:43:13.7471669Z   TOKENIZERS_PARALLELISM: false
+2026-10-28T17:43:13.7471906Z   OMP_NUM_THREADS: 4
+2026-10-28T17:43:13.7472111Z   MKL_NUM_THREADS: 4
+2026-10-28T17:43:13.7472375Z   EXPECTED_HEAD: 06b858a70d7019398cdc7a3f205ae24423f57c67
+2026-10-28T17:43:13.7472689Z ##[endgroup]
+2026-10-28T17:44:15.5066388Z PINNED_FILE model.safetensors ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3 360622744
+2026-10-28T17:44:15.5999385Z PINNED_FILE config.json cbc72137da3dae65085a2a8c39ad7634d16bf92d785ca00d283ee82fe32b37e7 1284
+2026-10-28T17:44:15.6001240Z PINNED_FILE tokenization_byte.py 279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03 4458
+2026-10-28T17:44:15.6002923Z PINNED_FILE byte_vocab.json 57a1cd2e70dd5b7cc6fd2eaa12ebfcd173c1620fa5d45c2c6282511c29b6a5f6 4292
+2026-10-28T17:44:15.6004638Z PINNED_FILE tokenizer_config.json 0ecbd4fd39e35125800d806af981ba0cacd8a7ba5f02c9e729c4ecc54af6d300 932
+2026-10-28T17:44:15.6006250Z PINNED_FILE special_tokens_map.json 20d4b94d0e657c3f44d9123522c106e7315b6c1a1b6d259478f17bd2918b1263 75
+2026-10-28T17:44:15.6341380Z ##[group]Run set -euo pipefail
+2026-10-28T17:44:15.6341733Z [36;1mset -euo pipefail[0m
+2026-10-28T17:44:15.6342364Z [36;1mHF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python3 scripts/byte_eos_001_frozen_qwen_loss.py 2>&1 | tee runtime/ncr-001/byte-eos-frozen-qwen-console.log[0m
+2026-10-28T17:44:15.6362948Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-28T17:44:15.6363280Z env:
+2026-10-28T17:44:15.6363483Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-28T17:44:15.6363764Z   HF_HOME: /tmp/byte-eos-001-frozen-qwen
+2026-10-28T17:44:15.6364041Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-28T17:44:15.6364281Z   TOKENIZERS_PARALLELISM: false
+2026-10-28T17:44:15.6364518Z   OMP_NUM_THREADS: 4
+2026-10-28T17:44:15.6364718Z   MKL_NUM_THREADS: 4
+2026-10-28T17:44:15.6364968Z   EXPECTED_HEAD: 06b858a70d7019398cdc7a3f205ae24423f57c67
+2026-10-28T17:44:15.6365283Z ##[endgroup]
+2026-10-28T17:44:19.2028557Z `torch_dtype` is deprecated! Use `dtype` instead!
+2026-10-28T17:44:20.0043558Z {"case_losses": [["empty_completion_after_one_byte_context", 8.765803337097168], ["mixed_utf8", 3.0656538009643555], ["literal_eos_text_is_plain_bytes", 4.957742691040039]], "status": "PASS_FROZEN_QWEN3_CAUSAL_EOS_FORWARD_ONLY__72_BLOCKED", "train_authorized": false}
+2026-10-28T17:44:20.5248577Z ##[group]Run mkdir -p runtime/ncr-001
+2026-10-28T17:44:20.5249139Z [36;1mmkdir -p runtime/ncr-001[0m
+2026-10-28T17:44:20.5249544Z [36;1mgit rev-parse HEAD > runtime/ncr-001/byte-eos-source-head.txt[0m
+2026-10-28T17:44:20.5250513Z [36;1msha256sum scripts/byte_eos_001_frozen_qwen_loss.py scripts/byte_eos_001_void_labels.py experiments/ncr-001/protocol.json experiments/ncr-001/source-pins.json > runtime/ncr-001/byte-eos-source-sha256.txt[0m
+2026-10-28T17:44:20.5270872Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-28T17:44:20.5271219Z env:
+2026-10-28T17:44:20.5271431Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-28T17:44:20.5271709Z   HF_HOME: /tmp/byte-eos-001-frozen-qwen
+2026-10-28T17:44:20.5271986Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-28T17:44:20.5272231Z   TOKENIZERS_PARALLELISM: false
+2026-10-28T17:44:20.5272471Z   OMP_NUM_THREADS: 4
+2026-10-28T17:44:20.5272669Z   MKL_NUM_THREADS: 4
+2026-10-28T17:44:20.5272945Z   EXPECTED_HEAD: 06b858a70d7019398cdc7a3f205ae24423f57c67
+2026-10-28T17:44:20.5273255Z ##[endgroup]
+2026-10-28T17:44:20.5441977Z ##[group]Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+2026-10-28T17:44:20.5442411Z with:
+2026-10-28T17:44:20.5442664Z   name: byte-eos-001-original-qwen-forward-a1
+2026-10-28T17:44:20.5443091Z   path: runtime/ncr-001/byte-eos-*
+runtime/ncr-001/void-byte-source-audit.json
+
+2026-10-28T17:44:20.5443498Z   retention-days: 30
+2026-10-28T17:44:20.5443720Z   if-no-files-found: warn
+2026-10-28T17:44:20.5443948Z   compression-level: 6
+2026-10-28T17:44:20.5444160Z   overwrite: false
+2026-10-28T17:44:20.5444369Z   include-hidden-files: false
+2026-10-28T17:44:20.5444599Z   archive: true
+2026-10-28T17:44:20.5444784Z env:
+2026-10-28T17:44:20.5444975Z   PYTHONDONTWRITEBYTECODE: 1
+2026-10-28T17:44:20.5445240Z   HF_HOME: /tmp/byte-eos-001-frozen-qwen
+2026-10-28T17:44:20.5445518Z   HF_HUB_DISABLE_TELEMETRY: 1
+2026-10-28T17:44:20.5445756Z   TOKENIZERS_PARALLELISM: false
+2026-10-28T17:44:20.5445994Z   OMP_NUM_THREADS: 4
+2026-10-28T17:44:20.5446195Z   MKL_NUM_THREADS: 4
+2026-10-28T17:44:20.5446483Z   EXPECTED_HEAD: 06b858a70d7019398cdc7a3f205ae24423f57c67
+2026-10-28T17:44:20.5446841Z ##[endgroup]
+2026-10-28T17:44:20.6995623Z With the provided path, there will be 7 files uploaded
+2026-10-28T17:44:20.7018560Z Artifact name is valid!
+2026-10-28T17:44:20.7019044Z Root directory input is valid!
+2026-10-28T17:44:20.9793447Z Uploading artifact: byte-eos-001-original-qwen-forward-a1.zip
+2026-10-28T17:44:20.9834387Z Beginning upload of artifact content to blob storage
+2026-10-28T17:44:21.1524890Z Uploaded bytes 6625
+2026-10-28T17:44:21.2010989Z Finished uploading artifact content to blob storage!
+2026-10-28T17:44:21.2012142Z SHA256 digest of uploaded artifact is 23f0c5bbca8cfacf9050656ed3a972ca4d716ce0c9db04c40a7bcb524c03f770
+2026-10-28T17:44:21.2013150Z Finalizing artifact upload
+2026-10-28T17:44:22.2940972Z Artifact byte-eos-001-original-qwen-forward-a1 successfully finalized. Artifact ID 12838158155
+2026-10-28T17:44:22.2942581Z Artifact byte-eos-001-original-qwen-forward-a1 has been successfully uploaded! Final size is 6625 bytes. Artifact ID is 12838158155
+2026-10-28T17:44:22.2945844Z Artifact download URL: https://github.com/techrote/neurounner/actions/runs/40738222796/artifacts/12838158155
+2026-10-28T17:44:22.3176501Z Post job cleanup.
+2026-10-28T17:44:22.4121790Z [command]/usr/bin/git version
+2026-10-28T17:44:22.4169705Z git version 2.56.0
+2026-10-28T17:44:22.4242272Z Temporarily overriding HOME='/home/runner/work/_temp/316cc70f-1df8-4d8b-91c8-7ddc6abd5676' before making global git config changes
+2026-10-28T17:44:22.4244255Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-28T17:44:22.4248485Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner
+2026-10-28T17:44:22.4284101Z Removing SSH command configuration
+2026-10-28T17:44:22.4291643Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-28T17:44:22.4332927Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-28T17:44:22.4602665Z Removing HTTP extra header
+2026-10-28T17:44:22.4611098Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-28T17:44:22.4658396Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-28T17:44:22.4941999Z Removing includeIf entries pointing to credentials config files
+2026-10-28T17:44:22.4950591Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-28T17:44:22.5006349Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-28T17:44:22.5487696Z Cleaning up orphan processes
