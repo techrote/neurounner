@@ -159,7 +159,12 @@ def read_and_check(evidence: Path = EVIDENCE, *, verify_git: bool = False) -> tu
            consumer["diagnostic_optimizer_steps"] == 0 and
            type(diag["diagnostic_optimizer_steps"]) is int and
            diag["diagnostic_optimizer_steps"] == 1 and
-           diag["status"].startswith("NEW_DIAGNOSTIC_NOT_ORIGINAL_172") is False and
+           # The reused original #172 function was invoked from #210 with
+           # this explicit NEW_DIAGNOSTIC marker; this is NOT original #172
+           # physical evidence and must never be relabelled as such.
+           diag["status"] == "NEW_DIAGNOSTIC_NOT_ORIGINAL_172" and
+           diag["checks"]["backbone_unchanged_after_one_step"] is True and
+           diag["checks"]["post_step_upstream_gradients"] is True and
            same_sample and producer["sample"]["real_eos_id"] == 258 and
            producer["sample"]["total_units"] == 31 and
            producer["sample"]["supervised_after_shift"] == 21 and
