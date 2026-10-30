@@ -257,7 +257,7 @@ def assert_original_decoded_git_blobs(root: Path | None = None) -> None:
     base = custody.EVIDENCE if root is None else root
     for name, expected_git_blob in ORIGINAL_DECODED_LOG_BLOBS.items():
         data = (base / name).read_bytes()
-        header = b"blob " + str(len(data)).encode("ascii") + b"\\0"
+        header = b"blob " + str(len(data)).encode("ascii") + b"\0"
         actual_git_blob = hashlib.sha1(header + data).hexdigest()
         refuse(actual_git_blob == expected_git_blob,
                "committed original decoded job-log Git blob drift: " + name)
