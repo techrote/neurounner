@@ -13,7 +13,8 @@ import json
 import os
 from pathlib import Path
 import subprocess
-from urllib.request import Request, urlopen
+from urllib.request import Request, build_opener, HTTPRedirectHandler
+from urllib.parse import urlparse
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,6 +45,19 @@ def blob(raw: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
 
 
+class DropAuthOnBlobRedirect(HTTPRedirectHandler):
+    """GitHub authorizes the API hop; Azure artifact SAS redirects reject bearer auth."""
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        redirected = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if redirected is not None and urlparse(newurl).hostname not in (
+                "api.github.com", "github.com"):
+            for table in (redirected.headers, redirected.unredirected_hdrs):
+                for key in tuple(table):
+                    if key.lower() == "authorization":
+                        del table[key]
+        return redirected
+
+
 def fetch(endpoint: str, *, json_result: bool = False):
     token = os.environ.get("GH_TOKEN")
     refuse(bool(token), "missing Actions read token")
@@ -52,7 +66,7 @@ def fetch(endpoint: str, *, json_result: bool = False):
                            "Authorization": "Bearer " + token,
                            "X-GitHub-Api-Version": "2022-11-28",
                            "User-Agent": "neurounner-original-custody"})
-    with urlopen(req, timeout=70) as response:
+    with build_opener(DropAuthOnBlobRedirect()).open(req, timeout=70) as response:
         payload = response.read()
     return json.loads(payload) if json_result else payload
 
