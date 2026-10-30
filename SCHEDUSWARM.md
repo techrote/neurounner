@@ -1,81 +1,66 @@
-# SCHEDUSWARM.md — Neurounner task-lane policy
+# SCHEDUSWARM.md — Neurounner v2 dispatcher policy
 
 ```yaml
-scheduswarm_version: 1
+scheduswarm_version: 2
 status: active
 hub: https://github.com/techrote/scheduswarm
+queue_branch: scheduswarm/queue
 coordination_ledger: https://github.com/techrote/neurounner/issues/213
 max_active_lanes: 3
 project_concurrency_budget: 2
 successors_per_lane: 1
 integration_writes_parallel: false
+automatic_dispatch_allowed: false
 ```
 
 ## Authority
 
-Scheduswarm coordinates execution only. It does not supersede `RAG.md`, experiment-specific protocols, source pins, evidence-retention rules, scientific gates, issue authority, or explicit owner decisions.
+Scheduswarm coordinates execution only. It does not supersede `RAG.md`, experiment protocols, source pins, evidence-retention rules, scientific gates, issue authority, or explicit owner decisions.
 
-For NCR-001, every lane must freshly inspect at minimum:
+For NCR-001, every dispatched worker must freshly inspect `RAG.md`, issues #67–#81/#92 as applicable, `experiments/ncr-001/protocol.json`, `source-pins.json`, current NCR PRs/reviews/exact-head Actions/original evidence, and the owner decision on issue #72.
 
-- `RAG.md`;
-- issues #67–#81 and BYTE-EOS-001 #92 as applicable;
-- `experiments/ncr-001/protocol.json` and `source-pins.json`;
-- current NCR PRs/branches, reviews, exact-head Actions and retained original evidence;
-- the owner review decision recorded on issue #72.
+The four frozen lanes remain distinct: SmolLM2-135M Instruct, Sprocket-500M Chat, Sprocket-500M root Instruct, and dotlabs/void.1. Never transfer behavior, thresholds, evidence, weights or admission across them.
 
-Four frozen model lanes remain scientifically distinct: SmolLM2-135M Instruct, Sprocket-500M Chat, Sprocket-500M root Instruct, and dotlabs/void.1. Do not transfer model behavior, thresholds, evidence or admission between them.
+## Queue and completion
 
-## Limits
+The dispatcher watches `scheduswarm/queue:.scheduswarm/tasks/*.md`.
 
-**Maximum active lanes = 3.** Up to three logical successor chains may exist, including scheduled/waiting chains.
+Workers do **not** create scheduled-task successors. At completion they:
+1. publish durable project evidence/handoff;
+2. write `.scheduswarm/completions/<task_id>.json` on the queue branch;
+3. write zero or one same-lane successor task envelope under `.scheduswarm/tasks/`;
+4. create extra parallel tasks only if lane admission and capacity permit;
+5. otherwise record an explicit stop reason.
 
-**Project concurrency budget = 2.** At most two Neurounner Scheduswarm lanes should intentionally execute or be launched into the same coordination window. A third active lane is staggered/waiting.
+Task prompts are checkpoints; every run starts with a fresh live audit.
 
-The active-lane limit controls coordination complexity. The concurrency budget controls simultaneous branch/CI/review race pressure.
+## Limits and lane classes
 
-## Lane classes
+Maximum active lanes: **3**. Project concurrency budget: **2**. Same-lane successor maximum: **1**.
 
-| Lane class | Purpose | Typical ownership |
-|---|---|---|
-| scientific | model-specific scientific qualification/adjudication | one model/evidence cohort and its bounded PR/issues |
-| evidence | original evidence custody, replay, provenance, adversarial audit | distinct archive/auditor write set |
-| accounting | #73 source/physical compute accounting and preflight | accounting scripts/tests/docs only unless separately authorized |
-| integration | serialized cross-lane protocol/status reconciliation | shared NCR authority surfaces |
-
-A normal lane may not create more than one successor for itself. A new parallel lane requires the Scheduswarm lane-admission test and free capacity.
+| Lane | Purpose |
+|---|---|
+| scientific | model-specific qualification/adjudication |
+| evidence | custody/replay/provenance/adversarial audit |
+| accounting | #73 source/physical compute qualification |
+| integration | serialized protocol/status reconciliation |
 
 ## Serialized surfaces
 
-While multiple NCR lanes are active, only the integration owner may intentionally change shared authoritative surfaces such as:
+Parallel workers may not concurrently change `protocol.json`, `source-pins.json`, sealed/global fixture definitions/hashes, project-wide training/admission registries, or shared conformance state promoted across model lanes.
 
-- `experiments/ncr-001/protocol.json`;
-- `experiments/ncr-001/source-pins.json`;
-- global/sealed fixture definitions or hashes;
-- any project-wide training authorization/admission registry;
-- shared conformance status promoted across model lanes.
+## NCR gates
 
-Parallel lanes may propose changes in isolated branches but must not race integration.
+- `train_authorized=false` and `full_72_conformance_pass=false` remain closed until explicit protocol scientific admission.
+- Never start comparative NCA/MLP training, open sealed held-outs, alter preregistered suites, relax causal/cache/byte/fixture gates, or promote a lane from source-only/admin evidence.
+- Receipt/archive CI is not a fresh physical-host run; physical inference is not automatically learned-quality or semantic competence.
+- Preserve the issue #72 same-account COMMENTED exception exactly; do not call it GitHub APPROVED or a second human identity.
+- Preserve negative results and complete raw evidence required by the experiment.
 
-## NCR safety gates
+## Dispatch commissioning
 
-- `train_authorized=false` and `full_72_conformance_pass=false` remain closed until the repository's explicit scientific protocol admits otherwise.
-- Never start comparative NCA/MLP training, open sealed held-outs, alter preregistered evaluation suites, relax causal/cache/byte/fixture gates, or promote a model lane from source-only/admin evidence.
-- Green receipt/audit CI is not a fresh physical-host model run.
-- Physical-host execution is not automatically learned-quality or semantic competence evidence.
-- Same-account COMMENTED review is handled exactly as the current owner decision specifies; do not call it GitHub APPROVED or a second human identity.
-- Preserve negative results and complete raw evidence required by the relevant experiment.
+`automatic_dispatch_allowed: false`. Use confirmation mode until the local Chrome adapter reliably verifies new-chat state, requested model/effort and exact prompt insertion. Automatic mode requires a future explicit policy change.
 
-## Live ownership and handoff
+## Live ownership
 
-Use issue #213 comments plus concrete branches/PRs as the append-only live lane registry. Each claim should state:
-
-- lane ID/class;
-- target issue/acceptance criterion;
-- branch/PR and intended write set;
-- dependencies/non-goals;
-- successor task ID when created;
-- stop/throttle reason when applicable.
-
-Avoid a shared mutable “current lane state” file.
-
-Every one-shot run must end with exact SHA/PR/run evidence, what physically executed versus what was source-only, retained failures, remaining gates, next highest-value task, and either one successor task ID or an explicit stop.
+Issue #213, branches/PRs and immutable queue records are the live ownership surfaces. Do not introduce a shared mutable current-state file.
