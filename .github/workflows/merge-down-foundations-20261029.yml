@@ -1,146 +1,156 @@
-name: NCR-001 bounded original Sprocket diagnostic source and ZIP integration
+name: NCR-001 publisher wire original-source merge-down
 on:
   push:
     branches: [integration/merge-down-foundations-20261029]
     paths: [.github/workflows/merge-down-foundations-20261029.yml]
 permissions:
   contents: read
-  actions: read
   pull-requests: read
+  actions: read
 concurrency:
-  group: ncr-001-sprocket-diagnostic-merge-down-20261029
+  group: ncr-wire-merge-down-20261030
   cancel-in-progress: false
 env:
   PYTHONDONTWRITEBYTECODE: "1"
   HF_HUB_OFFLINE: "1"
   TRANSFORMERS_OFFLINE: "1"
+  HF_HUB_DISABLE_TELEMETRY: "1"
   TOKENIZERS_PARALLELISM: "false"
   OMP_NUM_THREADS: "4"
   MKL_NUM_THREADS: "4"
-  BASE_SHA: 71239a4c134636f11d1d75920220029b18d0f057
+  BASE_SHA: 4959c5e0420861b812d95611d8285af271082ed7
 jobs:
   integration:
     runs-on: ubuntu-24.04
-    timeout-minutes: 17
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: 71239a4c134636f11d1d75920220029b18d0f057
+          ref: 4959c5e0420861b812d95611d8285af271082ed7
           fetch-depth: 0
           persist-credentials: false
-      - name: Install exact CPU synthetic source stack; do not load frozen models
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: techrote/neurounner
+          ref: 3592841802d85c442ca2521479b5d8795bee7233
+          path: wire-authority
+          persist-credentials: false
+      - name: Install synthetic pinned CPU tests only
         run: |
           python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
           python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "huggingface_hub==0.36.2" "safetensors==0.8.0" "sentencepiece>=0.2,<1"
           python3 -c 'import torch,transformers; assert torch.__version__=="2.14.1+cpu" and transformers.__version__=="4.57.6" and not torch.cuda.is_available()'
-      - name: Compose three exact original PR sources and replay six original receipt members
+      - name: Resolve exact original PR ancestry, source and readback without model inference
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git config user.name 'Read-only original diagnostic source reviewer'
-          git config user.email 'source-reviewer@example.invalid'
-          mkdir -p "$RUNNER_TEMP/ncr-diagnostic-merge-down"
+          git config user.name "Read-only source integration review"
+          git config user.email "source-review@example.invalid"
+          mkdir -p "$RUNNER_TEMP/wire-merge-down"
           python3 - <<'PY'
           import hashlib,io,json,os,pathlib,subprocess,sys,urllib.request,zipfile
-          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'ncr-diagnostic-merge-down'
-          def cmd(argv,name,fail=True):
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'wire-merge-down'
+          def run(argv,name,check=True):
               p=subprocess.run(argv,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
               (out/name).write_text(p.stdout)
               print(name,p.returncode,p.stdout,flush=True)
-              if fail and p.returncode:raise RuntimeError(f'{name}: status={p.returncode}')
+              if check and p.returncode:raise RuntimeError(name+' exited '+str(p.returncode))
               return p
           def api(path):
-              req=urllib.request.Request('https://api.github.com/repos/techrote/neurounner'+path,
-                  headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
-              with urllib.request.urlopen(req,timeout=45) as response:return json.load(response)
-          plan=[(159,'df8479aae34550cba014d910a73e30e59cd493e2'),
-                (160,'d168fa41ae35536e893a5bc548a7b21965c45999'),
-                (195,'fc0df287a1b13ad0ca92513196c6cd66325ec981')]
-          assert api('/branches/main')['commit']['sha']==os.environ['BASE_SHA'],'main moved'
-          assert cmd(['git','rev-parse','HEAD'],'current-main.txt').stdout.strip()==os.environ['BASE_SHA']
-          for number,head in plan:
-              pr=api('/pulls/'+str(number))
-              assert pr['state']=='open' and pr['head']['sha']==head,(number,pr['head']['sha'])
-              (out/f'{number}-pr.json').write_text(json.dumps({'head':head,'base':pr['base']['ref'],'draft':pr['draft']},indent=2)+'\n')
-          stages=[]
-          for number,head in plan:
-              result=cmd(['git','merge','--no-ff','--no-commit',head],f'{number}-merge.log',fail=False)
-              conflicts=cmd(['git','diff','--name-only','--diff-filter=U'],f'{number}-conflicts.txt').stdout.splitlines()
-              if conflicts==['RAG.md']:
-                  ours=cmd(['git','show','HEAD:RAG.md'],f'{number}-rag-current.md').stdout
-                  theirs=cmd(['git','show','MERGE_HEAD:RAG.md'],f'{number}-rag-original.md').stdout
-                  new=[l for l in theirs.splitlines() if l.startswith('- **[NCR-001E ') and l not in ours]
-                  assert len(new)==1,(number,new)
-                  pathlib.Path('RAG.md').write_text(ours.rstrip()+'\n'+new[0]+'\n',encoding='utf-8')
-                  cmd(['git','add','RAG.md'],f'{number}-rag-resolved.log')
-              elif conflicts or result.returncode:
-                  raise RuntimeError(f'Unreviewed merge conflict {number}: {conflicts}')
-              # Original Actions logs / evidence text are immutable, including historical whitespace.
-              cmd(['git','diff','--cached','--check','--','.',':(exclude,glob)**/*.md',':(exclude,glob)**/*.log'],f'{number}-nonarchive-whitespace.log')
-              cmd(['git','commit','--no-edit'],f'{number}-merge-commit.log')
-              tree=cmd(['git','rev-parse','HEAD^{tree}'],f'{number}-tree.txt').stdout.strip()
-              (out/f'{number}-RAG.md').write_bytes(pathlib.Path('RAG.md').read_bytes())
-              files=api(f'/pulls/{number}/files?per_page=100')
-              for item in files:
-                  path=item['filename']
-                  if path=='RAG.md':continue
-                  actual=cmd(['git','rev-parse','HEAD:'+path],f'{number}-blob-current.txt').stdout.strip()
-                  original=cmd(['git','rev-parse',head+':'+path],f'{number}-blob-original.txt').stdout.strip()
-                  assert actual==original,(number,path,'original source byte drift')
+              q=urllib.request.Request('https://api.github.com/repos/techrote/neurounner'+path,headers={
+                  'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(q,timeout=45) as r:return json.load(r)
+          def test(argv,name):
               env=dict(os.environ,PYTHONPATH=str(pathlib.Path('scripts').resolve()))
-              def test(argv,label):
-                  p=subprocess.run(argv,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,env=env,text=True)
-                  (out/label).write_text(p.stdout)
-                  print(label,p.returncode,p.stdout,flush=True)
-                  if p.returncode:raise RuntimeError(f'{label}: failed')
-              for pattern in ('test_ncr_001_sprocket_learning_gate.py','test_ncr_001_cross_decoder_lease.py'):
-                  test([sys.executable,'-m','unittest','discover','-s','tests','-p',pattern,'-v'],f'{number}-{pattern}.log')
-              if number>=160:
-                  test([sys.executable,'scripts/ncr_001_sprocket_learning_git_custody.py'],f'{number}-original-six-member-audit.json')
-              if number==195:
-                  test([sys.executable,'scripts/ncr_001_sprocket_original_zip_custody.py'],f'{number}-original-full-zip-audit.json')
-                  test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001_sprocket_original_zip_custody.py','-v'],f'{number}-9-adversarial-original-zip-tests.log')
+              p=subprocess.run(argv,env=env,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+              (out/name).write_text(p.stdout)
+              print(name,p.returncode,p.stdout,flush=True)
+              if p.returncode:raise RuntimeError(name+' tests failed')
+              return p.stdout
+          assert api('/branches/main')['commit']['sha']==os.environ['BASE_SHA'],'main advanced'
+          assert run(['git','rev-parse','HEAD'],'start-head.txt').stdout.strip()==os.environ['BASE_SHA']
+          assert run(['git','-C','wire-authority','rev-parse','HEAD'],'publisher-head.txt').stdout.strip()=='3592841802d85c442ca2521479b5d8795bee7233'
+          assert run(['git','-C','wire-authority','hash-object','scripts/ncr_001e_sprocket_publisher_wire.py'],'publisher-blob.txt').stdout.strip()=='4e558ae530a1b79050e22bee587b3caf056e4563'
+          plan=[(161,'aadbfe823c9778066acac0a0869e0c559a533f05'),
+                (162,'4cf8c052c5ad91c384f2e15b68793a92c9a80cfe')]
+          for n,head in plan:
+              pr=api('/pulls/'+str(n))
+              assert pr['state']=='open' and pr['head']['sha']==head,(n,pr['head']['sha'])
+              (out/f'{n}-metadata.json').write_text(json.dumps({'head':head,'base':pr['base']['ref'],'draft':pr['draft']},indent=2)+'\n')
+          stages=[]
+          for n,head in plan:
+              p=run(['git','merge','--no-ff','--no-commit',head],f'{n}-merge-proposal.log',check=False)
+              conflicts=run(['git','diff','--name-only','--diff-filter=U'],f'{n}-conflicts.txt').stdout.splitlines()
+              if conflicts==['RAG.md']:
+                  ours=run(['git','show','HEAD:RAG.md'],f'{n}-RAG-current.md').stdout
+                  theirs=run(['git','show','MERGE_HEAD:RAG.md'],f'{n}-RAG-original.md').stdout
+                  # Only source-gated addenda may be brought forward; preserve current main.
+                  new=[s for s in theirs.splitlines() if s.startswith('- **[NCR-001E ') and
+                       (('publisher wire witness' in s) or ('publisher-wire readback' in s))]
+                  assert len(new)>=1,new
+                  result=ours.rstrip()+'\n'
+                  for line in new:
+                      key=line.split(']')[0]+']'
+                      match=next((v for v in result.splitlines() if v.startswith(key)),None)
+                      if match:result=result.replace(match,line)
+                      else:result+=line+'\n'
+                  pathlib.Path('RAG.md').write_text(result,encoding='utf-8')
+                  run(['git','add','RAG.md'],f'{n}-RAG-resolve.log')
+              elif conflicts or p.returncode:raise RuntimeError('Unreviewed conflict '+str(n)+': '+str(conflicts))
+              run(['git','diff','--cached','--check','--','.',':(exclude,glob)**/*.md',':(exclude,glob)**/*.log'],f'{n}-diff-check-source.log')
+              run(['git','commit','--no-edit'],f'{n}-merge-commit.log')
+              tree=run(['git','rev-parse','HEAD^{tree}'],f'{n}-tree.txt').stdout.strip()
+              (out/f'{n}-merged-RAG.md').write_bytes(pathlib.Path('RAG.md').read_bytes())
+              for file in api('/pulls/'+str(n)+'/files?per_page=100'):
+                  name=file['filename']
+                  if name=='RAG.md':continue
+                  actual=run(['git','rev-parse','HEAD:'+name],f'{n}-current-blob.txt').stdout.strip()
+                  original=run(['git','rev-parse',head+':'+name],f'{n}-original-blob.txt').stdout.strip()
+                  assert actual==original,(n,name,'original source or receipt bytes modified')
+              test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001_postlease_sprocket_wire.py','-v'],f'{n}-wire-source-tests.log')
+              test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001_cross_decoder_lease.py','-v'],f'{n}-lease-tests.log')
+              if n==162:
+                  test([sys.executable,'scripts/ncr_001_postlease_wire_evidence_audit.py','--json'],'162-original-wire-audit.json')
+                  test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001_postlease_wire_evidence_audit.py','-v'],'162-16-adversarial-tests.log')
                   sys.path.insert(0,str(pathlib.Path('scripts').resolve()))
-                  import ncr_001_sprocket_original_zip_custody as audit
-                  from ncr_001_sprocket_learning_git_custody import load_archive
-                  _,original_members=load_archive()
-                  metadata={r['id']:r for r in api('/actions/runs/40710171622/artifacts?per_page=100')['artifacts']}
+                  import ncr_001_postlease_wire_evidence_audit as audit
+                  archived=audit.original_zip_bytes()
                   class StripAuth(urllib.request.HTTPRedirectHandler):
-                      def redirect_request(self,request,fp,code,msg,headers,newurl):
-                          r=super().redirect_request(request,fp,code,msg,headers,newurl)
+                      def redirect_request(self,req,fp,code,msg,headers,newurl):
+                          r=super().redirect_request(req,fp,code,msg,headers,newurl)
                           if r is not None:r.remove_header('Authorization')
                           return r
                   opener=urllib.request.build_opener(StripAuth())
-                  verified={}
-                  for lane,(artifact_id,size,expected,members) in audit.ORIGINALS.items():
-                      orig=metadata[artifact_id]
-                      assert not orig['expired'] and orig['workflow_run']['head_sha']==plan[0][1]
-                      assert orig['digest']=='sha256:'+expected and orig['size_in_bytes']==size
-                      req=urllib.request.Request('https://api.github.com/repos/techrote/neurounner/actions/artifacts/'+str(artifact_id)+'/zip',
-                           headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
-                      with opener.open(req,timeout=90) as response:raw=response.read(100000)
-                      assert len(raw)==size and hashlib.sha256(raw).hexdigest()==expected,lane
-                      assert audit.check_zip(lane,raw)==original_members[lane],lane
-                      encoded=(audit.EVIDENCE / audit.b64_path(lane)).read_bytes()
-                      import base64
-                      assert base64.b64decode(encoded.strip(),validate=True)==raw
-                      verified[lane]={'artifact_id':artifact_id,'whole_sha256':expected,'bytes':size,'members':sorted(members)}
-                  (out/'original-zip-api-readback.json').write_text(json.dumps(verified,indent=2)+'\n')
+                  items={a['id']:a for run_id in (40718706396,40718490313)
+                    for a in api(f'/actions/runs/{run_id}/artifacts?per_page=100')['artifacts']}
+                  checks={}
+                  for filename,meta in audit.ORIGINAL_ZIPS.items():
+                      id=int(filename.split('-')[1].split('.')[0])
+                      source=items[id]
+                      assert not source['expired'] and source['digest']=='sha256:'+meta['sha256']
+                      req=urllib.request.Request(f'https://api.github.com/repos/techrote/neurounner/actions/artifacts/{id}/zip',
+                          headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+                      with opener.open(req,timeout=90) as r:raw=r.read(100000)
+                      assert raw==archived[filename] and len(raw)==source['size_in_bytes']
+                      assert hashlib.sha256(raw).hexdigest()==meta['sha256']
+                      parts=audit.raw_zip_members(raw,meta)
+                      checks[filename]={'sha256':meta['sha256'],'bytes':len(raw),'members':sorted(parts)}
+                  assert sum(len(x['members']) for x in checks.values())==5
+                  (out/'original-Actions-ZIP-readback.json').write_text(json.dumps(checks,indent=2)+'\n')
               assert json.loads(pathlib.Path('experiments/ncr-001/protocol.json').read_text())['train_authorized'] is False
-              stages.append({'pr':number,'head':head,'integration_tree':tree,
-                  'source_and_original_evidence_blobs_unchanged':True,'training_authorized':False})
+              stages.append({'pr':n,'source_head':head,'tested_tree':tree,'original_bytes_unchanged':True,
+                  'frozen_model_loaded_in_this_job':False,'train_authorized':False})
               (out/'stages.json').write_text(json.dumps(stages,indent=2)+'\n')
-          test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001*.py','-v'],'complete-ncr-tests.log')
-          test([sys.executable,'scripts/ncr_001_protocol.py','validate'],'protocol-validation.json')
-          print('FINAL SOURCE TREE:',stages[-1]['integration_tree'])
-          print('NO REAL FROZEN MODELS LOADED; NO NEW OPTIMIZER STEP; NO HELDOUT/COMPARISON')
+          test([sys.executable,'-m','unittest','discover','-s','tests','-p','test_ncr_001*.py','-v'],'full-NCR-suite.log')
+          test([sys.executable,'scripts/ncr_001_protocol.py','validate'],'protocol-gate.json')
+          print('FINAL INTEGRATED TREE',stages[-1]['tested_tree'],'NO NEW MODEL INFERENCE OR OPTIMIZER')
           PY
-      - name: Preserve original source, complete ZIPs, negative tests and exact staged Git trees
+      - name: Preserve complete source validation, original ZIP hashes and failures
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: ncr-original-diagnostic-merge-down-${{ github.run_id }}
-          path: ${{ runner.temp }}/ncr-diagnostic-merge-down
+          name: ncr-wire-merge-down-${{ github.run_id }}
+          path: ${{ runner.temp }}/wire-merge-down/
           if-no-files-found: warn
           retention-days: 30
