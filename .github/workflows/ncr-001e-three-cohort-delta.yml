@@ -1,0 +1,66 @@
+name: NCR-001E source-only three-cohort Sprocket delta (NO TRAIN)
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+    branches: [review/ncr001e-alltoken2048-original-custody-20261030]
+    paths:
+      - ".github/workflows/ncr-001e-three-cohort-delta.yml"
+      - "scripts/ncr_001e_sprocket_three_cohort_delta.py"
+      - "tests/test_ncr_001e_sprocket_three_cohort_delta.py"
+      - "experiments/ncr-001/adjudication/sprocket-three-cohort-source-delta-20261030.json"
+      - "docs/NCR_001_E_SPROCKET_THREE_COHORT_DELTA.md"
+      - "RAG.md"
+permissions:
+  contents: read
+concurrency:
+  group: ncr001e-three-cohort-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  source-only-original-git-audit:
+    if: github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.head.ref == 'review/ncr001e-three-cohort-source-delta-20261030'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Read exact proposed head without a write token
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Read immutable original independent B2/diagnostic reconciliation
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 16f8610d856cccba27a7b35e5a99b96526652b50
+          path: prior-204
+          persist-credentials: false
+      - name: Confirm immutable sources and preregistration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "$(git -C prior-204 rev-parse HEAD)" = "16f8610d856cccba27a7b35e5a99b96526652b50"
+          git merge-base --is-ancestor cb016f6dceb79e8c7c5fb2c032479c4be5f461e7 HEAD
+          test "$(git rev-parse HEAD:experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git rev-parse HEAD:experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git rev-parse HEAD:scripts/ncr_001e_alltoken2048_original_custody.py)" = "484a61714d0ae1fbcb2a089ca3c93684d2dc7906"
+          echo "SOURCE_PINS_AND_PARENT_PASS"
+      - name: Execute original two immutable ZIP/log auditors and adversarial decision suite
+        shell: bash
+        env:
+          NCR_001_PRIOR_ROOT: prior-204
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr-001
+          python3 scripts/ncr_001e_alltoken2048_original_custody.py 2>&1 | tee runtime/ncr-001/pr205-custody-readback.log
+          python3 prior-204/scripts/ncr_001e_masked2048_original_custody.py 2>&1 | tee runtime/ncr-001/pr202-custody-readback.log
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_sprocket_three_cohort_delta.py' -v 2>&1 | tee runtime/ncr-001/three-cohort-tests.log
+          python3 scripts/ncr_001e_sprocket_three_cohort_delta.py --prior prior-204 --out runtime/ncr-001/three-cohort-derived.json 2>&1 | tee runtime/ncr-001/three-cohort-check.log
+          echo "PASS_THREE_COHORT_IMMUTABLE_ORIGINAL_SOURCE_DELTA"
+      - name: Preserve source-only PASS/FAIL log and generated decision for review
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ncr001e-three-cohort-no-train-${{ github.event.pull_request.head.sha }}
+          path: runtime/ncr-001/
+          if-no-files-found: warn
+          retention-days: 30
