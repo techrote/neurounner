@@ -1,0 +1,125 @@
+name: NCR-001E immutable PR205 original 2048 Chat/Instruct 3 ZIP 3 logs READ ONLY
+on:
+  pull_request:
+    branches: [review/ncr001e-sprocket-alltoken-streaming-20261030]
+    paths:
+      - ".github/workflows/ncr-001e-alltoken2048-original-custody.yml"
+      - "scripts/ncr_001e_alltoken2048_original_custody.py"
+      - "tests/test_ncr_001e_alltoken2048_original_custody.py"
+      - "docs/NCR_001_E_SPROCKET_ALLTOKEN_ORIGINAL_CUSTODY.md"
+      - "experiments/ncr-001/evidence-review/pr205-alltoken2048-original/**"
+      - "RAG.md"
+permissions:
+  actions: read
+  contents: read
+concurrency:
+  group: ncr001-pr205-custody-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  original-evidence-independent-readback:
+    if: github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.head.ref == 'review/ncr001e-alltoken2048-original-custody-20261030'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ORIGINAL_HEAD: 0c866f5b65380ef6629a5bf084d017e886b91e52
+      DEST: experiments/ncr-001/evidence-review/pr205-alltoken2048-original
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fail closed on original PR205 source, protocol, branch or training gate drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "techrote/neurounner"
+          test "$GITHUB_HEAD_REF" = "review/ncr001e-alltoken2048-original-custody-20261030"
+          test "$GITHUB_BASE_REF" = "review/ncr001e-sprocket-alltoken-streaming-20261030"
+          test "${{ github.event.pull_request.base.sha }}" = "$ORIGINAL_HEAD"
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          git merge-base --is-ancestor "$ORIGINAL_HEAD" HEAD
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          test "$(git hash-object scripts/ncr_001_postlease_sprocket.py)" = 66e6b4d97eea5e917339b8e7bfb5d1c191db4a2d
+          test ! -e ".github/workflows/ncr-001e-alltoken2048-original-bootstrap.yml"
+          python3 - <<'PY'
+          import json,subprocess
+          p=json.load(open('experiments/ncr-001/protocol.json'))
+          assert p['train_authorized'] is False
+          assert set(p['models'])=={'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          assert p['conformance']['full_vs_cached_prefill_atol'] == p['conformance']['full_vs_cached_prefill_rtol'] == 0.0005
+          changed=set(subprocess.check_output(['git','diff','--name-only','0c866f5b65380ef6629a5bf084d017e886b91e52','HEAD'],text=True).splitlines())
+          allowed={
+            '.github/workflows/ncr-001e-alltoken2048-original-custody.yml',
+            'scripts/ncr_001e_alltoken2048_original_custody.py',
+            'tests/test_ncr_001e_alltoken2048_original_custody.py',
+            'docs/NCR_001_E_SPROCKET_ALLTOKEN_ORIGINAL_CUSTODY.md',
+            'RAG.md'}
+          assert changed and all(x in allowed or x.startswith('experiments/ncr-001/evidence-review/pr205-alltoken2048-original/') for x in changed),changed
+          print('PASS_EXACT_PR205_SOURCE_NO_TRAIN_AND_WRITE_BOOTSTRAP_REVOKED')
+          PY
+      - name: Run original raw Git-blob/score audit and twelve adversarial/positive tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ncr205-custody
+          python3 -m py_compile scripts/ncr_001e_alltoken2048_original_custody.py tests/test_ncr_001e_alltoken2048_original_custody.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_alltoken2048_original_custody.py' -v 2>&1 | tee /tmp/ncr205-custody/tests.log
+          python3 scripts/ncr_001e_alltoken2048_original_custody.py | tee /tmp/ncr205-custody/primary-audit.json
+      - name: Check immutable original exact-head run/job/artifact live API metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          api() {
+            curl --fail --silent --show-error --location --retry 4 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/techrote/neurounner/$1" -o "$2"
+          }
+          api actions/runs/40987371706 /tmp/ncr205-custody/run.json
+          api 'actions/runs/40987371706/jobs?per_page=100' /tmp/ncr205-custody/jobs.json
+          api 'actions/runs/40987371706/artifacts?per_page=100' /tmp/ncr205-custody/artifacts.json
+          python3 - <<'PY'
+          import json,pathlib
+          d=pathlib.Path('/tmp/ncr205-custody')
+          run=json.loads((d/'run.json').read_text())
+          assert run['id']==40987371706 and run['head_sha']=='0c866f5b65380ef6629a5bf084d017e886b91e52'
+          assert run['status']=='completed' and run['conclusion']=='success'
+          jobs={j['id']:j for j in json.loads((d/'jobs.json').read_text())['jobs']}
+          assert all(jobs[i]['conclusion']=='success' for i in (123841492749,123841738132,123841738103))
+          artifacts={a['id']:a for a in json.loads((d/'artifacts.json').read_text())['artifacts']}
+          expected={
+            12947388112:'0d5b5a8c99d701a1b6c1df6234a36912c979fd52939b29332542509ed4170c69',
+            12947358773:'05d4b24909d612f08abf6dd65f498f71f31daab53b4c3cc3cfc8d0d881a40f36',
+            12947986971:'6d519ff309f81dfd805cfc108c926d22eafaebd12a2854fc8fba4377ca199b32'}
+          for aid,sha in expected.items():
+            a=artifacts[aid]
+            assert a['digest']=='sha256:'+sha and a['workflow_run']['id']==40987371706 and not a['expired']
+          print('PASS_ORIGINAL_RUN_THREE_JOBS_THREE_WHOLE_ZIP_ARTIFACT_IDENTITIES')
+          PY
+      - name: Re-download ALL three original whole ZIPs and ALL three complete decoded job logs byte identically
+        shell: bash
+        run: |
+          set -euo pipefail
+          api() {
+            curl --fail --silent --show-error --location --retry 4 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/techrote/neurounner/$1" -o "$2"
+          }
+          api actions/artifacts/12947388112/zip /tmp/ncr205-custody/source.zip
+          api actions/artifacts/12947358773/zip /tmp/ncr205-custody/chat.zip
+          api actions/artifacts/12947986971/zip /tmp/ncr205-custody/instruct.zip
+          cmp "$DEST/original-source-12947388112.zip" /tmp/ncr205-custody/source.zip
+          cmp "$DEST/original-chat-12947358773.zip" /tmp/ncr205-custody/chat.zip
+          cmp "$DEST/original-instruct-12947986971.zip" /tmp/ncr205-custody/instruct.zip
+          api actions/jobs/123841492749/logs /tmp/ncr205-custody/source.log
+          api actions/jobs/123841738132/logs /tmp/ncr205-custody/chat.log
+          api actions/jobs/123841738103/logs /tmp/ncr205-custody/instruct.log
+          cmp "$DEST/original-source-job-123841492749.log" /tmp/ncr205-custody/source.log
+          cmp "$DEST/original-chat-job-123841738132.log" /tmp/ncr205-custody/chat.log
+          cmp "$DEST/original-instruct-job-123841738103.log" /tmp/ncr205-custody/instruct.log
+          echo PASS_ALL_SIX_ORIGINAL_ARTIFACT_AND_DECODED_JOB_STREAMS_IDENTICAL | tee /tmp/ncr205-custody/final-byte-readback.log
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-pr205-original-readonly-${{ github.run_attempt }}
+          path: /tmp/ncr205-custody/
+          if-no-files-found: warn
+          retention-days: 30
