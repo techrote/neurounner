@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001E",
+  "issue": 72,
+  "model_key": "void1",
+  "model_variant": "base_byte",
+  "adjudication": "BLOCKED_REQUIRED_LEARNING_CHECKS__POSTLEASE_SOURCE_RUNTIME_PRETRAIN_PASS",
+  "per_model_gate": false,
+  "source_runtime_pretraining_subgate": true,
+  "train_authorized": false,
+  "optimizer_steps_observed": 0,
+  "backward_executed": false,
+  "heldout_evaluation": false,
+  "comparative_training_performed": false,
+  "independent_scientific_review": false,
+  "source": {
+    "repo_id": "dotlabs/void.1",
+    "revision": "9c2be5087772867d45961abd11f6b35110617563",
+    "weight_file": "model.safetensors",
+    "weight_sha256": "ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3",
+    "weight_bytes": 360622744,
+    "tokenizer_source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+    "corrected_serializer_commit": "9fbdee880697903aaf5b91cc29442c9e53479e50",
+    "taps_after_block_zero_based": [
+      7,
+      15,
+      23
+    ],
+    "max_context_units": 2048,
+    "eos_id": 258
+  },
+  "protocol": {
+    "sha256": "a76d38f80a57012ca8e62fba183d1cf2e91fd0986032f1adcdfb0aef843bf0b4",
+    "source_pins_sha256": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1",
+    "cache_atol": 0.0005,
+    "cache_rtol": 0.0005,
+    "required_checks": [
+      "same_base_logits",
+      "base_weight_unchanged_after_step",
+      "causal_suffix_invariance",
+      "full_prefix_vs_incremental_cache",
+      "per_token_isolation",
+      "per_request_reset",
+      "nonzero_adapter_gradient_after_warmup",
+      "finite_state_and_loss",
+      "cold_reload_state_dict"
+    ],
+    "any_failure_blocks_model_qualification": true
+  },
+  "evidence": {
+    "corrected_eos_postlease_run": 40747035876,
+    "corrected_eos_postlease_source_head": "9aed5ca0574a6885c5d60c07d16561e0f73d5043",
+    "postlease_max_context_run": 40755894558,
+    "postlease_max_context_source_head": "1438f45efc0dab8ed669a814b4897fc7a839302f",
+    "max_context_cache_max_abs": {
+      "nca_512": 0.0000133514404296875,
+      "nca_1024": 0.0000133514404296875,
+      "nca_2048": 0.00000858306884765625,
+      "mlp_512": 0.0000095367431640625,
+      "mlp_1024": 0.00001049041748046875,
+      "mlp_2048": 0.00000762939453125
+    },
+    "max_context_generation_records": 12,
+    "max_context_generation_ids": [
+      101,
+      110,
+      32,
+      109
+    ],
+    "actual_eos_258_emitted_in_four_step_probe": false,
+    "frozen_backbone_sha256": "7673957ba36e8eb5427e5ecc94dd52de71fbf9e6718bb0c2a94e4d7361b3f904"
+  },
+  "byte_eos_dependency": {
+    "future_serializer_source_runtime_status": "PASS_FORWARD_ONLY__NO_LEARNED_STOPPING_CLAIM",
+    "corrected_terminal_eos_id": 258,
+    "historical_train002b_effect_measured": false,
+    "four_step_generation_emitted_eos": false,
+    "note": "Correct target construction and original-host causal forward loss are supported; learned EOS stopping and historical effect size remain unmeasured."
+  },
+  "matrix": {
+    "same_base_logits": {
+      "status": "PASS",
+      "evidence_runs": [
+        40747035876,
+        40755894558
+      ],
+      "note": "Post-lease NCA disabled/zero frozen logits are exact at corrected-EOS cases and 512/1024/2048 contexts."
+    },
+    "base_weight_unchanged_after_step": {
+      "status": "BLOCKED_BY_TRAINING_POLICY",
+      "evidence_runs": [],
+      "note": "Forward-only frozen fingerprints are unchanged, but no optimizer step is permitted or observed; the protocol explicitly requires unchanged base weights after a diagnostic update."
+    },
+    "causal_suffix_invariance": {
+      "status": "PASS",
+      "evidence_runs": [
+        40747035876,
+        40755894558
+      ],
+      "note": "Post-lease future-suffix invariance is exact, including the full 2048-unit NCA witness."
+    },
+    "full_prefix_vs_incremental_cache": {
+      "status": "PASS",
+      "evidence_runs": [
+        40747035876,
+        40755894558
+      ],
+      "note": "Original frozen Qwen3 passes 32/128 and 512/1024/2048 incremental-cache checks plus real GenerationMixin cache on/off under unchanged 5e-4 tolerances."
+    },
+    "per_token_isolation": {
+      "status": "PASS_SOURCE_RUNTIME",
+      "evidence_runs": [
+        40747035876,
+        40755894558
+      ],
+      "note": "Shared decoder-root lease, explicit per-forward field creation, causal sentinels and cached-token source traces reject cross-adapter/token contamination."
+    },
+    "per_request_reset": {
+      "status": "PASS",
+      "evidence_runs": [
+        40747035876
+      ],
+      "note": "Original post-lease A→B→A request isolation is exact for the NCA and matched control."
+    },
+    "nonzero_adapter_gradient_after_warmup": {
+      "status": "BLOCKED_BY_TRAINING_POLICY",
+      "evidence_runs": [],
+      "note": "No post-lease backward/warmup is admitted in this stack; manually nonzero readouts are diagnostic, not learned gradients."
+    },
+    "finite_state_and_loss": {
+      "status": "PARTIAL_BLOCKED_WARMUP_LOSS",
+      "evidence_runs": [
+        40747035876,
+        40755894558
+      ],
+      "note": "States/logits are finite and corrected causal-EOS frozen losses match independent shifted CE, but the required supervised adapter loss after warmup has not been executed."
+    },
+    "cold_reload_state_dict": {
+      "status": "PASS_PRETRAIN",
+      "evidence_runs": [
+        40747035876
+      ],
+      "note": "NCA and matched-MLP adapter binaries replay exactly in a separate Python interpreter against the same pinned frozen Qwen3 source."
+    }
+  },
+  "blocking_required_checks": [
+    "base_weight_unchanged_after_step",
+    "nonzero_adapter_gradient_after_warmup",
+    "finite_state_and_loss"
+  ],
+  "nonblocking_scope_limits": {
+    "matched_mlp_postlease_source_runtime_prepass": true,
+    "matched_nca_mlp_comparative_training_performed": false,
+    "sealed_holdouts_opened": false,
+    "learned_eos_stopping_qualified": false,
+    "all_parent_prs_merged": false
+  },
+  "decision_note": "Do not set void1_conformance_pass=true and do not authorize comparative training. Post-lease exact-source/cache/cold/EOS-serialization runtime evidence is strong through 2048 units, but the protocol-required learning/update/supervised-warmup checks remain absent while train_authorized=false."
+}
