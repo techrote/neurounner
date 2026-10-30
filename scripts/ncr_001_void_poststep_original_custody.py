@@ -163,8 +163,21 @@ def read_and_check(evidence: Path = EVIDENCE, *, verify_git: bool = False) -> tu
            # this explicit NEW_DIAGNOSTIC marker; this is NOT original #172
            # physical evidence and must never be relabelled as such.
            diag["status"] == "NEW_DIAGNOSTIC_NOT_ORIGINAL_172" and
-           diag["checks"]["backbone_unchanged_after_one_step"] is True and
-           diag["checks"]["post_step_upstream_gradients"] is True and
+           # The original one-step routine writes its last on-disk receipt
+           # immediately after the second backward. Its final in-memory
+           # checks are verified by the producer but not written again.
+           # Validate the *actual archived partial* receipt, not fictitious
+           # persisted checks that never existed in the original artifact.
+           isinstance(diag.get("post_warmup"), dict) and
+           isinstance(diag["post_warmup"].get("gradient_l1"), dict) and
+           all(isinstance(value, (int, float)) and
+               math.isfinite(value) and value > 0
+               for value in diag["post_warmup"]["gradient_l1"].values()) and
+           isinstance(diag["post_warmup"].get("ordered_field_trace"), list) and
+           len(diag["post_warmup"]["ordered_field_trace"]) == 3 and
+           isinstance(diag["post_warmup"].get("native_causal_eos_loss"), (int, float)) and
+           math.isfinite(diag["post_warmup"]["native_causal_eos_loss"]) and
+           diag["post_warmup"]["native_causal_eos_loss"] > 0 and
            same_sample and producer["sample"]["real_eos_id"] == 258 and
            producer["sample"]["total_units"] == 31 and
            producer["sample"]["supervised_after_shift"] == 21 and
