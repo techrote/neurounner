@@ -1,0 +1,121 @@
+name: NCR-001E original publisher-wire source and custody integration (NO MODEL)
+
+# This workflow performs source/receipt readback ONLY. Historical model jobs
+# remain in immutable #102 ancestry; physical workflows are manual-only.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ncr-001e-sprocket-publisher-audit.yml'
+      - '.github/workflows/ncr-001e-sprocket-publisher-wire.yml'
+      - '.github/workflows/ncr-001e-sprocket-wire-completion.yml'
+      - 'scripts/ncr_001e_sprocket_publisher_*.py'
+      - 'scripts/ncr_001e_sprocket_wire_*.py'
+      - 'tests/test_ncr_001e_sprocket_publisher_*.py'
+      - 'tests/test_ncr_001e_sprocket_wire_*.py'
+      - 'datasets/ncr-001-sprocket-wire-diagnostic/**'
+      - 'datasets/README.md'
+      - 'experiments/ncr-001/evidence-review/sprocket-publisher-wire/**'
+      - 'docs/NCR_001_E_SPROCKET_PUBLISHER*.md'
+      - 'docs/NCR_001_E_WIRE_COMPLETION.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-head-no-model:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify historical source identities, unchanged pins, and manual-only physical triggers
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+
+          original = "3592841802d85c442ca2521479b5d8795bee7233"
+          prior_main = "1247571ae619c244b7cb65ace9e9c0aee56b7f24"
+          def git(*args):
+              return subprocess.check_output(("git", *args), text=True).strip()
+          subprocess.run(("git","merge-base","--is-ancestor",original,"HEAD"), check=True)
+          subprocess.run(("git","merge-base","--is-ancestor",prior_main,"HEAD"), check=True)
+          old_files = [
+              "datasets/ncr-001-sprocket-wire-diagnostic/README.md",
+              "datasets/ncr-001-sprocket-wire-diagnostic/manifest.json",
+              "datasets/ncr-001-sprocket-wire-diagnostic/original-text-members.tar.xz.b64",
+              "datasets/ncr-001-sprocket-wire-diagnostic/provenance.json",
+              "datasets/ncr-001-sprocket-wire-diagnostic/provenance/hashes.sha256",
+              "datasets/ncr-001-sprocket-wire-diagnostic/provenance/source-artifacts.json",
+              "docs/NCR_001_E_SPROCKET_PUBLISHER_WIRE.md",
+              "docs/NCR_001_E_SPROCKET_PUBLISHER_WIRE_EVIDENCE.md",
+              "docs/NCR_001_E_WIRE_COMPLETION.md",
+              "experiments/ncr-001/evidence-review/sprocket-publisher-wire/original-instruct.json.gz.b64",
+              "experiments/ncr-001/evidence-review/sprocket-publisher-wire/provenance.json",
+              "scripts/ncr_001e_sprocket_publisher_receipt_audit.py",
+              "scripts/ncr_001e_sprocket_publisher_wire.py",
+              "scripts/ncr_001e_sprocket_publisher_wire_model.py",
+              "scripts/ncr_001e_sprocket_wire_archive.py",
+              "scripts/ncr_001e_sprocket_wire_diagnostic.py",
+              "tests/test_ncr_001e_sprocket_publisher_receipt_audit.py",
+              "tests/test_ncr_001e_sprocket_publisher_wire.py",
+              "tests/test_ncr_001e_sprocket_wire_archive.py",
+              "tests/test_ncr_001e_sprocket_wire_completion.py",
+          ]
+          for path in old_files:
+              before = git("rev-parse", f"{original}:{path}")
+              now = git("rev-parse", f"HEAD:{path}")
+              if before != now:
+                  raise SystemExit(f"Original Git blob changed: {path} {before} != {now}")
+          for path, want in (
+              ("experiments/ncr-001/protocol.json", "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"),
+              ("experiments/ncr-001/source-pins.json", "59fff1aed872b5563aa6898171983973e0cdb02c"),
+          ):
+              if git("rev-parse",f"HEAD:{path}") != want:
+                  raise SystemExit("Scientific source pin changed: "+path)
+          if git("rev-parse","HEAD:RAG.md") != git("rev-parse",f"{prior_main}:RAG.md"):
+              raise SystemExit("Unsafe unrelated RAG mutation could trigger physical workflows")
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          m=json.loads(Path("datasets/ncr-001-sprocket-wire-diagnostic/manifest.json").read_text())
+          assert m["qualifications"]["train_authorized"] is False
+          assert m["qualifications"]["independent_final_72_admission"] is False
+          assert m["qualifications"]["model_tool_memory_semantics_pass"] is False
+          assert m["original_raw_generations"] == 21
+          idx=Path("datasets/README.md").read_text()
+          assert idx.count("ncr-001-sprocket-wire-diagnostic") == 2
+          assert "story-001-v2" in idx and "village-001d-recovery-v-g08-c" in idx
+          for name in ("ncr-001e-sprocket-publisher-wire.yml","ncr-001e-sprocket-wire-completion.yml"):
+              data=Path(".github/workflows",name).read_text()
+              if "\non:\n" not in data:
+                  raise SystemExit("Missing workflow event header")
+              header=data.split("\non:\n",1)[1].split("\npermissions:",1)[0]
+              if "workflow_dispatch:" not in header or "pull_request:" in header or "\npush:" in header:
+                  raise SystemExit("Unexpected automatic frozen-model event trigger in "+name)
+          print("SOURCE_ONLY_EXACT_HEAD",git("rev-parse","HEAD"),"original_sha",original,
+                "preserved_original_blobs",len(old_files),"train_authorized=false")
+          PY
+      - name: Execute independent offline source, tokenizer-grammar and evidence-custody suites
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_sprocket_publisher_wire.py scripts/ncr_001e_sprocket_publisher_wire_model.py scripts/ncr_001e_sprocket_wire_diagnostic.py scripts/ncr_001e_sprocket_wire_archive.py scripts/ncr_001e_sprocket_publisher_receipt_audit.py
+          python3 scripts/ncr_001e_sprocket_publisher_receipt_audit.py
+          python3 scripts/ncr_001e_sprocket_wire_archive.py
+          # Reconstruct the exact historical pre-repair serializer from Git ancestry,
+          # without network, model execution, mutation of the original or extra source checkout.
+          mkdir -p previous/scripts
+          git show 3583905ce2c91a813643e4a4e836eaa659cbde34:scripts/ncr_001e_sprocket_publisher_wire.py > previous/scripts/ncr_001e_sprocket_publisher_wire.py
+          test "$(git hash-object previous/scripts/ncr_001e_sprocket_publisher_wire.py)" = "0abf73a8877cad61392517baa1a8487276ba5507"
+          python3 scripts/ncr_001e_sprocket_wire_diagnostic.py --prepare
+          for name in test_ncr_001e_sprocket_publisher_receipt_audit.py test_ncr_001e_sprocket_publisher_wire.py test_ncr_001e_sprocket_wire_archive.py test_ncr_001e_sprocket_wire_completion.py; do
+            python3 -m unittest discover -s tests -p "$name" -v
+          done
+          echo "PASS: source/custody tests only; no model invocation"

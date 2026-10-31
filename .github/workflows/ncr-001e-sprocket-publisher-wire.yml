@@ -1,0 +1,133 @@
+name: NCR-001E publisher-source Sprocket Instruct tool/memory wire (no training)
+
+# G3 integration safety: historical PR-triggered frozen-model jobs are archived
+# in original #102 Git ancestry. This composition is manual-only; a separately
+# authorized physical qualification is mandatory before any future dispatch.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001e-publisher-wire-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  HF_HOME: /tmp/ncr001e-publisher-wire-hf
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  publisher-source:
+    name: Pinned publisher SFT wire and fail-closed source-only tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: kandivault-source/Sprocket-500M
+          ref: a003767e70d766bc14b40c89792543ee8641c8bc
+          path: publisher
+          persist-credentials: false
+      - name: Refuse drift from exact public publisher SFT source
+        run: |
+          test "$(git -C publisher rev-parse HEAD)" = "a003767e70d766bc14b40c89792543ee8641c8bc"
+          test "$(git -C publisher hash-object src/train/sft_data.py)" = "90bddf8976b9d6410fe7c5c1f084708e1cebab73"
+          test "$(git -C publisher hash-object scripts/harvest_round.py)" = "97811aa4245ad3f05f66ce0c2d8aa8c353619267"
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          from scripts.ncr_001e_sprocket_publisher_wire import ROLE
+          s=Path("publisher/src/train/sft_data.py").read_text()
+          assert all(f'"{role}": "{marker}"' in s for role,marker in ROLE.items())
+          assert "TRAINED_ROLES = {\"assistant\"}" in s
+          print("PUBLIC_PUBLISHER_SFT_SHA256", hashlib.sha256(s.encode()).hexdigest())
+          print("SOURCE_WIRE_RELEASE_GATE train_authorized=false")
+          PY
+      - name: Offline source-wire guards and negative tests
+        run: |
+          python3 -m py_compile scripts/ncr_001e_sprocket_publisher_wire.py scripts/ncr_001e_sprocket_publisher_wire_model.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_sprocket_publisher_wire.py' -v
+
+  actual-instruct:
+    needs: publisher-source
+    name: Actual frozen root Instruct original source/tool-memory cache witness
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: b95c010f9b2ba3cbd9f81317981316bb9c8acd19
+          path: implementation
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: kandivault-source/Sprocket-500M
+          ref: a003767e70d766bc14b40c89792543ee8641c8bc
+          path: publisher
+          persist-credentials: false
+      - name: Verify all unmodified source bindings, no training
+        run: |
+          test "$(git -C implementation rev-parse HEAD)" = "b95c010f9b2ba3cbd9f81317981316bb9c8acd19"
+          test "$(git -C publisher rev-parse HEAD)" = "a003767e70d766bc14b40c89792543ee8641c8bc"
+          test "$(git -C publisher hash-object src/train/sft_data.py)" = "90bddf8976b9d6410fe7c5c1f084708e1cebab73"
+          test "$(git -C publisher hash-object scripts/harvest_round.py)" = "97811aa4245ad3f05f66ce0c2d8aa8c353619267"
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          assert p["models"]["sprocket_instruct"]["weight_file"] == "model.safetensors"
+          print("NCR-001E source-pinned Instruct host; no training")
+          PY
+      - name: Install exact already-qualified CPU frozen-host dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Prefetch and hash the distinct full original pinned root checkpoint
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          pin=json.load(open("experiments/ncr-001/source-pins.json"))["models"]["sprocket_instruct"]
+          assert pin["repo_id"]=="kandivault/sprocket-500m"
+          assert pin["revision"]=="eb157d4ddddc4619e661d4a2426bb2dd000fc668"
+          assert pin["hf_weight_file"]=="model.safetensors"
+          for name in ("README.md","config.json","tokenizer.json",
+                       "tokenizer_config.json","special_tokens_map.json","model.safetensors"):
+              p=Path(hf_hub_download(pin["repo_id"],filename=name,revision=pin["revision"]))
+              digest=hashlib.sha256(p.read_bytes()).hexdigest()
+              if name=="model.safetensors":
+                  assert digest==pin["weight_declared_lfs_sha256_not_downloaded"]
+                  assert p.stat().st_size==pin["weight_bytes"]==1002207984
+              print("EXACT_ORIGINAL_INSTRUCT",name,digest,p.stat().st_size,flush=True)
+          PY
+      - name: Genuine frozen Instruct publisher-wire full versus cached boundary test
+        run: |
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001e_sprocket_publisher_wire_model.py
+      - name: Retain complete PASS/FAIL runner/source/causal receipt
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001e-instruct-publisher-wire-a${{ github.run_attempt }}
+          path: runtime/ncr-001/sprocket-instruct-publisher-wire.json
+          if-no-files-found: warn
+          retention-days: 30
