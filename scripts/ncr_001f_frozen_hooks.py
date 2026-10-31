@@ -236,10 +236,54 @@ class FrozenDepthGatedMLP(nn.Module):
         return meta
 
     def load_adapter(self, directory: str | Path) -> None:
-        self.verify_frozen_base()
-        path = Path(directory)
-        observed = json.loads((path / "metadata.json").read_text(encoding="utf-8"))
-        if observed != self._metadata():
-            raise RuntimeError("Gated MLP wrong model variant/source/config metadata")
-        state = torch.load(path / "adapter.pt", map_location="cpu", weights_only=True)
-        self.control.load_state_dict(state, strict=True)
+        """Validate the entire adapter before copying any live parameters.
+
+        PyTorch strict load_state_dict can copy earlier valid tensors before
+        rejecting a malformed later tensor. A rejected import must not change
+        the matched control or interleave with another decoder-root user.
+        This is an adapter-only operation; no original model is loaded.
+        """
+        with self._claim_backbone():
+            self.verify_frozen_base()
+            path = Path(directory)
+            observed = json.loads((path / "metadata.json").read_text(encoding="utf-8"))
+            if observed != self._metadata():
+                raise RuntimeError("Gated MLP wrong model variant/source/config metadata")
+            state = torch.load(path / "adapter.pt", map_location="cpu", weights_only=True)
+            expected = self.control.state_dict()
+            if not isinstance(state, dict) or set(state) != set(expected):
+                raise RuntimeError("Gated MLP adapter state keys do not match")
+            for name, reference in expected.items():
+                incoming = state[name]
+                if name == "_extra_state":
+                    if type(incoming) is not dict or incoming != reference:
+                        raise RuntimeError("Gated MLP adapter extra-state mismatch")
+                    continue
+                if (type(incoming) is not Tensor
+                        or incoming.layout != torch.strided
+                        or incoming.shape != reference.shape
+                        or incoming.dtype != reference.dtype):
+                    raise RuntimeError(f"Gated MLP adapter tensor metadata mismatch: {name}")
+                if incoming.is_floating_point() and not bool(torch.isfinite(incoming).all()):
+                    raise RuntimeError(f"Gated MLP adapter contains nonfinite values: {name}")
+
+            # Preserve values for rollback even if a later copy raises.
+            # The existing shared nonblocking lease covers validation, commit
+            # and rollback, preventing forward/disabled-baseline interleaving.
+            prior_parameters = {
+                name: value.detach().clone()
+                for name, value in self.control.named_parameters()
+            }
+            prior_buffers = {
+                name: value.detach().clone()
+                for name, value in self.control.named_buffers()
+            }
+            try:
+                self.control.load_state_dict(state, strict=True)
+            except BaseException:
+                with torch.no_grad():
+                    for name, value in self.control.named_parameters():
+                        value.copy_(prior_parameters[name])
+                    for name, value in self.control.named_buffers():
+                        value.copy_(prior_buffers[name])
+                raise

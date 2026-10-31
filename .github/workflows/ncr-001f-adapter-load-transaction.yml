@@ -1,0 +1,88 @@
+name: NCR-001F atomic MLP adapter import / shared decoder lease (NO MODEL)
+on:
+  push:
+    branches: [review/ncr001f-transactional-mlp-import-g5-20261031]
+    paths:
+      - "scripts/ncr_001f_frozen_hooks.py"
+      - "tests/test_ncr_001f_adapter_load_transaction.py"
+      - ".github/workflows/ncr-001f-adapter-load-transaction.yml"
+      - "docs/NCR_001_F_ADAPTER_LOAD_TRANSACTION.md"
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/ncr_001f_frozen_hooks.py"
+      - "tests/test_ncr_001f_adapter_load_transaction.py"
+      - ".github/workflows/ncr-001f-adapter-load-transaction.yml"
+      - "docs/NCR_001_F_ADAPTER_LOAD_TRANSACTION.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neurounner-ncr001f-load-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  OMP_NUM_THREADS: "2"
+  MKL_NUM_THREADS: "2"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  toy-four-lane-atomic-adapter-import:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Refuse unexpected checkout or source authority drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+      - name: Install pinned CPU PyTorch only, no original model or tokenizer
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+      - name: Execute toy import, frozen-hook and shared-backbone regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001f_frozen_hooks.py tests/test_ncr_001f_adapter_load_transaction.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001f_adapter_load_transaction.py' -v
+          python3 -O -m unittest discover -s tests -p 'test_ncr_001f_adapter_load_transaction.py' -v
+          python3 -m unittest discover -s tests -p 'test_ncr_001f_frozen_hooks.py' -v
+          python3 -m unittest discover -s tests -p 'test_ncr_001f_shared_backbone_ownership.py' -v
+      - name: Record bounded source-only PASS, not scientific admission
+        if: success()
+        run: |
+          mkdir -p runtime/ncr-001f
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report = {
+              "scope": "NCR-001F toy four-lane adapter import safety, no model",
+              "status": "SOURCE_ONLY_ATOMIC_IMPORT_PASS__SCIENTIFIC_ADMISSION_BLOCKED",
+              "original_model_executed": False,
+              "optimizer_steps": 0,
+              "sealed_heldouts_opened": False,
+              "train_authorized": False,
+              "full_72_conformance_pass": False,
+              "actual_compute_budget_qualified": False,
+              "actual_frozen_model_reload_requalified": False,
+          }
+          Path("runtime/ncr-001f/adapter-import-source-report.json").write_text(
+              json.dumps(report, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+          print(report["status"])
+          PY
+      - name: Preserve source-only report if created
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001f-atomic-import-a${{ github.run_attempt }}
+          path: runtime/ncr-001f/adapter-import-source-report.json
+          retention-days: 30
+          if-no-files-found: warn
