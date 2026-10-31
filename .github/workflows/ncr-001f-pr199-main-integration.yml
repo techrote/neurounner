@@ -1,0 +1,72 @@
+name: NCR-001F #199 current-main original-source integration (NO MODEL)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ncr-001f-pr199-main-integration.yml'
+      - '.github/workflows/ncr-001f-postlease-samehost-budget.yml'
+      - 'scripts/ncr_001f_postlease_samehost_budget.py'
+      - 'tests/test_ncr_001f_postlease_samehost_budget.py'
+      - 'docs/NCR_001_F_POSTLEASE_SAMEHOST_CPU_BUDGET.md'
+permissions:
+  contents: read
+jobs:
+  original-head-and-source:
+    name: Original blobs + current-main ancestry + nine no-model refusals
+    if: github.event.pull_request.head.ref == 'review/ncr001f-postlease-samehost-budget-20261029'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact-head history, original bytes and safe trigger (NO MODEL)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          def git(*a):
+              return subprocess.check_output(["git",*a], text=True).strip()
+          head=os.environ["EXPECTED_HEAD"]
+          main="1a9004929b0a6a4037940d9ee7e607ef13d5833c"
+          original="2e2d7c86b066e96207afd6355ddbfbe535d3718e"
+          assert git("rev-parse","HEAD")==head
+          assert git("rev-list","--parents","-n","1","HEAD").split()==[head,main,original]
+          expected={
+            "scripts/ncr_001f_postlease_samehost_budget.py":"aeb10895ffa03db61772acbcfccaa9764a306eb8",
+            "tests/test_ncr_001f_postlease_samehost_budget.py":"3c2ee275a5e25356760dd0411ffc62959b652ca7",
+            "docs/NCR_001_F_POSTLEASE_SAMEHOST_CPU_BUDGET.md":"63aa43cb98aff6d481d0c110a275de69c82054e3",
+            "experiments/ncr-001/protocol.json":"14ce5fbaa38f8806c8c8738f19c01b91385eebaf",
+            "experiments/ncr-001/source-pins.json":"59fff1aed872b5563aa6898171983973e0cdb02c",
+          }
+          for path,blob in expected.items():
+              assert git("hash-object",path)==blob,(path,git("hash-object",path),blob)
+          changed=set(git("diff","--name-only",main,head).splitlines())
+          allow={"scripts/ncr_001f_postlease_samehost_budget.py",
+                 "tests/test_ncr_001f_postlease_samehost_budget.py",
+                 "docs/NCR_001_F_POSTLEASE_SAMEHOST_CPU_BUDGET.md",
+                 ".github/workflows/ncr-001f-pr199-main-integration.yml",
+                 ".github/workflows/ncr-001f-postlease-samehost-budget.yml"}
+          assert changed==allow,(changed,allow)
+          wf=pathlib.Path(".github/workflows/ncr-001f-postlease-samehost-budget.yml").read_text()
+          assert "\non:\n  workflow_dispatch:\n" in wf
+          assert "\n  pull_request:" not in wf and "\n  push:" not in wf
+          assert "real-separate-frozen-variant:\n    if: ${{ false }}" in wf
+          p=json.loads(pathlib.Path("experiments/ncr-001/protocol.json").read_text())
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("PASS_EXACT_HEAD_ORIGINAL_BYTES_NO_PHYSICAL_TRIGGER_NO_ADMISSION")
+          PY
+      - name: Install pinned CPU dependencies (NO MODEL DOWNLOAD)
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "huggingface_hub==0.36.2" "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Run original synthetic-only negative tests (NO MODEL / NO TRAIN)
+        run: |
+          python3 -m py_compile scripts/ncr_001f_postlease_samehost_budget.py tests/test_ncr_001f_postlease_samehost_budget.py
+          python3 -m unittest discover -s tests -p test_ncr_001f_postlease_samehost_budget.py -v
