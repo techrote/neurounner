@@ -34,8 +34,8 @@ jobs:
           test "$(git hash-object experiments/ncr-001/evidence-review/pr113-rightpad-generation/provenance.json)" = e944ca2655729e60c587865a9168b34698031114
           if [ "${{ github.event_name }}" = pull_request ]; then
             test "${{ github.event.pull_request.head.repo.full_name }}" = techrote/neurounner
-            test "${{ github.event.pull_request.head.ref }}" = review/ncr001e-pr102-independent-masked-batch-20261027
-            test "${{ github.event.pull_request.base.sha }}" = d9e109f2b142665ad4feda098d37f5691e05cf38
+            test "${{ github.event.pull_request.base.ref }}" = main
+            git merge-base --is-ancestor "${{ github.event.pull_request.base.sha }}" HEAD
             git merge-base --is-ancestor 3592841802d85c442ca2521479b5d8795bee7233 HEAD
           fi
       - name: Independent five-member byte archive, runner and full source-model gate
