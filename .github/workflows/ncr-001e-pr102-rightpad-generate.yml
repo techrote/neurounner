@@ -1,0 +1,200 @@
+name: NCR-001E PR113 right-pad cached decode + original HF.generate (no training)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001e-pr113-rightpad-generate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  HF_HOME: /tmp/ncr001e-pr113-rightgap-hf
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+  PYTHONDONTWRITEBYTECODE: '1'
+
+jobs:
+  pure-source:
+    name: Source plan and right-pad cache gap negative refusals
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      run_model: ${{ steps.changed_source.outputs.run_model }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Source-matched real frozen model run required? Fail closed on bad diff
+        id: changed_source
+        run: |
+          python3 - <<'PY'
+          import json,os,subprocess
+          event=json.load(open(os.environ['GITHUB_EVENT_PATH']))
+          watched=[
+            'scripts/ncr_001e_pr102_rightpad_generate.py',
+            'scripts/ncr_001e_pr102_masked_batch_review.py',
+            'tests/test_ncr_001e_pr102_rightpad_generate.py',
+            '.github/workflows/ncr-001e-pr102-rightpad-generate.yml',
+          ]
+          run=True
+          if event.get('action')=='synchronize' and event.get('before'):
+              result=subprocess.run(['git','diff','--name-only',event['before'],'HEAD','--',*watched],
+                                    capture_output=True,text=True)
+              if result.returncode:
+                  raise RuntimeError('Refusing to infer source-only diff from failed git: '+result.stderr)
+              run=bool(result.stdout.strip())
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out:
+              out.write('run_model='+str(run).lower()+'\n')
+          print('SOURCE_MATCHED_ORIGINAL_FROZEN_MODEL_REQUIRED',run)
+          print('Archive-only changes retain the original 40598034739 real-model result, not a synthetic rerun')
+          PY
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 3592841802d85c442ca2521479b5d8795bee7233
+          path: candidate
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: kandivault-source/Sprocket-500M
+          ref: a003767e70d766bc14b40c89792543ee8641c8bc
+          path: publisher
+          persist-credentials: false
+      - name: Refuse reviewed source/config/drift, distinguish Chat root
+        run: |
+          set -euxo pipefail
+          test "$(git -C candidate rev-parse HEAD)" = "3592841802d85c442ca2521479b5d8795bee7233"
+          test "$(git -C candidate hash-object scripts/ncr_001e_sprocket_publisher_wire.py)" = "4e558ae530a1b79050e22bee587b3caf056e4563"
+          test "$(git hash-object scripts/ncr_001e_pr102_masked_batch_review.py)" = "6ade653f0452e58f82c8c78e79d326018c30bcf1"
+          test "$(git -C publisher rev-parse HEAD)" = "a003767e70d766bc14b40c89792543ee8641c8bc"
+          test "$(git -C publisher hash-object src/train/sft_data.py)" = "90bddf8976b9d6410fe7c5c1f084708e1cebab73"
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          p=json.loads(Path('candidate/experiments/ncr-001/protocol.json').read_text())
+          pins=json.loads(Path('candidate/experiments/ncr-001/source-pins.json').read_text())
+          assert p['train_authorized'] is False
+          assert set(p['models'])==set(pins['models'])=={'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          assert p['conformance']['full_vs_cached_prefill_atol']==p['conformance']['full_vs_cached_prefill_rtol']==.0005
+          assert pins['models']['sprocket_instruct']['hf_weight_file']=='model.safetensors'
+          assert pins['models']['sprocket_chat']['hf_weight_file']=='chat/model.safetensors'
+          s=Path('publisher/src/train/sft_data.py').read_bytes()
+          assert hashlib.sha256(s).hexdigest()=='e5568c15989f3987fec07545640f2f271ffe967c27cbe9d9883c0dd7b5c4ec69'
+          print('SOURCE_NO_TRAINING_NO_HOLDOUT exact publisher role schema verified')
+          PY
+      - name: New right-pad gap and source/budget regression tests (no torch)
+        run: |
+          python3 -m py_compile scripts/ncr_001e_pr102_rightpad_generate.py
+          python3 scripts/ncr_001e_pr102_rightpad_generate.py --source-test
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_pr102_rightpad_generate.py' -v
+
+  full-model:
+    needs: pure-source
+    if: needs.pure-source.outputs.run_model == 'true'
+    name: Actual original root Instruct right-gapped KV and HF GenerationMixin
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 3592841802d85c442ca2521479b5d8795bee7233
+          path: candidate
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: b95c010f9b2ba3cbd9f81317981316bb9c8acd19
+          path: implementation
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: kandivault-source/Sprocket-500M
+          ref: a003767e70d766bc14b40c89792543ee8641c8bc
+          path: publisher
+          persist-credentials: false
+      - name: Refuse any unpinned model-hook/publisher/Chat or protocol substitution
+        run: |
+          test "$(git -C candidate rev-parse HEAD)" = "3592841802d85c442ca2521479b5d8795bee7233"
+          test "$(git -C implementation rev-parse HEAD)" = "b95c010f9b2ba3cbd9f81317981316bb9c8acd19"
+          test "$(git -C publisher rev-parse HEAD)" = "a003767e70d766bc14b40c89792543ee8641c8bc"
+          test "$(git hash-object scripts/ncr_001e_pr102_masked_batch_review.py)" = "6ade653f0452e58f82c8c78e79d326018c30bcf1"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("candidate/experiments/ncr-001/protocol.json").read_text())
+          assert p['train_authorized'] is False
+          assert p['models']['sprocket_instruct']['weight_file'] == 'model.safetensors'
+          assert p['models']['sprocket_chat']['weight_file'] == 'chat/model.safetensors'
+          assert set(p['models']) == {'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          print('PINNED_FROZEN_ORIGINAL_HOOK_CONTEXT gates unchanged no training')
+          PY
+      - name: Install original qualified CPU-only runtime
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub==0.36.2' 'safetensors==0.8.0' 'sentencepiece>=0.2,<1'
+          mkdir -p runtime/ncr-001
+          python3 -m pip freeze > runtime/ncr-001/pr113-rightpad-packages.txt
+      - name: Prefetch and rehash original complete independent Instruct safetensors
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,platform
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          pin=json.loads(Path('candidate/experiments/ncr-001/source-pins.json').read_text())['models']['sprocket_instruct']
+          assert pin['hf_weight_file']=='model.safetensors'
+          report={'status':'RUNNING','train_authorized':False,'optimizer_steps':0,
+                  'runner':{'github_run_id':os.getenv('GITHUB_RUN_ID'),'github_sha':os.getenv('GITHUB_SHA'),
+                            'python':platform.python_version(),'runner_name':os.getenv('RUNNER_NAME')},
+                  'variant':'sprocket_instruct','source':{},'files':{}}
+          out=Path('runtime/ncr-001/pr113-rightpad-prefetch.json')
+          out.write_text(json.dumps(report,sort_keys=True,indent=2)+'\n')
+          try:
+              for name,key in [
+                  ('model.safetensors','weight_declared_lfs_sha256_not_downloaded'),
+                  ('config.json','config_sha256'),('tokenizer.json','tokenizer_sha256'),
+                  ('tokenizer_config.json','tokenizer_config_sha256'),
+                  ('special_tokens_map.json','special_tokens_map_sha256')]:
+                  path=Path(hf_hub_download(pin['repo_id'],name,revision=pin['revision']))
+                  h=hashlib.sha256()
+                  with path.open('rb') as fp:
+                      for chunk in iter(lambda:fp.read(4*1024*1024),b''):h.update(chunk)
+                  digest=h.hexdigest()
+                  assert digest==pin[key],f'pinned original source SHA changed: {name}'
+                  if name=='model.safetensors': assert path.stat().st_size==1002207984
+                  report['files'][name]={'sha256':digest,'bytes':path.stat().st_size}
+                  out.write_text(json.dumps(report,sort_keys=True,indent=2)+'\n')
+                  print('SOURCE_ORIGINAL_INSTRUCT',name,digest,path.stat().st_size,flush=True)
+              report['status']='PASS_EXACT_FULL_SOURCE_PREFETCH'
+          except BaseException as exc:
+              report['status']='FAIL_EXACT_FULL_SOURCE_PREFETCH'
+              report['error']=type(exc).__name__+': '+str(exc)
+              raise
+          finally:
+              out.write_text(json.dumps(report,sort_keys=True,indent=2)+'\n')
+          PY
+      - name: Genuine original frozen root Instruct right-gapped mask/cache and HF.generate
+        run: |
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python3 scripts/ncr_001e_pr102_rightpad_generate.py
+      - name: Preserve full new source/runner PASS or FAIL evidence, no destructive replacement
+        if: always()
+        run: |
+          mkdir -p runtime/ncr-001
+          git rev-parse HEAD > runtime/ncr-001/pr113-rightpad-source-commit.txt
+          sha256sum scripts/ncr_001e_pr102_rightpad_generate.py \
+            scripts/ncr_001e_pr102_masked_batch_review.py \
+            candidate/experiments/ncr-001/protocol.json \
+            candidate/experiments/ncr-001/source-pins.json > runtime/ncr-001/pr113-rightpad-source-hashes.sha256
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: ncr001e-pr113-rightpad-generate-a${{ github.run_attempt }}
+          path: runtime/ncr-001/pr113-rightpad-*
+          if-no-files-found: warn
+          retention-days: 30

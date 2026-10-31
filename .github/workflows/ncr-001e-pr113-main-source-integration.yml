@@ -1,0 +1,78 @@
+name: NCR-001E PR113 independent source and original receipt integration (NO MODEL)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ncr-001e-pr102-independent-*'
+      - '.github/workflows/ncr-001e-pr102-rightpad-generate.yml'
+      - '.github/workflows/ncr-001e-pr113-*'
+      - 'docs/NCR_001_E_PR113_MAIN_INTEGRATION.md'
+      - 'scripts/ncr_001e_pr102_*'
+      - 'scripts/ncr_001e_pr113_*'
+      - 'tests/test_ncr_001e_pr102_*'
+      - 'tests/test_ncr_001e_pr113_*'
+      - 'experiments/ncr-001/evidence-review/pr102-masked-batch/**'
+      - 'experiments/ncr-001/evidence-review/pr113-rightpad-generation/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-source-no-model:
+    name: Immutable PR113 original source/evidence and adversarial tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify original research ancestry, source and gate authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor a7391683478968301301959c100576b2a4cbf2a8 HEAD
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          test "$(git hash-object scripts/ncr_001e_pr102_masked_batch_audit.py)" = c347d9618d307a255a3c288ec2aa935cdb79c1f9
+          test "$(git hash-object scripts/ncr_001e_pr102_masked_batch_review.py)" = 6ade653f0452e58f82c8c78e79d326018c30bcf1
+          test "$(git hash-object scripts/ncr_001e_pr102_rightpad_generate.py)" = 7a99b614516f6aca84c43cffc543d6d1d4d3f1e0
+          test "$(git hash-object scripts/ncr_001e_pr113_rightpad_receipt_audit.py)" = 91e4cbb346767611d6abc2944db87c65d164c00e
+          test "$(git hash-object experiments/ncr-001/evidence-review/pr102-masked-batch/original-jsons.tar.gz.b64)" = 02f5d2e3c6de348ea561583bb1d9483c0054e6bd
+          test "$(git hash-object experiments/ncr-001/evidence-review/pr102-masked-batch/provenance.json)" = e222a1a2d2a15e6522d6e4634bb56c4988f655fa
+          test "$(git hash-object experiments/ncr-001/evidence-review/pr113-rightpad-generation/original-text-evidence.tar.xz.b64)" = 3ca13858e4a878de259406a01f1a0baa1c97282d
+          test "$(git hash-object experiments/ncr-001/evidence-review/pr113-rightpad-generation/provenance.json)" = e944ca2655729e60c587865a9168b34698031114
+          python3 - <<'PY'
+          import json
+          p=json.load(open('experiments/ncr-001/protocol.json'))
+          assert p['train_authorized'] is False
+          assert set(p['models']) == {'smollm2', 'sprocket_chat', 'sprocket_instruct', 'void1'}
+          assert p['conformance']['full_vs_cached_prefill_atol'] == p['conformance']['full_vs_cached_prefill_rtol'] == .0005
+          print('SOURCE_ONLY_NO_TRAIN_NO_SCIENTIFIC_ADMISSION')
+          PY
+      - name: Run complete exact source-audit and archive readback without original model
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_pr102_masked_batch_audit.py scripts/ncr_001e_pr102_masked_batch_review.py scripts/ncr_001e_pr102_rightpad_generate.py scripts/ncr_001e_pr113_rightpad_receipt_audit.py
+          python3 scripts/ncr_001e_pr102_masked_batch_audit.py
+          python3 scripts/ncr_001e_pr113_rightpad_receipt_audit.py
+          python3 scripts/ncr_001e_pr102_masked_batch_review.py --source-test
+          python3 scripts/ncr_001e_pr102_rightpad_generate.py --source-test
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_pr102_*.py' -v
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_pr113_*.py' -v
+      - name: Refuse workflow trigger escalation and false physical execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          physical=['ncr-001e-pr102-independent-batch.yml','ncr-001e-pr102-rightpad-generate.yml']
+          for name in physical:
+              content=(Path('.github/workflows')/name).read_text()
+              trigger=content.split('on:',1)[1].split('permissions:',1)[0]
+              assert 'workflow_dispatch:' in trigger
+              assert 'pull_request:' not in trigger and 'push:' not in trigger
+          print('MANUAL_ONLY_PHYSICAL_WORKFLOWS; NO_WEIGHT_DOWNLOAD_OR_MODEL_EXECUTION')
+          PY

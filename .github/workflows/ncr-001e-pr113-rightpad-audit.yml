@@ -1,0 +1,57 @@
+name: NCR-001E PR113 original rightpad/generation receipt byte audit (no model)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ncr-001e-pr113-rightpad-audit.yml'
+      - 'scripts/ncr_001e_pr113_rightpad_receipt_audit.py'
+      - 'tests/test_ncr_001e_pr113_rightpad_receipt_audit.py'
+      - 'experiments/ncr-001/evidence-review/pr113-rightpad-generation/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  immutable-five-originals:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check exact PR head, immutable base and committed representation blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          test "$(git hash-object experiments/ncr-001/evidence-review/pr113-rightpad-generation/original-text-evidence.tar.xz.b64)" = 3ca13858e4a878de259406a01f1a0baa1c97282d
+          test "$(git hash-object experiments/ncr-001/evidence-review/pr113-rightpad-generation/provenance.json)" = e944ca2655729e60c587865a9168b34698031114
+          if [ "${{ github.event_name }}" = pull_request ]; then
+            test "${{ github.event.pull_request.head.repo.full_name }}" = techrote/neurounner
+            test "${{ github.event.pull_request.head.ref }}" = review/ncr001e-pr102-independent-masked-batch-20261027
+            test "${{ github.event.pull_request.base.sha }}" = d9e109f2b142665ad4feda098d37f5691e05cf38
+            git merge-base --is-ancestor 3592841802d85c442ca2521479b5d8795bee7233 HEAD
+          fi
+      - name: Independent five-member byte archive, runner and full source-model gate
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_pr113_rightpad_receipt_audit.py
+          python3 scripts/ncr_001e_pr113_rightpad_receipt_audit.py
+          python3 -m unittest discover -s tests \
+            -p 'test_ncr_001e_pr113_rightpad_receipt_audit.py' -v
+      - name: Refuse drift in four original independent model lanes and train authorization
+        run: |
+          python3 - <<'PY'
+          import json
+          p=json.load(open('experiments/ncr-001/protocol.json'))
+          assert p['train_authorized'] is False
+          assert set(p['models']) == {'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          assert p['conformance']['full_vs_cached_prefill_atol'] == p['conformance']['full_vs_cached_prefill_rtol'] == .0005
+          print('ARCHIVE_READBACK_ONLY frozen model not executed; optimizer_steps=0')
+          PY

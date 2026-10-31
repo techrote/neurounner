@@ -1,0 +1,191 @@
+name: NCR-001E PR102 independent original Instruct masked-batch reviewer (no training)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001e-pr102-independent-batch-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  HF_HOME: /tmp/ncr001e-pr102-review-hf
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+  PYTHONDONTWRITEBYTECODE: '1'
+
+jobs:
+  offline-review:
+    name: Independent source-only mask and false-acceptance negative sentinels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      run_model: ${{ steps.source_changes.outputs.run_model }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Refuse redundant real frozen-model runs for archive-only commits
+        id: source_changes
+        run: |
+          python3 - <<'PY'
+          import json,os,subprocess
+          event=json.load(open(os.environ['GITHUB_EVENT_PATH']))
+          paths=[
+            '.github/workflows/ncr-001e-pr102-independent-batch.yml',
+            'scripts/ncr_001e_pr102_masked_batch_review.py',
+            'tests/test_ncr_001e_pr102_masked_batch_review.py',
+          ]
+          run=True
+          if event.get('action')=='synchronize' and event.get('before'):
+              diff=subprocess.run(
+                ['git','diff','--name-only',event['before'],'HEAD','--',*paths],
+                capture_output=True,text=True)
+              if diff.returncode:
+                  raise RuntimeError('Cannot verify source-only diff: '+diff.stderr)
+              run=bool(diff.stdout.strip())
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out:
+              out.write('run_model='+str(run).lower()+'\n')
+          print('INDEPENDENT_FRESH_FROZEN_MODEL_REQUIRED',run)
+          PY
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 3592841802d85c442ca2521479b5d8795bee7233
+          path: candidate
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: kandivault-source/Sprocket-500M
+          ref: a003767e70d766bc14b40c89792543ee8641c8bc
+          path: publisher
+          persist-credentials: false
+      - name: Refuse silent candidate or upstream source drift; no training
+        run: |
+          test "$(git -C candidate rev-parse HEAD)" = "3592841802d85c442ca2521479b5d8795bee7233"
+          test "$(git -C candidate hash-object scripts/ncr_001e_sprocket_publisher_wire.py)" = "4e558ae530a1b79050e22bee587b3caf056e4563"
+          test "$(git -C publisher rev-parse HEAD)" = "a003767e70d766bc14b40c89792543ee8641c8bc"
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          p=json.loads(Path("candidate/experiments/ncr-001/protocol.json").read_text())
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          assert p["conformance"]["full_vs_cached_prefill_atol"] == p["conformance"]["full_vs_cached_prefill_rtol"] == .0005
+          f=Path("publisher/src/train/sft_data.py").read_bytes()
+          assert hashlib.sha256(f).hexdigest() == "e5568c15989f3987fec07545640f2f271ffe967c27cbe9d9883c0dd7b5c4ec69"
+          print("PINNED_PUBLISHER_SFT_SHA256",hashlib.sha256(f).hexdigest())
+          print("NCR_001E_INDEPENDENT_REVIEW training false, no optimizer")
+          PY
+      - name: Synthetic review-plan and malformed source negative tests (no torch)
+        run: |
+          python3 -m py_compile scripts/ncr_001e_pr102_masked_batch_review.py
+          python3 scripts/ncr_001e_pr102_masked_batch_review.py --source-test
+          python3 -m unittest discover -s tests \
+            -p 'test_ncr_001e_pr102_masked_batch_review.py' -v
+
+  real-frozen-review:
+    needs: offline-review
+    if: needs.offline-review.outputs.run_model == 'true'
+    name: Actual pinned root Instruct synthetic source-wire masked batch and KV-cache
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 3592841802d85c442ca2521479b5d8795bee7233
+          path: candidate
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: b95c010f9b2ba3cbd9f81317981316bb9c8acd19
+          path: implementation
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: kandivault-source/Sprocket-500M
+          ref: a003767e70d766bc14b40c89792543ee8641c8bc
+          path: publisher
+          persist-credentials: false
+      - name: Verify exact original candidate, implementation and publisher SHAs
+        run: |
+          test "$(git -C candidate rev-parse HEAD)" = "3592841802d85c442ca2521479b5d8795bee7233"
+          test "$(git -C implementation rev-parse HEAD)" = "b95c010f9b2ba3cbd9f81317981316bb9c8acd19"
+          test "$(git -C publisher rev-parse HEAD)" = "a003767e70d766bc14b40c89792543ee8641c8bc"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("candidate/experiments/ncr-001/protocol.json").read_text())
+          assert p["train_authorized"] is False
+          assert p["models"]["sprocket_instruct"]["weight_file"] == "model.safetensors"
+          assert p["models"]["sprocket_chat"]["weight_file"] == "chat/model.safetensors"
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("NO_TRAINING four original variants remain separate")
+          PY
+      - name: Install exact pinned original frozen-model CPU dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Independently prefetch and SHA-check *full* distinct root checkpoint
+        run: |
+          mkdir -p runtime/ncr-001
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          p=json.loads(Path("candidate/experiments/ncr-001/source-pins.json").read_text())["models"]["sprocket_instruct"]
+          assert p["hf_weight_file"] == "model.safetensors"
+          files=[("model.safetensors","weight_declared_lfs_sha256_not_downloaded"),
+                 ("config.json","config_sha256"),
+                 ("tokenizer.json","tokenizer_sha256"),
+                 ("tokenizer_config.json","tokenizer_config_sha256"),
+                 ("special_tokens_map.json","special_tokens_map_sha256")]
+          report={"status":"RUNNING_PREFETCH","source_file_count":len(files),
+                  "model_variant":"sprocket_instruct",
+                  "train_authorized":False,"optimizer_steps":0,"files":{}}
+          out=Path("runtime/ncr-001/pr102-independent-prefetch.json")
+          out.write_text(json.dumps(report,indent=2)+"\n")
+          try:
+              for name,key in files:
+                  src=Path(hf_hub_download(p["repo_id"],name,revision=p["revision"]))
+                  h=hashlib.sha256()
+                  with src.open("rb") as stream:
+                      for chunk in iter(lambda:stream.read(4*1024*1024),b""):
+                          h.update(chunk)
+                  digest=h.hexdigest()
+                  assert digest==p[key],f"source identity altered: {name}"
+                  if name=="model.safetensors":
+                      assert src.stat().st_size==1002207984
+                  report["files"][name]={"sha256":digest,"bytes":src.stat().st_size}
+                  out.write_text(json.dumps(report,indent=2)+"\n")
+                  print("ACTUAL_ORIGINAL_SOURCE",name,digest,src.stat().st_size,flush=True)
+              report["status"]="PASS_PREFETCH_SOURCES"
+          except Exception as exc:
+              report["status"]="FAIL_PREFETCH"
+              report["error"]=type(exc).__name__+": "+str(exc)
+              raise
+          finally:
+              out.write_text(json.dumps(report,indent=2)+"\n")
+          PY
+      - name: New independent actual frozen root Instruct masked/causal/cached witness
+        run: |
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001e_pr102_masked_batch_review.py
+      - name: Preserve complete original reviewer source, PASS/FAIL partial report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001e-pr102-independent-batch-a${{ github.run_attempt }}
+          path: runtime/ncr-001/pr102-independent-*.json
+          if-no-files-found: warn
+          retention-days: 30
