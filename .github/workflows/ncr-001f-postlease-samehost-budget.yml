@@ -1,0 +1,211 @@
+name: NCR-001F measured same-host frozen Sprocket NCA/MLP CPU forwards (NO TRAIN)
+# Original physical run 40904839128 is historical evidence, not permission to rerun.
+# Automatic PR/sync triggers are disabled.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ncr001f-samehost-budget-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+env:
+  HF_HOME: /tmp/ncr001f-samehost-hf
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  OPENBLAS_NUM_THREADS: "4"
+  PYTHONDONTWRITEBYTECODE: "1"
+  NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+  PARENT_HEAD: 2d5c0ed72c3d1c44f78ba58493bfffd8fab26d80
+
+jobs:
+  offline-source-and-refusals:
+    if: github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.head.ref == 'review/ncr001f-postlease-samehost-budget-20261029'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Refuse changed original source, protocol, evidence or dependency base
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_BASE_REF" = "review/ncr001-postlease-sprocket-real-host-20261028"
+          test "${{ github.event.pull_request.base.sha }}" = "$PARENT_HEAD"
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          git merge-base --is-ancestor "$PARENT_HEAD" "$NCR_EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          python3 - <<'PY'
+          import subprocess
+          allowed = {
+              "scripts/ncr_001f_postlease_samehost_budget.py",
+              "tests/test_ncr_001f_postlease_samehost_budget.py",
+              ".github/workflows/ncr-001f-postlease-samehost-budget.yml",
+              "docs/NCR_001_F_POSTLEASE_SAMEHOST_CPU_BUDGET.md",
+          }
+          modified = set(subprocess.check_output(
+              ["git", "diff", "--name-only",
+               "2d5c0ed72c3d1c44f78ba58493bfffd8fab26d80", "HEAD"],
+              text=True).splitlines())
+          assert modified and modified <= allowed, modified
+          print("Original source, evidence and all four frozen protocol lanes unmodified")
+          PY
+      - name: Install pinned source-only dependency stack
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Bounded source-only adversarial tests (no frozen model)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001f-samehost/source
+          python3 -m py_compile scripts/ncr_001f_postlease_samehost_budget.py tests/test_ncr_001f_postlease_samehost_budget.py
+          python3 -m unittest discover -s tests -p "test_ncr_001f_postlease_samehost_budget.py" -v 2>&1 | tee runtime/ncr001f-samehost/source/tests.log
+      - name: Always retain source and runner identity including failures
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p runtime/ncr001f-samehost/source
+          python3 -m pip freeze > runtime/ncr001f-samehost/source/pip-freeze.txt || true
+          uname -a > runtime/ncr001f-samehost/source/uname.txt || true
+          lscpu > runtime/ncr001f-samehost/source/lscpu.txt || true
+          git rev-parse HEAD > runtime/ncr001f-samehost/source/head.txt || true
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001f-samehost-source-and-negatives
+          path: runtime/ncr001f-samehost/source/
+          retention-days: 30
+          if-no-files-found: warn
+
+  real-separate-frozen-variant:
+    if: ${{ false }} # historical physical evidence only
+    needs: offline-source-and-refusals
+    runs-on: ubuntu-24.04
+    timeout-minutes: 80
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [chat, instruct]
+    env:
+      NCR_VARIANT: ${{ matrix.variant }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 2271218d625e1462b2cf218445da975efe17fe32
+          path: format-authority
+          persist-credentials: false
+      - name: Refuse parent, source, formatter and model identity drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git -C format-authority rev-parse HEAD)" = 2271218d625e1462b2cf218445da975efe17fe32
+          test "${{ github.event.pull_request.base.sha }}" = "$PARENT_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+      - name: Install pinned original 4-CPU HF source dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Full-byte source and distinct actual checkpoint prefetch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "runtime/ncr001f-samehost/$NCR_VARIANT"
+          python3 - <<'PY' 2>&1 | tee "runtime/ncr001f-samehost/$NCR_VARIANT/prefetch.log"
+          import hashlib,json,os
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          variant = os.environ["NCR_VARIANT"]
+          pin = json.load(open("experiments/ncr-001/source-pins.json"))["models"]["sprocket_"+variant]
+          assert pin["repo_id"] == "kandivault/sprocket-500m"
+          assert pin["revision"] == "eb157d4ddddc4619e661d4a2426bb2dd000fc668"
+          weight = "chat/model.safetensors" if variant == "chat" else "model.safetensors"
+          assert pin["hf_weight_file"] == weight
+          source_names = (["chat/config.json", "chat/tokenizer.json",
+                           "chat/tokenizer_config.json"] if variant == "chat"
+                          else ["config.json", "tokenizer.json",
+                                "tokenizer_config.json", "special_tokens_map.json"])
+          keys = {"config.json": "config_sha256",
+                  "tokenizer.json": "tokenizer_sha256",
+                  "tokenizer_config.json": "tokenizer_config_sha256",
+                  "special_tokens_map.json": "special_tokens_map_sha256"}
+          expected = {"README.md": "09aec879dc5b387bdc031dc3c74d77a9ba44362a55163f9a8b456761b68142c9",
+                      weight: pin["weight_declared_lfs_sha256_not_downloaded"]}
+          for filename in source_names:
+              k = keys[filename.rsplit("/",1)[-1]]
+              expected[filename] = pin[("chat_" if variant=="chat" else "") + k]
+          for filename,sha in expected.items():
+              path=Path(hf_hub_download(pin["repo_id"],filename=filename,
+                                        revision=pin["revision"]))
+              h=hashlib.sha256()
+              with path.open("rb") as f:
+                  for b in iter(lambda:f.read(4194304), b""):
+                      h.update(b)
+              assert h.hexdigest() == sha, (variant,filename,h.hexdigest(),sha)
+              if filename == weight:
+                  assert path.stat().st_size == 1002207984
+              print("PINNED_ORIGINAL_SOURCE_VERIFIED", variant, filename,
+                    sha, path.stat().st_size, flush=True)
+          print("NO_TRAINING_OR_HELDOUT_ACCESS",flush=True)
+          PY
+      - name: Measure alternate complete original frozen-host NCA/MLP forwards only
+        shell: bash
+        run: |
+          set -euo pipefail
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001f_postlease_samehost_budget.py \
+              --variant "$NCR_VARIANT" \
+              --out "runtime/ncr001f-samehost/$NCR_VARIANT/report.json" \
+              2>&1 | tee "runtime/ncr001f-samehost/$NCR_VARIANT/model.log"
+          python3 - <<'PY'
+          import json,os
+          v=os.environ["NCR_VARIANT"]
+          r=json.load(open(f"runtime/ncr001f-samehost/{v}/report.json"))
+          assert r["status"]=="MEASURED_SAME_FROZEN_HOST_SYNTHETIC_FORWARD_ONLY__BUDGET_NOT_ADMITTED"
+          assert [c["synthetic_shape"][1] for c in r["synthetic_cases"]]==[512,2048]
+          assert all(len(c["raw_complete_frozen_host_forward_ns"][kind])==3
+                     for c in r["synthetic_cases"] for kind in ("frozen","nca","mlp"))
+          assert r["frozen_backbone_before_sha256"] == r["frozen_backbone_after_sha256"]
+          assert not any(r[k] for k in (
+              "train_authorized","full_72_conformance_pass",
+              "actual_compute_budget_qualified","scientific_admission",
+              "heldouts_opened","training_performed",
+              "comparative_nca_mlp_training",
+              "generated_tool_memory_semantics_qualified"))
+          assert r["optimizer_steps"]==0
+          print("PASS_MEASURED_SAME_HOST_FORWARD_ONLY__SCIENTIFIC_GATES_BLOCKED")
+          PY
+      - name: Preserve complete runner and package identities including failures
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p "runtime/ncr001f-samehost/$NCR_VARIANT"
+          python3 -m pip freeze > "runtime/ncr001f-samehost/$NCR_VARIANT/pip-freeze.txt" || true
+          uname -a > "runtime/ncr001f-samehost/$NCR_VARIANT/uname.txt" || true
+          lscpu > "runtime/ncr001f-samehost/$NCR_VARIANT/lscpu.txt" || true
+          git rev-parse HEAD > "runtime/ncr001f-samehost/$NCR_VARIANT/head.txt" || true
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001f-samehost-${{ matrix.variant }}-raw-and-failures
+          path: runtime/ncr001f-samehost/${{ matrix.variant }}/
+          retention-days: 30
+          if-no-files-found: warn
