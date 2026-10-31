@@ -42,23 +42,23 @@ jobs:
           def git(*args):
               return subprocess.check_output(['git', *args], text=True).strip()
           original = {
-    "docs/NCR_001_F_SPROCKET_ADAPTER_CPU_MICROBENCH.md": "64f7cca8897109de7b2e425dea0d8fe258f3b8b6",
-    "docs/NCR_001_F_SPROCKET_MAC_PROXY.md": "f42d5194cfb50602a28002c17d18991887b17d50",
-    "docs/NCR_001_F_SPROCKET_REAL_MLP.md": "c825097a39a36eb84e3b1fae05ddef904190f08f",
-    "experiments/ncr-001/controls-evidence/real-sprocket-mlp/original-jsons.tar.gz.b64": "ec80686c51c4885bada075c3086730f49f444abf",
-    "experiments/ncr-001/controls-evidence/real-sprocket-mlp/provenance.json": "e83a3228626e4fc833ed06cb08c0e1645fc89a4e",
-    "experiments/ncr-001/controls-evidence/sprocket-adapter-cpu-microbench-20261029/original-actions-40867677298.zip": "38a428b1a0fae2c7b9163f200a2b83f37f369add",
-    "experiments/ncr-001/controls-evidence/sprocket-adapter-cpu-microbench-20261029/original-job-123426590154.log": "7ec9f8443bb69ce69330088457c3e31bee19d512",
-    "scripts/ncr_001f_real_sprocket.py": "e14dc82e8af7504b905551fc0065f86074a3da46",
-    "scripts/ncr_001f_sprocket_adapter_cpu_custody.py": "5ec658faca354871c1bed79976b64986b103e89a",
-    "scripts/ncr_001f_sprocket_adapter_cpu_microbench.py": "ae789c4c4b4c9b6d5065155b7a416e269db79814",
-    "scripts/ncr_001f_sprocket_mac_proxy.py": "6ab8ffb3e3327d7a6a92eb3cfb0075679f2425f1",
-    "scripts/ncr_001f_sprocket_mlp_receipt_audit.py": "9303c85510dcfe70ccc4d8a5daa7436537a9af19",
-    "tests/test_ncr_001f_real_sprocket.py": "0085e01f5b8edfdc664aff67f5d74add91141b78",
-    "tests/test_ncr_001f_sprocket_adapter_cpu_custody.py": "74dd7709f01708eca448a9a67c59ee8e071c1eaf",
-    "tests/test_ncr_001f_sprocket_adapter_cpu_microbench.py": "768b01efa474241793af370fed3be7db51cd5256",
-    "tests/test_ncr_001f_sprocket_mac_proxy.py": "500e38e77e407a7420e4f7c04e637cd9e9b3114f",
-    "tests/test_ncr_001f_sprocket_mlp_receipt_audit.py": "f114947b4fc61de274dc8e738c19fb6ac7eb59e9",
+              "docs/NCR_001_F_SPROCKET_ADAPTER_CPU_MICROBENCH.md": "64f7cca8897109de7b2e425dea0d8fe258f3b8b6",
+              "docs/NCR_001_F_SPROCKET_MAC_PROXY.md": "f42d5194cfb50602a28002c17d18991887b17d50",
+              "docs/NCR_001_F_SPROCKET_REAL_MLP.md": "c825097a39a36eb84e3b1fae05ddef904190f08f",
+              "experiments/ncr-001/controls-evidence/real-sprocket-mlp/original-jsons.tar.gz.b64": "ec80686c51c4885bada075c3086730f49f444abf",
+              "experiments/ncr-001/controls-evidence/real-sprocket-mlp/provenance.json": "e83a3228626e4fc833ed06cb08c0e1645fc89a4e",
+              "experiments/ncr-001/controls-evidence/sprocket-adapter-cpu-microbench-20261029/original-actions-40867677298.zip": "38a428b1a0fae2c7b9163f200a2b83f37f369add",
+              "experiments/ncr-001/controls-evidence/sprocket-adapter-cpu-microbench-20261029/original-job-123426590154.log": "7ec9f8443bb69ce69330088457c3e31bee19d512",
+              "scripts/ncr_001f_real_sprocket.py": "e14dc82e8af7504b905551fc0065f86074a3da46",
+              "scripts/ncr_001f_sprocket_adapter_cpu_custody.py": "5ec658faca354871c1bed79976b64986b103e89a",
+              "scripts/ncr_001f_sprocket_adapter_cpu_microbench.py": "ae789c4c4b4c9b6d5065155b7a416e269db79814",
+              "scripts/ncr_001f_sprocket_mac_proxy.py": "6ab8ffb3e3327d7a6a92eb3cfb0075679f2425f1",
+              "scripts/ncr_001f_sprocket_mlp_receipt_audit.py": "9303c85510dcfe70ccc4d8a5daa7436537a9af19",
+              "tests/test_ncr_001f_real_sprocket.py": "0085e01f5b8edfdc664aff67f5d74add91141b78",
+              "tests/test_ncr_001f_sprocket_adapter_cpu_custody.py": "74dd7709f01708eca448a9a67c59ee8e071c1eaf",
+              "tests/test_ncr_001f_sprocket_adapter_cpu_microbench.py": "768b01efa474241793af370fed3be7db51cd5256",
+              "tests/test_ncr_001f_sprocket_mac_proxy.py": "500e38e77e407a7420e4f7c04e637cd9e9b3114f",
+              "tests/test_ncr_001f_sprocket_mlp_receipt_audit.py": "f114947b4fc61de274dc8e738c19fb6ac7eb59e9",
           }
           for name, old_sha in original.items():
               observed = git('rev-parse', 'HEAD:'+name)
@@ -70,8 +70,10 @@ jobs:
           }.items():
               assert git('rev-parse','HEAD:'+name)==expected, name
           old='c8139cc36b1105f6bcafd585b766ff470e8c9e1d'
-          parents=git('rev-list', '--parents','HEAD').split()
-          assert len(parents)==3 and old==parents[2], parents
+          integrated='427b407e35b3bf853f6553138291d07f23dfc30d'
+          parents=git('rev-list', '--parents','-n','1',integrated).split()
+          assert parents==[integrated,'ceba05e610d478464b37603f8c182cc66e0f4226',old], parents
+          git('merge-base','--is-ancestor',integrated,'HEAD')
           assert git('rev-parse',old+':scripts/ncr_001f_frozen_hooks.py')=='e4129ebcdfa31c3be218473cef45a0d9a4a6bd88'
           assert git('rev-parse','HEAD:RAG.md')==git('rev-parse','HEAD^1:RAG.md')
           p=json.loads(open('experiments/ncr-001/protocol.json').read())
