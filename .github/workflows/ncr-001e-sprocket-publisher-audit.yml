@@ -109,6 +109,11 @@ jobs:
           python3 -m py_compile scripts/ncr_001e_sprocket_publisher_wire.py scripts/ncr_001e_sprocket_publisher_wire_model.py scripts/ncr_001e_sprocket_wire_diagnostic.py scripts/ncr_001e_sprocket_wire_archive.py scripts/ncr_001e_sprocket_publisher_receipt_audit.py
           python3 scripts/ncr_001e_sprocket_publisher_receipt_audit.py
           python3 scripts/ncr_001e_sprocket_wire_archive.py
+          # Reconstruct the exact historical pre-repair serializer from Git ancestry,
+          # without network, model execution, mutation of the original or extra source checkout.
+          mkdir -p previous/scripts
+          git show 3583905ce2c91a813643e4a4e836eaa659cbde34:scripts/ncr_001e_sprocket_publisher_wire.py > previous/scripts/ncr_001e_sprocket_publisher_wire.py
+          test "$(git hash-object previous/scripts/ncr_001e_sprocket_publisher_wire.py)" = "0abf73a8877cad61392517baa1a8487276ba5507"
           python3 scripts/ncr_001e_sprocket_wire_diagnostic.py --prepare
           for name in test_ncr_001e_sprocket_publisher_receipt_audit.py test_ncr_001e_sprocket_publisher_wire.py test_ncr_001e_sprocket_wire_archive.py test_ncr_001e_sprocket_wire_completion.py; do
             python3 -m unittest discover -s tests -p "$name" -v
