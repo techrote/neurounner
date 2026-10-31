@@ -24,6 +24,41 @@ CONTROLS = ("frozen_base_no_adapter", "parameter_matched_gated_mlp",
             "reset_each_tap_nca_3_steps", "permuted_neighborhood_nca_3_steps")
 
 
+# Fixed source identities are independent of the supplied protocol JSON. An
+# internally self-consistent but replaced protocol must never receive a PASS.
+# These values are the four distinct frozen NCR-001A/#73 model lanes.
+FROZEN_MODEL_LANES = {
+    "smollm2": {
+        "repo_id": "HuggingFaceTB/SmolLM2-135M-Instruct",
+        "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+        "variant": "instruct", "weight_file": "model.safetensors",
+        "taps": (9, 19, 29), "model_type": "llama",
+        "hidden_size": 576, "num_hidden_layers": 30, "token_limit": 256,
+    },
+    "sprocket_chat": {
+        "repo_id": "kandivault/sprocket-500m",
+        "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+        "variant": "chat", "weight_file": "chat/model.safetensors",
+        "taps": (7, 16, 25), "model_type": "llama",
+        "hidden_size": 1280, "num_hidden_layers": 26, "token_limit": 256,
+    },
+    "sprocket_instruct": {
+        "repo_id": "kandivault/sprocket-500m",
+        "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+        "variant": "instruct", "weight_file": "model.safetensors",
+        "taps": (7, 16, 25), "model_type": "llama",
+        "hidden_size": 1280, "num_hidden_layers": 26, "token_limit": 256,
+    },
+    "void1": {
+        "repo_id": "dotlabs/void.1",
+        "revision": "9c2be5087772867d45961abd11f6b35110617563",
+        "variant": "base_byte", "weight_file": "model.safetensors",
+        "taps": (7, 15, 23), "model_type": "qwen3",
+        "hidden_size": 640, "num_hidden_layers": 24, "token_limit": 1024,
+    },
+}
+
+
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -136,6 +171,32 @@ def build_plan(protocol_path: Path = PROTOCOL, dataset_root: Path = DATASET_ROOT
                 f"NCR-001F preregistered {label} drift: "
                 f"expected {expected!r}, received {observed!r}"
             )
+    # Model dictionary keys alone are insufficient: a substituted revision,
+    # chat/root weight file, depth taps or token budget changes the experiment.
+    # Check every lane against independent, frozen source-only identity values.
+    for lane, expected in FROZEN_MODEL_LANES.items():
+        model = p["models"][lane]
+        for field in ("repo_id", "revision", "variant", "weight_file"):
+            observed = model[field]
+            if type(observed) is not str or observed != expected[field]:
+                raise RuntimeError(f"NCR-001F frozen {lane} {field} drift")
+        observed_taps = model["taps_after_block_zero_based"]
+        if (type(observed_taps) is not list
+                or len(observed_taps) != len(expected["taps"])
+                or any(type(tap) is not int for tap in observed_taps)
+                or tuple(observed_taps) != expected["taps"]):
+            raise RuntimeError(f"NCR-001F frozen {lane} taps drift")
+        config = model["expected_config"]
+        if (type(config["model_type"]) is not str
+                or config["model_type"] != expected["model_type"]):
+            raise RuntimeError(f"NCR-001F frozen {lane} model_type drift")
+        for field in ("hidden_size", "num_hidden_layers"):
+            observed = config[field]
+            if type(observed) is not int or observed != expected[field]:
+                raise RuntimeError(f"NCR-001F frozen {lane} {field} drift")
+        observed_budget = p["training"]["per_model_sequence_unit_limits"][lane]
+        if type(observed_budget) is not int or observed_budget != expected["token_limit"]:
+            raise RuntimeError(f"NCR-001F frozen {lane} token_limit drift")
     seeds = p["training"]["seed_list"]
     steps = p["training"]["primary_steps_per_seed"]
     # Identity AND order are preregistered, not just the number of seeds.

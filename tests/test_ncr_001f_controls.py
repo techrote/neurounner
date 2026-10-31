@@ -194,6 +194,54 @@ class MatchAndLeakageTests(unittest.TestCase):
                     ):
                         build_plan(protocol_path=path)
 
+    def test_four_lane_source_identity_and_token_limits_fail_closed_under_optimization(self):
+        """No protocol can change a model pin, tap, width or budget and still pass."""
+        original = load_json(ROOT / "experiments/ncr-001/protocol.json")
+        mutations = []
+        for lane, model in original["models"].items():
+            changes = (
+                ("repo_id", ("models", lane, "repo_id"), "substitute/other-model"),
+                ("revision", ("models", lane, "revision"), "0" * 40),
+                ("variant", ("models", lane, "variant"), "substituted"),
+                ("weight_file", ("models", lane, "weight_file"), "wrong/model.safetensors"),
+                ("taps", ("models", lane, "taps_after_block_zero_based"), [0, 1, 2]),
+                ("model_type", ("models", lane, "expected_config", "model_type"), "substitute"),
+                ("hidden_size", ("models", lane, "expected_config", "hidden_size"),
+                 model["expected_config"]["hidden_size"] + 1),
+                ("num_hidden_layers",
+                 ("models", lane, "expected_config", "num_hidden_layers"),
+                 model["expected_config"]["num_hidden_layers"] + 1),
+                ("token_limit", ("training", "per_model_sequence_unit_limits", lane),
+                 original["training"]["per_model_sequence_unit_limits"][lane] + 1),
+            )
+            mutations.extend((lane, *case) for case in changes)
+        # Equality alone would wrongly accept float-valued JSON fields and taps.
+        mutations.extend((
+            ("smollm2", "taps", ("models", "smollm2", "taps_after_block_zero_based"),
+             [9.0, 19, 29]),
+            ("smollm2", "hidden_size", ("models", "smollm2", "expected_config", "hidden_size"),
+             576.0),
+            ("void1", "token_limit", ("training", "per_model_sequence_unit_limits", "void1"),
+             1024.0),
+            ("sprocket_chat", "taps", ("models", "sprocket_chat", "taps_after_block_zero_based"),
+             [True, 16, 25]),
+        ))
+        self.assertEqual(len(mutations), 40)
+        for lane, gate, keys, replacement in mutations:
+            with self.subTest(lane=lane, gate=gate, replacement=replacement):
+                changed = json.loads(json.dumps(original))
+                target = changed
+                for key in keys[:-1]:
+                    target = target[key]
+                target[keys[-1]] = replacement
+                with tempfile.TemporaryDirectory() as td:
+                    path = Path(td) / "substituted-model-protocol.json"
+                    path.write_text(json.dumps(changed), encoding="utf-8")
+                    with self.assertRaisesRegex(
+                        RuntimeError, f"NCR-001F frozen {lane} {gate} drift"
+                    ):
+                        build_plan(protocol_path=path)
+
     def test_train_heldout_family_collision_is_blocking(self):
         m = {"train_examples": 1, "heldout_examples": 1,
              "train_family_count": 1, "heldout_family_count": 1,

@@ -42,3 +42,32 @@ must still produce the original 7,204-byte plan SHA-256
 `f906206cfde550625512efe4c5af2f2add1a281a17c9cd3fff16991d95f17ed0`
 in exact-head CI. No model or optimizer is run and no training or admission gate
 is elevated. Original G0 SHA/CI/review remain historical evidence.
+
+## Production follow-up — frozen model source identity and sequence-unit gates
+
+A four-key model-dictionary presence check was not enough: `build_plan`
+previously copied each model's mutable `repo_id`, revision, Chat/root variant,
+weight path, depth taps, width and per-model token-unit budget into a superficially
+successful **source-only** plan without comparing them to an independent frozen
+identity contract. A mutated yet self-consistent temporary protocol could
+therefore change its planned model population while still keeping training blocked.
+This is an **integrity/preflight bypass**, not evidence of actual model execution.
+
+The planner now requires each of the four separately pinned lanes to match its
+original NCR-001A source: exact model repo/revision, distinct Sprocket
+Chat `chat/model.safetensors` versus root Instruct `model.safetensors`,
+void.1 Qwen3/ByteTokenizer variant, layer count/hidden width, post-block depth
+taps and preregistered within-model sequence budgets (256 subword units, or
+1024 byte-tokenizer units for void.1). All checks use unconditional,
+type-strict `RuntimeError` refusal, including float/bool fields equal under
+Python's ordinary numeric equality. The independent constants are based on
+the existing checked-in `protocol.json` and `source-pins.json` but are **not**
+read from the mutable protocol argument under test.
+
+One new source-only test supplies **40 adversarial temporary-protocol
+mutations** spanning all four models, nine fields per model and four equality/
+type-confusion sentinels. Both normal and `python3 -O` CI must reject all
+cases while reproducing the exact original 7,204-byte source-plan SHA-256
+`f906206cfde550625512efe4c5af2f2add1a281a17c9cd3fff16991d95f17ed0`.
+No frozen source/weight/fixture/protocol bytes, original ZIP/log custody or
+scientific admission gates are modified; this remains draft-only source work.
