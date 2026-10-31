@@ -1,0 +1,86 @@
+# NCR-001F — actual frozen void.1 matched gated-MLP byte-tokenizer prepass
+
+**Parent:** [#67](https://github.com/techrote/neurounner/issues/67). **Control issue:** [#73](https://github.com/techrote/neurounner/issues/73). **Stack:** protocol [#77](https://github.com/techrote/neurounner/pull/77) → NCA core [#82](https://github.com/techrote/neurounner/pull/82) → matched controls [#87](https://github.com/techrote/neurounner/pull/87) → real frozen MLP wrapper [#96](https://github.com/techrote/neurounner/pull/96) → this draft. ByteTokenizer source/runtime authority is separately held by [#90](https://github.com/techrote/neurounner/pull/90)/[#91](https://github.com/techrote/neurounner/pull/91). Void NCA actual-model prepass [#93](https://github.com/techrote/neurounner/pull/93) is **not** a matched-MLP result. All PRs remain unmerged.
+
+## Pinned frozen identity and independent remote-code custody
+
+- Actual HF model **dotlabs/void.1**, revision `9c2be5087772867d45961abd11f6b35110617563`; **root** `model.safetensors`, 360,622,744 bytes, SHA-256 `ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3`.
+- Qwen3 decoder, 24 blocks × 640 hidden, zero-based **post-block taps [7,15,23]**. Existing source-identical noncellular gated-MLP wrapper is fixed at [PR #96 head `f4f4b5becaebf17d89f11dc8db0952c31cbe451f`](https://github.com/techrote/neurounner/pull/96).
+- Trainable conventional matched MLP **329,472** parameters vs untrained original NCA **329,944**; **472 fewer** (about 0.143%), but parameter parity is not compute/latency parity.
+- Source reviewed `tokenization_byte.py` SHA-256 `279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03`. Reuses unchanged standalone review function `verify_reviewed_shape` from exact [#91 commit `1fdc2e7e5c7b7b77923dbc4b47dcafa132aef47a`](https://github.com/techrote/neurounner/pull/91). Actual dynamic import occurs **only after complete source-file hashing and AST structural review under HF offline mode**. Hash the *executed* Python module file again after import. Special IDs remain PAD=256, BOS=257, EOS=258; ordinary literal `<eos>` produces five UTF-8 byte IDs, **not** ID 258.
+- Compare only against this same frozen model's own logits. Do not convert a Sprocket checkpoint, tokenizer, template, result or character metric into a void.1 claim.
+
+## Bounded nontraining evidence plan
+
+[Runtime script](../scripts/ncr_001f_real_void.py), [source/negative tests](../tests/test_ncr_001f_real_void.py) and [GitHub Actions workflow](../.github/workflows/ncr-001f-real-void.yml) operate on original pinned bytes with four CPU threads, PyTorch 2.14.1+cpu, Transformers 4.57.6, huggingface_hub 0.36.2, safetensors 0.8.0. Bounded 35-minute actual-model job; no optimizer exists and **zero updates** occur.
+
+1. Static-only negative sentinels deny source/variant/revision/geometry/weight/byte-tokenizer drift and any changes to `train_authorized=false`. No held-out material is opened.
+2. Download + hash full original checkpoint, config, ByteTokenizer Python, byte vocabulary, tokenizer and special map, writing complete or partial *original* prefetch JSON before invoking remote Python. Require pinned review commit.
+3. Execute reviewed UTF-8 tokenizer on a **new synthetic technical sentence** with emoji, Japanese, accents and Greek; prove tokenizer units equal actual UTF-8 bytes, retaining character/byte/unit lengths separately. Do not use frozen evaluation prompts or attempt EOS quality scoring.
+4. On original frozen Qwen3 model, verify zero-readout MLP exact frozen logits at 16/64/128 units and left/right masked batches, plus four-unit zero-init greedy parity with actual EOS **ID 258**. Check ordered three-tap hooks.
+5. Take one gradient-only readout check against model-sourced synthetic tokens: finite loss, nonzero MLP readout gradient, no frozen base gradients. No optimizer is constructed.
+6. Manually activate one untrained readout scalar, compare genuine 48-byte-unit full forward with 48 actual single-unit cached decoder forwards at *unchanged* preregistered `atol=rtol=5e-4`; test exact mutated-future suffix invariance, A→B→A request reset, independent adapter instance restored against **same** original frozen model, wrong adapter metadata refusal, and before/after SHA-256 of **every loaded backbone parameter byte**.
+7. Always upload complete available unaltered prefetch/actual-host JSON, including failures and stack trace. Stage artifact is **not** independently audited or durable until re-downloaded byte-for-byte, SHA-bound to Actions run/job/runner/checkout/source revision, archived under `experiments/ncr-001/controls-evidence/` and reviewed using separate negative sentinels.
+
+## Immutable gates and reporting
+
+This is **not** a valid #72 PASS, independent new-process cold replay, full 2048-context test, matched trained NCA/MLP comparison, EOS defect effect estimate, historical TRAIN-002b correction, or admission of any training. [BYTE-EOS-001 #92](https://github.com/techrote/neurounner/issues/92) and future-only [PR #94](https://github.com/techrote/neurounner/pull/94) stay separate. Both successful and failed actual frozen-host results must be archived; no test may silently lower causal thresholds. All four model identities and preregistered held-outs remain unchanged. **`train_authorized=false` remains in force.**
+
+**At creation:** script/workflow/source-negative tests are committed for review; actual frozen-model CI numerical results and permanent raw artifact readback must be verified separately before marking any real-host prepass as passed.
+
+## Verified original frozen host and immutable readback — 27 October 2026
+
+**Original actual-host [Actions run 40523446884](https://github.com/techrote/neurounner/actions/runs/40523446884) PASS:** offline source/negative job **122256460886** and original full frozen Qwen3/ByteTokenizer model job **122256966798** both succeeded. Exact checked-out source commit **`35c4eb966f12965c7640d1fd8a0c6d896b075791`**. The model was actually downloaded, SHA-256 verified and loaded against the independent exact reviewed ByteTokenizer implementation—not inferred from an earlier NCA or a synthetic hook.
+
+| No-training genuine void.1 result | Original measurement |
+|---|---:|
+| Frozen checkpoint bytes / SHA-256 | 360,622,744 / `ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3` |
+| Actual frozen model / matched MLP parameters | 90,148,352 / 329,472 (versus 329,944 reference NCA) |
+| Source UTF-8 text length | 1,170 Unicode characters; **1,296 UTF-8 bytes / tokenizer units** |
+| Zero-readout frozen logit parity (16/64/128; left/right two-sample padding) | **0 exact** |
+| Four-unit greedy zero-readout generation parity / actual EOS ID | **exact**, ID **258**; **EOS not generated** |
+| Manually activated, **untrained** MLP maximum logit effect | `0.07457733154296875` |
+| 48-unit full vs 48 genuine one-unit KV-cache forwards maximum absolute error | **`5.3256750106811523e-05`**; fixed gate `atol=rtol=5e-4` |
+| Strict changed-future suffix drift / A→B→A request-state drift / new-adapter same-frozen-model reload drift | **0 / 0 / 0 exact** |
+| Frozen original model before/after tensor SHA | **identical**, `0fedbc1b79f9dd0e781552dcb214a2d3c18fa943a665af337971ef108d2468a3` |
+| Original-model readout-gradient L1 (one backward, no optimizer) | `6682.22705078125`, no base gradients |
+| Host / RSS peak | AMD EPYC 9V74, four CPU threads, peak **730,368 KiB** |
+| Source runtime | Python 3.12.3, PyTorch 2.14.1+cpu, Transformers 4.57.6 |
+| Optimizer updates, learned quality results, held-out data accesses | **0 / none / none** |
+
+**Original JSON member custody is complete for this prepass; permanent custody of the original compressed Actions ZIP container and complete decoded workflow-job logs remains outstanding.** [Actions artifact #12741959402](https://github.com/techrote/neurounner/actions/runs/40523446884/artifacts/12741959402) was downloaded in its entirety: exact ZIP SHA-256 **`8e780dc30262d139fccb7c7d00962ab5b702280ef96fd76575f57c41d1435de0`**, 3,508 bytes. Its original `void1-source-prefetch.json` (1,593 bytes, SHA-256 `761b1a350eb3270ea6b6b44e4a3acb640753a1d9149f6580656340081f12266c`) and `void1-real-mlp.json` (8,103 bytes, SHA-256 `f962abde997b0215be51df2210df4d61d5a2a453773d7c1047df0497bfba7c4a`) are stored **without modification** inside [deterministic lossless gzip/base64 originals](../experiments/ncr-001/controls-evidence/real-void1-mlp/original-jsons.tar.gz.b64), compressed-member SHA-256 **`3df298ba523c910a34a4dce1950443850acc65f0964639853316eee515e81352`**. [Provenance](../experiments/ncr-001/controls-evidence/real-void1-mlp/provenance.json) records original Actions checkout, source/runner/artifact identities and individual hashes. Original JSON bytes are verifiable independently of expiring Actions artifacts.
+
+**Independent no-model [readback Actions run 40524940169](https://github.com/techrote/neurounner/actions/runs/40524940169) PASS:** the [standard-library custody auditor](../scripts/ncr_001f_void_mlp_receipt_audit.py) validates the complete gzip/member/original byte hashes, source/runner/checkpoint identity, both prefetch and actual frozen-host numerical and negative results. [Mutation sentinels](../tests/test_ncr_001f_void_mlp_receipt_audit.py) reject altered ZIP provenance, modified source receipts, model/tokenizer substitution, false training/admission/independent process claims, cache tolerance relaxation, future-token drift, mismatched original frozen weights and fabricated EOS ability. This is **archive auditing**, not another source-model evaluation.
+
+**Constrained outcome:** real frozen void.1 nontrained matched-MLP source/cache/gradient **PREPASS PASS**. Along with SmolLM2 #96 and separately tested Sprocket Chat/Instruct #98, all four matched noncellular controls now have independent per-checkpoint preliminary actual frozen-host tests. This **does not** constitute four-model final #72 source/runtime acceptance, a common-host matched learned comparison, distinct-interpreter void cold restart, 2048-byte context acceptance, evidence of historical EOS defect effect, or any scientific quality delta. The deliberately observed failure-to-emit-EOS in a four-unit continuation is kept as **non-evidence about termination rate**, not silently counted as success. No changes to protocol, fixtures, weights, training gates, or upstream experiments; **`train_authorized=false` remains unchanged**.
+
+## 29 October 2026 — exact-head read-only custody hardening (verified)
+
+This descendant draft repairs a fail-open archival edge without altering the original physical execution, either original JSON member, held-out fixture, frozen model, #72 protocol or training authorization. The primary standard-library auditor now checks the **raw Git-blob SHA-1 of the committed provenance JSON and losslessly encoded JSON archive** before parsing or stripping whitespace; it also refuses any false elevated `classification` directly in `validate_receipts()`. Four additional mutation tests change archive whitespace, provenance whitespace, internally rehashed false provenance, and the classification passed directly to the validator. The source-only `push` workflow now asserts its exact checkout SHA, the unchanged four-lane protocol and source-pin Git blobs, read-only custody and the narrow branch identity; documentation/protocol changes are included in its path filters.
+
+These repairs **do not reconstruct or independently verify the original compressed Actions ZIP or complete job logs**. Those remain a separate evidence-retention task. The historical original physical Actions #40523446884 and subsequent offline readback #40524940169 are not new-model CI for this commit. The source/test/workflow repair passed **[exact-source Actions #40807470955](https://github.com/techrote/neurounner/actions/runs/40807470955)**, job `123229740959`, at commit `9a8019169a68a7d86c3bbfc48ed242d43368cfd4`: **19/19** offline mutation/positive tests, immutable Git-blob checks, exact checkout SHA, protocol/source pins and closed training gate all PASS. This is a read-only source/evidence verifier, not another physical Qwen3 invocation or scientific acceptance. Subsequent documentation-only heads require their own exact-head workflow association. Model/source, trained quality, full 2048-length/independent-process cold adapter, EOS historical impact and #72 scientific admission remain unqualified; `train_authorized=false` and `full_72_conformance_pass=false`.
+
+## 29 October 2026 — original Actions ZIP and complete two-job custody extension
+
+This source-only archival extension follows existing #99 original exact physical source commit `35c4eb966f12965c7640d1fd8a0c6d896b075791` and Actions [40523446884](https://github.com/techrote/neurounner/actions/runs/40523446884). The original **3,508-byte compressed ZIP** (SHA-256 `8e780dc30262d139fccb7c7d00962ab5b702280ef96fd76575f57c41d1435de0`) has been re-downloaded byte-exact and encoded without modifying the original container into [original-actions-zip.base64](../experiments/ncr-001/controls-evidence/real-void1-mlp/original-actions-zip.base64); original two raw JSON members exactly match the existing independently committed raw member archive. **Both complete original GitHub-decoded job logs** (source-sentinel job `122256460886`, physical frozen Qwen3 job `122256966798`) are retained separately under the same evidence directory. Git blobs and original job identities are fixed in [original-actions-custody.json](../experiments/ncr-001/controls-evidence/real-void1-mlp/original-actions-custody.json). These are GitHub-decoded full text logs, **not** a claim to possess the original compressed HTTP job-log transfer bytes.
+
+[Original ZIP/job auditor](../scripts/ncr_001f_void_mlp_original_actions_audit.py) is strictly additive to the primary source/receipt auditor; it independently checks committed Git blobs, ZIP container and member SHA-256s/lengths, byte equality with the prior original-JSON custody, source/run/artifact identity, both complete job logs, unchanged EOS ID **258**, and closed training/scientific gates. [Adversarial tests](../tests/test_ncr_001f_void_mlp_original_actions_audit.py) cover archive/manifest/log mutation and substituted/truncated ZIP. The workflow remains `contents: read`, exact-head checkout and frozen protocol/source pin checked. **Current-head CI outcome must be checked separately after this archival commit**; no original physical-model execution, context expansion, separate-interpreter cold adapter, new optimizer step, heldout access, or four-lane #72 acceptance is implied. Previously recorded missing-custody wording above is a historical account superseded only as to these newly committed original ZIP/job files.
+
+`train_authorized=false`; `full_72_conformance_pass=false`; original TRAIN-002b EOS impact **UNMEASURED**. No dependency drafts merged.
+
+## 29 October 2026 — stronger nonsemantic-mutation sentinels
+
+A follow-up test review found that the six-test archival suite's named ZIP
+"whitespace mutation" appended literal backslash-plus-n bytes rather than an
+actual newline. Corrected it to append an LF. The ZIP auditor strips trailing
+whitespace before Base64 decoding, so the original decoded ZIP is unchanged:
+only its **committed Git blob** must trigger refusal. Added an analogous
+manifest LF mutation: the JSON object parses identically, but the committed
+manifest blob changes. Renamed the existing fabricated-scientific-claim test
+to avoid implying it had rehashed any trusted original. These are **seven**
+offline original-ZIP/log/manifest tests on this descendant commit, in addition
+to the existing 19 receipt tests; exact-head CI must verify the result.
+Original evidence ZIP, complete decoded logs, scientific flags, model source,
+historical failures and held-out material are not changed. The original
+physical-model run is not rerun. `train_authorized=false` and
+`full_72_conformance_pass=false` remain authoritative.
