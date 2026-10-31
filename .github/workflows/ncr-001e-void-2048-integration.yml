@@ -1,0 +1,83 @@
+name: NCR-001E void.1 2048 original-source integration (NO MODEL)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ncr-001e-void-2048-context.yml'
+      - '.github/workflows/ncr-001e-void-2048-audit.yml'
+      - '.github/workflows/ncr-001e-void-2048-integration.yml'
+      - 'scripts/ncr_001e_void_2048_context.py'
+      - 'scripts/ncr_001e_void_2048_archive_audit.py'
+      - 'tests/test_ncr_001e_void_2048_context.py'
+      - 'tests/test_ncr_001e_void_2048_archive_audit.py'
+      - 'experiments/ncr-001/evidence-review/void1-2048/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-source-guard-and-custody:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Original immutable blobs, historical ancestry and no-auto-model contract
+        env:
+          LITERAL_PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, subprocess, json
+          from pathlib import Path
+          original='654736b68e60ccb7b730fb29d7e011b10c149940'
+          integrated_base='3dccefa03b4cae1e420a7dd3cc32916fbc8693f3'
+          expected={
+            'docs/NCR_001_E_VOID1_2048_GENERATE.md':'639ecb90cca9b538ea0037d5e6fc1e789321c2ac',
+            'experiments/ncr-001/evidence-review/void1-2048/original-text-members.tar.xz.b64':'71bcba697e23c5ce5c986df55e41426f083f35df',
+            'experiments/ncr-001/evidence-review/void1-2048/provenance.json':'e01859208133448867a400a618bdf4fd0ccc9d82',
+            'scripts/ncr_001e_void_2048_archive_audit.py':'9299e64634baa45bc40566634bfb753d8c9a25aa',
+            'scripts/ncr_001e_void_2048_context.py':'d2e3461d63abbfcfe32a1612c857cbd1419a0427',
+            'tests/test_ncr_001e_void_2048_archive_audit.py':'37b334b373ac6da91070b475f59cc7440e4a606f',
+            'tests/test_ncr_001e_void_2048_context.py':'5a6714d5b4d5c543bc3e120622bdaf402ce6555a',
+          }
+          def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+          for path,blob in expected.items():
+              assert git('hash-object',path)==blob,(path,'original blob drift')
+          p=json.loads(Path('experiments/ncr-001/protocol.json').read_text())
+          assert p['train_authorized'] is False
+          pins=json.loads(Path('experiments/ncr-001/source-pins.json').read_text())
+          assert set(p['models'])==set(pins['models'])=={'void1','smollm2','sprocket_chat','sprocket_instruct'}
+          h=os.getenv('LITERAL_PR_HEAD') or ''
+          if h:
+              assert git('rev-parse',h+'^1')==integrated_base
+              assert git('rev-parse',h+'^2')==original
+              assert git('rev-parse','origin/main')==integrated_base, 'main advanced; requalify'
+          source=Path('.github/workflows/ncr-001e-void-2048-context.yml').read_text()
+          prefix=source.split('permissions:',1)[0]
+          assert 'workflow_dispatch:' in prefix and 'pull_request:' not in prefix and 'push:' not in prefix
+          print('ORIGINAL_VOID1_2048_BLOBS_AND_ANCESTRY_PASS, NO_AUTO_MODEL, NO_TRAINING')
+          PY
+      - name: Original source no-model sentinels
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_void_2048_context.py
+          python3 scripts/ncr_001e_void_2048_context.py --source-test
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_void_2048_context.py' -v
+      - name: Original six text members and adversarial archive audit (NO MODEL)
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_void_2048_archive_audit.py
+          python3 scripts/ncr_001e_void_2048_archive_audit.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_void_2048_archive_audit.py' -v
+          python3 - <<'PY'
+          import json
+          p=json.load(open('experiments/ncr-001/evidence-review/void1-2048/provenance.json'))
+          assert p['scope']['train_authorized'] is False
+          assert p['scope']['optimizer_steps']==0
+          assert p['original_actions']['original_zip_bytes_committed'] is False
+          assert p['results']['full_2048_context_proven'] is True
+          assert p['scope']['historical_byte_eos_impact_measured'] is False
+          print('HISTORICAL_SOURCE_ONLY; ORIGINAL_FULL_ZIP_NOT_GIT_CUSTODIED; SCIENCE_BLOCKED')
+          PY
