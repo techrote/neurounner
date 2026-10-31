@@ -1,0 +1,80 @@
+name: NCR-001E original PR102 whole Actions ZIP and source TAR custody (NO TRAIN)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/ncr-001e-pr102-original-zip-custody.yml"
+      - "scripts/ncr_001e_pr102_original_zip_custody.py"
+      - "tests/test_ncr_001e_pr102_original_zip_custody.py"
+      - "experiments/ncr-001/evidence-review/pr102-publisher-original/**"
+      - "docs/NCR_001_PR102_ORIGINAL_ZIP_CUSTODY.md"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: ncr-pr102-zip-custody-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  original-archive-readonly:
+    if: github.event.pull_request.head.repo.full_name == 'techrote/neurounner' && github.event.pull_request.head.ref == 'review/ncr001-pr102-original-zip-source-custody-20261029'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      SOURCE_BASE: 3592841802d85c442ca2521479b5d8795bee7233
+      INTEGRATION_MAIN: e248d1231ee43035a0df8c73e11dd1b7c071de55
+      DEST: experiments/ncr-001/evidence-review/pr102-publisher-original
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require exact branch/source/protocol and all committed original Git blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "techrote/neurounner"
+          test "$GITHUB_HEAD_REF" = "review/ncr001-pr102-original-zip-source-custody-20261029"
+          test "$GITHUB_BASE_REF" = "main"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "${{ github.event.pull_request.base.sha }}" = "$INTEGRATION_MAIN"
+          git merge-base --is-ancestor "$SOURCE_BASE" "$EXPECTED_HEAD"
+          git merge-base --is-ancestor "$INTEGRATION_MAIN" "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD:RAG.md)" = "$(git rev-parse "$INTEGRATION_MAIN:RAG.md")"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          git ls-files --error-unmatch -- "$DEST/original-actions-40573188117.zip" "$DEST/original-source-snapshot-40573188117.tar.gz" "$DEST/original-job-122432551094.log" "$DEST/original-custody.json" >/dev/null
+          test "$(git hash-object "$DEST/original-actions-40573188117.zip")" = 4a54a61b56ad0dc326082a157974c0737f28a294
+          test "$(git hash-object "$DEST/original-source-snapshot-40573188117.tar.gz")" = f56ae18f10afbe1ae87f579f422ba8d302a8d25a
+          test "$(git hash-object "$DEST/original-job-122432551094.log")" = 7a377e6cd90ae2de16a3eacc8cc20da120ec3272
+          test "$(git hash-object "$DEST/original-custody.json")" = d5d5803e3bef4c4363a67de97f05d48dea3e02aa
+      - name: Independently re-download immutable source Actions ZIP and job log for byte comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/pr102-source
+          curl -fSL --retry 2 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/techrote/neurounner/actions/artifacts/12766071456/zip -o runtime/pr102-source/original.zip
+          curl -fSL --retry 2 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/techrote/neurounner/actions/jobs/122432551094/logs -o runtime/pr102-source/original-job.log
+          python3 scripts/ncr_001e_pr102_original_zip_custody.py --verify-external-zip runtime/pr102-source/original.zip --extract-source-tar runtime/pr102-source/original-source-snapshot.tar.gz --verify-job runtime/pr102-source/original-job.log
+          cmp runtime/pr102-source/original.zip "$DEST/original-actions-40573188117.zip"
+          cmp runtime/pr102-source/original-source-snapshot.tar.gz "$DEST/original-source-snapshot-40573188117.tar.gz"
+          cmp runtime/pr102-source/original-job.log "$DEST/original-job-122432551094.log"
+      - name: Original complete archive and hostile tamper qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_pr102_original_zip_custody.py tests/test_ncr_001e_pr102_original_zip_custody.py
+          python3 -m unittest discover -s tests -p test_ncr_001e_pr102_original_zip_custody.py -v
+          python3 scripts/ncr_001e_pr102_original_zip_custody.py | tee runtime/pr102-source/readonly-audit.json
+          git diff --exit-code
+          git diff --cached --exit-code
+      - name: Retain read-only audit result (including partial negatives)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-pr102-original-zip-source-readonly-a${{ github.run_attempt }}
+          path: runtime/pr102-source/
+          retention-days: 30
+          if-no-files-found: warn
