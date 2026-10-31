@@ -1,0 +1,100 @@
+name: NCR-001F frozen four-lane phase-account registry guard (NO MODEL)
+on:
+  push:
+    branches: [review/ncr001f-fourlane-identity-audit-g7-20261031]
+    paths:
+      - "scripts/ncr_001f_fourlane_phase_budget.py"
+      - "tests/test_ncr_001f_fourlane_phase_budget.py"
+      - "docs/NCR_001_F_FOURLANE_IDENTITY_AUDIT.md"
+      - ".github/workflows/ncr-001f-fourlane-identity-audit.yml"
+  pull_request:
+    branches: [review/ncr001f-fourlane-phase-budget-preflight-20261030]
+    paths:
+      - "scripts/ncr_001f_fourlane_phase_budget.py"
+      - "tests/test_ncr_001f_fourlane_phase_budget.py"
+      - "docs/NCR_001_F_FOURLANE_IDENTITY_AUDIT.md"
+      - ".github/workflows/ncr-001f-fourlane-identity-audit.yml"
+permissions:
+  contents: read
+concurrency:
+  group: ncr001f-identity-g7-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  original-custody-and-immutable-identity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Refuse wrong exact source, base, research identity or forbidden diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git merge-base --is-ancestor e25b84e9766ee2be9150ae79172821af32a56eaf HEAD
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            test "${{ github.event.pull_request.base.sha }}" = e25b84e9766ee2be9150ae79172821af32a56eaf
+          fi
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          python3 - <<'PY'
+          import subprocess
+          allowed={
+              "scripts/ncr_001f_fourlane_phase_budget.py",
+              "tests/test_ncr_001f_fourlane_phase_budget.py",
+              ".github/workflows/ncr-001f-fourlane-identity-audit.yml",
+              "docs/NCR_001_F_FOURLANE_IDENTITY_AUDIT.md",
+          }
+          changed=set(subprocess.check_output([
+              "git","diff","--name-only",
+              "e25b84e9766ee2be9150ae79172821af32a56eaf","HEAD"
+          ],text=True).splitlines())
+          assert changed == allowed, (changed,allowed)
+          print("PASS_DISJOINT_G7_ONLY_FOUR_PATHS_AND_FROZEN_ORIGINAL_SOURCE")
+          PY
+      - name: Execute original three-ZIP/log auditor and four-lane hostile regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001f-fourlane-identity-g7
+          python3 -m py_compile scripts/ncr_001f_fourlane_phase_budget.py tests/test_ncr_001f_fourlane_phase_budget.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001f_fourlane_phase_budget.py' -v 2>&1 | tee runtime/ncr001f-fourlane-identity-g7/normal.log
+          python3 -O -m unittest discover -s tests -p 'test_ncr_001f_fourlane_phase_budget.py' -v 2>&1 | tee runtime/ncr001f-fourlane-identity-g7/optimized.log
+          python3 scripts/ncr_001f_fourlane_phase_budget.py --out runtime/ncr001f-fourlane-identity-g7/phase.json 2>&1 | tee runtime/ncr001f-fourlane-identity-g7/phase.log
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("runtime/ncr001f-fourlane-identity-g7/phase.json").read_text())
+          assert p["source_registry_git_blobs"]=={
+              "protocol":"14ce5fbaa38f8806c8c8738f19c01b91385eebaf",
+              "source_pins":"59fff1aed872b5563aa6898171983973e0cdb02c"}
+          assert p["source_registry_identity_verified"] is True
+          assert p["status"]=="FOUR_LANE_SOURCE_MAC_ACCOUNT__ACTUAL_TRAINING_BUDGET_UNQUALIFIED"
+          assert set(p["lanes"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          assert p["original_corrected_physical_run"]==40904839128
+          assert p["train_authorized"] is False
+          assert p["full_72_conformance_pass"] is False
+          assert p["actual_compute_budget_qualified"] is False
+          assert p["actual_optimizer_updates_in_this_run"]==0
+          assert p["no_actual_training_phase_receipts_present"] is True
+          assert p["original_physical_execution_in_this_run"] is False
+          print("PASS_FROZEN_FOUR_LANE_IDENTITY__ORIGINAL_ZIP_CUSTODY__NO_TRAINING")
+          PY
+      - name: Preserve entire source-only environment and failures
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p runtime/ncr001f-fourlane-identity-g7
+          git rev-parse HEAD > runtime/ncr001f-fourlane-identity-g7/source-head.txt || true
+          uname -a > runtime/ncr001f-fourlane-identity-g7/host.txt || true
+          python3 --version > runtime/ncr001f-fourlane-identity-g7/python.txt 2>&1 || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: ncr001f-fourlane-identity-g7-source-and-negative-evidence
+          path: runtime/ncr001f-fourlane-identity-g7/
+          retention-days: 30
+          if-no-files-found: warn

@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import copy
 import json
+import shutil
+import tempfile
+from unittest.mock import patch
 from pathlib import Path
 import sys
 import unittest
@@ -133,6 +136,109 @@ class FourLaneBudget(unittest.TestCase):
                 row["models"]["void1"]["weight_file"]="chat/model.safetensors"
             with self.subTest(variant=variant),self.assertRaisesRegex(ValueError,"REFUSED"):
                 gate.assert_protocol(row)
+
+
+    def test_model_registry_frozen_revisions_variants_and_layer_sizes(self):
+        direct=(
+            ("smollm2","repo_id","other/smol"),
+            ("smollm2","revision","0"*40),
+            ("sprocket_chat","repo_id","other/sprocket"),
+            ("sprocket_chat","revision","1"*40),
+            ("sprocket_chat","variant","instruct"),
+            ("sprocket_instruct","variant","chat"),
+            ("void1","repo_id","other/void"),
+            ("void1","revision","2"*40),
+            ("void1","variant","instruct"),
+        )
+        for model,key,value in direct:
+            row=copy.deepcopy(protocol())
+            row["models"][model][key]=value
+            with self.subTest(model=model,field=key),self.assertRaisesRegex(ValueError,"REFUSED"):
+                gate.assert_protocol(row)
+        config=(
+            ("smollm2","num_hidden_layers",29),
+            ("sprocket_chat","num_attention_heads",19),
+            ("sprocket_instruct","num_key_value_heads",8),
+            ("void1","vocab_size",32000),
+            ("void1","max_position_embeddings",4096),
+            ("void1","num_hidden_layers",True),
+        )
+        for model,key,value in config:
+            row=copy.deepcopy(protocol())
+            row["models"][model]["expected_config"][key]=value
+            with self.subTest(model=model,field=key),self.assertRaisesRegex(ValueError,"REFUSED"):
+                gate.assert_protocol(row)
+
+    def test_budget_and_causal_numeric_drift_rejected_without_python_assert(self):
+        cases=(
+            (("training","precision"),"float16"),
+            (("training","primary_steps_per_seed"),192.0),
+            (("training","torch_threads"),4.0),
+            (("training","optimizer_lr"),0.001),
+            (("training","optimizer_betas"),[0.9,0.99]),
+            (("training","weight_decay"),0.02),
+            (("training","grad_clip_norm"),2),
+            (("training","max_seq_tokens_per_sample"),512),
+            (("training","initial_smoke_max_steps"),33),
+            (("training","transformer_weights_changed"),True),
+            (("training","per_model_sequence_unit_limits","void1"),256),
+            (("training","seed_list"),[20261026,20261027.0,20261028]),
+            (("match_constraints","record_actual_sequence_and_supervised_tokens"),False),
+            (("match_constraints","no_cross_model_raw_token_perplexity_ranking"),False),
+            (("conformance","frozen_base_noop_atol"),0.01),
+            (("conformance","full_vs_cached_prefill_atol"),0.01),
+            (("conformance","any_failure_blocks_model_qualification"),False),
+            (("conformance","per_model_gates"),["smollm2","sprocket_chat","void1"]),
+            (("architecture","cross_token_recurrence"),True),
+            (("architecture","perception"),"Conv2d 4→16 channels, 1x1"),
+            (("architecture","local_rule"),"Conv2d 16→4 channels, 1x1"),
+            (("models","void1","tokenizer_reference","ids","eos"),257),
+            (("models","void1","tokenizer_reference","generation_budget_units"),999),
+            (("models","void1","tokenizer_reference","train002b_source_sha256"),"0"*64),
+        )
+        for path,value in cases:
+            row=copy.deepcopy(protocol())
+            target=row
+            for component in path[:-1]:
+                target=target[component]
+            target[path[-1]]=value
+            with self.subTest(path="/".join(path)),self.assertRaisesRegex(ValueError,"REFUSED"):
+                gate.assert_protocol(row)
+
+    def test_immutable_protocol_and_pins_enforced_by_standalone_cli(self):
+        original=ROOT/"experiments/ncr-001"
+        for kind in ("protocol","pins"):
+            with tempfile.TemporaryDirectory() as temp:
+                directory=Path(temp)/"experiments/ncr-001"
+                directory.mkdir(parents=True)
+                shutil.copyfile(original/"protocol.json",directory/"protocol.json")
+                shutil.copyfile(original/"source-pins.json",directory/"source-pins.json")
+                path=directory/("protocol.json" if kind=="protocol" else "source-pins.json")
+                payload=json.loads(path.read_text(encoding="utf-8"))
+                if kind=="protocol":
+                    payload["training"]["precision"]="float16"
+                else:
+                    payload["models"]["sprocket_chat"]["variant"]="instruct"
+                path.write_text(json.dumps(payload,indent=2)+"\n",encoding="utf-8")
+                with patch.object(gate,"ROOT",Path(temp)):
+                    with self.subTest(kind=kind),self.assertRaisesRegex(ValueError,"REFUSED"):
+                        gate.build()
+                    if kind=="pins":
+                        with self.assertRaisesRegex(ValueError,"REFUSED"):
+                            gate.assert_protocol(protocol())
+
+    def test_original_frozen_sprocket_checkpoint_hashes_rebound_to_pins(self):
+        data=gate.build()
+        pins=json.loads((ROOT/"experiments/ncr-001/source-pins.json").read_text())
+        self.assertEqual(data["source_registry_git_blobs"],
+                         {"protocol":gate.PROTO_BLOB,"source_pins":gate.PINS_BLOB})
+        self.assertIs(data["source_registry_identity_verified"],True)
+        for name in ("sprocket_chat","sprocket_instruct"):
+            lane=data["lanes"][name]
+            self.assertEqual(lane["checkpoint_repo"],pins["models"][name]["repo_id"])
+            self.assertEqual(lane["checkpoint_revision"],pins["models"][name]["revision"])
+            self.assertTrue(lane["original_untrained_complete_host_forward_samples_available"])
+            self.assertFalse(lane["matched_training_compute_qualified"])
 
 if __name__=="__main__":
     unittest.main()

@@ -7,6 +7,7 @@ training compute, profiler FLOPs, learned capability or permission to train.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -14,6 +15,8 @@ import ncr_001f_corrected_samehost_budget_delta as original
 
 ROOT = Path(__file__).resolve().parents[1]
 PARENT = "28353d042fe479589e04fc7a85fbc56a90fb7707"
+PROTO_BLOB = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+PINS_BLOB = "59fff1aed872b5563aa6898171983973e0cdb02c"
 STATUS = "FOUR_LANE_SOURCE_MAC_ACCOUNT__ACTUAL_TRAINING_BUDGET_UNQUALIFIED"
 WIDTHS = {"smollm2": 576, "sprocket_chat": 1280,
           "sprocket_instruct": 1280, "void1": 640}
@@ -82,7 +85,7 @@ def estimate(hidden: int) -> dict:
     }
     return result
 
-def assert_protocol(p: dict) -> None:
+def assert_protocol(p: dict) -> dict:
     require(type(p) is dict and p.get("experiment") == "NCR-001"
             and p.get("train_authorized") is False, "preregistration/training policy changed")
     require(set(p.get("models", {})) == set(WIDTHS),
@@ -120,9 +123,103 @@ def assert_protocol(p: dict) -> None:
                 and m["weight_file"] == WEIGHT_FILES[key],
                 "variant/width/taps/weight path drift: " + key)
 
+
+    return verify_registry(p)
+
+
+def gitblob(data: bytes) -> str:
+    """Compute Git's immutable blob identity without external commands."""
+    return hashlib.sha1(
+        b"blob " + str(len(data)).encode("ascii") + b"\x00" + data
+    ).hexdigest()
+
+
+def verify_registry(p: dict) -> dict:
+    """Independently protect source-only model identities and budget semantics."""
+    raw = (ROOT / "experiments/ncr-001/source-pins.json").read_bytes()
+    require(gitblob(raw) == PINS_BLOB, "immutable source-pins blob drift")
+    pins = json.loads(raw)["models"]
+    require(type(pins) is dict and set(pins) == set(WIDTHS),
+            "source-pins inventory or missing independent model")
+    for key in WIDTHS:
+        m, pin = p["models"][key], pins[key]
+        require(type(m["repo_id"]) is str and m["repo_id"] == pin["repo_id"]
+                and type(m["revision"]) is str and m["revision"] == pin["revision"]
+                and type(m["variant"]) is str and m["variant"] == pin["variant"]
+                and m["weight_file"] == pin["hf_weight_file"],
+                "model checkpoint/variant/revision identity: " + key)
+        config, arch = m["expected_config"], pin["architecture"]
+        for field, source in (
+            ("hidden_size", "hidden"), ("num_hidden_layers", "layers"),
+            ("num_attention_heads", "heads"), ("num_key_value_heads", "kv_heads"),
+            ("max_position_embeddings", "context"), ("vocab_size", "vocab"),
+        ):
+            require(type(config[field]) is int and config[field] == arch[source],
+                    "model layers/width/vocab/context drift: " + key + "/" + field)
+        kind = "qwen3" if key == "void1" else "llama"
+        archname = "Qwen3ForCausalLM" if key == "void1" else "LlamaForCausalLM"
+        require(config["model_type"] == kind and
+                config["architectures"] == [archname] and
+                m["taps_after_block_zero_based"] == pin["tap_indices_post_block_zero_based"],
+                "model source architecture or depth taps: " + key)
+
+    byte = p["models"]["void1"]["tokenizer_reference"]
+    require(byte["source_file"] == "tokenization_byte.py"
+            and byte["train002b_source_sha256"] ==
+                pins["void1"]["tokenization_byte_py_sha256"]
+            and byte["ids"] == {"pad": 256, "bos": 257, "eos": 258}
+            and type(byte["generation_budget_units"]) is int
+            and byte["generation_budget_units"] == 768,
+            "void.1 original reviewed ByteTokenizer/EOS source or unit policy")
+
+    tr = p["training"]
+    units = {"smollm2": 256, "sprocket_chat": 256,
+             "sprocket_instruct": 256, "void1": 1024}
+    require(tr["precision"] == "float32"
+            and type(tr["primary_steps_per_seed"]) is int
+            and type(tr["torch_threads"]) is int
+            and type(tr["initial_smoke_max_steps"]) is int
+            and tr["initial_smoke_max_steps"] == 32
+            and type(tr["max_seq_tokens_per_sample"]) is int
+            and tr["max_seq_tokens_per_sample"] == 256
+            and tr["optimizer_lr"] == 0.0008
+            and tr["optimizer_betas"] == [0.9, 0.95]
+            and tr["weight_decay"] == 0.01
+            and tr["grad_clip_norm"] == 1
+            and tr["transformer_weights_changed"] is False
+            and tr["per_model_sequence_unit_limits"] == units
+            and all(type(x) is int for x in tr["seed_list"]),
+            "frozen precision/optimizer/seed/token budget changed")
+    match = p["match_constraints"]
+    require(match["record_actual_sequence_and_supervised_tokens"] is True
+            and match["no_cross_model_raw_token_perplexity_ranking"] is True,
+            "supervised-token ledger or cross-tokenizer policy changed")
+    conv = p["conformance"]
+    require(all(type(conv[k]) is float and conv[k] == v for k, v in (
+            ("frozen_base_noop_atol", 0.0001),
+            ("frozen_base_noop_rtol", 0.0001),
+            ("full_vs_cached_prefill_atol", 0.0005),
+            ("full_vs_cached_prefill_rtol", 0.0005)))
+            and conv["any_failure_blocks_model_qualification"] is True
+            and conv["per_model_gates"] ==
+                ["smollm2", "sprocket_chat", "sprocket_instruct", "void1"],
+            "source conformance tolerance/model gate relaxed")
+    architecture = p["architecture"]
+    require(architecture["cross_token_recurrence"] is False
+            and architecture["dynamic_sparse_execution"] is False
+            and architecture["perception"] ==
+                "Conv2d 4→16 channels, 3x3 zero-padded, shared all taps/iterations; SiLU nonlinearity"
+            and architecture["local_rule"] ==
+                "Conv2d 16→8 channels, 1x1, split tanh delta and sigmoid gate",
+            "local convolution geometry or token-isolation changed")
+    return pins
+
+
 def build() -> dict:
-    p=json.loads((ROOT / "experiments/ncr-001/protocol.json").read_text(encoding="utf-8"))
-    assert_protocol(p)
+    raw = (ROOT / "experiments/ncr-001/protocol.json").read_bytes()
+    require(gitblob(raw) == PROTO_BLOB, "immutable protocol blob drift")
+    p = json.loads(raw)
+    pins = assert_protocol(p)
     original_decision=original.audit()  # Re-audits complete Git-custodied ZIP/logs.
     require(original_decision["status"] == original.STATUS
             and original_decision["custody_head"] ==
@@ -148,6 +245,11 @@ def build() -> dict:
             require(physical["trained_quality_measured"] is False
                     and physical["actual_compute_budget_qualified"] is False
                     and physical["effective_cpu_threads"] == 4
+                    and physical["frozen_checkpoint_path"] == m["weight_file"]
+                    and physical["frozen_checkpoint_sha256"] ==
+                        pins[key]["weight_declared_lfs_sha256_not_downloaded"]
+                    and physical["variant"] ==
+                        ("chat" if key == "sprocket_chat" else "instruct")
                     and [x["context_units"] for x in physical["cases"]] == [512,2048],
                     "untrained observed Sprocket forward sample promoted")
         lanes[key]={
@@ -174,6 +276,8 @@ def build() -> dict:
         "schema": "ncr001f-fourlane-source-phase-budget-v1",
         "status": STATUS, "parent_pr": 209, "parent_source_head": PARENT,
         "original_corrected_physical_run": 40904839128,
+        "source_registry_git_blobs": {"protocol": PROTO_BLOB, "source_pins": PINS_BLOB},
+        "source_registry_identity_verified": True,
         "original_physical_execution_in_this_run": False,
         "preregistered_seeds": p["training"]["seed_list"],
         "preregistered_updates_per_seed_per_arm": 192,
