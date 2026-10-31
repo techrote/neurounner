@@ -1,0 +1,69 @@
+name: NCR-001E Sprocket all-2048 original current-main source audit (NO MODEL)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/ncr-001e-sprocket-alltoken-stream.yml"
+      - ".github/workflows/ncr-001e-alltoken-source-integration.yml"
+      - "scripts/ncr_001e_sprocket_alltoken_stream.py"
+      - "tests/test_ncr_001e_sprocket_alltoken_stream.py"
+      - "docs/NCR_001_E_SPROCKET_ALLTOKEN_STREAM.md"
+permissions:
+  contents: read
+concurrency:
+  group: ncr001-alltoken-source-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  original-source-offline-tests:
+    if: github.event.pull_request.head.repo.full_name == 'techrote/neurounner'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify exact original blobs, current main and no automatic model job
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_BASE_REF" = main
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          git merge-base --is-ancestor 0c866f5b65380ef6629a5bf084d017e886b91e52 HEAD
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          test "$(git hash-object RAG.md)" = f04668be3a19606abba0eb67a4a40c4e62c564f6
+          test "$(git hash-object scripts/ncr_001_postlease_sprocket.py)" = 66e6b4d97eea5e917339b8e7bfb5d1c191db4a2d
+          test "$(git hash-object scripts/ncr_001e_sprocket_alltoken_stream.py)" = 09401d0c575ec74eff0dd9b73efbf8d8ad5d60b7
+          test "$(git hash-object tests/test_ncr_001e_sprocket_alltoken_stream.py)" = 019a7519239a40bb47088efa744db4eb7bb4856a
+          test "$(git hash-object docs/NCR_001_E_SPROCKET_ALLTOKEN_STREAM.md)" = f26935b40479f322856c4550a83e1426d14b59f2
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          s=json.loads(Path("experiments/ncr-001/source-pins.json").read_text())
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == set(s["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          assert p["conformance"]["full_vs_cached_prefill_atol"] == p["conformance"]["full_vs_cached_prefill_rtol"] == .0005
+          wf=Path(".github/workflows/ncr-001e-sprocket-alltoken-stream.yml").read_text()
+          triggers=wf.split("permissions:",1)[0]
+          assert "\n  workflow_dispatch:" in triggers
+          assert "\n  pull_request:" not in triggers and "\n  push:" not in triggers
+          assert "explicit_manual_model_authorization" in wf
+          assert "if: inputs.explicit_manual_model_authorization == true" in wf
+          assert "NCR_EXPECTED_HEAD:" in wf and "github.sha" in wf
+          print("PASS_ALL2048_ORIGINAL_GIT_BLOBS_NO_AUTO_PHYSICAL_SOURCE_PINNED")
+          PY
+      - name: Install pinned original CPU packages (no weights downloaded)
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "huggingface_hub==0.36.2" "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Twelve offline source and adversarial refusal tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_sprocket_alltoken_stream.py tests/test_ncr_001e_sprocket_alltoken_stream.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_sprocket_alltoken_stream.py' -v
