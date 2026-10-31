@@ -54,7 +54,7 @@ jobs:
           assert '\n  pull_request:' not in triggers and '\n  push:' not in triggers
           assert 'explicit_manual_model_authorization' in wf
           assert 'if: inputs.explicit_manual_model_authorization == true' in wf
-          assert 'NCR_EXPECTED_HEAD: ${{ github.sha }}' in wf
+          assert 'NCR_EXPECTED_HEAD: '+chr(36)+'{{ github.sha }}' in wf
           print('PASS_ORIGINAL_BLOBS_AND_NO_AUTO_PHYSICAL_SOURCE_PINNED')
           PY
       - name: Install original CPU-only test packages (no checkpoint downloads)
