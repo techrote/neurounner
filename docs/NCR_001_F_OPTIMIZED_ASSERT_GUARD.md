@@ -19,3 +19,26 @@ The preexisting source-only plan recreation/hash check remains in the same workf
 ## Scientific boundary
 
 This is **source-level integrity repair** only. It does not establish actual frozen-host cache/causal conformance for any model, matched physical backward/optimizer cost, tokenizer-correct held-out evaluation, trained NCA/MLP quality or routing speedup. Four pinned lanes remain independent. Keep `train_authorized=false`, `full_72_conformance_pass=false`, `actual_compute_budget_qualified=false`; the PR is draft/unmerged, and a same-account COMMENTED review is never a distinct-person scientific approval. Preserve the original pre-fix source as the parent Git commit.
+
+## Production follow-up — exact seed identity and primary-step type
+
+The prior guard protected NCA geometry and optimizer hyperparameters but left a
+distinct fail-open case: `len(seed_list) == 3` accepted substitutions,
+duplicates and reordering of the three preregistered random seeds. The planner
+would still report `PASS_COMPARISON_PLAN_PRECHECK__BLOCKED_FOR_TRAINING` while
+writing different source-row schedule identities. Numeric equality also accepted
+`primary_steps_per_seed=192.0` despite the preregistered integer count.
+
+The read-only source planner now requires the original ordered integer seed list
+`[20261026,20261027,20261028]` and exactly 192 **integer** primary steps,
+using unconditional, type-strict `RuntimeError` checks. Ten additional
+mutated temporary-protocol sentinels reject changed/duplicate/reordered/float/
+string/bool seeds and wrong/float/string/bool step counts under normal and
+`python3 -O` execution.
+
+This is a separate, narrowly scoped source-integrity correction to the same
+draft PR #223. The unchanged original protocol and model/source/fixture pins
+must still produce the original 7,204-byte plan SHA-256
+`f906206cfde550625512efe4c5af2f2add1a281a17c9cd3fff16991d95f17ed0`
+in exact-head CI. No model or optimizer is run and no training or admission gate
+is elevated. Original G0 SHA/CI/review remain historical evidence.

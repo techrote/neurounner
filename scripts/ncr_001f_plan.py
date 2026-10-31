@@ -138,8 +138,15 @@ def build_plan(protocol_path: Path = PROTOCOL, dataset_root: Path = DATASET_ROOT
             )
     seeds = p["training"]["seed_list"]
     steps = p["training"]["primary_steps_per_seed"]
-    if len(seeds) != 3 or steps != 192:
-        raise RuntimeError("unpreregistered seeds or primary optimizer steps")
+    # Identity AND order are preregistered, not just the number of seeds.
+    # JSON true/false and numeric floats must not silently masquerade as ints.
+    expected_seeds = (20261026, 20261027, 20261028)
+    if (type(seeds) is not list or len(seeds) != len(expected_seeds)
+            or any(type(seed) is not int for seed in seeds)
+            or tuple(seeds) != expected_seeds):
+        raise RuntimeError("NCR-001F preregistered seed list/order drift")
+    if type(steps) is not int or steps != 192:
+        raise RuntimeError("NCR-001F preregistered primary optimizer steps drift")
     schedules = {
         str(seed): {
             "seed": seed, "steps": steps,

@@ -167,6 +167,33 @@ class MatchAndLeakageTests(unittest.TestCase):
                     ):
                         build_plan(protocol_path=path)
 
+    def test_locked_schedule_seeds_and_step_type_fail_closed_under_optimization(self):
+        """Exact preregistered seed values/order and integer steps are immutable."""
+        original = load_json(ROOT / "experiments/ncr-001/protocol.json")
+        cases = (
+            ("seed list/order", "seed_list", [20261026, 20261027, 20261029]),
+            ("seed list/order", "seed_list", [20261026, 20261026, 20261028]),
+            ("seed list/order", "seed_list", [20261028, 20261027, 20261026]),
+            ("seed list/order", "seed_list", [20261026.0, 20261027, 20261028]),
+            ("seed list/order", "seed_list", "20261026,20261027,20261028"),
+            ("seed list/order", "seed_list", [True, 20261027, 20261028]),
+            ("primary optimizer steps", "primary_steps_per_seed", 192.0),
+            ("primary optimizer steps", "primary_steps_per_seed", 64),
+            ("primary optimizer steps", "primary_steps_per_seed", "192"),
+            ("primary optimizer steps", "primary_steps_per_seed", True),
+        )
+        for gate, field, replacement in cases:
+            with self.subTest(field=field, replacement=replacement):
+                changed = json.loads(json.dumps(original))
+                changed["training"][field] = replacement
+                with tempfile.TemporaryDirectory() as td:
+                    path = Path(td) / "altered-schedule-protocol.json"
+                    path.write_text(json.dumps(changed), encoding="utf-8")
+                    with self.assertRaisesRegex(
+                        RuntimeError, f"NCR-001F preregistered {gate} drift"
+                    ):
+                        build_plan(protocol_path=path)
+
     def test_train_heldout_family_collision_is_blocking(self):
         m = {"train_examples": 1, "heldout_examples": 1,
              "train_family_count": 1, "heldout_family_count": 1,
