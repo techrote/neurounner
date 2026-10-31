@@ -1,0 +1,55 @@
+name: NCR-001E SmolLM2 archived physical-evidence adjudication
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/ncr-001e-smol-adjudication.yml"
+      - "scripts/ncr_001e_smol_adjudication.py"
+      - "scripts/ncr_001e_smol_2048_archive_audit.py"
+      - "tests/test_ncr_001e_smol_adjudication.py"
+      - "experiments/ncr-001/adjudication/smolllm2-pretrain.json"
+      - "experiments/ncr-001/evidence-review/smolllm2-2048/**"
+      - "experiments/ncr-001/evidence-review/smolllm2-fresh/**"
+      - "experiments/ncr-001/protocol.json"
+      - "experiments/ncr-001/source-pins.json"
+      - "docs/NCR_001_E_SMOL_ADJUDICATION.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  adjudicate-original-two-physical-receipts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 80bb64aaceb45be01e8cfea280d8803c6d0510f0
+          persist-credentials: false
+      - name: Assert exact IMMUTABLE historical PR 152 source and closed training gate
+        env:
+          EXPECTED_HEAD: 80bb64aaceb45be01e8cfea280d8803c6d0510f0
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          python3 - <<'PY'
+          import json
+          p=json.load(open('experiments/ncr-001/protocol.json'))
+          assert p['train_authorized'] is False
+          assert set(p['models'])=={'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          PY
+      - name: Validate original 2048 producer/consumer byte-exact archive
+        run: python3 scripts/ncr_001e_smol_2048_archive_audit.py
+      - name: Verify old short/masked evidence and exact committed blocked report
+        run: python3 scripts/ncr_001e_smol_adjudication.py
+      - name: Negative false-promotion and source/variant tamper tests
+        run: python3 -m unittest discover -s tests -p 'test_ncr_001e_smol_adjudication.py' -v
+      - name: Preserve machine verdict also in Actions retention
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ncr001e-smollm2-source-runtime-only-matrix
+          path: experiments/ncr-001/adjudication/smolllm2-pretrain.json
+          if-no-files-found: error
+          retention-days: 30

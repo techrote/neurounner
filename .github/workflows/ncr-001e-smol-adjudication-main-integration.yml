@@ -1,0 +1,70 @@
+name: NCR-001E original SmolLM2 blocked-adjudication current-main integration (NO MODEL)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/ncr-001e-smol-adjudication.yml"
+      - ".github/workflows/ncr-001e-smol-adjudication-main-integration.yml"
+      - "docs/NCR_001_E_SMOL_ADJUDICATION.md"
+      - "scripts/ncr_001e_smol_adjudication.py"
+      - "tests/test_ncr_001e_smol_adjudication.py"
+      - "experiments/ncr-001/adjudication/smolllm2-pretrain.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  historical-adjudication-integration:
+    name: Original head/blob ancestry, blocked protocol and current source isolation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Exact PR head checkout with original parents
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require original #152 source blobs and modern main ancestry without rewriting either
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git merge-base --is-ancestor 80bb64aaceb45be01e8cfea280d8803c6d0510f0 HEAD
+          git merge-base --is-ancestor 617b2fdf8b1c4bb50585caa11de23c7b693aca8d HEAD
+          for path in docs/NCR_001_E_SMOL_ADJUDICATION.md experiments/ncr-001/adjudication/smolllm2-pretrain.json scripts/ncr_001e_smol_adjudication.py tests/test_ncr_001e_smol_adjudication.py; do
+            test "$(git rev-parse '80bb64aaceb45be01e8cfea280d8803c6d0510f0:'"$path")" = "$(git rev-parse 'HEAD:'"$path")" || { echo "ORIGINAL SOURCE ALTERED: $path"; exit 1; }
+          done
+          echo "Original four Smol adjudication docs/report/script/test blobs exact, original source ancestry intact"
+      - name: No-model current-main protocol/source and historical adjudication flags
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_bytes())
+          s=json.loads(Path("experiments/ncr-001/source-pins.json").read_bytes())
+          a=json.loads(Path("experiments/ncr-001/adjudication/smolllm2-pretrain.json").read_bytes())
+          orig=json.loads(Path("experiments/ncr-001/evidence-review/smolllm2-2048/provenance.json").read_bytes())
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          assert p["conformance"]["full_vs_cached_prefill_atol"]==p["conformance"]["full_vs_cached_prefill_rtol"]==0.0005
+          assert s["models"]["smollm2"]["repo_id"]=="HuggingFaceTB/SmolLM2-135M-Instruct"
+          assert s["models"]["smollm2"]["revision"]=="12fd25f77366fa6b3b4b768ec3050bf629380bac"
+          assert a["model_lane"]=="smollm2"
+          assert a["status"]=="BLOCKED_REQUIRED_LEARNING_CHECKS__SOURCE_RUNTIME_PRETRAIN_PASS"
+          assert a["train_authorized"] is False and a["final_72_pass"] is False and a["per_model_gate"] is False
+          assert a["comparative_training_performed"] is False and a["optimizer_steps"]==0
+          assert orig["original_actions_artifact"]["original_zip_committed_in_git"] is False
+          manual=Path(".github/workflows/ncr-001e-smol-maxctx.yml").read_text().split("permissions:",1)[0]
+          assert "  workflow_dispatch:" in manual and "pull_request:" not in manual and "push:" not in manual
+          assert Path("experiments/ncr-001/adjudication/void1-postlease-pretrain.json").is_file()
+          print("Current four-lane source, locked original Smol pretrain HOLD and physical manual-only policy PASS")
+          PY
+      - name: Syntax/AST-only current source assurance (no Torch execution)
+        run: |
+          python3 -m py_compile scripts/ncr_001e_smol_adjudication.py tests/test_ncr_001e_smol_adjudication.py
