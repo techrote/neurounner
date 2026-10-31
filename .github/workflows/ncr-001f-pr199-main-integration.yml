@@ -36,7 +36,8 @@ jobs:
           main="1a9004929b0a6a4037940d9ee7e607ef13d5833c"
           original="2e2d7c86b066e96207afd6355ddbfbe535d3718e"
           assert git("rev-parse","HEAD")==head
-          assert git("rev-list","--parents","-n","1","HEAD").split()==[head,main,original]
+          assert git("rev-list","--parents","-n","1","HEAD").split()==[head,"8bb0f706a021e9355e70d1f85e590b8b28d07192"]
+          assert git("rev-list","--parents","-n","1","8bb0f706a021e9355e70d1f85e590b8b28d07192").split()==["8bb0f706a021e9355e70d1f85e590b8b28d07192",main,original]
           expected={
             "scripts/ncr_001f_postlease_samehost_budget.py":"aeb10895ffa03db61772acbcfccaa9764a306eb8",
             "tests/test_ncr_001f_postlease_samehost_budget.py":"3c2ee275a5e25356760dd0411ffc62959b652ca7",
@@ -56,7 +57,7 @@ jobs:
           wf=pathlib.Path(".github/workflows/ncr-001f-postlease-samehost-budget.yml").read_text()
           assert "\non:\n  workflow_dispatch:\n" in wf
           assert "\n  pull_request:" not in wf and "\n  push:" not in wf
-          assert "real-separate-frozen-variant:\n    if: ${{ false }}" in wf
+          assert ("real-separate-frozen-variant:\n    if: " + chr(36) + "{{ false }}") in wf
           p=json.loads(pathlib.Path("experiments/ncr-001/protocol.json").read_text())
           assert p["train_authorized"] is False
           assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
