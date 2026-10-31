@@ -1,0 +1,74 @@
+name: NCR-001E Sprocket Chat #123 current-main source and original receipt integration (NO MODEL)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ncr-001e-sprocket-chat-*'
+      - 'scripts/ncr_001e_sprocket_chat_generate_*'
+      - 'tests/test_ncr_001e_sprocket_chat_generate_*'
+      - 'experiments/ncr-001/evidence-review/sprocket-chat-generate/**'
+      - 'docs/NCR_001_E_SPROCKET_CHAT_GENERATE.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chat-original-integration-no-model:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact current-main ancestry, old source, four-lane pins and manual-only physical workflow
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+          EXPECTED_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "techrote/neurounner"
+          test "$GITHUB_BASE_REF" = "main"
+          test "$GITHUB_HEAD_REF" = "review/ncr001e-sprocket-chat-generate-20261027"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^1)" = "$EXPECTED_BASE"
+          test "$(git rev-parse HEAD^2)" = "57bf036f1a8728b35545473b475e3306eee440d7"
+          git merge-base --is-ancestor "57bf036f1a8728b35545473b475e3306eee440d7" "$EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git hash-object RAG.md)" = "7f0d508bb51e665af3c6af84ffecb41bf3a035c0"
+          test "$(git hash-object docs/NCR_001_E_SPROCKET_CHAT_GENERATE.md)" = "5c8f5af0fe440b73c26038fed1cdfbb4b8693925"
+          test "$(git hash-object experiments/ncr-001/evidence-review/sprocket-chat-generate/original-text-evidence.tar.xz.b64)" = "d388a7708bd0f5912907a6cb6df66994080db96f"
+          test "$(git hash-object experiments/ncr-001/evidence-review/sprocket-chat-generate/provenance.json)" = "ac45bab02b1257930fb8e180a118b4b5d550921b"
+          test "$(git hash-object scripts/ncr_001e_sprocket_chat_generate_audit.py)" = "9023f866fb7cced3c8f7d6cd379d5d9cbc8e8284"
+          test "$(git hash-object scripts/ncr_001e_sprocket_chat_generate_review.py)" = "2656ce19f0c14595816dcc73448f77b6e59d67ef"
+          test "$(git hash-object tests/test_ncr_001e_sprocket_chat_generate_audit.py)" = "f653a52b4fadcae2b1ee083db42ecec75f4d65ad"
+          test "$(git hash-object tests/test_ncr_001e_sprocket_chat_generate_review.py)" = "2d25bd8284339a650d69c1f335cb5d3736fc943b"
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          physical=Path('.github/workflows/ncr-001e-sprocket-chat-generate.yml').read_text().split('permissions:',1)[0]
+          assert 'workflow_dispatch:' in physical
+          assert 'pull_request:' not in physical and 'push:' not in physical
+          audit=Path('.github/workflows/ncr-001e-sprocket-chat-generate-audit.yml').read_text()
+          assert '- main' in audit and 'pull_request:' in audit
+          p=json.loads(Path('experiments/ncr-001/protocol.json').read_text())
+          pins=json.loads(Path('experiments/ncr-001/source-pins.json').read_text())
+          assert p['train_authorized'] is False
+          assert set(p['models']) == set(pins['models']) == {'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          assert pins['models']['sprocket_chat']['hf_weight_file'] == 'chat/model.safetensors'
+          assert pins['models']['sprocket_instruct']['hf_weight_file'] == 'model.safetensors'
+          assert pins['models']['sprocket_chat']['weight_declared_lfs_sha256_not_downloaded'] != pins['models']['sprocket_instruct']['weight_declared_lfs_sha256_not_downloaded']
+          print('PASS_ORIGINAL_CHAT_ONLY_MANUAL_PHYSICAL_NO_TRAINING')
+          PY
+      - name: Recheck original archived model evidence and source-only negative tests without downloading a model
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_sprocket_chat_generate_audit.py scripts/ncr_001e_sprocket_chat_generate_review.py
+          python3 scripts/ncr_001e_sprocket_chat_generate_audit.py
+          python3 scripts/ncr_001e_sprocket_chat_generate_review.py --source-test
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_sprocket_chat_generate_audit.py' -v
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_sprocket_chat_generate_review.py' -v
+          git diff --exit-code
