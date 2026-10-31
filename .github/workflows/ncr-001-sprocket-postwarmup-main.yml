@@ -1,0 +1,70 @@
+name: NCR-001 Sprocket #194 current-main historical evidence audit (NO MODEL)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ncr-001-sprocket-postwarmup-main.yml'
+      - 'scripts/ncr_001_sprocket_postwarmup_reconcile.py'
+      - 'tests/test_ncr_001_sprocket_postwarmup_reconcile.py'
+      - 'docs/NCR_001_SPROCKET_POSTWARMUP_RECONCILIATION.md'
+permissions:
+  contents: read
+jobs:
+  source-only-archive-reconciliation:
+    name: Literal-head original source identities, receipt readback, negative tests
+    if: github.event.pull_request.head.ref == 'review/ncr001-sprocket-postwarmup-diag-reconciliation-20261029'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate original immutable source and current protocol (NO MODEL)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import subprocess,json,os
+          def git(*args):
+              return subprocess.check_output(['git',*args],text=True).strip()
+          h=os.environ['EXPECTED_HEAD']
+          assert git('rev-parse','HEAD')==h
+          original='e5ac7fb0659bd2e640a3007e8cf798820069fc2d'
+          parents=git('rev-list','--parents','-n','1','HEAD').split()
+          assert parents==[h,'ceba05e610d478464b37603f8c182cc66e0f4226',original],parents
+          wanted={
+            '.github/workflows/ncr-001-sprocket-postwarmup-reconcile.yml':'d570acf5e91e9588e4a133081cde514b287c14cc',
+            'docs/NCR_001_SPROCKET_POSTWARMUP_RECONCILIATION.md':'c1f05ef959af0d0a2299bd011d356a63b1c4518d',
+            'scripts/ncr_001_sprocket_postwarmup_reconcile.py':'a1860e8557d638dd23005871ec83e8c1d12c05ce',
+            'tests/test_ncr_001_sprocket_postwarmup_reconcile.py':'f39d34318793d087f92c21a4e5083dbf6b10c663',
+            'experiments/ncr-001/protocol.json':'14ce5fbaa38f8806c8c8738f19c01b91385eebaf',
+            'experiments/ncr-001/source-pins.json':'59fff1aed872b5563aa6898171983973e0cdb02c',
+          }
+          for path,sha in wanted.items():assert git('rev-parse','HEAD:'+path)==sha,path
+          assert git('rev-parse','HEAD:RAG.md')==git('rev-parse','HEAD^1:RAG.md')
+          p=json.load(open('experiments/ncr-001/protocol.json'))
+          assert p['train_authorized'] is False
+          print('SOURCE_BLOBS_IDENTICAL__FOUR_MODELS_DISTINCT__TRAINING_BLOCKED')
+          PY
+      - name: Offline original receipt crosswalk and 14 adversarial tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr-001
+          python3 -m py_compile scripts/ncr_001_sprocket_postwarmup_reconcile.py tests/test_ncr_001_sprocket_postwarmup_reconcile.py
+          python3 scripts/ncr_001_sprocket_postwarmup_reconcile.py --output runtime/ncr-001/sprocket-postwarmup-diagnostic-reconciliation.json
+          python3 -m unittest discover -s tests -p test_ncr_001_sprocket_postwarmup_reconcile.py -v
+          python3 - <<'PY'
+          import json
+          r=json.load(open('runtime/ncr-001/sprocket-postwarmup-diagnostic-reconciliation.json'))
+          assert r['status']=='BLOCKED_INDEPENDENT_FULL_72_SCIENTIFIC_ADJUDICATION__NO_TRAIN'
+          assert set(r['lanes'])=={'sprocket_chat','sprocket_instruct'}
+          for name in ('train_authorized','full_72_conformance_pass','comparative_nca_mlp_training','new_physical_model_execution','heldouts_opened'):
+              assert r[name] is False,name
+          assert r['new_optimizer_steps']==0
+          print('ORIGINAL_SPROCKET_RECONCILIATION_PASS__FINAL_72_BLOCKED__NO_MODEL')
+          PY
