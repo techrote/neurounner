@@ -1,0 +1,110 @@
+name: NCR-001F void1 #99 original matched-MLP current-main integration (NO MODEL)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ncr-001f-void-main-integration.yml'
+      - '.github/workflows/ncr-001f-void-archive.yml'
+      - '.github/workflows/ncr-001f-real-void.yml'
+      - 'scripts/ncr_001f_real_void.py'
+      - 'tests/test_ncr_001f_real_void.py'
+      - 'scripts/ncr_001f_void_mlp_receipt_audit.py'
+      - 'scripts/ncr_001f_void_mlp_original_actions_audit.py'
+      - 'tests/test_ncr_001f_void_mlp_receipt_audit.py'
+      - 'tests/test_ncr_001f_void_mlp_original_actions_audit.py'
+      - 'experiments/ncr-001/controls-evidence/real-void1-mlp/**'
+      - 'docs/NCR_001_F_VOID_REAL_MLP.md'
+      - 'docs/NCR_001_F_VOID_MLP_CURRENT_MAIN_INTEGRATION.md'
+permissions:
+  contents: read
+concurrency:
+  group: ncr001f-void-99-integration-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  exact-head-ancestry-and-evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Assert literal PR head, current-main first parent and original #99 second parent
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+          EXPECTED_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python3 - <<'PY'
+          import os,subprocess,json
+          from pathlib import Path
+          def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+          assert os.environ['GITHUB_REPOSITORY']=='techrote/neurounner'
+          assert os.environ['GITHUB_HEAD_REF']=='review/ncr-001f-void-byte-mlp-real-20261027'
+          assert os.environ['GITHUB_BASE_REF']=='main'
+          assert os.environ['EXPECTED_BASE']=='118720d868d741211f85bb4613686447e85a51c7', 'main moved: require new composition and qualification'
+          assert git('rev-parse','HEAD')==os.environ['EXPECTED_HEAD']
+          assert git('rev-parse','HEAD^1')==os.environ['EXPECTED_BASE']
+          assert git('rev-parse','HEAD^2')=='463b55410a1eb9f962960c605e7fa52844ffc2f5'
+          expected={
+          "docs/NCR_001_F_VOID_REAL_MLP.md": "d7e21b6ad5550181a35e1a5c4351c1ada5a72dd4",
+          "experiments/ncr-001/controls-evidence/real-void1-mlp/original-actions-custody.json": "cff5a8b28239d3bad8b0d0fc92a28d44efac1461",
+          "experiments/ncr-001/controls-evidence/real-void1-mlp/original-actions-zip.base64": "ffba95801464a046e3a61ecf07e06052b99b4d57",
+          "experiments/ncr-001/controls-evidence/real-void1-mlp/original-jsons.tar.gz.b64": "2bc9f809206507f893dacf1940748e630502a958",
+          "experiments/ncr-001/controls-evidence/real-void1-mlp/original-model-job-122256966798.log": "3c51293865c36c188137b8e4a4ee47f082e0bd27",
+          "experiments/ncr-001/controls-evidence/real-void1-mlp/original-source-job-122256460886.log": "5dd15def669be3e16870a94ba1e1ed5fa6808bce",
+          "experiments/ncr-001/controls-evidence/real-void1-mlp/provenance.json": "6d1f6f8aaca641501e57762225c22b3a9d87a33d",
+          "scripts/ncr_001f_real_void.py": "e5f6a2736f89cdc8846497f9947d26bd7948938e",
+          "scripts/ncr_001f_void_mlp_original_actions_audit.py": "8226fea0549903bfbbb2bca7fa0162937651edd0",
+          "scripts/ncr_001f_void_mlp_receipt_audit.py": "d02ee58c9f5036cc6cc5904f653291db3844cc6a",
+          "tests/test_ncr_001f_real_void.py": "12f3dc878477553fc702b98e01181f22286d34d6",
+          "tests/test_ncr_001f_void_mlp_original_actions_audit.py": "fd494c2ef67931903c67cac536f22edcbe820a90",
+          "tests/test_ncr_001f_void_mlp_receipt_audit.py": "bc6f9ad5a6064c907542b1b1bb3d8d227f98533f"
+          }
+          for p,blob in expected.items():
+              assert git('hash-object',p)==blob,(p,'historical original blob modified')
+          for p,b in {
+             'RAG.md':'f04668be3a19606abba0eb67a4a40c4e62c564f6',
+             'scripts/ncr_001f_frozen_hooks.py':'5efe8f0690bc1c2793de323d5b972b26bbd7bccb',
+             'experiments/ncr-001/protocol.json':'14ce5fbaa38f8806c8c8738f19c01b91385eebaf',
+             'experiments/ncr-001/source-pins.json':'59fff1aed872b5563aa6898171983973e0cdb02c'
+          }.items():
+              assert git('hash-object',p)==b,(p,'current-main scientific authority changed')
+          physical=Path('.github/workflows/ncr-001f-real-void.yml').read_text()
+          assert physical.split('on:\n',1)[1].split('permissions:',1)[0].strip()=='workflow_dispatch:', 'MODEL WORKFLOW MUST BE MANUAL ONLY'
+          p=json.loads(Path('experiments/ncr-001/protocol.json').read_text())
+          assert p['train_authorized'] is False and set(p['models'])=={'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          print('CURRENT_MAIN_RECONCILED_ORIGINAL_VOID_MLP_BLOBS__NO_PHYSICAL_MODEL')
+          PY
+      - name: Preserve two original member JSONs, complete Actions ZIP and both job logs; adversarial tests
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001f_void_mlp_receipt_audit.py scripts/ncr_001f_void_mlp_original_actions_audit.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001f_void_mlp_receipt_audit.py' -v
+          python3 -m unittest discover -s tests -p 'test_ncr_001f_void_mlp_original_actions_audit.py' -v
+          python3 scripts/ncr_001f_void_mlp_receipt_audit.py
+          python3 scripts/ncr_001f_void_mlp_original_actions_audit.py
+  frozen-source-negative-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      HF_HUB_OFFLINE: '1'
+      TRANSFORMERS_OFFLINE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      OMP_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Install CPU Python dependencies only — no model weight or tokenizer download
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub==0.36.2' 'safetensors==0.8.0' 'sentencepiece>=0.2,<1'
+      - name: Run original negative source-identity suite against updated main hooks, no inference
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001f_real_void.py tests/test_ncr_001f_real_void.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001f_real_void.py' -v
+          python3 -m unittest discover -s tests -p 'test_ncr_001f_frozen_hooks.py' -v
+          echo 'NO_MODEL_NO_TRAIN_SOURCE_GUARDS_PASS'

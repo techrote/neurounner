@@ -1,0 +1,164 @@
+name: NCR-001F pinned void.1 frozen byte-MLP real host (no training)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001f-void-real-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  TOKENIZERS_PARALLELISM: "false"
+  HF_HOME: /tmp/ncr001f-void-mlp
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  offline-source-negative:
+    name: Four model pin and byte-tokenizer negative sentinels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install exact CPU framework and dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Compile, assert all training gates are closed, run negative fixtures
+        run: |
+          python3 -m py_compile scripts/ncr_001f_real_void.py tests/test_ncr_001f_real_void.py
+          python3 -m unittest discover -s tests -p "test_ncr_001f_real_void.py" -v
+          python3 -m unittest discover -s tests -p "test_ncr_001f_frozen_hooks.py" -v
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("Unmerged four-lane protocol training gates remain CLOSED.")
+          PY
+
+  original-frozen-qwen3-mlp:
+    name: Real pinned Qwen3 byte-tokenizer MLP no-op/gradient/cache prepass
+    needs: offline-source-negative
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Check out original separate reviewed ByteTokenizer runtime code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 1fdc2e7e5c7b7b77923dbc4b47dcafa132aef47a
+          path: byte-authority
+          persist-credentials: false
+      - name: Verify exact independent review identity
+        run: |
+          test "$(git -C byte-authority rev-parse HEAD)" = "1fdc2e7e5c7b7b77923dbc4b47dcafa132aef47a"
+          test -f byte-authority/scripts/ncr_001k_byte_runtime.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          assert p["train_authorized"] is False
+          assert p["models"]["void1"]["revision"]=="9c2be5087772867d45961abd11f6b35110617563"
+          print("Original pinned void frozen source and training block bound.")
+          PY
+      - name: Install pinned CPU source/runtime stack
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Download and hash full original checkpoint and reviewed tokenizer before execution
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, traceback
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          pins=json.loads(Path("experiments/ncr-001/source-pins.json").read_text())["models"]["void1"]
+          expected={
+              "model.safetensors":"weight_declared_lfs_sha256_not_downloaded",
+              "config.json":"config_sha256",
+              "tokenization_byte.py":"tokenization_byte_py_sha256",
+              "byte_vocab.json":"byte_vocab_sha256",
+              "tokenizer_config.json":"tokenizer_config_sha256",
+              "special_tokens_map.json":"special_tokens_map_sha256",
+          }
+          p=Path("runtime/ncr-001f/void1-source-prefetch.json")
+          p.parent.mkdir(parents=True,exist_ok=True)
+          record={"status":"PREFETCH_STARTED","source_files":{},
+                  "github_run_id":os.getenv("GITHUB_RUN_ID"),
+                  "github_sha":os.getenv("GITHUB_SHA"),
+                  "train_authorized":False,"training_performed":False,
+                  "optimizer_steps":0}
+          def save(): p.write_text(json.dumps(record,indent=2,sort_keys=True)+"\n")
+          try:
+              assert pins["repo_id"]=="dotlabs/void.1"
+              assert pins["revision"]=="9c2be5087772867d45961abd11f6b35110617563"
+              for name,key in expected.items():
+                  f=Path(hf_hub_download(pins["repo_id"],filename=name,revision=pins["revision"]))
+                  h=hashlib.sha256()
+                  with f.open("rb") as stream:
+                      for chunk in iter(lambda:stream.read(4*1024*1024),b""):
+                          h.update(chunk)
+                  digest=h.hexdigest()
+                  record["source_files"][name]={"sha256":digest,
+                      "expected":pins[key],"bytes":f.stat().st_size}
+                  save()
+                  if digest!=pins[key]: raise RuntimeError("Pinned source SHA changed: "+name)
+                  if name=="model.safetensors" and f.stat().st_size!=360622744:
+                      raise RuntimeError("Incomplete original checkpoint")
+                  print("Source SHA verified:",name,digest,flush=True)
+              record["status"]="PASS_ALL_SOURCE_BYTES"
+              save()
+          except Exception as e:
+              record["status"]="FAILED_SOURCE_BYTES__TRAINING_BLOCKED"
+              record["error"]=type(e).__name__+": "+str(e)
+              record["traceback"]=traceback.format_exc()[-4500:]
+              save()
+              raise
+          PY
+      - name: Run offline reviewed tokenizer + actual original frozen Qwen3 MLP prepass
+        env:
+          HF_HUB_OFFLINE: "1"
+          TRANSFORMERS_OFFLINE: "1"
+        run: |
+          python3 scripts/ncr_001f_real_void.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("runtime/ncr-001f/void1-real-mlp.json").read_text())
+          assert r["status"]=="PASS_SOURCE_BOUND_VOID1_UTF8_MLP_REAL_MODEL_PREPASS__TRAINING_BLOCKED"
+          assert r["train_authorized"] is False
+          assert r["optimizer_steps"]==0 and r["model_training_performed"] is False
+          assert r["heldout_data_opened"] is False
+          assert r["final_ncr_001e_admission"] is False
+          assert r["tokenizer"]["actual_source_reviewed"] is True
+          assert r["checks"]["active_48_UTF8_full_vs_true_incremental_KV"]["close"] is True
+          assert r["checks"]["strict_causal_future_suffix"]["exact"] is True
+          assert r["checks"]["frozen_base_all_bytes_unchanged"] is True
+          print("Original model and reviewed tokenizer MLP prepass only. No training.")
+          PY
+      - name: Always retain original source/partial/failure receipts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001f-void1-source-MLP-a${{ github.run_attempt }}
+          path: |
+            runtime/ncr-001f/void1-source-prefetch.json
+            runtime/ncr-001f/void1-real-mlp.json
+          retention-days: 30
+          if-no-files-found: warn
