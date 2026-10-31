@@ -65,3 +65,16 @@ actual_compute_budget_qualified=false. The four task-owned PRs remain
 DRAFT/UNMERGED; actual merge-down belongs to the separate authorized worker.
 This source-only composition cannot itself authorize training, admission,
 PR readiness, release or main integration.
+
+## Preserved first-source CI failure and correction
+
+Initial literal source f513acbe2c275d0dc704df43f364abc76aa99061
+failed BOTH no-model workflow runs 41187586980 (push) and 41187591034
+(PR) after the original eight fake-Git tests passed 8/8 ordinary and 8/8
+optimized. First composition incorrectly required draft-specific #223 anchor
+e53ab3a to be on main, impossible while #223 remains draft, rather than
+checking the original PR base. Corrected the main ancestry requirement to
+12f7bf while retaining draft anchor verification on owned HEAD. Added a
+ninth positive Git regression for this exact separate-branch condition.
+Original failed jobs remain evidence; later source-composition PASS
+requires newly verified exact-head CI.

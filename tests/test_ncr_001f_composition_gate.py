@@ -47,10 +47,10 @@ class CompositionTests(unittest.TestCase):
         git(self.repo, "checkout", "-b", branch, parent)
         return self.commit(path, content)
 
-    def compose(self, stages, main="main", own_files=None):
+    def compose(self, stages, main="main", own_files=None, own_anchor=None):
         git(self.repo, "checkout", "own")
         return build(self.repo, Path(self.tmp.name) / "workspace", main,
-                     tuple(stages), own_anchor=self.base,
+                     tuple(stages), own_anchor=self.base if own_anchor is None else own_anchor,
                      own_files=own_files, authority=self.authority)
 
     def test_full_source_chain_and_two_disjoint_drafts(self):
@@ -122,6 +122,17 @@ class CompositionTests(unittest.TestCase):
             self.compose((Stage(199, seed, a, "phase"),
                           Stage(223, self.base, d, "self")),
                          main="main-diverged", own_files={"scripts/own.py"})
+
+    def test_owned_draft_anchor_does_not_need_to_exist_on_main(self):
+        # Draft source head is intentionally off main. Only original MAIN
+        # base must be an ancestor of current main.
+        anchor = self.branch("own", self.base, "scripts/anchor.py", "anchor=1\n")
+        head = self.commit("scripts/new.py", "new=1\n")
+        report = self.compose((Stage(223, self.base, head, "self"),),
+                              own_anchor=anchor,
+                              own_files={"scripts/anchor.py", "scripts/new.py"})
+        self.assertEqual(report["status"], STATUS)
+        self.assertEqual(report["main_source_sha"], self.base)
 
     def test_reject_protected_paths_without_file_access(self):
         for path in ("RAG.md", "SCHEDUSWARM.md",

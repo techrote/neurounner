@@ -84,7 +84,7 @@ def verify_stages(root: Path, stages: tuple[Stage, ...],
     if not stages or stages[-1].group != "self":
         raise Refusal("Owned literal source must be the final stage")
     git(root, "merge-base", "--is-ancestor", own_anchor, stages[-1].head)
-    git(root, "merge-base", "--is-ancestor", own_anchor, main)
+    git(root, "merge-base", "--is-ancestor", stages[-1].base, main)
     if git(root, "rev-parse", "HEAD").decode().strip() != stages[-1].head:
         raise Refusal("Current checkout is not literal owned source HEAD")
     records = []
