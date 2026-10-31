@@ -130,6 +130,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
           persist-credentials: false
       - name: Install pinned CPU-only PyTorch for synthetic source sentinels
         run: |
@@ -142,10 +143,15 @@ jobs:
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
           python3 -m py_compile scripts/ncr_001f_real_sprocket.py scripts/ncr_001f_sprocket_adapter_cpu_microbench.py
           python3 -m unittest discover -s tests -p test_ncr_001f_real_sprocket.py -v
-          python3 -m unittest discover -s tests -p test_ncr_001f_sprocket_adapter_cpu_microbench.py -v
+          git worktree add --detach /tmp/ncr98-original-adapter-cpu 'c8139cc36b1105f6bcafd585b766ff470e8c9e1d'
+          (
+            cd /tmp/ncr98-original-adapter-cpu
+            test "$(git rev-parse HEAD)" = 'c8139cc36b1105f6bcafd585b766ff470e8c9e1d'
+            python3 -m unittest discover -s tests -p test_ncr_001f_sprocket_adapter_cpu_microbench.py -v
+          )
           python3 - <<'PY'
           import json
           p=json.load(open('experiments/ncr-001/protocol.json'))
           assert p['train_authorized'] is False
-          print('CURRENT_HOOK_SYNTHETIC_SOURCE_ONLY__NO_FROZEN_MODEL_LOADED')
+          print('CURRENT_HOOK_CONTRACT_7_TESTS__HISTORIC_CPU_SAMPLES_SOURCE_VERSION_SEPARATE__NO_FROZEN_MODEL_LOADED')
           PY
