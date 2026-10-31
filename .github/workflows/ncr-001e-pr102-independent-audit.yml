@@ -1,0 +1,49 @@
+name: NCR-001E PR102 separate real-host original masked-batch receipt audit (no model)
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ncr-001e-pr102-independent-audit.yml'
+      - 'scripts/ncr_001e_pr102_masked_batch_audit.py'
+      - 'tests/test_ncr_001e_pr102_masked_batch_audit.py'
+      - 'experiments/ncr-001/evidence-review/pr102-masked-batch/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  original-receipt-readback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 31b052df673ec9fa382cf7a3d7587cdcbeb1707d
+          path: previous
+          persist-credentials: false
+      - name: Independently pin historical reviewer source before negative reproduction
+        run: |
+          test "$(git -C previous rev-parse HEAD)" = "31b052df673ec9fa382cf7a3d7587cdcbeb1707d"
+          test "$(git -C previous hash-object scripts/ncr_001e_pr102_masked_batch_audit.py)" = "2d1fb3eb6e3a30947d52b29d99d63be9fdaa936a"
+          echo 'Historical original archive gate pinned; reproduce negative and verify new refusal'
+      - name: Validate unchanged original two JSONs, full source SHA and false admission
+        run: |
+          python3 -m py_compile scripts/ncr_001e_pr102_masked_batch_audit.py
+          python3 scripts/ncr_001e_pr102_masked_batch_audit.py
+          python3 -m unittest discover -s tests \
+            -p 'test_ncr_001e_pr102_masked_batch_audit.py' -v
+      - name: Independently reassert global four-lane gate (not real model)
+        run: |
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("ORIGINAL_EVIDENCE_READBACK_ONLY optimizer_steps=0; no training admission")
+          PY
