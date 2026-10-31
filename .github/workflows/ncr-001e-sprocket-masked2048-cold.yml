@@ -1,0 +1,167 @@
+name: NCR-001E Sprocket masked-batched 2048 KV + cold-process (NO TRAIN)
+# Historical source-pinned physical workflow retained for explicit owner-approved manual runs only.
+# Normal pull requests and pushes MUST NOT execute model code.
+on:
+  workflow_dispatch:
+    inputs:
+      explicit_manual_model_authorization:
+        description: "Owner separately approved frozen-model inference only"
+        required: true
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: ncr001-masked2048-cold-${{ github.run_id }}
+  cancel-in-progress: true
+env:
+  HF_HOME: /tmp/ncr001-masked2048-cold
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  PYTHONDONTWRITEBYTECODE: "1"
+  NCR_EXPECTED_HEAD: ${{ github.sha }}
+jobs:
+  source-contract-and-adversarial:
+    if: inputs.explicit_manual_model_authorization == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Refuse base/identity/immutable protocol drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "techrote/neurounner"
+          test "${{ github.event_name }}" = "workflow_dispatch"
+          test "${{ inputs.explicit_manual_model_authorization }}" = "true"
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          git merge-base --is-ancestor "b52af229dbfd0220d8d89f0d18e58733a2c3b56b" HEAD
+          test "$(git hash-object scripts/ncr_001e_sprocket_masked_cold_2048.py)" = "c92a410dc6605fa1878ded44265906e0a9769d08"
+          test "$(git hash-object tests/test_ncr_001e_sprocket_masked_cold_2048.py)" = "e125e647544c80a58da14e85d5cf391640de82f6"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          python3 - <<'PY'
+          import json,subprocess
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          s=json.load(open("experiments/ncr-001/source-pins.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"])==set(s["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          assert p["conformance"]["full_vs_cached_prefill_atol"] == p["conformance"]["full_vs_cached_prefill_rtol"] == .0005
+          from pathlib import Path
+          assert subprocess.check_output(["git","hash-object","scripts/ncr_001e_sprocket_masked_cold_2048.py"],text=True).strip()=="c92a410dc6605fa1878ded44265906e0a9769d08"
+          assert subprocess.check_output(["git","hash-object","tests/test_ncr_001e_sprocket_masked_cold_2048.py"],text=True).strip()=="e125e647544c80a58da14e85d5cf391640de82f6"
+          print("PASS_EXACT_PARENT_SOURCE_PINS_NO_TRAIN")
+          PY
+      - name: Install original CPU-only pinned packages
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "huggingface_hub==0.36.2" "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Execute nine offline masking/causal/source negative tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-masked2048-cold
+          python3 -m py_compile scripts/ncr_001e_sprocket_masked_cold_2048.py tests/test_ncr_001e_sprocket_masked_cold_2048.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_sprocket_masked_cold_2048.py' -v 2>&1 | tee runtime/ncr001-masked2048-cold/source-tests.log
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-masked2048-source-a${{ github.run_attempt }}
+          path: runtime/ncr001-masked2048-cold/source-tests.log
+          if-no-files-found: warn
+          retention-days: 30
+
+  original-frozen-model-cold-matrix:
+    needs: source-contract-and-adversarial
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: chat
+            model_weight: chat/model.safetensors
+          - variant: instruct
+            model_weight: model.safetensors
+    env:
+      NCR_VARIANT: ${{ matrix.variant }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 2271218d625e1462b2cf218445da975efe17fe32
+          path: format-authority
+          persist-credentials: false
+      - name: Verify original frozen host and preregistration SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git -C format-authority rev-parse HEAD)" = "2271218d625e1462b2cf218445da975efe17fe32"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+      - name: Install pinned original frozen-model dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check "transformers==4.57.6" "huggingface_hub==0.36.2" "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Fetch and SHA-256 verify full original frozen model and tokenizer bytes
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          variant=os.environ["NCR_VARIANT"]
+          p=json.load(open("experiments/ncr-001/source-pins.json"))["models"]["sprocket_"+variant]
+          assert p["repo_id"]=="kandivault/sprocket-500m"
+          assert p["revision"]=="eb157d4ddddc4619e661d4a2426bb2dd000fc668"
+          weights={"chat":"chat/model.safetensors","instruct":"model.safetensors"}
+          assert p["hf_weight_file"]==weights[variant]
+          files={"chat":["chat/config.json","chat/tokenizer.json","chat/tokenizer_config.json"],
+                 "instruct":["config.json","tokenizer.json","tokenizer_config.json","special_tokens_map.json"]}
+          keys={"config.json":"config_sha256","tokenizer.json":"tokenizer_sha256",
+                "tokenizer_config.json":"tokenizer_config_sha256",
+                "special_tokens_map.json":"special_tokens_map_sha256"}
+          for name in ["README.md",*files[variant],p["hf_weight_file"]]:
+              path=Path(hf_hub_download(p["repo_id"],name,revision=p["revision"]))
+              h=hashlib.sha256()
+              with path.open("rb") as f:
+                  for chunk in iter(lambda:f.read(4*1024*1024),b""):h.update(chunk)
+              expected=("09aec879dc5b387bdc031dc3c74d77a9ba44362a55163f9a8b456761b68142c9"
+                        if name=="README.md" else
+                        p["weight_declared_lfs_sha256_not_downloaded"]
+                        if name==p["hf_weight_file"] else
+                        p[("chat_" if variant=="chat" else "")+keys[name.split("/")[-1]]])
+              assert h.hexdigest()==expected,(variant,name,h.hexdigest(),expected)
+              if name==p["hf_weight_file"]: assert path.stat().st_size==1002207984
+              print("ORIGINAL_VERIFIED_SOURCE",variant,name,h.hexdigest(),path.stat().st_size,flush=True)
+          PY
+      - name: Fresh actual frozen model masked 2048 prefill and four true KV steps
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "runtime/ncr001-masked2048-cold/$NCR_VARIANT"
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python3 scripts/ncr_001e_sprocket_masked_cold_2048.py --variant "$NCR_VARIANT" --phase producer 2>&1 | tee "runtime/ncr001-masked2048-cold/$NCR_VARIANT/producer.log"
+      - name: Separate Python interpreter reloads fresh original frozen model and adapter
+        shell: bash
+        run: |
+          set -euo pipefail
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python3 scripts/ncr_001e_sprocket_masked_cold_2048.py --variant "$NCR_VARIANT" --phase consumer 2>&1 | tee "runtime/ncr001-masked2048-cold/$NCR_VARIANT/consumer.log"
+      - name: Preserve raw source, partial failures, tensors, adapter files and decoded phase logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-masked2048-${{ matrix.variant }}-a${{ github.run_attempt }}
+          path: runtime/ncr001-masked2048-cold/${{ matrix.variant }}/
+          if-no-files-found: warn
+          retention-days: 30
