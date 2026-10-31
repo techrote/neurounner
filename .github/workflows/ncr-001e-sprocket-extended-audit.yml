@@ -1,0 +1,67 @@
+name: NCR-001E independent original 2048-context receipt readback (no model)
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/ncr-001e-sprocket-extended-audit.yml"
+      - "scripts/ncr_001e_sprocket_extended_receipt_audit.py"
+      - "tests/test_ncr_001e_sprocket_extended_receipt_audit.py"
+      - "experiments/ncr-001/evidence-review/sprocket-extended-context/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frozen-evidence-readback:
+    name: Read exact original Chat/Instruct source receipts and negative sentinels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Require literal PR/source head and original source byte identities
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+          test "$(git hash-object experiments/ncr-001/evidence-review/sprocket-extended-context/original-jsons.tar.gz.b64)" = 6caca17e952d65f2c8676c9ac7968fe47770844a
+          test "$(git hash-object experiments/ncr-001/evidence-review/sprocket-extended-context/provenance.json)" = 0efc52c47138260734b4c0bf0f201bc9e31c0c1d
+          test "$(git hash-object scripts/ncr_001e_sprocket_extended_receipt_audit.py)" = f69013472ed0126d72d73597472786147043944c
+          test "$(git hash-object tests/test_ncr_001e_sprocket_extended_receipt_audit.py)" = 4346392408a77d55daab7b1303484b494dc713c4
+          printf 'LITERAL_SOURCE_HEAD=%s\\n' "$EXPECTED_HEAD"
+      - name: Reject any protocol admission or lost source lanes
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("NCR-001E independent evidence readback only, training forbidden")
+          PY
+      - name: Negative source, cache and false-training/qualification mutation tests
+        run: |
+          python3 -m py_compile scripts/ncr_001e_sprocket_extended_receipt_audit.py
+          python3 -m unittest discover -s tests \
+            -p "test_ncr_001e_sprocket_extended_receipt_audit.py" -v
+      - name: Require byte-for-byte two original real frozen-host receipts
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr-001
+          python3 scripts/ncr_001e_sprocket_extended_receipt_audit.py | tee runtime/ncr-001/extended-source-audit.json
+      - name: Retain derived audit output (never label as original frozen-host ZIP)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001e-extended-source-audit-${{ github.run_id }}-a${{ github.run_attempt }}
+          path: runtime/ncr-001/extended-source-audit.json
+          if-no-files-found: warn
+          retention-days: 30
