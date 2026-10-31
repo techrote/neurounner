@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001E",
+  "issue": 72,
+  "model_key": "void1",
+  "model_variant": "qwen3_byte",
+  "adjudication": "BLOCKED_REQUIRED_LEARNING_CHECKS__SOURCE_RUNTIME_PRETRAIN_PASS",
+  "per_model_gate": false,
+  "source_runtime_pretraining_subgate": true,
+  "train_authorized": false,
+  "optimizer_steps_observed": 0,
+  "heldout_evaluation": false,
+  "source": {
+    "repo_id": "dotlabs/void.1",
+    "revision": "9c2be5087772867d45961abd11f6b35110617563",
+    "weight_file": "model.safetensors",
+    "weight_sha256": "ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3",
+    "weight_bytes": 360622744,
+    "tokenizer_source_sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+    "ids": {
+      "pad": 256,
+      "bos": 257,
+      "eos": 258,
+      "vocab": 259
+    },
+    "original_hook_commit": "5fa3dc8c0de153098d1800f7b0c809819620aef4",
+    "taps_after_block_zero_based": [
+      7,
+      15,
+      23
+    ],
+    "max_context_units": 2048
+  },
+  "protocol": {
+    "sha256": "2e294750a17b1bfb3eba448f8a5b55344c72aff700587351bd10da1af38885ab",
+    "source_pins_sha256": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1",
+    "cache_atol": 0.0005,
+    "cache_rtol": 0.0005,
+    "any_failure_blocks_model_qualification": true,
+    "required_checks": [
+      "same_base_logits",
+      "base_weight_unchanged_after_step",
+      "causal_suffix_invariance",
+      "full_prefix_vs_incremental_cache",
+      "per_token_isolation",
+      "per_request_reset",
+      "nonzero_adapter_gradient_after_warmup",
+      "finite_state_and_loss",
+      "cold_reload_state_dict"
+    ]
+  },
+  "matrix": {
+    "same_base_logits": {
+      "status": "PASS",
+      "evidence": [
+        "40464956343",
+        "40605678381"
+      ],
+      "note": "Exact frozen-vs-zero logits verified for UTF8 source, padding, 512/1024/2048 and generation."
+    },
+    "base_weight_unchanged_after_step": {
+      "status": "BLOCKED_BY_TRAINING_POLICY",
+      "evidence": [],
+      "note": "No optimizer step is authorized while train_authorized=false."
+    },
+    "causal_suffix_invariance": {
+      "status": "PASS",
+      "evidence": [
+        "40464956343",
+        "40549549886",
+        "40605678381"
+      ],
+      "note": "Future suffix influence and independent request replay are exact zero."
+    },
+    "full_prefix_vs_incremental_cache": {
+      "status": "PASS",
+      "evidence": [
+        "40464956343",
+        "40549549886",
+        "40605678381"
+      ],
+      "note": "48, 256/240+16, and 512/1024/2048 N-16 tails plus HF generate cache on/off remain below 5e-4."
+    },
+    "per_token_isolation": {
+      "status": "PASS_SOURCE_RUNTIME",
+      "evidence": [
+        "40549549886",
+        "40605678381"
+      ],
+      "note": "Sequential one-byte cached calls reset finite three-tap field state; no global carryover observed."
+    },
+    "per_request_reset": {
+      "status": "PASS",
+      "evidence": [
+        "40464956343",
+        "40549549886",
+        "40605678381"
+      ],
+      "note": "A→B→A and fresh-process replay are exact."
+    },
+    "nonzero_adapter_gradient_after_warmup": {
+      "status": "BLOCKED_BY_TRAINING_POLICY",
+      "evidence": [],
+      "note": "Manual readout interventions are deliberately untrained; no backward warmup is authorized."
+    },
+    "finite_state_and_loss": {
+      "status": "PARTIAL_BLOCKED_LOSS_BY_TRAINING_POLICY",
+      "evidence": [
+        "40464956343",
+        "40549549886",
+        "40605678381"
+      ],
+      "note": "Finite states/logits are proven through max context; supervised training loss is not executed."
+    },
+    "cold_reload_state_dict": {
+      "status": "PASS_PRETRAIN",
+      "evidence": [
+        "40464956343",
+        "40549549886"
+      ],
+      "note": "Fresh adapter reconstruction and separate-Python-process adapter/frozen-base replay are exact."
+    }
+  },
+  "blocking_required_checks": [
+    "base_weight_unchanged_after_step",
+    "nonzero_adapter_gradient_after_warmup",
+    "finite_state_and_loss"
+  ],
+  "byte_tokenizer_scope": {
+    "actual_reviewed_tokenizer_runtime_qualified": true,
+    "mixed_utf8_roundtrips_and_padding_source_bound": true,
+    "full_2048_context_proven": true,
+    "future_byte_eos_serializer_integration_in_this_lane": false,
+    "historical_byte_eos_effect_measured": false,
+    "four_unit_eos_non_emission_is_propensity_evidence": false
+  },
+  "nonblocking_scope_limits": {
+    "comparative_NCA_MLP_training_performed": false,
+    "sealed_holdouts_opened": false,
+    "trained_adapter_created": false,
+    "all_parent_prs_merged": false
+  },
+  "evidence_runs": [
+    40464956343,
+    40549549886,
+    40605678381
+  ],
+  "tokenizer_source_runtime_runs": [
+    40462933022,
+    40463929003
+  ],
+  "decision_note": "Do not set void1_conformance_pass=true and do not authorize training. Exact ByteTokenizer/Qwen3 source/runtime including full 2048 context is well-supported; final #72 remains blocked by required learning/update/loss checks that cannot run while train_authorized=false. BYTE-EOS future serializer integration is a separate future-training dependency."
+}

@@ -1,0 +1,84 @@
+name: NCR-001E void.1 historical pretrain adjudication (NO MODEL)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ncr-001e-void1-adjudication.yml'
+      - 'scripts/ncr_001e_void1_adjudication.py'
+      - 'tests/test_ncr_001e_void1_adjudication.py'
+      - 'experiments/ncr-001/adjudication/void1-pretrain.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  adjudicate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fail closed on main-source authority, exact archived blobs, ancestry and false admission
+        env:
+          LITERAL_PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os,subprocess
+          from pathlib import Path
+          expected={
+            'docs/NCR_001_E_VOID1_ADJUDICATION.md':'c08b7329826ad145206891cc8867b0f5a35dbb53',
+            'experiments/ncr-001/adjudication/void1-pretrain.json':'343f1033bd64fad40f9f06592422c20367e4ad7c',
+            'scripts/ncr_001e_void1_adjudication.py':'1488b4a609d0b8cff354ce08b4fccb10934e0fd7',
+            'tests/test_ncr_001e_void1_adjudication.py':'95e9d813292e7134343cd285feed4087ea77624d',
+          }
+          def git(*xs):return subprocess.check_output(['git',*xs],text=True).strip()
+          for path,digest in expected.items():assert git('hash-object',path)==digest,(path,'original blob changed')
+          p=json.loads(Path('experiments/ncr-001/protocol.json').read_text())
+          s=json.loads(Path('experiments/ncr-001/source-pins.json').read_text())
+          assert p['train_authorized'] is False
+          assert set(p['models'])==set(s['models'])=={'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          historic=json.loads(Path('experiments/ncr-001/adjudication/void1-pretrain.json').read_text())
+          newer=json.loads(Path('experiments/ncr-001/adjudication/void1-postlease-pretrain.json').read_text())
+          assert historic['train_authorized'] is False and historic['per_model_gate'] is False
+          assert historic['adjudication']=='BLOCKED_REQUIRED_LEARNING_CHECKS__SOURCE_RUNTIME_PRETRAIN_PASS'
+          assert newer['train_authorized'] is False and newer['per_model_gate'] is False
+          assert newer['adjudication']=='BLOCKED_REQUIRED_LEARNING_CHECKS__POSTLEASE_SOURCE_RUNTIME_PRETRAIN_PASS'
+          assert git('hash-object','experiments/ncr-001/adjudication/void1-postlease-pretrain.json')=='81c0c7239e64fab8d6d077978a1591f3458c0367'
+          h=os.getenv('LITERAL_PR_HEAD') or ''
+          if h:
+              assert git('rev-parse',h+'^1')=='6b15673fb4affebe50955ca6411fe4fb104761c5'
+              assert git('rev-parse',h+'^2')=='0bf045daad9324d8153ba0560e5416f21084337b'
+              assert git('rev-parse','origin/main')=='6b15673fb4affebe50955ca6411fe4fb104761c5', 'main advanced; requalify'
+          print('VOID1_HISTORICAL_SOURCE_ONLY: original blobs exact, newer POSTLEASE report untouched, no admission')
+          PY
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 0bf045daad9324d8153ba0560e5416f21084337b
+          path: historical-131
+          persist-credentials: false
+      - name: Reproduce original pinned-protocol adjudication in immutable historical checkout
+        run: |
+          set -euo pipefail
+          cd historical-131
+          python3 -m py_compile scripts/ncr_001e_void1_adjudication.py
+          python3 scripts/ncr_001e_void1_adjudication.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_void1_adjudication.py' -v
+          python3 - <<'PY'
+          import json
+          a=json.load(open('runtime/ncr-001/void1-adjudication.json'))
+          e=json.load(open('experiments/ncr-001/adjudication/void1-pretrain.json'))
+          assert a==e
+          assert a['per_model_gate'] is a['train_authorized'] is False
+          assert a['optimizer_steps_observed']==0
+          assert set(a['blocking_required_checks'])=={
+              'base_weight_unchanged_after_step','nonzero_adapter_gradient_after_warmup','finite_state_and_loss'}
+          print('VOID1_SOURCE_RUNTIME_PRETRAIN_ONLY; FULL_72_BLOCKED; NO_MODEL_OR_TRAIN')
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001e-void1-historical-pretrain-no-model
+          path: historical-131/runtime/ncr-001/void1-adjudication.json
+          if-no-files-found: error
+          retention-days: 30
