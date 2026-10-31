@@ -1,0 +1,77 @@
+name: NCR-001E void1 #101 original two-interpreter custody current-main integrity (NO MODEL)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ncr-001e-void-process-main-integration.yml'
+      - '.github/workflows/ncr-001e-void-process-receipt-readback.yml'
+      - '.github/workflows/ncr-001e-void-cross-process.yml'
+      - 'docs/NCR_001_E_VOID_CROSS_PROCESS.md'
+      - 'scripts/ncr_001e_void_cross_process.py'
+      - 'scripts/ncr_001e_void_process_guard.py'
+      - 'scripts/ncr_001e_void_process_receipt_audit.py'
+      - 'tests/test_ncr_001e_void_cross_process.py'
+      - 'tests/test_ncr_001e_void_process_receipt_audit.py'
+      - 'experiments/ncr-001/evidence-review/void1-cross-process/**'
+permissions:
+  contents: read
+jobs:
+  original-void-cold-restart-source-audit:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Guard original research ancestry, immutable source and model-execution trigger
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+          EXPECTED_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "techrote/neurounner"
+          test "$GITHUB_BASE_REF" = "main"
+          test "$GITHUB_HEAD_REF" = "review/ncr-001e-void-two-process-20261027"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^1)" = "$EXPECTED_BASE"
+          test "$(git rev-parse HEAD^2)" = "e233c602809979809427f1328dd4a1ab5bf843fa"
+          git merge-base --is-ancestor e233c602809979809427f1328dd4a1ab5bf843fa HEAD
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git hash-object RAG.md)" = "7f0d508bb51e665af3c6af84ffecb41bf3a035c0"
+          test "$(git hash-object docs/NCR_001_E_VOID_CROSS_PROCESS.md)" = "97f30d870741862e9b16e9e58945a7ff35eee27b"
+          test "$(git hash-object experiments/ncr-001/evidence-review/void1-cross-process/original-jsons.tar.gz.b64)" = "3c0a4cdc9e9914bfdc938f4cca6ef901ff6a31f4"
+          test "$(git hash-object experiments/ncr-001/evidence-review/void1-cross-process/provenance.json)" = "5b312972322c9ab7aa8c6e1546b8a9ab110c59c2"
+          test "$(git hash-object scripts/ncr_001e_void_cross_process.py)" = "ffacaa008e3ff60bac6600c21a41e0ab514abc4f"
+          test "$(git hash-object scripts/ncr_001e_void_process_guard.py)" = "fb0c86fa9077aa9c3feb507bb8af0669aec376f8"
+          test "$(git hash-object scripts/ncr_001e_void_process_receipt_audit.py)" = "a87c09ceb0e45b5d78a4afb46d88410c635f8dc8"
+          test "$(git hash-object tests/test_ncr_001e_void_cross_process.py)" = "6967af8f7021c11feea95357735be8e3c75ea01f"
+          test "$(git hash-object tests/test_ncr_001e_void_process_receipt_audit.py)" = "85e2b5f747509c0d4789dd3448adb7da170b0abd"
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          physical=Path('.github/workflows/ncr-001e-void-cross-process.yml').read_text().split('permissions:',1)[0]
+          assert 'workflow_dispatch:' in physical
+          assert 'pull_request:' not in physical and 'push:' not in physical
+          readback=Path('.github/workflows/ncr-001e-void-process-receipt-readback.yml').read_text()
+          assert '- main' in readback and 'pull_request:' in readback
+          p=json.loads(Path('experiments/ncr-001/protocol.json').read_text())
+          q=json.loads(Path('experiments/ncr-001/source-pins.json').read_text())
+          assert set(p['models'])==set(q['models'])=={'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          assert p['train_authorized'] is False
+          assert p['models']['void1']['repo_id']=='dotlabs/void.1'
+          print('VOID1_ORIGINAL_REPLAY_PROVENANCE_SOURCE_ONLY__NO_MODEL_NO_TRAIN')
+          PY
+      - name: Execute all original no-model source/protocol/custody and hostile mutation tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_void_process_guard.py scripts/ncr_001e_void_process_receipt_audit.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_void_cross_process.py' -v
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_void_process_receipt_audit.py' -v
+          python3 scripts/ncr_001e_void_process_receipt_audit.py
+          git diff --exit-code
