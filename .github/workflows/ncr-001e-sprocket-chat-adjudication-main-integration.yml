@@ -32,8 +32,9 @@ jobs:
           test "$GITHUB_BASE_REF" = "main"
           test "$GITHUB_HEAD_REF" = "review/ncr001e-sprocket-chat-adjudication-20261027"
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
-          test "$(git rev-parse HEAD^1)" = "$EXPECTED_BASE"
-          test "$(git rev-parse HEAD^2)" = "b2461a66241bc2fd0fbc389d7b3b2d10f729d2ab"
+          test "$(git rev-parse HEAD^1)" = "e5304e2baae01bce56991f914d3badf0f621e21e"
+          test "$(git rev-parse HEAD^1^1)" = "$EXPECTED_BASE"
+          test "$(git rev-parse HEAD^1^2)" = "b2461a66241bc2fd0fbc389d7b3b2d10f729d2ab"
           git merge-base --is-ancestor "b2461a66241bc2fd0fbc389d7b3b2d10f729d2ab" "$EXPECTED_HEAD"
           test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
           test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
@@ -50,6 +51,8 @@ jobs:
           assert 'pull_request:' not in phys and 'push:' not in phys
           audit=Path('.github/workflows/ncr-001e-sprocket-chat-adjudication.yml').read_text()
           assert '- main' in audit and 'pull_request:' in audit
+          inherited=Path('.github/workflows/ncr-001e-sprocket-chat-main-integration.yml').read_text()
+          assert "'.github/workflows/ncr-001e-sprocket-chat-*'" not in inherited
           p=json.loads(Path('experiments/ncr-001/protocol.json').read_text())
           pins=json.loads(Path('experiments/ncr-001/source-pins.json').read_text())
           assert p['train_authorized'] is False
