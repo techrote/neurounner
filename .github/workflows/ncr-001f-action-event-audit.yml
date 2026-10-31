@@ -49,13 +49,17 @@ jobs:
           assert r["status"] == "PASS_EXACT_HEAD_ACTION_EVENT_ATTRIBUTION__TRAINING_BLOCKED"
           assert len(r["results"]) == 2
           assert [x["pr"] for x in r["results"]] == [99, 198]
-          assert all(x["domain_push_source_audit_verified"] and
-                     not x["domain_pull_request_check_present"] for x in r["results"])
+          assert all(x["original_source_commit_verified"] and
+                     x["domain_push_source_audit_verified"] and
+                     x["domain_pull_request_check_verified"] is False and
+                     x["head_run_inventory_complete"] for x in r["results"])
           assert r["train_authorized"] is False
           assert r["full_72_conformance_pass"] is False
           assert r["actual_compute_budget_qualified"] is False
           assert r["optimizer_steps"] == 0 and r["model_executed"] is False
-          print("PUSH domain custody identified; VILLAGE PR successes NOT NCR evidence; scientific gates remain CLOSED")
+          for x in r["results"]:
+              print(f'PR #{x["pr"]} current={x["current_pr_state"]} original_at_head={x["original_head_still_current_pr_head"]} unreviewed_new_runs={x["additional_runs_unreviewed"]}')
+          print("ORIGINAL SHA/domain push evidence verified; mutable PR state and new runs NOT scientific evidence")
           PY
       - name: Preserve source-only report on success or failure
         if: always()
