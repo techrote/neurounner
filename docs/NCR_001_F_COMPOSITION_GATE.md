@@ -1,0 +1,67 @@
+# NCR-001F G9 — eight-source current-main composition
+
+## Objective
+
+Integration readiness for NCR-001 #67 / #73, without merging or reexecuting an
+original model. Four task-owned drafts passed individual source CI, but had not
+yet been tested as a single composition on current main. This extends existing
+draft #223 with a disposable local Git composition harness, NOT a fifth PR.
+
+## Dependency and source identity
+
+The source-only order is strictly:
+
+1. #199 → #201 → #209 → #212 → #227: original Sprocket forward-only timing,
+   corrected original complete ZIP/log custody, source MAC interpretation,
+   four-lane planned-phase registry and independent frozen checkpoint lock.
+2. #224: original historical Actions event classifier.
+3. #226: shared frozen-backbone leased MLP import and stable checkpoint save.
+4. #223: original preregistration drift guards plus this composition preflight.
+
+Read the pinned base and original head SHA of EVERY stage from
+scripts/ncr_001f_composition_gate.py. No source head is substituted with a
+mutable PR branch name. Each Git binary delta is independently fingerprinted
+and applied to a DISPOSABLE worktree from freshly fetched current origin/main.
+Original source ancestry, changed-file disjointness across independent groups,
+original binary diffs and protocol/source-pins Git objects are checked before
+a pass is possible. A missing commit, wrong ancestry, changed source files,
+overlapping independent PRs, protected material or patch conflict is an
+explicit REFUSAL, not a green check.
+
+The resulting machine report identifies the actual current main SHA and the
+eight original source heads/diff SHA-256s, with a categorical source-only
+status. It deliberately leaves all_domain_tests_passed = null because the
+separate CI steps must establish actual combined test results. The Git worktree
+is never committed or pushed; it has no GitHub write credentials.
+
+## Source-only CI acceptance
+
+Execute positive and negative fake-Git tests under ordinary and optimized
+Python, followed by actual composite-worktree offline test cases for event
+attribution, synthetic four-lane MLP atomic load/save, shared decoder lease,
+and three original corrected-Sprocket archived ZIP/log integrity. CPU Torch
+only. The original model/test workflows are NOT dispatched. This step must not
+run model inference, actual model generation, optimizers, held-out scoring or
+comparative training. The pre-existing TRAIN-003 held-out-sensitive planner
+suite is intentionally NOT re-executed here.
+
+A passing report alone is NOT combined-CI acceptance. Preserve complete
+original source/negative job logs and check exact source SHA, Action event,
+runner head and distinct tests before declaring source qualification.
+If current main or any participating PR head changes, recompose and requalify.
+
+## Scientific and merge boundary
+
+Four model identities and the exact original protocol/source-pins are
+unchanged. Original source-MAC proxy, forward-only Sprocket wall timing, frozen
+adapter toy reload, original raw custody and current-main source composition
+do not measure matched backward/optimizer FLOPs, real three-seed supervised
+tokens, learnable advantage, source semantics or independent #72 acceptance.
+The historical root-Instruct incomplete tool-call and void.1 EOS-258 impact
+remain negative/unmeasured.
+
+train_authorized=false, full_72_conformance_pass=false,
+actual_compute_budget_qualified=false. The four task-owned PRs remain
+DRAFT/UNMERGED; actual merge-down belongs to the separate authorized worker.
+This source-only composition cannot itself authorize training, admission,
+PR readiness, release or main integration.
