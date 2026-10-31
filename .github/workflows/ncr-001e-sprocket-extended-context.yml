@@ -1,14 +1,10 @@
 name: NCR-001E Sprocket extended 2048-unit frozen context prepass (no training)
 
+# Historic #100 original workflow YAML remains unchanged in second-parent ancestry.
+# Integrated version is MANUAL-ONLY. Automatic PR sync may launch both 500M
+# original-model jobs even while the PR is still being source-reconciled.
+# Any future physical job requires separately documented source/owner permission.
 on:
-  pull_request:
-    branches:
-      - review/ncr-001e-sprocket-two-process-restart-20261027
-    paths:
-      - ".github/workflows/ncr-001e-sprocket-extended-context.yml"
-      - "scripts/ncr_001e_sprocket_extended_context.py"
-      - "tests/test_ncr_001e_sprocket_extended_context.py"
-      - "docs/NCR_001_E_SPROCKET_EXTENDED_CONTEXT.md"
   workflow_dispatch:
 
 permissions:
