@@ -96,3 +96,11 @@ with its effective applied diff hashed separately. No old source, binary
 archive, historical review or current main RAG was modified. The new
 fake-Git tests accept an exact additive historic signpost and refuse a
 nonadditive mutation. Source-only PASS remains contingent on fresh CI.
+
+Source 2d11501901df3e520f9d3e9442a0ae6bec82efe3 produced original
+source-only failed CI 41187837125: 10/11 fake-Git tests succeeded, but
+the RAG-only positive test revealed that Git refuses an empty patch with
+exit 128. The composite now treats a separately certified historical
+RAG-only stage as a zero-byte *effective* patch (not a missing stage),
+while refusing any other empty effective source diff. This source-only
+negative case remains recorded; do not count the failed run as acceptance.

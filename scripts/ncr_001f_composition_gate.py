@@ -177,6 +177,13 @@ def build(root: Path, worktree: Path, main_ref: str, stages: tuple[Stage, ...],
         created = True
         for stage in stages:
             patch = effective_patch(root, stage)
+            if not patch:
+                # An audited original RAG-only index step has no effective
+                # executable/source bytes to apply against modern main.
+                if (stage.pr not in INDEX_ONLY
+                        or changed_paths(root, stage.base, stage.head) != {"RAG.md"}):
+                    raise Refusal(f"PR #{stage.pr}: unexpected empty source patch")
+                continue
             try:
                 git(worktree, "apply", "--3way", "--index", data=patch)
             except Refusal as exc:
