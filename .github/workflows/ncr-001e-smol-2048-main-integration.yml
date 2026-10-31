@@ -1,0 +1,74 @@
+name: NCR-001E SmolLM2 2048 current-main source integration (NO MODEL)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/ncr-001e-smol-2048-*"
+      - ".github/workflows/ncr-001e-smol-maxctx.yml"
+      - "docs/NCR_001_E_SMOL_2048_*"
+      - "scripts/ncr_001e_smol_*"
+      - "tests/test_ncr_001e_smol_*"
+      - "experiments/ncr-001/evidence-review/smolllm2-2048/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smol-source-integration:
+    name: Exact-head original-source custody, locked four-model gates and source-only refusal
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Checkout literal PR head with full Git ancestry
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require original #150 ancestry, present base and exact original research blobs
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git merge-base --is-ancestor a296676a497f1e7aea5a9f378198288fed984b12 HEAD
+          git merge-base --is-ancestor 323ea538e1bf959155c5c798719db87d7555c5e5 HEAD
+          for path in docs/NCR_001_E_SMOL_2048_COLD_GENERATE.md docs/NCR_001_E_SMOL_2048_RESULT.md experiments/ncr-001/evidence-review/smolllm2-2048/ARCHIVE_AUDIT_NEGATIVES.md experiments/ncr-001/evidence-review/smolllm2-2048/producer.json experiments/ncr-001/evidence-review/smolllm2-2048/consumer.json experiments/ncr-001/evidence-review/smolllm2-2048/provenance.json scripts/ncr_001e_smol_2048_archive_audit.py scripts/ncr_001e_smol_maxctx.py tests/test_ncr_001e_smol_2048_archive_audit.py tests/test_ncr_001e_smol_maxctx_source.py; do
+            old="$(git rev-parse 'a296676a497f1e7aea5a9f378198288fed984b12:'"$path")"
+            now="$(git rev-parse 'HEAD:'"$path")"
+            test "$old" = "$now" || { echo "HISTORICAL SOURCE ALTERED: $path"; exit 1; }
+          done
+          echo "All ten original SmolLM2 source, docs, tests and JSON/negative custody Git blobs preserved"
+      - name: Reject model-capable automatic trigger, protocol changes or false scientific admission
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          s=json.loads(Path("experiments/ncr-001/source-pins.json").read_text())
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          assert p["conformance"]["full_vs_cached_prefill_atol"] == 0.0005
+          assert p["conformance"]["full_vs_cached_prefill_rtol"] == 0.0005
+          m=s["models"]["smollm2"]
+          assert m["repo_id"]=="HuggingFaceTB/SmolLM2-135M-Instruct"
+          assert m["revision"]=="12fd25f77366fa6b3b4b768ec3050bf629380bac"
+          assert m["weight_declared_lfs_sha256_not_downloaded"]=="5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c"
+          model_yaml=Path(".github/workflows/ncr-001e-smol-maxctx.yml").read_text()
+          trigger=model_yaml.split("permissions:",1)[0]
+          assert "  workflow_dispatch:" in trigger
+          assert "pull_request:" not in trigger and "push:" not in trigger and "schedule:" not in trigger
+          manifest=json.loads(Path("experiments/ncr-001/evidence-review/smolllm2-2048/provenance.json").read_text())
+          assert manifest["qualification"]=="SOURCE_RUNTIME_PRETRAIN_PASS__FINAL_72_BLOCKED"
+          assert manifest["original_actions_artifact"]["original_zip_committed_in_git"] is False
+          assert manifest["required_final_gate"]["per_model_gate"] is False
+          print("Current pinned four-lane source, archive limits and NO MODEL automatic trigger PASS")
+          PY
+      - name: Source-only Smol long-context negative/identity tests (never load weights)
+        run: |
+          python3 -m py_compile scripts/ncr_001e_smol_maxctx.py tests/test_ncr_001e_smol_maxctx_source.py
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_smol_maxctx_source.py' -v

@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "experiment": "NCR-001E",
+  "lane": "smollm2",
+  "recorded_utc": "2026-10-28",
+  "qualification": "SOURCE_RUNTIME_PRETRAIN_PASS__FINAL_72_BLOCKED",
+  "source_run": {
+    "url": "https://github.com/techrote/neurounner/actions/runs/40651696185",
+    "run_id": 40651696185,
+    "tested_exact_head": "b452d3e5b112507b39be57bbfcac7f0ab721b609",
+    "job_id": 122693027277,
+    "job_conclusion": "success",
+    "runner_name": "GitHub Actions 1000046335",
+    "cpu_model": "AMD EPYC 7763 64-Core Processor",
+    "threads": 4,
+    "producer_pid": 2707,
+    "consumer_pid": 2758,
+    "source_hook_commit": "ec0d4a80e15f203a06c26ee9c23858f78976370b",
+    "source_model": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "model_revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "full_actual_weight_sha256": "5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c",
+    "protocol_sha256": "a76d38f80a57012ca8e62fba183d1cf2e91fd0986032f1adcdfb0aef843bf0b4",
+    "pins_sha256": "db794f53a49bb1bcbf8b23bd4a76d24430eb495da246639b506abdbbf11734b1"
+  },
+  "original_actions_artifact": {
+    "id": 12800615190,
+    "name": "ncr001e-smol-2048-cold-generation-a1",
+    "url": "https://github.com/techrote/neurounner/actions/runs/40651696185/artifacts/12800615190",
+    "zip_bytes": 551739,
+    "zip_sha256": "ae0b26e835f451a513527b7bad3a52e783248300a7a677b1f075a19d658b0f09",
+    "retention_days": 30,
+    "original_zip_committed_in_git": false,
+    "note": "GitHub Actions ZIP remains transient; original producer and consumer JSON are losslessly archived in Git. Original binary untrained adapter/ref remains in the temporary zipped artifact, with original hashes retained below."
+  },
+  "original_members": {
+    "producer.json": {
+      "bytes": 5708,
+      "sha256": "958dccd26c6ab9fa0f89f59f0a72c2ad33b7ca5ccd00396c97c026dfd02ca9aa",
+      "git_blob_sha": "5fb540a66cc47428d3fc1eb048062c90d70337ba",
+      "committed": "experiments/ncr-001/evidence-review/smolllm2-2048/producer.json"
+    },
+    "consumer.json": {
+      "bytes": 2560,
+      "sha256": "1d879bcc88a26b7b436766f7c1b583977756fa762e9b685ab30370903310c2ea",
+      "git_blob_sha": "ac84321fe51e17581378d8c3f3c86ee74e634aca",
+      "committed": "experiments/ncr-001/evidence-review/smolllm2-2048/consumer.json"
+    },
+    "adapter/adapter.pt": {
+      "bytes": 1191817,
+      "sha256": "1eb2e0b1a5bdf2386dfc3eea21959510b395600cb6f0c6a4c946e8d5040c9fa8",
+      "committed": null
+    },
+    "adapter/metadata.json": {
+      "bytes": 451,
+      "sha256": "6609617129dd0dc7593cc62557ffcf06f36af7dab5377332300dd7abc650271e",
+      "committed": null
+    },
+    "cold-reference.pt": {
+      "bytes": 3101,
+      "sha256": "571888ea637281544de720ea0ea5eb153f51cc5221f0a2cb58923ca667db764b",
+      "committed": null
+    }
+  },
+  "original_results": {
+    "zero_init_noop_exact_units": [
+      512,
+      1024,
+      2048
+    ],
+    "cache_16_tail_max_abs": {
+      "512": 0.000047206878662109375,
+      "1024": 0.0000476837158203125,
+      "2048": 0.00006890296936035156
+    },
+    "cache_bound_atol": 0.0005,
+    "cache_bound_rtol": 0.0005,
+    "hf_generate_active_cache_on_off_scores_max_abs": 0.00003528594970703125,
+    "hf_generate_frozen_vs_zero_scores_exact": true,
+    "future_suffix_drift_max_abs": 0,
+    "request_A_B_A_exact": true,
+    "separate_python_process_cold_active_adapter_logits_max_abs": 0,
+    "wrong_revision_cold_load_refused": true,
+    "producer_peak_rss_kib": 3713924,
+    "consumer_peak_rss_kib": 1128312,
+    "producer_wall_s": 86.137,
+    "consumer_wall_s": 1.934
+  },
+  "required_final_gate": {
+    "per_model_gate": false,
+    "train_authorized": false,
+    "optimizer_steps": 0,
+    "heldout_evaluation": false,
+    "learning_checks_blocked": [
+      "base_weight_unchanged_after_step",
+      "nonzero_adapter_gradient_after_warmup",
+      "finite_state_and_loss"
+    ],
+    "limitations": [
+      "Two independent Python interpreters shared one physical GitHub-hosted machine; no cross-host test.",
+      "Manual NCA readout was never optimized.",
+      "Only source/runtime subgate for SmolLM2; no learning/checkpoint-efficacy or comparative evidence.",
+      "Sprocket Chat/Instruct and void.1 remain independent model identities and gates."
+    ]
+  }
+}
