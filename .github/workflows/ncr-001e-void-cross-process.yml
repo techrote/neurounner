@@ -1,0 +1,117 @@
+name: NCR-001E void.1 reviewed UTF-8 two-process actual frozen-model replay (no training)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr-001e-void-two-process-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  HF_HOME: /tmp/ncr-001e-void-two-process
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+  TOKENIZERS_PARALLELISM: "false"
+
+jobs:
+  genuine-frozen-void:
+    runs-on: ubuntu-24.04
+    name: Pinned void.1 byte source producer and entirely new Python consumer
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Checkout the exact original Qwen3 NCA hook implementation
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 5fa3dc8c0de153098d1800f7b0c809819620aef4
+          path: implementation
+          persist-credentials: false
+      - name: Require original frozen source and locked four-model protocol
+        run: |
+          test "$(git -C implementation rev-parse HEAD)" = "5fa3dc8c0de153098d1800f7b0c809819620aef4"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, "scripts")
+          from ncr_001e_void_process_guard import validate_protocol
+          p=json.loads(Path("experiments/ncr-001/protocol.json").read_text())
+          pins=json.loads(Path("experiments/ncr-001/source-pins.json").read_text())
+          validate_protocol(p, pins)
+          assert p["train_authorized"] is False
+          print("NCR-001E exact Qwen3/ByteTokenizer source pins, four variants and training block verified")
+          PY
+      - name: Pure standard-library byte/manifest/false-admission negative tests
+        run: |
+          python3 -m py_compile scripts/ncr_001e_void_process_guard.py
+          python3 -m unittest discover -s tests -p "test_ncr_001e_void_cross_process.py" -v
+      - name: Install pinned CPU runtime after negative guards pass
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Independently audit remote ByteTokenizer source before executing it
+        run: |
+          python3 scripts/ncr_001k_byte_source_audit.py
+      - name: Prefetch and independently SHA-verify all exact model and ByteTokenizer sources
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          model=json.loads(Path("experiments/ncr-001/source-pins.json").read_text())["models"]["void1"]
+          for name,key in (
+              ("model.safetensors","weight_declared_lfs_sha256_not_downloaded"),
+              ("config.json","config_sha256"),
+              ("tokenization_byte.py","tokenization_byte_py_sha256"),
+              ("byte_vocab.json","byte_vocab_sha256"),
+              ("tokenizer_config.json","tokenizer_config_sha256"),
+              ("special_tokens_map.json","special_tokens_map_sha256"),
+          ):
+              path=Path(hf_hub_download(model["repo_id"],filename=name,revision=model["revision"]))
+              digest=hashlib.sha256(path.read_bytes()).hexdigest()
+              assert digest==model[key],(name,digest,model[key])
+              if name=="model.safetensors":
+                  assert path.stat().st_size==360622744
+              print("ORIGINAL_SOURCE_SHA256",name,digest,path.stat().st_size,flush=True)
+          PY
+      - name: Two separate source-bound Python processes with fresh Qwen3 reload
+        run: |
+          python3 -m py_compile scripts/ncr_001e_void_cross_process.py
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001e_void_cross_process.py --stage producer
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001e_void_cross_process.py --stage consumer
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("runtime/ncr-001/void1-cross-process")
+          a=json.loads((root/"producer.json").read_text())
+          b=json.loads((root/"consumer.json").read_text())
+          assert a["status"]=="PASS_PINNED_VOID1_UTF8_PROCESS_PRODUCER"
+          assert b["status"]=="PASS_NEW_INTERPRETER_ORIGINAL_FROZEN_VOID1_ADAPTER_REPLAY"
+          assert a["runner"]["pid"]!=b["runner"]["pid"]
+          assert a["optimizer_steps"]==b["optimizer_steps"]==0
+          assert a["train_authorized"] is b["train_authorized"] is False
+          assert b["checks"]["fresh_process_full_vs_real_cached_tail"]["pass"] is True
+          print("Actual frozen new-interpreter replay source-gated; final #72 blocked")
+          PY
+      - name: Preserve original PASS/FAIL, source, manifest and untrained adapter receipts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001e-void1-two-process-original-a${{ github.run_attempt }}
+          path: |
+            runtime/ncr-001/void1-cross-process/**
+            runtime/ncr-001/void-byte-source-audit.json
+          if-no-files-found: warn
+          retention-days: 30
