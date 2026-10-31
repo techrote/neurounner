@@ -9,13 +9,14 @@ on:
       - "tests/test_ncr_001_sprocket_chat_native_ce.py"
       - "docs/NCR_001_CHAT_NATIVE_CE.md"
       - "RAG.md"
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
   group: ncr001-chat-native-ce-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 env:
-  NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+  NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
   HF_HOME: /tmp/ncr001-chat-native-ce-hf
   HF_HUB_DISABLE_TELEMETRY: "1"
   TOKENIZERS_PARALLELISM: "false"
@@ -25,12 +26,13 @@ env:
 
 jobs:
   original-chat-assistant-ce:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 85
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:

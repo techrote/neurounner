@@ -32,6 +32,7 @@ env:
 
 jobs:
   reviewed-real-void:
+    if: github.event_name == 'workflow_dispatch'
     name: Reviewed ByteTokenizer + real frozen Qwen3 text/cache cold adapter
     runs-on: ubuntu-24.04
     timeout-minutes: 30

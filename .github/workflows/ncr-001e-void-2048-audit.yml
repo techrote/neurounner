@@ -1,0 +1,51 @@
+name: NCR-001E void.1 original 2048/generate receipt audit (no model)
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ncr-001e-void-2048-audit.yml'
+      - 'scripts/ncr_001e_void_2048_archive_audit.py'
+      - 'tests/test_ncr_001e_void_2048_archive_audit.py'
+      - 'experiments/ncr-001/evidence-review/void1-2048/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 654736b68e60ccb7b730fb29d7e011b10c149940
+          path: historical-128
+          persist-credentials: false
+      - name: Re-read exact original six-member evidence and fail closed
+        run: |
+          set -euo pipefail
+          cd historical-128
+          python3 -m py_compile scripts/ncr_001e_void_2048_archive_audit.py
+          python3 scripts/ncr_001e_void_2048_archive_audit.py
+          python3 -m unittest discover -s tests \
+            -p 'test_ncr_001e_void_2048_archive_audit.py' -v
+      - name: Reassert no training, historical impact or final four-lane pass
+        run: |
+          cd historical-128
+          python3 - <<'PY'
+          import json
+          p=json.load(open('experiments/ncr-001/evidence-review/void1-2048/provenance.json'))
+          assert p['results']['full_2048_context_proven'] is True
+          assert p['scope']['train_authorized'] is False
+          assert p['scope']['optimizer_steps'] == 0
+          assert p['scope']['historical_byte_eos_impact_measured'] is False
+          assert p['scope']['future_byte_eos_serializer_integrated'] is False
+          assert p['scope']['eos_non_emission_in_four_units_is_not_propensity_estimate'] is True
+          print('VOID1_2048_ARCHIVE_ONLY final_72=false training=false historical_EOS_effect=UNMEASURED')
+          PY

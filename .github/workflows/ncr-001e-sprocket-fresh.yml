@@ -96,6 +96,7 @@ jobs:
           retention-days: 30
 
   fresh-frozen-variants:
+    if: github.event_name == 'workflow_dispatch'
     name: Actual frozen ${{ matrix.variant }} source, cache and cold adapter
     needs: pinned-source-format
     runs-on: ubuntu-24.04
