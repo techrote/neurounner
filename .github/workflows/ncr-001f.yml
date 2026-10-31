@@ -35,7 +35,18 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          # A PR check's head_sha alone does not establish the checked-out
+          # source tree: default checkout is refs/pull/N/merge. Qualify the
+          # literal source head instead and refuse synthetic-merge attribution.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+      - name: Verify literal source checkout and unchanged source authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
       - name: Install pinned CPU torch, no model libraries
         run: |
           python3 -m pip install --disable-pip-version-check \

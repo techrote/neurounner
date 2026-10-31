@@ -98,3 +98,28 @@ runtime optimizer schedules, physical NCA-vs-MLP compute equivalence, trained
 quality, #72 model conformance or any scientific gate. No held-outs, model
 weights, original raw ZIP/logs, protocol/fixture/source-pin bytes, main branch
 or scientific admission records are altered.
+
+## G6 source provenance — literal PR-head checkout
+
+A fresh integration-readiness review identified a **CI attribution defect**:
+the prior `ncr-001f.yml` green PR-event job (Actions
+[41166611891](https://github.com/techrote/neurounner/actions/runs/41166611891))
+was associated with PR #223's source head by GitHub, but the workflow's default
+`actions/checkout` had **no explicit literal-head ref or checked-out HEAD
+assertion**. GitHub's normal `pull_request` checkout may use the synthetic
+`refs/pull/N/merge` worktree. Thus the older source-only tests were real, but
+the prior claim that their checkout was necessarily the literal PR head was
+not established. Keep that green job as historical, not retroactively relabelled.
+
+The repaired read-only workflow checks out the exact
+`github.event.pull_request.head.sha` (or the explicit workflow-dispatch
+`github.sha`), asserts `git rev-parse HEAD` matches the selected literal
+commit, and pins immutable protocol/source-pin Git blobs
+`14ce5fbaa38f8806c8c8738f19c01b91385eebaf` /
+`59fff1aed872b5563aa6898171983973e0cdb02c` before tests.
+It continues to execute all NCR-001F source-only controls under ordinary
+Python and `python -O` and reproduce the original unmodified 7,204-byte
+plan SHA. Successful new source-specific CI is required before describing the
+repaired revision as literally head-checked; no generic green VILLAGE check
+or historical synthetic-merge job can substitute. This repairs provenance,
+not #72/#73 scientific admission, a frozen-host inference or a merge.
