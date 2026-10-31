@@ -92,6 +92,13 @@ class EventEvidenceTests(unittest.TestCase):
         def edit(p, r, j):
             j[TARGETS[99]["domain_run"]]["total_count"] = 2
         self.refuses(edit, "job inventory")
+    def test_null_repository_metadata_fails_closed(self):
+        self.refuses(lambda p, r, j: r["workflow_runs"][0].update(
+            head_repository=None), "foreign repository")
+    def test_null_job_data_fails_closed(self):
+        def edit(p, r, j):
+            j[TARGETS[99]["domain_run"]]["jobs"][0] = None
+        self.refuses(edit, "invalid job object")
     def test_tampered_198_workflow(self):
         self.refuses(lambda p, r, j: r["workflow_runs"][0].update(
             path=".github/workflows/village-001-preflight.yml"),

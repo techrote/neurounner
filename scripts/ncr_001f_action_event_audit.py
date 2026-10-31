@@ -80,7 +80,8 @@ def validate(pr_number: int, pull: dict, inventory: dict, jobs_by_run: dict) -> 
         run = entries[t[key]]
         need(run.get("head_sha") == t["head"] and
              run.get("head_branch") == t["branch"], "cross-head or cross-branch run")
-        need(run.get("head_repository", {}).get("full_name") == REPO,
+        source_repo = run.get("head_repository")
+        need(type(source_repo) is dict and source_repo.get("full_name") == REPO,
              "foreign repository run")
         need(run.get("event") == event and run.get("path") == path,
              "event/workflow path misattribution")
@@ -99,7 +100,8 @@ def validate(pr_number: int, pull: dict, inventory: dict, jobs_by_run: dict) -> 
         jobs = job_collection.get("jobs")
         need(type(jobs) is list and len(jobs) == 1, "missing or duplicate job")
         job = jobs[0]
-        need(type(job) is dict and type(job.get("id")) is int and
+        need(type(job) is dict, "invalid job object")
+        need(type(job.get("id")) is int and
              job["id"] == job_id and job.get("name") == job_name,
              "job identity mismatch")
         need(job.get("head_sha") == t["head"] and
