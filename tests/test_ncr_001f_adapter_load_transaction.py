@@ -138,7 +138,13 @@ class AtomicMatchedControlImport(unittest.TestCase):
                 self.assertTrue(owner._backbone_lock.locked())
             assert_unchanged(self, other, before)
             other.load_adapter(directory)
-            assert_unchanged(self, other, before)
+            # A successful import intentionally replaces this wrapper's
+            # independently initialized weights with the owner's snapshot.
+            owner_params = dict(owner.control.named_parameters())
+            for name, parameter in other.control.named_parameters():
+                self.assertTrue(torch.equal(parameter, owner_params[name]), name)
+            self.assertFalse(other._lock.locked())
+            self.assertFalse(other._backbone_lock.locked())
 
     def test_injected_late_load_exception_restores_prior_weights(self):
         with tempfile.TemporaryDirectory() as directory:
