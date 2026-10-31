@@ -242,6 +242,39 @@ class MatchAndLeakageTests(unittest.TestCase):
                     ):
                         build_plan(protocol_path=path)
 
+    def test_preregistered_match_tolerance_and_fairness_fail_closed(self):
+        """Source-only fairness contract cannot be weakened or silently changed."""
+        original = load_json(ROOT / "experiments/ncr-001/protocol.json")
+        match = original["match_constraints"]
+        self.assertEqual(match["adapter_trainable_param_tolerance_fraction"], 0.05)
+        fair_flags = (
+            "comparison_within_each_model",
+            "same_examples_order_optimizer_updates_seed_and_taps",
+            "record_actual_sequence_and_supervised_tokens",
+            "no_cross_model_raw_token_perplexity_ranking",
+        )
+        self.assertTrue(all(match[field] is True for field in fair_flags))
+        mutations = [
+            ("adapter match tolerance", "adapter_trainable_param_tolerance_fraction", v)
+            for v in (0.04, 0.049, 0, "0.05", True)
+        ]
+        mutations += [
+            (f"fairness {field}", field, v)
+            for field in fair_flags for v in (False, 1, "true")
+        ]
+        self.assertEqual(len(mutations), 17)
+        for gate, field, replacement in mutations:
+            with self.subTest(field=field, replacement=replacement):
+                changed = json.loads(json.dumps(original))
+                changed["match_constraints"][field] = replacement
+                with tempfile.TemporaryDirectory() as td:
+                    path = Path(td) / "tampered-fairness-protocol.json"
+                    path.write_text(json.dumps(changed), encoding="utf-8")
+                    with self.assertRaisesRegex(
+                        RuntimeError, f"NCR-001F preregistered {gate} drift"
+                    ):
+                        build_plan(protocol_path=path)
+
     def test_train_heldout_family_collision_is_blocking(self):
         m = {"train_examples": 1, "heldout_examples": 1,
              "train_family_count": 1, "heldout_family_count": 1,

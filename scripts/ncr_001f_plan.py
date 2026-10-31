@@ -197,6 +197,21 @@ def build_plan(protocol_path: Path = PROTOCOL, dataset_root: Path = DATASET_ROOT
         observed_budget = p["training"]["per_model_sequence_unit_limits"][lane]
         if type(observed_budget) is not int or observed_budget != expected["token_limit"]:
             raise RuntimeError(f"NCR-001F frozen {lane} token_limit drift")
+    # A looser or tighter comparison rule is still preregistration drift:
+    # match tolerance AND the fairness requirements are frozen, not tunable
+    # through a self-consistent replacement protocol. This is source-only.
+    match = p["match_constraints"]
+    tolerance = match["adapter_trainable_param_tolerance_fraction"]
+    if type(tolerance) is not float or tolerance != 0.05:
+        raise RuntimeError("NCR-001F preregistered adapter match tolerance drift")
+    for field in (
+        "comparison_within_each_model",
+        "same_examples_order_optimizer_updates_seed_and_taps",
+        "record_actual_sequence_and_supervised_tokens",
+        "no_cross_model_raw_token_perplexity_ranking",
+    ):
+        if match[field] is not True:
+            raise RuntimeError(f"NCR-001F preregistered fairness {field} drift")
     seeds = p["training"]["seed_list"]
     steps = p["training"]["primary_steps_per_seed"]
     # Identity AND order are preregistered, not just the number of seeds.

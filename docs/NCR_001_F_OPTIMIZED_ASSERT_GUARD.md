@@ -71,3 +71,30 @@ cases while reproducing the exact original 7,204-byte source-plan SHA-256
 `f906206cfde550625512efe4c5af2f2add1a281a17c9cd3fff16991d95f17ed0`.
 No frozen source/weight/fixture/protocol bytes, original ZIP/log custody or
 scientific admission gates are modified; this remains draft-only source work.
+
+## Production follow-up — matched-control fairness authority
+
+A source-only fairness/preflight gap remained even after model, seed and optimizer
+identity locks: the mutable protocol could change the adapter parameter-count
+tolerance from exactly **5%** to another positive value at or below 5%, because
+the lower-level `matched_control_contract` deliberately accepts any such
+limit. The planner would still classify the modified protocol as
+`PASS_COMPARISON_PLAN_PRECHECK__BLOCKED_FOR_TRAINING`. It also did not check
+four experiment-defining boolean fairness flags (within-model comparison,
+identical example/order/optimizer/update/seed/taps, actual supervised-unit
+accounting, and prohibition on cross-tokenizer raw-perplexity ranking).
+
+The planner now requires `adapter_trainable_param_tolerance_fraction` to be
+exactly a Python float `0.05`, plus those four fields to be literally `true`.
+Seventeen temporary altered-protocol sentinels test changed tolerance,
+integer/string/bool type confusion and each flag set to false, integer 1 or
+string `"true"`; both normal and `python3 -O` CI must refuse the mutation.
+The original protocol remains untouched, and its original 7,204-byte output
+SHA-256 `f906206cfde550625512efe4c5af2f2add1a281a17c9cd3fff16991d95f17ed0`
+must still reproduce exactly.
+
+This locks the **source declaration** of matching fairness, but does not prove
+runtime optimizer schedules, physical NCA-vs-MLP compute equivalence, trained
+quality, #72 model conformance or any scientific gate. No held-outs, model
+weights, original raw ZIP/logs, protocol/fixture/source-pin bytes, main branch
+or scientific admission records are altered.
