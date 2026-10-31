@@ -51,8 +51,9 @@ jobs:
           assert set(p['models'])==set(pins['models'])=={'void1','smollm2','sprocket_chat','sprocket_instruct'}
           h=os.getenv('LITERAL_PR_HEAD') or ''
           if h:
-              assert git('rev-parse',h+'^1')==integrated_base
-              assert git('rev-parse',h+'^2')==original
+              assert git('rev-parse',h+'^1')=='edf9ee5ba376b5925be507bf8a9de07d1f4ff969', 'expected single safety-repair descendant'
+              assert git('rev-parse','edf9ee5ba376b5925be507bf8a9de07d1f4ff969^1')==integrated_base
+              assert git('rev-parse','edf9ee5ba376b5925be507bf8a9de07d1f4ff969^2')==original
               assert git('rev-parse','origin/main')==integrated_base, 'main advanced; requalify'
           source=Path('.github/workflows/ncr-001e-void-2048-context.yml').read_text()
           prefix=source.split('permissions:',1)[0]
@@ -65,9 +66,15 @@ jobs:
           python3 -m py_compile scripts/ncr_001e_void_2048_context.py
           python3 scripts/ncr_001e_void_2048_context.py --source-test
           python3 -m unittest discover -s tests -p 'test_ncr_001e_void_2048_context.py' -v
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 654736b68e60ccb7b730fb29d7e011b10c149940
+          path: historical-128
+          persist-credentials: false
       - name: Original six text members and adversarial archive audit (NO MODEL)
         run: |
           set -euo pipefail
+          cd historical-128
           python3 -m py_compile scripts/ncr_001e_void_2048_archive_audit.py
           python3 scripts/ncr_001e_void_2048_archive_audit.py
           python3 -m unittest discover -s tests -p 'test_ncr_001e_void_2048_archive_audit.py' -v

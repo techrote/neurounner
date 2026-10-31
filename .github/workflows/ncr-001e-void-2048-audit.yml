@@ -22,15 +22,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 654736b68e60ccb7b730fb29d7e011b10c149940
+          path: historical-128
+          persist-credentials: false
       - name: Re-read exact original six-member evidence and fail closed
         run: |
           set -euo pipefail
+          cd historical-128
           python3 -m py_compile scripts/ncr_001e_void_2048_archive_audit.py
           python3 scripts/ncr_001e_void_2048_archive_audit.py
           python3 -m unittest discover -s tests \
             -p 'test_ncr_001e_void_2048_archive_audit.py' -v
       - name: Reassert no training, historical impact or final four-lane pass
         run: |
+          cd historical-128
           python3 - <<'PY'
           import json
           p=json.load(open('experiments/ncr-001/evidence-review/void1-2048/provenance.json'))
