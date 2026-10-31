@@ -1,0 +1,89 @@
+name: NCR-001E Chat #124 historical blocked adjudication current-main integrity (NO MODEL)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ncr-001e-sprocket-chat-adjudication*.yml'
+      - 'docs/NCR_001_E_SPROCKET_CHAT_ADJUDICATION.md'
+      - 'scripts/ncr_001e_sprocket_chat_adjudication.py'
+      - 'tests/test_ncr_001e_sprocket_chat_adjudication.py'
+      - 'experiments/ncr-001/adjudication/sprocket-chat-pretrain.json'
+permissions:
+  contents: read
+jobs:
+  original-chat-blocked-source-replay:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify literal reviewed historic adjudication ancestry, original blobs and manual-only model workflow
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+          EXPECTED_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "techrote/neurounner"
+          test "$GITHUB_BASE_REF" = "main"
+          test "$GITHUB_HEAD_REF" = "review/ncr001e-sprocket-chat-adjudication-20261027"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test "$(git rev-parse HEAD^1)" = "e5304e2baae01bce56991f914d3badf0f621e21e"
+          test "$(git rev-parse HEAD^1^1)" = "$EXPECTED_BASE"
+          test "$(git rev-parse HEAD^1^2)" = "b2461a66241bc2fd0fbc389d7b3b2d10f729d2ab"
+          git merge-base --is-ancestor "b2461a66241bc2fd0fbc389d7b3b2d10f729d2ab" "$EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          test "$(git hash-object RAG.md)" = "7f0d508bb51e665af3c6af84ffecb41bf3a035c0"
+          test "$(git hash-object docs/NCR_001_E_SPROCKET_CHAT_ADJUDICATION.md)" = "d00c8b9f386b25b8ffebb0bf983f6d92e6cc391e"
+          test "$(git hash-object experiments/ncr-001/adjudication/sprocket-chat-pretrain.json)" = "70fd30e4d1d553deed6fdf13ae45e28bd04372a6"
+          test "$(git hash-object scripts/ncr_001e_sprocket_chat_adjudication.py)" = "5692e16f0fb0dd6596bf9df32fe8d43771f6dded"
+          test "$(git hash-object tests/test_ncr_001e_sprocket_chat_adjudication.py)" = "8a3dd7846af56d1e28c5865e7d4110d5c68f0700"
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          phys=Path('.github/workflows/ncr-001e-sprocket-chat-generate.yml').read_text().split('permissions:',1)[0]
+          assert 'workflow_dispatch:' in phys
+          assert 'pull_request:' not in phys and 'push:' not in phys
+          audit=Path('.github/workflows/ncr-001e-sprocket-chat-adjudication.yml').read_text()
+          assert '- main' in audit and 'pull_request:' in audit
+          inherited=Path('.github/workflows/ncr-001e-sprocket-chat-main-integration.yml').read_text()
+          assert "'.github/workflows/ncr-001e-sprocket-chat-*'" not in inherited
+          p=json.loads(Path('experiments/ncr-001/protocol.json').read_text())
+          pins=json.loads(Path('experiments/ncr-001/source-pins.json').read_text())
+          assert p['train_authorized'] is False
+          assert set(p['models'])==set(pins['models'])=={'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          assert pins['models']['sprocket_chat']['hf_weight_file']=='chat/model.safetensors'
+          assert pins['models']['sprocket_instruct']['hf_weight_file']=='model.safetensors'
+          assert pins['models']['sprocket_chat']['weight_declared_lfs_sha256_not_downloaded']!='1a9fd1066f3f0873c4f5ae99b75beab3b0721100f45b036f9e255611b220d864'
+          print('EXACT_OLD_SOURCE_AND_FOUR_MODEL_BOUNDARIES; NO_PHYSICAL_RUN')
+          PY
+      - name: Reproduce original Chat source-only blocked adjudication, all four original source audits and adversarial refusal tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/ncr_001e_sprocket_chat_adjudication.py tests/test_ncr_001e_sprocket_chat_adjudication.py
+          python3 scripts/ncr_001e_sprocket_chat_adjudication.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          p=json.loads(Path('experiments/ncr-001/adjudication/sprocket-chat-pretrain.json').read_text())
+          q=json.loads(Path('runtime/ncr-001/sprocket-chat-adjudication.json').read_text())
+          assert p==q
+          assert q['adjudication']=='BLOCKED_REQUIRED_LEARNING_CHECKS__SOURCE_RUNTIME_PRETRAIN_PASS'
+          assert q['per_model_gate'] is False and q['train_authorized'] is False
+          assert q['optimizer_steps_observed']==0 and q['heldout_evaluation'] is False
+          assert q['source_semantic_scope']['instruct_tool_memory_grammar_inherited'] is False
+          assert set(q['blocking_required_checks']) == {
+            'base_weight_unchanged_after_step','nonzero_adapter_gradient_after_warmup','finite_state_and_loss'}
+          assert q['reviewed_pr_heads']=={
+            'pr113':'7dec2f91b6542854762542807978e5bddead4f64',
+            'pr123':'57bf036f1a8728b35545473b475e3306eee440d7'}
+          print('HISTORICAL_CHAT_PRETRAIN_GATE_BLOCKED__NO_SCIENTIFIC_ADMISSION')
+          PY
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_sprocket_chat_adjudication.py' -v
+          git diff --exit-code
