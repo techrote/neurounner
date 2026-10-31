@@ -1,0 +1,123 @@
+name: NCR-001E source-oracle and bounded Instruct diagnostic (no training)
+# G3 integration safety: historical PR-triggered frozen-model jobs are archived
+# in original #102 Git ancestry. This composition is manual-only; a separately
+# authorized physical qualification is mandatory before any future dispatch.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: ncr-wire-completion-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+jobs:
+  qualification:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      HF_HOME: /tmp/ncr-wire-completion-hf
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Determine whether executable source changed (archive-only pushes do not regenerate)
+        id: changes
+        run: |
+          python3 - <<'PY'
+          import json,os,subprocess
+          e=json.load(open(os.environ['GITHUB_EVENT_PATH']))
+          paths=['scripts/ncr_001e_sprocket_publisher_wire.py','scripts/ncr_001e_sprocket_wire_diagnostic.py',
+                 'tests/test_ncr_001e_sprocket_wire_completion.py','.github/workflows/ncr-001e-sprocket-wire-completion.yml']
+          run=True
+          if e.get('action')=='synchronize' and e.get('before'):
+              result=subprocess.run(['git','diff','--name-only',e['before'],'HEAD','--',*paths],capture_output=True,text=True)
+              if result.returncode: raise RuntimeError(result.stderr)
+              run=bool(result.stdout.strip())
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f: f.write('runtime='+str(run).lower()+'\n')
+          print('FRESH_MODEL_DIAGNOSTIC_REQUIRED',run)
+          PY
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 3583905ce2c91a813643e4a4e836eaa659cbde34
+          path: previous
+          persist-credentials: false
+      - name: Historical negative reproduction, fixed plan, offline tests and archive readback
+        run: |
+          set -o pipefail
+          mkdir -p runtime/ncr-001/wire-diagnostic
+          cmp experiments/ncr-001/protocol.json previous/experiments/ncr-001/protocol.json
+          test -z "$(git diff 3583905ce2c91a813643e4a4e836eaa659cbde34 HEAD -- experiments/ncr-001/fixtures)"
+          python3 scripts/ncr_001e_sprocket_wire_diagnostic.py --prepare
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_sprocket_wire_completion.py' -v 2>&1 | tee runtime/ncr-001/wire-diagnostic/unit-tests.log
+          python3 -m unittest discover -s tests -p 'test_ncr_001e_sprocket_publisher_wire.py' -v
+          python3 scripts/ncr_001e_sprocket_publisher_receipt_audit.py
+          if [ -d datasets/ncr-001-sprocket-wire-diagnostic ]; then
+            python3 scripts/ncr_001e_sprocket_wire_archive.py
+            python3 -m unittest discover -s tests -p 'test_ncr_001e_sprocket_wire_archive.py' -v
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        if: steps.changes.outputs.runtime == 'true'
+        with:
+          ref: b95c010f9b2ba3cbd9f81317981316bb9c8acd19
+          path: implementation
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        if: steps.changes.outputs.runtime == 'true'
+        with:
+          repository: kandivault-source/Sprocket-500M
+          ref: a003767e70d766bc14b40c89792543ee8641c8bc
+          path: publisher
+          persist-credentials: false
+      - name: Exact CPU dependencies and source-only prefetch
+        if: steps.changes.outputs.runtime == 'true'
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub==0.36.2' 'safetensors==0.8.0' 'sentencepiece>=0.2,<1'
+          python3 -m pip freeze > runtime/ncr-001/wire-diagnostic/packages.txt
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          p=json.load(open('experiments/ncr-001/protocol.json'))
+          assert p['train_authorized'] is False
+          assert set(p['models'])=={'smollm2','sprocket_chat','sprocket_instruct','void1'}
+          pin=json.load(open('experiments/ncr-001/source-pins.json'))['models']['sprocket_instruct']
+          assert pin['hf_weight_file']=='model.safetensors'
+          records={}
+          for name in ('README.md','config.json','tokenizer.json','tokenizer_config.json','special_tokens_map.json','model.safetensors'):
+              path=Path(hf_hub_download(pin['repo_id'],name,revision=pin['revision']))
+              h=hashlib.sha256()
+              with path.open('rb') as f:
+                  for chunk in iter(lambda:f.read(4*1024*1024),b''): h.update(chunk)
+              records[name]={'sha256':h.hexdigest(),'bytes':path.stat().st_size}
+              Path('runtime/ncr-001/wire-diagnostic/prefetch.json').write_text(json.dumps(records,indent=2)+'\n')
+              if name=='model.safetensors':
+                  assert h.hexdigest()==pin['weight_declared_lfs_sha256_not_downloaded']
+                  assert path.stat().st_size==1002207984
+          PY
+      - name: Fresh publisher oracle, full-prefix cache and 21 bounded raw generations
+        if: steps.changes.outputs.runtime == 'true'
+        run: |
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python3 scripts/ncr_001e_sprocket_wire_diagnostic.py
+      - name: Preserve source-matched PASS/FAIL evidence, including raw negatives
+        if: always()
+        run: |
+          mkdir -p runtime/ncr-001/wire-diagnostic
+          git rev-parse HEAD > runtime/ncr-001/wire-diagnostic/checkout-sha.txt
+          tar -czf runtime/ncr-001/wire-diagnostic/source-snapshot.tar.gz \
+            scripts/ncr_001*.py tests/test_ncr_001*.py \
+            experiments/ncr-001/protocol.json experiments/ncr-001/source-pins.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: ncr-wire-completion-a${{ github.run_attempt }}
+          path: runtime/ncr-001/wire-diagnostic/
+          if-no-files-found: error
+          retention-days: 30
