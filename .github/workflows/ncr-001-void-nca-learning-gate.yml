@@ -1,0 +1,167 @@
+name: NCR-001E void1 one-step NCA-only diagnostic source gate (NO COMPARISON)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/ncr-001-void-nca-learning-gate.yml"
+      - "scripts/ncr_001_void_nca_learning_gate.py"
+      - "tests/test_ncr_001_void_nca_learning_gate.py"
+      - "docs/NCR_001_VOID_NCA_DIAGNOSTIC.md"
+      - "RAG.md"
+  workflow_dispatch:
+    inputs:
+      run_physical:
+        description: 'Owner explicitly authorizes the historical frozen-Qwen3 one-step diagnostic'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001-void-nca-diagnostic-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NCR_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+  HF_HOME: /tmp/ncr001-void-nca-learning-hf
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  TOKENIZERS_PARALLELISM: "false"
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  source-sentinels:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify immutable four-lane protocol and diagnostic boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          python3 - <<'PY'
+          import json
+          p = json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {
+              "smollm2", "sprocket_chat", "sprocket_instruct", "void1"}
+          PY
+      - name: Install pinned source-test CPU runtime
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Offline negative tests, no optimizer/model execution
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p runtime/ncr001-void-nca-learning/source
+          python3 -m py_compile scripts/ncr_001_void_nca_learning_gate.py tests/test_ncr_001_void_nca_learning_gate.py
+          python3 -m unittest discover -s tests -p "test_ncr_001_void_nca_learning_gate.py" -v \
+            2>&1 | tee runtime/ncr001-void-nca-learning/source/tests.log
+      - name: Archive raw test logs including failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-void-nca-diagnostic-source-a${{ github.run_attempt }}
+          path: runtime/ncr001-void-nca-learning/source/
+          if-no-files-found: warn
+          retention-days: 30
+
+  actual-qwen3-diagnostic:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_physical == true }}
+    needs: source-sentinels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 9fbdee880697903aaf5b91cc29442c9e53479e50
+          path: byte-eos-authority
+          persist-credentials: false
+      - name: Enforce exact source and future ByteTokenizer helper authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$NCR_EXPECTED_HEAD"
+          test "$(git -C byte-eos-authority rev-parse HEAD)" = "9fbdee880697903aaf5b91cc29442c9e53479e50"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = "14ce5fbaa38f8806c8c8738f19c01b91385eebaf"
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = "59fff1aed872b5563aa6898171983973e0cdb02c"
+          python3 - <<'PY'
+          import json
+          p = json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"]) == {
+              "smollm2", "sprocket_chat", "sprocket_instruct", "void1"}
+          PY
+      - name: Install pinned original CPU source runtime
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Prefetch and independently hash pinned Qwen3/ByteTokenizer original files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/ncr001-void-nca-learning
+          python3 - <<'PY' 2>&1 | tee runtime/ncr001-void-nca-learning/prefetch.log
+          import hashlib,json
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          p=json.load(open("experiments/ncr-001/source-pins.json"))["models"]["void1"]
+          assert p["repo_id"] == "dotlabs/void.1"
+          assert p["revision"] == "9c2be5087772867d45961abd11f6b35110617563"
+          names = {
+              "model.safetensors": "weight_declared_lfs_sha256_not_downloaded",
+              "config.json": "config_sha256",
+              "tokenization_byte.py": "tokenization_byte_py_sha256",
+              "byte_vocab.json": "byte_vocab_sha256",
+              "tokenizer_config.json": "tokenizer_config_sha256",
+              "special_tokens_map.json": "special_tokens_map_sha256",
+          }
+          for name, key in names.items():
+              f=Path(hf_hub_download(p["repo_id"],name,revision=p["revision"]))
+              h=hashlib.sha256()
+              with f.open("rb") as stream:
+                  for block in iter(lambda: stream.read(4*1024*1024),b""): h.update(block)
+              got=h.hexdigest()
+              assert got == p[key], (name, got, p[key])
+              if name == "model.safetensors":
+                  assert f.stat().st_size == 360622744
+              print("SOURCE_SHA256",name,got,f.stat().st_size,flush=True)
+          PY
+      - name: One synthetic causal-EOS NCA-only diagnostic SGD step (NOT comparative training)
+        shell: bash
+        run: |
+          set -o pipefail
+          HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+            python3 scripts/ncr_001_void_nca_learning_gate.py \
+            2>&1 | tee runtime/ncr001-void-nca-learning/host.log
+      - name: Preserve source-run receipts and all raw negative evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001-void-nca-diagnostic-host-a${{ github.run_attempt }}
+          path: |
+            runtime/ncr001-void-nca-learning/
+            runtime/ncr001-void-postlease/diagnostic.json
+          if-no-files-found: warn
+          retention-days: 30
