@@ -80,17 +80,16 @@ jobs:
           assert p['train_authorized'] is False and len(p['models'])==4
           print('ORIGINAL_17_BLOBS_EXACT__CURRENT_HOOK_DISTINCT__NO_MODEL')
           PY
-      - name: Current-composition original JSON and CPU ZIP integrity and adversarial tests
+      - name: Verify committed original CPU ZIP without reinterpreting old MLP hook code
         run: |
-          python3 -m unittest discover -s tests -p test_ncr_001f_sprocket_mlp_receipt_audit.py -v
           python3 -m unittest discover -s tests -p test_ncr_001f_sprocket_adapter_cpu_custody.py -v
-          python3 scripts/ncr_001f_sprocket_mlp_receipt_audit.py | tee /tmp/ncr98-original-custody.json
           python3 scripts/ncr_001f_sprocket_adapter_cpu_custody.py | tee /tmp/ncr98-cpu-custody.json
           python3 - <<'PY'
           import json
-          a=json.load(open('/tmp/ncr98-original-custody.json'))
-          assert a['train_authorized'] is False and a['optimizer_steps']==0
-          print('ORIGINAL_FROZEN_SPROCKET_MLP_ARCHIVE__NO_NEW_MODEL')
+          d=json.load(open('/tmp/ncr98-cpu-custody.json'))
+          assert d['train_authorized'] is False and d['optimizer_steps']==0
+          assert d['actual_matched_frozen_host_budget_pass'] is False
+          print('ORIGINAL_ADAPTER_CPU_ZIP_CUSTODY__HOST_COMPUTE_UNMEASURED')
           PY
       - name: Rerun historical MAC proxy solely at immutable 27 October source (never on modern hook)
         shell: bash
@@ -100,12 +99,19 @@ jobs:
           test "$(git -C /tmp/ncr98-historical rev-parse HEAD)" = 'c8139cc36b1105f6bcafd585b766ff470e8c9e1d'
           (
             cd /tmp/ncr98-historical
+            python3 -m unittest discover -s tests -p test_ncr_001f_sprocket_mlp_receipt_audit.py -v
+            python3 scripts/ncr_001f_sprocket_mlp_receipt_audit.py | tee /tmp/ncr98-original-custody.json
             python3 -m unittest discover -s tests -p test_ncr_001f_sprocket_mac_proxy.py -v
             python3 scripts/ncr_001f_sprocket_mac_proxy.py --out /tmp/ncr98-original-mac.json
           )
           python3 - <<'PY'
           import json
           d=json.load(open('/tmp/ncr98-original-mac.json'))
+          original=json.load(open('/tmp/ncr98-original-custody.json'))
+          assert original['status']=='PASS_ORIGINAL_DUAL_SPROCKET_FROZEN_MLP_RAW_JSON_CUSTODY__FINAL_CONFORMANCE_BLOCKED'
+          assert original['train_authorized'] is False and original['optimizer_steps']==0
+          assert original['source_integrity_readback_pass'] is True
+          assert original['independent_new_model_invocation'] is False
           assert d['status']=='SOURCE_MAC_PROXY_QUANTIFIED__ACTUAL_COMPUTE_MATCH_UNMEASURED__TRAINING_BLOCKED'
           assert d['actual_compute_budget_qualified'] is False
           assert d['full_72_conformance_pass'] is False
@@ -128,6 +134,7 @@ jobs:
       - name: Install pinned CPU-only PyTorch for synthetic source sentinels
         run: |
           python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub==0.36.2' 'safetensors==0.8.0' 'sentencepiece>=0.2,<1'
       - name: Run only offline synthetic source-contract tests (NO model checkpoint or optimizer)
         shell: bash
         run: |
