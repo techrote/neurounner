@@ -1,0 +1,157 @@
+name: NCR-001F Sprocket historical #98 CURRENT-main source and custody (NO MODEL)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ncr-001f-sprocket-main-source-integration.yml'
+      - '.github/workflows/ncr-001f-*.yml'
+      - 'docs/NCR_001_F_SPROCKET_*.md'
+      - 'scripts/ncr_001f_real_sprocket.py'
+      - 'scripts/ncr_001f_sprocket_*.py'
+      - 'tests/test_ncr_001f_real_sprocket.py'
+      - 'tests/test_ncr_001f_sprocket_*.py'
+      - 'experiments/ncr-001/controls-evidence/real-sprocket-mlp/**'
+      - 'experiments/ncr-001/controls-evidence/sprocket-adapter-cpu-microbench-20261029/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ncr001f-sprocket98-source-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+env:
+  EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+  PYTHONDONTWRITEBYTECODE: '1'
+jobs:
+  original-custody-and-source-contract:
+    name: Exact original blobs, immutable old MAC source, original ZIP/custody negative controls (NO MODEL)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check exact literal head, source provenance and all original byte blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          python3 - <<'PY'
+          import json, subprocess
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
+          original = {
+              "docs/NCR_001_F_SPROCKET_ADAPTER_CPU_MICROBENCH.md": "64f7cca8897109de7b2e425dea0d8fe258f3b8b6",
+              "docs/NCR_001_F_SPROCKET_MAC_PROXY.md": "f42d5194cfb50602a28002c17d18991887b17d50",
+              "docs/NCR_001_F_SPROCKET_REAL_MLP.md": "c825097a39a36eb84e3b1fae05ddef904190f08f",
+              "experiments/ncr-001/controls-evidence/real-sprocket-mlp/original-jsons.tar.gz.b64": "ec80686c51c4885bada075c3086730f49f444abf",
+              "experiments/ncr-001/controls-evidence/real-sprocket-mlp/provenance.json": "e83a3228626e4fc833ed06cb08c0e1645fc89a4e",
+              "experiments/ncr-001/controls-evidence/sprocket-adapter-cpu-microbench-20261029/original-actions-40867677298.zip": "38a428b1a0fae2c7b9163f200a2b83f37f369add",
+              "experiments/ncr-001/controls-evidence/sprocket-adapter-cpu-microbench-20261029/original-job-123426590154.log": "7ec9f8443bb69ce69330088457c3e31bee19d512",
+              "scripts/ncr_001f_real_sprocket.py": "e14dc82e8af7504b905551fc0065f86074a3da46",
+              "scripts/ncr_001f_sprocket_adapter_cpu_custody.py": "5ec658faca354871c1bed79976b64986b103e89a",
+              "scripts/ncr_001f_sprocket_adapter_cpu_microbench.py": "ae789c4c4b4c9b6d5065155b7a416e269db79814",
+              "scripts/ncr_001f_sprocket_mac_proxy.py": "6ab8ffb3e3327d7a6a92eb3cfb0075679f2425f1",
+              "scripts/ncr_001f_sprocket_mlp_receipt_audit.py": "9303c85510dcfe70ccc4d8a5daa7436537a9af19",
+              "tests/test_ncr_001f_real_sprocket.py": "0085e01f5b8edfdc664aff67f5d74add91141b78",
+              "tests/test_ncr_001f_sprocket_adapter_cpu_custody.py": "74dd7709f01708eca448a9a67c59ee8e071c1eaf",
+              "tests/test_ncr_001f_sprocket_adapter_cpu_microbench.py": "768b01efa474241793af370fed3be7db51cd5256",
+              "tests/test_ncr_001f_sprocket_mac_proxy.py": "500e38e77e407a7420e4f7c04e637cd9e9b3114f",
+              "tests/test_ncr_001f_sprocket_mlp_receipt_audit.py": "f114947b4fc61de274dc8e738c19fb6ac7eb59e9",
+          }
+          for name, old_sha in original.items():
+              observed = git('rev-parse', 'HEAD:'+name)
+              assert observed == old_sha, (name, observed, old_sha)
+          for name, expected in {
+              'experiments/ncr-001/protocol.json':'14ce5fbaa38f8806c8c8738f19c01b91385eebaf',
+              'experiments/ncr-001/source-pins.json':'59fff1aed872b5563aa6898171983973e0cdb02c',
+              'scripts/ncr_001f_frozen_hooks.py':'5efe8f0690bc1c2793de323d5b972b26bbd7bccb',
+          }.items():
+              assert git('rev-parse','HEAD:'+name)==expected, name
+          old='c8139cc36b1105f6bcafd585b766ff470e8c9e1d'
+          integrated='427b407e35b3bf853f6553138291d07f23dfc30d'
+          parents=git('rev-list', '--parents','-n','1',integrated).split()
+          assert parents==[integrated,'ceba05e610d478464b37603f8c182cc66e0f4226',old], parents
+          git('merge-base','--is-ancestor',integrated,'HEAD')
+          assert git('rev-parse',old+':scripts/ncr_001f_frozen_hooks.py')=='e4129ebcdfa31c3be218473cef45a0d9a4a6bd88'
+          assert git('rev-parse','HEAD:RAG.md')==git('rev-parse','HEAD^1:RAG.md')
+          p=json.loads(open('experiments/ncr-001/protocol.json').read())
+          assert p['train_authorized'] is False and len(p['models'])==4
+          print('ORIGINAL_17_BLOBS_EXACT__CURRENT_HOOK_DISTINCT__NO_MODEL')
+          PY
+      - name: Verify committed original CPU ZIP without reinterpreting old MLP hook code
+        run: |
+          python3 -m unittest discover -s tests -p test_ncr_001f_sprocket_adapter_cpu_custody.py -v
+          python3 scripts/ncr_001f_sprocket_adapter_cpu_custody.py | tee /tmp/ncr98-cpu-custody.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/ncr98-cpu-custody.json'))
+          assert d['train_authorized'] is False and d['optimizer_steps']==0
+          assert d['actual_matched_frozen_host_budget_pass'] is False
+          print('ORIGINAL_ADAPTER_CPU_ZIP_CUSTODY__HOST_COMPUTE_UNMEASURED')
+          PY
+      - name: Rerun historical MAC proxy solely at immutable 27 October source (never on modern hook)
+        shell: bash
+        run: |
+          set -euo pipefail
+          git worktree add --detach /tmp/ncr98-historical 'c8139cc36b1105f6bcafd585b766ff470e8c9e1d'
+          test "$(git -C /tmp/ncr98-historical rev-parse HEAD)" = 'c8139cc36b1105f6bcafd585b766ff470e8c9e1d'
+          (
+            cd /tmp/ncr98-historical
+            python3 -m unittest discover -s tests -p test_ncr_001f_sprocket_mlp_receipt_audit.py -v
+            python3 scripts/ncr_001f_sprocket_mlp_receipt_audit.py | tee /tmp/ncr98-original-custody.json
+            python3 -m unittest discover -s tests -p test_ncr_001f_sprocket_mac_proxy.py -v
+            python3 scripts/ncr_001f_sprocket_mac_proxy.py --out /tmp/ncr98-original-mac.json
+          )
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/ncr98-original-mac.json'))
+          original=json.load(open('/tmp/ncr98-original-custody.json'))
+          assert original['status']=='PASS_ORIGINAL_DUAL_SPROCKET_FROZEN_MLP_RAW_JSON_CUSTODY__FINAL_CONFORMANCE_BLOCKED'
+          assert original['train_authorized'] is False and original['optimizer_steps']==0
+          assert original['source_integrity_readback_pass'] is True
+          assert original['independent_new_model_invocation'] is False
+          assert d['status']=='SOURCE_MAC_PROXY_QUANTIFIED__ACTUAL_COMPUTE_MATCH_UNMEASURED__TRAINING_BLOCKED'
+          assert d['actual_compute_budget_qualified'] is False
+          assert d['full_72_conformance_pass'] is False
+          assert d['train_authorized'] is False and d['optimizer_steps']==0
+          assert set(d['lanes'])=={'sprocket_chat','sprocket_instruct'}
+          print('HISTORICAL_OLD_HOOK_MAC_PROXY_ONLY__MODERN_COMPUTE_UNMEASURED')
+          PY
+  current-frozen-hook-source-sentinels:
+    name: Current frozen-hook no-model PyTorch source-contract tests (NO MODEL)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install pinned CPU-only PyTorch for synthetic source sentinels
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub==0.36.2' 'safetensors==0.8.0' 'sentencepiece>=0.2,<1'
+      - name: Run only offline synthetic source-contract tests (NO model checkpoint or optimizer)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          python3 -m py_compile scripts/ncr_001f_real_sprocket.py scripts/ncr_001f_sprocket_adapter_cpu_microbench.py
+          python3 -m unittest discover -s tests -p test_ncr_001f_real_sprocket.py -v
+          git worktree add --detach /tmp/ncr98-original-adapter-cpu 'c8139cc36b1105f6bcafd585b766ff470e8c9e1d'
+          (
+            cd /tmp/ncr98-original-adapter-cpu
+            test "$(git rev-parse HEAD)" = 'c8139cc36b1105f6bcafd585b766ff470e8c9e1d'
+            python3 -m unittest discover -s tests -p test_ncr_001f_sprocket_adapter_cpu_microbench.py -v
+          )
+          python3 - <<'PY'
+          import json
+          p=json.load(open('experiments/ncr-001/protocol.json'))
+          assert p['train_authorized'] is False
+          print('CURRENT_HOOK_CONTRACT_7_TESTS__HISTORIC_CPU_SAMPLES_SOURCE_VERSION_SEPARATE__NO_FROZEN_MODEL_LOADED')
+          PY
