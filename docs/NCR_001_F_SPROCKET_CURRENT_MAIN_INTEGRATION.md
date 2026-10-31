@@ -1,0 +1,16 @@
+# NCR-001F — historical Sprocket matched-MLP #98 integration against current main
+
+Source-only integration review (31 October 2026). The original research was independently executed on 27 October and is **not rerun** by this PR integration. Distinct original frozen Sprocket **Chat** `chat/model.safetensors` and **root Instruct** `model.safetensors` checkpoint identities, old two-model MLP activation/48-token cache evidence, four original JSON raw receipts, original 5,589-byte adapter-only CPU ZIP/log and complete source provenance remain historical evidence, **not current-model scientific admission**.
+
+The original #98 exact head is `c8139cc36b1105f6bcafd585b766ff470e8c9e1d` (first source parent elsewhere in Git history). The integration composition uses first-parent fresh premerge main `ceba05e610d478464b37603f8c182cc66e0f4226` plus second-parent immutable #98 old head. All 17 original nonworkflow added Git blobs are required byte-identical by the [current-main no-model CI](../.github/workflows/ncr-001f-sprocket-main-source-integration.yml). Five old workflow YAMLs were made **manual-only** before publishing the integration branch, including the full 1GB+ frozen-model job; the original historical workflow definitions remain retrievable at old head.
+
+## Immutable source-version boundary
+
+Historical source-only MAC proxy `scripts/ncr_001f_sprocket_mac_proxy.py` pins original hook blob **`e4129ebcdfa31c3be218473cef45a0d9a4a6bd88`**. Current main hook `scripts/ncr_001f_frozen_hooks.py` is **`5efe8f0690bc1c2793de323d5b972b26bbd7bccb`**, a later shared-backbone implementation. The legacy helper must run against immutable `c8139cc36b1105f6bcafd585b766ff470e8c9e1d`, not be weakened to accept today's hook. The CI independently tests historical source-only original proxy at the original head, verifies current blob identity and runs only **synthetic/no-model** current source sentinels. Its original **1.20625 NCA/MLP dense/conv MAC ratio** is a source-arithmetic proxy for the pinned 2026-10-27 geometry; it is **not** measured modern training FLOPs, wall time, CPU parity or #73 actual compute-budget qualification.
+
+## Acceptance and holds
+
+- Original real frozen-host experiment [Actions 40519177555](https://github.com/techrote/neurounner/actions/runs/40519177555), independent raw JSON source receipt [40520745880](https://github.com/techrote/neurounner/actions/runs/40520745880) and archived synthetic CPU receipts are **historical**. A fresh no-model readback does not invoke either frozen model or prove learned quality.
+- The original #98 PR body expressly requires independent review **and training protocol admission before merge**. This specific admission hold must be adjudicated under the owner instructions; source-only CI passing **does not by itself release it**. Leave draft and unmerged if the hold cannot be shown to have been superseded by explicit bounded owner authorization.
+- No changes to shared `RAG.md`, original protocol/pins, model checkpoints, global decisions, held-outs or original failed/passing reports. No comparative NCA/MLP training.
+- `train_authorized=false`, `full_72_conformance_pass=false`, and `actual_compute_budget_qualified=false` remain mandatory. Distinct-person scientific approval has not been obtained; same-account COMMENTED review is not GitHub APPROVED.

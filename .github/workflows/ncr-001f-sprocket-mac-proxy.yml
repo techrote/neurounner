@@ -1,0 +1,49 @@
+name: NCR-001F pinned Sprocket source-only MAC proxy (NO TRAIN)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pinned-source-mac-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify exact checkout and fail-closed source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$GITHUB_REF_NAME" = "review/ncr-001f-sprocket-real-mlp-20261027"
+          python3 -m py_compile scripts/ncr_001f_sprocket_mac_proxy.py tests/test_ncr_001f_sprocket_mac_proxy.py
+          python3 -m unittest discover -s tests -p test_ncr_001f_sprocket_mac_proxy.py -v
+          python3 scripts/ncr_001f_sprocket_mac_proxy.py --out runtime/ncr001f-sprocket-mac-proxy.json
+      - name: Prohibit promotion to measured compute or scientific PASS
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          r=json.load(open("runtime/ncr001f-sprocket-mac-proxy.json"))
+          assert r["status"]=="SOURCE_MAC_PROXY_QUANTIFIED__ACTUAL_COMPUTE_MATCH_UNMEASURED__TRAINING_BLOCKED"
+          assert r["train_authorized"] is False
+          assert r["full_72_conformance_pass"] is False
+          assert r["actual_compute_budget_qualified"] is False
+          assert r["optimizer_steps"]==0 and r["new_model_execution"] is False
+          assert set(r["lanes"])=={"sprocket_chat","sprocket_instruct"}
+          for lane in r["lanes"].values():
+              assert lane["proxy"]["nca_conv_mac_per_token"]==405504
+              assert lane["proxy"]["nca_over_mlp_mac_ratio"]==1.20625
+              assert lane["actual_measured_flops"] is False
+              assert lane["scientific_lane_pass"] is False
+          print("SOURCE-MAC-PROXY-ONLY__COMPUTE_PARITY_UNMEASURED__NO_TRAIN")
+          PY
+      - name: Preserve report or partial error evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001f-sprocket-source-mac-proxy
+          path: runtime/ncr001f-sprocket-mac-proxy.json
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,175 @@
+name: NCR-001F actual pinned Sprocket Chat/Instruct matched MLP (no train)
+
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+
+concurrency:
+  group: ncr001f-sprocket-mlp-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  OMP_NUM_THREADS: "4"
+  MKL_NUM_THREADS: "4"
+  TOKENIZERS_PARALLELISM: "false"
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  HF_HOME: /tmp/ncr001f-sprocket-mlp
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  source-contract:
+    name: Offline model identities and fail-closed mutation sentinels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU source dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Refuse training, altered model identities, and stale hook/role modules
+        run: |
+          python3 -m py_compile scripts/ncr_001f_frozen_hooks.py \
+            scripts/ncr_001f_real_sprocket.py \
+            tests/test_ncr_001f_real_sprocket.py
+          python3 -m unittest discover -s tests -p "test_ncr_001f_real_sprocket.py" -v
+          python3 -m unittest discover -s tests -p "test_ncr_001f_frozen_hooks.py" -v
+          python3 - <<'PY'
+          import json
+          p=json.load(open("experiments/ncr-001/protocol.json"))
+          assert p["train_authorized"] is False
+          assert set(p["models"])=={"smollm2","sprocket_chat","sprocket_instruct","void1"}
+          print("All four predeclared training gates remain closed")
+          PY
+
+  pinned-sprocket-real-mlp:
+    name: Real original frozen ${{ matrix.variant }} MLP role+cache+gradient prepass
+    needs: source-contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: chat
+            model_file: chat/model.safetensors
+            config_file: chat/config.json
+            tokenizer_file: chat/tokenizer.json
+            tokenizer_config: chat/tokenizer_config.json
+          - variant: instruct
+            model_file: model.safetensors
+            config_file: config.json
+            tokenizer_file: tokenizer.json
+            tokenizer_config: tokenizer_config.json
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Checkout independent pinned ordinary-role review source at fixed commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 2271218d625e1462b2cf218445da975efe17fe32
+          path: format-authority
+          persist-credentials: false
+      - name: Require exact immutable source role formatter identity
+        run: |
+          test "$(git -C format-authority rev-parse HEAD)" = "2271218d625e1462b2cf218445da975efe17fe32"
+          test -f format-authority/scripts/ncr_001e_sprocket_format.py
+          test -f scripts/ncr_001f_frozen_hooks.py
+      - name: Install pinned CPU source stack, no optimizer
+        run: |
+          python3 -m pip install --disable-pip-version-check \
+            --index-url https://download.pytorch.org/whl/cpu "torch==2.14.1+cpu"
+          python3 -m pip install --disable-pip-version-check \
+            "transformers==4.57.6" "huggingface_hub==0.36.2" \
+            "safetensors==0.8.0" "sentencepiece>=0.2,<1"
+      - name: Fetch and independently hash complete original source and checkpoint
+        env:
+          MODEL_VARIANT: ${{ matrix.variant }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,platform,traceback
+          from pathlib import Path
+          from huggingface_hub import hf_hub_download
+          variant=os.environ["MODEL_VARIANT"]
+          pins=json.loads(Path("experiments/ncr-001/source-pins.json").read_text())
+          p=pins["models"]["sprocket_"+variant]
+          expected={
+              "README.md":"09aec879dc5b387bdc031dc3c74d77a9ba44362a55163f9a8b456761b68142c9",
+              "${{ matrix.config_file }}":p["chat_config_sha256" if variant=="chat" else "config_sha256"],
+              "${{ matrix.tokenizer_file }}":p["chat_tokenizer_sha256" if variant=="chat" else "tokenizer_sha256"],
+              "${{ matrix.tokenizer_config }}":p["chat_tokenizer_config_sha256" if variant=="chat" else "tokenizer_config_sha256"],
+              "${{ matrix.model_file }}":p["weight_declared_lfs_sha256_not_downloaded"],
+          }
+          if variant=="instruct":
+              expected["special_tokens_map.json"]=p["special_tokens_map_sha256"]
+          record={"variant":variant,"status":"PREFETCH_STARTED",
+                  "run_id":os.getenv("GITHUB_RUN_ID"),"github_sha":os.getenv("GITHUB_SHA"),
+                  "python":platform.python_version(),"source_files":{},
+                  "training_performed":False,"train_authorized":False}
+          out=Path("runtime/ncr-001f/sprocket-"+variant+"-prefetch.json")
+          out.parent.mkdir(parents=True,exist_ok=True)
+          def save(): out.write_text(json.dumps(record,sort_keys=True,indent=2)+"\n")
+          try:
+              assert p["repo_id"]=="kandivault/sprocket-500m"
+              assert p["revision"]=="eb157d4ddddc4619e661d4a2426bb2dd000fc668"
+              assert p["hf_weight_file"]=="${{ matrix.model_file }}"
+              for filename,sha in expected.items():
+                  file=Path(hf_hub_download(p["repo_id"],filename=filename,revision=p["revision"]))
+                  h=hashlib.sha256()
+                  with file.open("rb") as f:
+                      for chunk in iter(lambda:f.read(4*1024*1024),b""):
+                          h.update(chunk)
+                  observed=h.hexdigest()
+                  record["source_files"][filename]={"sha256":observed,"expected":sha,
+                                                    "bytes":file.stat().st_size}
+                  save()
+                  if observed!=sha: raise RuntimeError("Wrong pinned source bytes "+filename)
+                  if filename==p["hf_weight_file"] and file.stat().st_size!=1002207984:
+                      raise RuntimeError("Full original checkpoint length mismatch")
+                  print("Full source verified:",variant,filename,observed,flush=True)
+              record["status"]="SOURCE_BYTES_PASS"
+              save()
+          except Exception as e:
+              record["status"]="SOURCE_PREFETCH_FAIL_TRAINING_BLOCKED"
+              record["error"]=type(e).__name__+": "+str(e)
+              record["traceback"]=traceback.format_exc()[-4000:]
+              save()
+              raise
+          PY
+      - name: Execute actual host source-serialized MLP no-op, true cache and frozen gradient
+        env:
+          HF_HUB_OFFLINE: "1"
+          TRANSFORMERS_OFFLINE: "1"
+        run: |
+          python3 scripts/ncr_001f_real_sprocket.py --variant ${{ matrix.variant }}
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          variant="${{ matrix.variant }}"
+          d=json.loads(Path(f"runtime/ncr-001f/sprocket-{variant}-mlp.json").read_text())
+          assert d["status"]==f"PASS_SOURCE_BOUND_SPROCKET_{variant.upper()}_MLP_PREPASS__NO_TRAINING_ADMITTED"
+          assert d["train_authorized"] is False
+          assert d["training_performed"] is False and d["optimizer_steps"]==0
+          assert d["tool_and_memory_behavior_qualified"] is False
+          assert d["four_model_actual_host_mlp_qualified"] is False
+          assert d["checks"]["active_48_full_vs_incremental_KV"]["close"] is True
+          assert d["checks"]["frozen_original_tensor_bytes_unchanged"] is True
+          print("Actual pinned frozen Sprocket MLP prepass only; no training authorization")
+          PY
+      - name: Preserve raw source, success or failure receipts with runner identity
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001f-sprocket-${{ matrix.variant }}-mlp-a${{ github.run_attempt }}
+          path: |
+            runtime/ncr-001f/sprocket-${{ matrix.variant }}-prefetch.json
+            runtime/ncr-001f/sprocket-${{ matrix.variant }}-mlp.json
+          retention-days: 30
+          if-no-files-found: warn
