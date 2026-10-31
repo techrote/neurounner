@@ -1,0 +1,67 @@
+name: NCR-001F event-aware exact-head Actions coverage (NO MODEL)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/ncr_001f_action_event_audit.py"
+      - "tests/test_ncr_001f_action_event_audit.py"
+      - ".github/workflows/ncr-001f-action-event-audit.yml"
+      - "docs/NCR_001_F_ACTION_EVENT_EVIDENCE.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  exact-head-event-audit:
+    if: github.repository == 'techrote/neurounner'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact checkout and unchanged locked authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$(git hash-object experiments/ncr-001/protocol.json)" = 14ce5fbaa38f8806c8c8738f19c01b91385eebaf
+          test "$(git hash-object experiments/ncr-001/source-pins.json)" = 59fff1aed872b5563aa6898171983973e0cdb02c
+      - name: Compile and execute all source-only negative-sentinel cases
+        run: |
+          python3 -m py_compile scripts/ncr_001f_action_event_audit.py tests/test_ncr_001f_action_event_audit.py
+          python3 -m unittest discover -s tests -p test_ncr_001f_action_event_audit.py -v
+          python3 -O -m unittest discover -s tests -p test_ncr_001f_action_event_audit.py -v
+      - name: Independently read original all-event exact-head source and job evidence
+        run: |
+          python3 scripts/ncr_001f_action_event_audit.py --out runtime/ncr-001f/action-event-report.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("runtime/ncr-001f/action-event-report.json").read_text())
+          assert r["status"] == "PASS_EXACT_HEAD_ACTION_EVENT_ATTRIBUTION__TRAINING_BLOCKED"
+          assert len(r["results"]) == 2
+          assert [x["pr"] for x in r["results"]] == [99, 198]
+          assert all(x["domain_push_source_audit_verified"] and
+                     not x["domain_pull_request_check_present"] for x in r["results"])
+          assert r["train_authorized"] is False
+          assert r["full_72_conformance_pass"] is False
+          assert r["actual_compute_budget_qualified"] is False
+          assert r["optimizer_steps"] == 0 and r["model_executed"] is False
+          print("PUSH domain custody identified; VILLAGE PR successes NOT NCR evidence; scientific gates remain CLOSED")
+          PY
+      - name: Preserve source-only report on success or failure
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ncr001f-action-event-classification-a${{ github.run_attempt }}
+          path: runtime/ncr-001f/action-event-report.json
+          retention-days: 30
+          if-no-files-found: warn
