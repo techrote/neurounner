@@ -8,6 +8,7 @@ the actual-host runner separately verifies the complete downloaded file.
 from __future__ import annotations
 
 from contextlib import contextmanager
+from copy import deepcopy
 import json
 from pathlib import Path
 import threading
@@ -225,15 +226,29 @@ class FrozenDepthGatedMLP(nn.Module):
         }
 
     def save_adapter(self, directory: str | Path) -> dict[str, Any]:
-        self.verify_frozen_base()
-        path = Path(directory)
-        path.mkdir(parents=True, exist_ok=True)
-        meta = self._metadata()
-        torch.save(self.control.state_dict(), path / "adapter.pt")
-        (path / "metadata.json").write_text(
-            json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-        )
-        return meta
+        """Capture a stable adapter snapshot under the same lease as load.
+
+        A state_dict is a shallow mapping of live tensor storage. Saving it
+        without a decoder-root claim can persist a partially imported control
+        while another wrapper owns that decoder. Refuse overlapping use before
+        creating any files; clone the full adapter payload under the claim.
+        No original-model or optimizer operation occurs.
+        """
+        with self._claim_backbone():
+            self.verify_frozen_base()
+            path = Path(directory)
+            path.mkdir(parents=True, exist_ok=True)
+            meta = self._metadata()
+            snapshot = {
+                name: (value.detach().clone() if isinstance(value, Tensor)
+                       else deepcopy(value))
+                for name, value in self.control.state_dict().items()
+            }
+            torch.save(snapshot, path / "adapter.pt")
+            (path / "metadata.json").write_text(
+                json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            return meta
 
     def load_adapter(self, directory: str | Path) -> None:
         """Validate the entire adapter before copying any live parameters.

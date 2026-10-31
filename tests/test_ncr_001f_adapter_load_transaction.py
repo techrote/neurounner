@@ -176,5 +176,114 @@ class AtomicMatchedControlImport(unittest.TestCase):
             self.assertTrue(torch.isfinite(adapter(self.ids).logits).all())
 
 
+    def test_save_refuses_cross_wrapper_and_nested_lease_without_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = FrozenToyLM("sprocket_chat")
+            owner = wrap("sprocket_chat", base)
+            other = wrap("sprocket_chat", base)
+            with owner._instrument():
+                for suffix, adapter, message in (
+                    ("nested", owner, "Concurrent or nested"),
+                    ("cross", other, "Shared frozen backbone"),
+                ):
+                    path = Path(directory) / suffix
+                    with self.subTest(scope=suffix):
+                        with self.assertRaisesRegex(RuntimeError, message):
+                            adapter.save_adapter(path)
+                        self.assertFalse(path.exists())
+                self.assertTrue(owner._backbone_lock.locked())
+            for suffix, adapter in (("nested", owner), ("cross", other)):
+                path = Path(directory) / suffix
+                expected = snapshot(adapter)
+                meta = adapter.save_adapter(path)
+                self.assertEqual(json.loads((path / "metadata.json").read_text()), meta)
+                loaded = torch.load(path / "adapter.pt", weights_only=True)
+                self.assertEqual(set(loaded), set(adapter.control.state_dict()))
+                for name, value in expected.items():
+                    self.assertTrue(torch.equal(loaded[name], value), name)
+            self.assertFalse(owner._lock.locked())
+            self.assertFalse(other._lock.locked())
+            self.assertFalse(owner._backbone_lock.locked())
+
+    def test_interrupted_import_cannot_publish_a_torn_checkpoint(self):
+        # A deterministic concurrency witness: while a load holds both locks
+        # after modifying one tensor, saving must refuse rather than serialize
+        # a mixture of pre-import and mid-import parameters.
+        import threading
+        with tempfile.TemporaryDirectory() as directory:
+            target = wrap("smollm2")
+            source = Path(directory) / "source"
+            refused = Path(directory) / "refused"
+            recovered = Path(directory) / "recovered"
+            target.save_adapter(source)
+            before = snapshot(target)
+            entered = threading.Event()
+            release = threading.Event()
+            worker_errors = []
+
+            def interrupt_after_partial_copy(_state, *, strict):
+                self.assertTrue(strict)
+                with torch.no_grad():
+                    target.control.norm.weight.fill_(81.0)
+                    target.control.up.weight.fill_(82.0)
+                entered.set()
+                if not release.wait(timeout=10):
+                    raise RuntimeError("timed out waiting for save race probe")
+                raise RuntimeError("injected interrupted import")
+
+            def loader():
+                try:
+                    target.load_adapter(source)
+                except BaseException as exc:
+                    worker_errors.append(exc)
+
+            with patch.object(target.control, "load_state_dict",
+                              side_effect=interrupt_after_partial_copy):
+                worker = threading.Thread(target=loader)
+                worker.start()
+                try:
+                    self.assertTrue(entered.wait(timeout=10), "import did not enter")
+                    with self.assertRaisesRegex(RuntimeError,
+                                                "Concurrent or nested"):
+                        target.save_adapter(refused)
+                    self.assertFalse(refused.exists())
+                finally:
+                    release.set()
+                    worker.join(timeout=10)
+                self.assertFalse(worker.is_alive(), "import worker did not exit")
+            self.assertEqual(len(worker_errors), 1)
+            self.assertRegex(str(worker_errors[0]), "injected interrupted import")
+            assert_unchanged(self, target, before)
+            target.save_adapter(recovered)
+            state = torch.load(recovered / "adapter.pt", weights_only=True)
+            for name, tensor in before.items():
+                self.assertTrue(torch.equal(state[name], tensor), name)
+
+    def test_saved_tensor_payload_is_a_detached_point_in_time_snapshot(self):
+        # PyTorch state_dict() aliases live storage; an adversarial direct
+        # write in the serialization hook must not rewrite the captured bytes.
+        with tempfile.TemporaryDirectory() as directory:
+            adapter = wrap("void1")
+            before = snapshot(adapter)
+            original_save = torch.save
+
+            def mutate_live_before_serialize(state, path):
+                with torch.no_grad():
+                    adapter.control.norm.weight.fill_(97.0)
+                original_save(state, path)
+
+            with patch("ncr_001f_frozen_hooks.torch.save",
+                       side_effect=mutate_live_before_serialize):
+                adapter.save_adapter(directory)
+            saved = torch.load(Path(directory) / "adapter.pt", weights_only=True)
+            for name, value in before.items():
+                self.assertTrue(torch.equal(saved[name], value), name)
+            self.assertFalse(torch.equal(adapter.control.norm.weight,
+                                         before["norm.weight"]))
+            self.assertFalse(adapter._lock.locked())
+            self.assertFalse(adapter._backbone_lock.locked())
+
+
+
 if __name__ == "__main__":
     unittest.main()
