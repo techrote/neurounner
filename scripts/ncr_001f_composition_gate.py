@@ -77,6 +77,36 @@ def protected(path: str) -> bool:
             or ("sealed" in path.lower() and path.startswith("experiments/ncr-001/")))
 
 
+INDEX_ONLY = {
+    201: (2, "docs/NCR_001_F_CORRECTED_SAMEHOST_CUSTODY.md"),
+    209: (1, "docs/NCR_001_F_CORRECTED_SAMEHOST_BUDGET_DELTA.md"),
+    212: (1, "docs/NCR_001_F_FOURLANE_PHASE_BUDGET_PREFLIGHT.md"),
+}
+
+
+def certify_historical_index(root: Path, stage: Stage) -> None:
+    """Permit ONLY an immutable original additive index line to be omitted."""
+    if stage.pr not in INDEX_ONLY:
+        raise Refusal(f"#{stage.pr}: unqualified shared RAG.md modification")
+    expected_added, marker = INDEX_ONLY[stage.pr]
+    original = git(root, "diff", "--unified=0", stage.base, stage.head,
+                   "--", "RAG.md").decode("utf-8", "replace")
+    added = [line[1:] for line in original.splitlines()
+             if line.startswith("+") and not line.startswith("+++")]
+    removed = [line[1:] for line in original.splitlines()
+               if line.startswith("-") and not line.startswith("---")]
+    if removed or len(added) != expected_added or not any(
+            marker in line for line in added):
+        raise Refusal(f"#{stage.pr}: historical RAG change not a pinned additive index")
+
+
+def effective_patch(root: Path, stage: Stage) -> bytes:
+    args = ["diff", "--binary", "--full-index", stage.base, stage.head]
+    if stage.pr in INDEX_ONLY:
+        args.extend(["--", ".", ":(exclude)RAG.md"])
+    return git(root, *args)
+
+
 def verify_stages(root: Path, stages: tuple[Stage, ...],
                   main: str, own_anchor: str,
                   own_files: set[str] | None,
@@ -101,7 +131,12 @@ def verify_stages(root: Path, stages: tuple[Stage, ...],
         paths = changed_paths(root, stage.base, stage.head)
         if not paths:
             raise Refusal(f"#{stage.pr}: missing original source diff")
+        omitted: set[str] = set()
         for path in paths:
+            if path == "RAG.md":
+                certify_historical_index(root, stage)
+                omitted.add(path)
+                continue
             if protected(path) or path in authority:
                 raise Refusal(f"#{stage.pr}: protected path {path}")
             if path in seen and seen[path] != stage.group:
@@ -109,12 +144,16 @@ def verify_stages(root: Path, stages: tuple[Stage, ...],
             seen[path] = stage.group
         if stage.group == "self" and own_files is not None and paths != own_files:
             raise Refusal(f"#{stage.pr}: owned path drift {sorted(paths ^ own_files)}")
-        patch = git(root, "diff", "--binary", "--full-index", stage.base, stage.head)
+        original_patch = git(root, "diff", "--binary", "--full-index", stage.base, stage.head)
+        applied_patch = effective_patch(root, stage)
         records.append({"pr": stage.pr, "group": stage.group,
                         "original_base": stage.base, "literal_source_head": stage.head,
                         "changed_paths": sorted(paths),
-                        "patch_sha256": hashlib.sha256(patch).hexdigest(),
-                        "patch_bytes": len(patch)})
+                        "applied_changed_paths": sorted(paths - omitted),
+                        "excluded_historical_index_paths": sorted(omitted),
+                        "original_patch_sha256": hashlib.sha256(original_patch).hexdigest(),
+                        "applied_patch_sha256": hashlib.sha256(applied_patch).hexdigest(),
+                        "applied_patch_bytes": len(applied_patch)})
     for path, blob in authority.items():
         actual = git(root, "rev-parse", f"{main}:{path}").decode().strip()
         if actual != blob:
@@ -137,7 +176,7 @@ def build(root: Path, worktree: Path, main_ref: str, stages: tuple[Stage, ...],
         git(root, "worktree", "add", "--detach", str(worktree), main)
         created = True
         for stage in stages:
-            patch = git(root, "diff", "--binary", "--full-index", stage.base, stage.head)
+            patch = effective_patch(root, stage)
             try:
                 git(worktree, "apply", "--3way", "--index", data=patch)
             except Refusal as exc:
@@ -149,7 +188,7 @@ def build(root: Path, worktree: Path, main_ref: str, stages: tuple[Stage, ...],
             raise Refusal("Composition moved the original source HEAD")
         changed = {p.decode("utf-8", "surrogateescape") for p in
                    git(worktree, "diff", "--cached", "--name-only", "-z").split(b"\0") if p}
-        expected = {p for row in records for p in row["changed_paths"]}
+        expected = {p for row in records for p in row["applied_changed_paths"]}
         if changed != expected:
             raise Refusal(f"Composed path set drift: {sorted(changed ^ expected)}")
         return {"status": STATUS, "main_source_sha": main, "self_head": own,

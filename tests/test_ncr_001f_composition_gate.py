@@ -134,6 +134,38 @@ class CompositionTests(unittest.TestCase):
         self.assertEqual(report["status"], STATUS)
         self.assertEqual(report["main_source_sha"], self.base)
 
+    def test_original_additive_rag_index_is_recorded_not_overwritten(self):
+        self.base = self.commit("RAG.md", "Original summary\n")
+        a = self.branch("phase", self.base, "scripts/phase.py", "phase=1\n")
+        self.commit("RAG.md",
+                    "Original summary\n\n- index docs/NCR_001_F_CORRECTED_SAMEHOST_CUSTODY.md\n")
+        b = git(self.repo, "rev-parse", "HEAD")
+        d = self.branch("own", self.base, "scripts/own.py", "own=1\n")
+        result = self.compose(
+            (Stage(199, self.base, a, "phase"),
+             Stage(201, a, b, "phase"),
+             Stage(223, self.base, d, "self")),
+            own_files={"scripts/own.py"})
+        self.assertEqual(result["status"], STATUS)
+        self.assertEqual(result["original_stages"][1]["excluded_historical_index_paths"],
+                         ["RAG.md"])
+        self.assertIn("RAG.md", result["original_stages"][1]["changed_paths"])
+        self.assertNotIn("RAG.md", result["composed_changed_paths"])
+        self.assertEqual((Path(self.tmp.name)/"workspace/RAG.md").read_text(),
+                         "Original summary\n")
+
+    def test_nonadditive_historical_rag_change_is_refused(self):
+        self.base = self.commit("RAG.md", "Original summary\n")
+        a = self.branch("phase", self.base, "scripts/phase.py", "phase=1\n")
+        b = self.commit("RAG.md",
+                        "Mutated summary\n\n- index docs/NCR_001_F_CORRECTED_SAMEHOST_CUSTODY.md\n")
+        d = self.branch("own", self.base, "scripts/own.py", "own=1\n")
+        with self.assertRaisesRegex(Refusal, "not a pinned additive index"):
+            self.compose((Stage(199, self.base, a, "phase"),
+                          Stage(201, a, b, "phase"),
+                          Stage(223, self.base, d, "self")),
+                         own_files={"scripts/own.py"})
+
     def test_reject_protected_paths_without_file_access(self):
         for path in ("RAG.md", "SCHEDUSWARM.md",
                      "datasets/train-003/heldout.jsonl",

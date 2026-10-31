@@ -78,3 +78,21 @@ checking the original PR base. Corrected the main ancestry requirement to
 ninth positive Git regression for this exact separate-branch condition.
 Original failed jobs remain evidence; later source-composition PASS
 requires newly verified exact-head CI.
+
+## Preserved second-source failure and explicit historical index treatment
+
+Source 30249110d71332a1340be121c6fa985e92b4fcf2 passed nine ordinary
+and nine optimized fake-Git tests, but its exact-head push Actions
+41187686016 REFUSED actual composition at #201 RAG.md. This exposed a
+real historical indexing overlap, not a raw evidence or source-model defect:
+old #201, #209 and #212 modify the shared README-style RAG index by
+strictly additive signposts (2/1/1 lines). Current RAG has since evolved
+independently and must NOT be reset to an old source version. G9 now
+fingerprints the entire original binary source diff of each old PR and
+requires exactly those historical additive RAG changes, while omitting ONLY
+these three historical index hunks from the disposable current-main
+application. Each omitted path is explicitly disclosed in the report,
+with its effective applied diff hashed separately. No old source, binary
+archive, historical review or current main RAG was modified. The new
+fake-Git tests accept an exact additive historic signpost and refuse a
+nonadditive mutation. Source-only PASS remains contingent on fresh CI.
