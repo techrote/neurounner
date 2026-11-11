@@ -137,6 +137,144 @@ class MatchAndLeakageTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             matched_control_contract(576, nca_parameters=297048, limit=0.1)
 
+    def test_locked_pretraining_gates_fail_closed_under_optimization(self):
+        """Must reject changed preregistration even when Python strips asserts."""
+        original = load_json(ROOT / "experiments/ncr-001/protocol.json")
+        cases = (
+            ("field scalar count", ("architecture", "state_geometry", "scalars_per_token"), 128),
+            ("tap count", ("architecture", "tap_count"), 2),
+            ("steps per tap", ("architecture", "nca_steps_per_tap"), 1),
+            ("optimizer", ("training", "optimizer"), "SGD"),
+            ("optimizer learning rate", ("training", "optimizer_lr"), 0.08),
+            ("optimizer betas", ("training", "optimizer_betas"), [0.9, 0.9]),
+            ("weight decay", ("training", "weight_decay"), 0.1),
+            ("gradient clip", ("training", "grad_clip_norm"), 2),
+            ("gradient clip", ("training", "grad_clip_norm"), True),
+            ("MLP bottleneck", ("match_constraints", "conventional_adapter_bottleneck"), 128),
+        )
+        for label, keys, replacement in cases:
+            with self.subTest(gate=label, replacement=replacement):
+                changed = json.loads(json.dumps(original))
+                current = changed
+                for key in keys[:-1]:
+                    current = current[key]
+                current[keys[-1]] = replacement
+                with tempfile.TemporaryDirectory() as td:
+                    path = Path(td) / "altered-protocol.json"
+                    path.write_text(json.dumps(changed), encoding="utf-8")
+                    with self.assertRaisesRegex(
+                        RuntimeError, f"NCR-001F preregistered {label} drift"
+                    ):
+                        build_plan(protocol_path=path)
+
+    def test_locked_schedule_seeds_and_step_type_fail_closed_under_optimization(self):
+        """Exact preregistered seed values/order and integer steps are immutable."""
+        original = load_json(ROOT / "experiments/ncr-001/protocol.json")
+        cases = (
+            ("seed list/order", "seed_list", [20261026, 20261027, 20261029]),
+            ("seed list/order", "seed_list", [20261026, 20261026, 20261028]),
+            ("seed list/order", "seed_list", [20261028, 20261027, 20261026]),
+            ("seed list/order", "seed_list", [20261026.0, 20261027, 20261028]),
+            ("seed list/order", "seed_list", "20261026,20261027,20261028"),
+            ("seed list/order", "seed_list", [True, 20261027, 20261028]),
+            ("primary optimizer steps", "primary_steps_per_seed", 192.0),
+            ("primary optimizer steps", "primary_steps_per_seed", 64),
+            ("primary optimizer steps", "primary_steps_per_seed", "192"),
+            ("primary optimizer steps", "primary_steps_per_seed", True),
+        )
+        for gate, field, replacement in cases:
+            with self.subTest(field=field, replacement=replacement):
+                changed = json.loads(json.dumps(original))
+                changed["training"][field] = replacement
+                with tempfile.TemporaryDirectory() as td:
+                    path = Path(td) / "altered-schedule-protocol.json"
+                    path.write_text(json.dumps(changed), encoding="utf-8")
+                    with self.assertRaisesRegex(
+                        RuntimeError, f"NCR-001F preregistered {gate} drift"
+                    ):
+                        build_plan(protocol_path=path)
+
+    def test_four_lane_source_identity_and_token_limits_fail_closed_under_optimization(self):
+        """No protocol can change a model pin, tap, width or budget and still pass."""
+        original = load_json(ROOT / "experiments/ncr-001/protocol.json")
+        mutations = []
+        for lane, model in original["models"].items():
+            changes = (
+                ("repo_id", ("models", lane, "repo_id"), "substitute/other-model"),
+                ("revision", ("models", lane, "revision"), "0" * 40),
+                ("variant", ("models", lane, "variant"), "substituted"),
+                ("weight_file", ("models", lane, "weight_file"), "wrong/model.safetensors"),
+                ("taps", ("models", lane, "taps_after_block_zero_based"), [0, 1, 2]),
+                ("model_type", ("models", lane, "expected_config", "model_type"), "substitute"),
+                ("hidden_size", ("models", lane, "expected_config", "hidden_size"),
+                 model["expected_config"]["hidden_size"] + 1),
+                ("num_hidden_layers",
+                 ("models", lane, "expected_config", "num_hidden_layers"),
+                 model["expected_config"]["num_hidden_layers"] + 1),
+                ("token_limit", ("training", "per_model_sequence_unit_limits", lane),
+                 original["training"]["per_model_sequence_unit_limits"][lane] + 1),
+            )
+            mutations.extend((lane, *case) for case in changes)
+        # Equality alone would wrongly accept float-valued JSON fields and taps.
+        mutations.extend((
+            ("smollm2", "taps", ("models", "smollm2", "taps_after_block_zero_based"),
+             [9.0, 19, 29]),
+            ("smollm2", "hidden_size", ("models", "smollm2", "expected_config", "hidden_size"),
+             576.0),
+            ("void1", "token_limit", ("training", "per_model_sequence_unit_limits", "void1"),
+             1024.0),
+            ("sprocket_chat", "taps", ("models", "sprocket_chat", "taps_after_block_zero_based"),
+             [True, 16, 25]),
+        ))
+        self.assertEqual(len(mutations), 40)
+        for lane, gate, keys, replacement in mutations:
+            with self.subTest(lane=lane, gate=gate, replacement=replacement):
+                changed = json.loads(json.dumps(original))
+                target = changed
+                for key in keys[:-1]:
+                    target = target[key]
+                target[keys[-1]] = replacement
+                with tempfile.TemporaryDirectory() as td:
+                    path = Path(td) / "substituted-model-protocol.json"
+                    path.write_text(json.dumps(changed), encoding="utf-8")
+                    with self.assertRaisesRegex(
+                        RuntimeError, f"NCR-001F frozen {lane} {gate} drift"
+                    ):
+                        build_plan(protocol_path=path)
+
+    def test_preregistered_match_tolerance_and_fairness_fail_closed(self):
+        """Source-only fairness contract cannot be weakened or silently changed."""
+        original = load_json(ROOT / "experiments/ncr-001/protocol.json")
+        match = original["match_constraints"]
+        self.assertEqual(match["adapter_trainable_param_tolerance_fraction"], 0.05)
+        fair_flags = (
+            "comparison_within_each_model",
+            "same_examples_order_optimizer_updates_seed_and_taps",
+            "record_actual_sequence_and_supervised_tokens",
+            "no_cross_model_raw_token_perplexity_ranking",
+        )
+        self.assertTrue(all(match[field] is True for field in fair_flags))
+        mutations = [
+            ("adapter match tolerance", "adapter_trainable_param_tolerance_fraction", v)
+            for v in (0.04, 0.049, 0, "0.05", True)
+        ]
+        mutations += [
+            (f"fairness {field}", field, v)
+            for field in fair_flags for v in (False, 1, "true")
+        ]
+        self.assertEqual(len(mutations), 17)
+        for gate, field, replacement in mutations:
+            with self.subTest(field=field, replacement=replacement):
+                changed = json.loads(json.dumps(original))
+                changed["match_constraints"][field] = replacement
+                with tempfile.TemporaryDirectory() as td:
+                    path = Path(td) / "tampered-fairness-protocol.json"
+                    path.write_text(json.dumps(changed), encoding="utf-8")
+                    with self.assertRaisesRegex(
+                        RuntimeError, f"NCR-001F preregistered {gate} drift"
+                    ):
+                        build_plan(protocol_path=path)
+
     def test_train_heldout_family_collision_is_blocking(self):
         m = {"train_examples": 1, "heldout_examples": 1,
              "train_family_count": 1, "heldout_family_count": 1,
