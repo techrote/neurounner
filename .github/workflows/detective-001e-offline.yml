@@ -1,0 +1,45 @@
+name: DETECTIVE-001E offline playable case and transaction boundary
+
+on:
+  push:
+    paths:
+      - "scripts/detective_001e_playable.py"
+      - "tests/test_detective_001e_playable.py"
+      - ".github/workflows/detective-001e-offline.yml"
+      - "experiments/detective-001e/**"
+  pull_request:
+    paths:
+      - "scripts/detective_001e_playable.py"
+      - "tests/test_detective_001e_playable.py"
+      - ".github/workflows/detective-001e-offline.yml"
+      - "experiments/detective-001e/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-play:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Compile model-free integration
+        run: python3 -m py_compile scripts/detective_001e_playable.py tests/test_detective_001e_playable.py
+      - name: Run source-pinned authority and playable-case regressions
+        run: |
+          python3 -m unittest tests.test_detective_001_contract tests.test_detective_003a_session tests.test_detective_003c_scripter_bridge tests.test_detective_001e_playable -v
+      - name: Run playable fixture with no models
+        run: |
+          python3 scripts/detective_001e_playable.py --smoke > "$RUNNER_TEMP/smoke.json"
+          python3 - "$RUNNER_TEMP/smoke.json" <<'PY'
+          import json, sys
+          x = json.load(open(sys.argv[1], encoding="utf-8"))
+          assert x["mandatory_leads_recovered"] == 2
+          assert x["solvable_without_dialogue"] is True
+          assert x["optimizer_steps"] == 0
+          assert x["production_admission"] is False
+          print("OFFLINE PLAYABILITY / INDEPENDENT CLUE ROUTES / NO MODEL: PASS")
+          PY
