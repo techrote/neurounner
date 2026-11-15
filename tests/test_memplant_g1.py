@@ -73,7 +73,7 @@ class FeatureControlTests(unittest.TestCase):
     def test_swapped_and_zero_are_distinct(self):
         torch.manual_seed(61)
         model=DreamPrefix(2048,12,slots=8,bottleneck=16,scale=1)
-        f=torch.stack([torch.zeros(2048),torch.ones(2048)])
+        f=torch.stack([torch.randn(2048),torch.randn(2048)])  # avoid LayerNorm-equivalent constant vectors
         true=compute_condition(model,f,0,"genuine",twin_index=1,seed=13)
         switched=compute_condition(model,f,0,"swapped",twin_index=1,seed=13)
         zero=compute_condition(model,f,0,"zero",twin_index=1,seed=13)
