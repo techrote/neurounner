@@ -65,8 +65,8 @@ TASKS = {
 }
 CONDITIONS = (
     "real_v", "heat_swap", "vibration_swap", "both_swap",
-    "oracle_prefix", "hard_gate", "no_prefix", "equal_prefix",
-    "text_facts", "full_text"
+    "oracle_prefix", "hard_gate", "no_prefix", "zero_prefix",
+    "random_prefix", "equal_prefix", "text_facts", "full_text"
 )
 ANSWERS = (" Yes", " No")
 
@@ -161,6 +161,15 @@ def condition_input(cases, index, cond, source_scores, prototypes, tokenizer, ta
         prompt=format_prompt(tokenizer,question)
     elif cond=="no_prefix":
         prefix=None
+        prompt=format_prompt(tokenizer,question)
+    elif cond=="zero_prefix":
+        prefix=torch.zeros_like(prototypes["class_0"])
+        prompt=format_prompt(tokenizer,question)
+    elif cond=="random_prefix":
+        generator=torch.Generator(device="cpu").manual_seed(1138+index)
+        noise=torch.randn(prototypes["class_0"].shape,generator=generator)
+        reference=prototypes["class_0"]
+        prefix=noise*(reference.norm()/(noise.norm()+1e-8))
         prompt=format_prompt(tokenizer,question)
     elif cond=="text_facts":
         prefix=None
