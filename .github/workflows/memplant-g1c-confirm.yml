@@ -1,0 +1,116 @@
+name: MEMPLANT G1C frozen Dream Postcard confirmation
+
+on:
+  pull_request:
+    branches: [main, research/memplant-g1-donor-imprint]
+    paths:
+      - '.github/workflows/memplant-g1c-confirm.yml'
+      - 'experiments/memplant/postcard_audit/**'
+      - 'tests/test_memplant_g1c.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: memplant-g1c-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+  HF_HUB_DOWNLOAD_TIMEOUT: '120'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+
+jobs:
+  source:
+    name: Qwen genuine V state on 8 untouched counterfactual world families
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Source and split contracts (no torch)
+        run: |
+          python3 -m py_compile experiments/memplant/postcard_audit/prepare.py experiments/memplant/postcard_audit/audit.py tests/test_memplant_g1c.py
+          python3 -m unittest discover -s tests -p 'test_memplant_g1c.py' -v
+      - name: Install pinned CPU training-capable stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub>=0.36,<1' 'psutil>=7,<8' 'safetensors>=0.6,<1' 'numpy>=1.26,<3'
+      - name: Test paired intervention semantics
+        run: python3 -m unittest discover -s tests -p 'test_memplant_g1c.py' -v
+      - name: Get real donor state for entirely new sources
+        run: |
+          mkdir -p runtime/memplant/g1c/source
+          timeout --signal=INT --kill-after=15s 12m python3 -m experiments.memplant.postcard_audit.prepare --out runtime/memplant/g1c/source
+      - name: Retain original synthetic texts and donor features
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-g1c-confirm-source-a${{ github.run_attempt }}
+          path: runtime/memplant/g1c/source
+          if-no-files-found: warn
+          retention-days: 30
+
+  confirm:
+    name: Frozen checkpoint true/swapped blend audit without fitting
+    needs: source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 29
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned frozen recipient stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub>=0.36,<1' 'psutil>=7,<8' 'safetensors>=0.6,<1' 'numpy>=1.26,<3'
+      - name: Get exact original G1B checkpoint from immutable previous run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-g1b-postcards-a1
+          repository: techrote/neurounner
+          run-id: 43693630530
+          github-token: ${{ github.token }}
+          path: runtime/memplant/g1c/checkpoint
+      - name: Get fresh source manifest from this run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-g1c-confirm-source-a${{ github.run_attempt }}
+          path: runtime/memplant/g1c/source
+      - name: Audit source-specific frozen continuous pseudo-prefix with no retraining
+        run: |
+          mkdir -p runtime/memplant/g1c/results
+          timeout --signal=INT --kill-after=15s 22m python3 -m experiments.memplant.postcard_audit.audit \
+            --source runtime/memplant/g1c/source \
+            --checkpoint runtime/memplant/g1c/checkpoint \
+            --out runtime/memplant/g1c/results
+      - name: Display all controlled outcome counts
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('runtime/memplant/g1c/results/report.json')
+          if p.exists():
+              r=json.loads(p.read_text())
+              print('STATUS',r.get('status'),'ERROR',r.get('error'))
+              a=r.get('audit') or {}
+              print('CONDITIONS',a.get('conditions'))
+              print('SWAP', {k:v for k,v in (a.get('counterfactual_swap') or {}).items() if k!='cases'})
+          else:
+              print('NO RESULT: native process exited before reporting')
+          PY
+      - name: Retain all raw evidence including failure cases
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-g1c-confirm-results-a${{ github.run_attempt }}
+          path: runtime/memplant/g1c/results
+          if-no-files-found: warn
+          retention-days: 30
