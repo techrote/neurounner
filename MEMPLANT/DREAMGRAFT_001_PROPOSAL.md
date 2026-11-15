@@ -1,4 +1,4 @@
-# MEMPLANT / DREAMGRAFT-001 v3 — The Chimaera Garden: Counterfactual Alleles
+# MEMPLANT / DREAMGRAFT-001 v3.1 — The Chimaera Garden: Counterfactual Alleles
 
 **Subtitle:** The Stolen Dreams Foundry becomes an experimental ecology of inheritable, editable, recombinant memories.  
 **Status:** second independent-review amendments integrated; **proposal only — implementation NOT AUTHORISED**.  
@@ -193,7 +193,7 @@ Evaluate \`D_B(ẑ11)\` against the **separately encoded** \`z11\` on held-out c
 - **No-new-network first:** direct vector delta; if that fails, report failure. A trained low-rank edit operator is a *separate* optional experiment with its own held-out split and compute gate.
 - **Controls:** direct source re-encoding, shuffled heat deltas, random/norm-matched shifts, embedding-derived deltas, other-law deltas, no edit, textual edit reference and “heat only” recipient prompts.
 - **Invariance:** the edited heat consequence changes in the correct direction; vibration consequences remain fixed; unintended label changes are measured.
-- **Commutation probe:** applying independent heat and vibration deltas in either order should yield equivalent receiver-side *outcomes* when the rules are independent, not necessarily numerically equal latents.
+- **Commutation correction:** fixed additive edits commute identically: `(z + Δh) + Δv = (z + Δv) + Δh`; reversing them is therefore **not** a meaningful scientific test. Report joint semantic rule satisfaction separately. To test nontrivial operator order, a separately approved future experiment must use independently specified **non-additive or context-dependent** edit maps, evaluate recipient-side causal outcomes on independent worlds, and predeclare whether the modeled rules ought to commute.
 - **Avoid leakage:** law labels appear only in the evaluator and offline experiment construction; B sees fixed prompts and numerical capsules.
 - **Uncertainty:** near-linear structure may be absent, and a context-dependent edit may not transport. That is a valid negative discovery.
 
@@ -211,7 +211,7 @@ Start with two memories from one donor model (same-A, different source) before a
 
 **Bidirectional intervention criterion:** swap or edit A while B remains fixed; only A-dependent predictions should change. Then edit B while A remains fixed; only B-dependent predictions change. A result where both parent facts merely co-occur in fluent prose is **not** joint causal inheritance. Report dual-source *interaction* performance and unrelated-law preservation.
 
-**Science:** S5b requires correct withheld **joint consequences** above the independent-decode-and-combine and mismatched-donor baselines. Latent fusion itself is not novel.  
+**Science:** S5b requires correct withheld **joint consequences** and source-specific interventions above one-source and wrong-source controls. Independent-decode-and-combine is a practical **comparator, not a mandatory victory condition**. Report scientific fusion fidelity separately from speed, cost and modular-baseline accuracy; claim superior integration only with matched-resource evidence. Latent fusion itself is not novel.  
 **Creative output:** chimaera machines, ecological hybrids and explicit paradox notes, with source-specific lineage.
 
 ### DG-5 — Ghost Descendants: newly acquired B information
@@ -219,6 +219,8 @@ Start with two memories from one donor model (same-A, different source) before a
 **Question:** Can C inherit something **B newly learned or derived** that donor A never knew, via B-derived numerical computational state and no B→C text handoff?
 
 A originally gives B latent rule R. B privately encounters new event E (absent from A's source) and may infer new conclusion J from R+E. Extract B's native state and send it through a separately trained B→C (or B→B) compiler while C sees a fixed query. **No printed B continuation or A source is passed directly to C**. Excluding original prefix positions from B's state readout is necessary to test some alternatives but **not sufficient**: downstream states can still encode A and generated tokens.
+
+**Additional acquisition-versus-exposure comparison (independent v3 review):** Capture B's numerical state **T1 immediately after B receives event E**, then **T2 after a controlled inference step** intended to derive previously unstated conclusion J. Independently verify B can derive J. Compare recipient C's answer under T1 and T2 with an identical C prompt, plus a matched-compute/position control in which B advances through neutral steps. Match external source E and any generated/teacher-forced tokens across paired conditions to the extent the runtime permits; disclose unavoidable token-position differences. Retain E/E′ counterfactual swaps and A→C ancestral controls. A T2-specific gain on J strengthens attribution but does **not prove** internal thought inheritance: C may receive a better numerical encoding of E and derive J itself. Without this incremental controlled gain, report only input-state transfer, not a computed-memory transplant.
 
 **Predeclared inheritance arms:**
 
@@ -233,7 +235,7 @@ A originally gives B latent rule R. B privately encounters new event E (absent f
 
 The evaluator tests J and source-specific consequences, plus whether a new rule was **acquired by B** versus repeated from A. Even the silent arm can transport contextual representations of E rather than some special non-textual discovery; distinguish *B-specific information inheritance* from proof of a unique introspective thought representation.
 
-**Science:** S5c requires a second verified state-transfer path and recipient answers dependent on B-only information under matched controls; textual confounds reported, not hidden.  
+**Science:** S5c's basic finding is B-specific information transfer through numerical state. The stronger claim of **B-derived conclusion J inheritance** requires an improvement from the post-inference state over the immediate-after-E state, beyond equal-step/position and matched-token controls, with independent verification that B derives J. Otherwise report B-input/experience transfer only.  
 **Creative output:** genealogy of mechanisms that inherit some features and develop others across incompatible neural substrates.
 
 **Stop rule:** DG-3–DG-5 are an ambitious horizon, not automatic follow-on tasks. A useful gallery can survive a failed latent-channel experiment, but the provenance must say “no demonstrated transplant.”
@@ -358,8 +360,8 @@ Blinded reviewers choose interesting inventions without seeing whether they came
 | **G1 — bounded imprint** | Up to 24–48 first training cases, one CE objective, uncontextualised/hidden/V controls, zero/random/swapped arms, 6–12 raw creative postcards | Reproducible source-specific effect (or no-go); paired raw outputs; actual cost. No causal-generalisation claim | **Hold until G0 evidence and explicit owner approval** |
 | **G2 — causal worlds** | Factorial synthetic worlds with withheld rule/exception/intervention combinations; B full-text capability; symbolic scorer; fresh-sealed-world policy | Source-specific withheld consequences and novel-task transfer. Define errors and uncertainty | **Separate owner approval after G1** |
 | **G3 — Counterfactual Allele** | Delta from latent paired worlds applied to *independent target world*, compared to reimprint, random and text edits; test unchanged-law invariance | S5a selective latent-only edit; possible explicit no-go before training extra editor | **Separate owner approval after G2** |
-| **G4 — Chimaera interaction** | Dual-source capsule with interaction-only test, bidirectional swaps, independent decode+combine baseline, contradictions | S5b joint withheld consequence above independent/mismatched controls | **Separate owner approval; not implied by G3** |
-| **G5 — Ghost Descendants** | B-only experience + silent/controlled-token B state snapshot; independently qualified B→C state translator; direct A→C and swap baselines | S5c inheritance of B-specific new information with token-encoding confound reported | **Independent later research approval** |
+| **G4 — Chimaera interaction** | Dual-source capsule with interaction-only test, bidirectional swaps, modular comparator and contradictions | S5b joint consequence above one-source and wrong-source controls; modular accuracy and efficiency reported separately | **Separate owner approval; not implied by G3** |
+| **G5 — Ghost Descendants** | Immediate-after-E versus controlled post-inference B state, matched-step/position and emitted-token controls; qualified B→C translator | J-specific post-inference improvement above immediate and matched-step conditions needed for stronger acquired-conclusion claim | **REWORK; separate later research approval** |
 
 **Compute discipline:** initial G0 only on existing hosted CPU when pinned models and isolated dependencies are available. G1 proposes *at most two aggregate hosted runner-hours of adapter fitting*, pending the five-step profile. That is a cap, not a throughput guarantee. No large training, GPU/TITAN use, autonomous tasks or extra providers without fresh authorization and a resource estimate.
 
@@ -386,6 +388,10 @@ The reviewer assessed [v2 HEAD \`fa442a190f8a33a50b0bd7eeaf9c8729e7dcf68c\`](htt
 | **P2-B** tiny corpus and CPU cap inadequate for strong claims | **Claim levels bounded** | G1 smoke only, 40-world sealed test imprecision disclosed, fresh confirmation for strong claims, 5-step performance measurement |
 | **P2-C** literature novelty comparison incomplete | **Expanded** | Memorilla, causal abstraction, interchange-intervention training, distributed alignment search; older cache/prefix papers retained |
 | **P2-D** fresh re-encoding was mislabeled surgery | **Operations disambiguated** | DG-3 explicitly separates reimprinting, transferable latent-only edits and genuine mid-session KV modifications |
+
+### Independent v3 re-review follow-up — 15 November 2026
+
+Reviewed head: `24cee5390c85bed0d2e5b293223ddad9e5cc432f`. **Design verdicts:** G0 APPROVE; G1, G2/G3 and G4 CONDITIONAL APPROVAL; G5 REWORK. Three remaining findings are addressed in this v3.1 amendment: (1) additive commutation test is mathematically vacuous and withdrawn; (2) modular decode-and-combine is a comparator, not a scientific minimum for Chimaera; (3) G5 has immediate-versus-post-inference comparison, with matched processing controls and remaining input-encoding confounds. These are specification corrections **not new experimental results**. Approval of G0's design is **not owner authorization**. PRs #228 and #229 remain Draft/unmerged.
 
 ### The first moonshot — why the Allele comes before Chimaera
 
