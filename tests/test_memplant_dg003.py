@@ -12,9 +12,9 @@ class MechanismTests(unittest.TestCase):
     def test_truth_tables_require_both_variables(self):
         combos=[(h,v) for h in ("hardens","softens") for v in ("floats","sinks")]
         truth={
-            "xor":[True,False,False,True],
+            "xor":[False,True,True,False],
             "and":[True,False,False,False],
-            "equal":[False,True,True,False]
+            "equal":[True,False,False,True]
         }
         for task,expected in truth.items():
             self.assertEqual([cause_truth(task,h,v) for h,v in combos],expected)
