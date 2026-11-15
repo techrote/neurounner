@@ -1,27 +1,27 @@
-# MEMPLANT / DREAMGRAFT-001 v2 — The Chimaera Garden
+# MEMPLANT / DREAMGRAFT-001 v3 — The Chimaera Garden: Counterfactual Alleles
 
 **Subtitle:** The Stolen Dreams Foundry becomes an experimental ecology of inheritable, editable, recombinant memories.  
-**Status:** revised design for independent review; implementation **NOT AUTHORISED**.  
-**Date:** 2026-11-15. **Previous proposal head:** c17c2f8ec3891134825b9a18d3db02b7d565c37d.  
+**Status:** second independent-review amendments integrated; **proposal only — implementation NOT AUTHORISED**.  
+**Date:** 2026-11-15. **Prior reviewed heads:** v1 `c17c2f8ec3891134825b9a18d3db02b7d565c37d`; v2 `fa442a190f8a33a50b0bd7eeaf9c8729e7dcf68c`. **Independent v2 review verdicts:** G0/G1 conditional; DG-2–DG-5 rework. This document is a proposed resolution, not independent reapproval.  
 **Location:** techrote/neurounner/MEMPLANT/. **Parent:** [MEMPLANT README](README.md), [concept](CONCEPT.md), [pseudo-embeddings](PSEUDO_EMBEDDINGS.md), [research programme](EXPERIMENTS.md), [reference catalogue](REFERENCES.md).  
 **Authority:** documentation revision only; no model training, implementation, schedule, cross-repository work or merge is approved.
 
-> **The ambitious question:** Can one neural model's private experience be made into an inheritable computational object—something another, independently trained model can *remember, reinterpret, mutate, branch, recombine, and pass on* without being handed the original text?
+> **The ambitious question:** Can a donor-derived, numerically transmitted memory be interrogated and *selectively edited*, can two donor memories cause **joint** consequences, and can a descendant acquire information unavailable to its ancestor—without providing the receiver with the source text?
 
 This is deliberately a playful computational metaphor. No claim is made about consciousness, subjective experience or biological memory. A successful computation does not mean an entire mind, conversation, reasoning process or identity has migrated.
 
 ## Contents
 
-1. **The Chimaera Garden** — a generative project with dream worlds, inheritable rules and an atlas of descendants.
-2. **What would be genuinely new** — the distinction between existing cache translators and MEMPLANT's ambitious research questions.
-3. **The Dream Genome** — source-grounded latent capsules, target-native compilers and transparent lineage.
-4. **The five experiments** — from small imprints to causal mutation, recombination, memory descendants and heterogeneous substrates.
-5. **Mechanism and model feasibility** — precise initial adapter, models, injection semantics and capability controls.
-6. **Causal evidence and controls** — guardrails against merely learning labels, accidental perturbation or prompt leakage.
-7. **Generative outputs and the wandering laboratory** — atlas, dream ecology and what remains useful after weak results.
-8. **Execution and resource gates** — concrete first steps and non-automatic expansion triggers.
-9. **Self-review and professional-review resolution** — severity-ranked corrections and residual risks.
-10. **Independent review request** — adversarial review questions and authority boundary.
+1. **The Chimaera Garden** — generative worlds whose inherited laws can mutate and recombine.
+2. **Novelty boundary** — what prior latent-memory and causal-intervention research already covers.
+3. **The Dream Genome** — opaque donor-derived state, operational invariants and an addressable-KV frontier.
+4. **Five experiments and a moonshot** — imprint, causal law, Counterfactual Allele, Chimaera and descendants.
+5. **Mechanism and feasibility** — actual donor state, model interfaces, two positive oracles and CPU cost controls.
+6. **Causal evaluation** — paired interventions, negative controls and separate S0–S5c claims.
+7. **Generative outputs** — a provenance-backed atlas with simulation hooks and beautiful failures.
+8. **Execution gates** — G0 feasibility only first; independently reviewed later milestones.
+9. **Resolution and remaining risks** — explicit treatment of all nine second-review findings.
+10. **Review request** — separate re-review of G0/G1 and the aspirational horizon.
 
 ---
 
@@ -56,288 +56,383 @@ Each dream entry has:
 
 The deliverable should be browsable as Markdown/JSONL, with optional SVG/HTML visualisation *only if* it adds value. A collection of 25 strange but coherent mechanisms is useful on its own. A latent memory that survives one unfamiliar task is a legitimate research result on its own. Neither substitutes for the other.
 
-## 2. What would be genuinely new?
+## 2. What is novel, and what is not?
 
-**Not claimed as novel:** transferring KV states between models, soft prompts, learned continuous memory tokens, gated inter-agent cache fusion or compressed-cache recombination. These have relevant published precedents, including [KV-Lingo](references/02-kv-lingo.md), [Cache-to-Cache](references/05-cache-to-cache.md), [XKV](references/06-xkv.md), [ICAE](references/08-icae.md), and [C²KV](references/11-c2kv.md).
+MEMPLANT is **not** the first attempt at latent model communication, KV-state conversion, learned pseudo-tokens, query-conditioned memory or multi-sharer fusion. The relevant preceding work includes [KV-Lingo](references/02-kv-lingo.md), [Cache-to-Cache](references/05-cache-to-cache.md), [XKV](references/06-xkv.md), [ICAE](references/08-icae.md), [C²KV](references/11-c2kv.md) and [Memorilla: Latent Semantic Memory for LLMs](https://arxiv.org/abs/2610.21375) (October 2026). Memorilla already investigates learned query-dependent memory tokens for a frozen LLM and agent experience; a memory-token decoder alone is not sufficient novelty.
 
-**MEMPLANT's proposed novel direction** is the *intersection* of these capabilities, experimentally tested as operations on living, lineage-bearing memories rather than as single question-answer channels:
+Nor are *causal variables in neural networks* a new idea. [Causal Abstractions of Neural Networks](https://papers.neurips.cc/paper_files/paper/2021/hash/4f5c422f4d49a5a807eda27434231040-Abstract.html), [Interchange Intervention Training](https://proceedings.mlr.press/v162/geiger22a.html) and [Distributed Alignment Search](https://proceedings.mlr.press/v236/geiger24a) motivate explicit source-to-base intervention tests. MEMPLANT should borrow this discipline; it cannot claim to invent causal abstraction.
 
-1. **Counterfactual inheritance:** Does an inherited *causal rule* survive an unseen task, not just a memorised label?
-2. **Differential memory mutation:** Can changing one source rule selectively alter an already-inherited recipient memory without reintroducing the original text?
-3. **Memory chimaeras:** Can two independently acquired donor memories be fused into an interesting but still source-grounded new constraint system?
-4. **Latent descendants:** Can a receiver's continuation become the source of a later transplantation, with measurable inheritance through generations and without any text relay?
-5. **Substrate-independent dream identities:** Can one saved capsule be compiled into multiple unrelated model-native prefixes, measuring what stays invariant when the recipient model changes?
+**Potential distinctive contribution, conditional on empirical demonstration:** an *inherited donor-derived latent state* supports **operationally predictable semantic edits**, **interaction-dependent fusion** and **descendant-specific acquisition** across frozen, unrelated model substrates. The key is that these claims are separately falsifiable. A source-specific soft-prefix improves on generic conditioning, but is not by itself a novel form of transferable causality.
 
-This is a **research proposal**, not a claim of academic priority or proven technical feasibility. Some individual operations may overlap existing work. The empirical contribution sought is *content-specific causal inheritance through edits, compositions and generations*, with the creative ecology as a secondary output.
+| Capability already studied elsewhere | Proposed discriminating question in DREAMGRAFT |
+| --- | --- |
+| Cache translation and repeated handoff | Can a transferred *rule* be selectively edited in a different receiving world? |
+| Learned continuous memory tokens and compressed context | Does a rule-specific numerical edit generalise beyond lexical/template changes? |
+| Multi-sharer cache fusion | Can two donors jointly determine a **new interaction**, and do bidirectional interventions preserve each source's independent contribution? |
+| Model-generated experience storage | Can C recover a new consequence learned **only by B**, separating it from B's printed tokens? |
+| Causal alignment/interchange training | Can interventional invariants persist *across donor/recipient model boundaries*, and what is lost during transfer? |
 
-A caution from independent literature: [When Does Latent Communication Pay? A Causal Audit of Relayed KV Caches](https://arxiv.org/abs/2608.04893) and [Draft-KV](https://arxiv.org/abs/2609.34754) report settings in which purported latent communication gains do not depend on the correct example's donated state. MEMPLANT must not make that mistake. **A recipient must demonstrably follow the donor's identity and counterfactual edits, not merely be improved by having any prefix.**
+**Scientific hierarchy:** contextual feature communication is easier than useful state transfer; a V-derived fingerprint is easier than addressable K/V memory; recipient-conditioned source-fact retrieval is easier than law transfer; law transfer is easier than transferable latent edits; two facts coexisting are easier than interaction-dependent recombination; a second transfer is easier than genuinely new information acquired and inherited. The proposal treats each as a different experimental claim.
 
-## 3. The Dream Genome: a real but minimal interface
+Two cautionary baselines: [When Does Latent Communication Pay? A Causal Audit of Relayed KV Caches](https://arxiv.org/abs/2608.04893) and [Draft-KV](https://arxiv.org/abs/2609.34754). They motivate **mismatched-donor** and counterfactual identity tests instead of inferring communication merely because any prefix improves average performance.
 
-A **Dream Genome** is a name for an opaque *source-derived latent capsule with explicit lineage*. It does **not** mean a universal embedding coordinate system. Initially, the format represents a frozen donor's compressed state; it is compiled into a recipient-specific soft prefix. The same capsule being re-used in multiple tasks constitutes a *postcard*, not yet model-independent memory.
+All claimed originality remains *hypothetical*. Priority and novelty will require a fresh comparison against the literature at publication time.
+
+## 3. The Dream Genome — a source-derived latent with testable operations
+
+A **Dream Genome** is the deliberately narrow name for a versioned, opaque memory object *obtained from donor model computation*. It is not yet a universal representation, a natural causal graph, an editable self-describing program, or a faithful copy of an LLM's full conversation.
 
 ~~~text
-authoritative synthetic dream / source text / law graph
-                             |
-                   donor A prefill once
-                             |
-            actual layerwise A KV / other state
-                             |
-       E_A: fixed pooling + small learned encoder
-                             |
-          Dream Genome z (opaque, versioned)
-                 /            |          \
-                /             |           \
-       branch A query   branch B query    edit / splice
-                 \             |           /
-                 D_B(z, task, receiver identity)
-                              |
-                 B-native soft prefix / KV
-                              |
-                    B continuation + cache
-                              |
-                    measured behavior + art
-                              |
-                 optional B→C descendant
+private synthetic world + authoritative evaluator-only causal graph
+                       |
+               frozen donor A prefill
+                       |
+        source K/V, positions and hidden states
+                       |
+        E_A: initially pooled V feature baseline
+                       |
+                versioned latent z
+                       |
+             optional branch / edit / cross
+                       |
+        D_B: frozen-model-specific compiler
+                       |
+     B-native soft embeddings (or later deep KV)
+                       |
+   fixed recipient query -> frozen B -> evaluated output
 ~~~
 
-### Capsule manifest (proposed, not a frozen public API)
+**Mandatory source-origin constraint:** the learned numerical payload must originate in A's actual computational state. The evaluator's law graph, target labels, summaries, original text and source identifiers never enter the recipient-facing payload or prompt at inference. If we directly encode the law graph, we have demonstrated *symbolic-to-latent communication*, not the proposed memory transplant. Retain symbolic-ground-truth evaluation separately.
 
-- **Identity:** opaque capsule ID; source hash; model weight, tokenizer and inference-runtime identities; tensor-shape/layout version.
-- **Payload:** externally stored tensor bytes with digest, dtype, projection/pooling recipe and encoder revision.
-- **Lineage:** parent capsule hashes; operation (imprint / branch / counterfactual edit / splice / descend); stochastic seed and code revision.
-- **Boundary:** source ownership and allowed recipients; no confidential user conversation; synthetic-only first pilot.
-- **Scientific fields:** source labels, hidden truth graph and held-out answer keys kept in a *separate evaluator-only record*, never in the receiver-visible manifest.
-- **Restore rule:** numerical capsule plus compiler, recipient model pin, positions/masks and full fixed task template; reject incompatible compilations.
+### Minimum manifest / provenance
 
-**Important:** the *authoritative transcript and law graph* remain lossless, private to the scorer and archived with hashes; the capsule is an intentionally lossy derived view. The first experiment must prove that changing the capsule while holding the receiver's prompt and seed fixed changes source-specific behavior. It must not hide semantic clues in filenames, metadata, text prompts, or a manually selected donor-specific task.
+- Source hash, donor model/tokenizer revision, layer-selection and positional metadata.
+- Encoder revision; payload bytes/dtype/shape/hash; recipient-specific compiler revision.
+- Parent capsule hashes and operation log: *imprint, branch, independently reimprint, latent edit, cross, descend*.
+- User/tenant/source permissions; synthetic-only pilot; immutable lineage and run/seed record.
+- Evaluator-only world graph and answers in an isolated record, **not** a field delivered to B.
+- Native recipient compatibility, attention mask/positions, fixed task template and fallback path.
 
-A first-stage capsule can be nothing grander than a pooled V-state feature vector and one small adapter. The manifest exists to make later branching/editing/composition measurable, not to prematurely create a library framework.
+### Operational invariants (hypotheses, not schema guarantees)
 
-## 4. The five experiments: increasingly alien memory
+| Invariant | Operational test |
+| --- | --- |
+| **Source identity** | A real donor prefix follows its donor's held-out truth; a swapped prefix follows the *new* donor's truth. |
+| **Rule selectivity** | Editing heat behavior flips heat-dependent answers while preserving vibration and exception answers. |
+| **Composition** | Two parents produce correct *interaction-dependent* consequences neither parent can determine alone. |
+| **Edit transfer** | An edit derived in world X works on a separately encoded world Y with different nuisance details. |
+| **Independence** | Sibling branches cannot modify one another's source manifest or recipient state. |
+| **Inheritance** | A descendant passes along B-only new information, not merely A's prior fact or B's echoed words. |
+| **Substrate robustness** | The same immutable z yields semantically corresponding outcomes when separately compiled to two recipients; **unproven** until tested. |
 
-### DG-1 — Imprint: prove a source-specific memory channel
+These are **behavioral invariants**, not a claim that every latent coordinate maps to a human-labelled causal variable. “Same operation” is evaluated by changes to the receiver's decisions, with a symbolic intervention oracle and paired controls.
 
-**Question:** Can A's contextualised KV-derived features cause frozen B to recover information from a synthetic experience without B seeing its text?
+### A deliberate representation ladder
 
-Keep the independently trained small models. Start with 24–48 tiny memory examples and one supervised training objective, **not** distillation. Fit a V-only donor-state adapter to 8 soft-prefix positions, evaluate zero, random, source-swapped, uncontextualised token-embedding, hidden-state, full-text and compact-text baselines. Verify a positive receiver-native soft-prefix capability control first.
+**R0 / cheapest baseline:** 4 selected donor layers × 4 temporal bins × pooled V heads. The proposed Qwen geometry yields ~2,048 scalars; use a 32/64-wide adapter to compile 8 recipient input embeddings. Useful to prove an *information-bearing contextual feature channel*.
 
-Use simple material/trigger/effect labels *only* for the first plumbing assay. Follow immediately with an **unseen task instruction** (e.g., invent a device based on the inherited rule rather than listing labels). Never score an LFM-polished idea as raw memory transfer.
+**R1 / matched controls:** uncontextualised token embeddings and contextual hidden-state summaries at matched feature/prefix budget and training effort. Since V is derived from contextual hidden states via learned projections, **V cannot contain information absent from the complete source hidden state**. If R0 beats R1 in a particular task, it shows a useful bottleneck or inductive bias, *not* intrinsically richer information or a unique KV advantage.
 
-**Useful even if weak:** recoverable occasional motifs and an atlas of unfiltered generative outputs.  
-**Scientific gate:** correct donor identity and counterfactual direction matter more than eloquence.
+**R2 / optional addressable memory (requires a new gate):** retain a small sequence of source K/V with **key-dependent retrieval** by learned queries or a cross-attention readout, rather than averaging away addressing and order. Compare under matched total retained bytes, target-token positions, adapter capacity, and training/compile costs; include position-order/exception tests. This is the appropriate place to examine whether *the associative structure of KV* offers a benefit beyond ordinary contextual representations.
 
-### DG-2 — Causal Dream Physics: transmit laws, not nouns
+**R3 / speculative portable causal genome:** a shared z with model-specific decoders and edit/cross operations that satisfy the invariants above; no obligation to implement until R0–R2 evidence justifies it.
 
-**Question:** Does a memory capsule convey a changeable, compositional *law of an imaginary world*?
+A capsule is not “editable” because its bytes can be changed. It is editable only if a controlled operation makes the **intended causal consequence** change and unrelated consequences remain stable. Likewise, a stored clone is not live KV cloning until model-native state restoration has been validated.
 
-Give donor A a short *multi-event world diary* (roughly 100–300 words) with two or three interacting physical rules and an exception. Train with short questions about unseen consequences and interventions, not only labels. A sealed evaluator has a deterministic mini rule graph for each world; it can answer whether a proposed mechanism is consistent without using another LLM as the primary oracle.
+## 4. The five dream experiments, plus the Counterfactual Allele
 
-Construct minimal counterfactual twins: same words and world vocabulary, but reverse the direction of a relation, negate a consequence, change an exception, or change time ordering. Keep twins in the same data split. For example, "Copper becomes brittle **after** heating" versus "Heating prevents copper from becoming brittle" is not permitted to be solved just by a keyword bag.
+### DG-1 — Imprint: source-specific latent communication
 
-Require B's *unseen* invention to remain consistent with at least one donor-only rule. Report both positive transfer (recovering a law) and negative transfer (inventing an incompatible rule). Have human readers score novelty independently from rule fidelity.
+**Question:** Can A's actual contextual state cause an unrelated frozen B to recover donor-specific information without seeing A's text?
 
-**Useful outcome:** compact weird-physics setting cards that can inspire playable simulation constraints.  
-**Scientific gate:** task-transfer and counterfactual accuracy above donor-swapped and token-embedding baselines.
+Use a tiny 2–3 memory interface smoke; then 24–48 examples with short, supervised, teacher-forced answers. Donor A's V fingerprint is the primary representation; compare uncontextualised token embeddings, contextual hidden-state summary and zero/random/donor-swapped prefixes. Add B's direct fitted-prefix **interface oracle** and B's **full-text task-capability oracle** (distinct tests).
 
-### DG-3 — Dream Surgery: mutate one memory without destroying the rest
+**Early assay:** small *material / trigger / consequence* tuples, but describe their recovery as **cross-model contextual feature communication**, not as transferable causal memory. Report source-following on a swapped genuine capsule relative to both the original source and the substituted source.
 
-**Question:** Can a **small, explicit change to donor state** cause a selective change in a recipient's interpretation?
+**Science:** S0–S3; no claim of editable, addressable, cross-task or multi-generation memory.  
+**Creative use:** preserve 6–12 raw recipient inventions and short editor-independent dream postcards.
 
-For paired worlds differing in one causal law, compute separate source states and capsules. First test **branch re-compilation**: B runs from the same clean starting prompt with old versus new capsule; verify the changed rule flips while unrelated rules remain stable. Then test a delta representation (new capsule minus old, or a learned low-rank edit) applied to a stable latent, but compare against simply recompiling the new capsule. The former is not a novel improvement if it gives the same effect at higher cost.
+### DG-2 — Causal Dream Physics: laws and exceptions
 
-**No false claim of in-place KV surgery:** replacement of a prefix at a fresh branch is *not* live editing of an already-decoded B cache. True live surgery would require correcting downstream dependencies/positions, and is a separately approved stretch target; compare against recomputation and cache-editing research such as [AKV](references/12-akv.md) and [PatchKV](https://arxiv.org/abs/2609.26219).
+**Question:** Does the same inherited capsule support deductions **not explicitly answered in the donor's story**, under an instruction unseen during adapter fitting?
 
-**Useful outcome:** "before/after" dreams—worlds where one law changes and the emergent inventions adapt.  
-**Scientific gate:** causal edit specificity; measure changed-rule recovery and unaffected-rule preservation, not just that generations differ.
+The source is a small symbolic-grounded fictional world rendered into multiple, genuinely varied diaries. Vary heat/hardness, vibration/buoyancy, material exemption, temporal ordering and interactions. Hold out entire *factorial combinations*, source-world families and paraphrase templates from the sealed test; group all counterfactual twins into the same split. Balance lexical cues, sentence positions and document lengths.
 
-### DG-4 — Chimaera: graft two dreams into one mind
+The deterministic evaluator knows the world rules; **it is forbidden to serve those rules to the donor-state compiler or recipient at inference**. It asks fixed-choice/answer-likelihood questions about unseen interventions first, then evaluates open-ended inventions through derived rule constraints. A positive result is a correct *novel consequence*, not recognition of a label.
 
-**Question:** Can *two unrelated donor memories* produce a coherent hybrid mechanism that obeys facts from **both**, without the recipient being shown the originals?
+**Science:** S4 requires source-specific rule application on the held-out intervention distribution, with matched text/KV/embedding controls. This remains *operational* causal-rule transfer, not a proof of an identifiable causal model inside B.
 
-Start with two memories encoded by the **same donor model A**. Hold both capsules fixed and compare:
-1. a single-donor capsule (A-only or B-only);
-2. naive vector mean/interpolation (a deliberately weak baseline);
-3. a small gated/fused latent compiler that combines capsules;
-4. a full-text two-memory receiver reference;
-5. compact written clue cards under a comparable input/byte/cost accounting.
+### DG-3 — Dream Surgery: three fundamentally different operations
 
-A deterministic evaluator defines worlds where both source constraints are jointly possible and worlds where they conflict. A good chimaera identifies or resolves the conflict rather than simply emitting fashionable blended nouns. Source identity and edit trace must determine which constraints survive. Later, **only after** one working fusion, allow source A and unrelated donor C with different architectures; do not silently call a same-A two-memory merge "cross-model merging."
+1. **Source reimprinting control:** edit the donor's source text, re-run A, compile a new capsule and start B at a clean branch. This proves source sensitivity, **not latent surgery**.
+2. **Latent-only edit:** derive an operation from already-created latent capsules. Apply it to an *unseen, separately encoded world*, without re-reading that world's text or giving B labels. Test changed-law fidelity and unchanged-law preservation. This is the proposed genuinely experimental surgery.
+3. **True mid-session recipient-state modification:** edit B's already-populated live cache, carefully accounting for dependent keys/values, positions, token history and downstream recomputation. This is **not** demonstrated by a fresh branch using a different prefix and requires an independent later approval/contract, informed by [AKV](references/12-akv.md).
 
-**Useful outcome:** surprisingly inventive hybrid materials, impossible machines and interacting ecologies with source lineage.  
-**Scientific gate:** above single-source and mismatched-source controls on *both-source* causal questions; quantify conflict handling.
+**Science:** S5a only if a *latent-only* edit is selective and transfers to held-out worlds. Fresh-branch source reimprinting never counts as S5a.
 
-### DG-5 — Ghost Descendants: memory across generations and substrates
+#### DG-MOONSHOT-01 — The Counterfactual Allele (priority after DG-1)
 
-**Question:** Can one recipient's *experience of a transplant* become the source state for a new recipient, and what survives?
+A direct and unusually revealing experiment in **portable numerical changes to learned world rules**. Construct a factorial quartet:
 
-A receives a memory; B gets only a numeric graft and a fixed task. After B continues for one or more steps, snapshot B's native computational state. A **newly calibrated B→C or B→B transfer path** attempts to condition C without sending donor A's text **or B's generated text** to C. This tests transgenerational state inheritance rather than ordinary textual communication.
-
-Compare first-generation and second-generation rule recall, novel invention quality and accidental drift. Use shuffled ancestor IDs and matched text-relay baselines; preserve exact generation, compiler, and parentage. Multiple recipients compiled from a **single shared z** are a separate portability challenge, not a result of having two independently trained pairwise adapters.
-
-**Useful outcome:** family trees of alien ideas, with measurable fidelity versus creative mutation across descendants.  
-**Scientific gate:** a second independent transfer actually consumes donor-derived computational state and retains source-specific information above mismatch controls.
-
-**Stop rule:** DG-3–DG-5 are aspirational research fronts, *not* implied authorisation. Failure of DG-1 ends any scientific claim of inheritance; the standalone atlas generator can continue and must be labelled accordingly.
-
-## 5. Mechanism and model feasibility
-
-### First bounded candidate pair
-
-| Role | Proposed model | Reason / limit |
+| Capsule | Heat law | Vibration law |
 | --- | --- | --- |
-| Donor A | [Qwen2.5-0.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct) | Open weights, inspectable decoder-only Transformer state, 24 layers, width 896, 14 attention heads, 2 KV heads; independent family from receiver. Pin model/tokenizer revision. |
-| Recipient B | [SmolLM2-135M-Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct) | Frozen 30-layer, width-576, 9 query/3 KV-head Llama-style recipient with inexpensive relative compute; prior neurounner CPU training evidence but **not** this prefix method. |
-| Optional text editor | Neurounner's pinned LFM2.5-1.2B-Instruct | Human-readable atlas editing **only after** raw scoring; must never see donor private memory/answers or be called part of the non-textual transfer. |
-| Future recipient C | Model selected by feasibility and independent approval | Separate family preferred; CPU/GPU budget and decoder compatibility to be measured. Not a v2 prerequisite. |
+| \`z00\` | heat hardens | vibration sinks |
+| \`z10\` | heat softens | vibration sinks |
+| \`z01\` | heat hardens | vibration floats |
+| \`z11\` | heat softens | vibration floats |
 
-The pair is deliberately **not parameter-count matched**: this is a cheap heterogeneous experimental path, not evidence for large/peer-sized interchangeability. The experiment requires pinned **full-precision or training-capable** PyTorch/Transformers models for autograd. The host's GGUF/llama.cpp inference results cannot be used as proof that it supports this training or directly injecting custom soft prefixes. Keep all experimental dependencies isolated from existing neurounner workflows.
+Compute an edit from one pair *without knowing or transmitting the encoded world's text*:
 
-### First-stage adapter
+\[
+\Delta_{\text{heat}} = z_{10} - z_{00},\qquad
+\widetilde z_{11}=z_{01}+\Delta_{\text{heat}}.
+\]
 
-1. Freeze A. For each synthetic donor memory, perform genuine A prefill under no-grad and capture per-layer K/V states (and position/layout metadata).
-2. Select four donor layers and four length-normalised time bins. Begin with values only: for the specified Qwen geometry this is approximately **2,048 pooled scalar features** (4 × 4 × 2 KV heads × 64 per head), subject to checked runtime shapes.
-3. Fit a small LayerNorm → 32- or 64-wide MLP → **8 × 576** recipient embedding compiler. With 64-wide bottleneck and that feature count it has roughly **0.43 million** trainable dense weights, before biases and normalization. Do **not** claim it recreates A's full context.
-4. Frozen B receives the generated vectors prepended to the embeddings of one identical task instruction; attention mask, positions, BOS/chat template and continuation semantics must be verified.
-5. During adapter training, disable recipient inference-cache writes and preserve gradients **through B's operations back to the adapter**, even though B parameters are frozen. During generation, use validated native cache continuation and deterministic control comparisons. No donor text, labels or semantic metadata enter B's forward path.
-6. After a working objective, optionally separate the source-state encoder E_A and the B-specific compiler D_B to preserve a reusable z and test alternate recipient decoders. That separation is not free and is not assumed successful.
+Evaluate \`D_B(ẑ11)\` against the **separately encoded** \`z11\` on held-out consequences, and against \`z01\` on unchanged vibration constraints. Do not judge success by cosine similarity to \`z11\`: judge *semantic actions and predictions*. Apply a heat edit learned from one quartet to different material names, episode ordering and world templates; keep all query, task and adapter configurations fixed.
 
-**Distillation is deferred.** Start with one short supervised extraction/causal-response objective and gradient checks. Only consider KL distillation after a reproducible evidence-bearing implant.
+- **No-new-network first:** direct vector delta; if that fails, report failure. A trained low-rank edit operator is a *separate* optional experiment with its own held-out split and compute gate.
+- **Controls:** direct source re-encoding, shuffled heat deltas, random/norm-matched shifts, embedding-derived deltas, other-law deltas, no edit, textual edit reference and “heat only” recipient prompts.
+- **Invariance:** the edited heat consequence changes in the correct direction; vibration consequences remain fixed; unintended label changes are measured.
+- **Commutation probe:** applying independent heat and vibration deltas in either order should yield equivalent receiver-side *outcomes* when the rules are independent, not necessarily numerically equal latents.
+- **Avoid leakage:** law labels appear only in the evaluator and offline experiment construction; B sees fixed prompts and numerical capsules.
+- **Uncertainty:** near-linear structure may be absent, and a context-dependent edit may not transport. That is a valid negative discovery.
 
-### Positive soft-prefix capability oracle
+**Decision:** the first proposed moonshot *after* source-specific DG-1, under a separate bounded DG-2/DG-3 research gate. It must not be silently included in G0/G1 training.
 
-Before judging cross-family transfer, directly optimise a tiny **B-native continuous prefix** on a few known calibration cases (using only their known target answers). Show B's output actually responds to the fitted vectors; compare to no-prefix and random prefix with the same input. This is a **diagnostic interface oracle**, not a generalisation result: its test answers were used during fitting, so it is excluded from sealed performance comparisons. If the native soft-prefix oracle fails, stop and repair recipient embedding/position/caching semantics or choose a more capable B with a newly approved compute budget.
+**Creative output:** a family of strange “before/after” worlds where one impossible physical law changes and machines, organisms and architecture adapt accordingly. Keep failed edits in the atlas as failures, not imagined successful mutations.
 
-### Practical cost honesty
+### DG-4 — Chimaera: joint, intervention-sensitive recombination
 
-Eight FP16 input vectors at width 576 occupy about 9 KiB, but B's **corresponding per-layer KV** is about 180 KiB at FP16 before other context, tensor overhead and source state. Include input-state bytes, cache bytes, all A prefill compute, transfer, B compilation and B decode costs. A smaller number of virtual positions is *not* a measured compression ratio.
+**Question:** Can two separately acquired donor memories jointly determine a consequence **neither one alone can answer**, with independent editability of each contribution?
 
-## 6. Causal evidence: the transplant can be wrong
+Start with two memories from one donor model (same-A, different source) before admitting heterogeneous source models. Construct a task requiring A's heat transformation **and** B's vibration rule to determine a single combined event. Use a deterministic symbolic evaluator with known joint predictions and explicit contradictions/exception handling.
 
-### Locked controls (addresses all independent review P1 findings)
+**Arms:** A-only, B-only, true A+B fusion, wrong-but-plausible A′+B, A+B′, naive latent mean/concatenation, **independent decoding of each donor plus downstream combination**, direct recipient full-text two-source reference and short text postcards. Hold fixed memory budget and report extra fusion/compute overhead.
 
-| Condition | What enters B | What it rules out |
+**Bidirectional intervention criterion:** swap or edit A while B remains fixed; only A-dependent predictions should change. Then edit B while A remains fixed; only B-dependent predictions change. A result where both parent facts merely co-occur in fluent prose is **not** joint causal inheritance. Report dual-source *interaction* performance and unrelated-law preservation.
+
+**Science:** S5b requires correct withheld **joint consequences** above the independent-decode-and-combine and mismatched-donor baselines. Latent fusion itself is not novel.  
+**Creative output:** chimaera machines, ecological hybrids and explicit paradox notes, with source-specific lineage.
+
+### DG-5 — Ghost Descendants: newly acquired B information
+
+**Question:** Can C inherit something **B newly learned or derived** that donor A never knew, via B-derived numerical computational state and no B→C text handoff?
+
+A originally gives B latent rule R. B privately encounters new event E (absent from A's source) and may infer new conclusion J from R+E. Extract B's native state and send it through a separately trained B→C (or B→B) compiler while C sees a fixed query. **No printed B continuation or A source is passed directly to C**. Excluding original prefix positions from B's state readout is necessary to test some alternatives but **not sufficient**: downstream states can still encode A and generated tokens.
+
+**Predeclared inheritance arms:**
+
+| Arm | B's additional experience | Purpose |
 | --- | --- | --- |
-| Full donor text | D itself | B's native full-text reference capability; **not** a strict ceiling |
-| Equal-budget text postcard | source-grounded extractive/short textual clue | useful ordinary compression baseline |
-| Uncontextualised donor token embeddings | a matched-budget pooled embedding fingerprint through same-capacity compiler | lexical/feature classifier versus contextual KV value |
-| Donor hidden states | matched-budget hidden-state fingerprint | whether K/V contributes beyond simpler contextual representation |
-| True donor V → B pseudo-prefix | real A context state, learned compiler | actual candidate |
-| Zero/static prefix | constant | prompts and B prior knowledge |
-| Norm/covariance-matched random prefix | nonsemantic vectors | generic perturbation/regularisation |
-| Swapped donor prefix | different source's genuine capsule | whether correct *source identity* matters |
-| Counterfactual twin swap | same lexicon, one reversed rule | whether B follows causal rule changes rather than word statistics |
-| Recipient-native fitted prefix | B-optimised known case | validates that the virtual-token channel can be used at all |
-| Optional no-adapter / random adapter | fixed random projection | trained mapping versus generic perturbation |
+| Silent/controlled state | E is processed without sampling new B output, then snapshot | isolates newly processed B experience from freely generated-token contents |
+| Matched-token controls | hold generated visible token sequence fixed across E vs control E′, or teacher-force identical continuation | tests whether E changes state beyond the printed token string |
+| Natural continuation | B receives E and generates normally before state extraction | ecologically valid but confounded by B's generated text |
+| A-only direct | A→C, without B experiencing E | ensures new information was not already available to ancestor |
+| Counterfactual/swap | substitute E′ or unrelated B donor history | recipient must follow B-specific event identity, not a generic B cache |
+| Plain text relay | C receives available B text/summary | practical comparison; explicitly **not** a non-textual transplant |
 
-**Key outcome:** for a swap A→B, report both (i) performance relative to A's ground truth and (ii) performance relative to **B's swapped-in ground truth**. A valid source-sensitive implant should follow B after the swap. For counterfactual twins, test that precisely the edited relation changes and other source facts remain stable. This avoids a widely observed pitfall in latent communication: a generic prefix can improve a metric without communicating the actual donor's content.
+The evaluator tests J and source-specific consequences, plus whether a new rule was **acquired by B** versus repeated from A. Even the silent arm can transport contextual representations of E rather than some special non-textual discovery; distinguish *B-specific information inheritance* from proof of a unique introspective thought representation.
 
-**Condition-specific audit:** B's input record must contain the same fixed prompt, decode settings and nonsemantic indices across control arms; the only permitted semantic condition is the actual text in designated text baselines, and the only numeric condition in latent arms is the tensor. Inspect prompts/logs for label/source-name leakage. Source annotations and evaluator answers stay outside receiver work directories where practical.
+**Science:** S5c requires a second verified state-transfer path and recipient answers dependent on B-only information under matched controls; textual confounds reported, not hidden.  
+**Creative output:** genealogy of mechanisms that inherit some features and develop others across incompatible neural substrates.
 
-### Data and preregistered splits
+**Stop rule:** DG-3–DG-5 are an ambitious horizon, not automatic follow-on tasks. A useful gallery can survive a failed latent-channel experiment, but the provenance must say “no demonstrated transplant.”
 
-Begin with 2–3 examples for interface feasibility and **24–48 small training examples** for an early signal.
+## 5. Mechanism, model capability and resource feasibility
 
-A later controlled bank may contain approximately **240 short structured memories (160 train / 40 validation / 40 sealed test)**, with templates and **counterfactual twins grouped into the same split**. Individual paraphrases of the same world/scenario must never cross train/test. Include lexical/causal adversarial cases: reversed dependencies, negation, swapped antecedents, changed thresholds, and exception-order changes. Balance material/trigger/effect frequencies and ensure the model cannot infer donor labels from prompt templates, length or position alone.
+### Initial model pair — instrumental, not a universal result
 
-A small 40-case sealed test offers weak precision; report per-field accuracy, complete-tuple accuracy, causal-intervention consistency, invalid rate, paired differences and uncertainty intervals. Run a predeclared small number of decoding seeds (up to 3 if affordable) and treat repeated peeks as exploratory, **not** fresh holdouts. Avoid expanding formal test claims to the 12–24 open-ended dreams used for creative play.
+| Role | Candidate | What must be demonstrated |
+| --- | --- | --- |
+| Donor A | [Qwen2.5-0.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct) | pin config/weights/tokenizer; extract **actual**, non-mislabeled layer K/V tensors under \`no_grad\` |
+| Recipient B | [SmolLM2-135M-Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct) | native text **task** ability, differentiable \`inputs_embeds\` path, correct masks/positions, cache continuation, native fitted-prefix **interface** ability |
+| Optional editor | neurounner pinned LFM2.5-1.2B-Instruct | polishing *only after* raw scoring; no access to donor text or sealed law labels |
+| Future receiver C | unselected | new model/adapter subject to separate approval, budgets and scientific controls |
 
-### Measurements that matter
+A and B are unrelated **and not similar in parameter count**. This is a cheap first communication experiment, not proof of peer-sized model-state interchange. Existing neurounner GGUF/llama.cpp throughput and LoRA runs do not establish PyTorch gradient-through-receiver speed or KV insertion support. Pin an isolated compatible Transformers/PyTorch environment without modifying existing host workflows.
 
-- **Semantic fidelity:** donor-specific facts, causal consequences, swap-following accuracy, edit specificity, unrelated-fact preservation, novel-task transfer and multistep retention.
-- **Mechanism specificity:** real KV-derived features versus uncontextualised embedding and hidden-state features, same training budget and compiler capacity.
-- **Task transfer:** the **same trained capsule**, without additional tuning, used for extraction and at least one held-out creative instruction.
-- **Artistic utility:** blinded human selection of useful mechanisms, judged separately from faithful rule inheritance; raw outputs first, polished versions later.
-- **Efficiency:** source prefill, adapter compile, recipient forward/backward, inference time, peak RSS/VRAM, tensor bytes and amortisation break-even versus text replay/retrieval.
+### Two positive oracles that answer different questions
 
-**Scientific reporting categories:**
-- **S0:** native embedding interface works;
-- **S1:** prefixes perturb B reproducibly, but no source-specific content;
-- **S2:** genuine source-specific, donor-swap-following semantic transfer above zero/random;
-- **S3:** KV-derived contextualisation beats an equal-capacity simple token-embedding baseline on held-out causal tests;
-- **S4:** tasks and causal edits preserve a significant subset of the source rule structure;
-- **S5 (stretch):** multi-donor fusion or second-generation handoff with source-specific lineage.
+**Oracle I — numeric interface:** optimise a recipient-native soft prefix *directly on a few known examples* while B's weights remain frozen. Verify valid gradients into the prefix, observable output dependence on its values, and inference continuation equivalence. This memorising diagnostic is **excluded from generalisation scoring**.
 
-Never report S1 as "memory transplanted"; S2 does not imply S3; S3 does not imply universal memory, and S5 is not guaranteed.
+**Oracle T — task competence:** give B **the complete true synthetic world as text** and ask held-out fixed-choice causal questions and short answers. Determine whether this tiny receiver can actually solve the task. If B cannot solve tasks with the source available, do not interpret its failure with compressed latents as failure of memory transfer. Simplify G1 tasks or propose a stronger B with a separate resource estimate.
 
-## 7. Creative programme: wander deliberately
+Neither oracle substitutes for the other. A positive interface oracle does not imply causal reasoning capacity; a positive text oracle does not imply useful soft-prefix conditioning.
 
-The **Atlas of Stolen Dreams** is a companion creative research tool, not a benchmark leaderboard.
+### Concrete first mechanism
 
-Proposed artefact families:
-- **Impossible materials:** state-dependent hardness, gravity, temperature, sound, light, memory, decay.
-- **Alien machines:** contraptions whose operations derive from one or two inherited world laws.
-- **Living ecologies:** organisms that acquire materials, exchange energy or reproduce under impossible but internally testable laws.
-- **Causal paradoxes:** two donor dreams conflict; the recipient either finds a reconciliation or documents a failure.
-- **Memory family trees:** branch a capsule, mutate a law, splice a second source, observe descendants diverge.
-- **Repair and invention postcards:** take a raw B concept and let a text-only editor rephrase it for readability, always preserving the raw evidence.
+1. With frozen A in \`no_grad\`, prefill each donor memory and extract selected layer states. Initial **R0**: 4 × layers × 4 length-normalised bins × 2 KV heads × 64 head dimensions = 2,048 scalar value features, subject to actual configured head geometry.
+2. **Precompute once and checksum every donor feature vector**, and log model revision, tokenizer, source hashes and native tensor shape. Unload A **before** fitting B's adapter to avoid overlapping resident model weights. Generate matched feature baselines on the same source corpus and budget.
+3. Start with \`LayerNorm → 32/64 bottleneck → 8×576 soft input embeddings\` (~431k dense weights for the 64-wide case; confirm actual package implementation). Normalize output magnitude relative to recipient embedding statistics. Freeze A/B weights; train only this small adapter.
+4. Train B under teacher forcing with a **single masked cross-entropy objective** for the short target answer; the shared instruction is masked out of loss. B's parameters are frozen but B's computations remain differentiable: do **not** wrap B forward in \`no_grad\`, and disable receiver generation/inference caching during gradient training.
+5. At inference separately test the same \`inputs_embeds\`+task prefix route with a proper attention mask, BOS/template, position sequence and B-native KV continuation. Verify deterministic repeated continuation at identical seeds. Inspect actual receiver inputs for donor labels, source names and unintended text leakage.
+6. Favor **forced-choice target-answer log-likelihood** for early science and raw sampled prose for the separate dream atlas. No KL distillation, deep-KV injection or multiple fusion networks in G0.
 
-One dream can generate a *material / machine / ecology / failure* quartet under four independent receiver instructions. Another dream can be combined with a second donor to produce a coherent chimaera. Creative variation is welcome, but claim inheritance only when an intervention changes the correct inherited law with matched controls.
+### Cost and overfitting reality
 
-Keep a **wander notebook**: unplanned experiments, accidental breakthroughs, aesthetically interesting failures and exact seeds, openly marked exploratory. Curate a public gallery of non-sensitive synthetic outputs with a lineage graph (a simple table or static SVG suffices). Do not build a full game engine, a browser app, procedural animation, a sprawling agent framework or image-generation system merely to make the gallery look impressive.
+Eight FP16 vectors × width 576 use ~9 KiB at the input; their recipient FP16 30-layer KV content is ~180 KiB (assuming 3 KV heads and 64 head width), excluding other sequence positions and overhead. A ~431k-weight FP32 adapter uses ~1.7 MB for parameters, plus optimizer states. The A source prefill, retained source-state bytes, feature extraction, trainable activations through 30 B layers, compilation and B decode all count in full resource accounting.
 
-**If latent transfer fails:** the same structured world bank and text-only postcard baseline can still drive a useful weird-physics foundry. Its output remains creative material, but all scientific labels must say *no demonstrated transplant*.
+**24–48 training memories versus ~431k adapter parameters is a memorisation risk.** This tranche is a capability/smoke assay only. A held-out factorial world split or new independent world family is required before causal generalisation is claimed. No free-text sample score or dramatic visual output negates this.
 
-## 8. Execution gates and compute limits
+**Five-step G0 measurement:** forward/backward wall time, peak RSS or VRAM, gradient norm and finite values, high-water memory across feature extraction, full-text/native-prefix oracle scores, exact source and runtime hashes. Do not infer that the existing two-runner-hour limit is enough; it is an exploratory cap, not an evidence-based forecast.
 
-| Gate | Minimum actual work | Evidence before expansion | Authority |
+## 6. Causal evidence contract: what a transplant must actually do
+
+### Required controls
+
+| Method | Question it answers |
+| --- | --- |
+| Full source text to B | Can B solve the task with all information? **Reference, not a fixed upper bound.** |
+| Short extractive text postcard | Can an ordinary cheap text channel do as well at a comparable latency/storage budget? |
+| Uncontextualised A token embeddings, same budget | Can a lexical encoder recover labels without meaningful context processing? |
+| A contextual hidden states, same budget | Do V-derived features offer a favorable bias compared to another contextual representation? |
+| Actual pooled A values → B prefix | Can a true contextual donor-state feature reach B through a numerical channel? |
+| Zero/static or norm/covariance-matched random prefix | Is any extra conditioning enough? |
+| Mismatched real donor | Does **donor identity** determine the answer rather than generic latent activation? |
+| Counterfactual twin source swap | Does B follow the new world's altered law while holding unaffected rules constant? |
+| Directly optimized B native soft prefix | Is a numerical prefix *usable* at all? Diagnostic only, no generalisation claim. |
+| Independent decode-and-combine | Does two-source fusion exceed merely extracting both rules separately? |
+| Direct source reimprint and text edit | Is a latent numerical edit doing anything beyond re-running the encoder or writing a textual new source? |
+
+For each donor swap, report **both original-source accuracy and swapped-source accuracy**. For each counterfactual intervention, report changed-rule fidelity *and* preservation of unrelated laws. For joint inheritance, ask unseen questions requiring **both** donors simultaneously. For descendants, distinguish information that A knew, information encoded in B's generated tokens, and information introduced only by B's new experience.
+
+Controls are **paired by world, task, decoding seed and recipient checkpoint**. For numeric arms, B's fixed task prompt must not reveal donor ID, answer labels, training split, source filename or any lexical cue. Source truth and scorer-only data must be segregated from receiver input. Audit all prompt/tensor routes.
+
+### Revised evidence hierarchy — disjoint research claims
+
+| Level | Permitted finding | What it does **not** establish |
+| --- | --- | --- |
+| **S0** | Valid gradients, embeddings, positions and native cache interfaces | Any memory transfer |
+| **S1** | A numerical prefix predictably changes B's outputs | Example-specific communication |
+| **S2** | Correct donor identity changes source-specific recipient answers | KV-specific advantage or transferable causal models |
+| **S3a** | Contextual source features outperform lexical/uncontextualised baselines | Value projections contain unique extra information |
+| **S3b** | Pooled value-derived features beat matched contextual hidden-state features | Unique KV information or addressable KV memory |
+| **S4** | Transplanted laws predict held-out counterfactual consequences | Identifiable internal causal mechanism in B |
+| **S5a** | A latent-only rule edit is selective and portable | Live KV surgery unless already-decoded B state itself was edited |
+| **S5b** | Two memory sources support an **interaction-dependent** held-out consequence | That B→C descendants can inherit B's new experience |
+| **S5c** | C inherits information newly available to B through verified numeric state transfer | Consciousness, general learning or absence of possible token encodings |
+
+**No automatic promotion between levels.** S3b only means the chosen value projection is a more useful feature encoding in this setting, not that it can exceed the information content of the full hidden state.
+
+### Data, independence and uncertainty
+
+- G1: 2–3 fixed instrument fixtures, then 24–48 tiny training cases. This is a **smoke test**, not confirmatory evidence.
+- G2 candidate: ~240 synthetic worlds split 160/40/40, grouped by **scenario/world/template family** and by *counterfactual twins*. Cross-product factors include rule/exception/interaction order, materials and nuisance wording. Hold out specific combinations and intervention queries **not appearing as answers in training diaries**.
+- A sealed 40-world test is imprecise (around a 50% proportion, naive 95% binomial uncertainty is roughly ±15 percentage points). Report actual paired differences and intervals, family-level grouping, failures, invalid rate, forced-choice likelihoods and sampled results. Multiple continuations from the same world are **not independent worlds**.
+- If an apparently large scientific claim emerges, obtain a **fresh untouched confirmatory bank**, not repeated peeks at the existing sealed cases. Move exploratory probes to the wandering notebook and freeze new hypotheses before formal retesting.
+- Avoid a huge model/template/slot/loss grid. One representation and one loss first, then the smallest evidence-driven ablation.
+
+### Four independent outcome dimensions
+
+1. **Information-specific:** source identity, counterfactual rule recovery and donor-swap following.
+2. **Interventional:** rule-local edit success, unrelated-variable preservation, cross-world edit generalisation, bidirectional composition.
+3. **Inheritance:** B-only acquisition versus ancestral echo or generated-text representation, matched token controls.
+4. **Creative:** blind novelty, coherence, practical usability and fascinating failure selection. These artistic scores are **never** presented as evidence in dimensions 1–3.
+
+Report storage positions, bytes, encoder cost, input/output bandwidth, native cache bytes, compute, real end-to-end latency, and calibration/adapter amortisation. A reduction in receiver context positions is not an actual total compression measurement.
+
+## 7. Creative programme: wander deliberately, but preserve genealogy
+
+The **Atlas of Stolen Dreams** is not a leaderboard: it is a research-backed foundry of impossible matter, machines, creatures, physical laws, contradicting worlds and strange failures. Its distinctive value is that interesting artefacts can be **reused, simulated and traced back to observed operations**.
+
+Each selected artefact has four complementary **views**, kept explicitly distinct:
+
+1. **Raw dream:** verbatim recipient continuation, model/adapter hash, source capsule, task, seed, method and all matched-control raw outputs.
+2. **Field guide:** readable interpretation from a human or optional LFM editor; this may invent structure and must never replace raw evidence.
+3. **Ancestry:** donor worlds, verified or failed latent operations, grafts, branches, original source hashes and descendants; distinguish a speculative family tree from a measured numerical inheritance.
+4. **Simulation hook:** a minimal implementable trigger, exception, state update and consequence that a game/simulation designer can prototype (especially useful for materials and physics experiments).
+
+Good artefacts include **before/after alleles** (a world whose heat law changes, with consequences for machines and ecology), **chimaera machines** (a device whose operation needs two independently inherited laws), and **ghost descendants** (characters who acquire new constraints and pass them along). A deliberately failed transplant can still produce striking art; the scientific ledger must plainly mark it as a failed transfer.
+
+Use a small, browseable static Markdown index with JSONL raw data; optionally a lightweight SVG genealogy where it adds actual interpretability. No elaborate front-end, renderer, image generation campaign, bespoke scheduling framework or large issue forest is required. The novelty should live in *interventions and inheritance*, not dashboards.
+
+Blinded reviewers choose interesting inventions without seeing whether they came from latent, text-summary, random-prefix or post-editor conditions. Record novelty, internal consistency, reusability and unexpected failure value separately. Never select appealing samples for scientific accuracy denominators; retain every raw generation including malformed and discarded ones.
+
+**Failure-tolerant product:** if numerical transfer never reaches S2, the same synthetic world bank and text-postcard generator can still make a weird-physics atlas. That product is creative usefulness, not successful memory transplantation.
+
+## 8. Execution gates, budgets and authorisation
+
+| Gate | Work | Evidence required to request next gate | Authority |
 | --- | --- | --- | --- |
-| **G0 — instrument and cost** | pin model revisions, download/hashes, true A K/V extraction, B inputs_embeds, mask/position checks, positive prefix oracle; 5 forward/backward updates | real gradient on adapter, deterministic continuation, peak RSS and step timing, no hidden source leakage | **first proposed authorisation only** |
-| **G1 — first imprint** | 24–48 cases, one low-rank adapter, matched A-source vs swapped/zero/random, token-embedding and hidden-state controls; 6–12 raw dream cards | reproducible donor-sensitive result or precise negative explanation | separate approval after G0 |
-| **G2 — causal worlds** | grouped 160/40/40 bank, counterfactual twins, fixed held-out tasks, native/text baselines | source-aware swap and unseen-rule consistency, formal/creative metrics separately | separate approval after G1 |
-| **G3 — dream surgery** | branch-compile old/new capsules; measure rule-local specificity; optional learned delta | changed-rule flip, preserved unrelated rules and lower edit cost if claimed | separate approval after G2 |
-| **G4 — chimaeras** | fuse two source memories; blind dual-rule and contradiction tests | both-source evidence beats single-source and mismatched controls | separate approval after G2/G3 |
-| **G5 — ghost descendants** | B-generated native state → B/C recipient via new pairwise adapter or shared z; no text relay | second handoff verified, ancestry recovery above mismatched lineage | separate research programme/approval |
+| **G0 — instrumentation + two oracles** | Pin two model revisions; real A K/V extraction; feature hashing and A unload; B native soft-prefix/gradient, masks/positions/cache; native full-text **task competence**; five-step wall/RSS probe | Oracle I and Oracle T results, source provenance, input-leak check, gradient validity, deterministic continuation, realistic training-cost estimate | **Proposed first authorisation; owner has not approved it** |
+| **G1 — bounded imprint** | Up to 24–48 first training cases, one CE objective, uncontextualised/hidden/V controls, zero/random/swapped arms, 6–12 raw creative postcards | Reproducible source-specific effect (or no-go); paired raw outputs; actual cost. No causal-generalisation claim | **Hold until G0 evidence and explicit owner approval** |
+| **G2 — causal worlds** | Factorial synthetic worlds with withheld rule/exception/intervention combinations; B full-text capability; symbolic scorer; fresh-sealed-world policy | Source-specific withheld consequences and novel-task transfer. Define errors and uncertainty | **Separate owner approval after G1** |
+| **G3 — Counterfactual Allele** | Delta from latent paired worlds applied to *independent target world*, compared to reimprint, random and text edits; test unchanged-law invariance | S5a selective latent-only edit; possible explicit no-go before training extra editor | **Separate owner approval after G2** |
+| **G4 — Chimaera interaction** | Dual-source capsule with interaction-only test, bidirectional swaps, independent decode+combine baseline, contradictions | S5b joint withheld consequence above independent/mismatched controls | **Separate owner approval; not implied by G3** |
+| **G5 — Ghost Descendants** | B-only experience + silent/controlled-token B state snapshot; independently qualified B→C state translator; direct A→C and swap baselines | S5c inheritance of B-specific new information with token-encoding confound reported | **Independent later research approval** |
 
-**Compute:** G0 begins CPU-only on existing hosted Linux if model/license and dependency checks succeed. The reviewer explicitly warned that prior neurounner LoRA measurements do **not** price a prefix adapter requiring backward activations through B. Inspect a 5-update profile (wall time, RSS, gradient norm, cache behaviour) *before* scheduling real training. Proposed G1 cap: **two aggregate hosted runner-hours of fitting** and at most three preregistered variants, subject to observed throughput. G2–G5 require new estimates. Local GPU/TITAN hardware may be proposed only after a recorded resource comparison and explicit owner approval.
+**Compute discipline:** initial G0 only on existing hosted CPU when pinned models and isolated dependencies are available. G1 proposes *at most two aggregate hosted runner-hours of adapter fitting*, pending the five-step profile. That is a cap, not a throughput guarantee. No large training, GPU/TITAN use, autonomous tasks or extra providers without fresh authorization and a resource estimate.
 
-**Storage:** source texts, prompts, raw generations, negative results, manifests and small metrics belong under neurounner's documented [dataset filing system](../docs/DATASET_FILING_SYSTEM.md). Store large tensors/weights/checkpoints externally with immutable checksums; do not commit private contexts, unreviewed external datasets, gigabyte blobs or temporary Actions-only evidence. Use public/synthetic materials in this pilot.
+**Storage discipline:** source data, prompt fixtures, raw records, tensor/corpus hashes, negative observations and small summaries follow neurounner [dataset policy](../docs/DATASET_FILING_SYSTEM.md). Big tensors/checkpoints remain outside ordinary Git with retrievable immutable manifests, never source-embedded secrets. Use wholly synthetic sources in the first pilot. Do not accept screenshots, models or datasets of uncertain ownership as anonymous input.
 
-**Stop conditions:** bad masks/positions; unverified real cache extraction; native fitted prefix fails; missing donor identity effects; data leakage; resource budget exceeded; semantic label shortcut; or conflating editing/branching with true live KV patching. Do not automatically progress because the atlas looks entertaining.
+**Stop/repair:** interface or task oracle fails; mismatched donor does as well as true donor; apparent signal disappears against simple embeddings; gradients invalid; unreported corpus leakage; resource cap exceeded; inaccessible raw evidence. Each outcome can be recorded as a useful negative result. Only the owner can authorize the next gate, and **neither PR #229 nor the foundation PR #228 is approved for merge**.
 
-## 9. Self-review and professional-review resolution
+## 9. Self-review, second independent review and resolution register
 
-### Independent reviewer requirements incorporated
+### Independent v2 review: verdicts
 
-| Review | Earlier weakness | V2 amendment |
+The reviewer assessed [v2 HEAD \`fa442a190f8a33a50b0bd7eeaf9c8729e7dcf68c\`](https://github.com/techrote/neurounner/commit/fa442a190f8a33a50b0bd7eeaf9c8729e7dcf68c). Verdict: **G0/G1 CONDITIONAL APPROVAL; DG-2–DG-5 REWORK**. The review does **not** authorize code or training. This v3 is a proposed response, not proof the reviewer approves the changes.
+
+### Finding-by-finding amendments
+
+| Finding | v3 disposition | Concrete change |
 | --- | --- | --- |
-| **P1-A** | three-label recovery could just be feature classification | same-capacity **uncontextualised token-embedding** baseline plus hidden-state control; S3 explicitly requires KV-derived advantage |
-| **P1-B** | lexical/template shortcuts across split | group counterfactual twins, scenario families and paraphrases; include negation, role/temporal reversals, causal exception edits |
-| **P1-C** | B may be incapable of using eight continuous tokens | recipient-native directly fitted soft-prefix **positive capability oracle** before any transplant conclusion |
-| **P1-D** | swapped prefix scored against original only | report **original and swapped source** accuracy; change exactly one property to measure causal direction |
-| **P2-A** | very small B may be too weak | native text and native-prefix baselines; explicit fallback to a larger B only after budget/approval |
-| **P2-B/C** | LoRA evidence does not price gradient through frozen B; cache/autograd semantics | real five-step forward/backward profile; train with cache disabled; separate inference continuation validation |
-| **P2-D** | combining labels and KL was too complex | one short supervised loss first; target distillation only after successful simpler trial |
-| **P2-E** | positions are not total compression | account for bytes and full donor/adapter/recipient compute |
-| **P2-F** | label-tuned prefix may fail outside label task | sealed **unseen creative task** with same prefix and no retuning |
-| **P3** | excessive layer/bottleneck tuning | fixed four-layer/four-bin V baseline, 32/64-width bottleneck, no early grid search; full-text B is a reference, not guaranteed ceiling |
+| **P1-A** V-only is not uniquely KV memory | **Contract clarified; novel mechanism deferred** | R0 is contextual value-feature communication, R1 hidden/embedding comparators; R2 addressable K/V experiment separately gated; S3a/S3b narrower |
+| **P1-B** lexical and causal shortcut risks | **Test contract expanded** | factorial withheld interactions and consequences, world/template-group splits, twin pairs, novel task instructions, no label leakage |
+| **P1-C** native-prefix oracle not task oracle | **Both specified** | Oracle I tests numerical interface, Oracle T tests B's full-text rule-solving on held-out cases |
+| **P1-D** Chimaera may merely co-list facts | **Joint intervention contract** | interaction-dependent question not solvable from one donor; A/B bidirectional edits; independent decode+combine baseline |
+| **P1-E** descendants may relay B's generated tokens | **Controls expanded** | silent/controlled state, fixed identical generated sequences, natural generation, direct A→C, B-only experience and B→C state-swap |
+| **P2-A** Dream Genome lacked invariants | **Operational invariants added** | source identity, edit specificity, composition, inheritance, restore/branch and substrate robustness as *tests*, not assumptions |
+| **P2-B** tiny corpus and CPU cap inadequate for strong claims | **Claim levels bounded** | G1 smoke only, 40-world sealed test imprecision disclosed, fresh confirmation for strong claims, 5-step performance measurement |
+| **P2-C** literature novelty comparison incomplete | **Expanded** | Memorilla, causal abstraction, interchange-intervention training, distributed alignment search; older cache/prefix papers retained |
+| **P2-D** fresh re-encoding was mislabeled surgery | **Operations disambiguated** | DG-3 explicitly separates reimprinting, transferable latent-only edits and genuine mid-session KV modifications |
 
-### Independent self-critique of this V2 ambition
+### The first moonshot — why the Allele comes before Chimaera
 
-1. **Novelty is a programme-level aspiration, not established.** A tiny V-fingerprint-to-prefix classifier may not be materially new; only causal edits, recombination and distinct task/substrate transfer give the concept additional substance.
-2. **The weak link could be the recipient.** SmolLM2-135M may fail at imaginative, multistep causal reasoning even with ideal source information. Always measure native B and leave open a reviewed, stronger receiver.
-3. **The donor state may not add information over token embeddings.** If S2 works but S3 fails, label the result "learned non-textual cross-model feature channel" and do not manufacture a KV advantage.
-4. **Splicing numerical vectors is not automatically semantic composition.** It requires controlled paired worlds, dual-source oracles and perhaps a trained fusion module.
-5. **A multi-generation result can be contaminated by text.** A B→C claim requires auditing every tensor/prompt path so C never sees A's original text or B's printed continuation.
-6. **World rules are simplified synthetic truth, not unrestricted memory.** The physics-law mini-world enables causal verification but constrains generalisation; the creative dream bank probes outside it without overclaiming.
-7. **The grand vision has major risk of scope explosion.** G0 and G1 are deliberately small and remain valuable. G3–G5 are independent optional frontiers, with no implied CI automation, new issue tree, model zoo or framework.
-8. **Creative curation is selection-biased.** Keep every raw attempt; the gallery is chosen art, not a substitute for sealed scientific metrics.
-9. **Privacy matters even for internal tensor state.** Use only synthetic sources in this pilot; donor tensors are not an anonymisation mechanism.
+After G1, **Counterfactual Allele** is the strongest *bounded* test of whether a Dream Genome has useful manipulable structure. One inferred numerical law difference must work on a separately encoded world and preserve unrelated laws. This has a clear negative-result interpretation if it fails, generates appealing before/after dream artefacts, and is simpler to falsify than a generational ecology.
 
-**Design verdict:** more ambitious **research horizon**, more discriminating **first experiment**. The earlier proposal was a small classifier-flavoured proof. This proposal makes causal inheritance, selective mutation, dual-donor recombination and generational transfer the explicit horizon, while retaining a genuinely executable initial mechanism.
+Only after a convincing causal law and selective edit should a two-donor chimaera be claimed as recombination, and only after that should B-specific descendants be given costly new cross-model adapters. The *research horizon* stays broad but the *evidence surface* stays discriminating.
 
-## 10. Request for independent technical review
+### Remaining unresolved risks (not waived)
 
-Reviewers should be adversarial, imaginative and precise. In particular:
+1. A 135M recipient may not be capable of multi-rule tasks even with explicit text. Oracle T must be checked before interpreting latent failure.
+2. A pooled 2,048-dim V feature may lose keys/order/exceptions. R2 addressable KV may be scientifically required and more expensive.
+3. A supervised ~431k-weight adapter with only 24–48 memories can learn labels/templates and fail out of domain. G1 is explicitly a pilot.
+4. Counterfactual-delta addition may be non-linear and context-dependent; a failure is not evidence that all editable memory is impossible.
+5. A “recombined” output may borrow generic knowledge from B's weights rather than source-provided interaction. Factorial/mismatched-source controls reduce but cannot eliminate this.
+6. A silent B→C transfer can still encode tokens B *read* rather than a privileged hidden “thought”; source-specific interventions are essential.
+7. A shared z decoded by two models does not imply identical cognitive state or universal address space.
+8. Repeated creative cherry-picking creates gallery selection bias. Keep all generations and report blind aggregate metrics separately.
+9. Newly added research frontiers may exceed the computational and engineering resources of neurounner; every gate is independently optional.
 
-1. Does the S0→S5 evidence hierarchy properly separate generic conditioning, source-specific feature communication, KV-specific advantage and actual causal inheritance? What additional negative control is essential?
-2. Is the donor **V-derived** eight-slot compiler the most informative small first step, or would a simple deep-KV interface provide better evidence with similar cost?
-3. Does the proposed split really separate compositional reasoning from memorised templates, when counterfactual twins have similar vocabulary? What minimum held-out worlds would be enough to expose the problem?
-4. Can a tiny recipient with a native fitted-prefix oracle but poor reasoning meaningfully test rule transfer? Which fallback model/architecture is most informative under CPU and a modest local GPU budget?
-5. Is **Dream Surgery** a technically honest edit assay, and what would be required to upgrade fresh-branch recompilation to *real* mid-session KV editing?
-6. Is **Chimaera** materially more interesting than concatenating two text summaries or averaging two prefix vectors? How can dual-source inheritance be scored without an LLM judge?
-7. Is the **Ghost Descendants** route plausible without the original text or B's output leaking into C, or does that require a much larger research programme?
-8. Which one moonshot would maximize interesting, interpretable creative output under an approximately two-runner-hour first fitting budget?
-9. Identify unjustified assumptions, training/serving incompatibilities, leakage channels, misleading novelty claims and opportunities to simplify without losing the weirdness.
+**Revised design principle:** maximize the ambition of *what could be learned*, not the breadth of code or number of simultaneously running jobs. There remains no approval to implement.
 
-**Requested decision:** APPROVE / CONDITIONAL APPROVAL / REWORK / REJECT, with explicit separate recommendations for **G0/G1** versus the aspirational **G2–G5**. The owner has requested greater ambition and novelty, **not implementation**. Neither this stacked documentation PR nor its parent #228 may be merged without explicit final owner approval.
+## 10. Request for independent technical review — v3
+
+**Requested response:** a severity-ranked independent review, with explicit and **separate** APPROVE / CONDITIONAL APPROVAL / REWORK / REJECT verdicts for **G0**, **G1**, **G2/G3 Counterfactual Allele**, **G4 Chimaera**, and **G5 descendants**. The owner is requesting better science and more ambitious *research*, not implementation or a merge.
+
+Please examine:
+
+1. **Capability:** Is G0's dual oracle sufficient to distinguish a broken prefix interface from an incapable 135M causal-reasoning recipient?
+2. **Attribution:** Does S2/S3a/S3b properly distinguish pairing-specific latent information, contextualisation, useful V-derived bias and genuinely addressable K/V behavior?
+3. **Intervention:** Do the factorial worlds and independent \`Δheat = z10 − z00\` test adequately distinguish an actual selective latent edit from keyword decoding, averaging and fresh re-encoding?
+4. **Causal abstraction:** Are the specified recipient-side invariants meaningful and precise enough? Would interchange intervention or distributed alignment techniques provide a stronger *minimal* test?
+5. **Fusion:** Is a held-out **joint** consequence and bidirectional donor swap the decisive Chimaera assay, or can it still pass through isolated extraction plus composition in B's pretrained weights?
+6. **Inheritance:** Do the silent/controlled-token descendant arms genuinely add evidence of **B-acquired** information passing to C, given that even silent B state can encode E?
+7. **Novelty:** Given Memorilla, C2C, XKV, KV-Lingo and causal interchange training, is the combined intervention/genealogy programme potentially distinctive? Which claim should be most carefully restricted?
+8. **Compute/engineering:** Are model pins, state features, precompute/unload, gradient-through-B, task assays and gating realistic on the declared CPU budget? What *smallest* improvement would materially raise interpretability?
+9. **Artistic value:** Does the raw dream / field guide / ancestry / simulation-hook archive enable useful discovery even when scientific controls reject the transplant story?
+10. **Simplification:** Which speculative feature is most likely to divert the programme without improving information transfer? Which one **additional** moonshot is worth keeping?
+
+**Authority boundary:** Do **not** implement, train, spend compute, create schedules, merge PR #228/#229 or treat any design assertion as a successful runtime result. G0 instrumentation is the only **proposed** first implementation increment, pending explicit owner approval. Subsequent milestones require fresh owner authorization and appropriate evidence.
+
+### Primary literature to check for novelty and controls
+
+- [KV-Lingo](references/02-kv-lingo.md), [Cache-to-Cache](references/05-cache-to-cache.md), [XKV](references/06-xkv.md), [ICAE](references/08-icae.md), [C²KV](references/11-c2kv.md), [AKV](references/12-akv.md).
+- [Memorilla (arXiv:2610.21375)](https://arxiv.org/abs/2610.21375) — query-conditioned memory tokens and frozen LLMs.
+- [Geiger et al., Causal Abstractions of Neural Networks (NeurIPS 2021)](https://papers.neurips.cc/paper_files/paper/2021/hash/4f5c422f4d49a5a807eda27434231040-Abstract.html).
+- [Geiger et al., Inducing Causal Structure for Interpretable Neural Networks (ICML 2022)](https://proceedings.mlr.press/v162/geiger22a.html).
+- [Geiger et al., Distributed Alignment Search (CLeaR 2024)](https://proceedings.mlr.press/v236/geiger24a).
+- [When Does Latent Communication Pay? (arXiv:2608.04893)](https://arxiv.org/abs/2608.04893).
+
+**All experiments described in this PR remain unexecuted.** The aim is an experiment capable of detecting an unexpected *causally meaningful* inheritance effect if one appears, while remaining scientifically useful and creatively interesting if it does not.
