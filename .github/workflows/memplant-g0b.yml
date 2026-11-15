@@ -1,0 +1,52 @@
+name: MEMPLANT G0B receiver capability survey
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/memplant-g0b.yml'
+      - 'experiments/memplant/dreamgraft001/g0b_receiver_survey.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: memplant-g0b-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+  HF_HUB_DOWNLOAD_TIMEOUT: '120'
+
+jobs:
+  receiver_360m:
+    name: SmolLM2-360M exact-source native text and prefix capability
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Validate static module
+        run: python3 -m py_compile experiments/memplant/dreamgraft001/g0b_receiver_survey.py
+      - name: Install pinned CPU models stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub>=0.36,<1' 'psutil>=7,<8' 'safetensors>=0.6,<1'
+      - name: Check stronger receiver without training a transplant
+        run: |
+          mkdir -p runtime/memplant/g0b
+          timeout --signal=INT --kill-after=15s 14m python3 -m experiments.memplant.dreamgraft001.g0b_receiver_survey --out runtime/memplant/g0b/receiver_360m.json
+      - name: Publish diagnostic evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-receiver-360m-a${{ github.run_attempt }}
+          path: runtime/memplant/g0b
+          if-no-files-found: warn
+          retention-days: 30

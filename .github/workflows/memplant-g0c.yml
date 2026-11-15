@@ -1,0 +1,51 @@
+name: MEMPLANT G0C stronger receiver capability
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/memplant-g0c.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+  HF_HUB_DOWNLOAD_TIMEOUT: '120'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+
+jobs:
+  receiver_1b:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install frozen real-model CPU stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub>=0.36,<1' 'psutil>=7,<8' 'safetensors>=0.6,<1'
+      - name: Frozen 1.7B recipient task and prefix diagnostic (G0 only)
+        run: |
+          mkdir -p runtime/memplant/g0c
+          timeout --signal=INT --kill-after=15s 22m python3 - <<'PY'
+          from experiments.memplant.dreamgraft001 import g0b_receiver_survey as s
+          s.CANDIDATE='HuggingFaceTB/SmolLM2-1.7B-Instruct'
+          s.REVISION='31b70e2e869a7173562077fd711b654946d38674'
+          report=s.survey('runtime/memplant/g0c/receiver_1b.json')
+          print('G0C source paired contrasts:',report['task_capability']['contrasts'])
+          print('G0C fitted native prefix:',report['native_prefix_oracle']['status'])
+          PY
+      - name: Retain source-fenced diagnostic JSON
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-receiver-1b-a${{ github.run_attempt }}
+          path: runtime/memplant/g0c
+          if-no-files-found: warn
+          retention-days: 30
