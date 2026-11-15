@@ -1,0 +1,106 @@
+name: MEMPLANT G1B two-stage numerical Dream Postcards
+
+on:
+  pull_request:
+    branches: [main, research/memplant-g0-real-model-probe]
+    paths:
+      - '.github/workflows/memplant-g1b-postcards.yml'
+      - 'experiments/memplant/postcards/**'
+      - 'tests/test_memplant_postcards.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: memplant-g1b-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+  HF_HUB_DOWNLOAD_TIMEOUT: '120'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+
+jobs:
+  donor:
+    name: Real Qwen values and fresh unseen worlds
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Validate source and synthetic heldout
+        run: |
+          python3 -m py_compile experiments/memplant/postcards/prepare.py experiments/memplant/postcards/rescue.py tests/test_memplant_postcards.py
+          python3 -m unittest discover -s tests -p 'test_memplant_postcards.py' -v
+      - name: Isolated pinned CPU stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub>=0.36,<1' 'psutil>=7,<8' 'safetensors>=0.6,<1' 'numpy>=1.26,<3'
+      - name: Torch-based contract checks
+        run: python3 -m unittest discover -s tests -p 'test_memplant_postcards.py' -v
+      - name: Source-fenced genuine attention-value readbacks
+        run: |
+          mkdir -p runtime/memplant/g1b/source
+          timeout --signal=INT --kill-after=15s 12m python3 -m experiments.memplant.postcards.prepare --out runtime/memplant/g1b/source
+      - name: Retain all synthetic sources and V state evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-g1b-source-a${{ github.run_attempt }}
+          path: runtime/memplant/g1b/source
+          if-no-files-found: warn
+          retention-days: 30
+
+  postcard:
+    name: Frozen 1.7B native-prefix compiler and source-aware postcard
+    needs: donor
+    runs-on: ubuntu-24.04
+    timeout-minutes: 29
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned frozen recipient stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub>=0.36,<1' 'psutil>=7,<8' 'safetensors>=0.6,<1' 'numpy>=1.26,<3'
+      - name: Fetch exact-source feature artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-g1b-source-a${{ github.run_attempt }}
+          path: runtime/memplant/g1b/source
+      - name: Fit two B-native prefixes, route genuine donor values, test fresh counterfactual worlds
+        run: |
+          mkdir -p runtime/memplant/g1b/experiment
+          timeout --signal=INT --kill-after=15s 22m python3 -m experiments.memplant.postcards.rescue \
+            --source runtime/memplant/g1b/source \
+            --out runtime/memplant/g1b/experiment
+      - name: Print evidence (no automatic success claims)
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('runtime/memplant/g1b/experiment/report.json')
+          if p.exists():
+              r=json.loads(p.read_text())
+              print('status',r.get('status'),'error',r.get('error'))
+              print('fresh source readout',(r.get('ridge') or {}).get('split_accuracy',{}).get('fresh_test'))
+              print('receiver conditions',(r.get('fresh_test') or {}).get('conditions'))
+              print('raw postcards',(r.get('raw_postcards') or {}).get('n'))
+          else:
+              print('NO RESULT: process terminated before report',flush=True)
+          PY
+      - name: Archive raw failures and success without selection
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-g1b-postcards-a${{ github.run_attempt }}
+          path: runtime/memplant/g1b/experiment
+          if-no-files-found: warn
+          retention-days: 30
