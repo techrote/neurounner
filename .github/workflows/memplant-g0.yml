@@ -1,0 +1,113 @@
+name: MEMPLANT DREAMGRAFT G0 real-model qualification
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/memplant-g0.yml'
+      - 'experiments/memplant/dreamgraft001/**'
+      - 'tests/test_memplant_g0.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: memplant-g0-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+  HF_HUB_DOWNLOAD_TIMEOUT: '120'
+
+jobs:
+  offline:
+    name: Source and contract guards (no downloads)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Source syntax and independent contract tests
+        run: |
+          python3 -m py_compile \
+            experiments/memplant/dreamgraft001/contract.py \
+            experiments/memplant/dreamgraft001/bridge.py \
+            experiments/memplant/dreamgraft001/g0_live.py \
+            tests/test_memplant_g0.py
+          python3 -m unittest discover -s tests -p 'test_memplant_g0.py' -v
+      - name: Assert G0-only model-free preflight
+        run: |
+          python3 - <<'PY'
+          from experiments.memplant.dreamgraft001.contract import metadata, ensure_no_source_in_query
+          ensure_no_source_in_query()
+          assert len(metadata()) == 3
+          print('G0 source/privacy fixtures valid; no model executed in offline job')
+          PY
+
+  native_cpu:
+    name: Actual donor KV and frozen recipient soft-prefix G0
+    needs: offline
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install isolated pinned CPU inference/training stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check \
+            'transformers==4.57.6' 'huggingface_hub>=0.36,<1' \
+            'psutil>=7,<8' 'safetensors>=0.6,<1'
+          python3 - <<'PY'
+          import torch, transformers, huggingface_hub, psutil
+          print('Runtime', torch.__version__, transformers.__version__, huggingface_hub.__version__, psutil.__version__)
+          PY
+      - name: Verify real PyTorch gradient/cache fixtures
+        run: python3 -m unittest discover -s tests -p 'test_memplant_g0.py' -v
+      - name: G0 bounded native real-model investigation
+        run: |
+          mkdir -p runtime/memplant/g0
+          timeout --signal=INT --kill-after=15s 19m python3 -m experiments.memplant.dreamgraft001.g0_live --out runtime/memplant/g0/report.json
+      - name: Render human-readable evidence summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('runtime/memplant/g0/report.json')
+          out=Path('runtime/memplant/g0/SUMMARY.md')
+          if not p.exists():
+              out.parent.mkdir(parents=True, exist_ok=True)
+              out.write_text('# G0 evidence unavailable\n\nNative process exited before report write. Inspect logs.\n')
+          else:
+              r=json.loads(p.read_text())
+              lines=['# DREAMGRAFT-001 G0 native evidence',
+                     '',f"Schema: {r.get('schema')}",
+                     f"Status: {r.get('qualifications',{}).get('g0_instrumentation','NOT_REACHED')}",
+                     f"Donor: {r.get('donor',{}).get('revision','NOT_REACHED')}",
+                     f"Recipient: {r.get('receiver',{}).get('revision','NOT_REACHED')}",
+                     f"Real source cache probes: {len(r.get('source_cache',[]))}",
+                     f"Native-prefix oracle: {r.get('native_prefix_oracle',{}).get('status','NOT_REACHED')}",
+                     f"Full-text task oracle: {r.get('task_capability_oracle',{}).get('status','NOT_REACHED')}",
+                     f"Five-step adapter probes: {len(r.get('adapter_five_step',{}).get('steps',[]))}",
+                     f"Raw postcards: {r.get('creative_postcards',{}).get('count',0)}",
+                     '', 'Not proof of semantic cross-model memory transfer. G1 is unexecuted.',
+                     '', 'Errors:', str(r.get('error','None'))]
+              out.write_text('\n'.join(lines)+'\n')
+          print(out.read_text())
+          PY
+      - name: Retain bounded G0 audit and creative raw records
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-dreamgraft-g0-a${{ github.run_attempt }}
+          path: runtime/memplant/g0
+          if-no-files-found: warn
+          retention-days: 30
