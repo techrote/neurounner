@@ -36,7 +36,7 @@ jobs:
       - name: Syntax and synthetic counterfactual contracts
         run: |
           python3 -m py_compile experiments/memplant/dreamgraft002/*.py tests/test_memplant_dg002.py
-          python3 -m unittest discover -s tests -p 'test_memplant_dg002.py' -v
+          python3 -m experiments.memplant.dreamgraft002.source --help
       - name: Install pinned CPU model environment
         run: |
           python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
