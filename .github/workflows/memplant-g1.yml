@@ -1,0 +1,111 @@
+name: MEMPLANT G1 frozen cross-model donor imprint and causal swap
+
+on:
+  pull_request:
+    branches: [main, research/memplant-g0-real-model-probe]
+    paths:
+      - '.github/workflows/memplant-g1.yml'
+      - 'experiments/memplant/g1/**'
+      - 'tests/test_memplant_g1.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: memplant-g1-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+  HF_HUB_DOWNLOAD_TIMEOUT: '120'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+
+jobs:
+  donor_features:
+    name: Qwen actual KV/embedding/hidden source extraction
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: No-model split/security and Python syntax tests
+        run: |
+          python3 -m py_compile experiments/memplant/g1/features.py experiments/memplant/g1/imprint.py tests/test_memplant_g1.py
+          python3 -m unittest discover -s tests -p 'test_memplant_g1.py' -v
+      - name: Install pinned CPU source stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub>=0.36,<1' 'psutil>=7,<8' 'safetensors>=0.6,<1' 'numpy>=1.26,<3'
+      - name: Test real torch projection and control helpers
+        run: python3 -m unittest discover -s tests -p 'test_memplant_g1.py' -v
+      - name: Extract REAL frozen Qwen donor context (no training)
+        run: |
+          mkdir -p runtime/memplant/g1/features
+          timeout --signal=INT --kill-after=15s 13m python3 -m experiments.memplant.g1.features --out runtime/memplant/g1/features
+      - name: Archive exact synthetic corpus and real donor features
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-g1-source-a${{ github.run_attempt }}
+          path: runtime/memplant/g1/features
+          if-no-files-found: warn
+          retention-days: 30
+
+  train_and_eval:
+    name: Frozen SmolLM2-1.7B G1 / ${{ matrix.method }}
+    needs: donor_features
+    runs-on: ubuntu-24.04
+    timeout-minutes: 29
+    strategy:
+      fail-fast: false
+      matrix:
+        method: [v, hidden, embedding]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU experiment stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'huggingface_hub>=0.36,<1' 'psutil>=7,<8' 'safetensors>=0.6,<1' 'numpy>=1.26,<3'
+      - name: Recover exact donor source array and provenance
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-g1-source-a${{ github.run_attempt }}
+          path: runtime/memplant/g1/features
+      - name: G1 real frozen 1.7B fit and paired controls
+        run: |
+          mkdir -p runtime/memplant/g1/fit/${{ matrix.method }}
+          timeout --signal=INT --kill-after=15s 22m python3 -m experiments.memplant.g1.imprint \
+            --method ${{ matrix.method }} \
+            --features runtime/memplant/g1/features \
+            --out runtime/memplant/g1/fit/${{ matrix.method }} \
+            --steps 48 --max-fit-seconds 720
+      - name: Always report whether training and evaluation were completed
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('runtime/memplant/g1/fit')
+          for p in sorted(root.glob('*/report.json')):
+              r=json.loads(p.read_text())
+              print(p, r.get('status'), "method",r.get('method'))
+              train=r.get('training') or {}
+              print('updates',train.get('updates'),'fit',train.get('fit_seconds'))
+              print('heldout', (r.get('sealed') or {}).get('conditions'))
+              print('exception',r.get('error'))
+          PY
+      - name: Archive all G1 results including negatives and trainable adapter
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-g1-${{ matrix.method }}-a${{ github.run_attempt }}
+          path: runtime/memplant/g1/fit/${{ matrix.method }}
+          if-no-files-found: warn
+          retention-days: 30
