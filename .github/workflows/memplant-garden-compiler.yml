@@ -1,0 +1,88 @@
+name: MEMPLANT Garden memory-conditioned compiler and counterfactual audit
+
+on:
+  pull_request:
+    branches: [main, research/memplant-dg002-two-rule-transplant]
+    paths:
+      - '.github/workflows/memplant-garden-compiler.yml'
+      - 'experiments/memplant/memorygarden/garden_pair_v2.py'
+      - 'experiments/memplant/memorygarden/garden_compiler.py'
+      - 'tests/test_memplant_garden_compiler.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: memplant-garden-compiler-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+
+jobs:
+  paired_compiler:
+    name: Pinned Sprocket->LFM plus audited deterministic physics constraints
+    runs-on: ubuntu-24.04
+    timeout-minutes: 27
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Check syntax, disjoint sources and memory compiler invariant tests
+        run: |
+          python3 -m py_compile \
+            experiments/memplant/memorygarden/garden_compiler.py \
+            experiments/memplant/memorygarden/garden_pair_v2.py \
+            tests/test_memplant_garden_compiler.py
+          python3 -m unittest discover -s tests -p 'test_memplant_garden_compiler.py' -v
+      - name: Install small frozen readout numerical package
+        run: python3 -m pip install --disable-pip-version-check 'numpy>=1.26,<3'
+      - name: Bootstrap the exact pinned current Sprocket and LFM GGUF
+        run: bash scripts/bootstrap.sh all
+      - name: Recover original real Qwen attention features
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-dg002-source-a1
+          repository: techrote/neurounner
+          run-id: 43736088404
+          github-token: ${{ github.token }}
+          path: runtime/memplant/garden/source
+      - name: Test actual freeform Sprocket and LFM with raw-vs-repaired physics
+        run: |
+          mkdir -p runtime/memplant/garden/compiler2
+          timeout --signal=INT --kill-after=15s 16m python3 -m experiments.memplant.memorygarden.garden_pair_v2 \
+            --source runtime/memplant/garden/source \
+            --out runtime/memplant/garden/compiler2/report.json
+      - name: Report raw LFM and repaired device results separately
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          p=Path('runtime/memplant/garden/compiler2/report.json')
+          if not p.exists():
+              print('BLOCKED: no report')
+          else:
+              r=json.loads(p.read_text())
+              print('STATUS',r.get('status'),'ERROR',r.get('error'))
+              print('CONDITIONS',r.get('summary'))
+              print('COUNTERFACTUAL',r.get('counterfactual_pair_tests'))
+              print('ATTRIBUTION',r.get('deterministic_compiler_choices_not_ascribed_to_LFM'))
+          PY
+      - name: Retain all raw LLM responses, repairs, mechanistic scores and logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-garden-compiler-a${{ github.run_attempt }}
+          path: |
+            runtime/memplant/garden/compiler2
+            logs/memplant-garden2-sprocket/**
+            logs/memplant-garden2-lfm/**
+          if-no-files-found: warn
+          retention-days: 30
