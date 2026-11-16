@@ -38,7 +38,7 @@ jobs:
       - name: Install bounded CPU dependencies
         run: |
           python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
-          python3 -m pip install --disable-pip-version-check 'numpy>=1.26,<3'
+          python3 -m pip install --disable-pip-version-check 'numpy>=1.26,<3' 'Pillow>=10,<13'
       - name: Prove exact synthetic holdout and specialist algebra
         run: |
           python3 -m py_compile experiments/memplant/factorized_game_008/experiment.py
