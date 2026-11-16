@@ -22,7 +22,7 @@ Each query has six candidate actions, a host-owned legal-action mask, and ten sy
 
 ## Trained comparisons and controls
 
-The same-capacity receiving architecture is trained independently under three source channels: **outputs + hidden activations**, **outputs only**, and **penultimate hidden activations only**. A separate **query-only blind network** receives no donor state.
+The same-capacity receiving architecture is trained independently under three source channels: **outputs + hidden activations**, **outputs only**, and **penultimate hidden activations only**. An **architecture-matched query-only blind receiver** receives identically sized zero donor-state tensors **during training and evaluation**; it has the same trainable parameter count as each source-conditioned receiver.
 
 Evaluation also checks **zeroed donor state** (an out-of-distribution intervention; not a capacity-matched baseline), **opposite-wet donor on the exact same query worlds**, and donor checkpoints from the other independent bank. The swapped-donor result is scored against the actual *counterfactual action* as well as the original ground truth; this distinguishes causal adaptation from arbitrary degradation. Predictions are always checked against the host-legal mask.
 
@@ -46,7 +46,7 @@ Two locally completed 700-update receiver trainings and twelve 230-update donor 
 | Both channels, correct **unseen-seed** donors | 69.89% | 72.78% |
 | Outputs-only receiver | 69.78% | 73.22% |
 | Hidden-only receiver | 57.56% | 72.33% |
-| Separately trained query-only blind policy | 25.67% | 29.00% |
+| Separately trained query-only blind policy | 25.11% | 29.33% |
 | Both channels, wrong wet donor | 21.56% | 13.56% |
 | Both channels, opposite-wet donor matches counterfactual gold | 69.67% | 68.44% |
 | Both channels, hidden unseen three-way rule | 52.00% | 51.11% |
