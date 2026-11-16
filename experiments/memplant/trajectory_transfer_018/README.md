@@ -34,6 +34,12 @@ Different donor slots have private feature permutations/reflections.
   exactly one neural donor law (source intervention).
 - **oracle:** independent Dijkstra-based teacher. Not a neural baseline.
 
+All three conditioned models now start with **identical neural weights**, see the
+**same sampled training minibatches** and receive the same number of updates;
+only the auxiliary targets differ. This correction followed an initial successful
+but initialization-confounded pair of CI seeds; those original immutable artifacts
+remain preserved in Actions run 43939272935, rather than being rewritten.
+
 The value estimate only influences behaviour through a jointly trained feature
 representation; **it is not an online planner**. Cross-world cost-scale variance,
 oracle policy imitation, and the IID/OOD maze + gate-timing confound remain.
