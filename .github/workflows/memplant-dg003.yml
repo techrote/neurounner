@@ -47,14 +47,16 @@ jobs:
           PY
 
   tasks:
-    name: Frozen 1.7B novel interaction ${{ matrix.task }}
+    name: Frozen 1.7B novel interaction ${{ matrix.task }} / shard ${{ matrix.shard }}
     needs: source_contract
     runs-on: ubuntu-24.04
     timeout-minutes: 29
     strategy:
       fail-fast: false
+      max-parallel: 9
       matrix:
         task: [xor, and, equal]
+        shard: [0, 1, 2]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -83,20 +85,21 @@ jobs:
           path: runtime/memplant/dg003/prefixes
       - name: Test novel mechanism and counterfactual swaps, no fitting
         run: |
-          mkdir -p runtime/memplant/dg003/${{ matrix.task }}
+          mkdir -p runtime/memplant/dg003/${{ matrix.task }}/shard-${{ matrix.shard }}
           timeout --signal=INT --kill-after=15s 23m python3 -m experiments.memplant.dreamgraft003.interactions \
             --task '${{ matrix.task }}' \
+            --shard '${{ matrix.shard }}' \
             --source runtime/memplant/dg003/source \
             --checkpoint runtime/memplant/dg003/prefixes \
-            --out runtime/memplant/dg003/${{ matrix.task }} \
-            ${{ matrix.task == 'xor' && '--creative' || '' }}
+            --out runtime/memplant/dg003/${{ matrix.task }}/shard-${{ matrix.shard }} \
+            ${{ matrix.task == 'xor' && matrix.shard == 0 && '--creative' || '' }}
       - name: Print raw controls without converting CI pass to science claim
         if: always()
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import json
-          for p in Path('runtime/memplant/dg003').glob('*/report.json'):
+          for p in Path('runtime/memplant/dg003').rglob('report.json'):
               r=json.loads(p.read_text())
               a=r.get('evaluation',{})
               print('TASK',r.get('task'),'STATUS',r.get('status'),'ERROR',r.get('error'))
@@ -107,8 +110,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: memplant-dg003-${{ matrix.task }}-a${{ github.run_attempt }}
-          path: runtime/memplant/dg003/${{ matrix.task }}
+          name: memplant-dg003-${{ matrix.task }}-s${{ matrix.shard }}-a${{ github.run_attempt }}
+          path: runtime/memplant/dg003/${{ matrix.task }}/shard-${{ matrix.shard }}
           if-no-files-found: warn
           retention-days: 30
 
@@ -124,39 +127,78 @@ jobs:
           pattern: memplant-dg003-*-a${{ github.run_attempt }}
           path: evidence
           merge-multiple: false
-      - name: Summarize raw outcomes and their limits
+      - name: Assemble complete original 24-case protocol and preserve negative result
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import json
-          reports=sorted(Path('evidence').glob('*/report.json'))
-          lines=['# DG003 frozen novel causal interaction audit','',
-                 'Model weights, two-output ridge and recipient-native prefixes **unchanged**.',
-                 'Previously unused tasks: XOR, AND, agreement. Reused DG002 source corpus;',
-                 'not new source-world confirmation.','',
-                 '| Task | Real V | True-class prefix | Explicit law text | No prefix | Heat intervention | Vibration intervention |',
-                 '| --- | ---: | ---: | ---: | ---: | ---: | ---: |']
-          for p in reports:
-              r=json.loads(p.read_text())
-              a=r.get('evaluation') or {}
-              c=a.get('conditions') or {}
-              edits=a.get('causal_interventions') or {}
-              fmt=lambda key: str(c.get(key,{}).get('correct','—'))+'/'+str(c.get(key,{}).get('n','—'))
-              edit=lambda key: str(edits.get(key,{}).get('correct_intervention_direction','—'))+'/'+str(edits.get(key,{}).get('n','—'))
-              lines.append(f"| {r.get('task')} ({r.get('status')}) | {fmt('real_v')} | {fmt('oracle_prefix')} | {fmt('text_facts')} | {fmt('no_prefix')} | {edit('heat_swap')} | {edit('vibration_swap')} |")
-          if not reports:lines.append('| BLOCKED: no completed task reports | — | — | — | — | — | — |')
-          lines+=['','**Interpretation:** Successful CI establishes execution, not interaction inference.',
-                  'Require correct new consequences, adequate B oracle, and intervention directionality.',
-                  'All raw cases and rejection controls are kept in their respective JSON artifacts.',
-                  'No native KV transplant, latent-only surgery, or model-neutral memory implied.']
-          Path('interaction-summary.md').write_text('\n'.join(lines)+'\n')
+          reports=[json.loads(p.read_text()) for p in sorted(Path('evidence').glob('*/report.json'))]
+          by_task={}
+          for r in reports:
+              key=r.get('task')
+              if key not in ('xor','and','equal') or r.get('shard') not in (0,1,2):
+                  raise SystemExit('Invalid task/shard report')
+              if r.get('status')!='COMPLETED_FROZEN_EXPLORATORY':
+                  raise SystemExit('Incomplete task '+str(key))
+              by_task.setdefault(key,[]).append(r)
+          summary={'schema':'memplant-dg003-full-24-cases-v1','complete':False,
+                   'tasks':{},'raw_report_count':len(reports)}
+          for task in ('xor','and','equal'):
+              group=by_task.get(task,[])
+              if sorted(r['shard'] for r in group)!=[0,1,2]:
+                  summary['tasks'][task]={'status':'MISSING_SHARD'}
+                  continue
+              gathered=set()
+              conditions={}
+              interventions={}
+              for r in group:
+                  gathered.update(r['screening']['families'])
+                  for name,counts in r['evaluation']['conditions'].items():
+                      c=conditions.setdefault(name,{'n':0,'correct':0})
+                      c['n']+=counts['n']
+                      c['correct']+=counts['correct']
+                  for name,counts in r['evaluation']['causal_interventions'].items():
+                      c=interventions.setdefault(name,{'n':0,'correct_intervention_direction':0,
+                                                       'expected_flips':0,'observed_flips':0})
+                      for k in c:
+                          c[k]+=counts[k]
+              summary['tasks'][task]={
+                  'status':'COMPLETED_FULL_REUSED_WORLD_SCREEN',
+                  'independent_source_families':len(gathered),
+                  'conditions':conditions,'interventions':interventions}
+          summary['complete']=len(reports)==9 and all(
+              x.get('independent_source_families')==6 and
+              x['conditions']['real_v']['n']==24
+              for x in summary['tasks'].values()) and len(summary['tasks'])==3
+          Path('interaction-summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+          md=['# DREAMGRAFT-003 full 24-case frozen novel-interaction readout','',
+              'No new training. 6 reused source families per task. All controls and',
+              'source-specific intervention scores retained in nine raw artifacts.','',
+              '| Task | Real donor | True-class prefix | Explicit facts | No prefix | Heat interventions | Vibration interventions |',
+              '| --- | ---: | ---: | ---: | ---: | ---: | ---: |']
+          for task,x in summary['tasks'].items():
+              if 'conditions' not in x: continue
+              c=x['conditions']; e=x['interventions']
+              f=lambda k: str(c[k]['correct'])+'/'+str(c[k]['n'])
+              g=lambda k: str(e[k]['correct_intervention_direction'])+'/'+str(e[k]['n'])
+              md.append('| '+task+' | '+f('real_v')+' | '+f('oracle_prefix')+
+                        ' | '+f('text_facts')+' | '+f('no_prefix')+' | '+
+                        g('heat_swap')+' | '+g('vibration_swap')+' |')
+          md+=['','Complete: '+str(summary['complete']),
+               'No claim of general causal reasoning unless both capability oracles',
+               'and source-specific interventions support it.']
+          Path('interaction-summary.md').write_text('\n'.join(md)+'\n')
           print(Path('interaction-summary.md').read_text())
+          if not summary['complete']:
+              raise SystemExit('Full three-task, 24-case qualification incomplete')
           PY
       - name: Retain research summary
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: memplant-dg003-study-summary-a${{ github.run_attempt }}
-          path: interaction-summary.md
+          path: |
+            interaction-summary.md
+            interaction-summary.json
           if-no-files-found: warn
           retention-days: 30
