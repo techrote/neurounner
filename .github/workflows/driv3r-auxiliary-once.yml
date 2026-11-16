@@ -1,0 +1,28 @@
+name: One-shot DRIV3R auxiliary source relocation
+on:
+  push:
+    branches:
+      - research/driv3r-consolidation-2026-11-16
+permissions:
+  contents: write
+concurrency:
+  group: one-shot-driv3r-auxiliary
+  cancel-in-progress: false
+jobs:
+  relocate-auxiliary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy and verify auxiliary model research Git blobs
+        run: python3 scripts/migrate_cybersand_auxiliary.py
+      - name: Python syntax qualification
+        run: python3 -m compileall -q experiments/agent_painter/lanes experiments/agent_painter/worm/support_lfm experiments/agent_painter/worm/support_sprocket experiments/driv3r/wormbrain/fleet
+      - name: Commit research only and remove migration workflow
+        run: |
+          git config user.name 'research-migration[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- experiments/agent_painter/lanes experiments/agent_painter/worm/support_lfm experiments/agent_painter/worm/support_sprocket experiments/driv3r/wormbrain/fleet docs/driv3r-migration/AUXILIARY_MANIFEST.json
+          git rm -f .github/workflows/driv3r-auxiliary-once.yml
+          git commit -m 'research: preserve auxiliary CyberSand painter and worm labs'
+          git push origin HEAD:refs/heads/research/driv3r-consolidation-2026-11-16
