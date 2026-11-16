@@ -476,6 +476,8 @@ def eval_active_probes(models,bank,ranker,seed,cases):
     return results,selection_hashes,trajectory_source
 
 
+from collections import deque
+
 class SyntheticGameRollout:
     """Stateful grid: blocked cells, wetness, protected cells, history and paint."""
     def __init__(self,seed,side=13):
@@ -528,6 +530,23 @@ class SyntheticGameRollout:
                 self.path.pop();self.x,self.y=self.path[-1]
         if (self.x,self.y)==self.goal:self.hits+=1
 
+    def planner_action(self):
+        # Independent reachability ceiling: shortest legal route across static walls.
+        start=(self.x,self.y)
+        if start==self.goal:return None
+        directions=((-1,0),(1,0),(0,-1),(0,1))
+        queue=deque([(start,None)]);seen={start}
+        while queue:
+            at,first=queue.popleft()
+            for action,(dx,dy) in enumerate(directions):
+                nx,ny=at[0]+dx,at[1]+dy
+                neighbor=(nx,ny)
+                if not (0<=nx<self.side and 0<=ny<self.side) or self.walls[ny,nx] or neighbor in seen:continue
+                first_action=action if first is None else first
+                if neighbor==self.goal:return first_action
+                seen.add(neighbor);queue.append((neighbor,first_action))
+        return None
+
     def metrics(self):
         return dict(unique_visited=len(self.visits),painted=len(self.painted),
                     travel=self.travel,retrace=self.retrace,loops=self.loops,
@@ -536,18 +555,21 @@ class SyntheticGameRollout:
 
 def evaluate_trajectories(receiver,sources,seed,steps=72,world_count=18):
     summary={};records=[]
-    for mode,source in sources.items():
+    for mode,source in list(sources.items())+[('authored_expert',None),('goal_planner',None)]:
         values=[]
         for i in range(world_count):
             env=SyntheticGameRollout(seed+31000+i*73)
             laws=tuple(int(q) for q in np.random.default_rng(seed+5200+i).choice([-1,1],3))
-            src=assembled_source(torch.tensor([laws]),source)
+            src=assembled_source(torch.tensor([laws]),source) if source is not None else None
             trace=[]
             for t in range(steps):
                 x,legal=env.observe()
                 with torch.no_grad():
-                    action=int(receiver(torch.from_numpy(x[None]),
-                        torch.from_numpy(legal[None]),src).argmax(-1)[0])
+                    action=env.planner_action() if mode=='goal_planner' else None
+                    if action is None:
+                        action=(int(scores(x,legal,laws).argmax()) if src is None else
+                          int(receiver(torch.from_numpy(x[None]),
+                            torch.from_numpy(legal[None]),src).argmax(-1)[0]))
                 if not legal[action]:raise AssertionError('illegal game action emitted')
                 env.step(action)
                 if i<2:trace.append(dict(t=t,action=ACTIONS[action],position=[env.x,env.y]))
