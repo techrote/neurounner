@@ -70,7 +70,7 @@ def evaluate(predict,features,rows,split,delta_h,delta_v,rng):
         changed=predict(applied)
         random_delta=rng.normal(size=delta.shape)
         random_delta*=np.linalg.norm(delta)/(np.linalg.norm(random_delta)+1e-15)
-        wrong_delta=delta_v if axis=="heat" else delta_h
+        wrong_delta=(delta_v if axis=="heat" else delta_h).copy()
         wrong_delta*=np.linalg.norm(delta)/(np.linalg.norm(wrong_delta)+1e-15)
         def metrics(scores):
             signs=np.where(scores>=0,1,-1)
