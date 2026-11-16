@@ -1,0 +1,63 @@
+name: DREAMGRAFT DG015 material regret and recovery
+on:
+  pull_request:
+    branches: [research/memplant-dg014-trajectory-20261116]
+    paths:
+      - '.github/workflows/memplant-trajectory-transfer-015.yml'
+      - 'experiments/memplant/trajectory_transfer_015/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-neural-inheritance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [26011626, 26011627]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU tools
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy==1.26.4'
+      - name: Syntax and dynamic-world selftests
+        run: |
+          python3 -m py_compile experiments/memplant/trajectory_transfer_015/experiment.py
+          python3 -m experiments.memplant.trajectory_transfer_015.experiment --selftest
+      - name: Train donor models and two receivers and evaluate 100 sealed worlds
+        run: |
+          OUT=runtime/memplant/dg015/${{ matrix.seed }}
+          mkdir -p "$OUT"
+          sha256sum experiments/memplant/trajectory_transfer_015/experiment.py > "$OUT/source.sha256"
+          timeout --signal=INT --kill-after=15s 26m python3 -m experiments.memplant.trajectory_transfer_015.experiment \
+            --seed ${{ matrix.seed }} --train-worlds 500 --updates 850 --sealed 100 \
+            --horizon 64 --donor-steps 140 --out "$OUT"
+      - name: Check hashes and boundaries
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          p=pathlib.Path('runtime/memplant/dg015/${{ matrix.seed }}')
+          hashes=json.loads((p/'sha256.json').read_text())
+          for filename, digest in hashes.items():
+              assert hashlib.sha256((p/filename).read_bytes()).hexdigest()==digest,filename
+          r=json.loads((p/'report.json').read_text())
+          assert r['train_sealed_seed_overlap']==0
+          assert r['no_graph_distance_features'] and r['dynamic_gate']
+          assert r['sealed_worlds']==100
+          assert all(v['illegal']==0 for v in r['trajectories'].values())
+          assert len(hashes)>=18
+          print('Verified',r['seed'],len(hashes),'hashes',r['trajectories'])
+          PY
+      - name: Retain genuine checkpoints and SHA manifests
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg015-${{ matrix.seed }}
+          path: runtime/memplant/dg015/${{ matrix.seed }}
+          if-no-files-found: warn
+          retention-days: 30
