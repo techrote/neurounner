@@ -51,7 +51,7 @@ def make_world(seed):
     for id_, name in ((1, "start"), (2, "goal"), (3, "alternate"), (4, "gate")):
         y, x = np.argwhere(markers == id_)[0]
         out[name] = (int(x), int(y))
-        protected[y, x] = False
+        out["protected"][y, x] = False
     return out
 
 
