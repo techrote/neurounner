@@ -1,0 +1,55 @@
+name: DREAMGRAFT DG013 active neural donor interrogation
+on:
+  pull_request:
+    branches: [research/memplant-dg012-semantic-scramble-20261116]
+    paths:
+      - '.github/workflows/memplant-active-interrogation-013.yml'
+      - 'experiments/memplant/active_interrogation_013/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dg013-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  OMP_NUM_THREADS: '2'
+  MKL_NUM_THREADS: '2'
+jobs:
+  active-donor-game-policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [26011620, 26011621]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU training dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy>=1.26,<3'
+      - name: Check syntax and invariants
+        run: |
+          python3 -m py_compile experiments/memplant/active_interrogation_013/experiment.py
+          python3 -m experiments.memplant.active_interrogation_013.experiment --selftest
+      - name: Train DG012 donors and receiver, then new adaptive ranker and 72-decision trajectories
+        run: |
+          OUT=runtime/memplant/dg013/${{ matrix.seed }}
+          mkdir -p "$OUT"
+          sha256sum experiments/memplant/active_interrogation_013/experiment.py > "$OUT/source.sha256"
+          timeout --signal=INT --kill-after=20s 38m python3 -m experiments.memplant.active_interrogation_013.experiment \
+            --seed ${{ matrix.seed }} --donor-steps 220 --receiver-steps 900 \
+            --train-cases 5200 --sealed-cases 900 --ranker-steps 450 \
+            --trajectory-steps 72 --worlds 18 --out "$OUT"
+      - name: Preserve trained parent networks, original ranker, trajectories and SHA-256 identities
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg013-${{ matrix.seed }}-a${{ github.run_attempt }}
+          path: runtime/memplant/dg013/${{ matrix.seed }}
+          retention-days: 30
+          if-no-files-found: warn
