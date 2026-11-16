@@ -53,9 +53,11 @@ jobs:
           assert report['train_test_seed_overlap']==0
           assert report['source_neural_outputs'] and report['source_hidden_permutation']
           assert report['input_channels']==13
-          assert report['rounds']==2 and len(report['correction_log'])==4
+          assert report['budget_matched_bc']
+          assert report['guarded_corrective_fraction']==32/192
+          assert report['rounds']==2 and len(report['correction_log'])==8
           assert all(log['labels']>0 for log in report['correction_log'])
-          assert report['donors']==12 and report['receiver_models']==5
+          assert report['donors']==12 and report['receiver_models']==8
           for family in ('iid','ood'):
               data=report['results'][family]
               assert data['trajectories']['oracle']['success']==100
