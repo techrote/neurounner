@@ -11,8 +11,6 @@ import json
 from pathlib import Path
 
 from experiments.memplant.dreamgraft002.source import DONOR, DONOR_REV
-from experiments.memplant.dreamgraft001.bridge import source_fingerprint
-from experiments.memplant.dreamgraft001.g0_live import load_pinned
 from experiments.memplant.dreamgraft002.source import save_json
 
 NAMES = (
@@ -72,6 +70,8 @@ def cases():
 def extract(directory):
     import torch
     import numpy as np
+    from experiments.memplant.dreamgraft001.bridge import source_fingerprint
+    from experiments.memplant.dreamgraft001.g0_live import load_pinned
     torch.set_num_threads(min(4,torch.get_num_threads()))
     root=Path(directory)
     root.mkdir(parents=True,exist_ok=True)
