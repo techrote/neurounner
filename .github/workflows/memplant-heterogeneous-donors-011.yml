@@ -1,0 +1,55 @@
+name: DREAMGRAFT DG011 heterogeneous neural donor generalisation
+on:
+  pull_request:
+    branches: [research/memplant-dg010-neural-donor-composition-20261116]
+    paths:
+      - '.github/workflows/memplant-heterogeneous-donors-011.yml'
+      - 'experiments/memplant/neural_donors_011/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dg011-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  OMP_NUM_THREADS: '2'
+  MKL_NUM_THREADS: '2'
+jobs:
+  hetero-donor-train:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [26011618, 26011619]
+        method: [intervention, raw]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install CPU-only training dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy>=1.26,<3'
+      - name: Validate withheld-law, donor architecture and permutation invariance
+        run: |
+          python3 -m py_compile experiments/memplant/neural_donors_011/experiment.py
+          python3 -m experiments.memplant.neural_donors_011.experiment --selftest
+      - name: Train 18 neural donor specialists plus receiver and blind control
+        run: |
+          OUT=runtime/memplant/dg011/${{ matrix.method }}-${{ matrix.seed }}
+          mkdir -p "$OUT"
+          sha256sum experiments/memplant/neural_donors_011/experiment.py experiments/memplant/neural_donors_010/experiment.py > "$OUT/source.sha256"
+          timeout --signal=INT --kill-after=20s 18m python3 -m experiments.memplant.neural_donors_011.experiment \
+            --out "$OUT" --seed ${{ matrix.seed }} --signature-mode ${{ matrix.method }} \
+            --donor-steps 220 --receiver-steps 750 --train-cases 5200 --sealed-cases 900
+      - name: Preserve original trained weights, decisions, metrics and provenance
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg011-${{ matrix.method }}-${{ matrix.seed }}-a${{ github.run_attempt }}
+          path: runtime/memplant/dg011/${{ matrix.method }}-${{ matrix.seed }}
+          retention-days: 30
+          if-no-files-found: warn
