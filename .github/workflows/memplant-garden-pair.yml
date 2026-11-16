@@ -1,0 +1,83 @@
+name: MEMPLANT Garden two-agent Sprocket and LFM experiment
+
+on:
+  pull_request:
+    branches: [main, research/memplant-dg002-two-rule-transplant]
+    paths:
+      - '.github/workflows/memplant-garden-pair.yml'
+      - 'experiments/memplant/memorygarden/garden_pair.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: memplant-garden-pair-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+
+jobs:
+  paired_models:
+    name: Frozen Qwen V postcard -> Sprocket creative seed -> LFM compiler -> deterministic garden
+    runs-on: ubuntu-24.04
+    timeout-minutes: 27
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Offline Python syntax and simulator regression tests
+        run: |
+          python3 -m py_compile experiments/memplant/memorygarden/garden_pair.py
+          python3 -m unittest discover -s tests -p test_memplant_garden.py -v
+      - name: Install minimal numeric source decoder
+        run: python3 -m pip install --disable-pip-version-check 'numpy>=1.26,<3'
+      - name: Download current exact pinned Sprocket and LFM GGUF models
+        run: bash scripts/bootstrap.sh all
+      - name: Recover original real-Qwen DG002 donor-state features
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-dg002-source-a1
+          repository: techrote/neurounner
+          run-id: 43736088404
+          github-token: ${{ github.token }}
+          path: runtime/memplant/garden/source
+      - name: Execute both current neurounner subjects, compare all four evidence conditions
+        run: |
+          mkdir -p runtime/memplant/garden/paired
+          timeout --signal=INT --kill-after=15s 15m python3 -m experiments.memplant.memorygarden.garden_pair \
+            --source runtime/memplant/garden/source \
+            --out runtime/memplant/garden/paired/paired.json
+      - name: Report actual invention validity and functional world outcomes
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          p=Path('runtime/memplant/garden/paired/paired.json')
+          if not p.exists():
+              print('BLOCKED: no paired experiment result')
+          else:
+              r=json.loads(p.read_text())
+              print('MODEL PAIR',r.get('model_files'))
+              print('CONDITIONS',r.get('summary'))
+              print('ERROR',r.get('error'))
+              print('SOURCE METHOD',r.get('experimental_channel'))
+          PY
+      - name: Retain all unedited raw model results and server logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-garden-paired-a${{ github.run_attempt }}
+          path: |
+            runtime/memplant/garden/paired
+            logs/memplant-sprocket-seed/**
+            logs/memplant-lfm-compiler/**
+          if-no-files-found: warn
+          retention-days: 30

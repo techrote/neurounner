@@ -1,0 +1,176 @@
+name: MEMPLANT fresh-world Counterfactual Allele replication
+
+on:
+  pull_request:
+    branches: [main, research/memplant-dg002-two-rule-transplant]
+    paths:
+      - '.github/workflows/memplant-allele-fresh.yml'
+      - 'experiments/memplant/memorygarden/fresh_allele_source.py'
+      - 'experiments/memplant/memorygarden/fresh_allele_receiver.py'
+      - 'tests/test_memplant_allele_fresh.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: memplant-allele-fresh-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  HF_HUB_DISABLE_TELEMETRY: '1'
+  TOKENIZERS_PARALLELISM: 'false'
+  HF_HUB_DOWNLOAD_TIMEOUT: '120'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+
+jobs:
+  fresh_sources:
+    name: Eight completely new factorial world families, real Qwen K/V
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Source syntax and new-world separation test
+        run: |
+          python3 -m py_compile experiments/memplant/memorygarden/fresh_allele_source.py \
+            experiments/memplant/memorygarden/fresh_allele_receiver.py \
+            tests/test_memplant_allele_fresh.py
+          python3 -m unittest discover -s tests -p 'test_memplant_allele_fresh.py' -v
+      - name: Install isolated pinned Qwen CPU stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check \
+            'transformers==4.57.6' 'huggingface_hub>=0.36,<1' 'psutil>=7,<8' \
+            'safetensors>=0.6,<1' 'numpy>=1.26,<3'
+      - name: Real frozen donor prefill on all 32 genuinely new contexts
+        run: |
+          mkdir -p runtime/memplant/fresh-allele/source
+          timeout --signal=INT --kill-after=15s 13m python3 -m experiments.memplant.memorygarden.fresh_allele_source \
+            --out runtime/memplant/fresh-allele/source
+      - name: Retain all new source texts and complete real KV provenance
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-fresh-allele-source-a${{ github.run_attempt }}
+          path: runtime/memplant/fresh-allele/source
+          if-no-files-found: warn
+          retention-days: 30
+
+  frozen_receiver:
+    name: Frozen 1.7B new-world allele check, shard ${{ matrix.shard }}
+    needs: fresh_sources
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 29
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install exact receiver CPU stack
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check \
+            'transformers==4.57.6' 'huggingface_hub>=0.36,<1' 'psutil>=7,<8' \
+            'safetensors>=0.6,<1' 'numpy>=1.26,<3'
+      - name: Retrieve new Qwen contexts from SAME run
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-fresh-allele-source-a${{ github.run_attempt }}
+          path: runtime/memplant/fresh-allele/source
+      - name: Retrieve EXACT original DG002 train-only donor features
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-dg002-source-a1
+          repository: techrote/neurounner
+          run-id: 43736088404
+          github-token: ${{ github.token }}
+          path: runtime/memplant/fresh-allele/original
+      - name: Retrieve EXACT frozen SmolLM2 B-native prefix codebook
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-dg002-prefixes-a1
+          repository: techrote/neurounner
+          run-id: 43736088404
+          github-token: ${{ github.token }}
+          path: runtime/memplant/fresh-allele/prefixes
+      - name: Evaluate no-retraining original / edit / reencoding / negative controls
+        run: |
+          mkdir -p runtime/memplant/fresh-allele/results/shard-${{ matrix.shard }}
+          timeout --signal=INT --kill-after=15s 20m python3 -m experiments.memplant.memorygarden.fresh_allele_receiver \
+            --fresh runtime/memplant/fresh-allele/source \
+            --original runtime/memplant/fresh-allele/original \
+            --prefixes runtime/memplant/fresh-allele/prefixes \
+            --shard ${{ matrix.shard }} \
+            --out runtime/memplant/fresh-allele/results/shard-${{ matrix.shard }}/report.json
+      - name: Report measured prediction flips and literal errors
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          for p in Path('runtime/memplant/fresh-allele/results').glob('*/report.json'):
+              r=json.loads(p.read_text())
+              print('SHARD',r.get('shard'),'STATUS',r.get('status'))
+              print('COUNTS',r.get('summary'),'ERROR',r.get('error'))
+          PY
+      - name: Preserve all errors, original and counterfactual predictions
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-fresh-allele-shard-${{ matrix.shard }}-a${{ github.run_attempt }}
+          path: runtime/memplant/fresh-allele/results/shard-${{ matrix.shard }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  synthesis:
+    name: Assemble all eight independent world family results
+    needs: frozen_receiver
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: memplant-fresh-allele-shard-*-a${{ github.run_attempt }}
+          path: evidence
+          merge-multiple: false
+      - name: Produce aggregate with source-family as independence unit
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          rs=[json.loads(p.read_text()) for p in Path('evidence').glob('*/report.json')]
+          out={'schema':'memplant-fresh-allele-aggregate-v1',
+               'complete_shards':len(rs),'status_by_shard':{},
+               'counts':{},'independent_world_families':[]}
+          for r in rs:
+              out['status_by_shard'][str(r.get('shard'))]=r.get('status')
+              out['independent_world_families']+=r.get('families',[])
+              for cond,row in (r.get('summary') or {}).items():
+                  vals=out['counts'].setdefault(cond,{})
+                  for k,v in row.items():
+                      if isinstance(v,int):vals[k]=vals.get(k,0)+v
+          out['completed']=len(rs)==4 and all(
+              r.get('status')=='COMPLETE_FROZEN_FRESH_WORLD_EXPLORATORY'
+              for r in rs) and len(set(out['independent_world_families']))==8
+          Path('fresh-allele-summary.json').write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+          if not out['completed']:
+              raise SystemExit('Incomplete experiment: raw shards retained')
+          PY
+      - name: Preserve reviewer-friendly aggregate
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-fresh-allele-summary-a${{ github.run_attempt }}
+          path: fresh-allele-summary.json
+          if-no-files-found: warn
+          retention-days: 30
