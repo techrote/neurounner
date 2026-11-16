@@ -1,0 +1,69 @@
+{
+  "schema": "frankenlayers-wave14-q4-bridge-matched-geometry/1",
+  "lineage": {
+    "issue": 619,
+    "lab_pr": 640,
+    "wave13_source_sha": "735a1369ebfe1c31a54fad04259eed0b09a9c15d",
+    "wave13_success_run": 43905570049,
+    "wave13_artifacts": [
+      14248073156,
+      14246818135
+    ],
+    "model_q8_sha256": "073313d92b53b0ac8193db6e906cb3c78a98183d244b15b7b8f5426115c6738c",
+    "llama_commit": "8642541b255bfb5dc39cd351a178be09013a55d6",
+    "w0_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61"
+  },
+  "objective": "After IQ2_XS collapsed exploration/early STOP, test intermediate Q4_K_M as the geometry-sensitive NO2 rescue and as a distinct four-layer NO10/NO2 bridge. Two 36-decision x six-variant Q8-stock/Q4-stock/Q4-mutant matched geometry triads. Report all nonterminal, STOP, novelty and exposure gates without a single composite score.",
+  "quant": {
+    "target": "Q4_K_M",
+    "input": "Q8_0",
+    "allow_requantize": true,
+    "lossy_conversion": true,
+    "importance_matrix": null
+  },
+  "test_host": {
+    "seed": 2718,
+    "fixed_family": "architecture",
+    "steps_per_variant": 36,
+    "scenarios": [
+      "forward_gate",
+      "side_obstacle",
+      "distant_gate"
+    ],
+    "synthetic_obstacles_only": true,
+    "native_game": false
+  },
+  "experiments": [
+    {
+      "label": "aero4_no2_q4_causal",
+      "mode": "aero4_no2",
+      "flow": [
+        0,
+        4,
+        10,
+        20
+      ],
+      "quant": "q4_k_m",
+      "seed": 2718
+    },
+    {
+      "label": "aero4_bridge_q4_causal",
+      "mode": "aero4_bridge",
+      "flow": [
+        0,
+        2,
+        10,
+        20
+      ],
+      "quant": "q4_k_m",
+      "seed": 2718
+    }
+  ],
+  "max_parallel": 2,
+  "timeout_minutes": 95,
+  "no_game_changes": true,
+  "paid_api": false,
+  "paid_gpu": false,
+  "merge": false,
+  "ready": false
+}

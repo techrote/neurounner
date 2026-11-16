@@ -1,0 +1,47 @@
+{
+  "schema": "frankenlayers-wave11-calibrated-iq3-pilot/1",
+  "lineage": {
+    "issue": 619,
+    "lab_pr": 640,
+    "failed_wave10_source_sha": "00983a2ce544bf523b9a7df269f5d32419ee3b2d",
+    "failed_wave10_run": 43876518503,
+    "model_q8_sha256": "073313d92b53b0ac8193db6e906cb3c78a98183d244b15b7b8f5426115c6738c",
+    "llama_commit": "8642541b255bfb5dc39cd351a178be09013a55d6"
+  },
+  "objective": "Repair demonstrated IQ3_XS IQ3_XXS imatrix-required failure with actual source-built Q8 imatrix calibration; run one bounded real-model triad and retain failures, logs, checksums. Calibration seeds and prompts disjoint from held-out evaluation. No game writes.",
+  "quant": {
+    "target": "IQ3_XS",
+    "input": "Q8_0",
+    "allow_requantize": true,
+    "calibration_rows": 96,
+    "calibration_chunks": 8,
+    "calibration_seeds": [
+      101,
+      103,
+      107,
+      109
+    ],
+    "imatrix_source": "pinned Q8 stock, disjoint synthetic game prompts"
+  },
+  "experiments": [
+    {
+      "label": "aero4_no10_iq3_cal_s570",
+      "mode": "aero4_no10",
+      "flow": [
+        0,
+        2,
+        4,
+        20
+      ],
+      "quant": "iq3_xs",
+      "seed": 570
+    }
+  ],
+  "max_parallel": 1,
+  "timeout_minutes": 95,
+  "no_game_changes": true,
+  "paid_api": false,
+  "paid_gpu": false,
+  "merge": false,
+  "ready": false
+}

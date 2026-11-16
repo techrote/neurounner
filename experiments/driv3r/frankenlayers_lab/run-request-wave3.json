@@ -1,0 +1,73 @@
+{
+  "schema": "cybersand-d1-frankenlayers-lab-wave3/1",
+  "lineage": {
+    "issue": 619,
+    "phase2_pr": 626,
+    "lab_pr": 640,
+    "wave2_source_sha": "d4c9e5605776cb67741ce89302c6aac43a2770e8",
+    "wave2_run": 43797802175,
+    "llama_commit": "8642541b255bfb5dc39cd351a178be09013a55d6",
+    "model_q8_sha256": "073313d92b53b0ac8193db6e906cb3c78a98183d244b15b7b8f5426115c6738c",
+    "w0_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61"
+  },
+  "objective": "Test nonmonotonic/duplicate 4-step execution and two 5-layer ablations of AERO6. Preserve earlier wave identities; no training, no game modifications.",
+  "experiments": [
+    {
+      "label": "tailflip4",
+      "mode": "tailflip4",
+      "flow": [
+        0,
+        4,
+        20,
+        18
+      ],
+      "quant": "q8",
+      "seed": 570
+    },
+    {
+      "label": "echo4",
+      "mode": "echo4",
+      "flow": [
+        0,
+        4,
+        18,
+        4
+      ],
+      "quant": "q8",
+      "seed": 570
+    },
+    {
+      "label": "aero5_no20",
+      "mode": "aero5_no20",
+      "flow": [
+        0,
+        2,
+        4,
+        10,
+        23
+      ],
+      "quant": "q8",
+      "seed": 570
+    },
+    {
+      "label": "aero5_no23",
+      "mode": "aero5_no23",
+      "flow": [
+        0,
+        2,
+        4,
+        10,
+        20
+      ],
+      "quant": "q8",
+      "seed": 570
+    }
+  ],
+  "max_parallel": 2,
+  "timeout_minutes": 95,
+  "no_game_changes": true,
+  "paid_api": false,
+  "paid_gpu": false,
+  "merge": false,
+  "ready": false
+}

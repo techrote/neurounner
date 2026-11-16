@@ -1,0 +1,81 @@
+{
+  "schema": "frankenlayers-wave9-matched-geometry/1",
+  "lineage": {
+    "issue": 619,
+    "phase2_pr": 626,
+    "lab_pr": 640,
+    "wave8_source_sha": "e945aed597969fead1e2d765910078343fcfda5a",
+    "wave8_actions_run": 43857283673,
+    "llama_commit": "8642541b255bfb5dc39cd351a178be09013a55d6",
+    "model_q8_sha256": "073313d92b53b0ac8193db6e906cb3c78a98183d244b15b7b8f5426115c6738c",
+    "w0_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61"
+  },
+  "objective": "Test geometry-conditioned model response without family-label or seed confounding. Three 36-decision paired interventions with family=architecture and seed=2718 fixed; 216 decisions per arm; same-runner stock controls. Count observation exposure, first action divergence, early STOP, spatial novelty, unexplained nondeterministic divergences. This is synthetic game-facing research, not native gameplay or trained model.",
+  "experiment_module": "experiments.driv3r.frankenlayers_lab.counterfactual",
+  "test_host": {
+    "fixed_family": "architecture",
+    "seed": 2718,
+    "steps_per_variant": 36,
+    "scenarios": [
+      "forward_gate",
+      "side_obstacle",
+      "distant_gate"
+    ],
+    "variants": [
+      "east_open",
+      "east_blocked",
+      "north_blocked",
+      "south_blocked",
+      "far_open",
+      "far_blocked"
+    ],
+    "synthetic_obstacle_overlay_only": true,
+    "native_game": false
+  },
+  "experiments": [
+    {
+      "label": "aero4_no10_q4_causal",
+      "mode": "aero4_no10",
+      "flow": [
+        0,
+        2,
+        4,
+        20
+      ],
+      "quant": "q4_k_m",
+      "seed": 2718
+    },
+    {
+      "label": "aero5_no23_q4_causal",
+      "mode": "aero5_no23",
+      "flow": [
+        0,
+        2,
+        4,
+        10,
+        20
+      ],
+      "quant": "q4_k_m",
+      "seed": 2718
+    },
+    {
+      "label": "aero4_no2_q8_causal",
+      "mode": "aero4_no2",
+      "flow": [
+        0,
+        4,
+        10,
+        20
+      ],
+      "quant": "q8",
+      "seed": 2718
+    }
+  ],
+  "max_parallel": 2,
+  "timeout_minutes": 95,
+  "no_game_changes": true,
+  "paid_api": false,
+  "paid_gpu": false,
+  "merge": false,
+  "ready": false
+}

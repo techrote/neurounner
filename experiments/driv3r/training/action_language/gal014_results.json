@@ -1,0 +1,102 @@
+{
+  "schema": "gal-014-start-semantics/1",
+  "date": "2026-11-16",
+  "purpose": "Counterexample to unconditional START-cell painting refusal; task-level objective semantic bit, host authority unchanged",
+  "github_pr": 644,
+  "external_host_only": true,
+  "git_blob_sha1": {
+    "start_semantics.py": "5b6104c8eec6fb50bcb447d5c879fcb171eb3872",
+    "eval_sharded.py": "1b984f36fabca7c92d4ec3b770346dce2b96645b",
+    "test_start_semantics.py": "72ed95ded6fee54b43a806515cc19e8c333456dd"
+  },
+  "provenance": {
+    "frozen_base_checkpoint_sha256": "97f88f0349de134c3c430997f998a8534d1a2b62e372ba81970f85e12baf61d1",
+    "trained_adapter_checkpoint_sha256": "8c3dc507fd8db00a168bed89336768942faf8cd01b6bb611160cae0f07958761",
+    "source_sha256": {
+      "start_semantics.py": "8dfae8a882840b5fad7f9c6e50c6dd523bbc5ae5b597db5ef267e910a5f62a58",
+      "eval_sharded.py": "325915966463f10a08a62f94d894ab0aabf052b7cd0c67f581ca69013d832bd7",
+      "test_start_semantics.py": "4e48cde905e7e04858d358e94846a4168bbadb071aa81b88efa3e364546d0068"
+    },
+    "conversation_evidence_zip_sha256": "50a5b83fdc5289091d6df7e10bdf4f59516ba739714f1262b0b8a34678344fec",
+    "checkpoint_in_git": false,
+    "immutable_actions_artifact_published": false
+  },
+  "training": {
+    "worlds": 80,
+    "gradient_updates": 2212,
+    "seed_range": [
+      2030000,
+      2030079
+    ],
+    "topologies": [
+      "path",
+      "tree"
+    ],
+    "method": "frozen 23-feature GAL011 base plus 3 trained cross-entropy imitation adapter weights",
+    "final_adapter_weights": [
+      -0.3558418300501335,
+      0.3726864314273257,
+      -0.7285282614774589
+    ]
+  },
+  "evaluation": {
+    "seed_range": [
+      2130000,
+      2130031
+    ],
+    "matched_seed_worlds_per_objective": 32,
+    "objectives": [
+      "START not in target (32 cell strict ink budget)",
+      "START in target (33 cell strict ink budget)"
+    ],
+    "episodes": 384,
+    "independently_replayed_host_receipts": 12626,
+    "models": {
+      "frozen_greedy_unguarded": {
+        "start_not_goal_completions": 17,
+        "start_is_goal_completions": 32
+      },
+      "frozen_greedy_unconditional_start_guard": {
+        "start_not_goal_completions": 32,
+        "start_is_goal_completions": 0
+      },
+      "frozen_greedy_conditional_start_guard": {
+        "start_not_goal_completions": 32,
+        "start_is_goal_completions": 32
+      },
+      "trained_adapter_greedy_conditional_guard": {
+        "start_not_goal_completions": 32,
+        "start_is_goal_completions": 32
+      },
+      "trained_adapter_sampled_conditional_guard": {
+        "start_not_goal_completions": 27,
+        "start_is_goal_completions": 22
+      },
+      "observation_limited_teacher": {
+        "start_not_goal_completions": 32,
+        "start_is_goal_completions": 32
+      }
+    }
+  },
+  "tests": {
+    "dedicated_local_tests_passed": 8,
+    "dedicated_local_tests_total": 8,
+    "checkpoints_deterministic_small_training": true,
+    "host_protected_changes": 0,
+    "native_game_changes": 0
+  },
+  "conclusions": [
+    "Unconditional refusal to paint START is unsafe as a general policy when the objective requires painting START; 0/32 included-goal tasks versus 32/32 when task-conditional.",
+    "Conditional guard gives 32/32 completion in both task semantics with frozen greedy weights on these narrow synthetic corridors.",
+    "Genuinely trained adapter made no additional greedy completion gain beyond frozen conditional guard; negative result retained.",
+    "Stochastic adapter retained failures: 27/32 START-excluded and 22/32 START-included; deterministic decoding is a material confound.",
+    "The policy receives a public START-objective bit, not a privileged goal map. A precise host-provided task semantic is therefore required before applying such conditional filters."
+  ],
+  "limitations": [
+    "Only path/tree synthetic corridors, 32 or 33 cells, strict ink budget; no comb/deep_tree transfer",
+    "No native Godot or Workbench evidence",
+    "No resident SLM/LoRA inference or latency measurement",
+    "Original checkpoint and full receipt/gallery archive not yet hosted as immutable Actions artifact",
+    "Draft/HOLD, no merge or Ready"
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schema": "frankenlayers-wave15-q4-reorder-and-echo-matched-geometry/1",
+  "lineage": {
+    "issue": 619,
+    "lab_pr": 640,
+    "wave14_source_sha": "00f12efcb6cd9a53b77ef381d2d512487cef0bc6",
+    "wave14_success_run": 43916995562,
+    "wave14_artifacts": [
+      14256180124,
+      14255401097
+    ],
+    "model_q8_sha256": "073313d92b53b0ac8193db6e906cb3c78a98183d244b15b7b8f5426115c6738c",
+    "llama_commit": "8642541b255bfb5dc39cd351a178be09013a55d6",
+    "w0_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61"
+  },
+  "objective": "Test terminal execution-order inversion and explicit source-layer echo graft against the successful AERO4_NO2 Q4 geometry-sensitive donor. Both models retain the same 4 unique attention/conv source layers as the donor; no new training, no general-language objective. Q8-stock, Q4-stock and Q4-mutant share the same runner. Six matched obstacle counterfactuals, 36 decisions each, preserve failure/STOP and originality evidence. Compare against Wave 14 on a separate runner; no direct latency fairness claims across waves.",
+  "quant": {
+    "target": "Q4_K_M",
+    "input": "Q8_0",
+    "allow_requantize": true,
+    "lossy_conversion": true,
+    "importance_matrix": null
+  },
+  "test_host": {
+    "seed": 2718,
+    "fixed_family": "architecture",
+    "steps_per_variant": 36,
+    "scenarios": [
+      "forward_gate",
+      "side_obstacle",
+      "distant_gate"
+    ],
+    "synthetic_obstacles_only": true,
+    "native_game": false
+  },
+  "experiments": [
+    {
+      "label": "aero4_no2_tailflip_q4_causal",
+      "mode": "aero4_no2_tailflip",
+      "flow": [
+        0,
+        4,
+        20,
+        10
+      ],
+      "quant": "q4_k_m",
+      "seed": 2718
+    },
+    {
+      "label": "aero5_no2_echo10_q4_causal",
+      "mode": "aero5_no2_echo10",
+      "flow": [
+        0,
+        4,
+        10,
+        20,
+        10
+      ],
+      "quant": "q4_k_m",
+      "seed": 2718
+    }
+  ],
+  "max_parallel": 2,
+  "timeout_minutes": 95,
+  "no_game_changes": true,
+  "paid_api": false,
+  "paid_gpu": false,
+  "merge": false,
+  "ready": false
+}

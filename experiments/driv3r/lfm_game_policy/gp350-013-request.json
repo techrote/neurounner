@@ -1,0 +1,60 @@
+{
+  "schema": "driv3r.lfm350.gp350013-request/1",
+  "model": "LiquidAI/LFM2.5-350M",
+  "revision": "9921cd4d82c0e3986887aa4b376f9446729ef8a3",
+  "from_weights_run": 43806503356,
+  "from_weights_artifact": 14199280586,
+  "from_weights_adapter_sha256": "436159bd6508063221d31d46f057b5fba7ee5b6f05b27edf003c54e76863898c",
+  "new_optimizer_not_exact_resume": true,
+  "steps": 48,
+  "checkpoint_steps": [
+    16,
+    32,
+    48
+  ],
+  "train_seeds": [
+    3101,
+    3102,
+    3103,
+    3104,
+    3105,
+    3106,
+    3107,
+    3108,
+    3109,
+    3110,
+    3111,
+    3112
+  ],
+  "dev_seeds": [
+    9103,
+    9119,
+    9137
+  ],
+  "eval_seeds": [
+    9503,
+    9521
+  ],
+  "sizes": [
+    32,
+    48
+  ],
+  "natural_W0_observations": true,
+  "synthetic_teacher_not_native": true,
+  "original_W0_PNGs": 60,
+  "native": false,
+  "paid_GPU": false,
+  "draft_hold": true,
+  "lease_attempt": 1,
+  "branch_legal_negative_contrasts": true,
+  "GP006_pressure_KL": true,
+  "parent_logits_not_second_model": true,
+  "optimizer_recipe": "fresh AdamW 1.2e-4, 0.60 supervised CE/paired contrast + 0.40 GP006 parent pressure KL; 48 real updates; checkpoint steps 16/32/48",
+  "evaluation": "Matched original 64-turn GP006 vs GP013 across 3 families, 32/48 sizes, 9503/9521 seeds, 36 source-W0 procedural controls, 60 PNGs; 72 geometry marker probes PLUS 48 positive/negative RETRACE probes",
+  "tolerate_negative_result": true,
+  "mission": "Train genuine frozen-full-parent LFM2.5-350M rank8 GP006 LoRA with balanced source-W0 visited-only RETRACE positives versus RETRACE-legal negative observations, sparing motif branch contrasts and GP006 pressure KL",
+  "retrace_legal_positive_negative_contrasts": true,
+  "recovery_rule": "Only prefer RETRACE when host allows it and no legal movement arm reaches an unvisited one-cell neighbor; all teacher labels are synthetic",
+  "expected_recovery_probes": 48,
+  "evaluation_acceptance": "Positive RETRACE heldout transfer, lower revisits without collapse in coverage/anticipatory pressure, no overbranching; report raw illegal preferences, host actions, probe counts, optimizer gradients, RSS and wall; negative result preserved"
+}

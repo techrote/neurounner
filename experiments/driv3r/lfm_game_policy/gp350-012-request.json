@@ -1,0 +1,64 @@
+{
+  "schema": "driv3r.lfm350.gp350012-request/1",
+  "mission": "128-turn genuinely model-controlled OOD geometry stress: GP006 versus provisional GP010-step24 on same new W0 seeds and never-trained world sizes; retain no-result and failure artifacts",
+  "model": "LiquidAI/LFM2.5-350M",
+  "revision": "9921cd4d82c0e3986887aa4b376f9446729ef8a3",
+  "W0_source_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61",
+  "W0_blob": "8979b6f0296e81051194bacc907992d38e006605",
+  "policy_stages": [
+    "gp350006",
+    "gp350010-step24"
+  ],
+  "parent_artifacts": {
+    "gp350006": {
+      "run": 43806503356,
+      "artifact": 14199280586,
+      "sha256": "436159bd6508063221d31d46f057b5fba7ee5b6f05b27edf003c54e76863898c"
+    },
+    "gp350010-step24": {
+      "run": 43854890883,
+      "artifact": 14221088357,
+      "sha256": "047b2bacb61f6f04fb359e4d9839f6c198a17ba7db6dfb451d88e48846c66430"
+    }
+  },
+  "OOD_sizes": [
+    24,
+    64
+  ],
+  "OOD_seeds": [
+    9803,
+    9821
+  ],
+  "steps_per_episode": 128,
+  "episodes_per_stage": 12,
+  "decision_budget": 3072,
+  "source_host_controls": [
+    "random",
+    "wall",
+    "fidget"
+  ],
+  "heldout_probes": "actual W0-observed random/fidget; synthetic host-legal labels; deduplicate local geometry and quantify train-state overlap",
+  "evaluation": [
+    "source-replayed original PNG",
+    "full six-logit legal mask receipts",
+    "zero host-illegal actions",
+    "novel-cell coverage per turn",
+    "two-cell pressure steering",
+    "branch-burst length",
+    "revisit contacts",
+    "early-stop",
+    "probe accuracy and raw illegal",
+    "wall time and peak RSS"
+  ],
+  "immutable_artifacts": true,
+  "optimizer_updates": 0,
+  "synthetic_W0_only": true,
+  "native": false,
+  "paid_GPU": false,
+  "vision": false,
+  "matched_d1": "NOT RUN",
+  "new_GPU_or_paid_API_spend": false,
+  "no_game_or_provider_modifications": true,
+  "draft_hold": true,
+  "no_merge": true
+}

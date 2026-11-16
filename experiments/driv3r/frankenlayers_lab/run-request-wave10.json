@@ -1,0 +1,81 @@
+{
+  "schema": "frankenlayers-wave10-lowbit-screen/1",
+  "lineage": {
+    "issue": 619,
+    "phase2_pr": 626,
+    "lab_pr": 640,
+    "wave9_source_sha": "dc33462525bda1c9c26c5eb9d6c79a19c3de21e5",
+    "wave9_actions_run": 43867417750,
+    "llama_commit": "8642541b255bfb5dc39cd351a178be09013a55d6",
+    "model_q8_sha256": "073313d92b53b0ac8193db6e906cb3c78a98183d244b15b7b8f5426115c6738c",
+    "w0_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61"
+  },
+  "objective": "Test if four-layer Q4/Q8 wormbrain survivors remain legal, nonterminal and distinctive after IQ3_XS requantisation from the immutable Q8 donor; matched same-runner Q8-stock, IQ3-stock and IQ3-mutant. First use 3x16 W0 as a bounded screen before expensive held-out IQ3. Record quantizer failure unchanged if imatrix needed. No native game and no claim of repair training.",
+  "experiment_module": "experiments.driv3r.frankenlayers_lab.infer_lowbit",
+  "test_host": {
+    "seed_family": [
+      570,
+      571
+    ],
+    "worlds": [
+      "greebles",
+      "pipework",
+      "architecture"
+    ],
+    "steps_per_world": 16,
+    "synthetic_only": true,
+    "native_game": false
+  },
+  "quant": {
+    "target": "IQ3_XS",
+    "input": "Q8_0",
+    "allow_requantize": true,
+    "imatrix": null,
+    "lossy_conversion": true
+  },
+  "experiments": [
+    {
+      "label": "aero4_no10_iq3_s570",
+      "mode": "aero4_no10",
+      "flow": [
+        0,
+        2,
+        4,
+        20
+      ],
+      "quant": "iq3_xs",
+      "seed": 570
+    },
+    {
+      "label": "aero4_no10_iq3_s571",
+      "mode": "aero4_no10",
+      "flow": [
+        0,
+        2,
+        4,
+        20
+      ],
+      "quant": "iq3_xs",
+      "seed": 571
+    },
+    {
+      "label": "aero4_no2_iq3_s570",
+      "mode": "aero4_no2",
+      "flow": [
+        0,
+        4,
+        10,
+        20
+      ],
+      "quant": "iq3_xs",
+      "seed": 570
+    }
+  ],
+  "max_parallel": 2,
+  "timeout_minutes": 95,
+  "no_game_changes": true,
+  "paid_api": false,
+  "paid_gpu": false,
+  "merge": false,
+  "ready": false
+}

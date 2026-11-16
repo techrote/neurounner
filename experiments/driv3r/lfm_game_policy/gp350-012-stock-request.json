@@ -1,0 +1,43 @@
+{
+  "schema": "driv3r.lfm350.gp350012-stock-request/1",
+  "mission": "Truly matched untuned FULL LFM350 CPU control for GP350-012; same previously unseen W0 sizes/seeds, same rich_prompt, same W0 action menus, same 128-turn budgets",
+  "model": "LiquidAI/LFM2.5-350M",
+  "revision": "9921cd4d82c0e3986887aa4b376f9446729ef8a3",
+  "policy_stages": [
+    "stock"
+  ],
+  "OOD_sizes": [
+    24,
+    64
+  ],
+  "OOD_seeds": [
+    9803,
+    9821
+  ],
+  "steps_per_episode": 128,
+  "episodes_per_stage": 12,
+  "decision_budget": 1536,
+  "checkpoint": "None; full pinned untuned pretrained weights",
+  "controls": [
+    "random",
+    "wall",
+    "fidget"
+  ],
+  "synthetic_W0_only": true,
+  "native": false,
+  "vision": false,
+  "paid_GPU": false,
+  "matched_d1": "NOT RUN",
+  "optimizer_updates": 0,
+  "original_png_expected": 48,
+  "draft_hold": true,
+  "no_merge": true,
+  "source_replayed": true,
+  "improved_comparability_over_prior_stock": "GP350009 stock 64-turn evidence was on different sizes and seeds; this run explicitly matches GP350012 OOD 128-turn geometry.",
+  "retry": {
+    "reason": "GP350-012-S first run #43903630289 failed only in frozen reference fingerprint check: unadapted full-LFM parameter names lacked PEFT base_model.model. prefix",
+    "source_repair_commit": "3e473a3920e4d747c6b823504ff22e04664ecf20",
+    "evidence_preserved_artifact_id": 14243285863,
+    "scope": "same pinned full model and same 12 OOD worlds / 128-turn source W0 protocol; no optimizer; no game edits"
+  }
+}

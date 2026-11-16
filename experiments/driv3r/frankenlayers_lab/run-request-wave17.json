@@ -1,0 +1,72 @@
+{
+  "schema": "frankenlayers-wave17-causal-shield-real-model-ablation/1",
+  "lineage": {
+    "issue": 619,
+    "lab_pr": 640,
+    "wave16_source_sha": "7834780d96830b46001934fa78b4a58eb4702b1f",
+    "wave16_success_run": 43938680776,
+    "wave16_artifact": 14265151517,
+    "wave16_archive_sha256": "5c24c6993b7800ca73fdec60b6bdf1352e758928f2a5334b08e9818d5a7cf0e8",
+    "model_q8_sha256": "073313d92b53b0ac8193db6e906cb3c78a98183d244b15b7b8f5426115c6738c",
+    "llama_commit": "8642541b255bfb5dc39cd351a178be09013a55d6",
+    "w0_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61"
+  },
+  "objective": "Test whether observation-local obstacle shielding preserves the raw NO2 Q4 mutant's geometry response while retaining reduced early STOP and increased novelty from a real 55-weight trained external residual adapter. Falsify on disjoint seed/family and matched obstacle interventions.",
+  "quant": {
+    "target": "Q4_K_M",
+    "input": "Q8_0",
+    "allow_requantize": true,
+    "lossy_conversion": true,
+    "importance_matrix": null
+  },
+  "train": {
+    "seed": 2718,
+    "family": "architecture",
+    "steps_per_variant": 36,
+    "real_model_probabilities": true,
+    "adapter_parameters": 55,
+    "epochs": 80,
+    "teacher": "local novelty and RETRACE recovery",
+    "base_model_frozen": true
+  },
+  "test_host": {
+    "seed": 4979,
+    "fixed_family": "greebles",
+    "steps_per_variant": 36,
+    "scenarios": [
+      "forward_gate",
+      "side_obstacle",
+      "distant_gate"
+    ],
+    "synthetic_obstacles_only": true,
+    "native_game": false
+  },
+  "experiments": [
+    {
+      "label": "aero4_no2_q4_causal_shield",
+      "mode": "aero4_no2",
+      "flow": [
+        0,
+        4,
+        10,
+        20
+      ],
+      "quant": "q4_k_m",
+      "seed": 4979
+    }
+  ],
+  "max_parallel": 1,
+  "timeout_minutes": 95,
+  "no_game_changes": true,
+  "paid_api": false,
+  "paid_gpu": false,
+  "merge": false,
+  "ready": false,
+  "arms": [
+    "q8_stock",
+    "q4_stock",
+    "q4_mutant_raw",
+    "q4_mutant_strong",
+    "q4_mutant_guarded"
+  ]
+}

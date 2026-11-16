@@ -1,0 +1,49 @@
+{
+  "schema": "driv3r.lfm350.gp350009-request/1",
+  "objective": "Independent checkpoint selection after GP350008 held-out synthetic teacher regression; compare original pinned full LFM350 stock, GP350006 step96, GP350008 step32 and step64; W0 actual-observation probes and source-host legal 64-turn gameplay, original PNGs; no optimizer.",
+  "model": "LiquidAI/LFM2.5-350M",
+  "revision": "9921cd4d82c0e3986887aa4b376f9446729ef8a3",
+  "parent_runs": [
+    43806503356,
+    43820731360
+  ],
+  "checkpoint_sha256": [
+    "436159bd6508063221d31d46f057b5fba7ee5b6f05b27edf003c54e76863898c",
+    "6ac60a0b9ef38c8a8ce63437dde70a5d3e27cfc195090f47c65c00eb6ea1e171",
+    "340979ffae0a0dce48be57bbd42d908f5b0c0c04399653381c1818d14dafb497"
+  ],
+  "stages": [
+    "stock",
+    "gp350006",
+    "gp350008-step32",
+    "gp350008-step64"
+  ],
+  "seeds": [
+    9503,
+    9521
+  ],
+  "sizes": [
+    32,
+    48
+  ],
+  "turns": 64,
+  "model_episodes": 48,
+  "control_episodes": 36,
+  "heldout_W0_observation_probes_per_stage": 72,
+  "original_PNGs": 84,
+  "optimizer_steps": 0,
+  "native": false,
+  "vision_conditioned": false,
+  "paid_GPU": false,
+  "draft_hold": true,
+  "d1_matched": "NOT RUN",
+  "W0_pinned_source_sha": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61",
+  "notes": "Exact model and adapters are separately hash verified. Synthetic W0 host only. Trainable weights are never modified.",
+  "retry": {
+    "attempt": 2,
+    "source_failure_run_id": 43831908764,
+    "failure_artifact_id": 14209591788,
+    "failure": "immutable evidence file collision after gp350006 stage",
+    "correction": "distinct write-once partial-summary-<stage>.json evidence; no model/adapter/eval contract changes"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "schema": "frankenlayers-wave13-calibrated-iq2-matched-geometry/1",
+  "lineage": {
+    "issue": 619,
+    "lab_pr": 640,
+    "wave12_source_sha": "408e85a5a7464c0c70e40fecf30bec081948f63b",
+    "wave12_success_run": 43895653253,
+    "wave12_artifacts": [
+      14241756780,
+      14244410809
+    ],
+    "model_q8_sha256": "073313d92b53b0ac8193db6e906cb3c78a98183d244b15b7b8f5426115c6738c",
+    "llama_commit": "8642541b255bfb5dc39cd351a178be09013a55d6",
+    "w0_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61",
+    "wave12_calibration_sha256": "7d7bcbef0371baecc838c86020c36f7cff6aa2201e2f7cc7dff5de8bccc7b6d6"
+  },
+  "objective": "First calibrated Q8 to IQ2_XS pilot on both established four-layer skeletons. Distinguish speedy fixed BRANCH/STOP attractors from observation-sensitive action divergence on six held-out obstacle interventions; use same-runner Q8-stock/IQ2-stock/IQ2-mutant. Retain all failures and exact hashes.",
+  "quant": {
+    "target": "IQ2_XS",
+    "input": "Q8_0",
+    "allow_requantize": true,
+    "imatrix_source": "pinned Q8 stock, train-only game-state prompts",
+    "calibration_rows": 96,
+    "calibration_chunks": 8,
+    "calibration_seeds": [
+      101,
+      103,
+      107,
+      109
+    ],
+    "lossy_conversion": true
+  },
+  "test_host": {
+    "seed": 2718,
+    "fixed_family": "architecture",
+    "steps_per_variant": 36,
+    "scenarios": [
+      "forward_gate",
+      "side_obstacle",
+      "distant_gate"
+    ],
+    "synthetic_obstacles_only": true,
+    "native_game": false
+  },
+  "experiments": [
+    {
+      "label": "aero4_no10_iq2_causal",
+      "mode": "aero4_no10",
+      "flow": [
+        0,
+        2,
+        4,
+        20
+      ],
+      "quant": "iq2_xs",
+      "seed": 2718
+    },
+    {
+      "label": "aero4_no2_iq2_causal",
+      "mode": "aero4_no2",
+      "flow": [
+        0,
+        4,
+        10,
+        20
+      ],
+      "quant": "iq2_xs",
+      "seed": 2718
+    }
+  ],
+  "max_parallel": 2,
+  "timeout_minutes": 95,
+  "no_game_changes": true,
+  "paid_api": false,
+  "paid_gpu": false,
+  "merge": false,
+  "ready": false
+}

@@ -1,0 +1,62 @@
+{
+  "schema": "driv3r.lfm350.gp350014-request/1",
+  "model": "LiquidAI/LFM2.5-350M",
+  "revision": "9921cd4d82c0e3986887aa4b376f9446729ef8a3",
+  "from_weights_run": 43922902766,
+  "from_weights_artifact": 14255976938,
+  "from_weights_adapter_sha256": "b7790a5fd1c8b048ff94a9ad174fd65f51b871e0c885264a22e350111934ff77",
+  "new_optimizer_not_exact_resume": true,
+  "steps": 72,
+  "checkpoint_steps": [
+    18,
+    36,
+    54,
+    72
+  ],
+  "train_seeds": [
+    3101,
+    3102,
+    3103,
+    3104,
+    3105,
+    3106,
+    3107,
+    3108,
+    3109,
+    3110,
+    3111,
+    3112
+  ],
+  "dev_seeds": [
+    9103,
+    9119,
+    9137
+  ],
+  "eval_seeds": [
+    9503,
+    9521
+  ],
+  "sizes": [
+    32,
+    48
+  ],
+  "natural_W0_observations": true,
+  "synthetic_teacher_not_native": true,
+  "original_W0_PNGs": 60,
+  "native": false,
+  "paid_GPU": false,
+  "draft_hold": true,
+  "lease_attempt": 1,
+  "branch_legal_negative_contrasts": true,
+  "parent_logits_not_second_model": true,
+  "optimizer_recipe": "Fresh AdamW 1.8e-4, margin 1.5, 0.78 CE/paired margin + 0.22 frozen GP013 pressure KL; 72 real updates; 54 recovery-positive/negative contrasts, 4 selective branch contrasts, 14 obstacle-pressure contrasts; checkpoints 18/36/54/72",
+  "evaluation": "Matched real 64-turn GP350013 step48 vs GP350014 trajectories, 3 families, 32/48 sizes, seeds 9503/9521, 36 procedural W0 controls; 60 original PNGs; 72 general and 48 balanced trapped RETRACE positive/negative held-out probes",
+  "tolerate_negative_result": true,
+  "mission": "GP350-014: focused continuation from GP350-013 step48 adapter, more recovery-balanced real W0 positive/negative contrast. Test learned RETRACE preference, legal-negative rejection, retained pressure turns and cost of recovery on distinct cells; never assert success without held-out transfer.",
+  "retrace_legal_positive_negative_contrasts": true,
+  "recovery_rule": "Only prefer RETRACE when host allows it and no legal movement arm reaches an unvisited one-cell neighbor; all teacher labels are synthetic",
+  "expected_recovery_probes": 48,
+  "evaluation_acceptance": "Not enough for loss to drop: require >1/24 heldout positive RETRACE selections versus GP013, avoid false RETRACE on 24 heldout negatives, retain obstacle anticipation, watch branching and coverage. Preserve negatives and all checkpoint hashes.",
+  "GP013_pressure_KL": true,
+  "recovers_from": "GP350-013 genuine optimizer 48/48 but 1/24 trapped-positive heldout, 0 spontaneous RETRACE in 768 on-policy decisions; parent GP013 adapter sha b7790a5f..."
+}

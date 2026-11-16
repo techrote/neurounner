@@ -1,0 +1,73 @@
+{
+  "schema": "cybersand-d1-frankenlayers-lab-wave5/1",
+  "lineage": {
+    "issue": 619,
+    "phase2_pr": 626,
+    "lab_pr": 640,
+    "wave4_source_sha": "b6fae6dd81cef49c0f60f8589e2d643daa3bd8b6",
+    "wave4_run": 43808813584,
+    "llama_commit": "8642541b255bfb5dc39cd351a178be09013a55d6",
+    "model_q8_sha256": "073313d92b53b0ac8193db6e906cb3c78a98183d244b15b7b8f5426115c6738c",
+    "w0_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61"
+  },
+  "objective": "Test an unproven 4-layer deletion and reordered 5-layer branch spine; quantise input-responsive ECHO4; replicate AERO5 Q4 on seed 571. Same-runner Q8/Q4 stock and immutable source pins; no game edits.",
+  "experiments": [
+    {
+      "label": "aero4_no10",
+      "mode": "aero4_no10",
+      "flow": [
+        0,
+        2,
+        4,
+        20
+      ],
+      "quant": "q8",
+      "seed": 570
+    },
+    {
+      "label": "aero5_tailflip",
+      "mode": "aero5_tailflip",
+      "flow": [
+        0,
+        2,
+        4,
+        20,
+        10
+      ],
+      "quant": "q8",
+      "seed": 570
+    },
+    {
+      "label": "echo4_q4",
+      "mode": "echo4",
+      "flow": [
+        0,
+        4,
+        18,
+        4
+      ],
+      "quant": "q4_k_m",
+      "seed": 570
+    },
+    {
+      "label": "aero5_no23_q4_s571",
+      "mode": "aero5_no23",
+      "flow": [
+        0,
+        2,
+        4,
+        10,
+        20
+      ],
+      "quant": "q4_k_m",
+      "seed": 571
+    }
+  ],
+  "max_parallel": 2,
+  "timeout_minutes": 95,
+  "no_game_changes": true,
+  "paid_api": false,
+  "paid_gpu": false,
+  "merge": false,
+  "ready": false
+}

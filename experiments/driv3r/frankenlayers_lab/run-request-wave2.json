@@ -1,0 +1,61 @@
+{
+  "schema": "cybersand-d1-frankenlayers-lab-wave2/1",
+  "lineage": {
+    "issue": 619,
+    "phase2_pr": 626,
+    "lab_pr": 640,
+    "first_wave_sha": "a418d2f718ffb7786c357a3eb2a4a7112d74760b",
+    "first_wave_actions_run": 43790709596,
+    "llama_commit": "8642541b255bfb5dc39cd351a178be09013a55d6",
+    "model_q8_sha256": "073313d92b53b0ac8193db6e906cb3c78a98183d244b15b7b8f5426115c6738c",
+    "w0_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61"
+  },
+  "objective": "Preserve 6/4 Q8 evidence, try alternate four-layer tails with known attention ballast; Q4-requantize surviving branch-capable 6-layer mutant with same-runner Q8/Q4 stock controls",
+  "experiments": [
+    {
+      "label": "tailspin4",
+      "mode": "tailspin4",
+      "flow": [
+        0,
+        4,
+        18,
+        20
+      ],
+      "quant": "q8",
+      "seed": 570
+    },
+    {
+      "label": "needle4",
+      "mode": "needle4",
+      "flow": [
+        0,
+        4,
+        18,
+        22
+      ],
+      "quant": "q8",
+      "seed": 570
+    },
+    {
+      "label": "aero6q4",
+      "mode": "aero6",
+      "flow": [
+        0,
+        2,
+        4,
+        10,
+        20,
+        23
+      ],
+      "quant": "q4_k_m",
+      "seed": 570
+    }
+  ],
+  "max_parallel": 2,
+  "timeout_minutes": 95,
+  "no_game_changes": true,
+  "paid_api": false,
+  "paid_gpu": false,
+  "merge": false,
+  "ready": false
+}

@@ -1,0 +1,73 @@
+{
+  "schema": "cybersand-d1-frankenlayers-lab-wave4/1",
+  "lineage": {
+    "issue": 619,
+    "phase2_pr": 626,
+    "lab_pr": 640,
+    "wave3_source_sha": "61e316986f95672793c324b9df489a905994bb69",
+    "wave3_run": 43802923136,
+    "llama_commit": "8642541b255bfb5dc39cd351a178be09013a55d6",
+    "model_q8_sha256": "073313d92b53b0ac8193db6e906cb3c78a98183d244b15b7b8f5426115c6738c",
+    "w0_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61"
+  },
+  "objective": "Quantise proven five- and four-layer survivors, then test seed resilience of AERO5_NO23 and ECHO4. Same-runner controls, game-target W0, no game edits.",
+  "experiments": [
+    {
+      "label": "aero5_no23_q4",
+      "mode": "aero5_no23",
+      "flow": [
+        0,
+        2,
+        4,
+        10,
+        20
+      ],
+      "quant": "q4_k_m",
+      "seed": 570
+    },
+    {
+      "label": "tailflip4_q4",
+      "mode": "tailflip4",
+      "flow": [
+        0,
+        4,
+        20,
+        18
+      ],
+      "quant": "q4_k_m",
+      "seed": 570
+    },
+    {
+      "label": "aero5_no23_s571",
+      "mode": "aero5_no23",
+      "flow": [
+        0,
+        2,
+        4,
+        10,
+        20
+      ],
+      "quant": "q8",
+      "seed": 571
+    },
+    {
+      "label": "echo4_s571",
+      "mode": "echo4",
+      "flow": [
+        0,
+        4,
+        18,
+        4
+      ],
+      "quant": "q8",
+      "seed": 571
+    }
+  ],
+  "max_parallel": 2,
+  "timeout_minutes": 95,
+  "no_game_changes": true,
+  "paid_api": false,
+  "paid_gpu": false,
+  "merge": false,
+  "ready": false
+}

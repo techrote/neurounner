@@ -1,0 +1,35 @@
+{
+  "schema": "driv3r.lfm350.gp350009-recovery-request/1",
+  "objective": "Byte-verify/replay 36 source-scored original W0 episodes, use full pinned model+original GP008 step64 to finish exactly 12 matched 64-turn episodes, check three overlapping original runs, and emit 84 original PNGs; no fabricated rescore, no optimizer, no native.",
+  "model": "LiquidAI/LFM2.5-350M",
+  "model_revision": "9921cd4d82c0e3986887aa4b376f9446729ef8a3",
+  "source_run": 43838034564,
+  "source_artifact": 14213783262,
+  "source_head": "d8f017e81e553c9d92d6995d470e8a50e191238e",
+  "source_zip_sha256": "dce8cbbc7c5e0145f64974c4a3969d141fb50c6a807a1d14a1b7f8b55a64b805",
+  "adapter_run": 43820731360,
+  "adapter_sha256": "340979ffae0a0dce48be57bbd42d908f5b0c0c04399653381c1818d14dafb497",
+  "existing_source_stages": [
+    "stock",
+    "gp350006",
+    "gp350008-step32"
+  ],
+  "fresh_model_stage": "gp350008-step64",
+  "original_W0_source": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61",
+  "turns": 64,
+  "expected_old_complete_model_episodes": 36,
+  "fresh_model_episodes": 12,
+  "total_expected_pngs": 84,
+  "optimizer_steps": 0,
+  "native": false,
+  "vision": false,
+  "paid_gpu": false,
+  "draft_hold": true,
+  "d1_matched": "NOT RUN",
+  "negative_evidence": [
+    "GP350009 first attempt failed immutable summary collision after stage2",
+    "GP350009 second attempt completed 3/12 GP008 step64 before 2400s deadline",
+    "No claim of new model scoring for first three stages in recovered artifact"
+  ],
+  "source_fencing": "GitHub Actions exact HEAD, immutable old artifact metadata/digest, original W0, pinned full parent and adapter SHA"
+}

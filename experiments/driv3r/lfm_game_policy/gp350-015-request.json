@@ -1,0 +1,48 @@
+{
+  "schema": "driv3r.lfm350.gp350015-request/1",
+  "mission": "Qualify GP350-014 early-step checkpoints rather than doubling down on step72: test heldout trapped RETRACE, nontrapped false RETRACE, general 72-probe accuracy, actual W0 autonomous RETRACE legality and precision, branch bursts, coverages and raw illegal; no checkpoint promotion until demonstrated positive transfer.",
+  "model": "LiquidAI/LFM2.5-350M",
+  "revision": "9921cd4d82c0e3986887aa4b376f9446729ef8a3",
+  "source_run": 43933507612,
+  "source_artifact": 14261975494,
+  "source_sha": "b384826fca4eb6e5f315e341cd688ec8b3bd29c5",
+  "original_artifact_digest": "sha256:996d32c261847083c94471ccb3d78d8e80b26fd33594126a97f7f88c8806fd11",
+  "checkpoint_steps": [
+    18,
+    36,
+    54
+  ],
+  "archive_step72_reference_only": true,
+  "checkpoint_sha256": {
+    "18": "205f6356c25766a5f0664e5e4faf5a5135c22f092c55aa2d50f81293e230335f",
+    "36": "e37999047767861cfb7c05d64310d503505eeff3795c755d547b5e8aaa81cdf7",
+    "54": "dc302a1a610b5301ae94d4b8304cf9ae4292cfbd9a209dbb98db3252bf4c9d64",
+    "72": "d2d53be6fa737dda0e978c31914e3f5c5254af64a7ef3ca4cece7dd4b2878074"
+  },
+  "W0_exact_host_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61",
+  "W0_exact_host_blob": "8979b6f0296e81051194bacc907992d38e006605",
+  "heldout_general_probes_per_checkpoint": 72,
+  "heldout_balanced_recovery_probes_per_checkpoint": 48,
+  "model_rollouts_per_checkpoint": 12,
+  "model_rollout_turns": 64,
+  "eval_seeds": [
+    9503,
+    9521
+  ],
+  "sizes": [
+    32,
+    48
+  ],
+  "families": [
+    "greebles",
+    "pipework",
+    "architecture"
+  ],
+  "new_optimizer_steps": 0,
+  "original_W0_PNGs": 36,
+  "native": false,
+  "paid_GPU": false,
+  "draft_hold": true,
+  "negative_results": "preserve all, including cases where RETRACE argmax increases on heldout samples yet fires prematurely on autonomous runs",
+  "acceptance": "Prefer checkpoint with 24-positive trapped RETRACE recall and zero false RETRACE on 24 open-arm negatives, plus 0 premature on-policy RETRACE and no coverage/pressure/generalization regression. No promotion without independent audit."
+}

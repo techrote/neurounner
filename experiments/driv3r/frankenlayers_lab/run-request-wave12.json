@@ -1,0 +1,77 @@
+{
+  "schema": "frankenlayers-wave12-calibrated-iq3-matched-geometry/1",
+  "lineage": {
+    "issue": 619,
+    "lab_pr": 640,
+    "wave11_source_sha": "01ae051b14ba7a8767b53df56af54d5e80f49198",
+    "wave11_success_run": 43885385220,
+    "wave11_artifact_id": 14234559968,
+    "model_q8_sha256": "073313d92b53b0ac8193db6e906cb3c78a98183d244b15b7b8f5426115c6738c",
+    "llama_commit": "8642541b255bfb5dc39cd351a178be09013a55d6",
+    "w0_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61",
+    "wave11_calibration_sha256": "7d7bcbef0371baecc838c86020c36f7cff6aa2201e2f7cc7dff5de8bccc7b6d6",
+    "wave11_imatrix_sha256": "1cc196f2ee5a9f2edb23aea0fca1a6596ef5681ff199e445e1639f8f6b2ec29b",
+    "wave11_iq3_sha256": "1d5473a5c158a762f3eeeb097939adf91afc2ec3b9654041b8de1c9b125e25d7"
+  },
+  "objective": "Retest four-layer branch fiends with Q8-stock, IQ3-stock, calibrated IQ3-mutant all on same free CPU runner, six matched-label geometry-only held-out interventions. Do not count fixed BRANCH repetition as strategic competence. Retain failures, observation traces and original hashes.",
+  "quant": {
+    "target": "IQ3_XS",
+    "input": "Q8_0",
+    "allow_requantize": true,
+    "imatrix_source": "pinned Q8 stock, train-only game-state prompts",
+    "calibration_rows": 96,
+    "calibration_chunks": 8,
+    "calibration_seeds": [
+      101,
+      103,
+      107,
+      109
+    ],
+    "lossy_conversion": true
+  },
+  "test_host": {
+    "seed": 2718,
+    "fixed_family": "architecture",
+    "steps_per_variant": 36,
+    "scenarios": [
+      "forward_gate",
+      "side_obstacle",
+      "distant_gate"
+    ],
+    "synthetic_obstacles_only": true,
+    "native_game": false
+  },
+  "experiments": [
+    {
+      "label": "aero4_no10_iq3_causal",
+      "mode": "aero4_no10",
+      "flow": [
+        0,
+        2,
+        4,
+        20
+      ],
+      "quant": "iq3_xs",
+      "seed": 2718
+    },
+    {
+      "label": "aero4_no2_iq3_causal",
+      "mode": "aero4_no2",
+      "flow": [
+        0,
+        4,
+        10,
+        20
+      ],
+      "quant": "iq3_xs",
+      "seed": 2718
+    }
+  ],
+  "max_parallel": 2,
+  "timeout_minutes": 95,
+  "no_game_changes": true,
+  "paid_api": false,
+  "paid_gpu": false,
+  "merge": false,
+  "ready": false
+}

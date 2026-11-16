@@ -1,0 +1,68 @@
+{
+  "schema": "frankenlayers-wave16-frozen-q4-residual-repair/1",
+  "lineage": {
+    "issue": 619,
+    "lab_pr": 640,
+    "wave15_source_sha": "451f80662d0aa95413b5e26ef7d03a0a356b4735",
+    "wave15_success_run": 43928294407,
+    "wave15_artifacts": [
+      14260196745,
+      14260212927
+    ],
+    "model_q8_sha256": "073313d92b53b0ac8193db6e906cb3c78a98183d244b15b7b8f5426115c6738c",
+    "llama_commit": "8642541b255bfb5dc39cd351a178be09013a55d6",
+    "w0_commit": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61"
+  },
+  "objective": "Real CPU SGD of a 55-weight external residual logit re-ranker on fresh actual NO2 Q4 System One train-fold traces, then evaluate distinct seed/family/obstacle geometry against same-runner Q8 stock, Q4 stock and raw Q4 mutant. Preserve unadapted model choices and override frequency. Do not claim base 2B fine-tuning or native game acceptance.",
+  "quant": {
+    "target": "Q4_K_M",
+    "input": "Q8_0",
+    "allow_requantize": true,
+    "lossy_conversion": true,
+    "importance_matrix": null
+  },
+  "train": {
+    "seed": 2718,
+    "family": "architecture",
+    "steps_per_variant": 36,
+    "real_model_probabilities": true,
+    "adapter_parameters": 55,
+    "epochs": 80,
+    "teacher": "local novelty and RETRACE recovery",
+    "base_model_frozen": true
+  },
+  "test_host": {
+    "seed": 3891,
+    "fixed_family": "pipework",
+    "steps_per_variant": 36,
+    "scenarios": [
+      "forward_gate",
+      "side_obstacle",
+      "distant_gate"
+    ],
+    "shifted_obstacles": true,
+    "synthetic_obstacles_only": true,
+    "native_game": false
+  },
+  "experiments": [
+    {
+      "label": "aero4_no2_q4_learned_repair",
+      "mode": "aero4_no2",
+      "flow": [
+        0,
+        4,
+        10,
+        20
+      ],
+      "quant": "q4_k_m",
+      "seed": 3891
+    }
+  ],
+  "max_parallel": 1,
+  "timeout_minutes": 95,
+  "no_game_changes": true,
+  "paid_api": false,
+  "paid_gpu": false,
+  "merge": false,
+  "ready": false
+}

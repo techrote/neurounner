@@ -1,0 +1,129 @@
+{
+  "schema": "gal-013-013b-handoff/1",
+  "date": "2026-11-16",
+  "pr_number": 644,
+  "context": "External synthetic CyberSand-like host; no native/Workbench code changed",
+  "frozen_checkpoint_sha256": "97f88f0349de134c3c430997f998a8534d1a2b62e372ba81970f85e12baf61d1",
+  "trained_adapter_checkpoint_sha256": "549d4a170dea5e6119e6a8390431cc9ba2dcb74a04b1bfb71c8c2083f5561190",
+  "original_evidence_zip_sha256": "540a52f978cbe6df408e651bf9cfb8ee7f2e15a9ce76b68a314bef16859542f4",
+  "training": {
+    "worlds": 80,
+    "updates": 2531,
+    "teacher_rollins": 1612,
+    "families": [
+      "path",
+      "tree"
+    ],
+    "ink_targets": [
+      32,
+      48
+    ],
+    "seed_start": 1830000,
+    "seed_end": 1830079,
+    "method": "online cross-entropy imitation with DAgger-style roll-in; frozen 23-feature base and learned 12-feature additive adapter"
+  },
+  "heldout": {
+    "seeds": [
+      1930000,
+      1930015
+    ],
+    "families": [
+      "tree",
+      "comb",
+      "deep_tree"
+    ],
+    "ink_targets": [
+      32,
+      48,
+      64
+    ],
+    "matched_worlds_per_policy": 144,
+    "policies": {
+      "frozen_sampled": {
+        "complete": 56,
+        "decisions": 6863,
+        "non_target_ink": 49
+      },
+      "frozen_greedy": {
+        "complete": 91,
+        "decisions": 7868,
+        "non_target_ink": 53
+      },
+      "adapter_sampled": {
+        "complete": 74,
+        "decisions": 6932,
+        "non_target_ink": 50
+      },
+      "adapter_greedy": {
+        "complete": 92,
+        "decisions": 7068,
+        "non_target_ink": 52
+      },
+      "adapter_no_extra_route": {
+        "complete": 91,
+        "decisions": 7773,
+        "non_target_ink": 53
+      },
+      "frozen_sampled_start_guard": {
+        "complete": 92,
+        "decisions": 6650,
+        "non_target_ink": 0
+      },
+      "frozen_greedy_start_guard": {
+        "complete": 144,
+        "decisions": 6928,
+        "non_target_ink": 0
+      },
+      "adapter_sampled_start_guard": {
+        "complete": 117,
+        "decisions": 6860,
+        "non_target_ink": 0
+      },
+      "adapter_greedy_start_guard": {
+        "complete": 144,
+        "decisions": 6926,
+        "non_target_ink": 0
+      },
+      "observation_limited_teacher": {
+        "complete": 144,
+        "decisions": 6886,
+        "non_target_ink": 0
+      }
+    }
+  },
+  "host_replay": {
+    "route_experiment": {
+      "episodes": 864,
+      "receipts": 43390,
+      "panels": 54
+    },
+    "start_guard_experiment": {
+      "episodes": 576,
+      "receipts": 27364,
+      "panels": 36
+    },
+    "total_episodes": 1440,
+    "total_receipts": 70754
+  },
+  "findings": [
+    "All 53 frozen-greedy failed tasks and all 52 adapter-greedy failed tasks contained exactly one painted non-target starting cell, consuming the last ink allowance.",
+    "At equal frozen checkpoint and greedy decoder, model-side refusal of paint paths crossing known starting cell changed completion from 91/144 to 144/144; paired wins/losses 53/0.",
+    "At equal adapted checkpoint and greedy decoder, START guard changed completion from 92/144 to 144/144; paired wins/losses 52/0.",
+    "Route-specific new adapter features contributed 1/144 additional greedy completion relative to same adapted checkpoint with those extra features masked, an inconclusive gain.",
+    "Without START guard, greedy decoding improved frozen policy over stochastic decoding by 35 matched completions, with paired wins/losses 36/1.",
+    "Guarded stochastic policies remained incomplete: frozen 92/144 and adapter 117/144.",
+    "The GAL-012 apparent branch-recovery deficit was materially confounded by painting a known non-goal START cell: 71 of 120 frozen failures included one off-goal ink."
+  ],
+  "constraints": {
+    "game_implementation_edited": false,
+    "host_legal_actions_and_leases_preserved": true,
+    "model_side_start_guard_only": true,
+    "host_protected_material_untouched": true,
+    "hidden_goal_observed_at_inference": false,
+    "real_inference_latency_measured": false,
+    "native_receipts": 0,
+    "resident_slms": 0,
+    "pr_draft_hold": true
+  },
+  "provenance": "Original source, checkpoint JSON, complete episode/action receipts, panel audits, PNG galleries and SHA256 manifest in the owner-facing GAL013/013b conversation evidence ZIP. Source files have not yet been committed; immutable GitHub Actions checkpoint publication remains outstanding. Do not generalize no-START-ink guard to tasks requiring starting-cell paint."
+}
