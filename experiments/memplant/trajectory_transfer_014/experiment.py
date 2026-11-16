@@ -258,7 +258,7 @@ def run(seed,out,train_worlds=600,steps=420,test_worlds=80,horizon=64,donor_step
           'limitations':'External synthetic grid; supervised expert Dijkstra; shortest-path potential given as feature; raw donor output calibration, not KV transfer; oracle is scripted and donors learn authored laws; wrong-donor swaps branch goal, wrong-wet swaps material law.',
           'duration_seconds':round(time.monotonic()-t0,2)}
   (out/'report.json').write_text(json.dumps(report,indent=2)+'\n')
-  paths={p.name:sha(p) for p in out.iterdir() if p.is_file()}
+  paths={p.name:sha(p) for p in out.iterdir() if p.is_file() and p.name!='sha256.json'}
   (out/'sha256.json').write_text(json.dumps(paths,indent=2)+'\n')
   print(json.dumps(report,indent=2))
 
