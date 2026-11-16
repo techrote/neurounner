@@ -210,6 +210,68 @@ def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+
+def render_rollout(model,name,law,world_seed,out):
+    """Original 24-decision synthetic action trace, not a native game capture."""
+    from PIL import Image, ImageDraw
+    w=world(world_seed)
+    pos=w["start"]
+    history=[pos]
+    painted=set()
+    heading=0
+    chosen=[]
+    compared=[]
+    for step in range(24):
+        f,legal=offers(w,pos,history,painted,heading)
+        ft=torch.from_numpy(f[None])
+        lt=torch.from_numpy(legal[None])
+        with torch.no_grad():
+            action=int(model(torch.tensor([law],dtype=torch.float32),
+                             ft,lt).argmax(-1))
+        assert legal[action]
+        gold=expert(law,f,legal)
+        chosen.append(ACTIONS[action])
+        compared.append(action==gold)
+        if action<4:
+            pos=(pos[0]+DIRS[action][0],pos[1]+DIRS[action][1])
+            history.append(pos)
+            heading=action
+        elif action==4:
+            painted.add(pos)
+        elif len(history)>1:
+            history.pop()
+            pos=history[-1]
+    # Render genuine derived world state from this specific original trace.
+    scale=28
+    img=Image.new("RGB",(9*scale,9*scale),(17,21,25))
+    draw=ImageDraw.Draw(img)
+    palette=[(111,111,118),(165,139,82),(55,103,156),(24,28,31)]
+    for y in range(9):
+        for x in range(9):
+            pt=(x,y)
+            col=palette[int(w["tiles"][y,x])]
+            if w["protect"][y,x]:
+                col=(127,55,66)
+            if pt in painted:
+                col=(240,191,77)
+            draw.rectangle((x*scale,y*scale,(x+1)*scale-1,
+                            (y+1)*scale-1),fill=col,
+                           outline=(35,38,43))
+    for k,(x,y) in enumerate(history):
+        draw.ellipse((x*scale+9,y*scale+9,x*scale+18,y*scale+18),
+                     fill=(123,214,151) if k<len(history)-1
+                     else (247,249,251))
+    gx,gy=w["goal"]
+    draw.rectangle((gx*scale+11,gy*scale+11,
+                    gx*scale+16,gy*scale+16),fill=(247,78,80))
+    img.save(out)
+    return {"model":name,"law":[int(b) for b in law],"world_seed":world_seed,
+            "actions":chosen,"synthetic_steps":len(chosen),
+            "painted_cells":len(painted),"final_position":list(pos),
+            "exact_expert_matches_on_own_trajectory":sum(compared),
+            "image":out.name,"image_sha256":digest(out)}
+
+
 def produce(source,ref005,ref006,out,seed,updates,train_count=8500,
             valid_count=1500,sealed_count=2600):
     if not 100<=updates<=2000:
@@ -246,6 +308,17 @@ def produce(source,ref005,ref006,out,seed,updates,train_count=8500,
             "unseen_additive":evaluate(model,graft,blind=(n=="blind")),
             "unseen_hidden_synergy":evaluate(model,graft,blind=(n=="blind"),
                                              hidden=True)}
+    # Visualise model-selected, sequential game-like actions on the SAME
+    # world under separately observed A, B and unseen A+B law settings.
+    rollouts=[]
+    worlds_out=out/"rollouts"
+    worlds_out.mkdir(exist_ok=True)
+    for model_name,model in models.items():
+        for combo in ((1,0),(0,1),(1,1)):
+            law=(1,0,1)+combo
+            file=worlds_out/(model_name+"-A"+str(combo[0])+"B"+str(combo[1])+".png")
+            rollouts.append(render_rollout(
+                model,model_name,law,seed+4321,file))
     parent=parent_probe(models,source,ref005,ref006,seed)
     report={"experiment":"DG008-heldout-material-motion-graft-v1","seed":seed,
       "updates_per_model":updates,
@@ -254,6 +327,7 @@ def produce(source,ref005,ref006,out,seed,updates,train_count=8500,
       "train_A_B_pairs":["00","10","01"],"sealed_A_B_pair":"11",
       "models_trained":["factorized","flat","blind"],
       "training":train_reports,"sealed_results":evaluations,
+      "model_selected_synthetic_rollouts":rollouts,
       "real_donor_inherited_graft":parent,"checkpoints_sha256":checks,
       "elapsed_seconds":round(time.monotonic()-start,2),
       "limitations":["three H/V/P bits explicitly supervised in policy training",
