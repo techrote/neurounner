@@ -1,0 +1,112 @@
+{
+  "protocol": "cybersand.driv3r.d1b-shadow-fixtures/0",
+  "status": "SYNTHETIC_ONLY_NOT_NATIVE_OBSERVATIONS",
+  "scenario_family": "D-1B feedback and hysteresis authoring smoke",
+  "source_dependency": "b117bfb1a59b557d8c54da01751819b00bf95836",
+  "candidate_ids": [
+    "KEEP",
+    "UNDO",
+    "STOP"
+  ],
+  "hysteresis": {
+    "exit_below": 18000,
+    "reenter_at_or_above": 30000,
+    "initial_engaged": true,
+    "sequence": [
+      {
+        "scalar": 35000,
+        "event": "no_transition",
+        "engaged": true
+      },
+      {
+        "scalar": 17999,
+        "event": "propose_recovery",
+        "engaged": false
+      },
+      {
+        "scalar": 24000,
+        "event": "no_transition",
+        "engaged": false
+      },
+      {
+        "scalar": 30000,
+        "event": "reentered",
+        "engaged": true
+      }
+    ]
+  },
+  "shadow_cases": [
+    {
+      "id": "improving_trace_keep",
+      "before": {
+        "snapshot_id": "b1",
+        "goal_score": 10,
+        "violations": 0,
+        "progress_cells": 3
+      },
+      "after": {
+        "snapshot_id": "a1",
+        "goal_score": 12,
+        "violations": 0,
+        "progress_cells": 6
+      },
+      "undo_eligible": true,
+      "verified_native_receipt": true,
+      "expected": "KEEP"
+    },
+    {
+      "id": "regression_undo_proposal",
+      "before": {
+        "snapshot_id": "b2",
+        "goal_score": 10,
+        "violations": 0,
+        "progress_cells": 3
+      },
+      "after": {
+        "snapshot_id": "a2",
+        "goal_score": 8,
+        "violations": 1,
+        "progress_cells": 3
+      },
+      "undo_eligible": true,
+      "verified_native_receipt": true,
+      "expected": "UNDO"
+    },
+    {
+      "id": "unverified_receipt_forces_stop",
+      "before": {
+        "snapshot_id": "b3",
+        "goal_score": 10,
+        "violations": 0,
+        "progress_cells": 3
+      },
+      "after": {
+        "snapshot_id": "a3",
+        "goal_score": 8,
+        "violations": 1,
+        "progress_cells": 3
+      },
+      "undo_eligible": true,
+      "verified_native_receipt": false,
+      "expected": "STOP"
+    },
+    {
+      "id": "no_eligible_undo_forces_stop",
+      "before": {
+        "snapshot_id": "b4",
+        "goal_score": 10,
+        "violations": 0,
+        "progress_cells": 3
+      },
+      "after": {
+        "snapshot_id": "a4",
+        "goal_score": 10,
+        "violations": 0,
+        "progress_cells": 3
+      },
+      "undo_eligible": false,
+      "verified_native_receipt": true,
+      "expected": "STOP"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+# INTENTIONALLY INERT: NOT in .github/workflows; extension .disabled.
+# Moving or running requires #570 owner approval of exact contract, source,
+# model/native spend budget, runner cap and paired evaluation plan.
+name: DRIV3R D-2 paired procedural discovery [INERT TEMPLATE]
+on:
+  workflow_dispatch:
+    inputs:
+      runner_slots:
+        type: choice
+        description: "Qualify 2 then 4 then 8 runner throughput"
+        required: true
+        default: "2"
+        options: ["2", "4", "8"]
+      approved_source_sha:
+        type: string
+        required: true
+      approved_contract_schema_sha256:
+        type: string
+        required: true
+      owner_experiment_authorization:
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: driv3r-d2-${{ github.run_id }}-${{ github.run_attempt }}
+  cancel-in-progress: false
+jobs:
+  paired_native_candidate:
+    # DISABLED even if moved. The integration owner must replace this and
+    # implement exact source/native/model preflight only with new approval.
+    if: ${{ false }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJSON(inputs.runner_slots) }}
+      matrix:
+        prompt: [short, long, careful, exploratory]
+        geometry_seed: [101, 202, 303]
+        recovery: [backtrack, relocate]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.approved_source_sha }}
+      - name: Source and owner gates [NOT WIRED]
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ inputs.approved_source_sha }}"
+          echo "Contract pin, native permissions/receipt/replay and budget gates NOT WIRED"
+          exit 78
+      - name: Future paired native episode [NOT WIRED]
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Each arm gets independent native World, model and failure custody.
+          # Record first choice vs first consequential native divergence.
+          # Never use scripted pseudo-results as native model evidence.
+          echo "NO NATIVE OR MODEL JOB HAS BEEN AUTHORIZED"
+          exit 78
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: d2-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.prompt }}-${{ matrix.geometry_seed }}-${{ matrix.recovery }}
+          path: ${{ runner.temp }}/driv3r-d2/
+          if-no-files-found: ignore
+          retention-days: 7
+
+# Tier 1: 8-12 paired prompt/order/paraphrase probes on identical saved
+# observations, zero native edits. Tier 2 (after approval): 4 prompts x
+# 3 geometry seeds x 2 recovery policies = 24 independent native episodes.
+# Preflight resource throughput with 2/4/8 max-parallel before larger work.
+# Capture downloads, cold/warm latency, RSS, runner-hours, hashes, receipts,
+# full source/model identifiers, original images, failures and cancellations.
+# Sealed held-out cases must vary structurally, not merely by random seed.

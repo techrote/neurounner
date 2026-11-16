@@ -1,0 +1,1445 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/techrote/cybersand/experiments/driv3r/d_common/v1/interface.schema.json",
+  "title": "CyberSand DRIV3R D-COMMON-001 versioned interface contract candidate",
+  "description": "Five strict versioned records; explicit dynamic World dimensions; mandatory positive scalar guidance core plus optional typed, semantic-bound channels; three distinct reversal operations; strict actual-native evidence custody; synthetic-only lightweight exploration.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/observation"
+    },
+    {
+      "$ref": "#/$defs/guidance"
+    },
+    {
+      "$ref": "#/$defs/action"
+    },
+    {
+      "$ref": "#/$defs/reversal"
+    },
+    {
+      "$ref": "#/$defs/provenance"
+    }
+  ],
+  "$defs": {
+    "point": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "World-aligned XY integer cell coordinate. Actual in-World bounds are checked against world.width_cells/height_cells and authorized focus at runtime."
+    },
+    "rect": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        }
+      ],
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "World-aligned [x,y,width,height] integer-cell rectangle; extents checked against the current World/canvas, not a hard-coded 512-square World."
+    },
+    "blob": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes",
+        "format"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*\\.\\.)(?!.*//)[A-Za-z0-9_./-]+$",
+          "maxLength": 256
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "format": {
+          "enum": [
+            "u16le",
+            "i32le",
+            "png",
+            "jsonl",
+            "json",
+            "csv",
+            "bin",
+            "i16le",
+            "vec2_i16le"
+          ]
+        }
+      }
+    },
+    "world": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "generation",
+        "revision",
+        "tick",
+        "material_sha256",
+        "world_material_sha256",
+        "width_cells",
+        "height_cells"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tick": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "material_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "world_material_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "width_cells": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "height_cells": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "type",
+        "record_id",
+        "episode_id",
+        "sequence",
+        "objective",
+        "subgoal",
+        "world",
+        "cursor",
+        "target",
+        "guidance_ref",
+        "last_action_ref",
+        "last_native_receipt_ref",
+        "local_material",
+        "local_crop",
+        "host_geometry",
+        "history_sha256",
+        "rules",
+        "budget",
+        "feedback_views",
+        "guidance_channel_handling"
+      ],
+      "properties": {
+        "protocol": {
+          "const": "cybersand.driv3r.d-common/1"
+        },
+        "type": {
+          "const": "observation"
+        },
+        "record_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "episode_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "subgoal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "world": {
+          "$ref": "#/$defs/world"
+        },
+        "cursor": {
+          "$ref": "#/$defs/point"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/point"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "guidance_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "last_action_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "last_native_receipt_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "local_material": {
+          "$ref": "#/$defs/blob"
+        },
+        "local_crop": {
+          "$ref": "#/$defs/rect"
+        },
+        "host_geometry": {
+          "type": "object",
+          "description": "Host-computed, non-authoritative for permissions. Metric keys and units must be declared in the experiment manifest.",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            ]
+          }
+        },
+        "history_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "rules": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "focus",
+            "allowed_materials",
+            "forbidden_materials",
+            "protected_rectangles"
+          ],
+          "properties": {
+            "focus": {
+              "$ref": "#/$defs/rect"
+            },
+            "allowed_materials": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "uniqueItems": true
+            },
+            "forbidden_materials": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "uniqueItems": true
+            },
+            "protected_rectangles": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/rect"
+              },
+              "maxItems": 64
+            }
+          }
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "decisions_remaining",
+            "material_cell_budget",
+            "wall_seconds_remaining"
+          ],
+          "properties": {
+            "decisions_remaining": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000
+            },
+            "material_cell_budget": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "wall_seconds_remaining": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "feedback_views": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "artifact",
+              "source_world"
+            ],
+            "properties": {
+              "role": {
+                "enum": [
+                  "before_material",
+                  "after_material",
+                  "before_framebuffer",
+                  "after_framebuffer",
+                  "guidance_overlay"
+                ]
+              },
+              "artifact": {
+                "$ref": "#/$defs/blob"
+              },
+              "source_world": {
+                "$ref": "#/$defs/world"
+              }
+            }
+          },
+          "maxItems": 8
+        },
+        "guidance_channel_handling": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "unsupported_policy",
+            "used_channel_ids",
+            "ignored_channels"
+          ],
+          "properties": {
+            "unsupported_policy": {
+              "enum": [
+                "reject_unsupported",
+                "ignore_with_audit"
+              ]
+            },
+            "used_channel_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+              },
+              "uniqueItems": true,
+              "maxItems": 8
+            },
+            "ignored_channels": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ignored_guidance_channel"
+              },
+              "maxItems": 8
+            }
+          },
+          "description": "Admission accounting for every optional channel. A positive scalar baseline remains independently mandatory when a guidance record is referenced. Suppressed channels must appear in ignored_channels with their immutable values hash."
+        }
+      }
+    },
+    "guidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "type",
+        "record_id",
+        "episode_id",
+        "sequence",
+        "label",
+        "frame",
+        "source_kind",
+        "purpose",
+        "values",
+        "display",
+        "encoding",
+        "speckle",
+        "hysteresis",
+        "native_material_authority",
+        "authoring_seed",
+        "canvas_size",
+        "optional_channels"
+      ],
+      "properties": {
+        "protocol": {
+          "const": "cybersand.driv3r.d-common/1"
+        },
+        "type": {
+          "const": "guidance"
+        },
+        "record_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "episode_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "frame": {
+          "$ref": "#/$defs/rect",
+          "description": "Tile footprint in the explicit canvas. A large World can carry multiple bounded guidance tiles; never infer permissions from the field."
+        },
+        "source_kind": {
+          "enum": [
+            "airbrush",
+            "imported_png",
+            "procedural",
+            "composite",
+            "manual_scalar"
+          ]
+        },
+        "purpose": {
+          "const": "soft_positive_preference"
+        },
+        "values": {
+          "$ref": "#/$defs/blob"
+        },
+        "display": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/blob"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "encoding": {
+          "const": "u16le_higher_is_better_zero_is_neutral",
+          "description": "Mandatory positive u16le scalar core with 0 neutral and higher values more preferred. Auxiliary channels are optional and independently typed; neither core nor auxiliary controls native authority."
+        },
+        "speckle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "seed",
+            "radius_cells",
+            "centre_density",
+            "hardness",
+            "gradient_length"
+          ],
+          "properties": {
+            "seed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "radius_cells": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "centre_density": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "hardness": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "gradient_length": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "hysteresis": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "exit_below",
+            "reenter_at_or_above"
+          ],
+          "properties": {
+            "exit_below": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            },
+            "reenter_at_or_above": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          }
+        },
+        "native_material_authority": {
+          "const": false
+        },
+        "authoring_seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "canvas_size": {
+          "$ref": "#/$defs/canvas_size"
+        },
+        "optional_channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/guidance_channel"
+          },
+          "maxItems": 8,
+          "description": "A1: []; A2: separate attraction/avoidance/steering signals; A3: positive scalar plus typed geometric distance/flow features. Unsupported channels must never be silently consumed."
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "type",
+        "record_id",
+        "episode_id",
+        "sequence",
+        "observation_ref",
+        "world_precondition",
+        "candidate_set_sha256",
+        "legal_candidate_set_sha256",
+        "candidate_id",
+        "actor",
+        "mode",
+        "cursor_before",
+        "cursor_after",
+        "path",
+        "brush_state",
+        "guidance_ref",
+        "operation_sha256",
+        "model_decision_ref",
+        "predicted_effects",
+        "execution_status",
+        "native_receipt_ref",
+        "native_receipt_artifact",
+        "world_postcondition"
+      ],
+      "properties": {
+        "protocol": {
+          "const": "cybersand.driv3r.d-common/1"
+        },
+        "type": {
+          "const": "action"
+        },
+        "record_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "episode_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "observation_ref": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "world_precondition": {
+          "$ref": "#/$defs/world"
+        },
+        "candidate_set_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Hash of the complete candidate presentation/decision contract (may vary by policy/annotation). Never substitute this for legal_candidate_set_sha256 in matched A1/A2/A3 comparisons."
+        },
+        "candidate_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "actor": {
+          "enum": [
+            "d1",
+            "deterministic",
+            "random_legal",
+            "human",
+            "other_model"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "cursor_move",
+            "procedural_segment",
+            "add_material",
+            "erase_material",
+            "no_paint_plan",
+            "stop"
+          ]
+        },
+        "cursor_before": {
+          "$ref": "#/$defs/point"
+        },
+        "cursor_after": {
+          "$ref": "#/$defs/point"
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/point"
+          },
+          "maxItems": 100000
+        },
+        "brush_state": {
+          "enum": [
+            "up",
+            "add",
+            "erase"
+          ]
+        },
+        "guidance_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operation_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model_decision_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "predicted_effects": {
+          "type": "object",
+          "description": "Host-computed, non-authoritative for permissions. Metric keys and units must be declared in the experiment manifest.",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            ]
+          }
+        },
+        "execution_status": {
+          "enum": [
+            "candidate",
+            "selected",
+            "submitted",
+            "committed",
+            "refused",
+            "cancelled",
+            "partial"
+          ]
+        },
+        "native_receipt_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "native_receipt_artifact": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/blob"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Exact native JSON receipt bytes (sha256/size/path) when a material action commits. The receipt ID alone is insufficient."
+        },
+        "world_postcondition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/world"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Observed native post-action World fence/readback; required for committed actions."
+        },
+        "legal_candidate_set_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Hash of host-offered LEGAL recovery candidate IDs and exact admissible native effects/limits, canonically sorted by candidate ID; excludes prompt text, optional guide values, guide-derived scores and presentation order. Mandatory identical across A1/A2/A3 when observed native geometry/cursor/rules match. Full host catalog remains retained in experiment-native evidence."
+        }
+      }
+    },
+    "reversal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "type",
+        "record_id",
+        "episode_id",
+        "sequence",
+        "mechanism",
+        "source_action_ref",
+        "history_anchor_ref",
+        "cursor_before",
+        "cursor_after",
+        "brush_lifted",
+        "preserve_material_edits",
+        "before_world",
+        "after_world",
+        "native_undo_receipt_ref",
+        "actual_material_cells_changed",
+        "status",
+        "reason_code",
+        "native_undo_receipt_artifact"
+      ],
+      "properties": {
+        "protocol": {
+          "const": "cybersand.driv3r.d-common/1"
+        },
+        "type": {
+          "const": "reversal"
+        },
+        "record_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "episode_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "mechanism": {
+          "enum": [
+            "BACKTRACK_CURSOR",
+            "RELOCATE_TO_BRANCH",
+            "UNDO_MATERIAL_EDIT"
+          ]
+        },
+        "source_action_ref": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "history_anchor_ref": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "cursor_before": {
+          "$ref": "#/$defs/point"
+        },
+        "cursor_after": {
+          "$ref": "#/$defs/point"
+        },
+        "brush_lifted": {
+          "type": "boolean"
+        },
+        "preserve_material_edits": {
+          "type": "boolean"
+        },
+        "before_world": {
+          "$ref": "#/$defs/world"
+        },
+        "after_world": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/world"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "native_undo_receipt_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actual_material_cells_changed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "enum": [
+            "proposed",
+            "applied",
+            "refused",
+            "cancelled"
+          ]
+        },
+        "reason_code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "native_undo_receipt_artifact": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/blob"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Exact native Undo receipt bytes for applied UNDO_MATERIAL_EDIT; null for cursor-only rewinds."
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "type",
+        "record_id",
+        "episode_id",
+        "sequence",
+        "evidence_class",
+        "experiment_id",
+        "arm",
+        "split",
+        "algorithm",
+        "guidance_ref",
+        "episode_record_refs",
+        "outcome",
+        "metrics",
+        "replay",
+        "artifacts"
+      ],
+      "properties": {
+        "protocol": {
+          "const": "cybersand.driv3r.d-common/1"
+        },
+        "type": {
+          "const": "provenance"
+        },
+        "record_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "episode_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "source_commit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "source_tree": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "base_commit": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "interface_schema_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "experiment_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "arm": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "split": {
+          "enum": [
+            "development",
+            "held_out",
+            "final_sealed",
+            "pilot"
+          ]
+        },
+        "scenario_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "algorithm": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "version",
+            "seed",
+            "recipe_sha256"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "seed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "recipe_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "repo",
+                "revision",
+                "weights_sha256",
+                "backend_sha256"
+              ],
+              "properties": {
+                "repo": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "revision": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "weights_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "backend_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "native": {
+          "$ref": "#/$defs/blob"
+        },
+        "guidance_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "episode_record_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+          }
+        },
+        "final_world": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/world"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "success",
+            "stop",
+            "budget_exhausted",
+            "invalid_decision",
+            "model_failure",
+            "native_refusal",
+            "cancelled",
+            "partial",
+            "research_failed"
+          ]
+        },
+        "metrics": {
+          "type": "object",
+          "description": "Host-computed, non-authoritative for permissions. Metric keys and units must be declared in the experiment manifest.",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            ]
+          }
+        },
+        "replay": {
+          "enum": [
+            "not_attempted",
+            "pass",
+            "fail"
+          ]
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/blob"
+          }
+        },
+        "evidence_class": {
+          "enum": [
+            "synthetic",
+            "native"
+          ],
+          "description": "An honest evidence label. Synthetic does not require source/native artifacts; native requires exact source, bytes, receipts and custody checks."
+        },
+        "native_receipts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/blob"
+          },
+          "maxItems": 100000,
+          "description": "Hash/byte-bound receipt artifacts for every actual material edit or undo; correlate with action/reversal records."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "evidence_class": {
+                "const": "native"
+              }
+            },
+            "required": [
+              "evidence_class"
+            ]
+          },
+          "then": {
+            "required": [
+              "source_commit",
+              "source_tree",
+              "base_commit",
+              "interface_schema_sha256",
+              "scenario_sha256",
+              "model",
+              "native",
+              "native_receipts",
+              "final_world"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "evidence_class": {
+                "const": "synthetic"
+              }
+            },
+            "required": [
+              "evidence_class"
+            ]
+          },
+          "then": {
+            "properties": {
+              "replay": {
+                "const": "not_attempted"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "canvas_size": {
+      "type": "array",
+      "description": "Full canvas [width_cells,height_cells] for a guidance field; must match an observation World when referenced.",
+      "prefixItems": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "guidance_channel": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional, independently versioned and byte-custodied typed guidance signal. Cannot modify native World permissions. Unknown semantic IDs may only be used through an explicitly registered consumer or deliberately ignored with an immutable record.",
+      "required": [
+        "channel_id",
+        "signal_class",
+        "semantic_id",
+        "encoding",
+        "units",
+        "scale",
+        "zero_meaning",
+        "positive_meaning",
+        "negative_meaning",
+        "reference_id",
+        "canvas_size",
+        "frame",
+        "values",
+        "producer",
+        "native_material_authority"
+      ],
+      "properties": {
+        "channel_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$",
+          "description": "Unique stable within a guidance record"
+        },
+        "signal_class": {
+          "enum": [
+            "preference",
+            "geometry_metric"
+          ],
+          "description": "Preference strength and geometry-derived facts are independent signal categories"
+        },
+        "semantic_id": {
+          "type": "string",
+          "pattern": "^(?:[a-z][a-z0-9_]*|experimental\\.[a-z][a-z0-9_.-]*)/v[1-9][0-9]{0,2}$",
+          "maxLength": 96
+        },
+        "encoding": {
+          "enum": [
+            "u16le",
+            "i16le",
+            "vec2_i16le"
+          ],
+          "description": "One or two row-major signed/unsigned 16-bit little-endian samples per cell; values.format must match"
+        },
+        "units": {
+          "enum": [
+            "normalized_0_1",
+            "normalized_signed",
+            "cells",
+            "world_unit_vector",
+            "custom"
+          ],
+          "description": "Physical meaning of decoded signed/unsigned sample after applying exact rational scale"
+        },
+        "scale": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "numerator",
+            "denominator"
+          ],
+          "properties": {
+            "numerator": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            },
+            "denominator": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4294967295
+            }
+          },
+          "description": "Real-value scaling per stored component = encoded_int*numerator/denominator; no implicit float semantics"
+        },
+        "zero_meaning": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "positive_meaning": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "negative_meaning": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 160
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reference_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "canvas_size": {
+          "$ref": "#/$defs/canvas_size"
+        },
+        "frame": {
+          "$ref": "#/$defs/rect"
+        },
+        "values": {
+          "$ref": "#/$defs/blob"
+        },
+        "producer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "producer_id",
+            "revision",
+            "source_sha256",
+            "parameters_sha256",
+            "seed"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "airbrush",
+                "imported_png",
+                "procedural",
+                "derived_geometry",
+                "composite",
+                "manual"
+              ]
+            },
+            "producer_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+            },
+            "revision": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "source_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "parameters_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "seed": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967295
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "description": "Source trace for the specific signal transformation, not just the base guidance record."
+        },
+        "native_material_authority": {
+          "const": false
+        }
+      }
+    },
+    "ignored_guidance_channel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "channel_id",
+        "semantic_id",
+        "values_sha256",
+        "reason"
+      ],
+      "properties": {
+        "channel_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$"
+        },
+        "semantic_id": {
+          "type": "string",
+          "pattern": "^(?:[a-z][a-z0-9_]*|experimental\\.[a-z][a-z0-9_.-]*)/v[1-9][0-9]{0,2}$",
+          "maxLength": 96
+        },
+        "values_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "reason": {
+          "enum": [
+            "unsupported_semantics",
+            "explicit_information_ablation"
+          ]
+        }
+      }
+    }
+  }
+}

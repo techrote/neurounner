@@ -1,0 +1,202 @@
+{
+  "version": "d2.offline-corpus/1",
+  "qualification": "DEVELOPMENT_SYNTHETIC_ONLY",
+  "description": "Eight predeclared DEVELOPMENT recipes, including a source-matched weathering random-legal negative control and serpentine recovery. Not native, inference or held-out confirmation.",
+  "cases": [
+    {
+      "id": "rock-fissure-small",
+      "split": "development",
+      "tags": [
+        "weathering",
+        "shallow-erosion",
+        "original-boundary"
+      ],
+      "recipe": {
+        "version": "d2.offline/1",
+        "family": "weathering_worm",
+        "canvas": [
+          96,
+          96
+        ],
+        "seed": 29,
+        "steps": 128,
+        "brush_radius": 1,
+        "depth": 1,
+        "boundary_offset": 2,
+        "recovery": "backtrack"
+      }
+    },
+    {
+      "id": "rock-minkowski-deep",
+      "split": "development",
+      "tags": [
+        "weathering",
+        "deep-erosion",
+        "branch-frontier"
+      ],
+      "recipe": {
+        "version": "d2.offline/1",
+        "family": "weathering_worm",
+        "canvas": [
+          96,
+          96
+        ],
+        "seed": 31,
+        "steps": 128,
+        "brush_radius": 2,
+        "depth": 2,
+        "boundary_offset": 4,
+        "recovery": "relocate"
+      }
+    },
+    {
+      "id": "htree-contained",
+      "split": "development",
+      "tags": [
+        "growth",
+        "dense-structural",
+        "contained"
+      ],
+      "recipe": {
+        "version": "d2.offline/1",
+        "family": "branching_growth",
+        "canvas": [
+          96,
+          96
+        ],
+        "seed": 29,
+        "steps": 128,
+        "brush_radius": 2,
+        "depth": 3,
+        "volume_radius": 1,
+        "containment": "contained",
+        "recovery": "backtrack"
+      }
+    },
+    {
+      "id": "htree-expressive",
+      "split": "development",
+      "tags": [
+        "growth",
+        "sparse-structural",
+        "expressive"
+      ],
+      "recipe": {
+        "version": "d2.offline/1",
+        "family": "branching_growth",
+        "canvas": [
+          96,
+          96
+        ],
+        "seed": 31,
+        "steps": 128,
+        "brush_radius": 2,
+        "depth": 4,
+        "volume_radius": 0,
+        "containment": "expressive",
+        "recovery": "relocate"
+      }
+    },
+    {
+      "id": "hilbert-reentry",
+      "split": "development",
+      "tags": [
+        "coverage",
+        "open-curve",
+        "hysteresis"
+      ],
+      "recipe": {
+        "version": "d2.offline/1",
+        "family": "guided_coverage",
+        "canvas": [
+          96,
+          96
+        ],
+        "seed": 29,
+        "steps": 160,
+        "brush_radius": 0,
+        "order": 4,
+        "curve": "hilbert",
+        "exit_below": 48000,
+        "reenter_at": 52000,
+        "recovery": "backtrack"
+      }
+    },
+    {
+      "id": "moore-reentry",
+      "split": "development",
+      "tags": [
+        "coverage",
+        "closed-curve",
+        "hysteresis"
+      ],
+      "recipe": {
+        "version": "d2.offline/1",
+        "family": "guided_coverage",
+        "canvas": [
+          96,
+          96
+        ],
+        "seed": 31,
+        "steps": 160,
+        "brush_radius": 0,
+        "order": 5,
+        "curve": "moore",
+        "exit_below": 48000,
+        "reenter_at": 54000,
+        "recovery": "relocate"
+      }
+    },
+    {
+      "id": "rock-random-control",
+      "split": "development",
+      "tags": [
+        "weathering",
+        "negative-control",
+        "random-legal",
+        "matched-rock-fissure-small"
+      ],
+      "recipe": {
+        "version": "d2.offline/1",
+        "family": "weathering_worm",
+        "canvas": [
+          96,
+          96
+        ],
+        "seed": 29,
+        "steps": 128,
+        "brush_radius": 1,
+        "depth": 1,
+        "boundary_offset": 2,
+        "recovery": "backtrack",
+        "walker_policy": "random_legal"
+      }
+    },
+    {
+      "id": "serpentine-reentry",
+      "split": "development",
+      "tags": [
+        "coverage",
+        "serpentine",
+        "hysteresis",
+        "distinct-path"
+      ],
+      "recipe": {
+        "version": "d2.offline/1",
+        "family": "guided_coverage",
+        "canvas": [
+          96,
+          96
+        ],
+        "seed": 37,
+        "steps": 160,
+        "brush_radius": 0,
+        "order": 4,
+        "curve": "serpentine",
+        "exit_below": 48000,
+        "reenter_at": 52000,
+        "recovery": "relocate"
+      }
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "description": "Synthetic A1 baseline with mandatory positive scalar u16le field, zero optional channels, explicit empty admission accounting and 512×512 test World. Other A2/A3 synthetic variants are constructed and checked by test_interface.py. Placeholder digests do NOT evidence native execution.",
+  "fixtures": [
+    {
+      "protocol": "cybersand.driv3r.d-common/1",
+      "type": "guidance",
+      "record_id": "guide-001",
+      "episode_id": "fixture-001",
+      "sequence": 0,
+      "label": "Synthetic positive intensity preference",
+      "frame": [
+        0,
+        0,
+        8,
+        8
+      ],
+      "source_kind": "airbrush",
+      "purpose": "soft_positive_preference",
+      "values": {
+        "path": "fixtures/guide.u16le",
+        "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+        "bytes": 128,
+        "format": "u16le"
+      },
+      "display": {
+        "path": "fixtures/guide.png",
+        "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+        "bytes": 256,
+        "format": "png"
+      },
+      "encoding": "u16le_higher_is_better_zero_is_neutral",
+      "speckle": {
+        "seed": 17,
+        "radius_cells": 12,
+        "centre_density": 0.8,
+        "hardness": 0.2,
+        "gradient_length": 0.8
+      },
+      "hysteresis": {
+        "exit_below": 12000,
+        "reenter_at_or_above": 21000
+      },
+      "native_material_authority": false,
+      "authoring_seed": 17,
+      "canvas_size": [
+        512,
+        512
+      ],
+      "optional_channels": []
+    },
+    {
+      "protocol": "cybersand.driv3r.d-common/1",
+      "type": "observation",
+      "record_id": "obs-001",
+      "episode_id": "fixture-001",
+      "sequence": 1,
+      "objective": "Follow a selected wall 6–10 cells away",
+      "subgoal": "Find the next safe movement",
+      "world": {
+        "id": "synthetic-native-fixture",
+        "generation": 1,
+        "revision": 7,
+        "tick": 0,
+        "material_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "world_material_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "width_cells": 512,
+        "height_cells": 512
+      },
+      "cursor": [
+        12,
+        24
+      ],
+      "target": [
+        12,
+        30
+      ],
+      "guidance_ref": "guide-001",
+      "last_action_ref": null,
+      "last_native_receipt_ref": null,
+      "local_material": {
+        "path": "fixtures/crop.i32le",
+        "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+        "bytes": 256,
+        "format": "i32le"
+      },
+      "local_crop": [
+        8,
+        20,
+        8,
+        8
+      ],
+      "host_geometry": {
+        "selected_wall_distance_cells": 8,
+        "goal_distance_cells": 6
+      },
+      "history_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+      "rules": {
+        "focus": [
+          0,
+          0,
+          96,
+          96
+        ],
+        "allowed_materials": [
+          0,
+          58
+        ],
+        "forbidden_materials": [
+          28
+        ],
+        "protected_rectangles": [
+          [
+            40,
+            40,
+            8,
+            8
+          ]
+        ]
+      },
+      "budget": {
+        "decisions_remaining": 36,
+        "material_cell_budget": 1024,
+        "wall_seconds_remaining": 3600
+      },
+      "feedback_views": [],
+      "guidance_channel_handling": {
+        "unsupported_policy": "reject_unsupported",
+        "used_channel_ids": [],
+        "ignored_channels": []
+      }
+    },
+    {
+      "protocol": "cybersand.driv3r.d-common/1",
+      "type": "action",
+      "record_id": "action-001",
+      "episode_id": "fixture-001",
+      "sequence": 2,
+      "observation_ref": "obs-001",
+      "world_precondition": {
+        "id": "synthetic-native-fixture",
+        "generation": 1,
+        "revision": 7,
+        "tick": 0,
+        "material_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "world_material_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "width_cells": 512,
+        "height_cells": 512
+      },
+      "candidate_set_sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+      "candidate_id": "CURVE_PAUSE",
+      "actor": "d1",
+      "mode": "no_paint_plan",
+      "cursor_before": [
+        12,
+        24
+      ],
+      "cursor_after": [
+        12,
+        24
+      ],
+      "path": [
+        [
+          12,
+          24
+        ]
+      ],
+      "brush_state": "up",
+      "guidance_ref": "guide-001",
+      "operation_sha256": null,
+      "model_decision_ref": null,
+      "predicted_effects": {
+        "candidate_safety_label": "legal"
+      },
+      "execution_status": "candidate",
+      "native_receipt_ref": null,
+      "native_receipt_artifact": null,
+      "world_postcondition": null,
+      "legal_candidate_set_sha256": "8888888888888888888888888888888888888888888888888888888888888888"
+    },
+    {
+      "protocol": "cybersand.driv3r.d-common/1",
+      "type": "reversal",
+      "record_id": "reversal-001",
+      "episode_id": "fixture-001",
+      "sequence": 3,
+      "mechanism": "BACKTRACK_CURSOR",
+      "source_action_ref": "action-001",
+      "history_anchor_ref": "obs-001",
+      "cursor_before": [
+        12,
+        24
+      ],
+      "cursor_after": [
+        12,
+        23
+      ],
+      "brush_lifted": true,
+      "preserve_material_edits": true,
+      "before_world": {
+        "id": "synthetic-native-fixture",
+        "generation": 1,
+        "revision": 7,
+        "tick": 0,
+        "material_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "world_material_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "width_cells": 512,
+        "height_cells": 512
+      },
+      "after_world": {
+        "id": "synthetic-native-fixture",
+        "generation": 1,
+        "revision": 7,
+        "tick": 0,
+        "material_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "world_material_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "width_cells": 512,
+        "height_cells": 512
+      },
+      "native_undo_receipt_ref": null,
+      "actual_material_cells_changed": 0,
+      "status": "applied",
+      "reason_code": "cursor_only_recovery",
+      "native_undo_receipt_artifact": null
+    },
+    {
+      "protocol": "cybersand.driv3r.d-common/1",
+      "type": "provenance",
+      "record_id": "provenance-001",
+      "episode_id": "fixture-001",
+      "sequence": 4,
+      "experiment_id": "d-common-synthetic",
+      "arm": "fixture",
+      "split": "pilot",
+      "algorithm": {
+        "name": "synthetic-boundary-walk",
+        "version": "0.0",
+        "seed": 17,
+        "recipe_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "guidance_ref": "guide-001",
+      "episode_record_refs": [
+        "guide-001",
+        "obs-001",
+        "action-001",
+        "reversal-001"
+      ],
+      "outcome": "partial",
+      "metrics": {
+        "decisions": 1,
+        "material_cells_changed": 0
+      },
+      "replay": "not_attempted",
+      "artifacts": [],
+      "evidence_class": "synthetic"
+    }
+  ]
+}
