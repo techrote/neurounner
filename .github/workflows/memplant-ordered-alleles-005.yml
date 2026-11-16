@@ -1,0 +1,67 @@
+name: MEMPLANT DG005 noncommuting game-state allele receiver
+
+on:
+  pull_request:
+    branches: [research/memplant-game-state-004-20261116]
+    paths:
+      - '.github/workflows/memplant-ordered-alleles-005.yml'
+      - 'experiments/memplant/ordered_alleles/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: memplant-dg005-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  OMP_NUM_THREADS: '2'
+  MKL_NUM_THREADS: '2'
+
+jobs:
+  atomic-edit-and-game-receiver:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [26011605, 26011606]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install CPU-only source-pinned trainer
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy>=1.26,<3'
+      - name: Exact source syntax, atomic edit training and noncommutativity checks
+        run: |
+          python3 -m py_compile experiments/memplant/ordered_alleles/experiment.py
+          python3 -m experiments.memplant.ordered_alleles.experiment --selftest
+      - name: Restore pinned original Qwen attention V evidence
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-dg002-source-a1
+          repository: techrote/neurounner
+          run-id: 43736088404
+          github-token: ${{ github.token }}
+          path: runtime/memplant/dg005/source
+      - name: Train real-source decoder and independently supervised atomic editors
+        run: |
+          mkdir -p runtime/memplant/dg005/results
+          timeout --signal=INT --kill-after=15s 14m python3 -m experiments.memplant.ordered_alleles.experiment \
+            --source runtime/memplant/dg005/source \
+            --out runtime/memplant/dg005/results \
+            --seed '${{ matrix.seed }}' --updates 600
+      - name: Archive original trained weights, noncommuting order tests and negative controls
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-dg005-ordered-alleles-seed-${{ matrix.seed }}-a${{ github.run_attempt }}
+          path: runtime/memplant/dg005/results
+          if-no-files-found: warn
+          retention-days: 30
