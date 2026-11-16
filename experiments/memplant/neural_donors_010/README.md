@@ -18,7 +18,7 @@ Donors are trained against explicitly authored *single-family* synthetic utility
 
 Receivers are trained on seven out of eight signed triple combinations; **(+,+,+) is excluded from training and validation**. Evaluation uses 900 independent query worlds with the excluded triple and a separate set of neural donor checkpoints. Query worlds are never used to construct the donor states.
 
-Each query has six candidate actions, a host-owned legal-action mask, and ten synthetic local material/geometry/history features per candidate. This is an intentionally simplified **single-decision surrogate** for a CyberSand-facing policy, not native CyberSand gameplay.
+Each query has six candidate actions, a host-owned legal-action mask, and ten synthetic local material/geometry/history features per candidate. Both the donors and receiver receive an explicit one-hot action-identity feature to avoid aliasing action-dependent scoring functions. A local preflight exposed and repaired that architectural flaw; before the repair some specialist donors achieved only ~50-80% single-family action fidelity, whereas after repair independent heldout donor policies achieved ~94-99%. This is an intentionally simplified **single-decision surrogate** for a CyberSand-facing policy, not native CyberSand gameplay.
 
 ## Trained comparisons and controls
 
@@ -43,15 +43,15 @@ Two locally completed 700-update receiver trainings and twelve 230-update donor 
 
 | Sealed (+,+,+) exact-action accuracy | Seed 26011615 | Seed 26011616 |
 | --- | ---: | ---: |
-| Both channels, correct **unseen-seed** donors | 69.89% | 72.78% |
-| Outputs-only receiver | 69.78% | 73.22% |
-| Hidden-only receiver | 57.56% | 72.33% |
-| Separately trained query-only blind policy | 25.11% | 29.33% |
-| Both channels, wrong wet donor | 21.56% | 13.56% |
-| Both channels, opposite-wet donor matches counterfactual gold | 69.67% | 68.44% |
-| Both channels, hidden unseen three-way rule | 52.00% | 51.11% |
+| Both channels, correct **unseen-seed** donors | 88.44% | 90.56% |
+| Outputs-only receiver | 86.33% | 71.67% |
+| Hidden-only receiver | 72.78% | 39.67% |
+| Architecture-matched query-only blind policy | 27.67% | 39.56% |
+| Both channels, wrong wet donor (original-law match) | 33.78% | 25.11% |
+| Both channels, opposite-wet donor matches counterfactual gold | 90.33% | 91.78% |
+| Both channels, hidden unseen three-way rule | 52.67% | 52.11% |
 
-**Interpretation:** output-logit transfer has a reproducible effect and survives replacing all donor weights with independently trained unseen-seed donors. However the hidden-only channel is less reliable: on seed 26011616 it scored 72.33% correct under the original donor but changed only 0.78% of actions under an opposite-wet donor intervention. **Raw hidden-state accuracy without intervention specificity is not credible evidence of a correctly inherited wet rule.** The output-bearing channels have much better causal response.
+**Interpretation:** the combined output/activation channel transfers useful game-law preferences across independently trained donor weights and source-world seeds. The corrected source models reach 94-99% single-family fidelity. The combined receiver outperforms the capacity-matched blind model by 60.77 and 51.00 percentage points and recovers counterfactual target actions in >90% of cases when the wet donor changes. **Hidden-only is not independently established:** its seed-26011615 accuracy barely changes (72.78% -> 72.89%) under the wrong wet donor, while its seed-26011616 accuracy is low (39.67%). Mere accuracy with hidden activations does not demonstrate causal inheritance. The output-bearing channels provide the stronger signal.
 
 The newly introduced three-way rule changes the oracle action on ~46% of worlds, and the model does not infer it correctly. A neural donor's state can encode supervised preferences; this experiment does **not** establish novel physics discovery.
 
