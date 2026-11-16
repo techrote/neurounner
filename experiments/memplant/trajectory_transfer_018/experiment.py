@@ -358,7 +358,7 @@ def run(seed, out, train_worlds, updates, sealed, horizon, donor_steps):
             ("value", True, "real"),
             ("shuffled_value", True, "shuffled"),
             ("blind", False, "none"))):
-        models[name], losses[name] = fit(seed + 3000 + 1000*index,
+        models[name], losses[name] = fit(seed + (3000 if conditioned else 6000),
                         episodes, conditioned, updates, mode)
         torch.save(models[name].state_dict(), out/f"receiver-{name}.pt")
     results, traces = eval_sealed(seed+100000, bank, models, sealed, horizon)
@@ -380,7 +380,8 @@ def run(seed, out, train_worlds, updates, sealed, horizon, donor_steps):
         sequence_window=12, recurrent_hidden=96,
         supervised_value_target="remaining true weighted cost on TRAINING oracle trajectory, scaled by 40",
         value_auxiliary_coefficient=0.20,
-        matched_optim_budget=True, shuffled_value_control=True,
+        matched_optim_budget=True, matched_initialization=True,
+        matched_training_batches_conditioned=True, shuffled_value_control=True,
         inference_uses_oracle_potential=False, inference_uses_future_cost=False,
         host_legal_actions=True, source_neural_outputs=True,
         private_donor_features=True, train_sealed_seed_overlap=0,
