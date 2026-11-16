@@ -308,3 +308,143 @@ def causal_pairs(model,donors,seed,n=600):
     expected=(gold[:,0]!=gold[:,1])
     with torch.no_grad():
         scores={'grafted_pairwise':model(d['features'],em,de,d['codes']),
+                'atomic_additive':model(d['features'],em,de,d['codes'],False),
+                'no_donor':base_scores(d['features'])}
+    result={}
+    for name,score in scores.items():
+        p=score.masked_fill(~d['legal'],-1e5).argmax(-1).reshape(n,2)
+        changed=p[:,0]!=p[:,1]
+        result[name]={'n':n,'should_change':int(expected.sum()),'changed':int(changed.sum()),
+           'matched':int((expected==changed).sum()),
+           'both_correct':int(((p==gold).all(-1)).sum()),
+           'flag_accuracy':round(float((expected==changed).float().mean()),6)}
+    return result
+
+
+def render_rollout(model,donors,seed,codes,out):
+    """Real sequential synthetic model decisions and material marks, NOT native PAINT."""
+    from PIL import Image,ImageDraw
+    tiles,protected,pos,goal=world(seed)
+    history=[pos];marked=set();heading=0;trace=[]
+    for turn in range(32):
+        ft,legal=offer_state(tiles,protected,pos,goal,history,marked,heading)
+        d={'features':torch.from_numpy(ft[None]),'legal':torch.from_numpy(legal[None]),
+           'codes':torch.tensor([list(codes)+[-1]*(MAX_LAWS-len(codes))])}
+        em,de=tokens(donors,d)
+        with torch.no_grad():
+            logit=model(d['features'],em,de,d['codes'])
+            move=int(logit.masked_fill(~d['legal'],-1e5).argmax())
+        assert legal[move]
+        trace.append({'turn':turn,'position':list(pos),'action':ACTIONS[move],
+                      'legal_count':int(legal.sum())})
+        if move<4:
+            dx,dy=DIRS[move];pos=(pos[0]+dx,pos[1]+dy);history.append(pos);heading=move
+        elif move==4:marked.add(pos)
+        elif len(history)>1:history.pop();pos=history[-1]
+    sc=25
+    im=Image.new('RGB',(9*sc,9*sc),(18,19,21));dr=ImageDraw.Draw(im)
+    palette=((124,129,135),(168,139,91),(64,104,159),(27,30,33))
+    for y in range(9):
+        for x in range(9):
+            tile=palette[int(tiles[y,x])]
+            if protected[y,x]:tile=(89,39,53)
+            if (x,y) in marked:tile=(231,179,65)
+            dr.rectangle((x*sc,y*sc,x*sc+sc-1,y*sc+sc-1),fill=tile,outline=(38,40,42))
+    for x,y in history:
+        dr.ellipse((x*sc+7,y*sc+7,x*sc+17,y*sc+17),fill=(126,223,182))
+    gx,gy=goal;dr.rectangle((gx*sc+8,gy*sc+8,gx*sc+16,gy*sc+16),fill=(242,63,64))
+    x,y=pos;dr.ellipse((x*sc+6,y*sc+6,x*sc+18,y*sc+18),fill=(255,255,255))
+    im.save(out)
+    return {'world_seed':seed,'rule_codes':list(codes),'final_position':list(pos),
+            'painted_cells':len(marked),'trace':trace,'image_sha256':digest(out)}
+
+
+def produce(seed,out,donor_steps=280,receiver_steps=450):
+    torch.set_num_threads(2)
+    torch.manual_seed(seed)
+    start=time.monotonic()
+    dest=Path(out);dest.mkdir(parents=True,exist_ok=True)
+    donors=[];donor_curves={};hashes={}
+    for group in (0,1):
+        model,curve=train_donor(seed,group,donor_steps);donors.append(model)
+        path=dest/f'donor_{group}.pt';torch.save({'seed':seed,'specialty':'materials' if group==0 else 'motion_recovery','state_dict':model.state_dict(),'schema':'DG008'},path)
+        hashes[path.name]=digest(path);donor_curves[str(group)]=curve
+    receiver,rcurve=train_receiver(seed,donors,receiver_steps)
+    dst=dest/'receiver.pt';torch.save({'seed':seed,'state_dict':receiver.state_dict(),'schema':'DG008'},dst);hashes[dst.name]=digest(dst)
+    results={str(k):evaluate(receiver,donors,seed+5000, k) for k in (1,2,3,4)}
+    paired=causal_pairs(receiver,donors,seed+7000)
+    stress={str(k):interaction_stress(receiver,donors,seed+9000+k*50000,k,8000) for k in (3,4)}
+    galleries=[]
+    for i,codes in enumerate(((1,7,10),(0,6,11),(3,5,8,10))):
+        path=dest/f'synthetic-rollout-{i}.png'
+        galleries.append(render_rollout(receiver,donors,seed+8000,codes,path))
+    manifest={'schema':'DG008-dual-donor-composition-v1','seed':seed,'donor_steps_each':donor_steps,'receiver_steps':receiver_steps,
+              'frozen_specialised_donor_embeddings':True,'train_max_active_laws':2,'test_heldout_active_laws':[3,4],
+              'rules':'six synthetic families, two polarities each; five pairwise interactions; independent sealed 9x9 material worlds',
+              'donor_training':donor_curves,'receiver_training':rcurve,'results':results,'interaction_stress':stress,'paired_counterfactuals':paired,
+              'checkpoint_sha256':hashes,'synthetic_model_rollouts':galleries,'elapsed_seconds':round(time.monotonic()-start,3),
+              'limitations':['donors are trained small neural specialists, NOT original Qwen/KV state',
+                 'law card family/polarity supervised, both polarities seen in train',
+                 'only conjunction cardinality (3/4) withheld, not novel law identities',
+                 'synthetic authored physics and expert action scores, NOT CyberSand gameplay',
+                 'pairwise residual inductive bias hardcoded in receiver architecture',
+                 'single-run metrics are not a substitute for independent seeds',
+                 'no edits to CyberSand game/content']}
+    (dest/'report.json').write_text(json.dumps(manifest,indent=2)+'\n')
+    print(json.dumps({'seed':seed,'results':results,'paired':paired,'seconds':manifest['elapsed_seconds']},indent=2))
+    return manifest
+
+
+
+def evaluate_only(seed,out):
+    """Resume interrupted metrics from immutable model files; no retraining."""
+    torch.set_num_threads(2)
+    dest=Path(out)
+    prior=dest/'report.json'
+    if not prior.exists():raise FileNotFoundError('Original completed training report needed')
+    report=json.loads(prior.read_text())
+    if report['seed']!=seed:raise ValueError('seed mismatch')
+    donors=[]
+    for group in (0,1):
+        file=dest/f'donor_{group}.pt'
+        if digest(file)!=report['checkpoint_sha256'][file.name]:raise ValueError('donor hash mismatch')
+        model=Donor();weights=torch.load(file,weights_only=True,map_location='cpu')
+        if weights['seed']!=seed:raise ValueError('donor provenance mismatch')
+        model.load_state_dict(weights['state_dict']);model.eval();donors.append(model)
+    file=dest/'receiver.pt'
+    if digest(file)!=report['checkpoint_sha256'][file.name]:raise ValueError('receiver hash mismatch')
+    receiver=Receiver();weights=torch.load(file,weights_only=True,map_location='cpu')
+    receiver.load_state_dict(weights['state_dict']);receiver.eval()
+    now=time.monotonic()
+    report['interaction_stress']={str(k):interaction_stress(receiver,donors,seed+9000+k*50000,k,8000) for k in (3,4)}
+    report['resumed_eval_seconds']=round(time.monotonic()-now,3)
+    prior.write_text(json.dumps(report,indent=2)+'\n')
+    print(json.dumps(report['interaction_stress'],indent=2))
+
+
+def selftest():
+    a=one(123,20,2);b=one(123,20,2)
+    assert torch.equal(a['features'],b['features']) and torch.equal(a['codes'],b['codes'])
+    assert (a['codes'][:,:2]>=0).all() and (a['codes'][:,2:]==-1).all()
+    assert bool(a['legal'].gather(1,a['target'][:,None]).all())
+    f=a['features'][0];x=[0,8];y=[8,0]
+    assert torch.allclose(effects(f,x),effects(f,y))
+    assert torch.allclose(pair_effects(f,x),pair_effects(f,y))
+    d=[Donor(),Donor()];e,v=tokens(d,a);m=Receiver()
+    assert m(a['features'],e,v,a['codes']).shape==a['scores'].shape
+    assert all(a['legal'][i,int(j)] for i,j in enumerate(accuracy(m(a['features'],e,v,a['codes']),a)[1]))
+    print('DG008 deterministic worlds / mask / graft tensors / commutative pairs selftest PASS')
+
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('--selftest',action='store_true');p.add_argument('--evaluate-only',action='store_true')
+    p.add_argument('--seed',type=int,default=26011611)
+    p.add_argument('--out',default='runtime/memplant/dg008/results')
+    p.add_argument('--donor-steps',type=int,default=280)
+    p.add_argument('--receiver-steps',type=int,default=450)
+    args=p.parse_args()
+    if args.selftest:selftest()
+    elif args.evaluate_only:evaluate_only(args.seed,args.out)
+    else:
+        if not 80<=args.donor_steps<=800 or not 100<=args.receiver_steps<=1200: p.error('bounded model training step limits exceeded')
+        produce(args.seed,args.out,args.donor_steps,args.receiver_steps)
