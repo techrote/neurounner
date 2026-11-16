@@ -14,6 +14,8 @@ This advances DG007's trained six-action synthetic game-policy receiver and its 
 - Holdout scenario 2: an authored **hidden nonlinear A∧B physics** rule changing RETRACE/PAINT preference only when A=B=1. There are deliberately no examples revealing this rule. Nobody should expect it to be inferred; this is a negative control for **identifiability**, not an architecture failure to conceal.
 - Genuine source-path test: freeze and verify DG002 donor, DG005 decoder and DG006 contextual/additive editors, compose eight previously withheld edits, present the two extra synthetic laws as 11, and evaluate **the exact same host-legal synthetic game worlds** under real/zero/shuffled/oracle source modes.
 
+Nine original matched-world 24-decision synthetic rollouts per seed (factorized, flat, law-blind × A-only, B-only, unseen A+B), with actual chosen actions, painted-cell counts, expert-match receipts and PNG hashes. These are model-selected trajectories in synthetic worlds, **not native CyberSand captures**.
+
 Two independently seeded bounded CPU trainings; new world identities across train, validation and both sealed arms. Report exact-choice accuracy, action distributions, state accuracy, original checkpoint hashes and source provenance. No trained receiver claims a native CyberSand material edit or fresh model-donor validation.
 
 ## Reproduce
