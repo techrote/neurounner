@@ -195,6 +195,10 @@ def evaluate(seed, bank, models, n, horizon):
     rows = {m: [] for m in MODES}
     galleries = []
     swapped_first_action = 0
+    swapped_navigation_action = 0
+    paired_cost_deltas = []
+    paired_inherited_regret = []
+    paired_wrong_regret = []
     for i in range(n):
         w = make_world(seed + i * 101)
         law = HELD if i % 2 == 0 else TRAIN_LAWS[i % len(TRAIN_LAWS)]
@@ -202,11 +206,22 @@ def evaluate(seed, bank, models, n, horizon):
         if trials["inherited"]["actions"] and trials["wrong_wet"]["actions"]:
             swapped_first_action += (trials["inherited"]["actions"][0] !=
                                      trials["wrong_wet"]["actions"][0])
+        moves = ("LEFT", "RIGHT", "UP", "DOWN")
+        first_moves = []
+        for mode in ("inherited", "wrong_wet"):
+            first_moves.append(next((a for a in trials[mode]["actions"] if a in moves), None))
+        if all(first_moves):
+            swapped_navigation_action += int(first_moves[0] != first_moves[1])
+        if trials["inherited"]["success"] and trials["wrong_wet"]["success"]:
+            paired_cost_deltas.append(trials["wrong_wet"]["cost"] - trials["inherited"]["cost"])
         for mode in MODES:
             v = trials[mode]
             v["regret"] = (round(v["cost"] / max(1, trials["oracle"]["cost"]) - 1, 4)
                            if v["success"] and trials["oracle"]["success"] else None)
             rows[mode].append(v)
+        if trials["inherited"]["success"] and trials["wrong_wet"]["success"]:
+            paired_inherited_regret.append(trials["inherited"]["regret"])
+            paired_wrong_regret.append(trials["wrong_wet"]["regret"])
         if i < 4:
             galleries.append(dict(seed=seed+i*101, laws=law,
                                   wall=w["wall"].astype(int).tolist(),
@@ -222,7 +237,21 @@ def evaluate(seed, bank, models, n, horizon):
                              successful_mean_regret=round(float(np.mean(regrets)), 4) if regrets else None,
                              retraces=sum(v["retraces"] for v in vals),
                              illegal=sum(v["illegal"] for v in vals))
-    return summary, swapped_first_action, galleries
+    paired = dict(
+        jointly_successful_worlds=len(paired_cost_deltas),
+        mean_wrong_minus_correct_cost=round(float(np.mean(paired_cost_deltas)), 4)
+            if paired_cost_deltas else None,
+        correct_lower_cost=sum(v > 1e-6 for v in paired_cost_deltas),
+        wrong_lower_cost=sum(v < -1e-6 for v in paired_cost_deltas),
+        equal_cost=sum(abs(v) <= 1e-6 for v in paired_cost_deltas),
+        mean_inherited_regret_joint=round(float(np.mean(paired_inherited_regret)), 4)
+            if paired_inherited_regret else None,
+        mean_wrong_regret_joint=round(float(np.mean(paired_wrong_regret)), 4)
+            if paired_wrong_regret else None,
+        first_action_changed=swapped_first_action,
+        first_navigation_changed=swapped_navigation_action,
+        navigation_comparisons=n)
+    return summary, paired, galleries
 
 
 def gallery_svg(worlds, path):
@@ -296,7 +325,7 @@ def run(seed, out, worlds, updates, sealed, horizon, donor_steps):
     train_keys = {seed+2000+53*i for i in range(worlds)}
     sealed_keys = {seed+100000+101*i for i in range(sealed)}
     assert not train_keys & sealed_keys
-    summary, first_changes, trajectory = evaluate(seed+100000, bank, models, sealed, horizon)
+    summary, paired, trajectory = evaluate(seed+100000, bank, models, sealed, horizon)
     assert all(v["illegal"]==0 for v in summary.values())
     (out/"trajectories.json").write_text(json.dumps(trajectory, indent=2)+"\n")
     gallery_svg(trajectory, out/"gallery.svg")
@@ -307,7 +336,8 @@ def run(seed, out, worlds, updates, sealed, horizon, donor_steps):
                   horizon=horizon, no_graph_distance_features=True,
                   dynamic_gate=True, trained_retrace=True, withheld_triple="+++",
                   donor_validation_mse=errors, trajectories=summary,
-                  first_action_changed_by_wet_donor=first_changes,
+                  paired_wet_counterfactual=paired,
+                  first_action_changed_by_wet_donor=paired["first_action_changed"],
                   matched_first_action_comparisons=sealed,
                   train_sealed_seed_overlap=0,
                   limitations="Synthetic authored corridor family, Dijkstra teacher, source outputs not KV or learned unknown physics; success-conditioned regret can select survivors.",
