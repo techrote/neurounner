@@ -159,12 +159,13 @@ class Receiver(nn.Module):
 
 
 class Blind(nn.Module):
+    """Exact receiver architecture/capacity, trained with an absent source."""
     def __init__(self):
         super().__init__()
-        self.policy=nn.Sequential(nn.Linear(D,96),nn.GELU(),nn.Linear(96,64),
-                                  nn.GELU(),nn.Linear(64,1))
+        self.net=Receiver()
     def forward(self,x,legal):
-        return self.policy(x).squeeze(-1).masked_fill(~legal,-1e4)
+        null=x.new_zeros((x.shape[0],3,SIG))
+        return self.net(x,legal,null)
 
 
 def accuracy(logits,c):
