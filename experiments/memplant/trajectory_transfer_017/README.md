@@ -10,12 +10,15 @@ This experiment adds an observable per-cell visit-history channel (channel 13), 
 
 - legacy: DG016 architecture and behavioural-cloning objective, 12 channels
 - history_bc: same neural receiver initialization plus the added visit-history channel, trained on fresh expert trajectories
-- dagger: history-aware receiver additionally corrected using states visited by its own policy
-- blind_dagger: equally corrective-trained receiver without neural donor signatures
-- wrong_wet and wrong_goal: correct game physics/world but counterfactual specialist-donor outputs
+- history_bc_extended: history-aware BC with the same extra number of gradient steps as the corrective models
+- dagger: **deliberately retained failed** high-dose history-aware correction (50% replay, 0.001 LR)
+- guarded: 1/6 corrective examples, 5/6 fresh expert examples, 0.0002 LR, plus logit KL preservation against frozen history_bc
+- blind_dagger and blind_guarded: correction-matched policies without neural donor signatures
+- wrong_wet and wrong_goal: high-dose DAgger counterfactual specialist swaps
+- wrong_wet_guarded and wrong_goal_guarded: guarded DAgger counterfactual specialist swaps
 - oracle: Dijkstra replanning with host legality and timed gate closure
 
-Correction batches contain the oracle's action for the **receiver's actual current state**, with a bounded teacher-action mixture (20%, then 8%), repeated-state deduplication and a 20-state-per-episode cap. Corrective learning samples 50% fresh expert states and 50% aggregated corrected states; the history-aware behavioural-cloning control prevents attributing any gains from the new observable channel to correction. Conditioned vs blind correction isolates neural donor inheritance from ordinary off-policy recovery.
+Correction batches contain the oracle's action for the **receiver's actual current state**, with a bounded teacher-action mixture (20%, then 8%), repeated-state deduplication and a 20-state-per-episode cap. The initial high-dose DAgger intervention was a **replicated failure**: IID completion dropped from history-BC's 67/53 to 43/30, and OOD from 36/36 to 21/20 across seeds 30/31. Its original exact-head Actions run #43930475992 and immutable failed artifacts are retained; see PR #250's negative-result comment. The revised guarded intervention retains the failed DAgger alongside a lower-dose, KL-anchored correction and compute-matched BC control. Contrasting guarded with extended BC isolates correction from extra gradient-update count, while conditioned vs blind-guarded isolates donor dependence. None of these comparisons validates real CyberSand gameplay.
 
 ## Hard boundaries
 
@@ -27,9 +30,9 @@ Correction batches contain the oracle's action for the **receiver's actual curre
 
 ## Primary metrics
 
-Report all-world goal+painting completion, failure-penalized cost, successful-world cost, RETRACE count, legality, withheld-triple completion, and matched-world DAgger-vs-history-BC regret. The wet counterfactual test *preselects cases using differing original-vs-alternative-law oracle first moves* and reports its actual denominator (which may be zero). No inheritance claim may be derived from completion alone.
+Report all-world goal+painting completion, failure-penalized cost, successful-world cost, RETRACE count, legality, withheld-triple completion, and matched-world raw-DAgger-vs-history-BC and guarded-vs-budget-matched-BC regret. The wet counterfactual test *preselects cases using differing original-vs-alternative-law oracle first moves* and reports its actual denominator (which may be zero). No inheritance claim may be derived from completion alone.
 
-Keep genuine negative results, including potential DAgger degradation, goal specificity without wet-law adaptation, synthetic-oracle dependence, and combined topology/timing OOD confounding.
+Keep genuine negative results, including the *observed* catastrophic high-dose DAgger degradation, potential guarded degradation, goal specificity without wet-law adaptation, synthetic-oracle dependence, and combined topology/timing OOD confounding.
 
 ## Reproduce
 
@@ -42,4 +45,4 @@ python -m experiments.memplant.trajectory_transfer_017.experiment --selftest
 python -m experiments.memplant.trajectory_transfer_017.experiment --seed 26011630 --train-worlds 200 --updates 500 --sealed 100 --horizon 96 --donor-steps 140 --rounds 2 --correction-worlds 65 --out /tmp/dg017
 ~~~
 
-Immutable GitHub Actions artifacts retain all donor weights, all five receiver checkpoints, original SVG/JSON trajectories, correction-label denominators, reports and SHA-256 manifests. Results cannot be claimed qualified until the exact-head workflow and independent hash checks pass.
+Immutable GitHub Actions artifacts retain all donor weights, all eight receiver checkpoints, original SVG/JSON trajectories, correction-label denominators, reports and SHA-256 manifests. Results cannot be claimed qualified until the exact-head workflow and independent hash checks pass.
