@@ -1,0 +1,54 @@
+name: DREAMGRAFT DG010 neural donor state inheritance
+on:
+  pull_request:
+    branches: [research/memplant-dg009-fewshot-counterfactual-donors-20261116]
+    paths:
+      - '.github/workflows/memplant-neural-donors-010.yml'
+      - 'experiments/memplant/neural_donors_010/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dg010-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  OMP_NUM_THREADS: '2'
+  MKL_NUM_THREADS: '2'
+jobs:
+  neural-donor-train:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [26011615, 26011616, 26011617]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install bounded CPU-only training dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy>=1.26,<3'
+      - name: Verify holdout, legality and donor activation interface
+        run: |
+          python3 -m py_compile experiments/memplant/neural_donors_010/experiment.py
+          python3 -m experiments.memplant.neural_donors_010.experiment --selftest
+      - name: Train 12 independent neural donor models and three receiver conditions
+        run: |
+          mkdir -p runtime/memplant/dg010/seed-${{ matrix.seed }}
+          sha256sum experiments/memplant/neural_donors_010/experiment.py > runtime/memplant/dg010/seed-${{ matrix.seed }}/source.sha256
+          timeout --signal=INT --kill-after=20s 18m python3 -m experiments.memplant.neural_donors_010.experiment \
+            --out runtime/memplant/dg010/seed-${{ matrix.seed }} \
+            --seed ${{ matrix.seed }} --donor-steps 230 \
+            --receiver-steps 700 --train-cases 4500 --sealed-cases 900
+      - name: Retain actual independently trained parents, receivers and raw decisions
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg010-neural-donors-${{ matrix.seed }}-a${{ github.run_attempt }}
+          path: runtime/memplant/dg010/seed-${{ matrix.seed }}
+          retention-days: 30
+          if-no-files-found: warn
