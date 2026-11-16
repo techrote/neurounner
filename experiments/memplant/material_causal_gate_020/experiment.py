@@ -313,4 +313,3 @@ if __name__ == "__main__":
     else:
         run(a.seed, a.out, a.training_worlds, a.receiver_updates,
             a.donor_steps, a.per_family)
-
