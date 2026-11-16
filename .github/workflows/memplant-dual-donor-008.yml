@@ -1,0 +1,74 @@
+name: MEMPLANT DG008 specialist-donor compositional game-state training
+on:
+  pull_request:
+    branches: [research/memplant-dg007-learned-game-actions-20261116]
+    paths:
+      - '.github/workflows/memplant-dual-donor-008.yml'
+      - 'experiments/memplant/dual_donor_008/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dg008-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  OMP_NUM_THREADS: '2'
+  MKL_NUM_THREADS: '2'
+jobs:
+  specialist-grafts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [26011611, 26011612]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install bounded CPU trainer
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy>=1.26,<3' 'Pillow>=10,<13'
+      - name: Validate source and host-legal action masks
+        run: |
+          python3 -m py_compile experiments/memplant/dual_donor_008/experiment.py
+          python3 -m experiments.memplant.dual_donor_008.experiment --selftest
+      - name: Run genuine parent and recipient optimiser steps
+        run: |
+          mkdir -p runtime/memplant/dg008/seed-${{ matrix.seed }}
+          timeout --signal=INT --kill-after=15s 17m python3 -m experiments.memplant.dual_donor_008.experiment \
+            --seed '${{ matrix.seed }}' \
+            --donor-steps 280 --receiver-steps 450 \
+            --out runtime/memplant/dg008/seed-${{ matrix.seed }}
+      - name: Independently validate all checkpoint and image hashes
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root=pathlib.Path('runtime/memplant/dg008/seed-'+os.environ['MATRIX_SEED'])
+          report=json.loads((root/'report.json').read_text())
+          assert report['seed']==int(os.environ['MATRIX_SEED'])
+          assert report['train_max_active_laws']==2
+          assert report['test_heldout_active_laws']==[3,4]
+          for filename,expected in report['checkpoint_sha256'].items():
+              assert hashlib.sha256((root/filename).read_bytes()).hexdigest()==expected
+          for i,row in enumerate(report['synthetic_model_rollouts']):
+              assert len(row['trace'])==32
+              assert hashlib.sha256((root/f'synthetic-rollout-{i}.png').read_bytes()).hexdigest()==row['image_sha256']
+          for n in ('1','2','3','4'):
+              for name in ('grafted_pairwise','atomic_additive','no_donor','shuffled_donor','oracle_expert'):
+                  assert report['results'][n][name]['n']==1600
+          print('DG008 source, checkpoint, original-rollout and sealed-cohort receipt verified')
+          PY
+        env:
+          MATRIX_SEED: ${{ matrix.seed }}
+      - name: Retain original trained models, reports, controls and PNGs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg008-dual-donor-${{ matrix.seed }}-a${{ github.run_attempt }}
+          path: runtime/memplant/dg008/seed-${{ matrix.seed }}
+          if-no-files-found: warn
+          retention-days: 30
