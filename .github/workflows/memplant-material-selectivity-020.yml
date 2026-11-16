@@ -1,0 +1,99 @@
+name: DREAMGRAFT DG020 frozen material-law selectivity stress
+on:
+  pull_request:
+    branches: [research/memplant-dg018-sequence-value-20261116]
+    paths:
+      - '.github/workflows/memplant-material-selectivity-020.yml'
+      - 'experiments/memplant/material_causal_gate_020/selectivity_stress.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  frozen-selectivity-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        seed: [26011636, 26011637, 26011638]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Install pinned CPU science dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy==1.26.4'
+      - name: Rehydrate immutable original DG020 checkpoint artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SEED: ${{ matrix.seed }}
+        run: |
+          mkdir -p frozen
+          gh run download 43962148222 --repo "$GITHUB_REPOSITORY" \
+            --name "dg020-material-gate-$SEED" --dir frozen
+          test -s frozen/receiver-conditioned.pt
+          test -s frozen/sha256.json
+      - name: Replay old sealed decisions and evaluate frozen selectivity
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          SRC="experiments/memplant/material_causal_gate_020/selectivity_stress.py"
+          python3 -m py_compile "$SRC"
+          python3 "$SRC" --selftest
+          mkdir -p "runtime/memplant/dg020-selectivity/$SEED"
+          timeout --signal=INT --kill-after=15s 12m \
+            python3 "$SRC" --seed "$SEED" --frozen frozen \
+            --out "runtime/memplant/dg020-selectivity/$SEED" --pairs 160
+          git rev-parse HEAD > "runtime/memplant/dg020-selectivity/$SEED/audit_source_commit.txt"
+          sha256sum "$SRC" > "runtime/memplant/dg020-selectivity/$SEED/audit_source.sha256"
+      - name: Verify all receipts and preserve scientific FAIL as a completed experiment
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,sys
+          import numpy as np
+          path=pathlib.Path('runtime/memplant/dg020-selectivity')/os.environ['SEED']
+          source=pathlib.Path('experiments/memplant/material_causal_gate_020/selectivity_stress.py')
+          report=json.loads((path/'report.json').read_text())
+          assert report['audit_source_sha256']==hashlib.sha256(source.read_bytes()).hexdigest()
+          assert report['original_receipts_replayed']==320
+          assert report['seed']==int(os.environ['SEED'])
+          manifest=json.loads((path/'sha256.json').read_text())
+          for name,digest in manifest.items():
+              assert hashlib.sha256((path/name).read_bytes()).hexdigest()==digest,name
+          sys.path.insert(0,str(source.parent))
+          from selectivity_stress import oracle,FAMILIES,MIN_GAP
+          for family in FAMILIES:
+              family_report=report['per_family'][family]
+              receipts=[json.loads(x) for x in (path/f'receipts-{family}.jsonl').read_text().splitlines()]
+              assert len(receipts)==family_report['n']==160
+              for receipt in receipts:
+                  obs=np.asarray(receipt['observation'],dtype=np.float32)
+                  assert hashlib.sha256(obs.tobytes()).hexdigest()==receipt['shared_observation_sha256']
+                  assert receipt['legal_mask']==[1,1]
+                  for law in (0,1):
+                      action,gap,costs=oracle(obs,law)
+                      assert action==receipt['oracle_actions'][law]
+                      assert abs(gap-receipt['oracle_margins'][law])<1e-5
+                      assert gap>=MIN_GAP
+                  assert (receipt['oracle_actions'][0]!=receipt['oracle_actions'][1])==(family=='offset_differential')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as summary:
+              summary.write(f"### DG020 seed {report['seed']}: scientific {report['verdict']}\n\n")
+              for family,entry in report['per_family'].items():
+                  summary.write(f"- {family}: {entry['verdict']}; both {entry['metrics']['both']}; donor flip {entry['metrics']['flip']}; sham flip {entry['metrics']['sham_flip']}\n")
+              summary.write("\nA scientific FAIL is a valid, completed audit. It does not imply code execution failed.\n")
+          print('SOURCE+REPLAY+RECEIPTS VALIDATED; SCIENTIFIC', report['verdict'])
+          PY
+      - name: Preserve exact-source reports, failure cases and 480 receipts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg020-frozen-selectivity-${{ matrix.seed }}
+          path: runtime/memplant/dg020-selectivity/${{ matrix.seed }}
+          if-no-files-found: warn
+          retention-days: 30
