@@ -65,14 +65,19 @@ def scores(x, legal, laws=(0,0,0), extra=False):
     return z
 
 
+def with_action_id(x):
+    eye=torch.eye(N, dtype=x.dtype, device=x.device)[None,:,:].expand(x.shape[0],-1,-1)
+    return torch.cat((x,eye),-1)
+
+
 class Donor(nn.Module):
     def __init__(self):
         super().__init__()
-        self.a=nn.Linear(D,48)
+        self.a=nn.Linear(D+N,48)
         self.b=nn.Linear(48,24)
         self.c=nn.Linear(24,1)
     def forward(self,x,return_hidden=False):
-        h=F.gelu(self.b(F.gelu(self.a(x))))
+        h=F.gelu(self.b(F.gelu(self.a(with_action_id(x)))))
         z=self.c(h).squeeze(-1)
         return (z,h) if return_hidden else z
 
@@ -149,12 +154,12 @@ class Receiver(nn.Module):
     def __init__(self):
         super().__init__()
         self.context=nn.Sequential(nn.Linear(SIG,64),nn.GELU(),nn.Linear(64,16),nn.Tanh())
-        self.policy=nn.Sequential(nn.Linear(D+48,96),nn.GELU(),nn.Linear(96,64),
+        self.policy=nn.Sequential(nn.Linear(D+N+48,96),nn.GELU(),nn.Linear(96,64),
                                   nn.GELU(),nn.Linear(64,1))
     def forward(self,x,legal,source):
         n=x.shape[0]
         ctx=self.context(source).reshape(n,48)
-        inp=torch.cat((x,ctx[:,None,:].expand(-1,N,-1)),-1)
+        inp=torch.cat((with_action_id(x),ctx[:,None,:].expand(-1,N,-1)),-1)
         return self.policy(inp).squeeze(-1).masked_fill(~legal,-1e4)
 
 
