@@ -332,7 +332,19 @@ def run(task, source, checkpoint, outdir, *, creative=False):
                     # The creative instruction is fixed and new. Do not show the
                     # world rules or full story in numeric arms.
                     fixed=format_prompt(tok,idea)
-                    raw,ids=generation_from_prefix(rec,tok,fixed,prefix,max_tokens=48)
+                    if prefix is None:
+                        # True no-prefix baseline; do not substitute eight
+                        # zeros, which would alter positions and attention.
+                        with torch.inference_mode():
+                            produced=rec.generate(
+                                input_ids=fixed, do_sample=False,
+                                max_new_tokens=48, use_cache=True,
+                                pad_token_id=tok.eos_token_id)
+                        ids=produced[0,fixed.shape[1]:].tolist()
+                        raw=tok.decode(ids,skip_special_tokens=True)
+                    else:
+                        raw,ids=generation_from_prefix(
+                            rec,tok,fixed,prefix,max_tokens=48)
                     creative_rows.append({
                         "source":cases[index]["case_id"],"condition":cond,
                         "injected_source":cases[src]["case_id"],
