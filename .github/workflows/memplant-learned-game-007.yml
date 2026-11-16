@@ -1,0 +1,86 @@
+name: MEMPLANT DG007 learned game-action receiver from inherited law states
+on:
+  pull_request:
+    branches: [research/memplant-dg006-three-law-composition-20261116]
+    paths:
+      - '.github/workflows/memplant-learned-game-007.yml'
+      - 'experiments/memplant/learned_game_007/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: dg007-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  OMP_NUM_THREADS: '2'
+  MKL_NUM_THREADS: '2'
+jobs:
+  game-action-receiver:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - seed: 26011609
+            dg005_seed: 26011605
+            dg006_seed: 26011607
+          - seed: 26011610
+            dg005_seed: 26011606
+            dg006_seed: 26011608
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install bounded CPU trainer and images
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy>=1.26,<3' 'Pillow>=10,<13'
+      - name: Test source and synthetic action correctness
+        run: |
+          python3 -m py_compile experiments/memplant/learned_game_007/experiment.py
+          python3 -m experiments.memplant.learned_game_007.experiment --selftest
+      - name: Restore original Qwen attention V
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-dg002-source-a1
+          repository: techrote/neurounner
+          run-id: 43736088404
+          github-token: ${{ github.token }}
+          path: runtime/memplant/dg007/source
+      - name: Restore frozen DG005 source decoder
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-dg005-ordered-alleles-seed-${{ matrix.dg005_seed }}-a1
+          repository: techrote/neurounner
+          run-id: 43795069697
+          github-token: ${{ github.token }}
+          path: runtime/memplant/dg007/dg005
+      - name: Restore frozen DG006 models
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: dg006-three-law-${{ matrix.dg006_seed }}-a1
+          repository: techrote/neurounner
+          run-id: 43798092630
+          github-token: ${{ github.token }}
+          path: runtime/memplant/dg007/dg006
+      - name: Train policy and comparator, evaluate inherited law state
+        run: |
+          mkdir -p runtime/memplant/dg007/results
+          timeout --signal=INT --kill-after=15s 15m python3 -m experiments.memplant.learned_game_007.experiment \
+            --source runtime/memplant/dg007/source \
+            --reference-dg005 runtime/memplant/dg007/dg005 \
+            --reference-dg006 runtime/memplant/dg007/dg006 \
+            --out runtime/memplant/dg007/results \
+            --seed '${{ matrix.seed }}' --updates 500
+      - name: Preserve checkpoints, controls and PNGs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg007-learned-game-${{ matrix.seed }}-a${{ github.run_attempt }}
+          path: runtime/memplant/dg007/results
+          if-no-files-found: warn
+          retention-days: 30
