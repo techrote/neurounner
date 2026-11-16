@@ -9,7 +9,6 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
-import numpy as np
 
 from experiments.memplant.dreamgraft002.source import DONOR, DONOR_REV
 from experiments.memplant.dreamgraft001.bridge import source_fingerprint
@@ -72,6 +71,7 @@ def cases():
 
 def extract(directory):
     import torch
+    import numpy as np
     torch.set_num_threads(min(4,torch.get_num_threads()))
     root=Path(directory)
     root.mkdir(parents=True,exist_ok=True)
