@@ -56,6 +56,7 @@ jobs:
           assert report['donors']==12 and report['receivers']==4
           assert report['train_sealed_seed_overlap']==0
           assert report['matched_optim_budget'] and report['shuffled_value_control']
+          assert report['matched_initialization'] and report['matched_training_batches_conditioned']
           assert not report['inference_uses_oracle_potential']
           assert not report['inference_uses_future_cost']
           for split in ('iid','ood'):
