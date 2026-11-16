@@ -31,10 +31,10 @@ Paired seed-cluster 95% bootstrap intervals for waypoint difference: recovery ML
 
 ## Local source/evidence provenance
 
-Standalone executed Python source (not yet committed here): `m16_recovery.py` SHA-256 `648e0ba4e3f1768726716d085c207e0bfa6040c63a4d95df7e55fa30c6c794c1`, with `audit_m16_recovery.py` and `test_m16_recovery.py` in the local research bundle. Local ZIP SHA-256: `22f5b6debca5d631695c176bbd4cd2297f1aa9d006dd9378ea7b272bbdfbb2f6`. No checkpoint binary committed. This PR entry is a **results ledger, not exact-HEAD executable qualification**.
+Standalone executed Python source (now committed in this PR): `m16_recovery.py` SHA-256 `648e0ba4e3f1768726716d085c207e0bfa6040c63a4d95df7e55fa30c6c794c1`, with `audit_m16_recovery.py` and `test_m16_recovery.py` in the local research bundle. Local ZIP SHA-256: `22f5b6debca5d631695c176bbd4cd2297f1aa9d006dd9378ea7b272bbdfbb2f6`. No checkpoint binary committed. This PR entry is a **results ledger, not exact-HEAD executable qualification**.
 
 Audit passed 360 original state/PNG/receipt replays, 23,040 host-legal applied actions, 728 internal manifest hashes, four safe checkpoint loads and four adversarial/contract tests. A second full execution reproduced **729/729 files byte-identically**, including the manifest.
 
-**Open custody/qualification gap:** M16 source and weights presently remain in the downloadable local evidence bundle. No new immutable GitHub Actions artifact or hosted job was created; source still needs to be transferred into this owned folder and explicitly requalified from Neurounner HEAD. Earlier M15 source and immutable hosted artifacts remain preserved by the migration manifest; this entry does not claim new pretrained-backbone or LoRA updates.
+**Open custody/qualification gap:** M16 source and weights presently remain in the downloadable local evidence bundle. No new immutable GitHub Actions artifact or hosted job was created; the committed source still needs explicit hosted requalification from Neurounner HEAD. Earlier M15 source and immutable hosted artifacts remain preserved by the migration manifest; this entry does not claim new pretrained-backbone or LoRA updates.
 
 CyberSand is read-only; production game, native, Godot, Workbench and provider files untouched. Neurounner PR #252 remains Draft/HOLD and unmerged.
