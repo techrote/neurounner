@@ -1,0 +1,70 @@
+name: DREAMGRAFT DG014 trajectory donor inheritance
+on:
+  pull_request:
+    branches: [research/memplant-dg013-active-interrogation-20261116]
+    paths:
+      - '.github/workflows/memplant-trajectory-transfer-014.yml'
+      - 'experiments/memplant/trajectory_transfer_014/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dg014-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  OMP_NUM_THREADS: '2'
+  MKL_NUM_THREADS: '2'
+jobs:
+  three-law-trajectories:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [26011624, 26011625]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install source-pinned CPU dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy==1.26.4'
+      - name: Syntax, legal-action and path-objective invariants
+        run: |
+          python3 -m py_compile experiments/memplant/trajectory_transfer_014/experiment.py
+          python3 -m experiments.memplant.trajectory_transfer_014.experiment --selftest
+      - name: Train 12 actual neural donors and 2 receivers, evaluate 100 sealed 64-step worlds
+        run: |
+          OUT=runtime/memplant/dg014/${{ matrix.seed }}
+          mkdir -p "$OUT"
+          sha256sum experiments/memplant/trajectory_transfer_014/experiment.py > "$OUT/source.sha256"
+          timeout --signal=INT --kill-after=15s 26m python3 -m experiments.memplant.trajectory_transfer_014.experiment \
+            --seed ${{ matrix.seed }} --donor-steps 140 --steps 750 \
+            --train-worlds 600 --test-worlds 100 --horizon 64 --out "$OUT"
+      - name: Check SHA manifest and withheld-world invariants
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          for seed in (26011624,26011625):
+              p=pathlib.Path(f'runtime/memplant/dg014/{seed}')
+              if not p.exists(): continue
+              hashes=json.loads((p/'sha256.json').read_text())
+              for name, expected in hashes.items():
+                  assert hashlib.sha256((p/name).read_bytes()).hexdigest()==expected,name
+              report=json.loads((p/'report.json').read_text())
+              assert report['train_test_world_seed_overlap']==0
+              assert report['sealed_worlds']==100 and report['horizon']==64
+              assert all(x['illegal']==0 for x in report['trajectories'].values())
+              print('DG014 verified',seed,len(hashes),'source',report['source_sha256'])
+          PY
+      - name: Preserve models, original trajectory evidence and exact file hashes
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg014-${{ matrix.seed }}-a${{ github.run_attempt }}
+          path: runtime/memplant/dg014/${{ matrix.seed }}
+          retention-days: 30
+          if-no-files-found: warn
