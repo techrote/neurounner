@@ -107,6 +107,24 @@ def one_two_answer_forward(receiver, tokenizer, prompt, prefix, *, words=ANSWERS
     ]
     if any(len(ids)==0 for ids in alternatives):
         raise ValueError("empty answer tokens")
+    # Both YES/NO answers often tokenize as a single token. In that case a
+    # single complete-prefix forward gives the exact two conditional logprobs,
+    # avoiding two redundant answer-sequence forward passes.
+    if len(alternatives)==2 and all(len(x)==1 for x in alternatives):
+        with torch.inference_mode():
+            embed=receiver.get_input_embeddings()
+            prompt_emb=embed(prompt)
+            if prefix is None:
+                inputs=prompt_emb
+            else:
+                if prefix.shape!=(1,8,prompt_emb.shape[-1]):
+                    raise ValueError("invalid B-native prefix shape")
+                inputs=torch.cat((prefix,prompt_emb),dim=1)
+            logits=receiver(inputs_embeds=inputs,
+                            attention_mask=torch.ones((1,inputs.shape[1]),dtype=torch.long),
+                            use_cache=False,return_dict=True).logits[0,-1].float()
+            logp=logits.log_softmax(-1)
+            return [float(logp[int(x[0])]) for x in alternatives]
     n=len(alternatives)
     length=max(len(x) for x in alternatives)
     pad=int(tokenizer.eos_token_id)
@@ -252,11 +270,11 @@ def aggregate(rows,task,cases):
     return {"conditions":conditions,"causal_interventions":edits}
 
 
-def run(task, source, checkpoint, outdir, *, creative=False):
+def run(task, source, checkpoint, outdir, *, shard=0, creative=False):
     root=Path(outdir)
     root.mkdir(parents=True,exist_ok=True)
     report={"schema":"memplant-dg003-interactions-v1",
-            "task":task,"task_name":TASKS[task]["name"],"status":"STARTED",
+            "task":task,"task_name":TASKS[task]["name"],"shard":shard,"status":"STARTED",
             "new_training_updates":0,
             "prefix_training_question_excluded_all_interactions":True,
             "donor_source_did_not_contain_relay_rules":True,
@@ -284,14 +302,17 @@ def run(task, source, checkpoint, outdir, *, creative=False):
             "source_ridge_sealed":source_readout["sealed"],
         }
         all_sealed=[i for i,r in enumerate(cases) if r["split"]=="sealed"]
-        screened_families=sorted({cases[i]["family"] for i in all_sealed})[:2]
+        all_families=sorted({cases[i]["family"] for i in all_sealed})
+        if len(all_families)!=6 or not 0<=shard<3:
+            raise RuntimeError("six sealed world families required, shard 0/1/2")
+        screened_families=all_families[shard*2:(shard+1)*2]
         sealed=[i for i in all_sealed if cases[i]["family"] in screened_families]
-        report["screening"]={"subset":"first two sealed families by deterministic ID",
-                             "families":screened_families,"cases":len(sealed),
-                             "original_protocol_cases":len(all_sealed),
-                             "status":"bounded exploratory screening after the original full matrix timed out; not confirmatory"}
+        report["screening"]={"subset":"full 24-case protocol in three fixed two-family shards",
+                             "shard":shard,"families":screened_families,
+                             "cases":len(sealed),"original_protocol_cases":len(all_sealed),
+                             "status":"exact frozen full protocol; previously inspected sources"}
         if len(sealed)!=8:
-            raise RuntimeError("screening subset must be exactly two factorial families")
+            raise RuntimeError("each shard must contain exactly two factorial families")
         rows=[]
         start=time.monotonic()
         for count,index in enumerate(sealed):
@@ -382,5 +403,6 @@ if __name__=="__main__":
     p.add_argument("--checkpoint",default="runtime/memplant/dg003/prefixes")
     p.add_argument("--out",required=True)
     p.add_argument("--creative",action="store_true")
+    p.add_argument("--shard",type=int,choices=(0,1,2),required=True)
     a=p.parse_args()
-    run(a.task,a.source,a.checkpoint,a.out,creative=a.creative)
+    run(a.task,a.source,a.checkpoint,a.out,shard=a.shard,creative=a.creative)
