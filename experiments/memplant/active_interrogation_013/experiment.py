@@ -370,7 +370,7 @@ def train_probe_ranker(bank,seed,steps):
 def select_probe_indices(pool,budget,mode,ranker,real_donor,bank,random_seed):
     assert budget in (8,16,24) and len(pool)==64
     if mode=='random':
-        return [int(q) for q in np.random.default_rng(random_seed).choice(64,budget,replace=False)]
+        return [int(q) for q in np.random.default_rng(random_seed).choice(64,budget,replace=False)], None
     if mode=='geometry':
         x=probe_features(pool).numpy()
         x=(x-x.mean(0))/(x.std(0)+.25)
@@ -380,11 +380,11 @@ def select_probe_indices(pool,budget,mode,ranker,real_donor,bank,random_seed):
             scores=np.array([-1e9 if j in out else x[j]@inv@x[j] for j in range(64)])
             j=int(scores.argmax());out.append(j)
             v=inv@x[j];inv-=np.outer(v,v)/(1+x[j]@v)
-        return out
+        return out, None
     with torch.no_grad():
         rank=ranker(probe_features(pool)).numpy()
     if mode=='learned':
-        return [int(q) for q in np.argsort(-rank)[:budget]]
+        return [int(q) for q in np.argsort(-rank)[:budget]], None
     if mode!='adaptive':raise ValueError(mode)
     # Surrogate bank is restricted to previously trained narrow/wide models.
     # The held-out real gated donor is queried ONCE per selected probe; no peeks.
@@ -406,7 +406,22 @@ def select_probe_indices(pool,budget,mode,ranker,real_donor,bank,random_seed):
         discrepancy=((sur[:,selected]-np.stack(observed)[None])**2).mean((1,2))
         logp=-discrepancy/.65;logp-=logp.max()
         weights=np.exp(logp);weights/=weights.sum()
-    return selected
+    return selected, np.stack(observed)
+
+
+def paired_signature_cached(probe,centered_output):
+    # Exact DG012 ridge-calibrated signature, using already observed donor logits.
+    # No second call to the held-out gated donor.
+    z=torch.from_numpy(np.asarray(centered_output,dtype='float32'))
+    coefficients=[]
+    for action in range(N):
+        X=probe[:,action,:];Y=z[:,action]
+        X=X-X.mean(0,keepdim=True);Y=Y-Y.mean()
+        beta=torch.linalg.solve(X.T@X + torch.eye(D), X.T@Y)
+        coefficients.append(beta/3.)
+    out=torch.zeros(SIG)
+    out[:D*N]=torch.stack(coefficients).flatten()
+    return out
 
 
 def selected_source_bank(bank,ranker,pool,budget,mode,seed):
@@ -414,10 +429,11 @@ def selected_source_bank(bank,ranker,pool,budget,mode,seed):
     for family in range(3):
         for sign in (-1,1):
             real=bank['gated'][(family,sign)]['model']
-            inds=select_probe_indices(pool,budget,mode,ranker,real,bank,
+            inds,already_observed=select_probe_indices(pool,budget,mode,ranker,real,bank,
                                       seed+family*101+sign*13)
             selection[f'{family}:{sign}']=inds
-            fingerprints[(family,sign)]=signature(real,pool[inds],'paired',budget=budget)
+            fingerprints[(family,sign)]=(signature(real,pool[inds],'paired',budget=budget)
+                 if already_observed is None else paired_signature_cached(pool[inds],already_observed))
     return fingerprints,sha(json.dumps(selection,sort_keys=True).encode())
 
 
@@ -550,7 +566,7 @@ def dg013_selftest():
     q=candidate_pool(88)
     assert probe_features(q).shape==(64,30)
     assert ActiveProbeRanker()(probe_features(q)).shape==(64,)
-    assert len(select_probe_indices(q,8,'geometry',ActiveProbeRanker(),None,None,9))==8
+    assert len(select_probe_indices(q,8,'geometry',ActiveProbeRanker(),None,None,9)[0])==8
     env=SyntheticGameRollout(77)
     for _ in range(10):
         x,legal=env.observe()
