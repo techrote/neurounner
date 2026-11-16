@@ -77,6 +77,14 @@ jobs:
               assert p['metrics']['identity']==1 and p['metrics']['illegal']==0
           print('DG020 qualified',report['seed'],'gate',report['seed_status'],'manifest',len(manifest))
           PY
+      - name: Post-hoc wet-only / dry-only causal isolation audit
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          OUT="runtime/memplant/dg020/$SEED"
+          python3 experiments/memplant/material_causal_gate_020/wet_only_audit.py "$OUT" | tee "$OUT/wet_only_posthoc.jsonl"
+          sha256sum "$OUT/wet_only_posthoc.jsonl" > "$OUT/wet_only_posthoc.sha256"
+          sha256sum experiments/memplant/material_causal_gate_020/wet_only_audit.py > "$OUT/wet_only_source.sha256"
       - name: Publish immutable checkpoints and all paired decision receipts
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
