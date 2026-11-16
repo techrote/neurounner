@@ -90,9 +90,16 @@ class Game(dg014.Game):
         return a
 
     def step(self, action):
+        previous = self.pos
         self.moves += int(action < 4)
         self.retraces += int(action == 5)
         super().step(action)
+        if action == 5 and self.pos != previous:
+            # A retrace traverses a real edge, not a free teleport.
+            x, y = self.pos
+            wet = int(self.world["wet"][y, x])
+            self.wet_steps += wet
+            self.travel_cost += 1 + (6. if self.laws[0] > 0 else .05) * wet
         if self.moves >= 2 and not self.closed:
             x, y = self.world["gate"]
             if self.pos != (x, y):
