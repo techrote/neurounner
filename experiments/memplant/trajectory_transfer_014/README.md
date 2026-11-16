@@ -20,7 +20,7 @@ Seal: 100 distinct playable worlds per seed, 50 withheld (+,+,+), 50 mixed. At m
 
 ## Independently completed local CPU experiment (pre-CI)
 
-Source SHA-256: `7e3c2f5adae699ca4ad7d9a01a56af6780001ea67fed6e24b2b077678faac7ab`. Local torch 2.10.0+cpu. Each seed trained 12 neural donors at 140 optimiser steps and two receiving policies at 750 steps; original weights, private axis maps, per-file SHA, JSON traces and SVG trajectory gallery are preserved.
+Source SHA-256: `23918487bfc03acf5bb683857bcbed0b6e279d82fb26727720f3f37ae4495974`. Local torch 2.10.0+cpu. Each seed trained 12 neural donors at 140 optimiser steps and two receiving policies at 750 steps; original weights, private axis maps, per-file SHA, JSON traces and SVG trajectory gallery are preserved.
 
 | 100-world sealed goal-and-paint completion | Seed 26011624 | Seed 26011625 |
 |---|---:|---:|
