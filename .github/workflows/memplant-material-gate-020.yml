@@ -1,0 +1,87 @@
+name: DREAMGRAFT DG020 material-only causal gate
+on:
+  pull_request:
+    branches: [research/memplant-dg018-sequence-value-20261116]
+    paths:
+      - '.github/workflows/memplant-material-gate-020.yml'
+      - 'experiments/memplant/material_causal_gate_020/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preregistered-material-gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        seed: [26011636, 26011637, 26011638]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install CPU research dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy==1.26.4'
+      - name: Verify exact committed source and synthetic oracle selftest
+        run: |
+          python3 -m py_compile experiments/memplant/material_causal_gate_020/experiment.py
+          python3 experiments/memplant/material_causal_gate_020/experiment.py --selftest
+      - name: Train real donors and receivers; run two held-out counterfactual families
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          OUT="runtime/memplant/dg020/$SEED"
+          mkdir -p "$OUT"
+          sha256sum experiments/memplant/material_causal_gate_020/experiment.py > "$OUT/source.sha256"
+          timeout --signal=INT --kill-after=15s 35m \
+            python3 experiments/memplant/material_causal_gate_020/experiment.py \
+            --seed "$SEED" --out "$OUT" --training-worlds 1800 \
+            --receiver-updates 650 --donor-steps 400 --per-family 160
+      - name: Audit raw receipts, oracle, hashes, controls and seed gate
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          out=pathlib.Path('runtime/memplant/dg020')/os.environ['SEED']
+          source=pathlib.Path('experiments/memplant/material_causal_gate_020/experiment.py')
+          report=json.loads((out/'report.json').read_text())
+          assert report['source_sha256']==hashlib.sha256(source.read_bytes()).hexdigest()
+          assert report['seed']==int(os.environ['SEED'])
+          assert report['test_families']==['edge_bands','alternating']
+          manifest=json.loads((out/'sha256.json').read_text())
+          assert len(manifest)>=10,len(manifest)
+          for name,expected in manifest.items():
+              assert hashlib.sha256((out/name).read_bytes()).hexdigest()==expected,name
+          from importlib.util import spec_from_file_location,module_from_spec
+          spec=spec_from_file_location('dg020',source)
+          mod=module_from_spec(spec);spec.loader.exec_module(mod)
+          for family in ('edge_bands','alternating'):
+              p=report['per_family'][family]
+              receipts=[json.loads(x) for x in (out/f'receipts-{family}.jsonl').read_text().splitlines()]
+              assert len(receipts)==p['n']==160
+              assert all(r['oracle_actions'][0]!=r['oracle_actions'][1] and
+                         min(r['oracle_gaps'])>=0.60 and r['legal_mask']==[1,1] and
+                         r['observation_identical_between_laws'] for r in receipts)
+              for r in receipts:
+                  import numpy as np
+                  w=np.asarray(r['observation'],dtype=np.float32)
+                  assert hashlib.sha256(w.tobytes()).hexdigest()==r['observation_sha256']
+                  for law in (0,1):
+                      a,g,c=mod.oracle(w,law)
+                      assert r['oracle_actions'][law]==a
+                      assert abs(r['oracle_gaps'][law]-g)<1e-4
+              assert p['metrics']['identity']==1 and p['metrics']['illegal']==0
+          print('DG020 qualified',report['seed'],'gate',report['seed_status'],'manifest',len(manifest))
+          PY
+      - name: Publish immutable checkpoints and all paired decision receipts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg020-material-gate-${{ matrix.seed }}
+          path: runtime/memplant/dg020/${{ matrix.seed }}
+          if-no-files-found: warn
+          retention-days: 30
