@@ -1,5 +1,5 @@
 # MEMPLANT — Digital Memory Transplant
-**Status:** research concept and literature dossier, **not an implemented or qualified feature**.  
+**Status:** research concept and literature dossier; **experimental implementations exist on unmerged Draft PRs #230–#235, but heterogeneous native KV transplantation is NOT qualified**. See [dated evidence ledger](STATUS_2026-11-16.md).  
 **Repository:** `techrote/neurounner/MEMPLANT/`  
 **Research snapshot:** 2026-11-15
 
@@ -9,6 +9,7 @@ Investigate whether an LLM's live computational context can be **transplanted** 
 This is a **computational-memory** analogy, not a claim of transferring subjective experience, identity, or exact thought. A successful transplant must be evaluated by the receiver's behavior, provenance and cost—not by a tensor loading without an error.
 
 ## Document map
+- [STATUS_2026-11-16.md](STATUS_2026-11-16.md) — independently auditable experimental outcomes, negative findings, PR stack and owner gates (dated snapshot).
 - [CONCEPT.md](CONCEPT.md) — digital memory transplant perspective and proposed context-state substrate.
 - [PSEUDO_EMBEDDINGS.md](PSEUDO_EMBEDDINGS.md) — virtual tokens, deep prefixes and JIT memory compilation.
 - [EXPERIMENTS.md](EXPERIMENTS.md) — staged, falsifiable experiments and admission gates.
