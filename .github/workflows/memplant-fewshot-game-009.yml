@@ -1,0 +1,53 @@
+name: MEMPLANT DG009 few-shot game-rule donor inheritance
+on:
+  pull_request:
+    branches: [research/memplant-dg008-heldout-game-law-grafts-20261116]
+    paths:
+      - '.github/workflows/memplant-fewshot-game-009.yml'
+      - 'experiments/memplant/fewshot_game_009/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dg009-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  OMP_NUM_THREADS: '2'
+  MKL_NUM_THREADS: '2'
+jobs:
+  fewshot-donor:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [26011613, 26011614]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install bounded CPU dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy>=1.26,<3'
+      - name: Prove disjoint sealed worlds, masked legality, and donor symmetry
+        run: |
+          python3 -m py_compile experiments/memplant/fewshot_game_009/experiment.py
+          python3 -m experiments.memplant.fewshot_game_009.experiment --selftest
+      - name: Train donor receiver and independent blind baseline
+        run: |
+          mkdir -p runtime/memplant/dg009/seed-${{ matrix.seed }}
+          sha256sum experiments/memplant/fewshot_game_009/experiment.py > runtime/memplant/dg009/seed-${{ matrix.seed }}/source.sha256
+          timeout --signal=INT --kill-after=20s 16m python3 -m experiments.memplant.fewshot_game_009.experiment \
+            --out runtime/memplant/dg009/seed-${{ matrix.seed }} \
+            --seed ${{ matrix.seed }} --steps 650 --train-cases 3200 --heldout-cases 750
+      - name: Preserve real checkpoints and original decisions
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg009-fewshot-${{ matrix.seed }}-a${{ github.run_attempt }}
+          path: runtime/memplant/dg009/seed-${{ matrix.seed }}
+          if-no-files-found: warn
+          retention-days: 30
