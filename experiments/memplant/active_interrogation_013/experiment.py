@@ -447,6 +447,10 @@ def eval_active_probes(models,bank,ranker,seed,cases):
     sealed=dataset(seed+12000,cases,'sealed')
     assert not set(mixed['keys'])&set(sealed['keys'])
     received=models['paired'];blind=models['blind']
+    flip=mixed['laws'].clone();flip[:,0]*=-1
+    cf_gold=torch.tensor([int(scores(mixed['x'][i].numpy(),mixed['legal'][i].numpy(),
+                          tuple(flip[i].tolist())).argmax()) for i in range(cases)])
+    true_change_rate=round(float((cf_gold!=mixed['y']).float().mean()),5)
     results={};selection_hashes={};trajectory_source={}
     with torch.no_grad():
         blind_logits=blind(mixed['x'],mixed['legal'],torch.zeros(cases,3,SIG))
@@ -464,14 +468,20 @@ def eval_active_probes(models,bank,ranker,seed,cases):
                     mp=received(mixed['x'],mixed['legal'],assembled_source(mixed['laws'],fingerprints))
                     sp=received(sealed['x'],sealed['legal'],assembled_source(sealed['laws'],fingerprints))
                     ma=accuracy(mp,mixed['y']);sa=accuracy(sp,sealed['y'])
+                    wet_cf=received(mixed['x'],mixed['legal'],assembled_source(flip,fingerprints))
+                    cf_accuracy=accuracy(wet_cf,cf_gold)
                     assert mixed['legal'].gather(1,mp.argmax(-1)[:,None]).all()
                     assert sealed['legal'].gather(1,sp.argmax(-1)[:,None]).all()
-                observed.append((ma,sa))
+                    assert mixed['legal'].gather(1,wet_cf.argmax(-1)[:,None]).all()
+                observed.append((ma,sa,cf_accuracy))
             results[f'{budget}:{mode}']=dict(
                 mixed_mean=round(float(np.mean([q[0] for q in observed])),5),
                 mixed_by_probe_bank=[q[0] for q in observed],
                 withheld_mean=round(float(np.mean([q[1] for q in observed])),5),
                 withheld_by_probe_bank=[q[1] for q in observed],
+                counterfactual_wet_mean=round(float(np.mean([q[2] for q in observed])),5),
+                counterfactual_wet_by_probe_bank=[q[2] for q in observed],
+                counterfactual_true_action_change_rate=true_change_rate,
                 gated_donor_queries_per_bank=6*budget)
     return results,selection_hashes,trajectory_source
 
