@@ -1,0 +1,77 @@
+name: DREAMGRAFT DG018 sequence-value inheritance
+on:
+  pull_request:
+    branches: [research/memplant-dg017-dagger-recovery-20261116]
+    paths:
+      - '.github/workflows/memplant-sequence-value-018.yml'
+      - 'experiments/memplant/trajectory_transfer_018/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  trained-sequence-value:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [26011632, 26011633]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install bounded CPU research dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy==1.26.4'
+      - name: Validate sequence and host action contracts
+        run: |
+          python3 -m py_compile experiments/memplant/trajectory_transfer_018/experiment.py
+          python3 -m experiments.memplant.trajectory_transfer_018.experiment --selftest
+      - name: Train real neural donor and recurrent receiver checkpoints
+        run: |
+          OUT=runtime/memplant/dg018/$SEED
+          mkdir -p "$OUT"
+          sha256sum experiments/memplant/trajectory_transfer_018/experiment.py > "$OUT/source.sha256"
+          timeout --signal=INT --kill-after=15s 43m python3 -m experiments.memplant.trajectory_transfer_018.experiment \
+            --seed "$SEED" --train-worlds 200 --updates 500 \
+            --sealed 100 --horizon 96 --donor-steps 140 --out "$OUT"
+        env:
+          SEED: ${{ matrix.seed }}
+      - name: Verify artifacts, exact source, negative controls and sealed tests
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib,os
+          out=pathlib.Path('runtime/memplant/dg018')/os.environ['SEED']
+          report=json.loads((out/'report.json').read_text())
+          manifest=json.loads((out/'sha256.json').read_text())
+          assert len(manifest)>=19,len(manifest)
+          for name,digest in manifest.items():
+              assert hashlib.sha256((out/name).read_bytes()).hexdigest()==digest,name
+          source=pathlib.Path('experiments/memplant/trajectory_transfer_018/experiment.py')
+          assert report['source_sha256']==hashlib.sha256(source.read_bytes()).hexdigest()
+          assert report['donors']==12 and report['receivers']==4
+          assert report['train_sealed_seed_overlap']==0
+          assert report['matched_optim_budget'] and report['shuffled_value_control']
+          assert report['matched_initialization'] and report['matched_training_batches_conditioned']
+          assert not report['inference_uses_oracle_potential']
+          assert not report['inference_uses_future_cost']
+          for split in ('iid','ood'):
+              rows=report['results'][split]['trajectories']
+              assert rows['oracle']['success']==100
+              assert all(m['worlds']==100 and m['illegal']==0 for m in rows.values())
+              assert report['results'][split]['withheld_worlds']==50
+          assert report['counterfactual']['divergent_oracle_cases']<=50
+          print('DG018 verified seed',report['seed'],'hashes',len(manifest))
+          PY
+      - name: Retain trained checkpoints, sealed controls, failure metrics and galleries
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg018-${{ matrix.seed }}
+          path: runtime/memplant/dg018/${{ matrix.seed }}
+          if-no-files-found: warn
+          retention-days: 30
