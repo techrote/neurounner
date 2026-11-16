@@ -144,3 +144,167 @@ class Donor(nn.Module):
         emb=self.embedding(local_code)
         z=torch.cat((feat,emb[:,None,:].expand(-1,N_ACTIONS,-1)),-1)
         return self.predict(z).squeeze(-1)
+
+
+def train_donor(seed,group,steps):
+    torch.manual_seed(seed+group*17)
+    model=Donor()
+    data=one(seed+101+group,4200,-1)
+    f=data['features'];rng=torch.Generator().manual_seed(seed+993+group)
+    opt=torch.optim.AdamW(model.parameters(),lr=.004,weight_decay=0)
+    curve=[]
+    for it in range(1,steps+1):
+        ix=torch.randint(0,len(f),(192,),generator=rng)
+        local=torch.randint(0,6,(len(ix),),generator=rng)
+        codes=[2*(group*3+j//2)+j%2 for j in local.tolist()]
+        targets=torch.stack([effects(f[k],(c,)) for k,c in zip(ix.tolist(),codes)])
+        pred=model(local,f[ix]);loss=F.mse_loss(pred,targets)
+        opt.zero_grad();loss.backward();opt.step()
+        if it%100==0 or it==steps:curve.append((it,round(float(loss.detach()),6)))
+    model.eval()
+    return model,curve
+
+
+def tokens(donors,data,random_mode=False):
+    B=len(data['codes']);f=data['features'];codes=data['codes']
+    emb=torch.zeros(B,MAX_LAWS,16);delta=torch.zeros(B,MAX_LAWS,N_ACTIONS)
+    with torch.no_grad():
+        for col in range(MAX_LAWS):
+            for group in (0,1):
+                valid=(codes[:,col]>=0)&((codes[:,col]//6)==group)
+                if not valid.any():continue
+                inds=valid.nonzero(as_tuple=True)[0]
+                local=codes[inds,col]-group*6
+                model=donors[group]
+                emb[inds,col]=model.embedding(local)
+                delta[inds,col]=model(local,f[inds])
+    return emb,delta
+
+
+class Receiver(nn.Module):
+    """Learn only pairwise residuals; frozen donor deltas supply atomic law effects."""
+    def __init__(self):
+        super().__init__()
+        self.pair=nn.Sequential(nn.Linear(N_FEATURES+2*16+2,80),nn.Tanh(),nn.Linear(80,48),nn.Tanh(),nn.Linear(48,1))
+    def forward(self,feat,emb,delta,codes,with_pairs=True):
+        out=base_scores(feat)+delta.sum(1)
+        if with_pairs:
+            for a,b in itertools.combinations(range(MAX_LAWS),2):
+                valid=((codes[:,a]>=0)&(codes[:,b]>=0)).float()[:,None]
+                # Both orderings, averaged, to prevent input-column identity leakage.
+                joined=[]
+                for i,j in ((a,b),(b,a)):
+                    ea=emb[:,i,None,:].expand(-1,N_ACTIONS,-1)
+                    eb=emb[:,j,None,:].expand(-1,N_ACTIONS,-1)
+                    x=torch.cat((feat,ea,eb,delta[:,i,:,None],delta[:,j,:,None]),-1)
+                    joined.append(self.pair(x).squeeze(-1))
+                out=out+.5*(joined[0]+joined[1])*valid
+        return out
+
+
+def accuracy(scores,data):
+    prediction=scores.masked_fill(~data['legal'],-1e5).argmax(-1)
+    assert bool(data['legal'].gather(1,prediction[:,None]).all())
+    return float((prediction==data['target']).float().mean()),prediction
+
+
+def train_receiver(seed,donors,steps=450):
+    train=one(seed+200,6500,-1)
+    valid=one(seed+300,1200,-1)
+    et,dt=tokens(donors,train)
+    ev,dv=tokens(donors,valid)
+    torch.manual_seed(seed+543)
+    model=Receiver();opt=torch.optim.AdamW(model.parameters(),lr=.003)
+    gen=torch.Generator().manual_seed(seed+12)
+    best=1e9; weights=None;curve=[]
+    for step in range(1,steps+1):
+        ix=torch.randint(0,len(train['target']),(160,),generator=gen)
+        estimated=model(train['features'][ix],et[ix],dt[ix],train['codes'][ix])
+        loss=F.mse_loss(estimated,train['scores'][ix])
+        opt.zero_grad();loss.backward();torch.nn.utils.clip_grad_norm_(model.parameters(),3);opt.step()
+        if step%100==0 or step==steps:
+            with torch.no_grad():
+                val=F.mse_loss(model(valid['features'],ev,dv,valid['codes']),valid['scores'])
+                acc,_=accuracy(model(valid['features'],ev,dv,valid['codes']),valid)
+            curve.append((step,round(float(loss.detach()),6),round(float(val),6),round(acc,6)))
+            if float(val)<best:
+                best=float(val);weights={k:v.detach().clone() for k,v in model.state_dict().items()}
+    model.load_state_dict(weights);model.eval()
+    return model,curve
+
+
+def evaluate(model,donors,seed,nlaws,n=1600):
+    data=one(seed+nlaws*11,n,nlaws)
+    em,de=tokens(donors,data)
+    with torch.no_grad():
+        outputs={
+            'grafted_pairwise':model(data['features'],em,de,data['codes']),
+            'atomic_additive':model(data['features'],em,de,data['codes'],False),
+            'no_donor':base_scores(data['features']),
+        }
+        perm=torch.randperm(len(em),generator=torch.Generator().manual_seed(seed+447))
+        outputs['shuffled_donor']=model(data['features'],em[perm],de[perm],data['codes'])
+        outputs['oracle_expert']=data['scores']
+    oracle_additive = torch.stack([
+        base_scores(ft)+effects(ft,codes) for ft,codes in zip(data['features'],data['codes'])
+    ])
+    oracle_add_prediction=oracle_additive.masked_fill(~data['legal'],-1e5).argmax(-1)
+    challenge=(oracle_add_prediction!=data['target'])
+    report={'_interaction_challenge': {'cases':int(challenge.sum()),'n':n,
+        'fraction':round(float(challenge.float().mean()),6)}}
+    for name,scores in outputs.items():
+        hit,p=accuracy(scores,data)
+        mse=float(F.mse_loss(scores,data['scores']))
+        distribution={action:int((p==i).sum()) for i,action in enumerate(ACTIONS)}
+        report[name]={'action_accuracy':round(hit,6),'score_mse':round(mse,6),'action_counts':distribution,'n':n,
+                      'interaction_challenge_accuracy':(round(float((p[challenge]==data['target'][challenge]).float().mean()),6) if challenge.any() else None)}
+    return report
+
+
+
+def interaction_stress(model,donors,seed,nlaws=3,n=8000):
+    """Selection-conditional evaluation: mine *sealed*, teacher-defined hard cases.
+
+    This does NOT estimate the unconditioned population accuracy. Cases are
+    selected solely because authored pair terms change the oracle legal action.
+    """
+    d=one(seed,n,nlaws)
+    oracle_add=torch.stack([base_scores(f)+effects(f,law)
+                            for f,law in zip(d['features'],d['codes'])])
+    arg=oracle_add.masked_fill(~d['legal'],-1e5).argmax(-1)
+    ix=(arg!=d['target']).nonzero(as_tuple=True)[0]
+    chosen={key:(value[ix] if isinstance(value,torch.Tensor) else value)
+            for key,value in d.items()}
+    e,v=tokens(donors,chosen)
+    with torch.no_grad():
+        graft=model(chosen['features'],e,v,chosen['codes'])
+        add=model(chosen['features'],e,v,chosen['codes'],False)
+    a,_=accuracy(graft,chosen);b,_=accuracy(add,chosen)
+    return {'examined':n,'interaction_changing_cases':len(ix),
+            'grafted_action_accuracy':round(a,6),
+            'additive_action_accuracy':round(b,6),
+            'warning':'Outcome-conditioned evaluation, not natural-frequency accuracy'}
+
+def causal_pairs(model,donors,seed,n=600):
+    """Batch the SAME-world law flips to avoid serial tiny model inference."""
+    rng=random.Random(seed+223)
+    fs=[];masks=[];codes=[];truth=[]
+    for j in range(n):
+        f,mask=action_features(seed*200000+j)
+        families=rng.sample(range(6),3)
+        a=[2*x+rng.randrange(2) for x in families]
+        b=a.copy();b[rng.randrange(3)]^=1
+        for law in (a,b):
+            law=law+[-1]*(MAX_LAWS-len(law))
+            ft=torch.from_numpy(f)
+            target=base_scores(ft)+effects(ft,law)+pair_effects(ft,law)
+            fs.append(f);masks.append(mask);codes.append(law)
+            truth.append(int(target.masked_fill(~torch.from_numpy(mask),-1e6).argmax()))
+    d={'features':torch.from_numpy(np.stack(fs)),
+       'legal':torch.from_numpy(np.stack(masks)),
+       'codes':torch.tensor(codes)}
+    em,de=tokens(donors,d)
+    gold=torch.tensor(truth).reshape(n,2)
+    expected=(gold[:,0]!=gold[:,1])
+    with torch.no_grad():
+        scores={'grafted_pairwise':model(d['features'],em,de,d['codes']),
