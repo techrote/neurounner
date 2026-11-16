@@ -1,0 +1,28 @@
+name: One-shot missing MZ science salvage
+on:
+  push:
+    branches:
+      - research/driv3r-consolidation-2026-11-16
+permissions:
+  contents: write
+concurrency:
+  group: one-shot-driv3r-mz-salvage
+  cancel-in-progress: false
+jobs:
+  salvage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy missing historical model experiments
+        run: python3 scripts/migrate_cybersand_historical_mz.py
+      - name: Python syntax qualification
+        run: python3 -m compileall -q experiments/driv3r/model_zoo
+      - name: Commit verified model experiments and remove workflow
+        run: |
+          git config user.name 'research-migration[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- experiments/driv3r/model_zoo docs/driv3r-migration/HISTORICAL_MANIFEST.json
+          git rm -f .github/workflows/driv3r-historical-once.yml
+          git commit -m 'research: preserve superseded DRIV3R Model Zoo experimental variants'
+          git push origin HEAD:refs/heads/research/driv3r-consolidation-2026-11-16
