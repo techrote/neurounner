@@ -1,0 +1,62 @@
+name: MEMPLANT DG004 trained game-state recipients
+
+on:
+  pull_request:
+    branches: [research/memplant-dg002-two-rule-transplant]
+    paths:
+      - '.github/workflows/memplant-game-state-004.yml'
+      - 'experiments/memplant/game_state_lab/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: memplant-game-state-004-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  OMP_NUM_THREADS: '4'
+  MKL_NUM_THREADS: '4'
+
+jobs:
+  game-state-training:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU trainer
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy>=1.26,<3'
+      - name: Verify syntax, truth-table generalisation split, legal actions and real optimizer
+        run: |
+          python3 -m py_compile experiments/memplant/game_state_lab/game_policy.py
+          python3 -m experiments.memplant.game_state_lab.game_policy --selftest
+      - name: Restore pinned original Qwen pooled V (not new donor inference)
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-dg002-source-a1
+          repository: techrote/neurounner
+          run-id: 43736088404
+          github-token: ${{ github.token }}
+          path: runtime/memplant/game-state/donor
+      - name: Train three distinct receiver policies; evaluate XOR/XNOR, swaps and crossover
+        run: |
+          mkdir -p runtime/memplant/game-state/results
+          timeout --signal=INT --kill-after=15s 18m python3 -m experiments.memplant.game_state_lab.game_policy \
+            --source runtime/memplant/game-state/donor \
+            --out runtime/memplant/game-state/results \
+            --updates 450 --seed 260116
+      - name: Preserve original checkpoints, learning curves, raw legal decisions and failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: memplant-game-state-004-a${{ github.run_attempt }}
+          path: runtime/memplant/game-state/results
+          if-no-files-found: warn
+          retention-days: 30
