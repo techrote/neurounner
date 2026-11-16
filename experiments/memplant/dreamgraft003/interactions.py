@@ -226,8 +226,9 @@ def aggregate(rows,task,cases):
     edits={}
     for kind in ("heat_swap","vibration_swap","both_swap"):
         matches=[]
+        screened={x["case_id"] for x in rows if x["condition"]=="real_v"}
         for case in cases:
-            if case["split"]!="sealed":
+            if case["case_id"] not in screened:
                 continue
             before=idx[(case["case_id"],"real_v")]
             after=idx[(case["case_id"],kind)]
@@ -282,7 +283,15 @@ def run(task, source, checkpoint, outdir, *, creative=False):
             "ridge_lambda":1.0,"ridge_frozen_recomputed_from_training_only":True,
             "source_ridge_sealed":source_readout["sealed"],
         }
-        sealed=[i for i,r in enumerate(cases) if r["split"]=="sealed"]
+        all_sealed=[i for i,r in enumerate(cases) if r["split"]=="sealed"]
+        screened_families=sorted({cases[i]["family"] for i in all_sealed})[:2]
+        sealed=[i for i in all_sealed if cases[i]["family"] in screened_families]
+        report["screening"]={"subset":"first two sealed families by deterministic ID",
+                             "families":screened_families,"cases":len(sealed),
+                             "original_protocol_cases":len(all_sealed),
+                             "status":"bounded exploratory screening after the original full matrix timed out; not confirmatory"}
+        if len(sealed)!=8:
+            raise RuntimeError("screening subset must be exactly two factorial families")
         rows=[]
         start=time.monotonic()
         for count,index in enumerate(sealed):
@@ -300,7 +309,10 @@ def run(task, source, checkpoint, outdir, *, creative=False):
                     "predicted_yes":yes,"yes_minus_no":round(log_yes-log_no,6),
                     "log_likelihoods":{"yes":round(log_yes,6),"no":round(log_no,6)},
                     **verdict,**exposure})
-            if (count+1)%6==0:
+            if (count+1)%2==0:
+                report["partial_cases_processed"]=count+1
+                report["partial_raw_cases"]=rows
+                save_json(root/"partial.json",report)
                 print(f"DG003 {task}: {count+1}/{len(sealed)} sources evaluated",flush=True)
         report["evaluation"]=aggregate(rows,task,cases)
         report["raw_cases"]=rows
