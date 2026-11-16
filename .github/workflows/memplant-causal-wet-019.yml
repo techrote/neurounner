@@ -1,0 +1,86 @@
+name: DREAMGRAFT DG019 causal wet-law inheritance
+on:
+  pull_request:
+    branches: [research/memplant-dg018-sequence-value-20261116]
+    paths:
+      - '.github/workflows/memplant-causal-wet-019.yml'
+      - 'experiments/memplant/trajectory_transfer_019/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  trained-causal-wet:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [26011634, 26011635]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install CPU-only pinned dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy==1.26.4'
+      - name: Selftest host-legal state and neural probe tensor contracts
+        run: |
+          python3 -m py_compile experiments/memplant/trajectory_transfer_019/experiment.py
+          python3 -m experiments.memplant.trajectory_transfer_019.experiment --selftest
+      - name: Train donors and matched counterfactual receiver controls
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          OUT="runtime/memplant/dg019/$SEED"
+          mkdir -p "$OUT"
+          sha256sum experiments/memplant/trajectory_transfer_019/experiment.py > "$OUT/source.sha256"
+          timeout --signal=INT --kill-after=15s 48m python3 -m experiments.memplant.trajectory_transfer_019.experiment \
+            --seed "$SEED" --train-worlds 180 --updates 600 \
+            --paired-target 240 --paired-limit 850 \
+            --sealed 80 --horizon 96 --donor-steps 140 \
+            --probe-target 50 --probe-limit 2500 --out "$OUT"
+      - name: Verify exact source, checkpoint hashes and counterfactual denominators
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          out = pathlib.Path('runtime/memplant/dg019')/os.environ['SEED']
+          report = json.loads((out/'report.json').read_text())
+          manifest = json.loads((out/'sha256.json').read_text())
+          source = pathlib.Path('experiments/memplant/trajectory_transfer_019/experiment.py')
+          assert report['source_sha256'] == hashlib.sha256(source.read_bytes()).hexdigest()
+          assert len(manifest) >= 20, len(manifest)
+          for filename, digest in manifest.items():
+              assert hashlib.sha256((out/filename).read_bytes()).hexdigest() == digest, filename
+          assert report['donors'] == 12 and report['receivers'] == 4
+          assert report['train_sealed_seed_overlap'] == 0
+          assert report['matched_initialization'] and report['matched_update_budget']
+          assert report['source_blind_control'] and report['shuffled_signatures_control']
+          assert report['no_oracle_at_inference'] and report['no_distance_potential_at_inference']
+          assert report['train_paired_selection']['selected_from_held_law'] == 0
+          assert report['train_paired_selection']['divergent_pairs'] > 0
+          assert report['withheld_law'] == [1,1,1]
+          for split in ('iid', 'ood'):
+              rows = report['results'][split]['trajectories']
+              assert rows['oracle']['success'] == 80
+              assert all(v['worlds']==80 and v['illegal']==0 for v in rows.values())
+              for sub in ('held', 'seen'):
+                  p = report['counterfactual'][f'{split}-{sub}']
+                  assert p['divergent_cases'] > 0
+                  assert p['divergent_cases'] <= p['cap']
+                  assert all(v['illegal']==0 and v['both']<=p['divergent_cases']
+                             and v['flipped']<=p['divergent_cases']
+                             for v in p['modes'].values())
+          print('DG019 qualified',report['seed'],'manifest count',len(manifest))
+          PY
+      - name: Publish immutable checkpoints, failure controls and trajectories
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg019-${{ matrix.seed }}
+          path: runtime/memplant/dg019/${{ matrix.seed }}
+          if-no-files-found: warn
+          retention-days: 30
