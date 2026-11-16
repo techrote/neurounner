@@ -1,0 +1,75 @@
+name: DREAMGRAFT DG017 on-policy correction and recovery
+on:
+  pull_request:
+    branches: [research/memplant-dg016-maze-transfer-20261116]
+    paths:
+      - '.github/workflows/memplant-dagger-recovery-017.yml'
+      - 'experiments/memplant/trajectory_transfer_017/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  trained-corrective-recovery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 48
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [26011630, 26011631]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU-only research dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy==1.26.4'
+      - name: Validate host legal game, neural graft and sensor equivalence
+        run: |
+          python3 -m py_compile experiments/memplant/trajectory_transfer_017/experiment.py
+          python3 -m experiments.memplant.trajectory_transfer_017.experiment --selftest
+      - name: Train donor specialists and on-policy corrective receivers
+        run: |
+          OUT=runtime/memplant/dg017/${{ matrix.seed }}
+          mkdir -p "$OUT"
+          sha256sum experiments/memplant/trajectory_transfer_017/experiment.py > "$OUT/source.sha256"
+          timeout --signal=INT --kill-after=15s 39m python3 -m experiments.memplant.trajectory_transfer_017.experiment \
+            --seed ${{ matrix.seed }} --train-worlds 200 --updates 500 \
+            --sealed 100 --horizon 96 --donor-steps 140 \
+            --rounds 2 --correction-worlds 65 --out "$OUT"
+      - name: Exact-head artifacts, legal controls and held-out checks
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, pathlib
+          path=pathlib.Path('runtime/memplant/dg017/${{ matrix.seed }}')
+          hashes=json.loads((path/'sha256.json').read_text())
+          assert len(hashes)>=20, len(hashes)
+          for name, checksum in hashes.items():
+              assert hashlib.sha256((path/name).read_bytes()).hexdigest()==checksum,name
+          report=json.loads((path/'report.json').read_text())
+          source=pathlib.Path('experiments/memplant/trajectory_transfer_017/experiment.py')
+          assert report['source_sha256']==hashlib.sha256(source.read_bytes()).hexdigest()
+          assert report['train_test_seed_overlap']==0
+          assert report['source_neural_outputs'] and report['source_hidden_permutation']
+          assert report['input_channels']==13
+          assert report['rounds']==2 and len(report['correction_log'])==4
+          assert all(log['labels']>0 for log in report['correction_log'])
+          assert report['donors']==12 and report['receiver_models']==5
+          for family in ('iid','ood'):
+              data=report['results'][family]
+              assert data['trajectories']['oracle']['success']==100
+              assert data['withheld_worlds']==50
+              assert all(r['illegal']==0 and r['worlds']==100
+                         for r in data['trajectories'].values())
+          assert 0<=report['wet_counterfactual']['divergent_oracles']<=50
+          print('DG017 verified seed', report['seed'], 'files', len(hashes))
+          PY
+      - name: Retain real trained checkpoints, negative results and trajectory SVG
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg017-${{ matrix.seed }}
+          path: runtime/memplant/dg017/${{ matrix.seed }}
+          if-no-files-found: warn
+          retention-days: 30
