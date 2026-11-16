@@ -23,8 +23,10 @@ SIDE = prior.SIDE
 CHANNELS = prior.CHANNELS + 1
 HELD = prior.HELD
 TRAIN_LAWS = prior.TRAIN_LAWS
-MODES = ("legacy", "history_bc", "dagger", "blind_dagger",
-         "wrong_wet", "wrong_goal", "oracle")
+MODES = ("legacy", "history_bc", "history_bc_extended", "dagger",
+         "guarded", "blind_dagger", "blind_guarded",
+         "wrong_wet", "wrong_goal", "wrong_wet_guarded",
+         "wrong_goal_guarded", "oracle")
 
 
 def digest(path):
@@ -124,6 +126,33 @@ def fit(model, base_data, seed, updates, extra=None):
     return model.eval()
 
 
+def fit_guarded(model, anchor, base_data, seed, updates, extra):
+    """Low-dose DAgger under fixed BC-logit trust region, with matched update budget."""
+    torch.manual_seed(seed)
+    rng = np.random.default_rng(seed + 47)
+    model.train()
+    anchor.eval()
+    opt = torch.optim.AdamW(model.parameters(), lr=0.00020, weight_decay=0.0001)
+    x, masks, sigs, labels = base_data
+    for _ in range(updates):
+        a = torch.from_numpy(rng.integers(len(labels), size=160))
+        b = torch.from_numpy(rng.integers(len(extra[3]), size=32))
+        obs = torch.cat((x[a], extra[0][b]))
+        legal = torch.cat((masks[a], extra[1][b]))
+        signature = torch.cat((sigs[a], extra[2][b])) if model.conditioned else None
+        answers = torch.cat((labels[a], extra[3][b]))
+        outputs = model(obs, legal, signature)
+        with torch.no_grad():
+            ref = anchor(x[a], masks[a], sigs[a] if anchor.conditioned else None)
+        preserve = F.kl_div(F.log_softmax(outputs[:160], dim=-1),
+                            F.softmax(ref, dim=-1), reduction="batchmean")
+        loss = F.cross_entropy(outputs, answers) + .8 * preserve
+        opt.zero_grad(set_to_none=True)
+        loss.backward()
+        opt.step()
+    return model.eval()
+
+
 def collect(seed, bank, model, worlds, horizon, teacher_fraction):
     """DAgger-like rollouts; oracle relabels states actually visited by receiver.
 
@@ -183,9 +212,9 @@ def collect(seed, bank, model, worlds, horizon, teacher_fraction):
 
 
 def signature_for(bank, law, mode):
-    if mode == "wrong_wet":
+    if mode.startswith("wrong_wet"):
         donor = (-law[0], law[1], law[2])
-    elif mode == "wrong_goal":
+    elif mode.startswith("wrong_goal"):
         donor = (law[0], -law[1], law[2])
     else:
         donor = law
@@ -198,10 +227,10 @@ def play(world, law, mode, bank, models, horizon):
                           {"inherited": models["legacy"], "blind": models["legacy_blind"]}, horizon)
     game = HistoryGame(world, law)
     signature = signature_for(bank, law, mode)
-    if mode == "history_bc":
-        model = models["history_bc"]
-    elif mode == "blind_dagger":
-        model = models["blind_dagger"]
+    if mode in ("history_bc", "history_bc_extended", "blind_dagger", "blind_guarded"):
+        model = models[mode]
+    elif mode in ("guarded", "wrong_wet_guarded", "wrong_goal_guarded"):
+        model = models["guarded"]
     else:
         model = models["dagger"]
     trace = [game.pos]
@@ -268,6 +297,13 @@ def evaluate(seed, bank, models, worlds, horizon):
         regret = [dict(da=rows["dagger"][i]["cost"] / max(.001, rows["oracle"][i]["cost"]) - 1,
                        bc=rows["history_bc"][i]["cost"] / max(.001, rows["oracle"][i]["cost"]) - 1)
                   for i in pair]
+        guard_pair = [i for i in range(worlds)
+                      if all(rows[mode][i]["success"]
+                             for mode in ("guarded", "history_bc_extended", "oracle"))]
+        guard_regret = [
+            (rows["guarded"][i]["cost"]/max(.001,rows["oracle"][i]["cost"])-1,
+             rows["history_bc_extended"][i]["cost"]/max(.001,rows["oracle"][i]["cost"])-1)
+            for i in guard_pair]
         results[family] = dict(trajectories=summary(rows, horizon),
             withheld_worlds=(worlds + 1) // 2,
             withheld_success={mode: sum(row["success"] for j, row in enumerate(rows[mode])
@@ -277,7 +313,14 @@ def evaluate(seed, bank, models, worlds, horizon):
                 history_bc_mean_regret=round(float(np.mean([r["bc"] for r in regret])), 5) if regret else None,
                 dagger_cheaper=sum(r["da"] < r["bc"] - 1e-7 for r in regret),
                 bc_cheaper=sum(r["bc"] < r["da"] - 1e-7 for r in regret),
-                tied=sum(abs(r["da"] - r["bc"]) <= 1e-7 for r in regret)))
+                tied=sum(abs(r["da"] - r["bc"]) <= 1e-7 for r in regret)),
+            guarded_vs_budget_matched_bc=dict(
+                joint_success=len(guard_pair),
+                guarded_mean_regret=round(float(np.mean([r[0] for r in guard_regret])),5) if guard_regret else None,
+                matched_bc_mean_regret=round(float(np.mean([r[1] for r in guard_regret])),5) if guard_regret else None,
+                guarded_cheaper=sum(a < b-1e-7 for a,b in guard_regret),
+                bc_cheaper=sum(b < a-1e-7 for a,b in guard_regret),
+                tied=sum(abs(a-b)<=1e-7 for a,b in guard_regret)))
     return results, samples
 
 
@@ -291,6 +334,7 @@ def counterfactual(seed, bank, models, wanted=50, search_limit=2500):
     found = 0
     original = alternate = both = 0
     delta_predictions = 0
+    guard_original = guard_alternate = guard_both = guard_changes = 0
     for j in range(search_limit):
         world = prior.maze(seed + j * 173, "ood")
         law = (1, 1, 1)
@@ -312,7 +356,13 @@ def counterfactual(seed, bank, models, wanted=50, search_limit=2500):
             mask = torch.from_numpy(legal[None])
             pred = int(models["dagger"](inp, mask, sig).argmax(-1).item())
             swapped = int(models["dagger"](inp, mask, swapped_sig).argmax(-1).item())
+            gp = int(models["guarded"](inp, mask, sig).argmax(-1).item())
+            gs = int(models["guarded"](inp, mask, swapped_sig).argmax(-1).item())
         found += 1
+        guard_original += int(gp == true_action)
+        guard_alternate += int(gs == cf_action)
+        guard_both += int(gp == true_action and gs == cf_action)
+        guard_changes += int(gp != gs)
         original += int(pred == true_action)
         alternate += int(swapped == cf_action)
         both += int(pred == true_action and swapped == cf_action)
@@ -324,19 +374,23 @@ def counterfactual(seed, bank, models, wanted=50, search_limit=2500):
                 true_law_followed=original,
                 swapped_law_followed=alternate,
                 both_followed=both,
-                receiver_changed_action=delta_predictions)
+                receiver_changed_action=delta_predictions,
+                guarded_true_law_followed=guard_original,
+                guarded_swapped_law_followed=guard_alternate,
+                guarded_both_followed=guard_both,
+                guarded_receiver_changed_action=guard_changes)
 
 
-def gallery(samples, path):
+def gallery(samples, path, use_guarded=False):
     # Preserve DG016's identical-world SVG map display without changing its source.
     converted = []
     for sample in samples:
         case = dict(sample)
         case["trials"] = {
-            "inherited": sample["trials"]["dagger"],
-            "wrong_wet": sample["trials"]["wrong_wet"],
-            "wrong_goal": sample["trials"]["wrong_goal"],
-            "blind": sample["trials"]["blind_dagger"],
+            "inherited": sample["trials"]["guarded" if use_guarded else "dagger"],
+            "wrong_wet": sample["trials"]["wrong_wet_guarded" if use_guarded else "wrong_wet"],
+            "wrong_goal": sample["trials"]["wrong_goal_guarded" if use_guarded else "wrong_goal"],
+            "blind": sample["trials"]["blind_guarded" if use_guarded else "blind_dagger"],
             "oracle": sample["trials"]["oracle"],
         }
         converted.append(case)
@@ -403,12 +457,17 @@ def run(seed, out, worlds, updates, sealed, horizon, donor_steps, rounds, correc
     history_bc = fit(graft_legacy(legacy), history_data, seed + 5000, updates)
     blind_bc = fit(graft_legacy(legacy_blind), history_data, seed + 6000, updates)
     models = dict(legacy=legacy, legacy_blind=legacy_blind,
-                  history_bc=history_bc, dagger=copy.deepcopy(history_bc),
-                  blind_dagger=copy.deepcopy(blind_bc))
+                  history_bc=history_bc,
+                  history_bc_extended=copy.deepcopy(history_bc),
+                  dagger=copy.deepcopy(history_bc),
+                  guarded=copy.deepcopy(history_bc),
+                  blind_dagger=copy.deepcopy(blind_bc),
+                  blind_guarded=copy.deepcopy(blind_bc))
     logs = []
-    corrected = {"dagger": None, "blind_dagger": None}
+    corrected = {name: None for name in
+                 ("dagger", "blind_dagger", "guarded", "blind_guarded")}
     for round_id in range(rounds):
-        for model_name in ("dagger", "blind_dagger"):
+        for model_name in ("dagger", "blind_dagger", "guarded", "blind_guarded"):
             new_data, stats = collect(seed + 1000000 + 10000*round_id
                          + (500000 if model_name == "blind_dagger" else 0),
                          bank, models[model_name], correction_worlds, horizon,
@@ -418,11 +477,21 @@ def run(seed, out, worlds, updates, sealed, horizon, donor_steps, rounds, correc
                       for a, b in zip(corrected[model_name], new_data))
             else:
                 corrected[model_name] = new_data
-            models[model_name] = fit(models[model_name], history_data,
-                seed + 7000 + 100*round_id + (1000 if model_name == "blind_dagger" else 0),
-                max(100, updates // 2), corrected[model_name])
+            fit_seed = seed + 7000 + 100*round_id + (
+                {"dagger": 0, "blind_dagger": 1000,
+                 "guarded": 2000, "blind_guarded": 3000}[model_name])
+            if model_name in ("guarded", "blind_guarded"):
+                anchor = history_bc if model_name == "guarded" else blind_bc
+                models[model_name] = fit_guarded(
+                    models[model_name], anchor, history_data,
+                    fit_seed, max(100, updates // 2), corrected[model_name])
+            else:
+                models[model_name] = fit(models[model_name], history_data,
+                    fit_seed, max(100, updates // 2), corrected[model_name])
             logs.append(dict(round=round_id + 1, model=model_name, **stats,
                              cumulative_labels=len(corrected[model_name][3])))
+        models["history_bc_extended"] = fit(models["history_bc_extended"],
+            history_data, seed + 9100 + 100*round_id, max(100, updates//2))
     for name, model in models.items():
         torch.save(model.state_dict(), out / f"receiver-{name}.pt")
     results, samples = evaluate(seed + 100000, bank, models, sealed, horizon)
@@ -433,12 +502,16 @@ def run(seed, out, worlds, updates, sealed, horizon, donor_steps, rounds, correc
                for split in results.values())
     (out / "trajectories.json").write_text(json.dumps(samples, indent=2) + "\n")
     gallery(samples, out / "gallery.svg")
-    report = dict(experiment="DG017", seed=seed, source_sha256=digest(__file__),
+    gallery(samples, out / "gallery-guarded.svg", use_guarded=True)
+    report = dict(experiment="DG017", protocol_revision="matched-budget-and-guarded-v2", seed=seed, source_sha256=digest(__file__),
         parent_commit="a1ab1ab85d78699368a6af676f9e646edf312bb8",
         pytorch=torch.__version__, numpy=np.__version__, donors=len(bank),
         receiver_models=len(models), original_training_states=len(original_data[3]),
         history_training_states=len(history_data[3]), train_worlds=worlds,
         updates=updates, rounds=rounds, correction_worlds_per_round=correction_worlds,
+        guarded_corrective_fraction=32/192,
+        guarded_base_KL_weight=0.8, guarded_learning_rate=0.0002,
+        budget_matched_bc=True,
         correction_log=logs, sealed_worlds_per_split=sealed,
         horizon=horizon, donor_training_steps=donor_steps,
         source_neural_outputs=True, source_hidden_permutation=True,
