@@ -1,0 +1,28 @@
+name: One-shot DRIV3R Stage-D offline research migration
+on:
+  push:
+    branches:
+      - research/driv3r-consolidation-2026-11-16
+permissions:
+  contents: write
+concurrency:
+  group: one-shot-stage-d-relocation
+  cancel-in-progress: false
+jobs:
+  stage-d:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy and verify Stage-D research and pinned ABI test fixture
+        run: python3 scripts/migrate_cybersand_stage_d.py
+      - name: Python syntax qualification
+        run: python3 -m compileall -q experiments/driv3r/stage_d experiments/driv3r/m2_preflight experiments/driv3r/d_common
+      - name: Commit verified science and remove workflow
+        run: |
+          git config user.name 'research-migration[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- experiments/driv3r/stage_d experiments/driv3r/m2_preflight experiments/driv3r/d_common docs/driv3r-migration/STAGE_D_MANIFEST.json
+          git rm -f .github/workflows/driv3r-stage-d-once.yml
+          git commit -m 'research: salvage Stage D procedural and shadow-guidance labs'
+          git push origin HEAD:refs/heads/research/driv3r-consolidation-2026-11-16
