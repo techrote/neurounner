@@ -199,6 +199,10 @@ def evaluate(seed, bank, models, n, horizon):
     paired_cost_deltas = []
     paired_inherited_regret = []
     paired_wrong_regret = []
+    action_changing_worlds = 0
+    true_law_followed = 0
+    swapped_law_followed = 0
+    both_laws_followed = 0
     for i in range(n):
         w = make_world(seed + i * 101)
         law = HELD if i % 2 == 0 else TRAIN_LAWS[i % len(TRAIN_LAWS)]
@@ -212,6 +216,17 @@ def evaluate(seed, bank, models, n, horizon):
             first_moves.append(next((a for a in trials[mode]["actions"] if a in moves), None))
         if all(first_moves):
             swapped_navigation_action += int(first_moves[0] != first_moves[1])
+        alternative_oracle = play(w, (-law[0], law[1], law[2]), "oracle",
+                                  bank, models, horizon)
+        true_oracle_nav = next((a for a in trials["oracle"]["actions"] if a in moves), None)
+        alt_oracle_nav = next((a for a in alternative_oracle["actions"] if a in moves), None)
+        if true_oracle_nav is not None and alt_oracle_nav is not None and true_oracle_nav != alt_oracle_nav:
+            action_changing_worlds += 1
+            true_ok = first_moves[0] == true_oracle_nav
+            swapped_ok = first_moves[1] == alt_oracle_nav
+            true_law_followed += int(true_ok)
+            swapped_law_followed += int(swapped_ok)
+            both_laws_followed += int(true_ok and swapped_ok)
         if trials["inherited"]["success"] and trials["wrong_wet"]["success"]:
             paired_cost_deltas.append(trials["wrong_wet"]["cost"] - trials["inherited"]["cost"])
         for mode in MODES:
@@ -250,7 +265,11 @@ def evaluate(seed, bank, models, n, horizon):
             if paired_wrong_regret else None,
         first_action_changed=swapped_first_action,
         first_navigation_changed=swapped_navigation_action,
-        navigation_comparisons=n)
+        navigation_comparisons=n,
+        oracle_action_changing_worlds=action_changing_worlds,
+        true_oracle_followed_on_action_change=true_law_followed,
+        swapped_oracle_followed_on_action_change=swapped_law_followed,
+        both_oracles_followed_on_action_change=both_laws_followed)
     return summary, paired, galleries
 
 
