@@ -1,0 +1,75 @@
+name: MEMPLANT DG006 long-composition 3-law game-state recipient
+on:
+  pull_request:
+    branches: [research/memplant-dg005-ordered-allele-game-20261116]
+    paths:
+      - '.github/workflows/memplant-three-law-006.yml'
+      - 'experiments/memplant/three_law/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: dg006-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  OMP_NUM_THREADS: '2'
+  MKL_NUM_THREADS: '2'
+jobs:
+  real-source-three-law:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 24
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - seed: 26011607
+            dg005_seed: 26011605
+          - seed: 26011608
+            dg005_seed: 26011606
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install CPU-only trainer
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy>=1.26,<3'
+      - name: Source-level correctness and legal-action tests
+        run: |
+          python3 -m py_compile experiments/memplant/three_law/experiment.py
+          python3 -m experiments.memplant.three_law.experiment --selftest
+      - name: Restore original Qwen source archive
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-dg002-source-a1
+          repository: techrote/neurounner
+          run-id: 43736088404
+          github-token: ${{ github.token }}
+          path: runtime/memplant/dg006/source
+      - name: Restore original DG005 trained source decoder
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: memplant-dg005-ordered-alleles-seed-${{ matrix.dg005_seed }}-a1
+          repository: techrote/neurounner
+          run-id: 43795069697
+          github-token: ${{ github.token }}
+          path: runtime/memplant/dg006/reference
+      - name: Train genuine atomic models and evaluate never-trained compositions
+        run: |
+          mkdir -p runtime/memplant/dg006/results
+          timeout --signal=INT --kill-after=15s 14m python3 -m experiments.memplant.three_law.experiment \
+            --source runtime/memplant/dg006/source \
+            --reference runtime/memplant/dg006/reference \
+            --out runtime/memplant/dg006/results \
+            --seed '${{ matrix.seed }}' --updates 300
+      - name: Preserve checkpoints, hashes, controls and negative results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg006-three-law-${{ matrix.seed }}-a${{ github.run_attempt }}
+          path: runtime/memplant/dg006/results
+          if-no-files-found: warn
+          retention-days: 30
