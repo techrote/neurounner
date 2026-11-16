@@ -1,0 +1,201 @@
+{
+  "schema": "MZ016-LOWBIT-FROZEN-v1",
+  "date_utc": "2026-11-16",
+  "execution": "Local CPU/PyTorch 2.10; one thread; source-compatible reconstruction of MZ-013/015 imports; no GitHub CI for this increment",
+  "audit_git_blob_sha1": "9b42923e256ded37c092fe9217d0461840341933",
+  "test_git_blob_sha1": "ed92fc12f0587034efff26a228c6eaad42814f8a",
+  "imported_upstream_git_blobs": {
+    "spatial_paint_mz013_run": "70d0d3cb877aa8bab03019bdbd245e469587add4",
+    "turning_maps_mz015_run": "57152e3582c021758ca152896697b56a54ceee67"
+  },
+  "training_source_commit": "807ac25373c31649dd5a92a9aaa503098a86183b",
+  "checkpoint_sha256": "0c3d60f6259e9b9504843883c1bc06459720b0789748d22dcdf1ac4bb3071c5f",
+  "checkpoint_artifact_url": "https://github.com/techrote/cybersand/actions/runs/43942288057/artifacts/14265125044",
+  "checkpoint_schema": "MZ015-TURNING-MAPS-v1",
+  "baseline_independent_reproduction": "diagonal and GRU 32/32 clean on MZ-015 original 9000..9007; reactive 10/32 clean and 668 collisions",
+  "tests": "4 of 4 unit tests passed locally",
+  "train_updates": 0,
+  "seed_families": [
+    9000,
+    9001,
+    9002,
+    9003,
+    9004,
+    9005,
+    9006,
+    9007,
+    9100,
+    9101,
+    9102,
+    9103,
+    9104,
+    9105,
+    9106,
+    9107
+  ],
+  "episodes_per_model_treatment": 64,
+  "params": {
+    "diagonal": 209012,
+    "gru": 237428
+  },
+  "peak_process_rss_mib": 262.36,
+  "units": "Per treatment: [clean,success,protected_collisions,painted_total,raw_illegal,estimated_packed_ratio,p50_cpu_ms_cached_batch1]",
+  "data": {
+    "diagonal": {
+      "float32": [
+        64,
+        64,
+        0,
+        192,
+        0,
+        null,
+        0.1067
+      ],
+      "ternary_t0.5_all": [
+        9,
+        22,
+        1169,
+        106,
+        383,
+        0.07656,
+        0.18279
+      ],
+      "ternary_t0.5_first_state": [
+        12,
+        39,
+        1161,
+        117,
+        20,
+        0.69068,
+        0.11849
+      ],
+      "ternary_t0.5_second_state": [
+        59,
+        63,
+        10,
+        191,
+        0,
+        0.55203,
+        0.11865
+      ],
+      "ternary_t0.5_head": [
+        35,
+        39,
+        151,
+        156,
+        189,
+        0.83386,
+        0.1045
+      ],
+      "ternary_t1_all": [
+        18,
+        29,
+        1182,
+        109,
+        46,
+        0.07656,
+        0.15675
+      ],
+      "int4_all": [
+        64,
+        64,
+        0,
+        192,
+        0,
+        0.13844,
+        0.11201
+      ],
+      "int8_all": [
+        64,
+        64,
+        0,
+        192,
+        0,
+        0.26221,
+        0.11642
+      ]
+    },
+    "gru": {
+      "float32": [
+        64,
+        64,
+        0,
+        192,
+        0,
+        null,
+        0.17549
+      ],
+      "ternary_t0.5_all": [
+        8,
+        33,
+        625,
+        167,
+        681,
+        0.07934,
+        0.16649
+      ],
+      "ternary_t0.5_input_recurrence": [
+        35,
+        64,
+        34,
+        192,
+        30,
+        0.57414,
+        0.19198
+      ],
+      "ternary_t0.5_state_recurrence": [
+        64,
+        64,
+        0,
+        192,
+        0,
+        0.61507,
+        0.20629
+      ],
+      "ternary_t0.5_head": [
+        63,
+        64,
+        1,
+        192,
+        0,
+        0.89013,
+        0.16345
+      ],
+      "ternary_t1_all": [
+        27,
+        40,
+        732,
+        143,
+        244,
+        0.07934,
+        0.17161
+      ],
+      "int4_all": [
+        64,
+        64,
+        0,
+        192,
+        0,
+        0.14118,
+        0.18371
+      ],
+      "int8_all": [
+        64,
+        64,
+        0,
+        192,
+        0,
+        0.26486,
+        0.17034
+      ]
+    }
+  },
+  "caveats": [
+    "Evaluation uses only the original MZ-015 turning-path grammar, not novel free-space planning topologies",
+    "No quantization-aware training or finetuning; all changed specimens are deterministic dequantized weight transforms",
+    "Packed ratios are analytical lower-bound estimates including per-output-channel float32 scales, not measured file/RSS size",
+    "CPU timings use float32 dequantized PyTorch kernels, so they cannot establish low-bit acceleration",
+    "Host masks illegal actions before execution; raw illegal argmax preferences remain independently counted",
+    "Not genuine CyberSand/game integration or Windows GPU acceptance"
+  ]
+}
