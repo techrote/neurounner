@@ -1,0 +1,276 @@
+#!/usr/bin/env python3
+"""Strict first-pass LFM2.5-VL DEVELOPMENT evaluation; never native execution.
+
+Extensionless deliberately: model adapter_identity hashes lane *.py and
+profile.json, so evaluation-only tooling must not invalidate frozen adapters.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import resource
+import subprocess
+import sys
+import time
+
+LANE = Path(__file__).resolve().parent
+PAINTER = LANE.parent.parent
+sys.path.insert(0, str(PAINTER / "training"))
+
+from common import (canonical, compiler_module, profile, read_json, relative_file,
+                    sha256_file, strict_completion, strict_json, verify_checkpoint,
+                    verify_file, write_json)
+from lane_adapters import adapter_identity, encode_prompt
+from numerics import configure_cpu
+from train import SYSTEM, load_base
+
+
+def development_cases(corpus: Path, compiler_sha: str, expected_manifest: str):
+    manifest_path = relative_file(corpus, "admitted-corpus.json")
+    if sha256_file(manifest_path) != expected_manifest:
+        raise ValueError("evaluation corpus manifest SHA differs from immutable request")
+    manifest = read_json(manifest_path)
+    if (manifest.get("schema_version") != 1 or manifest.get("state") != "native-admitted"
+            or manifest.get("source_sha") != "633920373a3d406a2ede61ce4137c324f76be23b"
+            or manifest.get("compiler_sha256") != compiler_sha):
+        raise ValueError("not the qualified native source / compiler admission")
+    groups = manifest["structural_groups"]
+    if set(groups) != {"TRAIN", "DEVELOPMENT", "FINAL"}:
+        raise ValueError("incomplete structural split registry")
+    sets = [set(groups[part]) for part in ("TRAIN", "DEVELOPMENT", "FINAL")]
+    if any(not s for s in sets) or any(sets[i] & sets[j] for i in range(3) for j in range(i + 1, 3)):
+        raise ValueError("structural group contamination")
+    entry = manifest["split_files"]["DEVELOPMENT"]
+    path = verify_file(corpus, entry["path"], entry["sha256"])
+    rows = [strict_json(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    if len(rows) != entry["count"] or len(rows) != 12 or len({r["id"] for r in rows}) != 12:
+        raise ValueError("unexpected DEVELOPMENT denominator / duplicate IDs")
+    for row in rows:
+        group = row.get("group_id", row.get("structural_group"))
+        if (row.get("split") != "DEVELOPMENT" or group not in sets[1]
+                or row.get("family") not in {"greebles", "pipework", "architecture"}
+                or not isinstance(row.get("prompt"), str) or not row["prompt"].strip()
+                or type(row.get("seed")) is not int):
+            raise ValueError("invalid DEVELOPMENT source case")
+    # No FINAL target file, image or row is opened, even for diagnostics.
+    return rows, manifest
+
+
+
+def grouped_development(rows):
+    """Admit six distinct requests and two fixed, host-owned views per request."""
+    groups = {}
+    for row in rows:
+        group = row.get("group_id", row.get("structural_group"))
+        groups.setdefault(group, []).append(row)
+    if len(groups) != 6 or len({row["prompt"] for row in rows}) != 6:
+        raise ValueError("DEVELOPMENT must contain six distinct structural prompts")
+    counts = {"greebles": 0, "pipework": 0, "architecture": 0}
+    for group, members in groups.items():
+        if len(members) != 2 or {r["seed"] for r in members} != {104729, 130363}:
+            raise ValueError("structural group must have exactly two pinned host seeds")
+        if len({r["prompt"] for r in members}) != 1 or len({r["family"] for r in members}) != 1:
+            raise ValueError("structural group prompt or family differs between seeds")
+        counts[members[0]["family"]] += 1
+    if any(value != 2 for value in counts.values()):
+        raise ValueError("expected two independent structural groups per family")
+    return groups
+
+
+def validate_checkpoint_identity(receipt, source, step):
+    """Explicitly bind actual serialized full-state receipt, not a filename."""
+    import re
+    if not isinstance(source, str) or re.fullmatch(r"[0-9a-f]{40}", source) is None or type(step) is not int or step < 1:
+        raise ValueError("invalid pinned training source or optimizer step")
+    if (receipt.get("config", {}).get("source_sha") != source
+            or type(receipt.get("global_step")) is not int or receipt["global_step"] != step
+            or receipt.get("sample_cursor") != step
+            or len(receipt.get("history", [])) != step):
+        raise ValueError("candidate source, optimizer step, sample cursor or history mismatch")
+
+
+def evaluate(args):
+    if args.variant not in {"base", "tuned"} or not 1 <= args.max_new_tokens <= 512:
+        raise ValueError("unknown evaluation arm / token budget")
+    if args.output.exists():
+        raise ValueError("refusing to overwrite first-pass evidence")
+    selected = profile("lfm25_vl", require_supported=True)
+    compiler = compiler_module()
+    compiler_file = PAINTER / "compiler.py"
+    compiler_sha = sha256_file(compiler_file)
+    rows, manifest = development_cases(args.corpus, compiler_sha, args.manifest_sha256)
+    groups = grouped_development(rows)
+    if args.expected_training_source_sha is None or args.expected_global_step is None:
+        raise ValueError("source-pinned candidate receipt expectation is mandatory")
+
+    train_config = None
+    if args.variant == "tuned":
+        if args.checkpoint is None:
+            raise ValueError("tuned arm requires exact checkpoint")
+        receipt = verify_checkpoint(args.checkpoint)
+        validate_checkpoint_identity(receipt, args.expected_training_source_sha, args.expected_global_step)
+        train_config = receipt["config"]
+        if (train_config.get("profile") != "lfm25_vl" or train_config.get("model") != selected
+                or train_config.get("native_source_sha") != manifest["source_sha"]
+                or train_config.get("corpus_manifest_sha256") != args.manifest_sha256
+                or train_config.get("compiler_sha256") != compiler_sha
+                or train_config.get("adapter_contract") != adapter_identity(selected)):
+            raise ValueError("frozen adapter does not match original model/corpus/contract")
+    elif args.checkpoint is not None:
+        raise ValueError("base arm cannot load an adapter checkpoint")
+
+    # Configure before importing/loading Torch; same effective CPU profile as training.
+    numerics, numerical_runtime = configure_cpu(1)
+    if train_config is not None and train_config.get("numerics") != numerics:
+        raise ValueError("evaluation numerical recipe mismatch")
+    import torch
+    from peft import PeftModel
+
+    started = time.monotonic()
+    base, tokenizer = load_base(args.model, selected)
+    if args.variant == "tuned":
+        model = PeftModel.from_pretrained(base, args.checkpoint / "adapter", is_trainable=False,
+                                         local_files_only=True)
+    else:
+        model = base
+    model.eval()
+    args.output.mkdir(parents=True)
+    source = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=PAINTER, text=True).strip()
+    write_json(args.output / "provenance.json", {
+        "schema_version": 1, "evaluation_source_sha": source,
+        "training_source_sha": train_config.get("source_sha") if train_config else None,
+        "variant": args.variant, "checkpoint_inventory_sha256":
+            sha256_file(args.checkpoint / "inventory.json") if args.checkpoint else None,
+        "model": selected["model_id"], "model_revision": selected["revision"],
+        "corpus_manifest_sha256": args.manifest_sha256, "native_source_sha": manifest["source_sha"],
+        "compiler_sha256": compiler_sha, "development_file_sha256":
+            manifest["split_files"]["DEVELOPMENT"]["sha256"],
+        "numerics": numerics, "numerical_runtime": numerical_runtime,
+        "input_rows": len(rows), "structural_groups": len(groups),
+        "independent_language_requests": len(groups), "seed_views": len(rows),
+        "expected_training_source_sha": args.expected_training_source_sha,
+        "expected_optimizer_step": args.expected_global_step,
+        "max_new_tokens": args.max_new_tokens, "native_execution": False,
+        "model_quality_claim": False, "final_targets_opened": False,
+    })
+
+    totals = {"requests": 0, "case_views": 0, "eos": 0, "json": 0, "program": 0,
+              "compiled": 0, "geometry_preview": 0, "output_tokens": 0, "generate_seconds": 0.0}
+    families = {name: totals.copy() for name in ("greebles", "pipework", "architecture")}
+    generation_cache = {}
+    for index, row in enumerate(rows):
+        prompt = row["prompt"]
+        ids = encode_prompt(tokenizer, prompt, SYSTEM, selected)
+        if len(ids) + args.max_new_tokens > selected["max_sequence_tokens"]:
+            raise ValueError("complete requested generation exceeds untruncated context")
+        group_id = row.get("group_id", row.get("structural_group"))
+        reused = group_id in generation_cache
+        if reused:
+            original = generation_cache[group_id]
+            if original["prompt"] != prompt or original["family"] != row["family"]:
+                raise ValueError("reused generation changed prompt/family")
+            generated, base_verdict = original["generated"], original["verdict"]
+            elapsed = 0.0
+        else:
+            inputs = torch.tensor([ids], dtype=torch.long)
+            call_started = time.monotonic()
+            with torch.inference_mode():
+                generated = model.generate(
+                    input_ids=inputs, attention_mask=torch.ones_like(inputs),
+                    max_new_tokens=args.max_new_tokens, do_sample=False,
+                    eos_token_id=tokenizer.eos_token_id,
+                    pad_token_id=tokenizer.pad_token_id, use_cache=True,
+                )[0, len(ids):].tolist()
+            elapsed = time.monotonic() - call_started
+            base_verdict = strict_completion(tokenizer, generated, compiler.validate_program)
+            generation_cache[group_id] = {"prompt": prompt, "family": row["family"],
+                                          "generated": generated, "verdict": base_verdict}
+        verdict = dict(base_verdict)
+        accepted = verdict["first_pass_accepted"]
+        compiled = None
+        preview_passed = False
+        if accepted:
+            try:
+                focus = row["compiled"]["focus"]
+                material = row["compiled"]["material"]
+                compiled = compiler.compile_program(
+                    strict_json(verdict["raw_text"]), seed=row["seed"], focus=focus,
+                    material=material, allowed_materials=(material,))
+                raster = compiler.rasterize_operations(compiled["operations"], compiled["focus"])
+                preview_passed = compiler.verify_structure(compiled, raster).get("passed") is True
+            except ValueError as error:
+                accepted = False
+                verdict["compile_failure"] = str(error)
+        name = f"{index:02d}"
+        directory = args.output / "cases" / name
+        directory.mkdir(parents=True)
+        (directory / "completion.txt").write_text(verdict["raw_text"], encoding="utf-8")
+        write_json(directory / "raw-output.json", verdict)
+        if accepted:
+            write_json(directory / "compiled-only.json", compiled)
+        result = {
+            "id": row["id"], "family": row["family"],
+            "structural_group": row.get("group_id", row.get("structural_group")),
+            "seed": row["seed"], "prompt": prompt, "variant": args.variant,
+            "generation_id": group_id, "generation_reused": reused,
+            "input_tokens": len(ids), "output_tokens": len(generated),
+            "max_new_tokens": args.max_new_tokens, "generation_seconds": elapsed,
+            "eos_terminated": verdict["eos_terminated"],
+            "json_valid": verdict["json_valid"], "program_valid": verdict["program_valid"],
+            "first_pass_accepted": verdict["first_pass_accepted"],
+            "compile_accepted": accepted, "geometry_preview_passed": preview_passed,
+            "native_execution": False, "model_quality_claim": False,
+            "completion_sha256": sha256_file(directory / "completion.txt"),
+            "failure": verdict.get("failure", verdict.get("compile_failure")),
+        }
+        write_json(directory / "receipt.json", result)
+        for target in (totals, families[row["family"]]):
+            target["case_views"] += 1
+            if not reused:
+                target["requests"] += 1
+                target["eos"] += int(verdict["eos_terminated"])
+                target["json"] += int(verdict["json_valid"])
+                target["program"] += int(verdict["program_valid"])
+            target["compiled"] += int(accepted)
+            target["geometry_preview"] += int(preview_passed)
+            if not reused:
+                target["output_tokens"] += len(generated)
+                target["generate_seconds"] += elapsed
+        print(canonical({"event": "development-first-pass", **result}), flush=True)
+
+    if len(generation_cache) != 6 or totals["requests"] != 6 or totals["case_views"] != 12:
+        raise ValueError("independent request/seed-view denominator mismatch")
+    summary = {
+        "schema_version": 1, "variant": args.variant, "status": "complete",
+        "source_sha": source, "training_source_sha":
+            train_config.get("source_sha") if train_config else None,
+        "candidate_checkpoint": str(args.checkpoint) if args.checkpoint else None,
+        "native_execution": False, "model_quality_claim": False,
+        "final_targets_opened": False, "first_pass_only": True,
+        "metric_units": {"requests": "distinct language prompts", "case_views": "host seed views",
+                         "eos": "distinct model completions", "json": "distinct model completions",
+                         "program": "distinct model completions",
+                         "compiled": "host seed views", "geometry_preview": "host seed views",
+                         "output_tokens": "distinct model completions",
+                         "generate_seconds": "distinct model calls"},
+        "global": totals, "by_family": families, "wall_seconds": time.monotonic() - started,
+        "cpu_seconds": time.process_time(), "peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+    }
+    write_json(args.output / "summary.json", summary)
+    print(canonical({"event": "development-complete", **summary}), flush=True)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--model", type=Path, required=True)
+    parser.add_argument("--corpus", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--variant", required=True, choices=("base", "tuned"))
+    parser.add_argument("--checkpoint", type=Path)
+    parser.add_argument("--manifest-sha256", required=True)
+    parser.add_argument("--max-new-tokens", type=int, default=384)
+    parser.add_argument("--expected-training-source-sha", required=True)
+    parser.add_argument("--expected-global-step", type=int, required=True)
+    evaluate(parser.parse_args())

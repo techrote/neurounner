@@ -1,0 +1,9 @@
+# SPROCKET W10 original training outcome; W11 head-sampling hypothesis
+
+16 November 2026. W10 original [run 43806919532](https://github.com/techrote/cybersand/actions/runs/43806919532) SUCCESS, immutable [artifact 14200393499](https://github.com/techrote/cybersand/actions/runs/43806919532/artifacts/14200393499); exact source `141c6d3f8ee2b9d029d744d02ac64776dcf0f00f`.
+
+Independently downloaded ZIP SHA256 `795870d7e3418655b9e965f60c541cb1f9604481a06d1aec70e83cdb8ad69231`; **126/126 CRC and 125/125 internal SHA checks passed**. Actual **320/320 AdamW auxiliary-head updates**, 0 root/LoRA updates, **432 genuine pinned root model decisions**, **54 original synthetic W0 PNG/JSON pairs**. Checkpoint `f984965d07c6774a5522269d7db9d61637427251c7871a8e37ebf4d67dc15d9f`, wall 2931.97 s, peak RSS 3,331,024 KiB.
+
+Held-out teacher host-masked accuracy improved 0.507523 → 0.760417, but intermediate W10 motif-balanced stage had **876/1728 top BRANCH**, and final replay stage **only 13/1728 top BRANCH**. Held-out 128-turn Greebles W9 head drew 27 BRANCH per world; W10 drew 0 on all three held-out worlds, despite higher teacher-match scores. Same 48-turn seed 1709 fused root comparison W10 vs W9: Greebles 31 vs 47 unique trail cells, Pipework 46 vs 49, Architecture 46 vs 49. These are distinct behaviours, **not** evidence of more useful artwork.
+
+W11 replays immutable checkpoints in 9 previously unseen seeded synthetic W0 worlds at 128 turns using true PyTorch model steps. Test W9 greedy, W10 greedy, W10 temperatures 0.35/0.70/1.40 with a shared source-defined host draw per observation tick; add random, wall and fidget. This is **inference-only**, 5,760 genuine head forwards, 0 new optimizer/root forwards and 72 original PNG pairs. This tests whether W10 action scores retain latent branching that greedy inference suppresses, before another expensive training objective. All files remain research-only, Draft/HOLD.

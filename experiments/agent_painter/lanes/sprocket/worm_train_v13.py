@@ -1,0 +1,268 @@
+#!/usr/bin/env python3
+"""W13: legal-conditioned BRANCH contrast plus sampled on-policy recovery.
+
+Continue verified W12 auxiliary head; frozen root-Instruct identity, zero root
+forwards/updates. Synthetic W0 observations and engine-owned action legality.
+"""
+from __future__ import annotations
+import argparse, hashlib, json, os, random, resource, sys, time
+from collections import Counter
+from pathlib import Path
+HERE=Path(__file__).resolve().parent
+sys.path[:0]=[str(HERE.parents[1]/"training"),str(HERE)]
+import worm_train_v9 as w9
+import worm_train_v10 as w10
+import worm_train_v12 as w12
+import worm_head_sample_v11 as w11
+import worm_v4 as objective
+from common import profile, sha256_file, write_json
+from numerics import configure_cpu
+
+VERSION="sprocket-w13-conditional-branch-v1"
+PARENT_SHA="30a2fc415bb07741559b27b560637ed0d4be0905c22d9841631edfcea885bbed"
+PARENT_W9_SHA=w11.W9_SHA
+TRAIN_SEEDS=(261,269,271,277)
+HELDOUT=(2309,2311,2333)
+UPDATES=120
+QUOTA={"STRAIGHT":20,"LEFT":12,"RIGHT":12,"BRANCH":12,"RETRACE":6,"STOP":2}
+assert sum(QUOTA.values())==64
+
+def class_rows(rows):
+    groups={a:[] for a in w9.ACTIONS}
+    for i,r in enumerate(rows):
+        if r["action"] not in r["observation"]["legal"]:
+            raise AssertionError("illegal teacher action")
+        groups[r["action"]].append(i)
+    missing=[a for a in w9.ACTIONS if not groups[a]]
+    if missing:raise ValueError("missing curriculum actions "+str(missing))
+    return groups
+
+def balanced(groups,rng):
+    indices=[]
+    for name,count in QUOTA.items():
+        indices.extend(rng.choices(groups[name],k=count))
+    rng.shuffle(indices)
+    return indices
+
+def legal_mask(torch,rows):
+    return torch.tensor([[a in r["observation"]["legal"] for a in w9.ACTIONS]
+                         for r in rows],dtype=torch.bool)
+
+def eligible_indices(rows):
+    pos=[i for i,r in enumerate(rows)
+         if "BRANCH" in r["observation"]["legal"] and r["action"]=="BRANCH"]
+    neg=[i for i,r in enumerate(rows)
+         if "BRANCH" in r["observation"]["legal"] and r["action"]!="BRANCH"]
+    if not pos or not neg:raise ValueError("no legal BRANCH positives or hard negatives")
+    return pos,neg
+
+def branch_loss(torch,model,x,mask,pos,neg,rng):
+    ids=rng.choices(pos,k=32)+rng.choices(neg,k=32)
+    logits=model(x[ids])
+    available=mask[ids]
+    branch=w9.ACTIONS.index("BRANCH")
+    if not bool(available[:,branch].all()):raise AssertionError("illegal BRANCH contrast")
+    other=logits.masked_fill(~available,-1e4).clone()
+    other[:,branch]=-1e4
+    gap=logits[:,branch]-other.logsumexp(dim=1)
+    target=torch.tensor([1.]*32+[0.]*32,dtype=torch.float32)
+    return torch.nn.functional.binary_cross_entropy_with_logits(gap,target)
+
+def branch_diagnostic(torch,model,rows):
+    x,y=w9.as_tensors(torch,rows)
+    mask=legal_mask(torch,rows)
+    j=w9.ACTIONS.index("BRANCH")
+    with torch.no_grad():pred=model(x).masked_fill(~mask,-1e4).argmax(dim=1)
+    eligible=mask[:,j]
+    truth=(y==j)&eligible
+    picked=(pred==j)&eligible
+    tp=int((picked&truth).sum());fp=int((picked&~truth).sum())
+    fn=int((~picked&truth).sum());tn=int((~picked&~truth&eligible).sum())
+    return {"eligible":int(eligible.sum()),"tp":tp,"fp":fp,"fn":fn,"tn":tn,
+            "precision":round(tp/max(1,tp+fp),6),"recall":round(tp/max(1,tp+fn),6),
+            "hard_negative_specificity":round(tn/max(1,tn+fp),6)}
+
+def class_recall(torch,model,rows):
+    x,y=w9.as_tensors(torch,rows)
+    with torch.no_grad():
+        out=model(x)
+        legal=torch.tensor([[a in r["observation"]["legal"] for a in w9.ACTIONS]
+                            for r in rows],dtype=torch.bool)
+        pred=out.masked_fill(~legal,-1e9).argmax(dim=1)
+    result={}
+    for a in w9.ACTIONS:
+        j=w9.ACTIONS.index(a)
+        truth=(y==j)
+        result[a]={"true":int(truth.sum()),"predicted":int((pred==j).sum()),
+                   "correct":int((truth & (pred==j)).sum())}
+    result["macro_recall"]=round(sum(result[a]["correct"]/max(1,result[a]["true"])
+                                      for a in w9.ACTIONS)/6,6)
+    return result
+
+def stage_checkpoint(torch,head,opt,folder,stage,measure):
+    path=folder/(stage+".pt")
+    torch.save({"version":VERSION,"stage":stage,"root_frozen":True,
+                "head":head.state_dict(),"optimizer":opt.state_dict(),
+                "torch_rng_state":torch.random.get_rng_state(),
+                "dev":measure},path)
+    return {"file":path.name,"sha256":sha256_file(path),"bytes":path.stat().st_size}
+
+def replay_data(torch,w0,support,models):
+    result=[];manifest=[]
+    for seed in TRAIN_SEEDS:
+        for family in w9.FAMILIES:
+            for mode,head in models.items():
+                rec=w11.probe(torch,w0,head,seed,family,"w10-t07" if mode=="w13-stage1-t07" else mode)
+                manifest.append([seed,family,mode,len(rec["events"])])
+                for event in rec["events"]:
+                    obs=event["observation"]
+                    target=w10.motif_teacher(obs,support)
+                    result.append({"observation":obs,"action":target,"family":family,
+                                   "legal":obs["legal"],"seed":seed,
+                                   "source":"closed-loop-"+mode})
+    return result,manifest
+
+def train(torch,w0,support,args,out):
+    torch.manual_seed(131313)
+    rng=random.Random(131313)
+    w9_head=w11.load(torch,args.w9,PARENT_W9_SHA,w9.FEATURE_VERSION)
+    frozen=w11.load(torch,args.parent,PARENT_SHA,w12.VERSION)
+    model=w9.model_class(torch)()
+    model.load_state_dict(frozen.state_dict())
+    source,source_manifest=w10.gather(w0,support,TRAIN_SEEDS,steps=128)
+    heldout,heldout_manifest=w10.gather(w0,support,HELDOUT,steps=128)
+    assert not set(TRAIN_SEEDS)&set(HELDOUT)
+    groups=class_rows(source)
+    sx,sy=w9.as_tensors(torch,source)
+    sm=legal_mask(torch,source)
+    positives,negatives=eligible_indices(source)
+    write_json(out/"dataset-manifest.json",{
+        "schema":VERSION,"train_worlds":source_manifest,"heldout_worlds":heldout_manifest,
+        "train_counts":dict(Counter(r["action"] for r in source)),
+        "heldout_counts":dict(Counter(r["action"] for r in heldout)),
+        "quota_per_64":QUOTA,"legal_branch_positives":len(positives),
+        "legal_branch_hard_negatives":len(negatives),"synthetic":True,"native":False})
+    opt=torch.optim.AdamW(model.parameters(),lr=0.00018,weight_decay=0.002)
+    stages=[{"name":"frozen-W12","teacher":w9.accuracy(torch,frozen,heldout),
+             "class_recall":class_recall(torch,frozen,heldout),
+             "branch_diagnostic":branch_diagnostic(torch,frozen,heldout)}]
+    hist=[]
+    for stage in ("conditional-branch-frontier","sampled-branch-recovery"):
+        if stage=="sampled-branch-recovery":
+            replay,manifest=replay_data(torch,w0,support,{"w9-greedy":w9_head,
+                                                           "w13-stage1-t07":model})
+            rgroups=class_rows(replay)
+            rx,ry=w9.as_tensors(torch,replay)
+            rm=legal_mask(torch,replay)
+            rpositives,rnegatives=eligible_indices(replay)
+            write_json(out/"replay-manifest.json",{
+                "source_controllers":list(("w9-greedy","w13-stage1-t07")),
+                "closed_loop_worlds":manifest,
+                "actual_replay_rows":len(replay),
+                "label_counts":dict(Counter(r["action"] for r in replay)),
+                "synthetic":True})
+        for step in range(UPDATES):
+            opt.zero_grad(set_to_none=True)
+            ids=balanced(groups,rng)
+            ce=torch.nn.functional.cross_entropy(
+                model(sx[ids]).masked_fill(~sm[ids],-1e4),sy[ids])
+            bc=branch_loss(torch,model,sx,sm,positives,negatives,rng)
+            if stage=="sampled-branch-recovery":
+                rids=balanced(rgroups,rng)
+                rce=torch.nn.functional.cross_entropy(
+                    model(rx[rids]).masked_fill(~rm[rids],-1e4),ry[rids])
+                rbc=branch_loss(torch,model,rx,rm,rpositives,rnegatives,rng)
+                loss=.35*ce+.15*bc+.25*rce+.25*rbc
+            else:
+                loss=.55*ce+.45*bc
+            if not torch.isfinite(loss):raise RuntimeError("nonfinite objective")
+            loss.backward()
+            norm=torch.nn.utils.clip_grad_norm_(model.parameters(),3.)
+            if not torch.isfinite(norm) or float(norm)<=0:raise RuntimeError("bad optimizer gradient")
+            opt.step()
+            if (step+1)%30==0:
+                item={"stage":stage,"update":len(hist)+1,"global_update":len(hist)*30+30,
+                      "stage_step":step+1,"loss":round(float(loss.detach()),6),
+                      "gradient_norm":round(float(norm),6)}
+                hist.append(item)
+                write_json(out/"partial-optimizer-history.json",hist)
+        measure={"name":stage,"updates":UPDATES,"teacher":w9.accuracy(torch,model,heldout),
+                 "class_recall":class_recall(torch,model,heldout),
+                 "branch_diagnostic":branch_diagnostic(torch,model,heldout)}
+        measure["checkpoint"]=stage_checkpoint(torch,model,opt,out,stage,measure)
+        stages.append(measure)
+        write_json(out/"stage-progress.json",stages)
+    return w9_head,frozen,model,stages,hist
+
+def main(args):
+    start=time.monotonic()
+    args.output.mkdir(parents=True,exist_ok=False)
+    configure_cpu(1)
+    import torch
+    torch.set_num_threads(1)
+    p=profile("sprocket",require_supported=True)
+    assert p["model_id"]=="kandivault/sprocket-500m"
+    assert p["revision"]=="eb157d4ddddc4619e661d4a2426bb2dd000fc668"
+    assert p["subfolder"]=="" and p["framing"]["eos_token_id"]==5
+    assert sha256_file(args.parent)==PARENT_SHA
+    assert sha256_file(args.w9)==PARENT_W9_SHA
+    assert sha256_file(args.w0)=="81c3923cb38d7f196b99986806216388c34ebc27fd4976e168b3b370c25a323e"
+    assert sha256_file(args.support)=="c555c55ea4fc4bc303159fd3268cef4a0b7d9e5c006e19918ea3433d1f7c95d6"
+    assert not set(TRAIN_SEEDS)&(set(w10.TRAIN_SEEDS)|set(w10.HELDOUT)|set(w11.SEEDS))
+    assert not set(HELDOUT)&(set(w10.TRAIN_SEEDS)|set(w10.HELDOUT)|set(w11.SEEDS)|set(TRAIN_SEEDS))
+    support=objective.load_support(args.support,args.w0)
+    write_json(args.output/"provenance.json",{
+        "schema":VERSION,"source":os.environ.get("GITHUB_SHA","local"),
+        "root_profile":p,"root_frozen":True,"root_updates":0,"lora_updates":0,
+        "parent_W10_sha256":PARENT_SHA,"parent_W9_sha256":PARENT_W9_SHA,
+        "W0_sha256":sha256_file(args.w0),"support_sha256":sha256_file(args.support),
+        "script_sha256":sha256_file(__file__),"planned_adamw_steps":2*UPDATES,
+        "heldout_seeds":HELDOUT,"NOT_native":True,"sealed_final_opened":False})
+    old,w10head,w12head,stages,hist=train(torch,support.worm,support,args,args.output)
+    rows=[];folder=args.output/"png-and-json"
+    for seed in HELDOUT:
+        for fam in w9.FAMILIES:
+            for name,head,mode in (
+                ("w9-greedy",old,"w9-greedy"),
+                ("w12-greedy",w10head,"w10-greedy"),
+                ("w12-t07",w10head,"w10-t07"),
+                ("w13-greedy",w12head,"w10-greedy"),
+                ("w13-t07",w12head,"w10-t07")):
+                r=w11.probe(torch,support.worm,head,seed,fam,mode)
+                r["mode"]=name
+                support.worm.write_result(r,folder)
+                rows.append({"seed":seed,"family":fam,"mode":name,
+                    "metrics":r["metrics"],"head_forwards":len(r["head_decisions"])})
+            for mode in ("random","wall","fidget"):
+                r=support.worm.run(seed,mode,fam,128)
+                support.worm.write_result(r,folder)
+                rows.append({"seed":seed,"family":fam,"mode":mode,
+                             "metrics":r["metrics"],"head_forwards":0})
+        write_json(args.output/"partial-original-rollouts.json",rows)
+    assert len(rows)==72
+    checkpoints=[s["checkpoint"] for s in stages if "checkpoint" in s]
+    assert len(checkpoints)==2 and all(
+        sha256_file(args.output/x["file"])==x["sha256"] for x in checkpoints)
+    final={"status":"complete","version":VERSION,
+       "real_aux_optimizer_steps":UPDATES*2,"root_updates":0,
+       "real_head_forwards":sum(x["head_forwards"] for x in rows),
+       "root_forwards":0,"original_png_json_pairs":len(rows),
+       "two_checkpoints_valid":True,"stages":stages,"history":hist,
+       "results":rows,"wall_seconds":time.monotonic()-start,
+       "peak_rss_kib":resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+       "native":False,"sealed_final_opened":False}
+    write_json(args.output/"summary.json",final)
+    print(json.dumps({"status":"complete","optimizer_steps":UPDATES*2,
+        "png_pairs":len(rows),"head_forwards":final["real_head_forwards"]}),flush=True)
+
+if __name__=="__main__":
+    ap=argparse.ArgumentParser()
+    for n in ("parent","w9","w0","support","output"):
+        ap.add_argument("--"+n,type=Path,required=True)
+    a=ap.parse_args()
+    try:main(a)
+    except BaseException as e:
+        if a.output.exists():
+            write_json(a.output/"failure.json",{"error":str(e),"type":type(e).__name__,
+                                                "partial_or_failed":True})
+        raise

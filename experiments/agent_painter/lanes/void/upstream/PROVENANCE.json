@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "model_id": "dotlabs/void.1",
+  "revision": "9c2be5087772867d45961abd11f6b35110617563",
+  "source": "https://huggingface.co/dotlabs/void.1/tree/9c2be5087772867d45961abd11f6b35110617563",
+  "retrieved_utc": "2026-11-13",
+  "license": "apache-2.0",
+  "license_evidence": "https://huggingface.co/dotlabs/void.1/blob/9c2be5087772867d45961abd11f6b35110617563/README.md",
+  "upstream_has_standalone_license_file": false,
+  "license_text_source": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+  "license_text_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+  "files": {
+    "README.md": {
+      "source": "https://huggingface.co/dotlabs/void.1/resolve/9c2be5087772867d45961abd11f6b35110617563/README.md",
+      "sha256": "420004edd5a9bd4a69cc03b79c3ae6d91e525b1b495583fb48934345b2590e0c",
+      "preserved_unmodified": true,
+      "executed_at_runtime": false
+    },
+    "byte_vocab.json": {
+      "source": "https://huggingface.co/dotlabs/void.1/resolve/9c2be5087772867d45961abd11f6b35110617563/byte_vocab.json",
+      "sha256": "57a1cd2e70dd5b7cc6fd2eaa12ebfcd173c1620fa5d45c2c6282511c29b6a5f6",
+      "preserved_unmodified": true,
+      "executed_at_runtime": false
+    },
+    "config.json": {
+      "source": "https://huggingface.co/dotlabs/void.1/resolve/9c2be5087772867d45961abd11f6b35110617563/config.json",
+      "sha256": "cbc72137da3dae65085a2a8c39ad7634d16bf92d785ca00d283ee82fe32b37e7",
+      "preserved_unmodified": true,
+      "executed_at_runtime": false
+    },
+    "generation_config.json": {
+      "source": "https://huggingface.co/dotlabs/void.1/resolve/9c2be5087772867d45961abd11f6b35110617563/generation_config.json",
+      "sha256": "54ed0d19f6226888c91157964ede8a892bd5ae175bfad85336152b3d9b6cd7c4",
+      "preserved_unmodified": true,
+      "executed_at_runtime": false
+    },
+    "special_tokens_map.json": {
+      "source": "https://huggingface.co/dotlabs/void.1/resolve/9c2be5087772867d45961abd11f6b35110617563/special_tokens_map.json",
+      "sha256": "20d4b94d0e657c3f44d9123522c106e7315b6c1a1b6d259478f17bd2918b1263",
+      "preserved_unmodified": true,
+      "executed_at_runtime": false
+    },
+    "tokenization_byte.py": {
+      "source": "https://huggingface.co/dotlabs/void.1/resolve/9c2be5087772867d45961abd11f6b35110617563/tokenization_byte.py",
+      "sha256": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+      "preserved_unmodified": true,
+      "executed_at_runtime": false
+    },
+    "tokenizer_config.json": {
+      "source": "https://huggingface.co/dotlabs/void.1/resolve/9c2be5087772867d45961abd11f6b35110617563/tokenizer_config.json",
+      "sha256": "0ecbd4fd39e35125800d806af981ba0cacd8a7ba5f02c9e729c4ecc54af6d300",
+      "preserved_unmodified": true,
+      "executed_at_runtime": false
+    },
+    "training_config.json": {
+      "source": "https://huggingface.co/dotlabs/void.1/resolve/9c2be5087772867d45961abd11f6b35110617563/training_config.json",
+      "sha256": "4e8f8b2fc7193aabdbca12082e7c7cc3a0ed080bd5ff16e060cc02e10ffc53dd",
+      "preserved_unmodified": true,
+      "executed_at_runtime": false
+    }
+  },
+  "model_safetensors": {
+    "source": "https://huggingface.co/dotlabs/void.1/resolve/9c2be5087772867d45961abd11f6b35110617563/model.safetensors",
+    "sha256": "ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3",
+    "bytes": 360622744,
+    "hash_evidence": "Hugging Face pinned revision API LFS SHA-256; hosted downloader must hash actual file",
+    "downloaded_for_local_preflight": false
+  },
+  "adaptation": {
+    "source": "tokenization_byte.py",
+    "destination": "../adapter.py:CyberSandVoidByteTokenizer",
+    "unchanged_semantics": [
+      "byte IDs0..255, PAD256, BOS257, EOS258",
+      "UTF-8 valid text maps one token per byte",
+      "literal special-token strings split into bytes",
+      "no automatic BOS/EOS; no upstream chat template",
+      "left padding declaration; no whitespace cleanup"
+    ],
+    "deliberate_changes": [
+      "pure Python implementation keeps imports Torch-free until configure_cpu",
+      "invalid Unicode and malformed UTF-8 raise, never errors=replace",
+      "invalid vocabulary IDs raise instead of silently mapping to NUL",
+      "saved checkpoint tokenizer has explicit fixed contract, no remote auto_map, and immediate readback check",
+      "new versioned task framing is explicitly separate from the pretrained tokenizer; complete JSON plus actual EOS supervised"
+    ]
+  }
+}

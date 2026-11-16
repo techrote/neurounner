@@ -1,0 +1,83 @@
+{
+  "schema": "cybersand.worm.sprocket-branch-hardnegative-calibration/17",
+  "experiment": "W17-W16-false-positive-branch-reduction-with-short-history-and-positive-recall-retention",
+  "root": "kandivault/sprocket-500m",
+  "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+  "eos": 5,
+  "action_vocabulary": [
+    "STRAIGHT",
+    "LEFT",
+    "RIGHT",
+    "BRANCH",
+    "RETRACE",
+    "STOP"
+  ],
+  "parent_W16_run": 43851411911,
+  "parent_W16_artifact": 14217467236,
+  "W16_sha256": "f5dc8482a145e39a0bfb10ba94617efad34dc957e3ff485afab3b13726fe90a9",
+  "parent_W15_run": 43833124076,
+  "parent_W15_artifact": 14209446704,
+  "W15_sha256": "a2b521f99a9bda90ad471d980aaf3b3372c69cbe54269c54885e145114addcba",
+  "parent_W14_run": 43820283061,
+  "parent_W14_artifact": 14203838927,
+  "W14_sha256": "1c4decfe00fb89f8ccd44269cb6693c5706dcd793705f925a75143fbc3392c35",
+  "W0_sha256": "81c3923cb38d7f196b99986806216388c34ebc27fd4976e168b3b370c25a323e",
+  "support_sha256": "c555c55ea4fc4bc303159fd3268cef4a0b7d9e5c006e19918ea3433d1f7c95d6",
+  "train": [
+    367,
+    373,
+    379,
+    383
+  ],
+  "heldout": [
+    2707,
+    2711,
+    2729
+  ],
+  "real_aux_adamw_steps": 320,
+  "root_updates": 0,
+  "lora_updates": 0,
+  "planned_root_forwards": 0,
+  "waves": [
+    "160 legal CE + hard-negative conditional branch suppression + frozen W16 positive-margin distillation + short-history contrast",
+    "160 W14/W16/W17-stage1 closed-loop synthetic replay with hard negatives and branch/history retention"
+  ],
+  "controls": [
+    "W14-greedy",
+    "W15-greedy",
+    "W16-greedy",
+    "W16-t07",
+    "W17-stage1-greedy",
+    "W17-final-greedy",
+    "W17-final-t07",
+    "W17-mixed-t07",
+    "random",
+    "wall",
+    "fidget"
+  ],
+  "rollout_decision_limit": 128,
+  "target_original_png_json_pairs": 99,
+  "max_training_vms": 1,
+  "one_optimizer_process": true,
+  "cpu_threads": 1,
+  "wall_deadline_seconds": 2400,
+  "finite_job_minutes": 50,
+  "immutable_artifact_retention_days": 90,
+  "checkpoint_custody": "two full-state optimizer/model/RNG checkpoints in immutable Actions artifact, not Git",
+  "evaluation_requirements": [
+    "world-disjoint BRANCH precision, recall, TP/FP, W15 history-pair both-action correctness, teacher agreement",
+    "three new seeds x three families x eleven controllers: original PNG/JSON/raw logits with 128-turn limit",
+    "invalid applied choices, obstacle recoveries, short branch bursts, retraces, motifs, distinct trajectories, wall and RSS",
+    "compare same-seed W16 frozen/greedy/sampled and W17 trained, W14, W15, random/wall/fidget; retain failures"
+  ],
+  "known_limitations": [
+    "synthetic host models blocked/visited grid not native materials or protected-cell authority",
+    "last-action counterfactual reachability not established",
+    "root Sprocket 500M is frozen and not forwarded in W17, only auxiliary head updated",
+    "no new d1 model or root comparisons; no dominance claim"
+  ],
+  "native": false,
+  "final_opened": false,
+  "draft_hold": true,
+  "scope": "experiments/agent_painter/lanes/sprocket/** and .github/workflows/agent-painter-sprocket*.yml only"
+}

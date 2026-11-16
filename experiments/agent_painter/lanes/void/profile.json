@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "model_id": "dotlabs/void.1",
+  "revision": "9c2be5087772867d45961abd11f6b35110617563",
+  "subfolder": "",
+  "status": "implemented-hosted-proof-results-in-issue-568",
+  "loader": "Qwen3ForCausalLM",
+  "architecture": "Qwen3ForCausalLM",
+  "model_type": "qwen3",
+  "tokenizer": "CyberSandVoidByteTokenizer",
+  "trust_remote_code": false,
+  "license": "apache-2.0",
+  "license_evidence": {
+    "declaration": "README.md frontmatter at exact model revision",
+    "readme_sha256": "420004edd5a9bd4a69cc03b79c3ae6d91e525b1b495583fb48934345b2590e0c",
+    "standalone_upstream_license_file": false,
+    "vendored_license_text": "upstream/LICENSE-2.0.txt",
+    "license_text_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  "max_sequence_tokens": 2048,
+  "vocabulary_size": 259,
+  "special_token_ids": {
+    "pad": 256,
+    "bos": 257,
+    "eos": 258
+  },
+  "lora_targets": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "gate_proj",
+    "up_proj",
+    "down_proj"
+  ],
+  "lora": {
+    "rank": 8,
+    "alpha": 16,
+    "dropout": 0.05,
+    "bias": "none",
+    "task_type": "CAUSAL_LM",
+    "expected_target_modules": 168,
+    "expected_trainable_parameters": 1984512,
+    "base_embedding_and_head_frozen": true
+  },
+  "configuration": {
+    "hidden_size": 640,
+    "intermediate_size": 1440,
+    "num_hidden_layers": 24,
+    "num_attention_heads": 10,
+    "num_key_value_heads": 2,
+    "head_dim": 64,
+    "tie_word_embeddings": true,
+    "attention_implementation": "eager",
+    "dtype": "float32",
+    "device": "cpu"
+  },
+  "framing": {
+    "id": "cybersand-void-task-v1",
+    "kind": "new-supervised-task-framing-no-upstream-chat-template",
+    "prefix": "cybersand-void-task-v1\\n + canonical JSON {instruction: system, request: prompt} + \\n",
+    "canonical_json": "sorted keys; compact separators; ensure_ascii=false; finite values only",
+    "completion": "complete canonical admitted program JSON UTF-8 byte IDs followed by integer EOS 258",
+    "automatic_bos_eos": false,
+    "bos_inserted": false,
+    "loss_mask": "all prefix positions -100; every completion byte and final EOS supervised",
+    "utf8_errors": "strict",
+    "truncation": "refused",
+    "literal_special_strings": "ordinary UTF-8 bytes, never special IDs"
+  },
+  "upstream_tokenizer_auto_map": {
+    "AutoTokenizer": [
+      "tokenization_byte.ByteTokenizer",
+      null
+    ]
+  },
+  "remote_code_policy": "download reviewed tokenization_byte.py as inert pinned evidence; never execute it at runtime; native Transformers Qwen3 model and audited pure byte tokenizer",
+  "required_hashes": {
+    "README.md": "420004edd5a9bd4a69cc03b79c3ae6d91e525b1b495583fb48934345b2590e0c",
+    "byte_vocab.json": "57a1cd2e70dd5b7cc6fd2eaa12ebfcd173c1620fa5d45c2c6282511c29b6a5f6",
+    "config.json": "cbc72137da3dae65085a2a8c39ad7634d16bf92d785ca00d283ee82fe32b37e7",
+    "generation_config.json": "54ed0d19f6226888c91157964ede8a892bd5ae175bfad85336152b3d9b6cd7c4",
+    "model.safetensors": "ecaf2dfec3caad3cb997995c330b4c9b2581b4754acf78fb0309fbe887f14cc3",
+    "special_tokens_map.json": "20d4b94d0e657c3f44d9123522c106e7315b6c1a1b6d259478f17bd2918b1263",
+    "tokenization_byte.py": "279b9990f77b1eaedc7c1184fe13d60273a713ead856200f1fb9ae323c7b1e03",
+    "tokenizer_config.json": "0ecbd4fd39e35125800d806af981ba0cacd8a7ba5f02c9e729c4ecc54af6d300",
+    "training_config.json": "4e8f8b2fc7193aabdbca12082e7c7cc3a0ed080bd5ff16e060cc02e10ffc53dd"
+  },
+  "pin_source": "techrote/neurounner@40543403f05de7ecacdca84ad7d651e5c5997cea:experiments/ncr-001/source-pins.json"
+}

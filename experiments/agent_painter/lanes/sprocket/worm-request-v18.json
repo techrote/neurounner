@@ -1,0 +1,58 @@
+{
+  "schema": "cybersand.worm.sprocket-synthetic-material-overlay/18",
+  "experiment": "W18-protected-material-legal-steering",
+  "root": "kandivault/sprocket-500m",
+  "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+  "eos": 5,
+  "W17_sha256": "3d0fe44f303851db6f34f489eb17ff2b1f6dc5a5cfe569b0637716306594aec3",
+  "W0_sha256": "81c3923cb38d7f196b99986806216388c34ebc27fd4976e168b3b370c25a323e",
+  "train": [
+    401,
+    409,
+    419,
+    421
+  ],
+  "heldout": [
+    2801,
+    2819,
+    2833
+  ],
+  "action_vocabulary": [
+    "STRAIGHT",
+    "LEFT",
+    "RIGHT",
+    "BRANCH",
+    "RETRACE",
+    "STOP"
+  ],
+  "real_aux_adamw_steps": 320,
+  "root_optimizer_steps": 0,
+  "root_forwards": 0,
+  "lora_steps": 0,
+  "training_vms": 1,
+  "optimizers_per_vm": 1,
+  "cpu_threads": 1,
+  "W17_parent_run": 43871037458,
+  "W17_parent_artifact": 14227747885,
+  "external_w0_sha": "4bb9d6e1d0d0d78183f87d1e3c29648edafacf61",
+  "material_classes": [
+    "sand",
+    "stone",
+    "water",
+    "metal",
+    "protected",
+    "obstacle"
+  ],
+  "synthetic_protected_mask": true,
+  "rollout_decisions": 128,
+  "target_original_png_json_pairs": 63,
+  "checkpoint_custody": "two complete full-state Action artifacts, not Git",
+  "training_stages": [
+    "160 updates material residual only with W17 base frozen",
+    "160 updates replay plus last W17 auxiliary layer, blank-material distillation"
+  ],
+  "native": false,
+  "sealed_final_opened": false,
+  "draft_hold": true,
+  "scope": "experiments/agent_painter/lanes/sprocket/** and .github/workflows/agent-painter-sprocket*.yml"
+}

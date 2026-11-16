@@ -1,0 +1,56 @@
+{
+  "schema": "cybersand.worm.sprocket-host-replay-material-router/20",
+  "root": "kandivault/sprocket-500m",
+  "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+  "eos": 5,
+  "experiment": "W20: heading-aligned next-action material features with persistent one-cell synthetic-world interventions and host-legal prefix replay",
+  "parent_checkpoint_sha256": "0358824dd721118fe9e9bbad7b19d0bfd48be36ce038a18bf7b952c7f9eee01b",
+  "original_W18_sha256": "13189f3e71b0db9d6d0cb961221e649cf7d2e868ed0c66eb18a93d8378fd015b",
+  "original_W17_sha256": "3d0fe44f303851db6f34f489eb17ff2b1f6dc5a5cfe569b0637716306594aec3",
+  "original_W0_source_sha256": "81c3923cb38d7f196b99986806216388c34ebc27fd4976e168b3b370c25a323e",
+  "auxiliary_optimizer_steps": 320,
+  "training_vms": 1,
+  "optimizers_per_vm": 1,
+  "root_forwards": 0,
+  "root_optimizer_steps": 0,
+  "LoRA_steps": 0,
+  "train_world_seeds": [
+    457,
+    461,
+    463,
+    467
+  ],
+  "heldout_world_seeds": [
+    3401,
+    3413,
+    3433
+  ],
+  "intervention_scope": "persistent-synthetic-world-one-cell",
+  "heldout_control_set": [
+    "W17",
+    "W18",
+    "W19",
+    "W20-stage1",
+    "W20-final-greedy",
+    "W20-final-T0.7",
+    "W20-final-T1.1",
+    "teacher",
+    "random",
+    "wall"
+  ],
+  "training_objectives": [
+    "local candidate-cell material contrast",
+    "unseen host-legal prefix-replay validity",
+    "on-policy recovery/branch retention"
+  ],
+  "native": false,
+  "sealed_FINAL": false,
+  "draft_hold": true,
+  "merge_allowed": false,
+  "limitations": [
+    "artificial materials and protected mask, not native CyberSand physics or permissions",
+    "legal-prefix reachability does not imply unconstrained policy will reach paired states",
+    "root-Instruct model not forwarded or updated in W20",
+    "no paid GPU or API"
+  ]
+}

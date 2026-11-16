@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""Pure preflight tests; no Torch, model, native execution, or FINAL access."""
+import ast
+from pathlib import Path
+import unittest
+
+source = Path(__file__).with_name("evaluate").read_text()
+tree = ast.parse(source)
+names = {"grouped_development", "validate_checkpoint_identity"}
+functions = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in names]
+assert len(functions) == 2
+ns = {}
+exec(compile(ast.Module(body=functions, type_ignores=[]), "<contracts>", "exec"), ns)
+grouped, validate = ns["grouped_development"], ns["validate_checkpoint_identity"]
+SHA = "a8284c90050499cc1bf5c33dd0992741891c146b"
+
+
+def rows():
+    return [{"id": f"{f}-{j}-{seed}", "family": f, "group_id": f"{f}/structure{j}",
+             "seed": seed, "prompt": f"Draw {f} request {j}"}
+            for f in ("greebles", "pipework", "architecture")
+            for j in range(2) for seed in (104729, 130363)]
+
+
+class Contracts(unittest.TestCase):
+    def test_grouped_six_real_prompts_twelve_views(self):
+        self.assertEqual(len(grouped(rows())), 6)
+        self.assertEqual(sum(len(v) for v in grouped(rows()).values()), 12)
+
+    def test_duplicate_seed_fails_closed(self):
+        bad = rows()
+        bad[1]["seed"] = 104729
+        with self.assertRaisesRegex(ValueError, "host seeds"):
+            grouped(bad)
+
+    def test_changed_prompt_or_family_fails_closed(self):
+        bad = rows()
+        bad[1]["prompt"] = "different"
+        with self.assertRaises(ValueError):
+            grouped(bad)
+        bad = rows()
+        bad[1]["family"] = "architecture"
+        with self.assertRaisesRegex(ValueError, "differs"):
+            grouped(bad)
+
+    def test_repeated_request_across_structural_groups_refused(self):
+        bad = rows()
+        for r in bad[2:4]:
+            r["prompt"] = bad[0]["prompt"]
+        with self.assertRaisesRegex(ValueError, "six distinct"):
+            grouped(bad)
+
+    def test_partial_group_refused(self):
+        with self.assertRaisesRegex(ValueError, "host seeds"):
+            grouped(rows()[:-1])
+
+    def test_source_step_cursor_and_history(self):
+        receipt = {"config": {"source_sha": SHA}, "global_step": 16,
+                   "sample_cursor": 16, "history": [{} for _ in range(16)]}
+        validate(receipt, SHA, 16)
+        for key, value in [("global_step", 15), ("sample_cursor", 15),
+                           ("history", [{} for _ in range(15)])]:
+            wrong = dict(receipt); wrong[key] = value
+            with self.assertRaisesRegex(ValueError, "mismatch"):
+                validate(wrong, SHA, 16)
+        with self.assertRaisesRegex(ValueError, "mismatch"):
+            validate(receipt, "f"*40, 16)
+        with self.assertRaisesRegex(ValueError, "invalid"):
+            validate(receipt, SHA, True)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

@@ -1,0 +1,34 @@
+# LFM2.5-VL original DEVELOPMENT first-pass error audit — 2026-11-14 UTC
+
+**Research-only, Draft/HOLD.** This is an independent **read-only extraction of the already completed, six-independent-request DEVELOPMENT comparison**, not new inference, synthetic model output, a newly approved benchmark, a training-data admission, or an artistic success claim. No FINAL files, labels or images were accessed.
+
+## Fixed provenance and method
+
+- Trained checkpoint producer: [GitHub-hosted run 43529993326](https://github.com/techrote/cybersand/actions/runs/43529993326), trainer source `1c9cf2ef8760177e0c1d095052c27fcf200a5cb3`; 48 and 120 genuine fresh optimizer updates, respectively, original native corpus source `633920373a3d406a2ede61ce4137c324f76be23b` and manifest SHA-256 `2fdef5a3639606fb9af68319f9747a1de1e9a573da5c6197a2dcbc96579cb6cc`.
+- Original evaluator: [GitHub-hosted run 43536363400](https://github.com/techrote/cybersand/actions/runs/43536363400), evaluator source `984b595b3b612341adc9ca0a4112698b5a7f6743`, **distinct from trainer source**.
+- Original `fresh48` evaluator archive artifact `14090715152`: independently downloaded, full ZIP SHA-256 **`c2982e219ceaded06ae46b699edcd193003c23f505b47af333a3d260593d4d34`** exactly matches published GitHub digest; ZIP CRC valid.
+- Original `fresh120` evaluator archive artifact `14089866157`: independently downloaded, full ZIP SHA-256 **`eb8c6b98f00ba810704d87f18590eb5af116b6c99fd88c56b83c8dbde8f90b99`** exactly matches published GitHub digest; ZIP CRC valid.
+- Extracted **six first-pass `completion.txt`, `raw-output.json` and `receipt.json` records from each arm** (12 distinct model completions, not 24). For each, original completion bytes matched `raw_text`, the reported `completion_sha256`, and the raw token ID count matched `output_tokens`. The remaining six artifact case records *per arm* are second host-seed views and **not independent inference attempts**. All twelve primary records end with true EOS, with no hidden repair, retry or fallback.
+- This analysis uses the archived evaluator's original unmodified strict-compiler verdicts and raw completions; it does **not** rerun the compiler or re-execute Art. Final drawings and learning quality remain separately gated.
+
+## Per-independent-request error matrix
+
+| Held-out DEVELOPMENT composition | 48-step raw result | 120-step raw result | Diagnostic failure / witness |
+| --- | --- | --- | --- |
+| Greebles: four modules, empty centre | JSON yes, program rejected | JSON yes, program rejected | Both: **unknown Greebles component/detail**. 48 emitted colour names as panel detail; 120 emitted `kind:module` / `detail:panel` rather than approved detail vocabulary. |
+| Greebles: central spine + panels/service gaps | JSON yes, program rejected | JSON yes, program rejected | Both: **panel has the wrong keys**. 48 omits `border`; 120 uses Architecture-style `openings` and `thickness` inside panels. |
+| Pipework: three upward branches, five endpoints, width 3 | JSON yes, strict program accepted | JSON yes, strict program accepted | **Same four-node, three-edge T graph**, one junction/three endpoints instead of requested three-upward-branch five-endpoint manifold. 48 uses width 3, 120 width **5** contrary to prompt. Native readback was separately 4/4 genuine material writes, **0/4 request-conforming**. |
+| Pipework: rectangular loop with left tap | JSON yes, program rejected | JSON yes, program rejected | Both: **wrong requirements keys** (`closed`, `region` rather than strict `connected`, `cycles`). Both returned a 3-edge chain without a declared `pipe_network` node inventory, not the requested loop and tap. |
+| Architecture: stacked rooms and shaft | JSON yes, program rejected | **duplicate JSON key `route`** | 48 omitted required `region`; both substituted adjacent/repeated room boxes for requested vertical composition and use invalid/overlapping elements. |
+| Architecture: elevated bridge between towers | JSON yes, program rejected | JSON yes, program rejected | 48 emitted unrecognized `bridge`/other component kind; 120 emitted `clear_path` instead of required `clearance` within requirements. Neither is valid orthographic playable layout. |
+
+The six-request summaries, without inflating seed-view counts: **48 steps = 6/6 EOS, 6/6 valid JSON, 1/6 strictly accepted programs; 120 steps = 6/6 EOS, 5/6 valid JSON, 1/6 strictly accepted programs**. The one accepted structure is **not** request-conforming in either arm. Failures by family: Greebles **2/2 rejected**, Pipework **1/2 rejected and 1/2 wrong topology**, Architecture **2/2 rejected** in each arm.
+
+## Engineering implications (proposals, not approved recipe changes)
+
+1. The dominant error is **conditional schema-binding and instruction/composition generalisation**, not premature EOS: 11/12 raw completions were valid JSON, but only 2/12 strictly compiled. Merely raising optimizer steps from 48 to 120 cannot be counted as improvement.
+2. The observed cross-family key transfer (`openings`/`thickness` on Greebles panels; missing `region`/`clearance` in Architecture) argues for **deliberately contrastive, fully native-admitted TRAIN examples**: correct exact component vocabulary, permitted fields, structurally distinct compositions, and forbidden cross-family confusions. Do **not** auto-correct or post-process model output, or infer that these six diagnostics validate a new prompt.
+3. Pipework needs genuinely non-T trees, loop/topology classes, variable endpoint/junction counts, and constant-width compliance **in the native-admitted TRAIN distribution**, not more seeds/copies of the old tee. The reviewed SMOL five-endpoint nested-tree proposal and eligible deduplicated VOID/SPROCKET graphs are potential *teachers only after* shepherd/reviewer global composition IDs, collision screening and positive Art admission. The earlier peer prototype native receipts by themselves are **not** shared TRAIN admission.
+4. When the shepherd freezes structurally novel public TRAIN and the **shared** 60-request/five-formulation DEVELOPMENT suite, version a separate LFM campaign source/recipe identity. Start bounded CPU pilots; keep old `campaign_gate.py` pinned to original 12-row 48/120 experiment and preserve frozen parent/LoRA/EOS/license boundary. Compare first-pass unmodified outputs, strict schema errors, real native images and requested topology by independent composition ID. No vN freeze until demonstrably useful.
+
+**Research limits:** six original independent prompts per candidate are far too few for population-level effect estimates. This is analysis of existing public raw DEVELOPMENT evidence and original native outcomes only; no independently new model call, optimizer update, native application or held-out FINAL access was performed. Continue Draft/HOLD; do not merge.

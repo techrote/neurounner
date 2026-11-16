@@ -1,0 +1,30 @@
+# VOID A02 v5 — independently verified original native evidence (14 November 2026)
+
+**Scope:** single human-authored Architecture teacher composition, two deterministic host seeds; **not** model inference, a new structural group, an admitted TRAIN row, or evidence of runtime platformer playability. This read-only analysis does not replace or modify v4 evidence.
+
+## Original immutable evidence and custody
+
+| Artifact | Actual source | Hosted run / immutable artifact | Complete ZIP SHA-256 | ZIP CRC |
+|---|---|---|---|---|
+| A02 v4 baseline | `4c1a70f806c6ba173098cee22fce770b3c4662ae` | [run 43592303518](https://github.com/techrote/cybersand/actions/runs/43592303518), [artifact 14113396057](https://github.com/techrote/cybersand/actions/runs/43592303518/artifacts/14113396057) | `deeabf0c0a79b924bdc6092b4f9514b376ae5e3bdbe013571bea46bbd472c38a` | 65/65 |
+| A02 v5 floor-anchored | `64b5f1ca5b0f65ffbf9a7645a0d0828d35657f08` | [run 43601866007](https://github.com/techrote/cybersand/actions/runs/43601866007), [job 132468135745](https://github.com/techrote/cybersand/actions/runs/43601866007/job/132468135745), [artifact 14116463694](https://github.com/techrote/cybersand/actions/runs/43601866007/artifacts/14116463694) | `d8f1c1dbce65ef14d392a7bd557bd89e8af21563da14d4a5a61b84386285944b` | 66/66 |
+
+Both original ZIPs were downloaded afresh for this review, whole-archive SHA-256 recomputed and compared with the Actions artifact digest, and every ZIP member's CRC verified. Inspected each original 96×96 rendered stored-material PNG, each material-ID PNG, every i32le material array, the native summary and the per-case receipts. The native source was actually built on an ordinary GitHub-hosted Linux CPU VM using Godot 4.7 stable and the pinned C++ extension. This is **native stored-material visualization**, not a photographed screen framebuffer.
+
+**Identity:** v5 program `9df29e3d7f5d97d68ee69708882e3bd6b7b19a5ee3d019ca0a2a86145cc1aeba`, operations `88aae61b07427e7f19906b3ff6c4442a40e72007c068f979289f262e6de6d356`, source proposal `4e455dc60098d66a3619e0f9cee4fac28664e3ac6a5f4c1fae33f1ffc365acec`. Reference original source633 corpus manifest `2fdef5a3639606fb9af68319f9747a1de1e9a573da5c6197a2dcbc96579cb6cc` remains a *separate* immutable source identity.
+
+## Actual native results
+
+- **2/2** original v5 views complete successfully, at seeds `104729` and `130363`; **662/662** native cells changed and acknowledged per view, **0** refused/excluded/unexpected cells, **12** compiler operations per view. Native verifier recorded **60 checks, 125 engine checks, all 16 global gates PASS, zero failures**. History/Undo/Redo/save-reopen was specifically checked on **1/2** representative views, not both; deterministic replay was checked on **2/2**.
+- Independently interpreted all **18,432/18,432** original v5 i32le cells as little-endian signed material IDs and cross-checked every pixel against original grayscale material-ID PNG and original native-render PNG. The only IDs are Empty `0` (**8,554 per view**) and Hard Wall `58` (**662 per view**). Their original RGB representations are respectively `(13,21,28)` and `(232,226,205)` in the rendered PNG, and `(0,0,0)` and `(58,58,58)` in the material-ID PNG.
+- Both host seeds produce **identical** 96×96 material arrays, PNGs, `crop_i32le_sha256=14738d7bd6747f2137c2604e1e7afa615622a7d31c2adf785bd64f95e3c67cf7`, operation hashes and physical cell counts. They are **one**, not two, structural designs.
+- For each seed the exact original v4 mask is a strict subset of v5: v4 **524** material cells; v5 **662**; exactly **138 added** material cells and **0 removed**. New material occupies only x=33–34 and x=63–64, y=38–81. It forms **three added-mask connected segments** (48 cells x33–34/y38–61; 36 cells x33–34/y64–81; 54 cells x63–64/y55–81), because an existing intermediate platform splits the left *added-only* mask. These new segments touch existing platform/floor structure; they do not introduce independent detached painted islands.
+- Original visual inspection: v5 replaces both visually dangling supports with uninterrupted floor contacts beneath their platform locations; it retains the single tall orthographic shaft, staggered ledges and top/bottom portal gaps. The unobstructed centrally specified **5×5 free-space route** remains source-qualified. This is geometric clearance, **not** proof that a player can jump/climb from the bottom to the top; the extended supports can also affect visual density and traversal semantics, which remain to be judged by the independent reviewer.
+
+## Scientific and ownership disposition
+
+**Native teacher research: PASS.** **Teacher supports: visually corrected**, pending independent semantic/style judgement. **Shared TRAIN admission: HOLD**. A02 v5 replaces v4 *as a proposed variant of one composition*, not a second independent structural group. Global semantic near-neighbor review is still needed against visible original DEVELOPMENT stacked-rooms/shaft and peer Architecture proposals. The earlier v3 A01 two-facing-room design remains **QUARANTINED**.
+
+The baseline trained VOID adapter remains **120 genuine updates** with **1/6** distinct DEVELOPMENT compiler-accepted and **0/2** request-conforming native Pipework views. No new optimizer step, raw VOID model completion, genuine model-generated native Art, useful vN freeze, FINAL read, production provider change or owner-authorized merge occurred. Sole VOID [PR #574](https://github.com/techrote/cybersand/pull/574) remains **Draft/HOLD**.
+
+**Requested independent handoff:** shepherd/reviewer should assess the original v5 imagery, decide whether anchored supports improve or obstruct the pedagogical Architecture composition, and allocate a global identity/split only if it remains structurally distinct. The common 18–36-group native-admitted TRAIN curriculum and frozen 60-request/five-formulation DEVELOPMENT suite must precede new VOID campaign training. Preserve the original v4 and v5 producer/artifact identities without relabeling.

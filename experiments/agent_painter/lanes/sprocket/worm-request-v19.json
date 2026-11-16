@@ -1,0 +1,68 @@
+{
+  "schema": "cybersand.worm.sprocket-material-one-cell-contrast/19",
+  "experiment": "W19-W18-single-cell-material-counterfactual-real-CPU-optimizer-and-synthetic-replay",
+  "root": "kandivault/sprocket-500m",
+  "revision": "eb157d4ddddc4619e661d4a2426bb2dd000fc668",
+  "eos": 5,
+  "parent_W18_run": 43884643572,
+  "parent_W18_artifact": 14233503006,
+  "parent_W18_checkpoint_SHA256": "13189f3e71b0db9d6d0cb961221e649cf7d2e868ed0c66eb18a93d8378fd015b",
+  "parent_W17_run": 43871037458,
+  "parent_W17_artifact": 14227747885,
+  "parent_W17_SHA256": "3d0fe44f303851db6f34f489eb17ff2b1f6dc5a5cfe569b0637716306594aec3",
+  "pinned_W0_SHA256": "81c3923cb38d7f196b99986806216388c34ebc27fd4976e168b3b370c25a323e",
+  "train_seeds": [
+    433,
+    439,
+    443,
+    449
+  ],
+  "heldout_seeds": [
+    3001,
+    3007,
+    3011
+  ],
+  "real_aux_adamw_steps": 320,
+  "stages": [
+    "160 legal-label imitation, paired one-cell material contrast, frozen W18 auxiliary base",
+    "160 on-policy synthetic W0 material replay + calibrated branch retention and residual/last-layer updates"
+  ],
+  "temperature_values": [
+    0,
+    0.7
+  ],
+  "action_vocabulary": [
+    "STRAIGHT",
+    "LEFT",
+    "RIGHT",
+    "BRANCH",
+    "RETRACE",
+    "STOP"
+  ],
+  "target_original_png_json_pairs": 72,
+  "rollout_decision_cap": 128,
+  "root_forwards": 0,
+  "root_optimizer_steps": 0,
+  "lora_steps": 0,
+  "training_vms": 1,
+  "optimizers_per_vm": 1,
+  "cpu_threads": 1,
+  "optimizer_deadline_seconds": 1800,
+  "data_provenance": "one-cell synthetic counterfactual pairs, 5x5 material context, protected host masks, W0 exact-source, outside native gameplay",
+  "data_limit": "one-cell counterfactual examples not independently validated physical states; host-owned material-protection is synthetic, not CyberSand material authority",
+  "checkpoint_policy": "two complete original model/optimizer/RNG checkpoints + raw actions, member hashes, partial failures, immutable Actions artifact",
+  "controls": [
+    "W17",
+    "W18-frozen",
+    "W19-stage1",
+    "W19-final",
+    "W19-final-t07",
+    "random",
+    "wall",
+    "teacher"
+  ],
+  "native": false,
+  "sealed_final_opened": false,
+  "draft_hold": true,
+  "scope": "experiments/agent_painter/lanes/sprocket/** and .github/workflows/agent-painter-sprocket*.yml only"
+}

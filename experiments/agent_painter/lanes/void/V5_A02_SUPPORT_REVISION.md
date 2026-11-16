@@ -1,0 +1,9 @@
+# VOID A02 floor-anchored source variant (v5)
+
+**Unadmitted research only.** Independent reviewer [6877659378](https://github.com/techrote/cybersand/pull/574#issuecomment-6877659378) found both original v4 A02 supports suspended under platforms without reaching the floor. The original [native proof 43592303518](https://github.com/techrote/cybersand/actions/runs/43592303518) remains correct for original v4 A02 and is immutable.
+
+This new version moves **only the two support end positions**, from `[33,30,2,8]` and `[63,47,2,8]` to `[33,30,2,52]` and `[63,47,2,35]`. Both reach the existing inside floor at y=82 while still touching the intended platform underside. The room, openings, decks, and five-cell vertical central clearance are unchanged. The third platform remains wall-cantilevered. These two posts are now genuinely floor-anchored, rather than ambiguous dangling brackets.
+
+Source-only screening binds the original v4 program SHA256 `d8f8d0ff810e006d6a52e38396790a73f15b9999e73fe0b59ca110c985cc1cd9`, original native run/artifact, frozen original TRAIN/DEVELOPMENT split and previous A01 quarantine. Adversarial tests reject detached or moved posts, altered rooms, route blockage and evidence reclassification. No FINAL targets/images opened.
+
+**Scientific accounting:** v4 and v5 are the **same structural composition** and must never count as two independent TRAIN groups. Both host seeds are nonindependent. Source-only acceptance does not mean positive native Art. A **new** source-built native two-seed runtime/receipt/readback/PNG proof and reviewer visual assessment are required for v5 before any common TRAIN admission. Reviewer/shepherd approval of A02's global novelty and DEV split safety also remains pending; zero optimizer steps and useful model freezes in this change. PR #574 stays Draft/HOLD.
