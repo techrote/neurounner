@@ -18,7 +18,7 @@ from experiments.memplant.trajectory_transfer_017 import experiment as prior
 
 LAWS = prior.TRAIN_LAWS
 HELD = prior.HELD
-MODES = ("paired", "bc", "shuffled", "blind", "wrong_wet", "oracle")
+MODES = ("paired", "bc", "shuffled", "blind", "wrong_wet", "wrong_goal", "oracle")
 
 
 def sha256(path):
@@ -117,6 +117,7 @@ def train(seed, original, pairs, updates, mode):
     model = prior.Receiver(conditioned)
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.0014, weight_decay=0.0001)
     rng = np.random.default_rng(seed + 73)
+    control_rng = np.random.default_rng(seed + 471)
     model.train()
     trace = []
     x, m, s, y = original
@@ -126,12 +127,12 @@ def train(seed, original, pairs, updates, mode):
         jx = torch.from_numpy(rng.integers(len(py), size=64))
         x0, m0, s0, y0 = x[ix], m[ix], s[ix], y[ix]
         if mode == "bc":
-            kx = torch.from_numpy(rng.integers(len(y), size=64))
+            kx = torch.from_numpy(control_rng.integers(len(y), size=64))
             x1, m1, s1, y1 = x[kx], m[kx], s[kx], y[kx]
         else:
             x1, m1, s1, y1 = px[jx], pm[jx], ps[jx], py[jx]
             if mode == "shuffled":
-                permutation = torch.from_numpy(rng.permutation(len(jx)))
+                permutation = torch.from_numpy(control_rng.permutation(len(jx)))
                 s1 = s1[permutation]
         full_x = torch.cat((x0, x1), dim=0)
         full_mask = torch.cat((m0, m1), dim=0)
@@ -224,9 +225,10 @@ def play(world, law, mode, bank, models, horizon):
             action = game.oracle()
         else:
             ob, legal = game.observe()
-            inferred = (-law[0], law[1], law[2]) if mode == "wrong_wet" else law
+            inferred = (-law[0], law[1], law[2]) if mode == "wrong_wet" else (
+                (law[0], -law[1], law[2]) if mode == "wrong_goal" else law)
             sig = donor_signature(bank, inferred, "gated")
-            key = "paired" if mode == "wrong_wet" else mode
+            key = "paired" if mode in ("wrong_wet", "wrong_goal") else mode
             action = infer(models[key], ob, legal, sig)
         if action is None:
             break
@@ -292,7 +294,7 @@ def gallery_svg(traces, filename):
         data["trials"] = {
             "inherited": sample["trials"]["paired"],
             "wrong_wet": sample["trials"]["wrong_wet"],
-            "wrong_goal": sample["trials"]["bc"],
+            "wrong_goal": sample["trials"]["wrong_goal"],
             "blind": sample["trials"]["blind"],
             "oracle": sample["trials"]["oracle"],
         }
