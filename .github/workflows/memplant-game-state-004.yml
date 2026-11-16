@@ -25,6 +25,11 @@ jobs:
   game-state-training:
     runs-on: ubuntu-24.04
     timeout-minutes: 26
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [260116, 260117, 260118, 260119, 260120]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -51,12 +56,12 @@ jobs:
           timeout --signal=INT --kill-after=15s 18m python3 -m experiments.memplant.game_state_lab.game_policy \
             --source runtime/memplant/game-state/donor \
             --out runtime/memplant/game-state/results \
-            --updates 450 --seed 260116
+            --updates 450 --seed '${{ matrix.seed }}'
       - name: Preserve original checkpoints, learning curves, raw legal decisions and failures
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: memplant-game-state-004-a${{ github.run_attempt }}
+          name: memplant-game-state-004-seed-${{ matrix.seed }}-a${{ github.run_attempt }}
           path: runtime/memplant/game-state/results
           if-no-files-found: warn
           retention-days: 30
