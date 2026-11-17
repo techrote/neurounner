@@ -100,7 +100,6 @@ jobs:
           ROOT=experiments/memplant/material_causal_gate_020
           printf '%s  %s\n' '99774034c67acf14c19e3653a680a9068635cc6e5978872b73a97a0b235e2a4e' "$ROOT/h12_neartie_calibration.py" | sha256sum -c -
           printf '%s  %s\n' '7c8791794622ebedd8780d5690fcfff994a59c8b1eb6e93f7ce994502c6c1e08' "$ROOT/h12_receipt_audit.py" | sha256sum -c -
-          (cd "$ROOT" && sha256sum -c h9_expected_checkpoints.sha256)
           python3 -m py_compile "$ROOT"/{experiment,h9_cross_seed_audit,h10_fee_count_stress,h12_neartie_calibration,h12_receipt_audit}.py
           sudo install -d -o "$(id -u)" -g "$(id -g)" /mnt/data
           python3 - <<'PY'
@@ -129,6 +128,7 @@ jobs:
           for archive in Path('/mnt/data').glob('DG020-*.zip'):
               assert zipfile.ZipFile(archive).testzip() is None
           PY
+          (cd "$ROOT" && sha256sum -c h9_expected_checkpoints.sha256)
       - name: Train three genuine same-size receivers and evaluate 4,800 untouched counterfactual pairs
         run: |
           set -euo pipefail
