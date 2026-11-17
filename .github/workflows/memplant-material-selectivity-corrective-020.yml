@@ -250,10 +250,10 @@ jobs:
         env:
           SEED: ${{ matrix.seed }}
         run: |
-          python3 -m py_compile experiments/memplant/material_causal_gate_020/{experiment,h6_experiment}.py
+          python3 -m py_compile experiments/memplant/material_causal_gate_020/{experiment,h6_experiment,h7_experiment}.py
           OUT="runtime/memplant/h7/$SEED"
           mkdir -p "$OUT"
-          sha256sum experiments/memplant/material_causal_gate_020/{experiment,h6_experiment}.py > "$OUT/source-files.sha256"
+          sha256sum experiments/memplant/material_causal_gate_020/{experiment,h6_experiment,h7_experiment}.py > "$OUT/source-files.sha256"
           sha256sum runtime/memplant/h7-checkpoints/"$SEED"/*.pt > "$OUT/original-checkpoint-files.sha256"
           timeout --signal=INT --kill-after=15s 35m python3 experiments/memplant/material_causal_gate_020/h7_experiment.py \
             --seed "$SEED" --checkpoint-root runtime/memplant/h7-checkpoints --out "$OUT" \
