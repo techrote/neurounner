@@ -170,7 +170,7 @@ def run(seed,out,train_each=600,eval_each=160,steps=700,donor_steps=400):
     for law in (0,1):
         donors[law]=[]
         for replica in (0,1):
-            d=train_donor(seed+1000+law*200+replica*11,law,donor_steps)
+            d,_=train_donor(seed+1000+law*200+replica*11,law,donor_steps)
             name=f'donor-{law}-replica-{replica}.pt';torch.save(d.state_dict(),out/name)
             donors[law].append(d)
             rng=np.random.default_rng(seed+6000+law*333+replica*22)
