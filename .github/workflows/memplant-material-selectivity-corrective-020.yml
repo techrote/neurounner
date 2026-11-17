@@ -6,6 +6,7 @@ on:
       - '.github/workflows/memplant-material-selectivity-corrective-020.yml'
       - 'experiments/memplant/material_causal_gate_020/selectivity_retrain.py'
       - 'experiments/memplant/material_causal_gate_020/experiment.py'
+      - 'experiments/memplant/material_causal_gate_020/h6_experiment.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -115,5 +116,103 @@ jobs:
         with:
           name: dg020-selectivity-corrective-${{ matrix.seed }}
           path: runtime/memplant/dg020-selectivity/${{ matrix.seed }}
+          if-no-files-found: warn
+          retention-days: 30
+
+  near-tie-h6-frozen-donor-retrain:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - { seed: 26011639, artifact: 14288351242 }
+          - { seed: 26011640, artifact: 14287683493 }
+          - { seed: 26011641, artifact: 14288072802 }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU-only dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy==1.26.4'
+      - name: Download immutable original neural donor checkpoints (no retraining donors)
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ matrix.artifact }}
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: runtime/memplant/h6-checkpoints/${{ matrix.seed }}
+      - name: Retrain same-size receiver with route-difference supervision; record scientific FAIL/PASS
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          python3 -m py_compile experiments/memplant/material_causal_gate_020/{experiment,h6_experiment}.py
+          OUT="runtime/memplant/h6/$SEED"
+          mkdir -p "$OUT"
+          sha256sum experiments/memplant/material_causal_gate_020/{experiment,h6_experiment}.py > "$OUT/source-files.sha256"
+          sha256sum runtime/memplant/h6-checkpoints/"$SEED"/*.pt > "$OUT/original-checkpoint-files.sha256"
+          timeout --signal=INT --kill-after=15s 35m python3 experiments/memplant/material_causal_gate_020/h6_experiment.py \
+            --seed "$SEED" --checkpoint-root runtime/memplant/h6-checkpoints --out "$OUT" \
+            --train-each 320 --eval-each 160 --updates 1000
+      - name: Independently audit model replay, oracle, source/checkpoint hashes and all 1600 receipts
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,sys
+          import numpy as np,torch
+          root=pathlib.Path('experiments/memplant/material_causal_gate_020')
+          sys.path.insert(0,str(root.resolve()))
+          from experiment import oracle,Receiver,TILES
+          from h6_experiment import load_donors,HELDOUT_FAMILIES,BUCKETS,THRESHOLDS
+          seed=int(os.environ['SEED'])
+          out=pathlib.Path('runtime/memplant/h6')/str(seed)
+          rootcp=pathlib.Path('runtime/memplant/h6-checkpoints')
+          h=lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          rep=json.loads((out/'report.json').read_text())
+          assert rep['seed']==seed and rep['source_sha256']==h(root/'h6_experiment.py')
+          manifest=json.loads((out/'sha256.json').read_text())
+          assert all(h(out/name)==sha for name,sha in manifest.items())
+          donors,_=load_donors(seed,rootcp)
+          model=Receiver().eval()
+          model.load_state_dict(torch.load(out/'receiver-route-difference.pt',map_location='cpu',weights_only=True))
+          count=0
+          for fam in HELDOUT_FAMILIES:
+              for bucket in BUCKETS:
+                  rows=[json.loads(line) for line in (out/f'receipts-{fam}-{bucket}.jsonl').read_text().splitlines()]
+                  assert len(rows)==THRESHOLDS['n']
+                  x=np.asarray([r['observation'] for r in rows],dtype='f4')
+                  tx=torch.from_numpy(x)
+                  with torch.no_grad():
+                      forecasts=[donors[k][0](tx.reshape(-1,4)).reshape(len(x),2,TILES) for k in (0,1)]
+                      logits=[model(tx,forecasts[k]) for k in (0,1)]
+                  for i,row in enumerate(rows):
+                      assert hashlib.sha256(x[i].tobytes()).hexdigest()==row['observation_sha256']
+                      assert row['legal_mask']==[1,1] and row['identical_observation_both_laws']
+                      actions=[]
+                      for k in (0,1):
+                          action,gap,costs=oracle(x[i],k)
+                          assert action==row['oracle_actions'][k]
+                          assert abs(gap-row['oracle_gaps'][k])<1e-4
+                          assert np.allclose(costs,row['oracle_route_costs'][k],atol=5e-5,rtol=1e-6)
+                          assert np.allclose(forecasts[k][i].numpy(),row['donor_forecasts'][k],atol=5e-5)
+                          assert np.allclose(logits[k][i].numpy(),row['logits'][k],atol=5e-5)
+                          actions.append(int(logits[k][i].argmax()))
+                      assert actions==row['actions']
+                      assert (row['oracle_actions'][0]!=row['oracle_actions'][1])==bucket.endswith('divergent')
+                      count+=1
+          assert count==1600
+          (out/'independent-audit.json').write_text(json.dumps(dict(seed=seed,source_verified=True,receipts_replayed=count,manifest_verified=len(manifest),scientific_verdict=rep['scientific_verdict']),indent=2)+'\n')
+          print('Independent replay/oracle audit PASS; scientific verdict:',rep['scientific_verdict'])
+          PY
+      - name: Preserve actual trained receiver, controls, near-tie raw decisions and negative results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg020-h6-neartie-${{ matrix.seed }}
+          path: runtime/memplant/h6/${{ matrix.seed }}
           if-no-files-found: warn
           retention-days: 30
