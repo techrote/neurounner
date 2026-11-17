@@ -199,5 +199,4 @@ def main():
                                                if p.is_file() and p.name!='sha256.json'},indent=2)+'\n')
     print('H12 SCIENTIFIC RESULT',report['status'],report['passed_cells'],'/30',flush=True)
 
-
 if __name__=='__main__':main()
