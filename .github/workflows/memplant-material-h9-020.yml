@@ -76,6 +76,7 @@ jobs:
         run: |
           set -euo pipefail
           ROOT=experiments/memplant/material_causal_gate_020
+          sudo install -d -o "$(id -u)" -g "$(id -g)" /mnt/data
           printf '%s  %s\n' '9633b2548f690f8bab0281e7c2fb1228ecef3c6408513b63d7be3c1787b4f799' "$ROOT/h9_cross_seed_audit.py" | sha256sum -c -
           printf '%s  %s\n' '3b7d3ba943d9d4834eb715201d8251e24c62c1d9f608d0187460196dd74c6b9c' "$ROOT/h9_independent_receipt_audit.py" | sha256sum -c -
           python3 - <<'PY'
@@ -124,10 +125,12 @@ jobs:
         if: always()
         env:
           RUN_SHA: ${{ github.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
           RUN_ID: ${{ github.run_id }}
         run: |
           mkdir -p runtime/memplant/h9-provenance
-          printf '%s\n' "$RUN_SHA" > runtime/memplant/h9-provenance/checkout-head-sha.txt
+          printf '%s\n' "$RUN_SHA" > runtime/memplant/h9-provenance/checkout-merge-sha.txt
+          printf '%s\n' "$PR_HEAD" > runtime/memplant/h9-provenance/pr-head-sha.txt
           printf '%s\n' "$RUN_ID" > runtime/memplant/h9-provenance/github-run-id.txt
           sha256sum experiments/memplant/material_causal_gate_020/{experiment,h9_cross_seed_audit,h9_independent_receipt_audit}.py > runtime/memplant/h9-provenance/sources.sha256
           cp experiments/memplant/material_causal_gate_020/h9_expected_checkpoints.sha256 runtime/memplant/h9-provenance/
