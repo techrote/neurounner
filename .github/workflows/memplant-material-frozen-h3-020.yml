@@ -6,6 +6,7 @@ on:
       - '.github/workflows/memplant-material-frozen-h3-020.yml'
       - 'experiments/memplant/material_causal_gate_020/frozen_h3_audit.py'
       - 'experiments/memplant/material_causal_gate_020/near_boundary_h4_audit.py'
+      - 'experiments/memplant/material_causal_gate_020/frozen_h5_audit.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -55,6 +56,20 @@ jobs:
           mkdir -p runtime/memplant/dg020-h4
           sha256sum experiments/memplant/material_causal_gate_020/{experiment,frozen_h3_audit,near_boundary_h4_audit}.py > runtime/memplant/dg020-h4/source-files.sha256
           python3 experiments/memplant/material_causal_gate_020/near_boundary_h4_audit.py runtime/memplant/dg020-h3-input runtime/memplant/dg020-h4
+      - name: H5 frozen near-tie material law selectivity (report scientific failures without losing artifacts)
+        run: |
+          python3 -m py_compile experiments/memplant/material_causal_gate_020/frozen_h5_audit.py
+          mkdir -p runtime/memplant/dg020-h5
+          sha256sum experiments/memplant/material_causal_gate_020/{experiment,frozen_h3_audit,frozen_h5_audit}.py > runtime/memplant/dg020-h5/source-files.sha256
+          python3 experiments/memplant/material_causal_gate_020/frozen_h5_audit.py runtime/memplant/dg020-h3-input runtime/memplant/dg020-h5
+      - name: Upload H5 exact-head frozen near-tie negative decisions
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg020-h5-frozen-near-tie-selectivity
+          path: runtime/memplant/dg020-h5
+          if-no-files-found: warn
+          retention-days: 30
       - name: Upload H4 raw near-boundary receipts and verdict
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
