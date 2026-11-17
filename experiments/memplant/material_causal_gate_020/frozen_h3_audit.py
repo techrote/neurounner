@@ -7,7 +7,15 @@ import numpy as np
 import torch
 from torch.nn.functional import softmax
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from experiment import Donor, Receiver, oracle, TILES
+from experiment import Donor, Receiver, TILES
+
+def oracle(x, law):
+    # Independently recompute the physical cost comparison; no call to trainer oracle.
+    wet=x[...,0] > .5
+    fees=x[...,1]
+    tile_cost=np.where(wet,(.35,2.30)[law],1.) + fees
+    totals=tile_cost.sum(axis=-1)
+    return int(np.argmin(totals)),float(abs(totals[0]-totals[1])),totals.tolist()
 
 SEEDS = (26011639, 26011640, 26011641)
 FAMILIES = ("inverted_toll_invariant", "fee_edge_divergent")
