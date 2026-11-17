@@ -145,6 +145,7 @@ jobs:
           run-id: 43991959674
           github-token: ${{ github.token }}
           path: runtime/memplant/h6-checkpoints/${{ matrix.seed }}
+          merge-multiple: true
       - name: Retrain same-size receiver with route-difference supervision; record scientific FAIL/PASS
         env:
           SEED: ${{ matrix.seed }}
