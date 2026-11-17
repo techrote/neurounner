@@ -1,0 +1,58 @@
+name: DREAMGRAFT DG020 H3 frozen selectivity replication
+on:
+  pull_request:
+    branches: [research/memplant-dg018-sequence-value-20261116]
+    paths:
+      - '.github/workflows/memplant-material-frozen-h3-020.yml'
+      - 'experiments/memplant/material_causal_gate_020/frozen_h3_audit.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  frozen-checkpoint-replication:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU-only dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy==1.26.4'
+      - name: Download original seed 39 frozen trained checkpoints
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14288351242
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: runtime/memplant/dg020-h3-input/26011639
+      - name: Download original seed 40 frozen trained checkpoints
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14287683493
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: runtime/memplant/dg020-h3-input/26011640
+      - name: Download original seed 41 frozen trained checkpoints
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14288072802
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: runtime/memplant/dg020-h3-input/26011641
+      - name: Check artifact contents and independently replay frozen material-law interventions
+        run: |
+          python3 -m py_compile experiments/memplant/material_causal_gate_020/{experiment,frozen_h3_audit}.py
+          mkdir -p runtime/memplant/dg020-h3
+          sha256sum experiments/memplant/material_causal_gate_020/{experiment,frozen_h3_audit}.py > runtime/memplant/dg020-h3/source-files.sha256
+          python3 experiments/memplant/material_causal_gate_020/frozen_h3_audit.py runtime/memplant/dg020-h3-input runtime/memplant/dg020-h3
+      - name: Upload all per-decision receipts and failure report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg020-h3-frozen-causal-selectivity-replication
+          path: runtime/memplant/dg020-h3
+          if-no-files-found: warn
+          retention-days: 30
