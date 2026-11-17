@@ -50,6 +50,8 @@ def sample(seed, family):
     return np.stack(data), attempts
 def load(root, seed):
     base=root/str(seed)
+    if not (base/"sha256.json").exists():
+        base=base/f"dg020-selectivity-corrective-{seed}"  # download-artifact v4 creates a named subfolder for ID downloads
     hashes=json.loads((base/"sha256.json").read_text())
     assert len(hashes)>=13
     for p,sha in hashes.items(): assert digest(base/p)==sha,p
