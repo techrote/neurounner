@@ -18,6 +18,9 @@ import sys
 import tempfile
 import zipfile
 
+if not __debug__:
+    raise RuntimeError('DG020 H22 archive verifier must not run with Python -O (assertions disabled)')
+
 EXPECTED_ARCHIVE_SHA256 = '47546540b96ae0800697e8a729c169e1191f111cec8c09f704c99a8843568667'
 EXPECTED_H22_SOURCE_SHA256 = 'a032a2b9057c150beb918e83e17ff8ad7e73a764fefcb4cf11cfd3049e1ef35d'
 EXPECTED_ORIGINAL_SEAL_ENTRIES = 31
