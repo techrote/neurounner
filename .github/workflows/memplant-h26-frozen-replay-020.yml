@@ -6,6 +6,7 @@ on:
       - '.github/workflows/memplant-h26-frozen-replay-020.yml'
       - 'experiments/memplant/material_causal_gate_020/h26_git_custody_replay.py'
       - 'experiments/memplant/material_causal_gate_020/h26_original_checkpoints.py'
+      - 'experiments/memplant/material_causal_gate_020/h26_posthoc_margin_probe.py'
       - 'experiments/memplant/material_causal_gate_020/evidence/h22_capsule.part*'
   workflow_dispatch:
 
@@ -89,11 +90,30 @@ jobs:
           assert r['same_law_sham_changes']==0
           print('Retrospective frozen H26 PASS; no new prospective holdout or broad memory-transfer claim.')
           PY
+      - name: Preserve and reproduce previously exposed H26 near-tie negative (diagnostic, NOT gate)
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=INT --kill-after=10s 8m \
+            python -B experiments/memplant/material_causal_gate_020/h26_posthoc_margin_probe.py \
+              --out "$RUNNER_TEMP/dg020-h26-posthoc"
+          python - <<'PY'
+          import json,os,pathlib
+          r=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'dg020-h26-posthoc/h26-posthoc-margin-summary.json').read_text())
+          assert r['status']=='POSTHOC_DIAGNOSTIC_ONLY'
+          assert r['prospective_h26_scientific_disposition']=='ORIGINAL_30_OF_30_PASS_UNCHANGED'
+          assert r['raw_rows']==19200
+          assert r['cells']['None']['wrong_invariant_action_flips']==0
+          assert r['cells']['0.001']['wrong_invariant_action_flips']>0
+          print('Retained negative near-tie selectivity; H26 restricted PASS remains unchanged.')
+          PY
       - name: Retain reconstructed raw decisions, logits, source identity and comparison receipt
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: dg020-h26-reconstructed-frozen-neural-replay-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/dg020-h26-replay/
+          path: |
+            ${{ runner.temp }}/dg020-h26-replay/
+            ${{ runner.temp }}/dg020-h26-posthoc/
           if-no-files-found: warn
           retention-days: 90
