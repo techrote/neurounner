@@ -6,6 +6,7 @@ import gzip
 import hashlib
 import json
 import os
+import re
 import shutil
 import statistics
 import tarfile
@@ -119,6 +120,116 @@ def hash_inventory(root: Path, exclude: set[str]) -> str:
     return "\n".join(rows) + "\n"
 
 
+def validate_recovered_parent(
+    member_id: str,
+    contract_sha: str,
+    parent_asset: dict,
+    parent_result: dict,
+    records: dict[str, dict],
+    feedback_rows: list[dict],
+    pair_rows: list[dict],
+) -> None:
+    """Bind an internally consistent recovered lane to current C authority."""
+    parent_sha = parent_asset.get("adapter_directory_sha256")
+    if (
+        parent_asset.get("member_id") != member_id
+        or not isinstance(parent_sha, str)
+        or re.fullmatch(r"[0-9a-f]{64}", parent_sha) is None
+    ):
+        raise RuntimeError(f"{member_id}: invalid current SFT release asset")
+    if (
+        parent_result.get("experiment") != "VILLAGE-001C"
+        or parent_result.get("member_id") != member_id
+        or parent_result.get("member_contract_sha256") != contract_sha
+        or parent_result.get("adapter", {}).get("sha256") != parent_sha
+    ):
+        raise RuntimeError(f"{member_id}: current SFT result/release mismatch")
+    for label, record in records.items():
+        if (
+            record.get("member_id") != member_id
+            or record.get("member_contract_sha256") != contract_sha
+            or record.get("parent_adapter_sha256") != parent_sha
+        ):
+            raise RuntimeError(
+                f"{member_id}: {label} does not match current SFT parent"
+            )
+
+    source_rows = [
+        *parent_result.get("evaluation", {}).get("responses", []),
+        *parent_result.get("member_probe_evaluation", {}).get("responses", []),
+    ]
+    sources = {row["scenario_id"]: row["response"] for row in source_rows}
+    if len(sources) != len(source_rows):
+        raise RuntimeError(f"{member_id}: duplicate current SFT scenario")
+    for row in feedback_rows:
+        provenance = row.get("provenance", {})
+        response = sources.get(row.get("scenario_id"))
+        if (
+            row.get("member_id") != member_id
+            or row.get("parent_adapter_sha256") != parent_sha
+            or provenance.get("member_contract_sha256") != contract_sha
+            or not isinstance(response, str)
+            or provenance.get("sft_scenario_response_sha256")
+            != hashlib.sha256(response.encode()).hexdigest()
+        ):
+            raise RuntimeError(
+                f"{member_id}: feedback row does not match current SFT response"
+            )
+    for row in pair_rows:
+        provenance = row.get("provenance", {})
+        if (
+            row.get("member_id") != member_id
+            or provenance.get("member_contract_sha256") != contract_sha
+            or provenance.get("parent_adapter_sha256") != parent_sha
+            or row.get("scenario_id") not in sources
+            or row.get("source_parent_response") != sources[row["scenario_id"]]
+        ):
+            raise RuntimeError(
+                f"{member_id}: pair row does not match current SFT response"
+            )
+
+
+def validate_comparison_evidence(source: Path) -> None:
+    """Require raw judge custody, including failed or malformed attempts."""
+    if source.is_symlink() or any(path.is_symlink() for path in source.rglob("*")):
+        raise RuntimeError(f"{source}: comparison evidence contains a symlink")
+    provider = source / "provider"
+    if (
+        not (source / "evaluation.json").is_file()
+        or not provider.is_dir()
+        or not any(provider.glob("*-request.json"))
+        or not any(provider.glob("*-provider.json"))
+        or not any(provider.glob("*-content.txt"))
+    ):
+        raise RuntimeError(f"{source}: raw comparison provider evidence missing")
+
+
+def copy_comparison_evidence(source: Path, destination: Path) -> None:
+    validate_comparison_evidence(source)
+    shutil.copytree(source, destination)
+
+
+def select_release_tag(pref: dict, override: str | None) -> str:
+    tag = pref["final_release_tag"] if override is None else override
+    if not isinstance(tag, str) or re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", tag) is None:
+        raise ValueError("invalid VILLAGE-001D release tag")
+    return tag
+
+
+def member_report_row(row: dict) -> str:
+    return (
+        f"| {row['member_id']} | {row['valid_feedback']}/{row['feedback_total']} | "
+        f"{row['preference_margin_before']:.3f}→"
+        f"{row['preference_margin_after']:.3f} | "
+        f"{row['preference_accuracy_before']:.3f}→"
+        f"{row['preference_accuracy_after']:.3f} | "
+        f"{row['task_relevance_delta']:+.3f} | "
+        f"{row['behavior_fit_delta']:+.3f} | "
+        f"{row['sibling_accuracy_delta']:+.3f} | "
+        f"{'PASS' if row['qualified_for_population_tournament'] else 'REGRESSED'} |"
+    )
+
+
 def terminal_pair_curation(pair_root: Path, pair_ids: set[str]) -> dict[str, str]:
     critic_path = pair_root / "quality" / "critic.json"
     adjudicator_path = pair_root / "quality" / "adjudicator.json"
@@ -199,9 +310,14 @@ def main() -> None:
         default=ROOT / "experiments/village-001/preference-evidence",
     )
     parser.add_argument("--release-out", type=Path, required=True)
+    parser.add_argument(
+        "--release-tag",
+        help="Isolated recovery release tag; defaults to the campaign release tag",
+    )
     args = parser.parse_args()
 
     pref = json.loads(args.config.read_text())
+    release_tag = select_release_tag(pref, args.release_tag)
     feedback_per_member = (
         int(pref["feedback"]["scenario_count"])
         + int(pref["feedback"]["member_probe_count"])
@@ -265,12 +381,6 @@ def main() -> None:
 
     evidence = args.evidence_out
     release = args.release_out
-    if evidence.exists():
-        shutil.rmtree(evidence)
-    if release.exists():
-        shutil.rmtree(release)
-    evidence.mkdir(parents=True)
-    release.mkdir(parents=True)
 
     dataset_root = ROOT / campaign["archive"]["dataset_root"]
     dataset_manifest = dataset_root / "manifest.json"
@@ -295,8 +405,45 @@ def main() -> None:
         row["member_id"]: row
         for row in parent_release["assets"]
     }
-    if set(parent_assets) != set(expected_members):
+    if (
+        set(parent_assets) != set(expected_members)
+        or len(parent_release["assets"]) != len(expected_members)
+        or parent_release.get("release_tag") != pref["parent_release_tag"]
+        or parent_release.get("member_contract_sha256")
+        != population["member_contract_sha256"]
+    ):
         raise RuntimeError("SFT parent release manifest is incomplete")
+
+    # Check every recovered parent's current authority before deleting output or
+    # copying any member. Mutually consistent old artifacts must not repromote
+    # beneath a refreshed C release, even if all their local hashes agree.
+    for member_id in expected_members:
+        parent_result = json.loads(
+            (ROOT / pref["sft_evidence_root"] / "results" / f"{member_id}.json").read_text()
+        )
+        records = {
+            "feedback manifest": json.loads((feedback_found[member_id] / "manifest.json").read_text()),
+            "pair manifest": json.loads((pair_found[member_id] / "manifest.json").read_text()),
+            "preference result": json.loads((preference_found[member_id] / "result.json").read_text()),
+            "comparison": json.loads((comparison_found[member_id] / "evaluation.json").read_text()),
+        }
+        validate_recovered_parent(
+            member_id,
+            population["member_contract_sha256"],
+            parent_assets[member_id],
+            parent_result,
+            records,
+            read_jsonl(feedback_found[member_id] / "feedback.jsonl"),
+            read_jsonl(pair_found[member_id] / "pairs.jsonl"),
+        )
+        validate_comparison_evidence(comparison_found[member_id])
+
+    if evidence.exists():
+        shutil.rmtree(evidence)
+    if release.exists():
+        shutil.rmtree(release)
+    evidence.mkdir(parents=True)
+    release.mkdir(parents=True)
 
     member_rows = []
     release_assets = []
@@ -548,6 +695,10 @@ def main() -> None:
             comparison_root / "evaluation.json",
             compare_dest,
         )
+        copy_comparison_evidence(
+            comparison_root,
+            evidence / "before-after-evidence" / member_id,
+        )
 
         archive_name = (
             f"village-001-preference-{member_id}-"
@@ -651,14 +802,14 @@ def main() -> None:
         "provider_root": "provider/preference",
         "quality_root": "preference-quality",
         "evidence_root": "experiments/village-001/preference-evidence",
-        "release_tag": pref["final_release_tag"],
+        "release_tag": release_tag,
     }
     write_json(
         dataset_root / "preference-manifest.json",
         preference_manifest,
     )
 
-    dataset_readme = """# VILLAGE-001 — durable campaign archive
+    dataset_readme = f"""# VILLAGE-001 — durable campaign archive
 
 Current promoted stage: **VILLAGE-001D preference-matured population**.
 
@@ -676,7 +827,10 @@ manifest. Later campaign layers are additive and have their own stage manifests.
 - `preference-hashes.sha256` — additive dataset inventory through VILLAGE-001D.
 
 Model bytes remain outside Git. The in-repo preference evidence and adapter-release
-manifest identify the exact `village-001-preference-v1` assets and hashes.
+manifest identify the exact `{release_tag}` assets and hashes. Raw before/after
+judge requests, responses, failed attempts and recovery receipts are preserved in
+`experiments/village-001/preference-evidence/before-after-evidence/` and covered by
+that evidence directory's `hashes.sha256`.
 
 GitHub Actions artifacts are staging only; this tree is durable authority.
 """
@@ -686,10 +840,10 @@ GitHub Actions artifacts are staging only; this tree is durable authority.
         "schema_version": 1,
         "experiment": "VILLAGE-001D",
         "issue": 13,
-        "release_tag": pref["final_release_tag"],
+        "release_tag": release_tag,
         "release_url": (
             "https://github.com/techrote/neurounner/releases/tag/"
-            + pref["final_release_tag"]
+            + release_tag
         ),
         "parent_release": pref["parent_release_tag"],
         "base_model": campaign["base_model"]["id"],
@@ -804,17 +958,7 @@ GitHub Actions artifacts are staging only; this tree is durable authority.
         "|---|---:|---:|---:|---:|---:|---:|---|",
     ]
     for row in member_rows:
-        report.append(
-            f"| {row['member_id']} | {row['valid_feedback']}/72 | "
-            f"{row['preference_margin_before']:.3f}→"
-            f"{row['preference_margin_after']:.3f} | "
-            f"{row['preference_accuracy_before']:.3f}→"
-            f"{row['preference_accuracy_after']:.3f} | "
-            f"{row['task_relevance_delta']:+.3f} | "
-            f"{row['behavior_fit_delta']:+.3f} | "
-            f"{row['sibling_accuracy_delta']:+.3f} | "
-            f"{'PASS' if row['qualified_for_population_tournament'] else 'REGRESSED'} |"
-        )
+        report.append(member_report_row(row))
     report.extend(
         [
             "",

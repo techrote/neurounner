@@ -1,0 +1,289 @@
+name: VILLAGE-001D isolated completed-population recovery
+
+on:
+  push:
+    branches: [work/village-001-continuation-20261118]
+    paths:
+      - 'experiments/village-001/recovery-20261118/request.json'
+  pull_request:
+    paths:
+      - '.github/workflows/village-001d-finish-recovery.yml'
+      - 'scripts/village_001d_compare.py'
+      - 'scripts/village_001d_assemble.py'
+      - 'scripts/village_001d_recover_completed.py'
+      - 'tests/test_village_001d_*.py'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: village-001d-isolated-recovery-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Test source-bound recovery and unchanged provider gate
+        run: |
+          python3 -m unittest discover -s tests -p 'test_village_001d_*.py' -v
+          python3 -O -m unittest discover -s tests -p 'test_village_001d_*.py'
+          python3 scripts/village_001_gate.py
+
+  recover:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/work/village-001-continuation-20261118' }}
+    needs: offline
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      actions: read
+    env:
+      SOURCE_ROOT: ${{ runner.temp }}/village001d-original
+      COMPARISON_ROOT: ${{ runner.temp }}/village001d-comparisons
+      RECOVERY_ROOT: experiments/village-001/recovery-20261118
+      RECOVERY_TAG: village-001d-recovery-40613393744-20261118
+      SOURCE_HEAD: 388ad349d48102f6266c0c0c837efec0275e38c9
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Verify source lineage and isolated recovery request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          remote_head=$(git ls-remote origin "refs/heads/$GITHUB_REF_NAME" | cut -f1)
+          test "$remote_head" = "$GITHUB_SHA" || {
+            echo "Owned branch already moved; refusing a stale recovery before provider calls."
+            exit 1
+          }
+          git fetch --no-tags origin "$SOURCE_HEAD"
+          git diff --exit-code "$SOURCE_HEAD" HEAD -- \
+            experiments/village-001/config.json \
+            experiments/village-001/preference-config.json \
+            experiments/village-001/heldout-eval.json \
+            experiments/village-001/sft-evidence \
+            datasets/village-001 datasets/babble-001 \
+            scripts/village_001_manifest.py scripts/village_001d_preference_train.py
+          python3 - <<'PY'
+          import json,os,urllib.error,urllib.request
+          from pathlib import Path
+          r=json.loads((Path(os.environ["RECOVERY_ROOT"])/"request.json").read_text())
+          expected={
+              "schema": "village-001d-isolated-recovery-v1",
+              "source_run_id":40613393744,
+              "source_head":os.environ["SOURCE_HEAD"],
+              "failed_member":"V-G12-B",
+              "release_tag":os.environ["RECOVERY_TAG"],
+              "new_training":False,
+              "run_final_tournament":False,
+              "publish_branch":"work/village-001-continuation-20261118",
+          }
+          if r!=expected:
+              raise SystemExit("recovery request drift")
+          if os.environ["GITHUB_REPOSITORY"]!="techrote/neurounner":
+              raise SystemExit("unexpected repository")
+          if os.environ["GITHUB_REF_NAME"]!=r["publish_branch"]:
+              raise SystemExit("unexpected publication branch")
+          url=f"https://api.github.com/repos/techrote/neurounner/releases/tags/{r['release_tag']}"
+          request=urllib.request.Request(url,headers={"Authorization":"Bearer "+os.environ["GH_TOKEN"],
+                                                    "Accept":"application/vnd.github+json"})
+          try:
+              with urllib.request.urlopen(request,timeout=30):
+                  raise SystemExit("immutable recovery release already exists; refusing duplicate provider work")
+          except urllib.error.HTTPError as error:
+              if error.code!=404:
+                  raise SystemExit(f"cannot verify release absence: HTTP {error.code}")
+          PY
+
+      - name: Recover and verify all 144 original artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/village_001d_recover_completed.py --out "$SOURCE_ROOT"
+
+      - name: Independently replay 35 completed comparisons offline
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,subprocess
+          from pathlib import Path
+          source=Path(os.environ["SOURCE_ROOT"])
+          target=Path(os.environ["COMPARISON_ROOT"])
+          receipts=[]
+          for i in range(1,13):
+              for sibling in "ABC":
+                  member=f"V-G{i:02d}-{sibling}"
+                  if member=="V-G12-B":
+                      continue
+                  subprocess.run([
+                      "python3","scripts/village_001d_compare.py",
+                      "--member",member,
+                      "--preference-result",str(source/"preference"/member/"result.json"),
+                      "--resume",str(source/"comparison"/member),
+                      "--out",str(target/member),"--offline",
+                  ],check=True)
+                  original=(source/"comparison"/member/"evaluation.json").read_bytes()
+                  replayed=(target/member/"evaluation.json").read_bytes()
+                  if original!=replayed:
+                      raise SystemExit(f"{member}: original evaluation changed")
+                  receipts.append({"member_id":member,"evaluation_sha256":hashlib.sha256(original).hexdigest(),
+                                   "byte_identical":True,"new_provider_requests":0})
+          root=Path(os.environ["RECOVERY_ROOT"])/"evidence"
+          root.mkdir(parents=True,exist_ok=True)
+          (root/"completed-comparison-replay.json").write_text(json.dumps(receipts,indent=2)+"\n")
+          PY
+
+      - name: Complete only the unfinished G12-B critic reviews
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+        run: |
+          python3 scripts/village_001_gate.py
+          python3 scripts/village_001d_compare.py \
+            --member V-G12-B \
+            --preference-result "$SOURCE_ROOT/preference/V-G12-B/result.json" \
+            --resume "$SOURCE_ROOT/comparison/V-G12-B" \
+            --out "$COMPARISON_ROOT/V-G12-B"
+
+      - name: Assemble all original trained adapters and complete raw evidence
+        run: |
+          python3 scripts/village_001d_assemble.py \
+            --feedback-artifacts "$SOURCE_ROOT/feedback" \
+            --pair-artifacts "$SOURCE_ROOT/pairs" \
+            --preference-artifacts "$SOURCE_ROOT/preference" \
+            --comparison-artifacts "$COMPARISON_ROOT" \
+            --evidence-out experiments/village-001/preference-evidence \
+            --release-out release-assets \
+            --release-tag "$RECOVERY_TAG"
+
+      - name: Preserve original ZIP custody and measure recovered population
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,shutil
+          from pathlib import Path
+          source=Path(os.environ["SOURCE_ROOT"])
+          target=Path(os.environ["RECOVERY_ROOT"])/"evidence"
+          for path in (source/"custody").glob("*.json"):
+              shutil.copy2(path,target/path.name)
+          shutil.copytree(source/"comparison"/"V-G12-B",target/"original-failed-comparison")
+          recovery=json.loads((Path(os.environ["COMPARISON_ROOT"])/"V-G12-B"/"recovery.json").read_text())
+          summary=json.loads(Path("experiments/village-001/preference-evidence/summary.json").read_text())
+          expected={"members":36,"feedback_records":3456,"preference_pairs":2160,"preference_lanes":36}
+          if any(summary.get(k)!=v for k,v in expected.items()):
+              raise SystemExit("assembled population is incomplete")
+          if len(list(Path("release-assets").glob("*.tar.gz")))!=36:
+              raise SystemExit("expected 36 adapter archives")
+          receipt={
+              "schema":"village-001d-isolated-recovery-result-v1",
+              "original_run_id":40613393744,"original_source_head":os.environ["SOURCE_HEAD"],
+              "recovery_run_id":int(os.environ["GITHUB_RUN_ID"]),
+              "recovery_source_head":os.environ["GITHUB_SHA"],
+              "release_tag":os.environ["RECOVERY_TAG"],
+              "completed_comparisons_reused":35,"original_artifacts_verified":144,
+              "new_optimizer_steps":0,"new_local_model_generations":0,
+              "recovered_member":"V-G12-B","critic_recovery":recovery,
+              "stage_d_qualified_count":summary["qualified_count"],
+              "stage_d_regressed_count":summary["regressed_count"],
+              "structured_sprocket_feedback_valid":summary["valid_feedback_records"],
+              "structured_sprocket_feedback_invalid":summary["invalid_feedback_records"],
+              "final_tournament_run":False,"usable_village_qualified":False,
+              "publication_branch":os.environ["GITHUB_REF_NAME"],
+          }
+          (target/"recovery-result.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps({k:v for k,v in receipt.items() if k!="critic_recovery"},indent=2))
+          PY
+          tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+            -cf release-assets/village-001d-original-artifacts-40613393744.tar \
+            -C "$SOURCE_ROOT/custody" .
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          rows=[]
+          for path in sorted(Path("release-assets").iterdir()):
+              h=hashlib.sha256()
+              with path.open("rb") as stream:
+                  for block in iter(lambda:stream.read(1024*1024),b""):
+                      h.update(block)
+              rows.append({"file":path.name,"bytes":path.stat().st_size,"sha256":h.hexdigest()})
+          target=Path(os.environ["RECOVERY_ROOT"])/"evidence"
+          (target/"release-assets.json").write_text(json.dumps({"release_tag":os.environ["RECOVERY_TAG"],"assets":rows},indent=2)+"\n")
+          PY
+
+      - name: Commit recovered evidence only to the owned draft branch
+        run: |
+          remote_head=$(git ls-remote origin "refs/heads/$GITHUB_REF_NAME" | cut -f1)
+          test "$remote_head" = "$GITHUB_SHA" || {
+            echo "Owned branch moved during recovery; retaining evidence artifact without overwriting it."
+            exit 1
+          }
+          git config user.name "neurounner experiment bot"
+          git config user.email "261801702+techrote@users.noreply.github.com"
+          git add \
+            experiments/village-001/preference-evidence \
+            experiments/village-001/recovery-20261118/evidence \
+            datasets/village-001/sprocket-feedback \
+            datasets/village-001/sprocket-feedback-evidence \
+            datasets/village-001/preference \
+            datasets/village-001/provider/preference \
+            datasets/village-001/preference-quality \
+            datasets/village-001/preference-manifest.json \
+            datasets/village-001/preference-hashes.sha256 \
+            datasets/village-001/README.md
+          git diff --cached --check
+          git commit -m "Archive recovered VILLAGE-001D population without retraining"
+          git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+
+      - name: Publish isolated prerelease with immutable original custody
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$RECOVERY_TAG" \
+            --target "$(git rev-parse HEAD)" --prerelease \
+            --title "VILLAGE-001D recovered population — final qualification pending" \
+            --notes-file experiments/village-001/preference-evidence/REPORT.md \
+            release-assets/*
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RECOVERY_TAG" > "$RUNNER_TEMP/recovery-release.json"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          expected=json.loads((Path(os.environ["RECOVERY_ROOT"])/"evidence/release-assets.json").read_text())
+          release=json.loads((Path(os.environ["RUNNER_TEMP"])/"recovery-release.json").read_text())
+          if release["tag_name"]!=expected["release_tag"] or not release["prerelease"]:
+              raise SystemExit("release identity/state mismatch")
+          actual={a["name"]:a for a in release["assets"]}
+          if set(actual)!={a["file"] for a in expected["assets"]}:
+              raise SystemExit("published asset inventory mismatch")
+          for row in expected["assets"]:
+              asset=actual[row["file"]]
+              if asset["size"]!=row["bytes"] or asset.get("digest")!="sha256:"+row["sha256"]:
+                  raise SystemExit(f"published asset integrity mismatch: {row['file']}")
+          print("Published 36 original trained adapters plus original 144-artifact custody: PASS")
+          PY
+
+      - name: Retain recovery output and failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001d-isolated-recovery-${{ github.run_id }}
+          path: |
+            ${{ env.COMPARISON_ROOT }}
+            experiments/village-001/recovery-20261118/evidence
+            experiments/village-001/preference-evidence
+            release-assets
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Retain original custody if recovery or publication fails
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001d-original-custody-${{ github.run_id }}
+          path: ${{ env.SOURCE_ROOT }}/custody
+          if-no-files-found: warn
+          retention-days: 30
