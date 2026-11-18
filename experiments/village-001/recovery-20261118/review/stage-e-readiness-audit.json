@@ -1,0 +1,158 @@
+{
+  "actions": {
+    "edited_stage_e": false,
+    "generated_final_suite": false,
+    "new_model_generations": 0,
+    "new_provider_api_calls": 0,
+    "optimizer_steps": 0,
+    "read_final_suite_recipe_prompts": false,
+    "read_generated_final_suite": false
+  },
+  "additional_owner_gate_found_in_village_sources": false,
+  "additional_owner_gate_scope_note": "This is a source assessment, not a new grant of authority. Existing campaign calls for E evaluation; no new training or merge is part of this proposed isolated continuation.",
+  "audited_at_date": "2026-11-18",
+  "audited_checkout_head": "5fea627c5f16a1dffe17d12dbb9230522ab7be15",
+  "historical_stage_d_subset": {
+    "after_task_relevance_at_least_2_5_count": 0,
+    "after_task_relevance_max": 1.25,
+    "after_task_relevance_mean": 1.0035714285714286,
+    "after_task_relevance_min": 0.75,
+    "all_35_pass_existing_d_delta_gates": true,
+    "excluded_member": "V-G12-B",
+    "interpretation": "Historical 35-member diagnostic subset on D inputs, not a final-suite measurement or final verdict. Passing D delta gates does not establish absolute relevance or usable-village quality.",
+    "members": 35,
+    "original_run_id": 40613393744
+  },
+  "launch_blockers": [
+    {
+      "code": "unsafe_existing_publication_for_isolation",
+      "detail": "Existing assembly rebases and pushes HEAD:main and creates/uploads --clobber to canonical village-001-final-v1. Use an owned child-branch workflow and distinct immutable prerelease.",
+      "source": ".github/workflows/village-001e-final.yml"
+    },
+    {
+      "code": "hardcoded_ecology_parent_tag",
+      "detail": "Ecology download hardcodes village-001-preference-v1; member final-response download already uses the D release manifest. Resolve every download from the frozen recovery manifest.",
+      "source": ".github/workflows/village-001e-final.yml"
+    },
+    {
+      "code": "provider_lane_not_resumable",
+      "detail": "No resume/replay; scripts delete output and allow one whole-batch schema repair. A terminal parse failure can discard a lane after many successful calls. Add exact-source bound immutable checkpoint/replay and bounded missing-only repair before full campaign.",
+      "source": [
+        "scripts/village_001e_tournament_scenario.py",
+        "scripts/village_001e_ecology_judge.py"
+      ]
+    }
+  ],
+  "quality_gates": {
+    "ecology": "All 24 sessions and judgments, including 12 cross-lineage contamination audits, are required evidence. Ecology metrics do not enter the current usable_village conjunction.",
+    "individual": {
+      "behavior_lineage_hits_at_least": 3,
+      "behavior_sibling_hits_given_correct_lineage_at_least": 8,
+      "fresh_final_raw_genericness_mean_at_most": 2,
+      "fresh_final_raw_task_relevance_mean_at_least": 2.5,
+      "passes_stage_d_maturation_gate": true,
+      "scenarios": 24
+    },
+    "population": {
+      "behavior_lineage_accuracy_at_least": 0.1666666667,
+      "behavior_sibling_accuracy_given_correct_lineage_at_least": 0.4166666667,
+      "individual_quality_members_at_least": 30,
+      "raw_mean_genericness_strictly_below": "Same fresh F-suite untuned BASE control mean."
+    },
+    "source": "experiments/village-001/tournament-config.json and scripts/village_001e_assemble.py"
+  },
+  "repository": "techrote/neurounner",
+  "schema": "village-001e-readiness-audit-v1",
+  "scope": "Read-only stage E implementation readiness assessment; no stage E execution or final verdict.",
+  "source_paths": [
+    ".github/workflows/village-001e-final.yml",
+    "experiments/village-001/tournament-config.json",
+    "scripts/village_001e_build_final_suite.py",
+    "scripts/village_001e_generate_final_responses.py",
+    "scripts/village_001e_tournament_scenario.py",
+    "scripts/village_001e_ecology_run.py",
+    "scripts/village_001e_ecology_judge.py",
+    "scripts/village_001e_assemble.py",
+    "scripts/village_001_gate.py",
+    "docs/VILLAGE_001_CYBERGOBLIN_FOUNDRY.md"
+  ],
+  "state": "Requires isolated publication and recovery-safe execution before launch.",
+  "suite_custody": {
+    "generator": "scripts/village_001e_build_final_suite.py",
+    "required_order": [
+      "Finish and freeze D summary/release bytes plus retrievable adapters.",
+      "Preserve recipe, membership and gate values.",
+      "Generate final suite exactly once from those frozen D bytes after terminal D.",
+      "Commit or durably retain exact suite bytes and hash before inference; reuse them for every member, BASE, tournament and retry."
+    ],
+    "seed_inputs": [
+      "recipe_sha256",
+      "preference_summary_sha256",
+      "preference_release_sha256"
+    ],
+    "warning": "Changing D release-tag text changes the release-manifest hash and therefore the derived final suite even if adapter bytes stay identical."
+  },
+  "workload": {
+    "actions_job_calculation": {
+      "assembly": 1,
+      "base_final_response": 1,
+      "ecology_judge": 24,
+      "ecology_session": 24,
+      "member_final_response": 36,
+      "plan": 1,
+      "tournament_scenario": 24
+    },
+    "actions_jobs": 111,
+    "bounds_note": "Maximum assumes every permitted schema repair and conditional audit executes; per-job timeouts can terminate earlier. No time or price prediction is implied.",
+    "local_generation_calculation": {
+      "ecology": {
+        "generations": 180,
+        "group_members": 3,
+        "group_sessions": 12,
+        "max_new_tokens_each": 96,
+        "pair_members": 2,
+        "pair_sessions": 12,
+        "rounds": 3
+      },
+      "final": {
+        "generations": 888,
+        "max_new_tokens_each": 160,
+        "population_including_base": 37,
+        "scenarios": 24
+      }
+    },
+    "local_model_generations": 1068,
+    "maximum_generated_local_tokens": 159360,
+    "provider_calculation": {
+      "ecology": {
+        "baseline": 36,
+        "critic": 24,
+        "cross_lineage_audit": 12,
+        "optional_super_audit_max": 24,
+        "schema_repairs_max": 36,
+        "super_schema_repair_supported": false,
+        "with_all_repairs_and_audits_max": 96
+      },
+      "tournament_24_scenarios": {
+        "baseline": 432,
+        "optional_audits_max": 72,
+        "with_all_audits_and_repairs_max": 1008
+      },
+      "tournament_per_scenario": {
+        "baseline": 18,
+        "normalizer_37_at_chunk12": 4,
+        "optional_low_confidence_audit_max": 3,
+        "raw_and_behavior_classifier_37_at_chunk12_each": 8,
+        "raw_and_behavior_sibling_36_at_chunk12_each": 6,
+        "schema_repair_max_per_logical_call": 1
+      }
+    },
+    "provider_calls_with_all_optional_audits_before_repairs": 564,
+    "provider_concurrency_current_effective_maximum": 2,
+    "provider_concurrency_note": "Tournament and ecology-judge matrices each use max-parallel 1 but may run simultaneously.",
+    "provider_logical_calls_baseline": 468,
+    "provider_logical_calls_maximum": 1104,
+    "theoretical_http_attempts_maximum": 6624,
+    "transport_attempts_per_logical_call_maximum": 6
+  }
+}
