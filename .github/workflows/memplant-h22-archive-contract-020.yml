@@ -6,7 +6,6 @@ on:
       - '.github/workflows/memplant-h22-archive-contract-020.yml'
       - 'experiments/memplant/material_causal_gate_020/h22_bundle_reproduce.py'
       - 'experiments/memplant/material_causal_gate_020/test_h22_bundle_reproduce.py'
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -20,6 +19,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Check exact checked-out PR source identity
         env:
           EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
@@ -30,8 +30,9 @@ jobs:
           git rev-parse HEAD
       - name: Exercise fail-closed archive safety and provenance contract
         run: |
-          python3 -B -m unittest -v \
-            experiments/memplant/material_causal_gate_020/test_h22_bundle_reproduce.py
+          python3 -B -m unittest discover -v \
+            -s experiments/memplant/material_causal_gate_020 \
+            -p test_h22_bundle_reproduce.py
       - name: Define qualification boundary
         run: |
           echo 'PASS means only that stdlib archive harness contract tests passed.'
