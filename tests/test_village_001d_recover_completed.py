@@ -189,6 +189,34 @@ class SourceCustodyTests(unittest.TestCase):
 
 
 class ZipBoundaryTests(unittest.TestCase):
+    def test_transient_get_failure_retries_without_weakening_validation(self):
+        failure = urllib.error.HTTPError("https://invalid.example", 502, "bad gateway", {}, None)
+        with mock.patch.object(recovery, "_get_bytes_once", side_effect=[failure, b"original"]) as fetch, \
+             mock.patch.object(recovery.time, "sleep") as sleep:
+            self.assertEqual(recovery.get_bytes("source", "secret", 123), b"original")
+        self.assertEqual(fetch.call_args_list, [mock.call("source", "secret", 123)] * 2)
+        sleep.assert_called_once_with(1)
+
+    def test_permanent_http_failure_is_not_retried(self):
+        for status in (401, 403, 404, 410):
+            with self.subTest(status=status):
+                failure = urllib.error.HTTPError("https://invalid.example", status, "denied", {}, None)
+                with mock.patch.object(recovery, "_get_bytes_once", side_effect=failure) as fetch, \
+                     mock.patch.object(recovery.time, "sleep") as sleep:
+                    with self.assertRaisesRegex(RuntimeError, f"HTTP {status}"):
+                        recovery.get_bytes("source", "secret")
+                self.assertEqual(fetch.call_count, 1)
+                sleep.assert_not_called()
+
+    def test_transient_get_retry_budget_is_four_attempts(self):
+        failure = urllib.error.HTTPError("https://invalid.example", 503, "unavailable", {}, None)
+        with mock.patch.object(recovery, "_get_bytes_once", side_effect=failure) as fetch, \
+             mock.patch.object(recovery.time, "sleep") as sleep:
+            with self.assertRaisesRegex(RuntimeError, "HTTP 503"):
+                recovery.get_bytes("source", "secret")
+        self.assertEqual(fetch.call_count, 4)
+        self.assertEqual(sleep.call_args_list, [mock.call(1), mock.call(2), mock.call(4)])
+
     def test_github_token_is_never_forwarded_to_artifact_storage(self):
         url = f"https://api.github.com/repos/{recovery.REPOSITORY}/actions/artifacts/1/zip"
         storage = "https://storage.example.invalid/archive.zip?sig=synthetic"

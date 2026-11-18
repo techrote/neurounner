@@ -9,11 +9,13 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import json
 import os
 import re
 import shutil
 import stat
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -174,7 +176,7 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-def get_bytes(url: str, token: str, limit: int = MAX_ZIP_BYTES) -> bytes:
+def _get_bytes_once(url: str, token: str, limit: int) -> bytes:
     require(url.startswith(f"https://api.github.com/repos/{REPOSITORY}/actions/"), "unexpected API URL")
     headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28",
                "User-Agent": "neurounner-village-evidence-recovery"}
@@ -184,20 +186,32 @@ def get_bytes(url: str, token: str, limit: int = MAX_ZIP_BYTES) -> bytes:
         response = urllib.request.build_opener(NoRedirect).open(urllib.request.Request(url, headers=headers), timeout=90)
     except urllib.error.HTTPError as exc:
         if exc.code not in (301, 302, 303, 307, 308):
-            raise RuntimeError(f"GitHub GET failed with HTTP {exc.code}") from None
+            raise
         target = exc.headers.get("Location", "")
         parsed = urllib.parse.urlsplit(target)
         require(parsed.scheme == "https" and parsed.hostname and not parsed.username and not parsed.password,
                 "unsafe artifact redirect")
         # Signed artifact storage receives no GitHub token or API headers.
-        try:
-            response = urllib.request.urlopen(target, timeout=90)
-        except urllib.error.HTTPError as storage_error:
-            raise RuntimeError(f"artifact storage GET failed with HTTP {storage_error.code}") from None
+        response = urllib.request.urlopen(target, timeout=90)
     with response:
         data = response.read(limit + 1)
     require(len(data) <= limit, "download exceeds size bound")
     return data
+
+
+def get_bytes(url: str, token: str, limit: int = MAX_ZIP_BYTES) -> bytes:
+    """Retry bounded transient GET failures without changing custody checks."""
+    for attempt in range(1, 5):
+        try:
+            return _get_bytes_once(url, token, limit)
+        except urllib.error.HTTPError as error:
+            if error.code not in (429, 500, 502, 503, 504) or attempt == 4:
+                raise RuntimeError(f"artifact API/storage GET failed with HTTP {error.code}") from None
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.IncompleteRead):
+            if attempt == 4:
+                raise RuntimeError("artifact API/storage transport failed after four attempts") from None
+        time.sleep(2 ** (attempt - 1))
+    raise RuntimeError("unreachable download retry state")
 
 
 def fetch_collection(kind: str, token: str) -> list[dict]:
