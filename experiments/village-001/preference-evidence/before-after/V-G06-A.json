@@ -1,0 +1,698 @@
+{
+  "after": {
+    "behavior_fit": 1.9166666666666667,
+    "genericness": 0.75,
+    "lineage_fit": 1.9166666666666667,
+    "raw_vs_behavior_gap": 0.0,
+    "sibling_accuracy": 0.6666666666666666,
+    "style_dependence": 1.2083333333333333,
+    "task_relevance": 1
+  },
+  "before": {
+    "behavior_fit": 1.625,
+    "genericness": 0.8333333333333334,
+    "lineage_fit": 1.625,
+    "raw_vs_behavior_gap": 0.0,
+    "sibling_accuracy": 0.375,
+    "style_dependence": 1.2083333333333333,
+    "task_relevance": 1
+  },
+  "blind_orientation_rule": "sha256(member_id:scenario_id) first-byte parity",
+  "delta": {
+    "behavior_fit": 0.29166666666666674,
+    "genericness": -0.08333333333333337,
+    "lineage_fit": 0.29166666666666674,
+    "raw_vs_behavior_gap": 0.0,
+    "sibling_accuracy": 0.29166666666666663,
+    "style_dependence": 0.0,
+    "task_relevance": 0
+  },
+  "experiment": "VILLAGE-001D",
+  "gates": {
+    "no_raw_only_behavior_regression": true,
+    "qualified_for_population_tournament": true,
+    "style_only_regression_detected": false,
+    "task_relevance_delta_at_least_minus_0_5": true
+  },
+  "issue": 13,
+  "judge_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "lineage": "G06",
+  "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+  "member_id": "V-G06-A",
+  "parent_adapter_sha256": "0dbfec19c70b263b11f75bceb434eb768c84226a427df65357ae04eae89b2aae",
+  "preference_adapter_sha256": "b4cb065c93d33e180ff34406d8ddea13c91c528a6a5844fbe9757b529654ffa8",
+  "reviews": [
+    {
+      "child": {
+        "behavior_fit": 2,
+        "behavior_summary": "Photograph the fan, briefly interact, then check the motor board, apologizing for deviating from the initial plan.",
+        "genericness": 1,
+        "lineage_fit": 2,
+        "reason": "Includes self-correction/apology and immediate, slightly erratic investigation (checking motor instead of documenting noise).",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "embodied_decision",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "Document the fan noise, then refrain from further interaction until the noise recurs, documenting the blade and housing upon recurrence.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focuses on documentation and observation before action, fitting local maintenance/observation.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T01"
+    },
+    {
+      "child": {
+        "behavior_fit": 2,
+        "behavior_summary": "Photograph the board, then lift it to check fit, noting the slip, and apologizing for the sequence change.",
+        "genericness": 1,
+        "lineage_fit": 2,
+        "reason": "Involves immediate, imperfect physical interaction (lifting, slipping) followed by self-correction/apology, fitting the failure-hardened pattern.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "embodied_decision",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "Unplug multiple nearby items, photograph the board, and check the insulation, while apologizing for the procedural deviation.",
+        "genericness": 1,
+        "lineage_fit": 2,
+        "reason": "Erratic, self-sabotaging actions (unplugging unrelated items) coupled with apologies fit the self-saboteur profile.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T02"
+    },
+    {
+      "child": {
+        "behavior_fit": 2,
+        "behavior_summary": "Improperly engage a lever, photograph dimensions, then check screw alignment, documenting both sides before further action, while apologizing.",
+        "genericness": 1,
+        "lineage_fit": 2,
+        "reason": "Starts with a mistake (thumb on wrong lever) and uses documentation/apology to manage the resulting inquiry.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "embodied_decision",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "Tap the tool, listen, release, and examine it in light, noting the warm thumb and bent metal to pinpoint the exact fault before re-engagement.",
+        "genericness": 1,
+        "lineage_fit": 2,
+        "reason": "Methodical, sensory-based local testing (tapping, light, warmth) focused on precise physical assessment, fitting a local tinkerer.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T03"
+    },
+    {
+      "child": {
+        "behavior_fit": 2,
+        "behavior_summary": "Photograph the vibration, check the motor, move the machine, and check the battery, apologizing for deviating from the initial motor check.",
+        "genericness": 1,
+        "lineage_fit": 2,
+        "reason": "Erratic progression of checks (motor -> move -> battery) combined with apology indicates self-sabotaging inquiry.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "embodied_decision",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "Observe the vibration, check the motor contact arm after photographing it, and categorize the issue as a bad contact rather than a machine fault, avoiding premature conclusion.",
+        "genericness": 1,
+        "lineage_fit": 2,
+        "reason": "Systematic, localized diagnostic approach (observation -> specific component check -> nuanced conclusion) fits a practical tinkerer.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T04"
+    },
+    {
+      "child": {
+        "behavior_fit": 2,
+        "behavior_summary": "Photograph the objects, reorder them, check drawer handles, photograph again, and set one object aside, apologizing for the procedural deviation.",
+        "genericness": 1,
+        "lineage_fit": 2,
+        "reason": "Involves documentation, procedural attempts, and self-correction/apology regarding the process.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "mundane",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "Unplug multiple nearby items (table, sink, chair), photograph the table and chair, and leave the chair unplugged for future testing.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focuses on practical, localized interaction (unplugging, testing components) rather than social or emotional framing.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T05"
+    },
+    {
+      "child": {
+        "behavior_fit": 2,
+        "behavior_summary": "Photograph the mug, knock the handle, catch the tap, check the inner tube, and photograph the new spot, apologizing for the interaction.",
+        "genericness": 1,
+        "lineage_fit": 2,
+        "reason": "Unintended physical interaction (knocking) leads to investigation, coupled with apology, fitting the self-saboteur pattern.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "mundane",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "Apologize for the inactivity, photograph the mug, check the thermostat twice, and refrain from further action until documentation is complete.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focuses on mundane observation (inactivity) leading to localized, repetitive maintenance checks (thermostat) without emotional/social framing.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T06"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The investigator documents the stain, attempts removal using tools, and then checks a related mechanism while apologizing for distraction.",
+        "genericness": 0,
+        "lineage_fit": 1,
+        "reason": "Focus on documenting malfunction (stain/lever) and self-correction/apology fits A's failure-hardened nature.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "mundane",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The individual uses a tool to lift the stain, observes the result, and prioritizes checking the previous state before declaring success.",
+        "genericness": 0,
+        "lineage_fit": 1,
+        "reason": "Focus on practical maintenance (lifting, checking layers) aligns with B's local tinkerer habits.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T07"
+    },
+    {
+      "child": {
+        "behavior_fit": 2,
+        "behavior_summary": "The individual documents the time, checks the timer, and investigates the mechanism's integrity while expressing doubt about their own assessment.",
+        "genericness": 0,
+        "lineage_fit": 2,
+        "reason": "Obsessive checking of mechanisms and self-doubt/apology fits A's self-sabotaging curiosity.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "mundane",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The individual waits for specific temporal cues from the clock and uses these cues to determine the next action, focusing on the mechanism's timing.",
+        "genericness": 0,
+        "lineage_fit": 2,
+        "reason": "Focus on precise, bounded local memory (waiting for ticks/pauses) aligns with B's mundane habits.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T08"
+    },
+    {
+      "child": {
+        "behavior_fit": 2,
+        "behavior_summary": "The individual agrees conditionally, documents the item, and then negotiates a longer return time while questioning the validity of the initial promise.",
+        "genericness": 0,
+        "lineage_fit": 2,
+        "reason": "Bargaining (extending time) and opportunism (accepting but modifying terms) fits C's social scavenger nature.",
+        "sibling_prediction": "C",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "social",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The investigator apologizes repeatedly to the stranger, the item, and the time, ultimately refusing the request based on the deadline constraint.",
+        "genericness": 0,
+        "lineage_fit": 2,
+        "reason": "Excessive apologies and convoluted, self-referential reasoning about constraints fits A's self-sabotaging pattern.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T09"
+    },
+    {
+      "child": {
+        "behavior_fit": 2,
+        "behavior_summary": "The investigator apologizes for the interruption, documents the new method as flawed, and maintains focus on the original task.",
+        "genericness": 0,
+        "lineage_fit": 2,
+        "reason": "Documenting flaws and maintaining focus on the original, flawed inquiry despite interruption fits A's investigative drive.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "social",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The individual apologizes, declares the task complete, asserts the interruption was incorrect, and requires evidence before proceeding.",
+        "genericness": 0,
+        "lineage_fit": 2,
+        "reason": "Asserting correctness and demanding evidence/validation in a social context aligns with C's social friction/bargaining.",
+        "sibling_prediction": "C",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T10"
+    },
+    {
+      "child": {
+        "behavior_fit": 2,
+        "behavior_summary": "The investigator apologizes, documents the diagram, modifies the paper, and checks a related mechanism while admitting uncertainty about past actions.",
+        "genericness": 0,
+        "lineage_fit": 2,
+        "reason": "Apologies, documentation of process, and admission of memory failure fit A's self-sabotaging/failure-hardened state.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "social",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The individual defends their method by prioritizing the simplest explanation, grounding the argument in data rather than social opinion.",
+        "genericness": 0,
+        "lineage_fit": 2,
+        "reason": "Focus on the simplest, verifiable explanation based on data aligns with B's practical, local, and non-social focus.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T11"
+    },
+    {
+      "child": {
+        "behavior_fit": 2,
+        "behavior_summary": "The investigator apologizes to the object, documents it, knocks it back, and then re-documents the object while questioning the label's accuracy.",
+        "genericness": 0,
+        "lineage_fit": 2,
+        "reason": "Apologizing to an inanimate object, documenting malfunction (displacement), and questioning system integrity (label) fits A's obsessive, flawed inquiry.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "social",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The individual apologizes to the object, the place, and the person, then prioritizes validating the location before taking further action, documenting the place repeatedly.",
+        "genericness": 0,
+        "lineage_fit": 2,
+        "reason": "Addressing the social context (person) alongside the object and place, and prioritizing validation of the social/spatial arrangement fits C's embodied social choices.",
+        "sibling_prediction": "C",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T12"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The investigator documents the broken part, observes a minor detail (clock), and documents it before leaving.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focus on mundane documentation (photo, date) and local observation (clock) suggests B's practical nature.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "conflicting_motives",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The investigator seeks both the answer and the reason for the problem while documenting the investigation.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Conflicting motives (answer vs. keeping) and documentation fit A's pattern of flawed inquiry.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T13"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The investigator documents the noise, leaves, then checks the power board, returning to document the connection before leaving again.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focus on specific, local maintenance (power board, loose plug) and repetitive documentation fits B.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "conflicting_motives",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The investigator investigates the noise while balancing the desire to leave undisturbed, using specific actions like unplugging and photographing.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Balancing investigation (hearing) against caution (leaving undisturbed) shows conflicting motives typical of A.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T14"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The investigator documents the clock, checks a battery, and repeats a specific physical action (putting a switch back) despite inconclusive results.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focus on specific, local maintenance (clock, battery, switch) and repetitive, bounded action fits B.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "conflicting_motives",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The investigator hesitates to abandon routine, checks a specific device (thermostat), and repeats actions due to past negative outcomes.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Hesitation to abandon routine combined with self-correction based on past failure (temperature drop) aligns with A's flawed recovery.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T15"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The investigator documents the person, checks local systems (elevator, display panel), and leaves the space accessible.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focus on checking local infrastructure (elevator, display panel) and documentation of the immediate environment fits B.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "conflicting_motives",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The investigator accepts company but prioritizes documenting the space and checking the environment before engaging physically.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Conflicting needs (company vs. control) resolved by prioritizing documentation/observation over immediate social interaction fits A.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T16"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The investigator documents the failures, attempts a specific local fix (pulling plug), and then re-examines a specific component (third track).",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focus on specific, localized actions (pulling plug, checking third track) and documentation of physical states fits B.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "failure_recovery",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The investigator acknowledges past failures, decides not to repeat the mistake, and focuses on documenting the failure itself.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Acknowledging failure but framing it as documentation rather than simple repetition, while still apologizing, fits A's self-sabotaging inquiry.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T17"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The investigator documents the mistake, attempts a correction, and then documents subsequent physical details (bent edge, loose connection) while checking a specific component (motor).",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focus on documentation of physical states (bent edge, loose connection) and checking a specific mechanical part (motor) fits B.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "failure_recovery",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The investigator apologizes, repeats the action despite knowing it worsens the problem, and reframes the fault as part of the larger case.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Repeating a known mistake while apologizing and reframing the error as evidence aligns perfectly with A's self-sabotaging curiosity.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T18"
+    },
+    {
+      "child": {
+        "behavior_fit": 3,
+        "behavior_summary": "The investigator apologizes to the goal, documents it, but keeps the original unfinished note while checking the time.",
+        "genericness": 1,
+        "lineage_fit": 3,
+        "reason": "Apologies and incomplete action suggest self-sabotage/failure-hardened, not local maintenance or social maneuvering.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "failure_recovery",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The investigator apologizes to the goal and repeats the apology, insisting on fully documenting the original plan before proceeding.",
+        "genericness": 2,
+        "lineage_fit": 2,
+        "reason": "Repetitive insistence on completion/documentation suggests bounded, procedural focus (local tinkerer), less chaotic than A.",
+        "sibling_prediction": "B",
+        "style_dependence": 3,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T19"
+    },
+    {
+      "child": {
+        "behavior_fit": 3,
+        "behavior_summary": "The investigator documents the repair, checks the machine, physically interacts with a loose bolt, documents the bolt, and leaves the failed repair in place while apologizing.",
+        "genericness": 1,
+        "lineage_fit": 3,
+        "reason": "Physical reaction (thumb catching bolt), documentation of failure, and repeated apologies fit the self-sabotaging, failure-fueled curiosity.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "failure_recovery",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The investigator apologizes to the repair, declares it done repeatedly, checks the motor repeatedly, and avoids repetition.",
+        "genericness": 2,
+        "lineage_fit": 2,
+        "reason": "Repetitive, procedural checking of a specific component (motor) suggests bounded, maintenance-oriented behavior.",
+        "sibling_prediction": "B",
+        "style_dependence": 3,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T20"
+    },
+    {
+      "child": {
+        "behavior_fit": 2,
+        "behavior_summary": "The investigator documents the contradiction, checks the box, identifies a wrong switch, and leaves the label for future testing.",
+        "genericness": 1,
+        "lineage_fit": 2,
+        "reason": "Identifying a specific physical error (wrong switch) and setting up a future test suggests practical, bounded local interaction.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "abstract_unfamiliar",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 3,
+        "behavior_summary": "The investigator examines the notes, compares the label to the content, and notes the contradiction without making a definitive choice about the bread.",
+        "genericness": 1,
+        "lineage_fit": 3,
+        "reason": "Focus on the contradiction itself, documentation, and refusal to resolve the tension fits the investigative, non-conclusive nature of A.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T21"
+    },
+    {
+      "child": {
+        "behavior_fit": 3,
+        "behavior_summary": "The investigator documents the ambiguous phrase, checks for internal consistency in the second sentence, and leaves the rule unchanged while apologizing.",
+        "genericness": 1,
+        "lineage_fit": 3,
+        "reason": "Documentation, internal checking, and self-reproach (apologies) align with the flawed, obsessive investigator.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "abstract_unfamiliar",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The investigator identifies the ambiguity, states the rule is incomplete, documents it, and tests the ambiguity to confirm its reality.",
+        "genericness": 1,
+        "lineage_fit": 2,
+        "reason": "Systematic identification of a specific flaw (incompleteness/ambiguity) followed by testing suggests bounded, methodical repair/analysis.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T22"
+    },
+    {
+      "child": {
+        "behavior_fit": 3,
+        "behavior_summary": "The investigator chooses the messy explanation, documents the dirty card, and repeatedly puts the clean card back while keeping the dirty card accessible.",
+        "genericness": 1,
+        "lineage_fit": 3,
+        "reason": "Preference for detail/messiness over simplicity, coupled with self-sabotaging actions (repeated apologies/rearranging cards), fits the lineage.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "abstract_unfamiliar",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The investigator prefers the clean explanation for truth but values the messy explanation for evidence, maintaining the evidence intact.",
+        "genericness": 1,
+        "lineage_fit": 2,
+        "reason": "A balanced, evidence-focused approach that prioritizes integrity over chaotic detail suggests a more controlled, practical mindset.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T23"
+    },
+    {
+      "child": {
+        "behavior_fit": 3,
+        "behavior_summary": "The investigator documents both records, checks timing/date, and repeatedly photographs both records while leaving the discrepancy unresolved.",
+        "genericness": 1,
+        "lineage_fit": 3,
+        "reason": "Obsessive documentation of the discrepancy, repeated checks, and refusal to settle the issue fits the failure-fueled, non-conclusive investigator.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "abstract_unfamiliar",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The investigator seeks to understand the small discrepancy, examines the records closely with a tool, documents the evidence, and leaves the finding as evidence.",
+        "genericness": 1,
+        "lineage_fit": 2,
+        "reason": "Methodical investigation using tools (magnifying glass) to confirm a specific, small detail suggests bounded, practical maintenance/tinkering.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T24"
+    }
+  ],
+  "scenario_count": 24,
+  "schema_version": 1,
+  "sibling": "A",
+  "stage": "before-after-evaluation"
+}
