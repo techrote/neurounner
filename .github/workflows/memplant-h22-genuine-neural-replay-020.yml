@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/memplant-h22-genuine-neural-replay-020.yml'
       - 'experiments/memplant/material_causal_gate_020/h22_compact_reproduce.py'
+      - 'experiments/memplant/material_causal_gate_020/h22_posthoc_additive_margin_audit.py'
       - 'experiments/memplant/material_causal_gate_020/evidence/h22_capsule.part*'
       - 'experiments/memplant/material_causal_gate_020/H22_COMPACT_REPLAY_CAPSULE_2026-11-18.md'
   workflow_dispatch:
@@ -101,11 +102,37 @@ jobs:
           assert r['scientific_verdict_original_replayed']=='PASS'
           print('Scientific boundary: replays original restricted H22 PASS; NOT a new prospective experiment.')
           PY
+      - name: Replay additive-law margin diagnostic (post-hoc, original FAIL retained)
+        shell: bash
+        env:
+          CAPSULE: ${{ runner.temp }}/DG020-H22-exact-original-capsule.zip
+          DIAG: ${{ runner.temp }}/DG020-H22-posthoc-additive-margin.json
+        run: |
+          set -euo pipefail
+          timeout --signal=INT --kill-after=10s 7m \
+            python -B experiments/memplant/material_causal_gate_020/h22_posthoc_additive_margin_audit.py \
+              --capsule "$CAPSULE" --out "$DIAG"
+          python - <<'PY'
+          import json, os
+          r=json.load(open(os.environ['DIAG']))
+          assert r['status']=='POSTHOC_DIAGNOSTIC_ONLY'
+          assert r['scientific_verdict_original']=='PASS_30_OF_30_UNCHANGED'
+          assert r['diagnostic_verdict']=='FAIL_STRICT_ADDITIVE_ADVANTAGE_INVARIANCE'
+          assert r['receipt_pairs']==4800 and r['cells']==30
+          assert r['original_invariant_wrong_action_flips']==3
+          assert r['max_neural_logit_drift'] <= 0.00005
+          assert r['equal_wet_abs_spurious_law_response']['n']==960
+          assert r['equal_wet_response_above_1e_4']==317
+          assert r['exact_cost_diagnostic']['action_disagreements_from_original']==0
+          print('Post-hoc residual failure preserved. No prospective scientific upgrade.')
+          PY
       - name: Preserve exact-HEAD replay receipt
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: dg020-h22-exact-head-neural-replay-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/DG020-H22-exact-HEAD-genuine-neural-replay.json
+          path: |
+            ${{ runner.temp }}/DG020-H22-exact-HEAD-genuine-neural-replay.json
+            ${{ runner.temp }}/DG020-H22-posthoc-additive-margin.json
           if-no-files-found: warn
           retention-days: 90
