@@ -44,8 +44,6 @@ jobs:
       contents: write
       actions: read
     env:
-      SOURCE_ROOT: ${{ runner.temp }}/village001d-original
-      COMPARISON_ROOT: ${{ runner.temp }}/village001d-comparisons
       RECOVERY_ROOT: experiments/village-001/recovery-20261118
       RECOVERY_TAG: village-001d-recovery-40613393744-20261118
       SOURCE_HEAD: 388ad349d48102f6266c0c0c837efec0275e38c9
@@ -54,6 +52,11 @@ jobs:
         with:
           persist-credentials: true
           fetch-depth: 1
+
+      - name: Initialize runner-local recovery paths
+        run: |
+          echo "SOURCE_ROOT=$RUNNER_TEMP/village001d-original" >> "$GITHUB_ENV"
+          echo "COMPARISON_ROOT=$RUNNER_TEMP/village001d-comparisons" >> "$GITHUB_ENV"
 
       - name: Verify source lineage and isolated recovery request
         env:
@@ -78,6 +81,7 @@ jobs:
           r=json.loads((Path(os.environ["RECOVERY_ROOT"])/"request.json").read_text())
           expected={
               "schema": "village-001d-isolated-recovery-v1",
+              "execution_revision":2,
               "source_run_id":40613393744,
               "source_head":os.environ["SOURCE_HEAD"],
               "failed_member":"V-G12-B",
