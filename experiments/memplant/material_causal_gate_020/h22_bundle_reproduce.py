@@ -119,7 +119,23 @@ def main():
                'H22 must have exactly 30 sealed receipt cells')
 
         receipt_output = run([sys.executable, str(auditor), str(evidence)], extracted)
-        demand('PASS' in receipt_output, 'independent receipt contract did not PASS')
+        receipt_report = json.loads(receipt_output)
+        demand(receipt_report['verdict'] == 'PASS'
+               and receipt_report['cells'] == '30/30'
+               and receipt_report['pairs'] == 4800
+               and receipt_report['receipts_hashed'] == 31,
+               'independent receipt contract did not satisfy full H22 gate')
+        for key, expected in {
+            'divergent_both': 1920,
+            'divergent_flip': 1920,
+            'invariant_both': 2877,
+            'invariant_flip': 3,
+            'foreign_source_changes': 0,
+            'dry_placebo_changes': 0,
+            'shuffled_divergent_both': 496,
+        }.items():
+            demand(receipt_report['results'][key] == expected,
+                   f'independent receipt contract count {key} differs')
         checkpoint_output = run([sys.executable, 'h22_independent_receipt_replay.py'], extracted)
         report = json.loads((extracted / 'H22_INDEPENDENT_AUDIT.json').read_text())
         demand(report['independent_audit'] == 'PASS' and report['gate_verdict'] == 'PASS',
