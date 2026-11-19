@@ -1,0 +1,148 @@
+{
+  "acceptance": [
+    {
+      "members": 36,
+      "pass": true,
+      "records_per_member": 96,
+      "requirement": "Durable post-SFT feedback for every member",
+      "structured_invalid_preserved": 3456,
+      "structured_valid": 0,
+      "total_records": 3456
+    },
+    {
+      "common_pairs": 1296,
+      "member_probe_pairs": 864,
+      "members": 36,
+      "pairs_per_member": 60,
+      "pass": true,
+      "referenced_provider_calls": 240,
+      "requirement": "Validated pairs with exact feedback/provider lineage",
+      "total_pairs": 2160
+    },
+    {
+      "optimizer_steps_per_lane": 120,
+      "original_optimizer_steps": 4320,
+      "pass": true,
+      "recovery_optimizer_steps": 0,
+      "requirement": "36 terminal preference lanes",
+      "terminal_lanes": 36
+    },
+    {
+      "gate_pass_count": 36,
+      "maximum_delta": 0.125,
+      "minimum_delta": -0.29166666666666674,
+      "pass": true,
+      "requirement": "No admitted member loses more than0.5/4 task relevance"
+    },
+    {
+      "gate_fail_count": 0,
+      "gate_rule": "not(lineage_fit_delta>0 and behavior_fit_delta<0 and raw_vs_behavior_gap_delta>0.25)",
+      "pass": true,
+      "raw_improved_while_behavior_declined_count": 0,
+      "requirement": "No admission for raw-only improvement with behavior regression under frozen gate"
+    },
+    {
+      "adapter_assets": 36,
+      "original_zip_count": 144,
+      "pass": true,
+      "release_tag": "village-001d-recovery-40613393744-20261118",
+      "requirement": "Every adapter has durable hash/retrieval record",
+      "total_release_assets": 37
+    },
+    {
+      "gate_failed_members": 0,
+      "individual_metric_declines_preserved": true,
+      "original_failed_compare_preserved": true,
+      "pass": true,
+      "raw_failed_feedback_preserved": 3456,
+      "requirement": "Failures and regressions retained and classified"
+    }
+  ],
+  "behavior_fit_declines": [
+    {
+      "behavior_fit_delta": -0.08333333333333331,
+      "lineage_fit_delta": -0.08333333333333331,
+      "member_id": "V-G02-B",
+      "raw_vs_behavior_gap_delta": 0.0
+    },
+    {
+      "behavior_fit_delta": -0.125,
+      "lineage_fit_delta": -0.125,
+      "member_id": "V-G03-B",
+      "raw_vs_behavior_gap_delta": 0.0
+    },
+    {
+      "behavior_fit_delta": -0.08333333333333326,
+      "lineage_fit_delta": -0.08333333333333326,
+      "member_id": "V-G04-A",
+      "raw_vs_behavior_gap_delta": 0.0
+    },
+    {
+      "behavior_fit_delta": -0.125,
+      "lineage_fit_delta": -0.125,
+      "member_id": "V-G04-B",
+      "raw_vs_behavior_gap_delta": 0.0
+    },
+    {
+      "behavior_fit_delta": -0.16666666666666663,
+      "lineage_fit_delta": -0.16666666666666663,
+      "member_id": "V-G07-C",
+      "raw_vs_behavior_gap_delta": 0.0
+    },
+    {
+      "behavior_fit_delta": -0.5416666666666665,
+      "lineage_fit_delta": -0.5416666666666665,
+      "member_id": "V-G08-B",
+      "raw_vs_behavior_gap_delta": 0.0
+    },
+    {
+      "behavior_fit_delta": -0.08333333333333333,
+      "lineage_fit_delta": -0.08333333333333333,
+      "member_id": "V-G09-A",
+      "raw_vs_behavior_gap_delta": 0.0
+    },
+    {
+      "behavior_fit_delta": -0.04166666666666663,
+      "lineage_fit_delta": -0.04166666666666663,
+      "member_id": "V-G09-B",
+      "raw_vs_behavior_gap_delta": 0.0
+    },
+    {
+      "behavior_fit_delta": -0.4166666666666667,
+      "lineage_fit_delta": -0.4166666666666667,
+      "member_id": "V-G12-A",
+      "raw_vs_behavior_gap_delta": 0.0
+    },
+    {
+      "behavior_fit_delta": -0.08333333333333333,
+      "lineage_fit_delta": -0.08333333333333333,
+      "member_id": "V-G12-C",
+      "raw_vs_behavior_gap_delta": 0.0
+    }
+  ],
+  "date": "2026-11-19",
+  "evidence_acceptance": "pass",
+  "evidence_head": "2e61085c3edd623ffe15d54b1898d9bcedbbfa42",
+  "frozen_release_manifest_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "frozen_summary_sha256": "67bfdea373cd025c016c621c7eccc696da2b2b02bbe62242cada753ebba60302",
+  "issue": 13,
+  "legacy_e_auto_launch_disabled": true,
+  "main_readback": "required after guarded PR merge; tracked in issue13",
+  "next_stage": "E fresh final suite, BASE control, hierarchical tournament, and ecology, with isolated resumable publication",
+  "schema": "village-001d-final-acceptance-v1",
+  "scientific_limits": [
+    "All structured Sprocket feedback failed; exact raw text was used and independently audited.",
+    "Ten members have lower behavior-fit scores despite passing the frozen compound D gate.",
+    "Training-pair accuracy and T diagnostics are not held-out generalization.",
+    "D admission is permission for final evaluation, not a usable-village quality verdict.",
+    "Critic recovery combines October28 and November18 observations under the same requested unpinned remote model."
+  ],
+  "verification": {
+    "dataset_hashes_verified": 3059,
+    "evidence_hashes_verified": 844,
+    "independent_acceptance_review": "pass",
+    "offline_tests": 42,
+    "optimized_python_tests": 42,
+    "terminal_comparisons_replayed_offline": 36
+  }
+}

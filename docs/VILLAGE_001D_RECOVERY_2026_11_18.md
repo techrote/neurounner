@@ -240,3 +240,13 @@ running it.
 
 PR #254 remains **Draft/HOLD**. Issues #9, #13 and #14 remain open pending their
 appropriate evidence/acceptance decisions.
+
+## Stage D acceptance and integration — 19 November 2026
+
+A separate acceptance review checked all seven requirements in issue #13 against the complete recovered archive. All seven pass under the frozen D contract. The machine-readable review is `experiments/village-001/recovery-20261118/review/stage-d-acceptance.json`. Formal closure additionally requires independently reading the merged evidence back from `main`, as specified in the original issue #13 handoff. That readback and the merge commit are recorded in the issue when complete.
+
+The review reconfirmed 96 feedback records and 60 validated preference pairs per member, all 36 terminal 120-step training records, exact parent/feedback/provider lineage, all 36 comparison gates, all 36 retrievable adapter assets, 844 evidence hashes and 3,059 dataset hashes. All 42 recovery tests pass normally and under optimized Python.
+
+Passing the D gates does not mean every behavior improved: 10 members have a negative behavior-fit delta. None combines a positive raw lineage-fit delta with a negative behavior-fit delta, so none qualifies on a raw-only improvement. Their individual declines remain explicit in the new acceptance record. The structured-feedback failure and weak absolute relevance remain unchanged scientific findings.
+
+Before integration, the historical Stage E workflow's automatic and manual live triggers were removed; its pull-request contract checks remain. This prevents merging D evidence from launching the obsolete workflow that publishes to main and the canonical E release. The requested Stage E continuation will use the separately reviewed isolated, resumable execution path. No D adapter, summary, release-manifest byte, training recipe or gate was changed by this acceptance step.
