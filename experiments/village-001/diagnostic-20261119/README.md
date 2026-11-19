@@ -14,7 +14,11 @@ The pinned [SmolLM2 tokenizer configuration](https://huggingface.co/HuggingFaceT
 
 The worker panel is V-G01-A, V-G03-B, V-G05-C, V-G07-A, V-G09-B and V-G11-C: six odd-numbered lineages, cyclic A/B/C, two members per sibling. Selection does not depend on E scores. The new Q reserve has zero exact collisions with 3,407 prior inputs. Q and E-final cases never enter training. The six member means are the replication units; the full 72 paired case differences and every regression are retained. The predeclared working effect threshold is 0.5/4 relevance, at least four positive member means, and no member relevance loss above 0.5. A pilot does not automatically authorize or establish a useful 36-member population.
 
+The [original C baseline audit](C_BASELINE_AUDIT.md) separates confirmed curriculum and validation findings from causal hypotheses and records a proposed seen-example check outside F's workload.
+
 Sprocket retains its original pinned Chat GGUF, native template, runtime, source examples, three seeds and sampling settings. The compact arm is a combined prompt revision, so the experiment does not isolate schema position alone. JSON validity, grounding, usefulness and unsupported claims are reported separately. A syntactically valid critique is not by itself evidence of a training benefit.
+
+The [pinned runtime API source receipt](sprocket-runtime-api-source-receipt.json) verifies six upstream files and the `b11852` tag at commit `7894e8b92481a8bb8ffe94f73b656ffe0dd01e10`. The requested `verbose` and `return_tokens` fields expose the native prompt and token IDs without a `return_prompt` flag; preflight tokenization matches generation, and completion counts include any sampled EOG token. This source review did not execute a model.
 
 Detailed plans: [worker mask pilot](WORKER_MASK_PILOT.md), [Sprocket diagnostic](SPROCKET_DIAGNOSTIC_PLAN.md), [worker plan](worker-plan.json), and [judge contract](judge-config.json).
 
