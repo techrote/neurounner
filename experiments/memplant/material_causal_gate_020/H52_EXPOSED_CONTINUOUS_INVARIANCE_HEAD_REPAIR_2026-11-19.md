@@ -35,7 +35,7 @@ The repaired candidate imposed a `1e-4` signed margin, feasible at maximum outpu
 | Genuine both-direction correct / 2,560 divergent profile pairs | 2,560 | **2,560** |
 | Both arms correct / 3,840 invariant profile pairs | 3,840 | **3,840** |
 
-**Controls:** with identically seeded (26011952) actual float32 donor interventions on the H52 receiver, genuine divergent pairs were 2,560/2,560 both-correct; reversed-law pairs 0/2,560; zero and neutral same-cost shams 0/2,560 (mathematically inevitable, so per-arm correctness is retained); shuffled law assignment 646/2,560 (25.23%, expected random two-arm baseline near 25%). All 3,840 genuine invariant pairs were both-correct under genuine, swapped, zero, neutral and shuffled conditions.
+**Controls:** with identically seeded (26011952) actual float32 donor interventions on the H52 receiver, genuine divergent pairs were 2,560/2,560 both-correct; reversed-law pairs 0/2,560; literal all-zero donor tensor, constant-zero-wet-base, and neutral-unit same-cost shams 0/2,560 (mathematically inevitable, so per-arm correctness is retained); shuffled law assignment 646/2,560 (25.23%, expected random two-arm baseline near 25%). All 3,840 genuine invariant pairs were both-correct under genuine, swapped, actual literal-zero cost-tensor, wet-base-cost-zero, neutral-unit and shuffled conditions. Literal zero means every third-channel material cost is exactly zero, not c=0 plus the retained fee.
 
 ## Interpretation and next action
 
