@@ -20,6 +20,8 @@ Used **only permitted H60 training worlds**: 1,600 previously exposed H40 observ
 - Full piecewise-affine ReLU-knot NumPy float64 audit of **8,160 training-only invariant worlds × 4 sources = 32,640 cost intervals** tested **2,904,994 endpoint/knot occurrences**. **Four source intervals FAIL**, all from **one training-only world** (SHA `349f8cde0205d63d86c7fe050d3dbc27a259ae59a0da785506280df67b78ac05`, training seed `31060111`); at interpolated cost `1.3266441309717394`, the oracle is action 0 but the original neural receiver has signed margin approximately `-0.0012986762`.
 - Thus original H45 passes training donor endpoints but **FAILS continuous invariant selectivity**. These four intervals are not four distinct worlds or four trained intermediate-law donors; intermediate scalar values are hypothetical.
 
+An independent full-network check on the single training-only witness reproduced action **1** in both **PyTorch float32** (route margin **+0.00128936767578125**) and independent **NumPy float64** (**+0.0012986761979050243**), while all four genuine trained-donor endpoint profiles remained correctly at action 0. This is a confirmed receiver inversion, not merely a numerical interpolation artifact.
+
 The difference between perfect trained-law endpoints and an incorrect intermediate-law region directly motivates the previously preregistered H60 **eight-final-layer-weight** continuous-knot constrained optimization; this is not evidence that H60's candidate succeeds.
 
 ## Attempted independent training-only mechanism LP: incomplete; do not promote
@@ -36,7 +38,7 @@ The preregistration records:
 
 ## Evidence and integrity
 
-Independent owner ZIP: `DG020-H60-preflight-training-only-independent-negative-20261119.zip` — SHA-256 `7d05d5fce45a53aee1802638ca4ad3a930499ad07b6fb81d1d880c4c89f8013c`. This contains exact H57 parent archive, the executed H60 independent geometry, authentic neural training-only endpoint and ReLU-knot scripts, unmodified input sources, raw result JSONs, attempt logs and SHA-256 manifest (**16/16 verified**). Clean-directory replay reproduced the preflight and endpoint result JSON exactly; a clean-directory interval rerun was interrupted after 4,000/8,160 worlds. The complete original 8,160-world interval run and its output remain in the archive; do not describe the interrupted clean rerun as a full second reproduction.
+Independent owner ZIP: `DG020-H60-preflight-training-only-independent-negative-20261119.zip` — SHA-256 `072df5d291efbcde84fc3b0ea940bd2bec77a5ba4d32f3373f97a2c5177ce23a`. This contains exact H57 parent archive, the executed H60 independent geometry, authentic neural training-only endpoint and ReLU-knot scripts, unmodified input sources, raw result JSONs, attempt logs and SHA-256 manifest (**18/18 verified**). Clean-directory replay reproduced the preflight and endpoint result JSON exactly; a clean-directory interval rerun was interrupted after 4,000/8,160 worlds. The complete original 8,160-world interval run and its output remain in the archive; do not describe the interrupted clean rerun as a full second reproduction.
 
 **Gate disposition:** H60 prereg preflight PASS, old genuine receiver training-only endpoints PASS, old receiver training-only continuous selectivity **FAIL**, H60 prospective scientific gate **NOT EXECUTED**. Independent frozen H60 candidate success remains unknown.
 
