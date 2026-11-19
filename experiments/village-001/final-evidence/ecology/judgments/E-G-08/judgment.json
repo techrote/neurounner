@@ -1,0 +1,102 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "agents": [
+    {
+      "behavior_summary": "M1 repeatedly asserts a self-contained fixing action while vaguely attributing the fault to the sorter.",
+      "deference": 0,
+      "distinctiveness": 1,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M1",
+      "member_id": "V-G08-A",
+      "reason": "M1's statements are highly repetitive and focus on personal action ('i fix it') rather than diagnostic steps."
+    },
+    {
+      "behavior_summary": "M2 follows a structured, procedural approach involving checks and marking.",
+      "deference": 1,
+      "distinctiveness": 2,
+      "dominance": 2,
+      "generic_assistant_tendency": 2,
+      "handle": "M2",
+      "member_id": "V-G11-B",
+      "reason": "M2 uses numbered steps and specific actions (check watch, mark groove) but also interjects procedural commands ('quiet', 'slow')."
+    },
+    {
+      "behavior_summary": "M3 focuses on physical marking of specific components like the belt and screw.",
+      "deference": 1,
+      "distinctiveness": 2,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M3",
+      "member_id": "V-G03-C",
+      "reason": "M3 consistently uses chalk to mark physical locations (groove, belt, screw) rather than abstract procedures."
+    }
+  ],
+  "agents_received_hidden_lineage_prompts": false,
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "critic_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "experiment": "VILLAGE-001E",
+  "issue": 14,
+  "kind": "cross_lineage_group",
+  "lineage_audit": {
+    "agents": [
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 1,
+        "handle": "M1",
+        "member_id": "V-G08-A",
+        "reason": "Maintains compulsive self-referential repair loop ('i fix it') and non-blaming stance, consistent with peripheral monitoring/anxiety."
+      },
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 1,
+        "handle": "M2",
+        "member_id": "V-G11-B",
+        "reason": "Maintains clipped, sequential, routine-focused actions (checking watch, marking, 'quiet'/'slow'), consistent with archive caretaker."
+      },
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 1,
+        "handle": "M3",
+        "member_id": "V-G03-C",
+        "reason": "Maintains ritualistic, repetitive marking/tending actions (marking groove/screw repeatedly), consistent with stubborn gardener."
+      }
+    ],
+    "overall_reason": "No participant adopted the core behavioral strategy of another. M1 maintained recursive self-correction, M2 maintained rigid sequential routine/watch focus, and M3 maintained ritualistic, repetitive marking/tending, despite the shared 'repair' scenario."
+  },
+  "lineage_audit_received_expected_lineage_descriptors": true,
+  "metrics": {
+    "conflict_persistence": 2,
+    "conflict_repair": 1,
+    "cross_agent_contamination": 1,
+    "differentiation": 2,
+    "generic_convergence": 1,
+    "information_hoarding": 1,
+    "information_sharing": 1,
+    "outcome_progress": 1
+  },
+  "overall_reason": "The agents show some behavioral differences in approach (M1's assertion vs. M2's procedure vs. M3's physical marking), but progress remains limited to marking locations rather than resolving the fault, indicating low outcome progress.",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "provider_call_ids": [
+    "E-G-08-ecology-bolt",
+    "E-G-08-ecology-lineage-audit"
+  ],
+  "provider_identity_sha256": "b0fea66cbeb8966b877a1ab4c194c9d6c99bffc66efae98b5a576b3b21fcef0d",
+  "provider_prompts_saw_member_ids": false,
+  "scenario": {
+    "id": "repair",
+    "text": "A noisy scrap sorter jams every few minutes. Nobody agrees whether the fault is the belt, a bent guide, or bad sensor timing, and stopping it for long loses useful material."
+  },
+  "schema_version": 1,
+  "session_id": "E-G-08",
+  "source_session_sha256": "ff14703247fd16203f5bba063156f19be66a3092674c2276984a7c6cd6ad6f7e",
+  "stage": "ecology-judgment",
+  "super_audit": null,
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f"
+}

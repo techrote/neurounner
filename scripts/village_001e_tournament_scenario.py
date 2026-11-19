@@ -4,12 +4,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import shutil
 from pathlib import Path
 
 from babble_002_expand import extract_json, packet_for
 from village_001_manifest import build_manifest
 from village_001b_generate_member import call_api
+from village_001e_provider_checkpoint import (
+    Checkpoint, parse_rows, prepare_output, sha256_value, source_identity,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 SIBLING_CATALOG = {
@@ -563,79 +565,29 @@ def validate_audits(raw: str, expected: list[str]) -> dict[str, dict]:
 
 
 def call_json_with_repair(
-    *,
-    key: str,
-    campaign: dict,
-    model: dict,
-    rawdir: Path,
-    label: str,
-    prompt: str,
-    system: str,
-    max_tokens: int,
-    validator,
-    expected: list[str],
-    role: str,
+    *, checkpoint: Checkpoint, model: dict, label: str, prompt_factory,
+    system: str, max_tokens: int, validator, expected: list[str], role: str,
+    array_key: str,
 ) -> tuple[dict, list[str]]:
-    payload = {
-        "model": model["id"],
-        "messages": [
-            {"role": "system", "content": system},
-            {"role": "user", "content": prompt},
-        ],
-        "max_tokens": max_tokens,
-        "temperature": 0.2,
-        "top_p": 0.9,
-        "stream": False,
-    }
-    if "reasoning_effort" in model:
-        payload["reasoning_effort"] = model["reasoning_effort"]
-    raw, _, _ = call_api(
-        key=key,
-        endpoint=campaign["nvidia"]["endpoint"],
-        payload=payload,
-        outdir=rawdir,
-        label=label,
-        attempts_limit=int(campaign["nvidia"]["generation"]["attempts"]),
-        role=role,
+    return checkpoint.collect(
+        label=label, expected=expected,
+        prompt_factory=lambda selected, repair: prompt_factory(selected),
+        system=system, model=model, max_tokens=max_tokens, role=role,
+        parser=lambda raw, selected: parse_rows(
+            raw, selected, array_key=array_key, validator=validator),
     )
-    try:
-        return validator(raw, expected), [label]
-    except ValueError as exc:
-        repair_label = label + "-json-repair"
-        repair_payload = {
-            "model": model["id"],
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "Repair the requested JSON only. Return complete JSON.",
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        prompt
-                        + "\n\nMALFORMED OUTPUT:\n"
-                        + raw
-                        + f"\n\nPARSER PROBLEM: {exc}"
-                    ),
-                },
-            ],
-            "max_tokens": max_tokens,
-            "temperature": 0.1,
-            "top_p": 0.9,
-            "stream": False,
-        }
-        if "reasoning_effort" in model:
-            repair_payload["reasoning_effort"] = "low"
-        repaired, _, _ = call_api(
-            key=key,
-            endpoint=campaign["nvidia"]["endpoint"],
-            payload=repair_payload,
-            outdir=rawdir,
-            label=repair_label,
-            attempts_limit=int(campaign["nvidia"]["generation"]["attempts"]),
-            role=role + "-repair",
-        )
-        return validator(repaired, expected), [label, repair_label]
+
+
+def source_response_hashes(responses_root: Path) -> dict[str, str]:
+    result = {}
+    for path in sorted(responses_root.rglob("result.json")):
+        obj = json.loads(path.read_text())
+        if obj.get("experiment") == "VILLAGE-001E" and obj.get("stage") == "fresh-final-heldout-responses":
+            ident = obj["member_id"]
+            if ident in result:
+                raise RuntimeError(f"duplicate response identity: {ident}")
+            result[ident] = sha256_file(path)
+    return result
 
 
 def main() -> None:
@@ -648,6 +600,8 @@ def main() -> None:
     parser.add_argument("--scenario", required=True)
     parser.add_argument("--responses-root", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--resume", type=Path)
+    parser.add_argument("--offline", action="store_true")
     args = parser.parse_args()
 
     cfg = json.loads(args.config.read_text())
@@ -664,20 +618,33 @@ def main() -> None:
         raise SystemExit(f"invalid scenario {args.scenario}")
 
     key = __import__("os").environ.get("NVIDIA_API_KEY", "").strip()
-    if not key:
-        raise SystemExit("NVIDIA_API_KEY/NVKEY is required")
-
     scenario, rows, control = load_cases(
         cfg,
         args.scenario,
         args.responses_root,
     )
     out = args.out
-    if out.exists():
-        shutil.rmtree(out)
-    out.mkdir(parents=True)
-    rawdir = out / "provider"
-    rawdir.mkdir(parents=True)
+    source_hashes = source_response_hashes(args.responses_root)
+    identity = {
+        "schema_version": 1,
+        "stage": "hierarchical-blind-tournament-scenario",
+        "scenario_id": args.scenario,
+        "tournament_config_sha256": sha256_file(args.config),
+        "campaign_config_sha256": sha256_file(ROOT / cfg["campaign_config"]),
+        "preference_release_sha256": sha256_file(ROOT / cfg["preference_evidence_root"] / "adapter-release.json"),
+        "final_eval_config_sha256": scenario["final_eval_config_sha256"],
+        "source_response_sha256": source_hashes,
+        "case_identity_sha256": sha256_value({"scenario": scenario, "rows": rows, "control": control}),
+        "lineage_catalog_sha256": sha256_value(lineage_catalog()),
+        "sibling_catalog_sha256": sha256_value(SIBLING_CATALOG),
+        "provider_models": campaign["nvidia"]["models"],
+        "provider_endpoint": campaign["nvidia"]["endpoint"],
+        "schema_repair_batch_sizes": [3, 2, 1],
+        "logical_request_limit": 42,
+        "source_sha256": source_identity(Path(__file__)),
+    }
+    prepare_output(out, args.resume, identity)
+    checkpoint = Checkpoint(out, campaign=campaign, key=key, offline=args.offline, api=call_api, logical_request_limit=42)
 
     normalizer = campaign["nvidia"]["models"]["compiler"]
     classifier = campaign["nvidia"]["models"]["critic"]
@@ -693,12 +660,11 @@ def main() -> None:
         expected = [row["opaque_id"] for row in chunk]
         label = f"{args.scenario}-normalize-{offset // norm_chunk + 1:02d}"
         result, refs = call_json_with_repair(
-            key=key,
-            campaign=campaign,
+            checkpoint=checkpoint,
             model=normalizer,
-            rawdir=rawdir,
             label=label,
-            prompt=normalize_prompt(scenario, chunk),
+            prompt_factory=lambda ids: normalize_prompt(scenario, [row for row in chunk if row["opaque_id"] in ids]),
+            array_key="summaries",
             system=(
                 "You are a behavior neutralizer. Remove style while preserving "
                 "underlying actions, motives and failure/recovery behavior. Return JSON."
@@ -727,12 +693,11 @@ def main() -> None:
                 f"{offset // class_chunk + 1:02d}"
             )
             result, refs = call_json_with_repair(
-                key=key,
-                campaign=campaign,
+                checkpoint=checkpoint,
                 model=classifier,
-                rawdir=rawdir,
                 label=label,
-                prompt=classifier_prompt(scenario, chunk, mode=mode),
+                prompt_factory=lambda ids: classifier_prompt(scenario, [row for row in chunk if row["opaque_id"] in ids], mode=mode),
+                array_key="classifications",
                 system=(
                     "You are a blind behavioral classifier. Use behavioral evidence "
                     "rather than prose flair. Return JSON only."
@@ -760,12 +725,11 @@ def main() -> None:
                 f"{offset // class_chunk + 1:02d}"
             )
             result, refs = call_json_with_repair(
-                key=key,
-                campaign=campaign,
+                checkpoint=checkpoint,
                 model=classifier,
-                rawdir=rawdir,
                 label=label,
-                prompt=sibling_prompt(scenario, chunk, mode=mode),
+                prompt_factory=lambda ids: sibling_prompt(scenario, [row for row in chunk if row["opaque_id"] in ids], mode=mode),
+                array_key="classifications",
                 system=(
                     "You are the second-level blind sibling classifier in a hierarchical "
                     "behavior tournament. The correct ancestral lineage is supplied; "
@@ -798,12 +762,11 @@ def main() -> None:
             f"{offset // class_chunk + 1:02d}"
         )
         result, refs = call_json_with_repair(
-            key=key,
-            campaign=campaign,
+            checkpoint=checkpoint,
             model=adjudicator,
-            rawdir=rawdir,
             label=label,
-            prompt=adjudicator_prompt(scenario, chunk),
+            prompt_factory=lambda ids: adjudicator_prompt(scenario, [row for row in chunk if row["opaque_id"] in ids]),
+            array_key="audits",
             system=(
                 "You are a sparse independent adjudicator for low-confidence blind "
                 "behavior classification. Return JSON only."
@@ -894,9 +857,14 @@ def main() -> None:
             "behavior": control_predictions["behavior"],
         },
         "provider_call_ids": call_refs,
+        "tournament_config_sha256": identity["tournament_config_sha256"],
+        "campaign_config_sha256": identity["campaign_config_sha256"],
+        "preference_release_sha256": identity["preference_release_sha256"],
+        "source_response_sha256": source_hashes,
+        "provider_identity_sha256": sha256_file(out / "provider-identity.json"),
         "records": records,
     }
-    write_json(out / "scenario.json", result)
+    checkpoint.finish("scenario.json", result)
     print(
         json.dumps(
             {

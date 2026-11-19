@@ -107,7 +107,7 @@ def main() -> None:
                 "session_id": row["session_id"],
                 "m1": row["members"][0],
                 "m2": row["members"][1],
-                "m3": row["members"][2],
+                "m3": row["members"][2] if len(row["members"]) == 3 else "",
             }
             for row in sessions
         ]

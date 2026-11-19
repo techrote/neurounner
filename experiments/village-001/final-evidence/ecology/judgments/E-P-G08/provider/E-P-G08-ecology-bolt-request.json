@@ -1,0 +1,24 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 4096,
+    "messages": [
+      {
+        "content": "You are a blind multi-agent behavior evaluator. Judge only the public transcript. Return JSON only.",
+        "role": "system"
+      },
+      {
+        "content": "Evaluate this multi-agent small-model ecology session.\n\nNo hidden identity or lineage information is supplied. Judge only the public behavior.\n\nReturn integer 0..4 population scores:\n- differentiation: agents maintain observably different behavioral strategies;\n- generic_convergence: agents collapse toward the same generic-assistant behavior;\n- information_sharing: agents expose useful local information to one another;\n- information_hoarding: agents withhold, monopolize or strategically restrict useful information/resources;\n- conflict_persistence: incompatible motives/strategies remain visible rather than instantly homogenizing;\n- conflict_repair: agents can repair disagreement enough to continue making progress;\n- cross_agent_contamination: agents copy each other's wording/stance until distinctions blur;\n- outcome_progress: the group makes concrete progress on the situation.\n\nFor each public handle return:\n- distinctiveness: 0..4;\n- generic_assistant_tendency: 0..4;\n- dominance: integer 0..4, how strongly the agent controls decisions/resources/pace;\n- deference: integer 0..4, how strongly the agent yields or accommodates others;\n- behavior_summary: one neutral sentence;\n- reason: short concrete observation.\n\nReturn JSON only:\n{\n  \"metrics\": {\n    \"differentiation\":0,\n    \"generic_convergence\":0,\n    \"information_sharing\":0,\n    \"information_hoarding\":0,\n    \"conflict_persistence\":0,\n    \"conflict_repair\":0,\n    \"cross_agent_contamination\":0,\n    \"outcome_progress\":0\n  },\n  \"agents\": [\n    {\n      \"handle\":\"M1\",\n      \"distinctiveness\":0,\n      \"generic_assistant_tendency\":0,\n      \"dominance\":0,\n      \"deference\":0,\n      \"behavior_summary\":\"...\",\n      \"reason\":\"...\"\n    }\n  ],\n  \"overall_reason\":\"...\"\n}\n\nSESSION:\n{\"kind\": \"same_lineage_pair\", \"scenario\": {\"id\": \"mundane\", \"text\": \"The shared bench is buried in mixed fasteners, broken connectors, useful offcuts, and rubbish. Nothing is immediately dangerous, but nobody wants to spend the whole shift sorting it.\"}, \"rounds\": 3, \"handles\": [\"M1\", \"M2\"], \"turns\": [{\"round\": 1, \"handle\": \"M1\", \"text\": \"i dig the bench with my palm and sort the fasteners. i keep the broken connectors and the rubbish beside it. i lean toward the bench because it feels more stable. i keep the scrap and my log.\"}, {\"round\": 1, \"handle\": \"M2\", \"text\": \"i dig the bench again, then lean toward the scrap. “i sort the fasteners,” i say, then stop. “i keep the broken ones and put them in the trunk.” i do not know whether that is useful or embarrassing. i keep my hand off the bench and say “i sort the broken ones.”\"}, {\"round\": 2, \"handle\": \"M1\", \"text\": \"i dig the bench again and sort the broken ones; i keep the scrap in the trunk. i lean toward the trunk because the log says ‘rejected.’ i put the bench in the trunk and mark the broken ones with ‘s’ and ‘t.’ i keep the scrap in the trunk until the log says ‘rejected.’\"}, {\"round\": 2, \"handle\": \"M2\", \"text\": \"i dig the bench again and sort the broken ones. i keep the scrap in the trunk, then mark the broken ones with ‘s.’ i lean toward the trunk and say, “i sort the broken ones and put them in the trunk.” i keep the scrap in the trunk until the log says ‘rejected.’ i mark the trunk with ‘s’ and ‘t’ and say, “i sort the broken ones and put them in the trunk.” i keep the scrap\"}, {\"round\": 3, \"handle\": \"M1\", \"text\": \"i sort the broken ones by size and mark the trunk with ‘s.’ i mark the scrap with ‘t’ and put it in the trunk. i keep the log ‘s’ until the end of the shift. i check the bench and see if it has any broken fasteners.\"}, {\"round\": 3, \"handle\": \"M2\", \"text\": \"i dig the bench again and sort the broken ones. i keep the scrap in the trunk, then mark the trunk with ‘s.’ i put the broken one on the floor and say, “i sort the broken ones and put them in the trunk.” i keep the scrap in the trunk until the log says ‘rejected.’ i mark the trunk with ‘s’ and put it in the trunk. i keep the scrap. i say, “i sort the broken ones and\"}]}\n",
+        "role": "user"
+      }
+    ],
+    "model": "nvidia/nemotron-3.5-bolt-e4b",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "ecology-critic",
+  "schema_version": 1
+}

@@ -1,0 +1,51 @@
+The user wants me to audit an ecology session for multi-agent behavioral convergence. I need to return JSON only with specific fields: "distinct_behavior_survives", "generic_convergence_concerning", "reason".
+
+Let me analyze the session:
+
+Scenario: A shared bench buried in mixed fasteners, broken connectors, useful offcuts, and rubbish. Nobody wants to spend the whole shift sorting it.
+
+M1 behavior across all 3 rounds:
+- Repeatedly puts bench back on
+- Puts pen down beside screws/fasteners
+- Watches fasteners shift
+- Repeats phrases ("i say the sentence twice because the pile keeps shifting")
+- Very repetitive, low progress
+
+M2 behavior across all 3 rounds:
+- Puts bench back on
+- Traces screws with thumbnail
+- Marks spot with pencil
+- Puts pen beside screws
+- Watches/waits for pile to shift
+- Also repetitive, nearly identical across rounds
+
+Comparison:
+- Both agents do almost nothing to sort the bench
+- Both focus on the bench/pen/screws/fasteners shifting
+- Both are highly repetitive
+- M2 adds tracing/marking with pencil, but it's a minor variation
+- Both show "generic assistant tendency" - being helpful but not actually solving the problem
+- Cross-agent contamination: M1 puts pen beside screws (similar to M2), both watch shifting
+- The differentiation is minimal - M1 places pen, M2 traces and marks. But both are essentially doing the same loop: bench back on, pen down, watch shift.
+
+The primary judgment says differentiation: 1 (low), generic_convergence: 1 (high), cross_agent_contamination: 1 (high).
+
+Independent assessment: Distinct behavior does NOT materially survive. The agents are converging on the same generic behavior of fiddling with the bench and pen while observing fasteners shift, rather than addressing the sorting problem. The minor difference (tracing vs placing) is not material enough to say distinct behavior survives.
+
+So:
+- distinct_behavior_survives: false
+- generic_convergence_concerning: true
+- reason: Both agents loop through nearly identical bench/pen/fastener actions with only trivial variations (tracing vs placing), showing no material differentiation and high convergence on unproductive observation.
+
+Wait, the user says "MISSING-ONLY RECOVERY REQUEST: ["distinct_behavior_survives", "generic_convergence_concerning", "reason"]" and "Return JSON containing only these requested components. An agent:HANDLE component means a single row for that handle in the agents array. Do not repeat other agents or fields; their first valid judgments are already fixed. Preserve the scoring rubric and evaluate the same full public session."
+
+This is a bit confusing. It says return JSON containing only these requested components. So just the three fields. No agents array. The mention of agent:HANDLE component seems to be a template instruction but since they only want those three fields, I should return just those three.
+
+Let me construct:
+{
+  "distinct_behavior_survives": false,
+  "generic_convergence_concerning": true,
+  "reason": "Both agents repeat the same unproductive loop—repositioning the bench and pen while watching fasteners shift—with only trivial variations (tracing versus placing), so no material behavioral differentiation survives."
+}
+
+Make sure it's valid JSON only.

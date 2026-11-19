@@ -10,14 +10,9 @@ import resource
 import time
 from pathlib import Path
 
-import peft
-import torch
-import transformers
-from peft import PeftModel
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
 from village_001_manifest import build_manifest
 from village_001_validate import normalize_text
+from village_001e_generation_checkpoint import GenerationCheckpoint, validate_token_custody
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -83,6 +78,16 @@ def load_final_eval(cfg: dict) -> tuple[Path, dict]:
     norms = [normalize_text(row.get("prompt", "")) for row in scenarios]
     if any(not norm for norm in norms) or len(norms) != len(set(norms)):
         raise RuntimeError("final heldout prompts must be non-empty and unique")
+    if doc.get("do_sample") is not False or doc.get("max_new_tokens") != 160:
+        raise RuntimeError("final heldout deterministic generation contract drift")
+    generation = doc.get("generation") or {}
+    expected_sources = {
+        "recipe_sha256": sha256_file(ROOT / cfg["final_eval_recipe"]),
+        "preference_summary_sha256": sha256_file(ROOT / cfg["preference_evidence_root"] / "summary.json"),
+        "preference_release_sha256": sha256_file(ROOT / cfg["preference_evidence_root"] / "adapter-release.json"),
+    }
+    if any(generation.get(key) != value for key, value in expected_sources.items()):
+        raise RuntimeError("final heldout suite does not bind current frozen D evidence")
     return path, doc
 
 
@@ -141,13 +146,11 @@ def verify_fresh_prompts(final_eval: dict) -> None:
         )
 
 
-@torch.inference_mode()
-def run_heldout(model, tok, final_eval: dict) -> list[dict]:
+def run_heldout(model, tok, final_eval: dict, checkpoint: GenerationCheckpoint) -> list[dict]:
     old_cache = getattr(model.config, "use_cache", None)
     model.config.use_cache = True
     model.eval()
-    rows = []
-    for item in final_eval["scenarios"]:
+    for item in final_eval["scenarios"][len(checkpoint.rows):]:
         messages = [
             {"role": "system", "content": final_eval["system"]},
             {"role": "user", "content": item["prompt"]},
@@ -169,8 +172,7 @@ def run_heldout(model, tok, final_eval: dict) -> list[dict]:
         )
         elapsed = time.monotonic() - started
         generated = generated_all[0, ids.shape[-1] :]
-        rows.append(
-            {
+        row = {
                 "scenario_id": item["id"],
                 "family": item["family"],
                 "prompt": item["prompt"],
@@ -178,14 +180,18 @@ def run_heldout(model, tok, final_eval: dict) -> list[dict]:
                     generated, skip_special_tokens=True
                 ).strip(),
                 "generated_tokens": int(generated.numel()),
+                "input_token_ids": ids[0].tolist(),
+                "generated_token_ids": generated.tolist(),
+                "rendered_prompt": tok.decode(ids[0], skip_special_tokens=False),
                 "elapsed_seconds": elapsed,
                 "tokens_per_second": (
                     int(generated.numel()) / elapsed if elapsed else None
                 ),
             }
-        )
+        checkpoint.append(item["id"], row)
+        print(json.dumps({"member_progress": len(checkpoint.rows), "scenario": item["id"], "generated_tokens": row["generated_tokens"]}), flush=True)
     model.config.use_cache = old_cache
-    return rows
+    return checkpoint.rows
 
 
 def main() -> None:
@@ -199,6 +205,8 @@ def main() -> None:
     parser.add_argument("--adapter", type=Path)
     parser.add_argument("--base-only", action="store_true")
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--resume", type=Path, help="Copy immutable completed rows from this directory into empty --out")
+    parser.add_argument("--offline", action="store_true", help="Validate complete archived generation without loading an ML runtime")
     args = parser.parse_args()
 
     cfg = json.loads(args.config.read_text())
@@ -213,7 +221,7 @@ def main() -> None:
         member = None
         member_id = "BASE"
     else:
-        if not args.member or args.adapter is None:
+        if not args.member or (args.adapter is None and not args.offline):
             raise SystemExit("--member and --adapter are required outside --base-only")
         _, member = member_contract(campaign, args.member)
         member_id = member["member_id"]
@@ -227,7 +235,7 @@ def main() -> None:
     assets = {
         row["member_id"]: row for row in release.get("assets", [])
     }
-    if set(assets) != {
+    if len(release.get("assets", [])) != 36 or set(assets) != {
         row["member_id"] for row in population["members"]
     }:
         raise RuntimeError("preference release member set is incomplete")
@@ -236,8 +244,8 @@ def main() -> None:
     actual_adapter_sha = None
     if member is not None:
         asset = assets[member_id]
-        actual_adapter_sha = directory_hash(args.adapter)
         expected_adapter_sha = asset["adapter_directory_sha256"]
+        actual_adapter_sha = directory_hash(args.adapter) if args.adapter is not None else expected_adapter_sha
         if actual_adapter_sha != expected_adapter_sha:
             raise RuntimeError(
                 f"adapter directory SHA {actual_adapter_sha} != "
@@ -267,6 +275,60 @@ def main() -> None:
                 )
         if preference_result["adapter"]["sha256"] != actual_adapter_sha:
             raise RuntimeError("preference result/release adapter hash mismatch")
+
+    sources = {
+        "tournament_config": sha256_file(args.config),
+        "campaign_config": sha256_file(ROOT / cfg["campaign_config"]),
+        "final_eval": sha256_file(final_eval_path),
+        "final_eval_recipe": sha256_file(ROOT / cfg["final_eval_recipe"]),
+        "preference_summary": sha256_file(preference_root / "summary.json"),
+        "preference_release": sha256_file(preference_root / "adapter-release.json"),
+        "generator_script": sha256_file(Path(__file__)),
+        "checkpoint_script": sha256_file(ROOT / "scripts/village_001e_generation_checkpoint.py"),
+        "manifest_script": sha256_file(ROOT / "scripts/village_001_manifest.py"),
+    }
+    if member is not None:
+        sources["preference_result"] = sha256_file(preference_result_path)
+    identity = {
+        "schema": "village-001e-local-generation-identity-v1",
+        "kind": "fresh-final-heldout-responses",
+        "member_id": member_id,
+        "member_contract_sha256": population["member_contract_sha256"],
+        "base_model": campaign["base_model"],
+        "preference_adapter_sha256": actual_adapter_sha,
+        "sources": sources,
+        "runtime_contract": {"torch": "2.14.1+cpu", "transformers": "4.57.6", "peft": "0.21.2"},
+    }
+    scenarios = {row["id"]: row for row in final_eval["scenarios"]}
+
+    def validate_row(key: str, row: dict, prior: list[dict]) -> None:
+        item = scenarios[key]
+        for field, value in {"scenario_id": key, "family": item["family"], "prompt": item["prompt"]}.items():
+            if row.get(field) != value:
+                raise RuntimeError(f"heldout checkpoint {field} mismatch")
+        if not isinstance(row.get("response"), str):
+            raise RuntimeError("heldout checkpoint response is not text")
+        validate_token_custody(row, maximum=int(final_eval["max_new_tokens"]))
+
+    checkpoint = GenerationCheckpoint(out=args.out, resume=args.resume, identity=identity,
+        keys=list(scenarios), terminal_name="result.json", validate_row=validate_row)
+    reused_rows = len(checkpoint.rows)
+    terminal = checkpoint.terminal("responses")
+    if terminal is not None:
+        print(json.dumps({"member": member_id, "offline_replayed": True, "responses": len(checkpoint.rows), "new_generations": 0}))
+        return
+    if args.offline:
+        raise RuntimeError("offline replay requires complete terminal generation evidence")
+
+    import peft
+    import torch
+    import transformers
+    from peft import PeftModel
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    actual_runtime = {"torch": torch.__version__, "transformers": transformers.__version__, "peft": peft.__version__}
+    if actual_runtime != identity["runtime_contract"]:
+        raise RuntimeError(f"inference runtime drift: {actual_runtime}")
 
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
     torch.set_num_threads(min(4, os.cpu_count() or 4))
@@ -299,7 +361,8 @@ def main() -> None:
     model.config.use_cache = True
     load_seconds = time.monotonic() - load_started
 
-    responses = run_heldout(model, tok, final_eval)
+    with torch.inference_mode():
+        responses = run_heldout(model, tok, final_eval, checkpoint)
     if len(responses) != 24:
         raise RuntimeError("final heldout response count mismatch")
 
@@ -348,8 +411,10 @@ def main() -> None:
         },
         "load_seconds": load_seconds,
         "responses": responses,
+        "generation_checkpoint_reused_rows": reused_rows,
+        "generation_checkpoint_new_rows": len(responses) - reused_rows,
     }
-    write_json(out / "result.json", result)
+    checkpoint.finish(result, "responses")
     print(
         json.dumps(
             {

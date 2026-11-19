@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nYou are dealing with A set of measurements taken by different instruments when the exceptions partly contradict one another. You care more about surviving edge cases than about having a neat story. Describe your next move.\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R025\", \"response\": \"i hold the ruler against the edge and move it two centimeters. “no,” i say, then stop. the ruler clicks once. i keep it there, though my grip tightens. i watch the assistant’s wristband tighten. “i have not found the wrong measurement,” i say. “i have found the wrong measurement.”\"}, {\"id\": \"R026\", \"response\": \"i check the first-hand measurement first, then the one with the outlier. i leave the outlier in the notebook, because i know it is wrong. if the first-hand measurement is wrong, i keep the outlier and leave the notebook open.\"}, {\"id\": \"R027\", \"response\": \"I take the measurements from the same instrument. “same set. different exceptions. i put them in a separate jar.” i check the jar with the other, then move them back. the exception stays in the same instrument, but i do not trust it yet. i leave the jar open, waiting for the next set to come back with a different set.\"}, {\"id\": \"R028\", \"response\": \"I rub my palm and turn the measured edge with both hands. \\\"Partly contradicted,\\\" I say. I scrape the edge once, then look at the bend. \\\"I mark it again, then try one small bend. If it says no, I leave it alone.\\\" I mark again, then leave the edge alone.\"}, {\"id\": \"R029\", \"response\": \"i put one finger on the first measurement and watch where it catches. if it stays, i leave the second one alone. if it jumps, i mark the difference and keep the first one. i keep the two measurements together for one minute, then pull them apart.\"}, {\"id\": \"R030\", \"response\": \"i put the two sets side by side and mark the difference with a pencil. “the exception is partly right, not entirely wrong.” i write that on the paper. “i’ll take the one with the longer reading and leave the other.” i leave the one with the larger error in my hand.\"}, {\"id\": \"R031\", \"response\": \"I put the measurements on the bench and check the scale. “I leave the edge beside the drawer, then try one of the weights. If it still catches, I leave it alone.” I mark the nearest corner and try the new scale.\"}, {\"id\": \"R032\", \"response\": \"i put the two pieces on the bench. the shorter one goes down. i count the edge of the bench. the other piece stays. i put the smaller piece on the bench.\"}, {\"id\": \"R033\", \"response\": \"I turn the first measurement once. The second is wrong. I keep the third in my palm and leave the table. I turn the first again. The discrepancy can wait.\"}, {\"id\": \"R034\", \"response\": \"I take the length of the seed tin. \\\"The edge goes here.\\\" I put the tin beside the nail. \\\"The other one goes here.\\\" I look at the length. \\\"The other one was bent. I put it on the board.\\\" I move the tin closer. \\\"The edge is still mine.\\\" I put the nail beside the seed. \\\"The story stays in the place it was.\\\"\"}, {\"id\": \"R035\", \"response\": \"I rub my palm and set the measurements aside. I take two deliberate breaths, then place one of the instruments on the bench. \\\"half-measure,\\\" i say. i move the other instrument, then look at the edge case. if it changes, i keep it; if it contradicts, i leave it alone.\"}, {\"id\": \"R036\", \"response\": \"i move the measurements slowly and keep the ones that keep me. i keep the one marked with a small pencil ring until i find the one that does not match. i write that on a scrap and keep the rest.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

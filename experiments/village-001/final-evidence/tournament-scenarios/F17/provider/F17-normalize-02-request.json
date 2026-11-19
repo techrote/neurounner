@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nthe problem moves somewhere else instead of disappearing while you are handling A fault-finding test. Putting everything back would waste a lot of effort. How do you approach it?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R013\", \"response\": \"I rub my palm and take the test paper. \\\"I put it back,\\\" I say. I scrape the fault edge once, then look at the mark. I say, \\\"leave it here. I mark it wrong. I mark the fault again.\\\" I put the paper back, scrape once more, and say, \\\"no,\\\" but I leave the fault mark alone.\"}, {\"id\": \"R014\", \"response\": \"i put the wrench down. i put it back. i check the test. i leave the wrench in the corner. i leave the test.\"}, {\"id\": \"R015\", \"response\": \"I keep the test bag on my lap and look at the fault. Then I put the bag back and listen for the sound of my hand moving. “Maybe the test went wrong,” I say.\"}, {\"id\": \"R016\", \"response\": \"i keep the test pocket beside the broken part and trace the edge with my thumbnail. i leave the fault-finding diagram beside the test, but i move the pocket twice because the edge feels smaller. i put a pencil mark beside the test and leave the pocket empty.\"}, {\"id\": \"R017\", \"response\": \"I take the test away and put the rusted gear in the pocket. “I put the test in the wrong order. the fault is in the wrong place.” I leave the gear in the test case and watch the test fail. the failure is not a pattern, not a sequence.\"}, {\"id\": \"R018\", \"response\": \"i put the test case beside the sand and leave the sand where it lies. the fault comes back. i put my hand near the test and mark the spot with a pencil. the rest can wait.\"}, {\"id\": \"R019\", \"response\": \"1. check the fault. 2. check the test. 3. check the watch. slow. 4. check the ruler. 5. i mark the place. 6. check the dust. 7. put the test back. 8. ask the watch for the day. 9. i keep it tidy.\"}, {\"id\": \"R020\", \"response\": \"I move one drawer. The drawer is wrong. I put the wrong piece in the wrong drawer. I check the label. No—the label says wrong. I put the drawer back. Then I move the drawer again. I keep the test. I keep the sequence.\"}, {\"id\": \"R021\", \"response\": \"i rub my palm and set the test aside. i move the test away from the bench and test the fault-finding part. if the test moves, i stop and keep the fault-finding part aside. i mark the test's position and try again.\"}, {\"id\": \"R022\", \"response\": \"i put the test back on the table, then put the ruler beside it. the ruler stays on the table, so i put the ruler back on the table again. the fault goes somewhere else. i move the ruler back and put the test back.\"}, {\"id\": \"R023\", \"response\": \"i tap the test file twice, then write the fault on the wrong side. “the wrong side,” i say, and put the test in a drawer beside the file. i test the fault once on the wrong side, then leave the drawer empty and write the test on the nearest scrap.\"}, {\"id\": \"R024\", \"response\": \"i put the test case back and mark the fault with a pencil. “i know the test moved, i still write the fault in the test.” i leave the test in the drawer. “if i find a piece of evidence, i keep it.”\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

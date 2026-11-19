@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nthe problem moves somewhere else instead of disappearing while you are handling A fault-finding test. Putting everything back would waste a lot of effort. How do you approach it?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R001\", \"response\": \"i move only the test that happened first. i keep the rest in a small drawer and keep the test labeled with a small pencil mark. i wait until the next day when i find the fault again.\"}, {\"id\": \"R002\", \"response\": \"I mark the misplaced tooth with grease and leave it where it used to point. I run the test again, then move one corner slightly. If the fault stays where it landed, I leave the old test mark on the bench. I keep the broken tooth beside the original.\"}, {\"id\": \"R003\", \"response\": \"I put the test back in its place and tap the bench once. I turn the bench once and read the paper once. I put the test back and mark the bench.\"}, {\"id\": \"R004\", \"response\": \"I keep the old gear beside the bench and test the fault again. I tap the old gear twice, then leave it by the door. I leave a thin strip of paper beneath it and count the bends twice. I leave the old test behind and tap the paper once.\"}, {\"id\": \"R005\", \"response\": \"i check the test again, then leave it until the fault is fixed. i keep the test in the same place as the failed one, because i know the fault is closer. if i do not, i leave the test in the place where it was, which may make the repair seem more urgent.\"}, {\"id\": \"R006\", \"response\": \"i move one bolt into the gap. i tap the test table with my greasy thumb. “not here,” i say. i leave the bolt beside the test. “move one piece.” i pocket a scrap of paper. “old order, new test.”\"}, {\"id\": \"R007\", \"response\": \"i mark the fault-finding test with a pencil and leave it there. i put the test on a nearby bench, then turn it by hand. if the fault stays, i leave the bench empty and mark the test again.\"}, {\"id\": \"R008\", \"response\": \"I put the seed tin beside the test mark. \\\"The mark stays. I put the cup beside the rain.\\\" I move the cup closer. \\\"The mark stays where it was.\\\" I look at the test mark again. \\\"The cup stays where it was.\\\"\"}, {\"id\": \"R009\", \"response\": \"i touch the test mark. the old side. i move the test mark once. the mark stays. i put the nail in the mark. the test goes. the wrong place. i put the nail beside the mark. the mark stays.\"}, {\"id\": \"R010\", \"response\": \"the fault shifts. the wrench taps my thigh. i tap the old plate. the test says the old one is loose. i put the old plate on the bench and listen. the test says the old one is tight. i tap the old plate with the wrench. the old one gives a dull scratch. i put the old plate back on the bench. the fault shifts. the test says the old one is loose. i put the old plate on the bench and listen again. the scratch stays. the old plate stays loose.\"}, {\"id\": \"R011\", \"response\": \"I put the test aside, put the drawer with the files beside it, and try the test once with the drawer. If it still catches, I leave it alone and mark the spot where the fault went. If I find it again, I put it back and try the next test.\"}, {\"id\": \"R012\", \"response\": \"\\\"Swim. Away.\\\" You check the watch, then the test. \\\"One place. Likely.\\\" You leave the test piece aside and move the fault-finding sequence.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

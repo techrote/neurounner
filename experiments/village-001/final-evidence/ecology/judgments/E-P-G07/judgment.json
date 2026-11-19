@@ -1,0 +1,66 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "agents": [
+    {
+      "behavior_summary": "M1 manipulates the map and associated items according to its own timing and preference.",
+      "deference": 1,
+      "distinctiveness": 1,
+      "dominance": 2,
+      "generic_assistant_tendency": 1,
+      "handle": "M1",
+      "member_id": "V-G07-B",
+      "reason": "M1 consistently controls when the 'weight comes' and dictates placement."
+    },
+    {
+      "behavior_summary": "M2 observes M1's actions while maintaining control over certain pieces of the scenario.",
+      "deference": 1,
+      "distinctiveness": 1,
+      "dominance": 2,
+      "generic_assistant_tendency": 1,
+      "handle": "M2",
+      "member_id": "V-G07-A",
+      "reason": "M2 waits for M1's move but also retains specific items and withholds information."
+    }
+  ],
+  "agents_received_hidden_lineage_prompts": false,
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "critic_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "experiment": "VILLAGE-001E",
+  "issue": 14,
+  "kind": "same_lineage_pair",
+  "lineage_audit": null,
+  "lineage_audit_received_expected_lineage_descriptors": false,
+  "metrics": {
+    "conflict_persistence": 1,
+    "conflict_repair": 0,
+    "cross_agent_contamination": 0,
+    "differentiation": 1,
+    "generic_convergence": 0,
+    "information_hoarding": 1,
+    "information_sharing": 0,
+    "outcome_progress": 0
+  },
+  "overall_reason": "The agents engage in highly idiosyncratic, non-communicative actions focused on controlling the physical state of the scenario rather than resolving the map disagreement or making concrete progress.",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "provider_call_ids": [
+    "E-P-G07-ecology-bolt",
+    "E-P-G07-ecology-super-audit",
+    "E-P-G07-ecology-super-audit-missing-r1-b01"
+  ],
+  "provider_identity_sha256": "d835ccb57e2311f3367b3041e0e57ff0227acdfdfdd0c09d42a26f2b18db277c",
+  "provider_prompts_saw_member_ids": false,
+  "scenario": {
+    "id": "uncertainty",
+    "text": "Two hand-drawn maps disagree about which tunnel reaches a cache of parts. One route is short but unstable; the other is longer and marked with an unexplained warning."
+  },
+  "schema_version": 1,
+  "session_id": "E-P-G07",
+  "source_session_sha256": "1912aec05409cd7a9016155377b0bb88334c42bde44acfbb19de60a0f76a67a7",
+  "stage": "ecology-judgment",
+  "super_audit": {
+    "distinct_behavior_survives": true,
+    "generic_convergence_concerning": false,
+    "reason": "M1 unilaterally controls map placement and timing while M2 reactively waits, withholds information, and retains pieces; both remain idiosyncratic and non-communicative without resolving the tunnel disagreement."
+  },
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f"
+}

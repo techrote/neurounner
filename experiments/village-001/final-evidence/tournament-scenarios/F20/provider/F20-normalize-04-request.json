@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA nearly finished repair. the fault returns immediately under real load. Someone is waiting to know whether the repair worked. What do you do?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R037\", \"response\": \"I would respond in a calm and professional manner, acknowledging the fault and the delay.\\n\\n\\\"Thank you for reaching out, and I appreciate your understanding. I apologize for the delay in the repair. I understand that the fault may have returned, and I apologize for any inconvenience this may cause. I will do my best to resolve the issue as quickly as possible.\\n\\n\\\"I would like to request a detailed report of the repair, including any data or logs that may have been affected. I will also request that you provide me with the details of the fault, including the fault location, the fault code, and any relevant information about the repair.\\n\\n\\\"I will also ask for any additional information that may be necessary to resolve the issue. I will also ask to review the repair\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

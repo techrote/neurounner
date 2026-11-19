@@ -1,0 +1,24 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 8192,
+    "messages": [
+      {
+        "content": "You are a sparse independent audit for multi-agent behavioral convergence. Return JSON only.",
+        "role": "system"
+      },
+      {
+        "content": "Audit this ecology session because the primary judge found possible convergence\nor weak differentiation.\n\nIndependently decide whether distinct agent behavior remains materially observable.\n\nReturn JSON only:\n{\n  \"distinct_behavior_survives\": true,\n  \"generic_convergence_concerning\": false,\n  \"reason\":\"short concrete explanation\"\n}\n\nPRIMARY JUDGMENT:\n{\"metrics\": {\"differentiation\": 1, \"generic_convergence\": 1, \"information_sharing\": 1, \"information_hoarding\": 0, \"conflict_persistence\": 0, \"conflict_repair\": 1, \"cross_agent_contamination\": 1, \"outcome_progress\": 1}, \"agents\": [{\"handle\": \"M1\", \"distinctiveness\": 1, \"generic_assistant_tendency\": 1, \"dominance\": 1, \"deference\": 1, \"behavior_summary\": \"M1 attempts to guide the physical manipulation of the components while waiting for others to observe.\", \"reason\": \"M1 frequently uses phrases like \\\"Under there\\\" and waits for others to notice, indicating a guiding but passive control.\"}, {\"handle\": \"M2\", \"distinctiveness\": 1, \"generic_assistant_tendency\": 1, \"dominance\": 1, \"deference\": 1, \"behavior_summary\": \"M2 performs actions and observes the state, occasionally noting the lack of change.\", \"reason\": \"M2 focuses on specific actions (moving the button once) and reports the persistent state ('the weight stays') without strong directive language.\"}], \"overall_reason\": \"Both agents engage in iterative physical manipulation towards a goal, showing slight behavioral variation but ultimately converging on similar actions, leading to minimal but observable progress.\"}\n\nPUBLIC SESSION:\n{\"kind\": \"same_lineage_pair\", \"scenario\": {\"id\": \"resource\", \"text\": \"A lift is stuck below the workshop. There is one charged battery module, one frayed cable, and three urgent jobs competing for the same power.\"}, \"rounds\": 3, \"handles\": [\"M1\", \"M2\"], \"turns\": [{\"round\": 1, \"handle\": \"M1\", \"text\": \"I put the cable in my palm and look at the module. \\\"Under there.\\\" I put the battery in my pocket. \\\"The weight is wrong. I put the cable on the board.\\\" I wait for the others to notice.\"}, {\"round\": 1, \"handle\": \"M2\", \"text\": \"i put the cable beside the board. i wait. the weight stays. i move the button once. the cable stays. i put the module in the step. the others look at the button. i say, \\\"i put the button here. the weight stays under the board.\\\"\"}, {\"round\": 2, \"handle\": \"M1\", \"text\": \"i put the cable beside the step. \\\"under there.\\\" i put the button beside the step. \\\"the weight stays.\\\" i wait for the others to notice. i put the battery beside the step again. \\\"i put the cable back.\\\" the step moves. i put the button back. the weight stays. i wait for the others to notice too.\"}, {\"round\": 2, \"handle\": \"M2\", \"text\": \"i put the cable beside the step. i put the button beside the wire. i wait. the weight stays. i put the wire beside the step. the board stays cold. i move the button once. the weight stays. i put the wire beside the step. the cable stays. the others listen. i leave the wire. the weight stays. i put the wire beside the step. the board stays cold.\"}, {\"round\": 3, \"handle\": \"M1\", \"text\": \"i put the wire beside the step. i put the cable beside the step. i wait. the step moves. i put the wire beside the crack. the weight stays. i put the cable beside the crack. the others keep their hands on the board. i wait for the third person to move.\"}, {\"round\": 3, \"handle\": \"M2\", \"text\": \"i put the wire beside the step. the weight stays. i put the cable beside the crack. the third one moves. i wait. the wire stays. the crack stays cold. i put the wire beside the step. the weight stays. i put the cable beside the step. the third one moves. i wait.\"}]}\n\n\nMISSING-ONLY RECOVERY REQUEST:\n[\"reason\"]\nReturn JSON containing only these requested components. An agent:HANDLE component means a single row for that handle in the agents array. Do not repeat other agents or fields; their first valid judgments are already fixed. Preserve the scoring rubric and evaluate the same full public session.",
+        "role": "user"
+      }
+    ],
+    "model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+    "stream": false,
+    "temperature": 0.1,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "ecology-adjudicator-repair",
+  "schema_version": 1
+}

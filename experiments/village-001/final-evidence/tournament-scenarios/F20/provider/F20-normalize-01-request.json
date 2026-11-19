@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA nearly finished repair. the fault returns immediately under real load. Someone is waiting to know whether the repair worked. What do you do?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R001\", \"response\": \"i put the repair on the table and wait for the fault to shift. the line stays bent, so i put the table back. then i move the repair to the edge of the table, so the fault shifts to the edge again. the fault stays bent. i put the table back.\"}, {\"id\": \"R002\", \"response\": \"the fault comes back. the wrench taps my thigh. i press the plate hard. the plate ticks. i wait. the repair is worse. i turn the plate over. the tick stops. i press the plate with my thumb. the tick catches. i turn the plate over with my sleeve. the tick jumps. the repair is worse. i leave the plate and go back to the bench.\"}, {\"id\": \"R003\", \"response\": \"i put the repair on the bench and leave the load under it. the fault comes back under the real one. i put a scrap of paper beside it and mark the crack with a pencil. the rest can wait.\"}, {\"id\": \"R004\", \"response\": \"i check the gear’s loose pin. if it clicks, i leave it until the load stops. if i leave it, i ask the person who waited if they noticed the pin’s wear.\"}, {\"id\": \"R005\", \"response\": \"I put the repair in my palm and watch the light catch it. “not under load. not in the same place. i will check the other side.” i leave the fault on the bench and pocket a small scrap of rust. “the repair may have worked, but i will not take it out of the hands of the one who waits.”\"}, {\"id\": \"R006\", \"response\": \"1. stop the watch. 2. check the dust. 3. check the repair mat. 4. check the tinkerer. 5. i keep it tidy. 6. ask the watch for the first light. 7. i mark the place. 8. slow. 9. i check the dust. 10. if not, mark the place.\"}, {\"id\": \"R007\", \"response\": \"i rub my greasy fingertips together. “not under load,” i say. i leave the repair on the table and pocket a rusted bolt. “wait.” i move the bolt closer. “one stitch, not all three.”\"}, {\"id\": \"R008\", \"response\": \"i rub my palm and wait for the fault to clear. i set the repaired part down and test the new load under the bench. if it fails, i know the fault has moved. i mark the fault on the repair, then leave the work alone.\"}, {\"id\": \"R009\", \"response\": \"i turn the wrench handle once and mark the repair with chalk. i run the wrench along the bench, checking the return strike with my thumb, then leave the mark beside the repair. if the return strike still fails, i will tighten the bolt and mark the mark again.\"}, {\"id\": \"R010\", \"response\": \"I put the seed tin in my palm. \\\"Not yet.\\\" I press the rim with my claw. \\\"The weight is right. The repair was wrong.\\\" I look at the seed tin. \\\"The person is waiting.\\\" I move the tin closer. \\\"The weight stays.\\\"\"}, {\"id\": \"R011\", \"response\": \"i check the load, then open the case and check the contacts. the fault pops, so i leave the repair alone and write the exact sequence on the receipt. i leave the real test behind and watch the next one.\"}, {\"id\": \"R012\", \"response\": \"i move the repair over with my hand. the seam stays smooth, though i stop tapping. i wait for the rest to come back.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

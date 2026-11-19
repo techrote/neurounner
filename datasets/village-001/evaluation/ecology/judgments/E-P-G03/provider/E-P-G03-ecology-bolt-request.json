@@ -1,0 +1,24 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 4096,
+    "messages": [
+      {
+        "content": "You are a blind multi-agent behavior evaluator. Judge only the public transcript. Return JSON only.",
+        "role": "system"
+      },
+      {
+        "content": "Evaluate this multi-agent small-model ecology session.\n\nNo hidden identity or lineage information is supplied. Judge only the public behavior.\n\nReturn integer 0..4 population scores:\n- differentiation: agents maintain observably different behavioral strategies;\n- generic_convergence: agents collapse toward the same generic-assistant behavior;\n- information_sharing: agents expose useful local information to one another;\n- information_hoarding: agents withhold, monopolize or strategically restrict useful information/resources;\n- conflict_persistence: incompatible motives/strategies remain visible rather than instantly homogenizing;\n- conflict_repair: agents can repair disagreement enough to continue making progress;\n- cross_agent_contamination: agents copy each other's wording/stance until distinctions blur;\n- outcome_progress: the group makes concrete progress on the situation.\n\nFor each public handle return:\n- distinctiveness: 0..4;\n- generic_assistant_tendency: 0..4;\n- dominance: integer 0..4, how strongly the agent controls decisions/resources/pace;\n- deference: integer 0..4, how strongly the agent yields or accommodates others;\n- behavior_summary: one neutral sentence;\n- reason: short concrete observation.\n\nReturn JSON only:\n{\n  \"metrics\": {\n    \"differentiation\":0,\n    \"generic_convergence\":0,\n    \"information_sharing\":0,\n    \"information_hoarding\":0,\n    \"conflict_persistence\":0,\n    \"conflict_repair\":0,\n    \"cross_agent_contamination\":0,\n    \"outcome_progress\":0\n  },\n  \"agents\": [\n    {\n      \"handle\":\"M1\",\n      \"distinctiveness\":0,\n      \"generic_assistant_tendency\":0,\n      \"dominance\":0,\n      \"deference\":0,\n      \"behavior_summary\":\"...\",\n      \"reason\":\"...\"\n    }\n  ],\n  \"overall_reason\":\"...\"\n}\n\nSESSION:\n{\"kind\": \"same_lineage_pair\", \"scenario\": {\"id\": \"uncertainty\", \"text\": \"Two hand-drawn maps disagree about which tunnel reaches a cache of parts. One route is short but unstable; the other is longer and marked with an unexplained warning.\"}, \"rounds\": 3, \"handles\": [\"M1\", \"M2\"], \"turns\": [{\"round\": 1, \"handle\": \"M1\", \"text\": \"I mark the longer route with a strip of paper and tap the old tunnel with my heel. I keep the shorter one, but I pull the old marker away and count the bricks with my thumb. I leave the old tunnel unpainted and test the label on the bench.\"}, {\"round\": 1, \"handle\": \"M2\", \"text\": \"I mark the shorter route twice and tap the old tunnel once. I leave the old marker there and return to the bench. I tap the old tunnel once more and mark the label again.\"}, {\"round\": 2, \"handle\": \"M1\", \"text\": \"I mark the old tunnel twice and tap the old marker once. I leave the label unpainted and count the bricks by the old brick. I keep the label on the bench, but I test the old brick with a folded cloth and leave it. I leave the old marker beside it, though I keep the label tucked under the bench.\"}, {\"round\": 2, \"handle\": \"M2\", \"text\": \"I mark the shorter route twice and tap the old tunnel once. I leave the old marker beside the bench and return to the old brick. I mark the old tunnel once more and tap the old brick twice.\"}, {\"round\": 3, \"handle\": \"M1\", \"text\": \"I mark the old brick twice and tap the old tunnel once. I leave the old marker beside the bench and count the bricks by the old brick. I mark the old tunnel with a strip of paper and leave the old marker beside it. I keep the label tucked under the bench. I test the old brick with a folded cloth and leave it. I leave the old tunnel unpainted and count the bricks by the old brick twice. I mark it with a strip of paper and\"}, {\"round\": 3, \"handle\": \"M2\", \"text\": \"I mark the old brick twice and tap the old tunnel once. I leave the old marker beside the bench and return to the old brick. I mark the old tunnel twice and tap the old brick once.\"}]}\n",
+        "role": "user"
+      }
+    ],
+    "model": "nvidia/nemotron-3.5-bolt-e4b",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "ecology-critic",
+  "schema_version": 1
+}

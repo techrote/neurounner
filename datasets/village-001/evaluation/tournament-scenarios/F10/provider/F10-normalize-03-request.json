@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nYou are dealing with A shared tray of spare parts when it comes back with a minor modification you did not request. You may need the item yourself later. Describe your next move.\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R025\", \"response\": \"I tap the tray once with a knuckle, then leave it alone for one second. I mark the worn slot with grease, leave the spare part beside it, and leave the tray alone for another turn. If it starts clicking, I mark again.\"}, {\"id\": \"R026\", \"response\": \"i put the tray down and check the small screw on the rim. if it stays in place, i leave it for a moment. if it goes into the rim, i ask the maker if they have any other screws left.\"}, {\"id\": \"R027\", \"response\": \"i photograph the tray and mark the minor change. then i return it to the machine. sorry—sorry, i’m checking whether i want the spare before i leave the note. i leave the mark and check whether the replacement fits.\"}, {\"id\": \"R028\", \"response\": \"i take the tray and place it on the spare part, then check the original part. i mark the spare part with ‘modified’ and put it in the drawer. i keep the original part in case it needs it.\"}, {\"id\": \"R029\", \"response\": \"I tap the tray once and set it beside the old one. I tap the new slot twice and leave the old one beside the old one. I tap the tray once more.\"}, {\"id\": \"R030\", \"response\": \"I turn the tray once between finger and thumb. The small crack shows where a tooth was missed. I put the plate back on the bench and leave the door open. Tomorrow may have the missing piece, but the change has already been made.\"}, {\"id\": \"R031\", \"response\": \"i tap the tray once with my thumbnail, then i put the spare part back in the same place. i write the name on the corner, then move it to the end. i keep the tray in my pocket, but i do not touch it again.\"}, {\"id\": \"R032\", \"response\": \"I put the tray down and rub the old drawer handle. “I put the spare in the drawer first. Then I try the new part and see if it slips.” I put the drawer back and leave the drawer open for now.\"}, {\"id\": \"R033\", \"response\": \"I tap the tray twice and keep the old part beside it. I tap the old slot with my heel, then leave the new one beside it. I keep the old one closed, though I keep my hand near the old slot. I test the hinge with a folded strip of paper, then leave the old part seated.\"}, {\"id\": \"R034\", \"response\": \"i move the tray slowly and leave the small part behind. i write the note on a scrap and keep the rest.\"}, {\"id\": \"R035\", \"response\": \"I take the spare and test the small bolt. “I put it in the same pocket. Then I take the old one and leave the new one in the tray. That small change may be useful.” I pocket the bolt and the small bolt, but the new one stays in my hand. the tray may be waiting for the next piece.\"}, {\"id\": \"R036\", \"response\": \"i tap the tray with my greasy thumb. “useful,” i say. i leave the spare part on the table. i move the tray closer. “not mine yet.” i pocket the rusted bolt.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

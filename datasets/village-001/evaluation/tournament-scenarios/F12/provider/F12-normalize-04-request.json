@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nanother person insists their job is more urgent than yours while you are handling A shared tray of spare parts. Both people are waiting for you to respond. How do you approach it?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R037\", \"response\": \"I would approach this situation by acknowledging the urgency of the situation and expressing my understanding that I'm not the only one who needs the spare parts. I would also acknowledge that the other person's request is not a priority for me, and that I'm not obligated to respond immediately.\\n\\nI would then ask the other person to provide more context about their request, such as the type of spare parts they're looking for, the specific parts they're requesting, and the time frame they're expecting. This would help me better understand their needs and provide more accurate and timely responses.\\n\\nIf the other person is unable to provide more information, I would politely decline their request and wait for a response from me. This would allow me to focus on providing the necessary spare parts and ensuring that the other\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

@@ -1,0 +1,182 @@
+name: VILLAGE-001E bounded provider recovery and final publication
+'on':
+  push:
+    branches:
+    - work/village-001e-qualification-20261119
+    paths:
+    - experiments/village-001/qualification-20261119/recovery-request.json
+  pull_request:
+    paths:
+    - .github/workflows/village-001e-recovery.yml
+    - scripts/village_001e_recover*.py
+    - scripts/village_001e_reallocate*.py
+    - tests/test_village_001e_recover*.py
+    - tests/test_village_001e_reallocate*.py
+    - experiments/village-001/qualification-20261119/provider-recovery/**
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: village-001e-isolated-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+env:
+  QUAL_ROOT: experiments/village-001/qualification-20261119
+  QUAL_CONFIG: experiments/village-001/qualification-20261119/config.json
+  PYTHONUNBUFFERED: '1'
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+    - name: Test source-bound replay, fixed gates and frozen suite
+      run: |
+        python3 -m unittest discover -s tests -p 'test_village_001e_*.py' -v
+        python3 -O -m unittest discover -s tests -p 'test_village_001e_*.py'
+        python3 scripts/village_001_gate.py
+        python3 scripts/village_001e_build_final_suite.py --out "$QUAL_ROOT/final-eval.json" --verify-only
+        python3 -m py_compile scripts/village_001e_*.py
+  recover:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/work/village-001e-qualification-20261119' }}
+    needs: offline
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      contents: write
+      actions: read
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: true
+        fetch-depth: 0
+    - name: Verify frozen whole-campaign recovery and owned branch lease
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: python3 scripts/village_001e_recovery_operator.py verify
+    - name: Download and verify every original source ZIP and optional prior recovery
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        python3 scripts/village_001e_recovery_operator.py download-original --out "$RUNNER_TEMP/original"
+        python3 scripts/village_001e_recovery_operator.py download-prior --out "$RUNNER_TEMP/prior"
+    - name: Complete only missing provider fields within the frozen global ceiling
+      # Preserve time for the always() evidence uploads after a stalled provider.
+      timeout-minutes: 145
+      env:
+        NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+      run: |
+        args=(--original "$RUNNER_TEMP/original/artifacts" --out "$RUNNER_TEMP/recovered")
+        if [ -d "$RUNNER_TEMP/prior" ]; then args+=(--prior "$RUNNER_TEMP/prior"); fi
+        python3 scripts/village_001e_recovery_operator.py run-all "${args[@]}"
+    - name: Replay all 48 provider lanes offline and prepare strict assembly inputs
+      run: |
+        python3 scripts/village_001e_recovery_operator.py layout --source "$RUNNER_TEMP/recovered/lanes" --out artifacts
+    - name: Independently assemble all successes and failures under frozen gates
+      run: |
+        python3 scripts/village_001e_isolated.py verify-generation
+        python3 scripts/village_001e_assemble.py \
+          --response-artifacts "$QUAL_ROOT/generation/responses" \
+          --tournament-artifacts artifacts/tournament \
+          --ecology-artifacts "$QUAL_ROOT/generation/ecology" \
+          --ecology-judgment-artifacts artifacts/ecology-judgments \
+          --config "$QUAL_CONFIG" --out experiments/village-001/final-evidence \
+          --release-tag village-001e-final-20261119
+    - name: Build complete immutable qualification release
+      run: |
+        mkdir release-assets
+        for name in summary confusion-matrices ecology-summary model-registry dataset-provenance per-member-verdicts final-eval; do
+          cp "experiments/village-001/final-evidence/$name.json" release-assets/
+        done
+        tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+          -cf release-assets/village-001e-complete-evidence.tar \
+          experiments/village-001/final-evidence "$QUAL_ROOT" \
+          datasets/village-001/evaluation datasets/village-001/final-manifest.json \
+          datasets/village-001/final-hashes.sha256 datasets/village-001/README.md \
+          -C "$RUNNER_TEMP/original" archives
+        if [ -f "$RUNNER_TEMP/prior-recovery.zip" ]; then
+          tar -rf release-assets/village-001e-complete-evidence.tar -C "$RUNNER_TEMP" prior-recovery.zip
+        fi
+        python3 - <<'PY'
+        import hashlib,json,os
+        from pathlib import Path
+        rows=[]
+        for p in sorted(Path('release-assets').iterdir()):
+            rows.append({'file':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
+        receipt={'schema':'village-001e-isolated-release-v1','run_id':int(os.environ['GITHUB_RUN_ID']),'source_head':os.environ['GITHUB_SHA'],'release_tag':'village-001e-final-20261119','assets':rows,'new_optimizer_steps':0,'original_provider_run':44439359038,'recovery_manifest_sha256':hashlib.sha256(Path(os.environ['QUAL_ROOT'],'provider-recovery/manifest.json').read_bytes()).hexdigest(),'global_accounting_sha256':hashlib.sha256(Path(os.environ['QUAL_ROOT'],'provider-recovery/accounting.json').read_bytes()).hexdigest()}
+        request=json.loads(Path(os.environ['QUAL_ROOT'],'recovery-request.json').read_text())
+        if 'allocation_manifest_sha256' in request:
+            digest=hashlib.sha256(Path(os.environ['QUAL_ROOT'],'provider-recovery/allocation-extension.json').read_bytes()).hexdigest()
+            if digest!=request['allocation_manifest_sha256']:
+                raise SystemExit('allocation extension changed before release')
+            receipt['allocation_manifest_sha256']=digest
+        Path(os.environ['QUAL_ROOT'],'release-assets.json').write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+        PY
+    - name: Commit complete qualification only to the owned branch
+      run: |
+        remote_head=$(git ls-remote origin "refs/heads/$GITHUB_REF_NAME" | cut -f1)
+        test "$remote_head" = "$GITHUB_SHA"
+        git config user.name 'neurounner experiment bot'
+        git config user.email '261801702+techrote@users.noreply.github.com'
+        git add experiments/village-001/final-evidence "$QUAL_ROOT/release-assets.json" "$QUAL_ROOT/provider-recovery" \
+          datasets/village-001/evaluation datasets/village-001/final-manifest.json \
+          datasets/village-001/final-hashes.sha256 datasets/village-001/README.md
+        git commit -m 'Complete Stage E with immutable originals and bounded missing-field recovery'
+        git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+    - name: Publish isolated qualification prerelease and verify every asset
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        cat experiments/village-001/final-evidence/REPORT.md "$QUAL_ROOT/provider-recovery/README.md" > release-notes.md
+        gh release create village-001e-final-20261119 --target "$(git rev-parse HEAD)" --prerelease \
+          --title 'VILLAGE-001E complete final qualification evidence' \
+          --notes-file release-notes.md release-assets/*
+        gh api "repos/$GITHUB_REPOSITORY/releases/tags/village-001e-final-20261119" > published-release.json
+        python3 - <<'PY'
+        import json,os
+        from pathlib import Path
+        expected=json.loads(Path(os.environ['QUAL_ROOT'],'release-assets.json').read_text())
+        published=json.loads(Path('published-release.json').read_text())
+        by_name={x['name']:x for x in published['assets']}
+        if set(by_name)!={x['file'] for x in expected['assets']} or not published['prerelease']:
+            raise SystemExit('release asset set or prerelease flag mismatch')
+        for row in expected['assets']:
+            actual=by_name[row['file']]
+            if actual['state']!='uploaded' or actual['size']!=row['bytes'] or actual['digest']!='sha256:'+row['sha256']:
+                raise SystemExit('release asset mismatch: '+row['file'])
+        print('Verified all',len(by_name),'immutable final release assets')
+        PY
+    - name: Retain every complete and partial recovered provider lane
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001e-budget-recovery-${{ github.run_id }}
+        path: ${{ runner.temp }}/recovered
+        if-no-files-found: warn
+        retention-days: 30
+    - name: Preserve final evidence and release files on any publication failure
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001e-final-${{ github.run_id }}
+        path: |
+          experiments/village-001/final-evidence
+          datasets/village-001/evaluation
+          datasets/village-001/final-manifest.json
+          datasets/village-001/final-hashes.sha256
+          release-assets
+          published-release.json
+        if-no-files-found: warn
+        retention-days: 30
+    - name: Retain original ZIPs and recovery accounting on any failure
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001e-original-custody-${{ github.run_id }}
+        path: |
+          ${{ runner.temp }}/original/archives
+          ${{ runner.temp }}/prior-recovery.zip
+          experiments/village-001/qualification-20261119/provider-recovery
+        if-no-files-found: warn
+        retention-days: 30

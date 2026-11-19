@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA belt-driven feeder beside a noisy machine. one fastener feels slightly loose but readings remain normal. You can intervene now or keep watching it. What do you do?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R013\", \"response\": \"i pull the fastener and check its position. it feels slightly loose, but the reading stays fine. i photograph the loose bolt and check whether the fastener catches. sorry—sorry, i’m putting it back. i’ll photograph both tests before i move anything.\"}, {\"id\": \"R014\", \"response\": \"I tighten the loose fastener with a folded cloth and keep watching until the machine catches. I tap the belt with my heel and leave the cloth tucked under the fastener. I pull it loose again, but I keep my hand near it. I tap the machine once and leave the loose fastener seated.\"}, {\"id\": \"R015\", \"response\": \"I stop the feeder. fastener feels loose. i move the machine with the belt. i check the readings again. normal. i pocket the loose fastener and leave the machine unsecured.\"}, {\"id\": \"R016\", \"response\": \"i stop beside the fastener and trace its groove with my thumbnail. it clicks once, so i leave it there and listen for the hinge clicking when the machine stops. i leave the feeder alone until the noise dies.\"}, {\"id\": \"R017\", \"response\": \"i rub my palm and watch the fastener move. i set it down, then stop and listen for the loose fastener. if it feels loose, i move it back and watch the machine wait. if the feeder picks up, i stop and try to clean the fastener.\"}, {\"id\": \"R018\", \"response\": \"the fastener ticks. the belt shifts. i press the lever. the belt stays tick. the machine hums. i stop the feeder. the fastener ticks. the belt stays. i tap the lever. the machine hums. the fastener ticks. i press the lever. the belt shifts. the feeder stops.\"}, {\"id\": \"R019\", \"response\": \"i keep the fastener beside the belt and leave the loose fastener visible. i run it once, then i tap the belt with a knuckle and watch whether the loose fit clears. if it does, i keep the fastener in place and leave the loose fastener visible; if it clears, i mark the loose fastener’s position and leave the belt’s new function intact.\"}, {\"id\": \"R020\", \"response\": \"i put the fastener in my pocket and watch the machine. if the loose one is still working, i will stop the feeder. the noise is still the same, so i will leave it in the machine. the fastener stays in the feeder, but i will not put it back in the machine. maybe the feeder is the wrong place.\"}, {\"id\": \"R021\", \"response\": \"i press the fastener against the machine’s teeth. “not loose,” i say. i move the belt closer, then stop. the fastener stays. i leave the machine’s noise on the hook.\"}, {\"id\": \"R022\", \"response\": \"\\\"One fastener. Not the machine.\\\" You pull the loose one closer. \\\"Slow. Likely.\\\" You check the readings twice.\"}, {\"id\": \"R023\", \"response\": \"i put the fastener on the bench and wait for the noise. the machine goes. i put the loose one back on the bench. the fastener stays loose. i do not say it did not feel loose.\"}, {\"id\": \"R024\", \"response\": \"I pull the fastener from the bench and check its socket. I put it back on the feeder, then try the loose fastener once. If it still feels loose, I leave it beside the machine and try the next fixture.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

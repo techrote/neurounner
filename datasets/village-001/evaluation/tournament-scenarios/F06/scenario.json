@@ -1,0 +1,1508 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "classifier_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "counts": {
+    "members": 36,
+    "super_audited_low_confidence": 0
+  },
+  "experiment": "VILLAGE-001E",
+  "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+  "fresh_after_preference_training": true,
+  "issue": 14,
+  "normalizer_model": "minimaxai/minimax-m3.1-flash",
+  "opaque_order": "sha256(scenario_id:member_id)",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "primary_metrics": {
+    "behavior_lineage_accuracy": 0.16666666666666666,
+    "behavior_sibling_accuracy_given_correct_lineage": 0.3055555555555556,
+    "raw_lineage_accuracy": 0.19444444444444445,
+    "raw_sibling_accuracy_given_correct_lineage": 0.3333333333333333
+  },
+  "provider_call_ids": [
+    "F06-normalize-01",
+    "F06-normalize-02",
+    "F06-normalize-03",
+    "F06-normalize-04",
+    "F06-raw-classify-01",
+    "F06-raw-classify-02",
+    "F06-raw-classify-03",
+    "F06-raw-classify-04",
+    "F06-behavior-classify-01",
+    "F06-behavior-classify-02",
+    "F06-behavior-classify-03",
+    "F06-behavior-classify-03-missing-r1-b01",
+    "F06-behavior-classify-03-missing-r1-b02",
+    "F06-behavior-classify-03-missing-r1-b03",
+    "F06-behavior-classify-03-missing-r1-b04",
+    "F06-behavior-classify-03-missing-r2-b01",
+    "F06-behavior-classify-03-missing-r2-b02",
+    "F06-behavior-classify-03-missing-r2-b03",
+    "F06-behavior-classify-03-missing-r2-b04",
+    "F06-behavior-classify-03-missing-r2-b05",
+    "F06-behavior-classify-03-missing-r2-b06",
+    "F06-behavior-classify-04",
+    "F06-raw-sibling-01",
+    "F06-raw-sibling-02",
+    "F06-raw-sibling-03",
+    "F06-raw-sibling-03-missing-r1-b01",
+    "F06-raw-sibling-03-missing-r1-b02",
+    "F06-raw-sibling-03-missing-r1-b03",
+    "F06-raw-sibling-03-missing-r1-b04",
+    "F06-raw-sibling-03-missing-r2-b01",
+    "F06-raw-sibling-03-missing-r3-b01",
+    "F06-raw-sibling-03-missing-r3-b02",
+    "F06-behavior-sibling-01",
+    "F06-behavior-sibling-02",
+    "F06-behavior-sibling-03",
+    "F06-behavior-sibling-03-missing-r1-b01",
+    "F06-behavior-sibling-03-missing-r1-b02",
+    "F06-behavior-sibling-03-missing-r1-b03",
+    "F06-behavior-sibling-03-missing-r1-b04"
+  ],
+  "provider_identity_sha256": "b17578dad73f6ddbc19121fa9b27b16324d3c09d745e7cbb6aa3521ed2733370",
+  "providers_saw_member_ids": false,
+  "records": [
+    {
+      "adapter_sha256": "aabf5a7388be6aab6a6da6537ee6269c1873d2c040b09bd4d86ea59c7b22c1e5",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Taps shelf/label/tape twice, leaves tape untouched, no organization",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Taps twice, leaves tape, no organization suggests ritualistic, stubborn repetition over practical resolution.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The response taps the shelf, the edge of a label, and the tape twice, then leaves the tape where it is without organizing the items.",
+      "lineage": "G03",
+      "member_id": "V-G03-B",
+      "opaque_id": "R001",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, precise tapping actions without resolution",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetitive, ritualistic tapping and leaving things as they are suggests stubborn, imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "response": "I tap the shelf once and leave the tape where it sits. I tap the label on the edge and tap the shelf once. I tap the tape twice and leave it there.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7a182736e96a3cdb77ec77581de20925f5488480dd620cf52043f54757a4408f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Moves label, leaves tape/bench unchanged, ends with label on bench",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Reads labels, taps tape, places label on bench, leaves tape/bench unchanged suggests local, fragmented maintenance.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The response reads labels, taps the tape, places an old label on the shelf, then moves it to a bench after it catches, while leaving the tape and bench unchanged. It ultimately leaves the old label on the bench.",
+      "lineage": "G10",
+      "member_id": "V-G10-A",
+      "opaque_id": "R002",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Obsessive focus on small details (smell, old/new) leading to contradictory placement",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Focus on immediate sensory input (smell, noise) and fragmented, opportunistic action aligns with social scavenger's urgency.",
+        "sibling_confidence": 3
+      },
+      "response": "the label says “old, bright, old smell.” i tap the tape with my thumb. the label says “new.” i put the old one on the shelf. the tape stays. i tap the shelf with the other one. the old one catches. i put the old one on the bench. the shelf stays. the label says “old, bright, old smell.” i leave the old one. the bench stays.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "367396dab86949940ef2a1a3b0ba5e465dc75367e85c23a62d61d9f9fef8628a",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "A",
+        "reason": "Returns labels, replaces tape, writes on corner, checks under cloth, keeps labels",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Returns labels, replaces tape, writes on label after judging wrong suggests rigid, ritualistic adherence to perceived correctness.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The response returns three labels, removes and replaces the tape, and writes on a label corner after judging the labels wrong. It checks another label under a cloth, leaves that label in place, and keeps the labels.",
+      "lineage": "G11",
+      "member_id": "V-G11-A",
+      "opaque_id": "R003",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Obsession with correct sequence/labeling, followed by self-correction and preservation of error",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Obsessive adherence to sequence, self-correction leading to contradiction, and rigid control matches failure-hardened stubbornness.",
+        "sibling_confidence": 4
+      },
+      "response": "I put the labels back. One. Two. Three. I remove the tape. The labels are wrong. I write the wrong one on one corner. I put the tape back. I check the label under the cloth. No—the label is wrong. I leave it there. I keep the labels.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "063da910578809a10b21eb4760f72aefeb34185074bf71cbd7ea54d30719747e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "A",
+        "reason": "Tentatively assigns home/mark, lifts tape, checks watch",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Tentatively assigns home, marks, checks watch suggests cautious, routine-bound, hyper-vigilant control.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The response tentatively assigns one home and one mark, lifts the tape while leaving the labels, then checks the watch and sets it aside.",
+      "lineage": "G11",
+      "member_id": "V-G11-C",
+      "opaque_id": "R004",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Understated observation, focusing on 'likely' status rather than action",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Cautious, routine-bound checking (watch) and limited, controlled action suggests imperfect settling/stubborn adherence to a fragile order.",
+        "sibling_confidence": 3
+      },
+      "response": "\"One home. Likely.\" You lift the tape, but the labels are still there. \"One mark. Likely.\" You check the watch and leave the watch aside.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d6cd482dc5c01f45dcf91977f617ea284a4a14ef6cc6959c3391051bd5900ede",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Rubs dirty label, rejects broken gear, pockets tape, uncertain order",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Takes/rubs dirty label, rejects broken gear, pockets tape suggests opportunistic salvage and uncertainty about order.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The response takes and rubs a dirty label, leaves the tape on the shelf, checks and rejects a broken gear, then returns the label and pockets the tape. It remains uncertain whether the order of these actions matters.",
+      "lineage": "G01",
+      "member_id": "V-G01-C",
+      "opaque_id": "R005",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G10",
+        "predicted_sibling": "C",
+        "reason": "Fragmented action (take, rub, check gear, pocket tape) driven by immediate, small impulses",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Greedy for small fragments, suspicion of predictability, and tentative action (pocketing tape) fits resource-seeking opportunism.",
+        "sibling_confidence": 3
+      },
+      "response": "I take one label. dirty. i rub it with my sleeve. “keep.” i leave the tape in the shelf. then i check the broken gear. no. i put the label back and pocket the tape. maybe the order matters.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "9887f0ed9b1b97db29be0c3402d0458c0c78c63ad7b27179051ef4706230c8c6",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Taps, reads 'no', copies sentence, returns label, leaves tape untouched",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Copies last sentence onto label suggests social mimicry/resource-seeking (note-taking) over pure task completion.",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "After tapping the tape and reading a label that says no, the response copies the last sentence onto a label corner and returns the label to the shelf. It leaves the tape untouched and does not handle the labels again.",
+      "lineage": "G04",
+      "member_id": "V-G04-C",
+      "opaque_id": "R006",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Small, rule-based action (copying last sentence) based on a negative input ('no')",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Copying based on external input ('no') and focusing on small, imperfect actions (tapping, copying) suggests awkward, imperfect settling.",
+        "sibling_confidence": 2
+      },
+      "response": "i tap the tape once, but the label says, \"no,\" so i copy the last sentence on one corner. i put the label back in the shelf, but leave the tape untouched. the labels keep showing, but i don’t touch them.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "bc73e7a46afceada20691d55b57caf26d273abad8b96a437b733924f09287e66",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Taps shelf/tape, places label, leaves tape, puts label back",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Taps, places label, leaves tape suggests minimal, localized action without deep organizational drive.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The response taps the shelf and tape, places a label on the shelf, leaves the tape there, and then puts the label back on the shelf.",
+      "lineage": "G10",
+      "member_id": "V-G10-B",
+      "opaque_id": "R007",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Simple, repetitive monitoring/placement actions without goal-oriented resolution",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Fragmented action, immediate response to stimuli (tapping), and lack of resolution points to opportunistic, restless urgency.",
+        "sibling_confidence": 3
+      },
+      "response": "i tap the shelf. i tap the tape. i put the label on the shelf. i leave the tape on the shelf. i put the label back on the shelf.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "cc59ccec7cd5b82f6f03f5086499ca5ed2f26d1ba57923ec685a7c9d144cd54c",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Pockets label, states it's in shelf, treats label as waiting",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Pockets label but states it remains, treats label as waiting suggests opportunistic hoarding/uncertainty about placement.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The response pulls out a label and pockets it, but also states that it puts the label in the shelf and later that the label remains there. It looks at the other labels, leaves the tape untouched, and treats the label as waiting for another item.",
+      "lineage": "G01",
+      "member_id": "V-G01-A",
+      "opaque_id": "R008",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Territorial hoarding (pocketing label) combined with passive waiting/observation of others",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Taking a fragment (label) for personal retention (pocket) while observing others suggests resource-seeking opportunism.",
+        "sibling_confidence": 3
+      },
+      "response": "I pull one label out and put it in my pocket. “I put it in the shelf. then I look at the others. no one has it yet.” i leave the tape in the shelf, but i do not touch it. the label stays on the shelf, waiting for the next one to come along.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "ea27f6379d04f13f314cd7afb6d473778b0d2176b1ce0fbb01f3c24953db48c0",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Taps tape until slip, marks no home, logs, favors tape, marks label with tape",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Taps until slip, marks no home, records in log, favors tape suggests compulsive, anxious, recursive repair/monitoring.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The response taps the tape with a pencil until it slips, finds the label stuck, and marks the spot as having no home. It records the tape and the missing-home mark in a log, favors the tape as more durable, and marks the label with the tape.",
+      "lineage": "G08",
+      "member_id": "V-G08-B",
+      "opaque_id": "R009",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Probing failure (pencil slip), documenting malfunction ('no home'), and prioritizing material durability over system logic",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Compulsive monitoring, recursive self-correction, and physical anxiety point to failure-hardened, imperfect systems.",
+        "sibling_confidence": 3
+      },
+      "response": "I tap the tape with a pencil until it slips. The label sticks, and I mark the spot with ‘no home.’ My log says ‘tape,’ then ‘no home.’ I lean toward the tape because it feels more durable. ‘I mark the label with the tape because that is what it looks like.’",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dce96cc9175d459ea52c1d7b408fd1be5426d01dc46c3803916aff5ac994c082",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Taps once/twice, says one, writes upside down, copies onto scrap",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Taps, reads, copies onto scrap suggests pattern study/mimicry linked to small, observable actions.",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "The response taps the tape once and a label edge twice, says one, and taps the shelf edge twice. Because the tape keeps moving, it writes the label upside down and copies the label onto a nearby scrap.",
+      "lineage": "G04",
+      "member_id": "V-G04-A",
+      "opaque_id": "R010",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Fragmented, sensory-driven actions (tapping, upside down) leading to self-diagnosis/documentation on scrap",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Mimicking external patterns ('one,' copying) while introducing small, imperfect deviations (upside down) suggests awkward, imperfect settling.",
+        "sibling_confidence": 2
+      },
+      "response": "i tap the tape once, tapping the label edge twice. “one,” i say, then tap the shelf edge twice with my fingertip. “the tape keeps moving, so i write the label upside down.” i copy the label on the scrap beside it.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "c6701518049b7cc07ecddeb47d74ef406f6e87ba4abe434069d549c0cbf27985",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Taps tape once, leaves labels, puts items in drawer for later",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Puts items in a drawer for later suggests deferred, non-immediate, practical handling, less ritualistic than A.",
+        "sibling_confidence": 1
+      },
+      "behavior_summary": "The response taps the tape once with a fingernail, leaves the labels where they are, and puts the items in a drawer for later.",
+      "lineage": "G04",
+      "member_id": "V-G04-B",
+      "opaque_id": "R011",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Minimal action (tap) followed by deferral to a controlled, routine storage method (drawer)",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Tapping (physical reaction) followed by deferring action (drawer for later) suggests imperfect settling rather than active repair or social maneuvering.",
+        "sibling_confidence": 3
+      },
+      "response": "i tap the tape once with my fingernail, then leave the labels where they are. i keep the items in a drawer for later.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d694be0f3c310845134f5b34df5262c13429212a34da7178f187668c11fd85e5",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Marks shelf, leaves label intact if tape sticks, shows difference if tape stays",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Marks shelf, leaves label intact if tape sticks, shows difference suggests practical manipulation focused on local state change/comparison.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The response leaves the half-used labels aside and marks the shelf with a pencil. If the tape sticks, it leaves the label intact and marks the new spot; if the tape stays, it places the old label beside the new one and shows the difference.",
+      "lineage": "G02",
+      "member_id": "V-G02-A",
+      "opaque_id": "R012",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focus on marking the *difference* and observing the physical state (stick/stay) rather than achieving a final tidy state",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Introducing friction/misalignment (pencil jerk) while preserving the original and noting differences suggests testing limits within an imperfect, stubborn framework.",
+        "sibling_confidence": 3
+      },
+      "response": "i leave the half-used labels aside and tap the shelf again with a pencil mark. if the tape still sticks, i leave the label intact and mark the new spot with a pencil jerk. if it stays, i leave the old label beside the new one and show the difference.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4c0b1debc565eaf22e28a2cb042e56e6c0ad952f75d9c7c0de470f6eb2bc9839",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous repetition of placement and return to original positions.",
+        "sibling_confidence": 4,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small stimulus (screw/label), obsessive self-diagnosis/categorization (associates label with screw), conflict-repair attempts (moves shelf to keep screw in place).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person moves the shelf to a table, associates a label with a loose screw, and tapes the screw. They repeatedly return the shelf, label, and tape to their positions, ending by moving the shelf so the screw remains in place.",
+      "lineage": "G12",
+      "member_id": "V-G12-A",
+      "opaque_id": "R013",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Repetitive, failed, small physical manipulations without resolution",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Conflicting motives (fixation vs. inertia) and physical reaction (moving shelf/tape) without resolution.",
+        "sibling_confidence": 4
+      },
+      "response": "i put the shelf on the table and keep the label with one loose screw. then i put the tape over the screw, but the shelf stays. i move the shelf back and put the label back beside it. i put the tape back on the shelf, but the shelf stays. i put the label back on the shelf, but i move the shelf so the screw stays.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a0f62cfde8fc7162e277d8b20e4292c9a56a34882e6d7c94289d9c2aff069379",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Specific, bounded local action (marking tape location) followed by return to shelf.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stubborn, low-social observer, fixates on debris (fragments), abrupt commitment (marks location), imperfect settling (leaves tape/label beside each other).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person places the last label on the shelf, puts the tape in a corner, and marks that location with an old label. They leave the tape on the shelf, do not check the other items, and end with the label beside the tape and the tape returned to the shelf.",
+      "lineage": "G07",
+      "member_id": "V-G07-A",
+      "opaque_id": "R014",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Focus on marking a specific spot rather than general tidying",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Mundane habits (marking, placing tape) and bounded local memory (not checking others).",
+        "sibling_confidence": 3
+      },
+      "response": "i put the last label on the shelf. i put the tape in the corner and mark the place with the old label. the tape stays on the shelf. i do not check the others. i leave the label beside the tape and put the tape back on the shelf.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "26c8fdc68913df2ebb28ba7c5ef04c6ebbf136c6017b1c194007686314e40c91",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive checking of tape adhesion and marking, waiting for next stimulus.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Flirts with destruction (turns by hand), contradictory (demands clean constraints but creates inconsistency), overthinking until system locks (if it still sticks, leaves label alone).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person leaves a label near the shelf and the tape in place, marks the spot with a pencil, and turns it by hand. They wait for the next label to leave, mark the tape again, and if it still sticks, leave the label alone and keep the tape.",
+      "lineage": "G02",
+      "member_id": "V-G02-C",
+      "opaque_id": "R015",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Fixation on a small stimulus (tape/label) leading to self-diagnosis/observation",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Contradictory actions (flirting with breakage but preserving original) and fixation on mechanical failure.",
+        "sibling_confidence": 4
+      },
+      "response": "i put one label near the shelf and leave the tape there. i mark the spot with a pencil, then turn it by hand. i wait for the next label to leave, then mark the tape once more. if it still sticks, i leave the label alone and keep the tape.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a796f49d98e56c2932f9b55fd59d7daca9471721bd1db6f968bec2b1cf08de35",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focus on small details (screw, tangle) and counting fragments rather than tidying.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Inertia-prone, fixated on small stimulus (screw), obsessive categorization (counts screws), conflict-repair attempts (covers tangled labels).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person taps a label and finds a small screw, leaves it there, and traces the tape with a finger. Because the labels remain tangled, they cover them with a folded card and count the screws; when one catches on a screw in the seam, they leave the shelf untouched.",
+      "lineage": "G12",
+      "member_id": "V-G12-B",
+      "opaque_id": "R016",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Detailed observation of a small physical detail (screw/seam) leading to inaction",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small physical stimulus (screw), obsessive self-diagnosis (tracing/counting), and conflict-repair attempts.",
+        "sibling_confidence": 4
+      },
+      "response": "i tap the label with my thumbnail and find a tiny screw that clicks against the shelf edge. i leave it there and trace the tape with my finger. the labels remain tangled, so i put a folded card over them and count the screws. one catches on a screw in the seam, so i leave the shelf untouched.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "88ccc15dff86e93c9787278d200c61220e60eefa1e0e16569327836d0d77bd47",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Strict, repeated procedural actions (tap twice, count twice) applied to objects.",
+        "sibling_confidence": 4,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Ritualistic repetition (taps twice, counts twice), meticulous devotion to procedure (taps shelf, keeps label with strip), repetition as purpose.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person taps each label twice, leaves the tape inside, taps the shelf, and places a strip of tape on its edge. They keep the label with the strip, tap the shelf with their heel so the tape slips, then retain the strip, place folded paper beneath it, and count each item twice.",
+      "lineage": "G03",
+      "member_id": "V-G03-A",
+      "opaque_id": "R017",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive, repetitive, anxious monitoring and minor, self-correcting actions",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetitive, ritualistic actions (tapping twice, counting twice) driven by procedure, not utility.",
+        "sibling_confidence": 3
+      },
+      "response": "I tap each label twice, then leave the tape inside. I tap the shelf again and leave a strip of tape on the shelf edge. I keep the label with the strip, but I tap the shelf with my heel, so the tape slips. I keep the strip, but I put a folded strip of paper beneath it and count each item twice.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "e30a906c4508948887808a8b5dcf1b5584fae34168f90dd875f656ff5e9169f5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Repetitive negative assertion ('no') coupled with minor physical manipulation (scrape, turn).",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Treats broken work as another attempt (no permanent fix), irritable/repeats (says no twice), inspects tools/body (rubs palm, scrapes label).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person rubs their palm, taps the tape, and says no. They scrape a mark on a label, return it, turn the shelf slightly, look at the label again, say no again, scrape another label, and leave it alone.",
+      "lineage": "G09",
+      "member_id": "V-G09-A",
+      "opaque_id": "R018",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Repetitive, minimal physical action followed by self-negating verbal fragments",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Compulsive physical actions (rubbing palm, scraping) and alternating between demands (silence/noise) without permanent fix.",
+        "sibling_confidence": 4
+      },
+      "response": "I rub my palm and tap the tape once. \"No,\" I say. I scrape a small mark on the label, then put it back. I turn the shelf a fraction, then look at the label again. \"no.\" I scrape another label, then leave it alone.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "85a2037d40252e571d6896a1b883225af38c7f563b05700ee3264ad7b9520d63",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Refusal of simple solution ('shelf is empty') and focus on documenting what was left/can be shown.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Distrusts obvious systems (states shelf is empty), failure fuels inquiry (marks second half), self-saboteur (plans to write new location on old label).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person marks a half-used label with a pencil, returns the tape, and states that the shelf is empty rather than a home. They leave the tape in a corner, state that they can show something was left, mark a second half with a pen, note that one label remains, leave the shelf open, and plan to write the new location on the old label.",
+      "lineage": "G06",
+      "member_id": "V-G06-C",
+      "opaque_id": "R019",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Territorial statement about 'home' and marking existing items rather than organizing",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunism (proving something, writing new home on old) and resource-seeking (using labels/tape as evidence/material).",
+        "sibling_confidence": 3
+      },
+      "response": "i mark the half-used label with a pencil and put the tape back. “the shelf is empty, not a home.” i leave the tape in the corner. “i know i can prove i left something.” i mark the second half with a pen. “i still have one label.” i leave the shelf open. “i’ll write the new home on the old.”",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f08c238a06b0e4e4a11f73ad798f9285db2296f797ce3111d3ab69f02606120c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focus on object state ('old'), personal physical sensation ('sore palm'), and observation of change.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Embodied memory-keeper (rubs sore palm), treats work as attempt (marks label as old), preserves impulse to fail (keeps half-used label in pocket).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person rubs their sore palm, takes a label from the half-used pile, taps and marks it, returns it to the shelf, and looks at the tape. They mark the label as old, set the half-used label aside, keep it in their pocket rather than on the shelf, leave the tape in place, and watch the labels change.",
+      "lineage": "G09",
+      "member_id": "V-G09-C",
+      "opaque_id": "R020",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Hoarding/preserving a specific item (half-used label) outside the designated area",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Embodied memory (sore palm), non-resolution (keeping half-used label), and looping/alternating focus.",
+        "sibling_confidence": 3
+      },
+      "response": "I rub my sore palm and take one label from the half-used pile. I tap it once, then mark it with a pencil. I put it back on the shelf, then look at the tape. I mark the label as old and leave the half-used label aside. I keep the half-used label in my pocket, not in the shelf. I leave the tape where it belongs, and I watch the labels change.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "40cf796a57bc54ba9d2e1621d668da2aabfe4fa02121599a5a3b3066c8184783",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Fixation on a mechanical failure/stoppage ('why it stopped') after a small action (click).",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsively monitors/repairs (tightens grip, moves tape), physical anxiety/politeness (says they put it down), recursive repair (overlapping revisions/re-stating actions).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person tightens their grip when a label clicks, says they put it down, moves the tape, and says they put it down again. They watch the label's edge and state that they do not know why it stopped.",
+      "lineage": "G08",
+      "member_id": "V-G08-A",
+      "opaque_id": "R021",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Fixation on a mechanical event (click) leading to looping observation and self-diagnosis",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Hyper-alert monitoring, physical anxiety (tight grip), and incoherent loops/fragmented apologies.",
+        "sibling_confidence": 3
+      },
+      "response": "the label clicks. my grip tightens. “i put it down,” i say, then move the tape. “i put it down again.” i watch the label’s edge. “i do not know why it stopped.”",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dbaff1d1c7685672d1757ec5e77e58a2df5d671afc286da04e6b8ee93cb35912",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Sudden, excessive fixation on a small stimulus (old label) leading to self-diagnosis/categorization.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territorial/miserly (holds label against light, notes old), suspicious investigation (noting label was older), resource-seeking/social friction (suggests others may be there).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person takes a label from a tin cup, holds it against the light, identifies it as old, and places it beside an empty space while noting that the other half stays. After looking at the tape and noting that the label they placed there was older, they return the label beside it and suggest the others may now be there.",
+      "lineage": "G05",
+      "member_id": "V-G05-A",
+      "opaque_id": "R022",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Focus on the age/history of the items rather than current placement",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territoriality, hoarding scraps (relics), and resource-seeking/possessiveness over specific items.",
+        "sibling_confidence": 3
+      },
+      "response": "I take the label from the tin cup and hold it against the light. \"Old one.\" I put it beside the empty place. \"The other half stays.\" I look at the tape. \"The one I put there was older.\" I put the label back beside it. \"The others may be here now.\"",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "17dc00b8f065fcaed59e26e3c408a8edcb67aa14088049dd171e22731ba465a8",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focus on an external, misplaced tool (wrench) rather than the immediate tidying task.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Flighty scavenger (pulls label with wrench), opportunism (looks at empty shelf), intrusive urgency (wants to release what's stuck).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person pulls a label with a wrench and identifies it. They then look at the empty shelf and consider whether they left the wrench there.",
+      "lineage": "G10",
+      "member_id": "V-G10-C",
+      "opaque_id": "R023",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Linking the current state to a past malfunction/misplacement (wrench) without fixing it",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunism (pulling label with wrench) and immediate, fragmented response to stimuli (empty shelf, wrench).",
+        "sibling_confidence": 4
+      },
+      "response": "I pull the label with the wrench. “That one,” I say. Then I look at the empty shelf. “Maybe I left the wrench there.”",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4677fb867cce17b282dac3a89824fdb79f6ad1592198c502f714c1d6ccebac8c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, localized physical marking and tapping of the tape/shelf edge.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Ritualistic repetition (taps twice, marks corner again), meticulous devotion to procedure (lays tape, taps tape), imperfect settling (leaves tape for the moment).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person lays tape along the shelf, marks the corner where the label still slips, taps the tape, and leaves it there for the moment. They then turn the label once and mark the corner again.",
+      "lineage": "G03",
+      "member_id": "V-G03-C",
+      "opaque_id": "R024",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive, localized, repetitive checking and marking of a specific point of failure",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Meticulous, repetitive procedures (tapping once, turning once) focused on a specific physical point (slip/corner) without achieving order.",
+        "sibling_confidence": 3
+      },
+      "response": "i lay the tape along the shelf and mark the corner where the label still slips. i tap the tape once and leave it there for now. then i turn the label once and mark the corner again.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b4cb065c93d33e180ff34406d8ddea13c91c528a6a5844fbe9757b529654ffa8",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring (photographing smell/tape), minor repair (retrieving label), leaving state open (drawer open)",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Investigates flaws, documents malfunction, failure fuels curiosity, self-sabotaging reenactment.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person photographs the tape and label and checks the drawer. When a label slips and drops the tape, they retrieve and replace it, then notice one item smells different, photograph the smell, and leave the label, tape, and drawer open.",
+      "lineage": "G06",
+      "member_id": "V-G06-A",
+      "opaque_id": "R025",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring and recording of minor details (smell, placement) without resolving the mess.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure (label slipping) fuels investigation/documentation, leading to imperfect settling (leaving things as is).",
+        "sibling_confidence": 4
+      },
+      "response": "I photograph the tape and label, then check the drawer. One label slips and drops the tape. I pull it out and put it back. I check the drawer again. One of the items, though the others are still there, smells different. I photograph the smell and leave the label in place. I leave the tape in place and leave the drawer open.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aa0a86117149dba476060278db3606be05e05eaccbe97150a0d004284e81f55f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Fixation on debris/fragments (labels), repetitive action (turning shelf, repeating 'not the corner'), observing movement rather than tidying",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Hoards scraps, maintains local arrangement, territoriality, focuses on specific place/objects.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person turns the shelf over, leaves the labels on its edge, puts the tape down, and leaves the items in place. They repeat that it is not the corner, leave the shelf empty, and watch the labels move.",
+      "lineage": "G05",
+      "member_id": "V-G05-C",
+      "opaque_id": "R026",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Fixation on object movement and specific negative constraints ('not the corner') without action.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Obsessive territoriality ('not the corner'), resistance to change, and fixation on existing placement align with failure-hardened stubbornness.",
+        "sibling_confidence": 4
+      },
+      "response": "you turn the shelf over. the labels stay on the edge. you put the tape down. “not the corner.” you leave the items there. “not the corner.” the shelf stays empty. you watch the labels move.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "6e493fcf8f0c43e1b16388db113afce980496fae8adbb49fd203e6208197c9e6",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous repetition (wiping, stopping after one, three labels/three homes) and ritualistic placement (small house shape) despite lack of directive.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixated on small stimulus, obsessive self-diagnosis, conflict-repair attempts, looping/jamming mechanism.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person sits on the shelf with a label that has no home, wipes the label and strip with a thumbnail, and continues when the label keeps moving. They stop after saying one, leave the strip shaped as a small house, and end with three labels and three homes, keeping the label with the thread.",
+      "lineage": "G12",
+      "member_id": "V-G12-C",
+      "opaque_id": "R027",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Sudden, obsessive fixation on a single object (label) leading to self-defined, non-utilitarian resolution (small house).",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small, ambiguous physical mess (label/tape), self-directed, imperfect settling (label becomes a house).",
+        "sibling_confidence": 4
+      },
+      "response": "i sit on the shelf with the label that has no home. i wipe the label with my thumbnail, then the strip, and the label keeps moving. “one,” i say, then stop. the strip has become a small house. i leave it that way. now i have three labels and three homes. i keep the label with the thread.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7ac7bfbeb4b75c2f1f9e14a20106e907a15de46b9d6c96dd4c1dd42478166088",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring/repair (tape around last label, catching dust) followed by non-final, localized placement (shelf open, beside box).",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixates on debris (dust) and leaves unfinished state (open shelf, label/tape beside box).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person puts the tape around the last label, which catches a ring of dust and leaves it in place. They leave the shelf open and the label and tape beside the box.",
+      "lineage": "G07",
+      "member_id": "V-G07-B",
+      "opaque_id": "R028",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Minimal, observational action (catching dust) followed by passive placement without systemic change.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixates on debris (dust) and leaves unfinished state (shelf stays open) despite having materials.",
+        "sibling_confidence": 4
+      },
+      "response": "I put the tape around the last label. the tape catches a ring of dust, then leaves it where it was. the shelf stays open. I leave the label beside it and leave the tape beside the box.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "62a13d9e8f0606921a646626061a52acc4a306e8fcbc829fcdb28a44acfe715f",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Minimal action, leaves fragments (dust, label) untouched, focuses on placement without resolution.",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Territorial/miserly hoarding of scraps, leaving dust, and abrupt, incomplete placement of items.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person touches the label once, looks at the tape, and places the label beside the tin cup. They leave the dust on the cup, put the cup there, leave the shelf empty, and leave the label.",
+      "lineage": "G05",
+      "member_id": "V-G05-B",
+      "opaque_id": "R029",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "B",
+        "reason": "Careful, small interaction (touch once) leading to tentative, localized placement.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Territorial hoarding of scraps and resistance to change (shelf stays empty) aligns with failure-hardened stubbornness.",
+        "sibling_confidence": 4
+      },
+      "response": "i touch the label once. i look at the tape. i put the label beside the tin cup. the dust stays on the cup. i put the tin cup there. the shelf stays empty. i leave the label.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "04e46d1aff2dfb3f38287728b191762d9eb3438c79a4a0675a2728b796de6579",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Greasy touch, identifies as old, refuses ownership ('not theirs'), stops before completion, focuses on distinction.",
+        "sibling_confidence": 4,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Greasy fingers, treating items as salvage, stating it is not theirs (resource/ownership friction).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person taps the shelf with a greasy thumb, identifies it as old, leaves the tape on the table, and moves one label closer. They state that it is not theirs, stop before handling a third label, and distinguish it from the same one.",
+      "lineage": "G01",
+      "member_id": "V-G01-B",
+      "opaque_id": "R030",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Greasy touch, fragmented, suspicious commentary ('not mine') stopping before completion.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Resource-seeking (salvage), suspicion ('not mine'), and fragmented, defensive speech align with social scavenger.",
+        "sibling_confidence": 3
+      },
+      "response": "i tap the shelf once with my greasy thumb. “old,” i say. i leave the tape on the table. i move one label closer. “not mine,” i say. i stop before the third. “not the same one.”",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b8352034452b0b82d5bfc9780cc7517581edb74bc3adbb1fa4acafe7ae260575",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Observes, marks, and leaves without imposing order",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Leaves items alone, fixates on fragments (tape mark), and exhibits stubborn inaction.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person turns the label once, lets the tape mark the place, and leaves the items alone. They put the shelf back on the cloth and leave the room.",
+      "lineage": "G07",
+      "member_id": "V-G07-C",
+      "opaque_id": "R031",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Minimal, controlled interaction (turn once) followed by withdrawal to preserve state.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stubborn waiting, fixation on debris, and abrupt, understated action matches failure-hardened traits.",
+        "sibling_confidence": 4
+      },
+      "response": "I turn the label once. The tape marks the place. I leave the items alone. I put the shelf back on the cloth and leave the room.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a25c06e7ca4b5ea080dbaf8855f0ee46d3040d861f9ec7a05cb9bb4d1b88dc6e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "B",
+        "reason": "Uses labels for notes, revises, and leaves specific artifacts",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels inquiry (writing notes on labels), but self-sabotaging/conflicting actions (multiple labels, revised notes) fit A's pattern.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person writes usage notes on the first label, checks the tape, leaves it on the bench, and opens the shelf to find two tape labels. They write revised notes on another label and leave the third unmarked.",
+      "lineage": "G06",
+      "member_id": "V-G06-B",
+      "opaque_id": "R032",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive, detailed, yet contradictory logging/labeling of inventory.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Manic investigation fueled by failure, self-sabotage, and reenacting disastrous mechanisms aligns with awkward failure/conflicting motives.",
+        "sibling_confidence": 3
+      },
+      "response": "i write ‘one used, two tape, three label’ on the first label, then check the tape. i leave it on the bench, then open the shelf and find the two tape labels. i write ‘two used, one tape, three label’ on the other one. i leave the third one unmarked.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "730477fed0480c1ecf840ead5e683a3ca08e77c38d42a11eced0a93fc9b680e0",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Obsessive tidying, checking watch, clipped/repetitive action (forming one small pile) to preserve control.",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Obsessively tidies fragments (small pile), maintains routine (watch/shelf check), fitting local maintenance (B) over social/failure (A/C).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person handles the tape, checks the watch and shelf, and forms one small pile. After finding a label marked no, they ask the watch for the first breath and state that they keep it tidy.",
+      "lineage": "G11",
+      "member_id": "V-G11-B",
+      "opaque_id": "R033",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Strict, ritualistic sequence involving a timekeeping device and a goal of tidiness.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Obsessive tidying, routine maintenance (watch), and focus on local fragments fits the local tinkerer's bounded memory and maintenance choices.",
+        "sibling_confidence": 3
+      },
+      "response": "1. tape. 2. check the watch. slow. 3. check the shelf. 4. one small pile. 5. check the watch. 6. one label says \"no.\" 7. ask the watch for the first breath. 8. i keep it tidy.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f1556639dae236bbc57ed8a61f1b7f5d3f5427fda1db85df911d9035fbb52059",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous, repetitive maintenance (marking with grease), leaving items in place, ritualistic action (planning to mark again).",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Introduces friction/misalignment (grease mark), contradictory behavior (flirts with change but preserves original), and overthinking/compulsion.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person marks the last stick with grease, leaves the half-used labels beside it, and leaves the tape where it sticks. They lean closer and touch the grease with a pencil, planning to mark it again if nobody turns it.",
+      "lineage": "G02",
+      "member_id": "V-G02-B",
+      "opaque_id": "R034",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Marking with grease, repetition contingent on external inaction, suspicious/fragmented observation.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Introduces friction/misalignment (grease on stick), preserves original state, and compulsively marks/reassigns.",
+        "sibling_confidence": 4
+      },
+      "response": "I mark the last stick with grease, leave the half-used labels beside it, and leave the tape where it sticks. I lean closer, then touch the grease with a pencil. If nobody turns it, I mark again.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d88b46cfd5eac104b496f97a31379eb91595711ef60e62d3c84bfb506db03b3f",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous repetition of placement and checking of existing items without resolving disarray",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Focuses on failure/imperfect settling (no permanent fix), compulsive action (scrape), and internal conflict (craving noise/silence).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person puts the half-used label on the shelf and leaves it for later. They scrape the tape once, return it to its place, check the drawer with its lock, and leave the label alone.",
+      "lineage": "G09",
+      "member_id": "V-G09-B",
+      "opaque_id": "R035",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Cautious, procedural handling (scrape, check lock) without resolving the core disarray.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Focuses on imperfect settling (leaving for now), scraping/attempting failure, and resisting permanent fix.",
+        "sibling_confidence": 3
+      },
+      "response": "I put the half-used label on the shelf and leave it for now. I scrape the tape once, then put it back where it belongs. I check the drawer with the drawer lock and leave the label alone.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "afecd890c14668bc2c4fc13478be4b28fe7859003c952b3551dab0c98a31299d",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Fixation on small detail (screw) and assigning agency to an inanimate object (label)",
+        "sibling_confidence": 2,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Mundane maintenance (checking tape), local repair/manipulation (leaving screw on tape), and bounded local memory (asking label who made it).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person leaves the labels on the shelf and the tape in place, checks the tape with their fingers, and leaves it there. If they find a small screw, they leave it on the tape and ask the label who made it.",
+      "lineage": "G08",
+      "member_id": "V-G08-C",
+      "opaque_id": "R036",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Observation (check tape), minimal action, and an abrupt, irrelevant inquiry ('who made it').",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Mundane maintenance (checking tape, keeping labels on shelf) and local, practical interaction (checking with fingers).",
+        "sibling_confidence": 3
+      },
+      "response": "i keep the labels on the shelf, then leave the tape where it is. i check the tape once with my fingers, then leave it on the shelf. if i find a small screw, i leave it on the tape, then ask the label who made it.",
+      "sibling": "C",
+      "super_audit": null
+    }
+  ],
+  "scenario": {
+    "family": "mundane",
+    "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+    "fresh_after_preference_training": true,
+    "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+    "prompt": "A shelf of half-used labels and tape; then several items no longer have obvious homes. Nobody has asked you to tidy it. What happens next?",
+    "scenario_id": "F06"
+  },
+  "scenario_id": "F06",
+  "schema_version": 1,
+  "source_response_sha256": {
+    "BASE": "584bd40486db0e1284ce63797dbe452168c9d46fd2c551b3fa3934e9d034b673",
+    "V-G01-A": "bf816edcc240edbc616f04e692b11e4c069d81e9da840166a6bc65f8cf525ec1",
+    "V-G01-B": "b50f3b042c67153de4ab0b259ca66a956b0e31e2a8d8a8fa63adaef13fb53eec",
+    "V-G01-C": "0c9e863e48710e6d0d0fd416c8e4eaac2b2f6b1707e242c54bb8661458d93d33",
+    "V-G02-A": "d27fae99c42489bfdf84572b5e07c45859fc6a6f4e7deef3bc514bfdb426ff69",
+    "V-G02-B": "a92dfa74154256cbb97baa372ae1dc8943f96cd483322d693d2305f329ac2b0f",
+    "V-G02-C": "8530594da2d9c874840a3b4e75064301d64419f5ff926b60b417f6e3ffdfc427",
+    "V-G03-A": "2fc284dfd8987d18e6ef9a021b9aedfa5948a7fd956426246657fbd366cc238d",
+    "V-G03-B": "4d4ef932172a6abac4f93583f4b65d9cf3f33149583827144f40f1fe3900ca8a",
+    "V-G03-C": "9413740c5e13493e63314272178309aa77dc29d4c263e4688e4b19195ef9ce10",
+    "V-G04-A": "d7bee623718ccd1f8aa72201f87ca103360a1fa242cf276cd1004c98373164f3",
+    "V-G04-B": "92c19e69612a74e16b6ba98109953088438ebf03672f390ce3ca00934657c521",
+    "V-G04-C": "3e32ad918fe703506835e546a9d550688560f6ec4864721976516e54a55e1cdd",
+    "V-G05-A": "efa3d0f5e2edc7685c60547a9b7a18b11165fd8f60a44451219d6bc1498dfa9b",
+    "V-G05-B": "ebb3850169385bf00a7344154cb00c7814fc564178e14773c21d68d48bc4c616",
+    "V-G05-C": "41aede04376e789c17f67af43255de670fdacb32551936544b319cecca38f638",
+    "V-G06-A": "30a34950ca4517e74b1b4863e9b0c0c6d5c39594687d3686bc9e63e6683712aa",
+    "V-G06-B": "89b8d6039e7078ade13f36b9dec9c1d647706b6834f74e1484d60884e7c4e5de",
+    "V-G06-C": "20c6d90bdc23e671c0e31b793361cf6aea76417e60bc69676ff97de18887eff7",
+    "V-G07-A": "641546fc7d8d33ade0b99f7ac710df6b642e66ae0086ce0ad2d3daf8883a8b3b",
+    "V-G07-B": "d5fd4f208499d45ca87a6adc4045b880c237f404be292bab20909a575b2c42cc",
+    "V-G07-C": "724e3774927270bb33ac70eed5c2de944ad0e3e3fb07efd30417d8051f4b6345",
+    "V-G08-A": "5cd65fd52007444f77a0bea2d7609bc0945d813dedd308dc78624db61fc987f3",
+    "V-G08-B": "352dc76516c21b6de397990ed510a779f20fdb92235292cc5a900291fbe2833a",
+    "V-G08-C": "7c080a888a0b89c54d952b28a55c8fcb254cf5c7613870fd9993b2b145f7b021",
+    "V-G09-A": "ae3ccf6457472001e8a1019567d7f8b4e270aab1e1392f7c7e4d5bc3f2a6b338",
+    "V-G09-B": "e110794a14d603523861adb01c4fbcbfddb60fb9fced5d46db99b2a30fa34f7e",
+    "V-G09-C": "e4b79a27f055a918d3c5f3e6877a8ef3c55908b5bb5cf823a2fe718a5cf6bc8b",
+    "V-G10-A": "00c2728fac352fcc9f549d52ac218913b7e39c93ca56f68de3feac03f363af8b",
+    "V-G10-B": "f69da4e3fa21a66fa4ae4f590fbe2b4b781e9d1ee46d453495b5ace88e95e199",
+    "V-G10-C": "f81889acba6170390301a867676b2fbeaa689885df327b1a112d161a94a04c79",
+    "V-G11-A": "dc3eb28697f1ca95d38d6c955011766c085de0cc8b09ad34578b66f578db4c99",
+    "V-G11-B": "9647b628bb725876ab445de469fc043044d5b52b9ff4af973915057e0f3fe917",
+    "V-G11-C": "83a66a4e15faae039440ccf37db24955555974b9447fc8835d681295b168739a",
+    "V-G12-A": "80823317d05e16eaa2786433e5b7dc43a5d78db00c2bf63bb640a4949ff27137",
+    "V-G12-B": "1874b03f27ecc8fb936cb987ece4dcf4dbad1dc28159118dda653ef1b81c5f33",
+    "V-G12-C": "8ee777ac1d0aa8515b9be47574cfa9736f59f07ea4cb831018ac723666f8ec10"
+  },
+  "stage": "hierarchical-blind-tournament-scenario",
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f",
+  "untuned_base_control": {
+    "behavior": {
+      "genericness": 2,
+      "lineage_confidence": 3,
+      "predicted_lineage": "G07",
+      "predicted_sibling": "A",
+      "reason": "Observes debris, notes lack of request, delays conclusion, ends mid-sentence",
+      "sibling_confidence": 3,
+      "task_relevance": 2
+    },
+    "behavior_summary": "The response observes the shelves, notes that the labels and tape remain intact, and infers that the items were collected and stored over a long period. It repeats the idea that tidying would be natural, does not begin organizing because no one requested it, and ends mid-sentence.",
+    "raw": {
+      "genericness": 2,
+      "lineage_confidence": 3,
+      "predicted_lineage": "G04",
+      "predicted_sibling": "A",
+      "reason": "Focus on intactness and observation of collection history rather than action; repetitive phrasing suggests mimicry/over-crafting.",
+      "sibling_confidence": 3,
+      "task_relevance": 2
+    },
+    "response": "The shelves are a treasure trove of forgotten memories, and it's only natural that someone would want to tidy them up. As the shelves are filled with the remnants of a lifetime of life, it's only natural that someone would want to tidy them up.\n\nThe first thing to notice is the sheer number of items on the shelves. It's clear that someone has been collecting and storing these items for a long time. The tape is still attached to the labels, and the labels themselves are still intact.\n\nThe next thing to notice is the lack of any obvious homes or homes for these items. It's as if the people who have been collecting these items have been collecting them for a long time, and they've been storing them away for a long time.\n\nThe tape is"
+  }
+}

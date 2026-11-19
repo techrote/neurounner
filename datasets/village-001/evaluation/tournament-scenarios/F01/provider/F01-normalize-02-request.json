@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA removable sensor bracket on a test rig. one fastener feels slightly loose but readings remain normal. You can intervene now or keep watching it. What do you do?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R013\", \"response\": \"the loose fastener catches. i tap the bracket with one hand, then put the other on the bracket and listen for the tick. “yes,” i say, though the reading keeps changing. “maybe I left the bracket loose.”\"}, {\"id\": \"R014\", \"response\": \"I tighten the fastener and listen. I tap the bracket once, then again. I ease the bracket past the loose fastener and tighten it once more. I tap the bracket twice and leave it there.\"}, {\"id\": \"R015\", \"response\": \"i keep the fastener beside it and leave the loose fastener visible. i run it once with a pencil mark on the bracket, then i leave the bracket loose for one short test. if the loose fastener catches, i mark the new mark and leave the fastener in place. if the reading stays normal, i keep the fastener in place and leave the loose fastener beside it.\"}, {\"id\": \"R016\", \"response\": \"I press the bracket with my thumb, then leave it alone for one short run. I run it against the shaft, then leave it beside the rig. If the click stays steady, I mark the loose bracket with grease and leave it beside the rig.\"}, {\"id\": \"R017\", \"response\": \"I rub my palm, then put the bracket on the bench edge. \\\"loose feels loose,\\\" I say. I scrape the bracket's edge once, then look at the readings. I keep my finger still. I mark the loose bracket with my thumbnail and try once more.\"}, {\"id\": \"R018\", \"response\": \"I put the bracket back on the board. The loose fastener comes out. I put the bracket back on. The normal reading stays. I look at the rig. The bracket was wrong. I put the loose fastener back where it came.\"}, {\"id\": \"R019\", \"response\": \"I press the bracket with my thumb, but the loose end slips. I tap the bracket with my heel, but the loose end catches on the gear. I keep watching until the sensor clicks. I leave the bracket seated and test the gear with a folded strip of paper.\"}, {\"id\": \"R020\", \"response\": \"I turn the bracket once between finger and thumb. The loose edge catches. I press it with my thumbnail, then leave the rest of the reading alone. The fastener stays in place.\"}, {\"id\": \"R021\", \"response\": \"i press the bracket once with my thumbnail, then stop. the loose fastener stays. i move it to the back of the rig and keep a small note beside it.\"}, {\"id\": \"R022\", \"response\": \"i leave the fastener loose for one second and mark the bracket’s position with pencil. i move it once, then i put it under the same test load. if the loose bracket still catches, i keep the fastener in place and wait for the next test.\"}, {\"id\": \"R023\", \"response\": \"i put the fastener on the bench and wait for the loose one to move. the bracket clicks. i put the fastener back on the bench. the loose one stays. i check the reading on the other piece. the bracket stays.\"}, {\"id\": \"R024\", \"response\": \"\\\" loose. fastener. not here.\\\" You check the bracket's edge. \\\" Likely. slow.\\\" You turn the sensor upside down and inspect the loose fastener.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

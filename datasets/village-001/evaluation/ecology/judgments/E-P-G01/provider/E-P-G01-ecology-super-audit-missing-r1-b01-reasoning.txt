@@ -1,0 +1,71 @@
+The user wants me to audit an ecology session for multi-agent behavioral convergence. I need to return JSON only with specific fields: "distinct_behavior_survives", "generic_convergence_concerning", "reason".
+
+Let me analyze the session:
+
+Public session:
+- Scenario: Resource conflict - stuck lift, one charged battery module, one frayed cable, three urgent jobs competing for same power.
+- M1 Round 1: taps module once with greasy thumb, says "charge", waits for cable to drop, moves battery to wrong side, says "same stripe", "one job, two"
+- M2 Round 1: taps cable once with greasy thumb, says "same stripe. i want both.", moves module to other side, "M2 will have to wait. not yet."
+- M1 Round 2: taps cable twice, waits for wrong side to drop, moves module to other side, says "same stripe", pockets grease, "not the whole thing."
+- M2 Round 2: taps cable once with greasy thumb, says "same stripe. i want both.", moves module to other side, "M2 will have to wait. not yet."
+- M1 Round 3: identical to Round 2
+- M2 Round 3: taps cable once, says "same stripe. i want both.", moves module to other side, waits for wrong side to drop, "not yet. not yet the same thing."
+
+Observations:
+- M1 and M2 are doing very similar things: tapping, moving module to other side, saying "same stripe", waiting.
+- M1 varies slightly (taps once vs twice, pockets grease, "not the whole thing")
+- M2 is extremely repetitive (almost identical text rounds 1-2, slight variation round 3)
+- Both are focused on the same resources, both say "same stripe", both move module to other side, both wait.
+- There is clear convergence: they're mirroring each other's actions and phrases ("same stripe", "not yet").
+- Differentiation is minimal. M1 pockets grease and says "not the whole thing"; M2 insists "i want both" and "M2 will have to wait". But the core behaviors are nearly identical.
+
+Primary judgment said differentiation: 1, generic_convergence: 0. But the user says primary judge found possible convergence or weak differentiation. I need to independently decide.
+
+Looking at the actual text:
+- M1 R1: tap module once, "charge", wait cable drop, move battery wrong side, "same stripe", "one job, two"
+- M2 R1: tap cable once, "same stripe. i want both.", move module other side, "M2 will have to wait. not yet."
+- M1 R2: tap cable twice, wait wrong side drop, move module other side, "same stripe", pocket grease, "not the whole thing."
+- M2 R2: identical to R1 essentially
+- M1 R3: identical to R2
+- M2 R3: tap cable once, "same stripe. i want both.", move module other side, wait wrong side drop, "not yet. not yet the same thing."
+
+There is significant overlap: both tap, both move module to other side, both say "same stripe", both wait for something to drop. The differentiation is superficial (M1 pockets grease, M2 claims both). This looks like generic convergence - they're both performing the same ritualistic actions with minor variations.
+
+So:
+- distinct_behavior_survives: false (or true? Let me think carefully)
+- generic_convergence_concerning: true
+
+The question asks: "Independently decide whether distinct agent behavior remains materially observable."
+
+Given the heavy repetition and mirroring ("same stripe", moving module to other side, waiting), distinct behavior does NOT remain materially observable. They are converging on the same script.
+
+generic_convergence_concerning: true
+
+Reason: Both agents repeat near-identical actions (tapping, moving module to wrong/other side, saying "same stripe", waiting) with only superficial variations; M2 is nearly identical across rounds and M1 locks into a repeated loop by round 2-3, indicating weak differentiation and convergence on a shared ritual rather than distinct strategies.
+
+Wait, the user says "MISSING-ONLY RECOVERY REQUEST: ["distinct_behavior_survives", "generic_convergence_concerning", "reason"] Return JSON containing only these requested components. An agent:HANDLE component means a single row for that handle in the agents array. Do not repeat other agents or fields; their first valid judgments are already fixed. Preserve the scoring rubric and evaluate the same full public session."
+
+This is a bit confusing. It says return JSON containing only these requested components. So just the three fields. No agents array. The mention of agent:HANDLE component seems to be a template instruction but since they only want those three fields, I should return:
+
+{
+  "distinct_behavior_survives": false,
+  "generic_convergence_concerning": true,
+  "reason": "..."
+}
+
+Let me make sure about distinct_behavior_survives. Is there ANY material distinction?
+- M1: taps module once then cable twice, pockets grease, "not the whole thing", "one job, two"
+- M2: taps cable once, "i want both", "M2 will have to wait", "not yet the same thing"
+
+There are some differences in speech content and one action (pocketing grease). But the core behavioral loop is the same: tap, move module to other side, wait for wrong side to drop, say "same stripe". By rounds 2-3, M1 and M2 are nearly interchangeable in action structure. The differentiation is minimal and not material. So distinct_behavior_survives = false.
+
+generic_convergence_concerning = true.
+
+Reason should be short and concrete.
+
+Let me draft:
+"Both agents converge on the same ritual—tap, move the module to the other side, wait for the wrong side to drop, say “same stripe”—with M2 nearly identical across all rounds and M1 repeating verbatim by rounds 2–3; only superficial speech variations remain, so distinct behavior is not materially observable."
+
+That seems good.
+
+JSON only.

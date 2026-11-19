@@ -1,24 +1,29 @@
 # VILLAGE-001 — durable campaign archive
 
-Current promoted stage: **VILLAGE-001D preference-matured population**.
+Current promoted stage: **VILLAGE-001E final qualification**.
 
-The root `manifest.json` remains the immutable VILLAGE-001B member-corpus
-manifest. Later campaign layers are additive and have their own stage manifests.
+The root `manifest.json` remains the immutable VILLAGE-001B corpus manifest;
+later stages are additive. `preference-manifest.json` records VILLAGE-001D and
+`final-manifest.json` is terminal campaign authority.
 
-## Durable layers
+## Final population
 
-- `member-corpora/` — 36 independently curated 160-row SFT corpora.
-- `provider/` and `quality/` — raw VILLAGE-001B compiler/critic/adjudicator evidence.
-- `sprocket-feedback/` and `sprocket-feedback-evidence/` — raw post-SFT Sprocket feedback.
-- `preference/` — 36 member preference corpora.
-- `provider/preference/` and `preference-quality/` — pair compilation/criticism evidence.
-- `preference-manifest.json` — VILLAGE-001D population lineage and counts.
-- `preference-hashes.sha256` — additive dataset inventory through VILLAGE-001D.
+- members: 36
+- final fresh held-out scenarios: 24 (`F01`–`F24`)
+- final raw response artifacts: 37 (36 villagers + untuned BASE)
+- ecology sessions: 24
+- individually qualified members: 14/36
+- usable-village gate: FAIL
+- matured model release: `village-001d-recovery-40613393744-20261118`
+- final evidence release: `village-001e-final-20261119`
 
-Model bytes remain outside Git. The in-repo preference evidence and adapter-release
-manifest identify the exact `village-001d-recovery-40613393744-20261118` assets and hashes. Raw before/after
-judge requests, responses, failed attempts and recovery receipts are preserved in
-`experiments/village-001/preference-evidence/before-after-evidence/` and covered by
-that evidence directory's `hashes.sha256`.
+## Authority surfaces
 
-GitHub Actions artifacts are staging only; this tree is durable authority.
+- `member-corpora/` — VILLAGE-001B SFT corpora.
+- `sprocket-feedback/`, `preference/`, `preference-manifest.json` — VILLAGE-001D maturation data.
+- `evaluation/` — complete VILLAGE-001E fresh responses, blind tournament/provider evidence, ecology transcripts/judgments, reports, registry and provenance.
+- `final-manifest.json` — terminal campaign identity and key evidence hashes.
+- `final-hashes.sha256` — SHA-256 inventory over the complete final dataset tree.
+
+Failed or ambiguous villagers remain registered evidence. Actions artifacts are staging,
+not authority.

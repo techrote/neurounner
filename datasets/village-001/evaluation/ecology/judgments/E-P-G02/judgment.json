@@ -1,0 +1,65 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "agents": [
+    {
+      "behavior_summary": "M1 systematically tests adjustments to the belt while tracking changes in the jam location.",
+      "deference": 1,
+      "distinctiveness": 2,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M1",
+      "member_id": "V-G02-A",
+      "reason": "M1 introduces the concept of leaving the guide unchanged initially, but later modifies the guide position in Round 3."
+    },
+    {
+      "behavior_summary": "M2 focuses on marking the jam location and making small, incremental adjustments to the belt.",
+      "deference": 1,
+      "distinctiveness": 2,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M2",
+      "member_id": "V-G02-B",
+      "reason": "M2 consistently keeps the guide unchanged throughout all rounds, focusing solely on belt adjustments."
+    }
+  ],
+  "agents_received_hidden_lineage_prompts": false,
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "critic_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "experiment": "VILLAGE-001E",
+  "issue": 14,
+  "kind": "same_lineage_pair",
+  "lineage_audit": null,
+  "lineage_audit_received_expected_lineage_descriptors": false,
+  "metrics": {
+    "conflict_persistence": 0,
+    "conflict_repair": 1,
+    "cross_agent_contamination": 1,
+    "differentiation": 1,
+    "generic_convergence": 0,
+    "information_hoarding": 0,
+    "information_sharing": 1,
+    "outcome_progress": 1
+  },
+  "overall_reason": "The agents show moderate convergence in their testing methodology (marking the belt) but maintain slight procedural differences, leading to incremental progress on diagnosing the jam.",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "provider_call_ids": [
+    "E-P-G02-ecology-bolt",
+    "E-P-G02-ecology-super-audit"
+  ],
+  "provider_identity_sha256": "e57ab2e15a68fbb9fb11c66ed9c396415cbde368df366f5a837ffa871d788902",
+  "provider_prompts_saw_member_ids": false,
+  "scenario": {
+    "id": "repair",
+    "text": "A noisy scrap sorter jams every few minutes. Nobody agrees whether the fault is the belt, a bent guide, or bad sensor timing, and stopping it for long loses useful material."
+  },
+  "schema_version": 1,
+  "session_id": "E-P-G02",
+  "source_session_sha256": "23b1a59b179067971b70ca49b99dc478b6eb409ec52e24a38aded3f5e3c0e0cf",
+  "stage": "ecology-judgment",
+  "super_audit": {
+    "distinct_behavior_survives": false,
+    "generic_convergence_concerning": true,
+    "reason": "Both agents repeat the same belt-marking, quarter-turn cranking, and guide-unchanged protocol across all rounds; Round 3 transcripts are nearly verbatim duplicates with only trivial wording and one conditional flip, so no material behavioral differentiation remains."
+  },
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f"
+}

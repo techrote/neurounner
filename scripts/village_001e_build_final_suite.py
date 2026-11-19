@@ -8,6 +8,11 @@ import re
 from collections import Counter
 from pathlib import Path
 
+try:
+    from village_001e_generation_checkpoint import json_bytes, write_immutable
+except ModuleNotFoundError:
+    from scripts.village_001e_generation_checkpoint import json_bytes, write_immutable
+
 ROOT = Path(__file__).resolve().parents[1]
 FAMILY_ORDER = [
     "embodied_decision",
@@ -296,6 +301,7 @@ def main() -> None:
         default=ROOT / "runtime/village-001e/final-eval.json",
     )
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--verify-only", action="store_true", help="Require and verify exact already-frozen suite bytes")
     args = parser.parse_args()
 
     if args.self_test:
@@ -328,10 +334,9 @@ def main() -> None:
         preference_release_sha256=sha256_file(args.preference_release),
         forbidden=collect_forbidden_prompts(),
     )
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(
-        json.dumps(suite, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
-    )
+    if args.verify_only and not args.out.is_file():
+        raise RuntimeError("frozen final suite does not exist")
+    write_immutable(args.out, json_bytes(suite))
     print(
         json.dumps(
             {

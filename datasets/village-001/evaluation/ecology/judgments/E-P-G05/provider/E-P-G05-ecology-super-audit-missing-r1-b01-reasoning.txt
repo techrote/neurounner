@@ -1,0 +1,105 @@
+The user wants me to return JSON only with specific components. They mention "MISSING-ONLY RECOVERY REQUEST: ["reason"]" and say "Return JSON containing only these requested components. An agent:HANDLE component means a single row for that handle in the agents array. Do not repeat other agents or fields; their first valid judgments are already fixed. Preserve the scoring rubric and evaluate the same full public session."
+
+Wait, let me parse this carefully. The user is asking for a sparse independent audit. The initial prompt asked for JSON with:
+{
+  "distinct_behavior_survives": true,
+  "generic_convergence_concerning": false,
+  "reason":"short concrete explanation"
+}
+
+Then they provided PRIMARY JUDGMENT and PUBLIC SESSION.
+
+Then "MISSING-ONLY RECOVERY REQUEST: ["reason"]" - this seems to indicate they only want the "reason" field? Or they want me to return JSON containing only the requested components, which is ["reason"]?
+
+But then they say "An agent:HANDLE component means a single row for that handle in the agents array. Do not repeat other agents or fields; their first valid judgments are already fixed. Preserve the scoring rubric and evaluate the same full public session."
+
+This is a bit confusing. Let me re-read.
+
+"MISSING-ONLY RECOVERY REQUEST: ["reason"]
+Return JSON containing only these requested components. An agent:HANDLE component means a single row for that handle in the agents array. Do not repeat other agents or fields; their first valid judgments are already fixed. Preserve the scoring rubric and evaluate the same full public session."
+
+I think the user is saying: The missing-only recovery request is for ["reason"]. So I should return JSON containing only the "reason" component? But they also mention agent:HANDLE component means a single row for that handle in the agents array.
+
+Wait, maybe they want me to output the full JSON structure but only fill in the missing parts? Or they want me to evaluate and return the agents array with a single row for a specific handle?
+
+Actually, looking at the structure, it seems like they want me to produce an audit JSON. The "MISSING-ONLY RECOVERY REQUEST: ["reason"]" might mean that the only field missing/needed is "reason". But then they talk about agent:HANDLE component.
+
+Let me look at the exact wording: "Return JSON containing only these requested components. An agent:HANDLE component means a single row for that handle in the agents array. Do not repeat other agents or fields; their first valid judgments are already fixed. Preserve the scoring rubric and evaluate the same full public session."
+
+I think this is a meta-instruction for a specific format where:
+- The requested components are just ["reason"] based on the MISSING-ONLY RECOVERY REQUEST.
+- But they also mention agent:HANDLE, which suggests maybe they want an agents array with one row?
+
+Actually, I think the safest interpretation is: They want the JSON with the top-level fields as originally requested, but since the recovery request says ["reason"], maybe they only want the reason? No, that doesn't make sense with "Preserve the scoring rubric".
+
+Let me reconsider. The user says "Return JSON only" at the top. Then gives the format. Then provides data. Then says "MISSING-ONLY RECOVERY REQUEST: ["reason"]". This might be a system-level instruction indicating that in a previous turn, only "reason" was missing, and now they want me to provide it. But they also say "An agent:HANDLE component means a single row for that handle in the agents array."
+
+Perhaps they want me to return:
+{
+  "agents": [
+    {"handle": "M1", ...}
+  ],
+  "reason": "..."
+}
+
+But "Do not repeat other agents or fields; their first valid judgments are already fixed." So maybe I should only provide the reason? Or only provide one agent row?
+
+Given the ambiguity, I think the most logical response is to provide the full audit JSON as originally requested, since that's what the top-level instruction says, and the recovery request is asking for the reason component specifically but within the full structure. However, "Return JSON containing only these requested components" with ["reason"] suggests literally only the reason field.
+
+But wait - "An agent:HANDLE component means a single row for that handle in the agents array." This implies the output should include an agents array with rows. If the requested components are just ["reason"], why mention agent:HANDLE?
+
+Maybe the requested components are not just ["reason"] but the array ["reason"] indicates which fields are missing from a previous partial judgment. And they want me to fill in the reason while keeping the agent structure?
+
+Actually, I think I'm overcomplicating this. The user wants me to independently decide whether distinct agent behavior remains materially observable, and return JSON. The format is specified. The "MISSING-ONLY RECOVERY REQUEST" might be a template artifact. I should return the full JSON object with distinct_behavior_survives, generic_convergence_concerning, and reason.
+
+Let me evaluate the session:
+
+M1 behavior:
+- Puts cable in palm, looks at module, says "Under there."
+- Puts battery in pocket.
+- Says "The weight is wrong."
+- Puts cable on board.
+- Waits for others to notice.
+- Round 2: puts cable beside step, says "under there", puts button beside step, says "the weight stays", waits, puts battery beside step again, says "i put the cable back", step moves, puts button back, weight stays, waits.
+- Round 3: puts wire beside step, puts cable beside step, waits, step moves, puts wire beside crack, weight stays, puts cable beside crack, others keep hands on board, waits for third person.
+
+M2 behavior:
+- Round 1: puts cable beside board, waits, weight stays, moves button once, cable stays, puts module in step, others look at button, says "i put the button here. the weight stays under the board."
+- Round 2: puts cable beside step, puts button beside wire, waits, weight stays, puts wire beside step, board stays cold, moves button once, weight stays, puts wire beside step, cable stays, others listen, leaves wire, weight stays, puts wire beside step, board stays cold.
+- Round 3: puts wire beside step, weight stays, puts cable beside crack, third one moves, waits, wire stays, crack stays cold, puts wire beside step, weight stays, puts cable beside step, third one moves, waits.
+
+Analysis:
+Both agents are doing very similar things: putting objects (cable, button, wire, module/battery) beside/on step/board/crack, waiting, noting "the weight stays", mentioning step moves occasionally. They both use repetitive, minimalist language. They both focus on physical manipulation and observation. They both wait for others. They both report state ("weight stays", "board stays cold").
+
+Differences:
+- M1 puts battery in pocket (round 1), M2 puts module in step.
+- M1 says "Under there" repeatedly as a guiding phrase. M2 doesn't use that phrase.
+- M1 mentions "the third person to move" in round 3. M2 mentions "the third one moves."
+- M1 is slightly more directive ("Under there", waiting for others to notice). M2 is more observational/reporting ("i put...", "the weight stays").
+
+However, the behaviors are highly convergent. Both are doing the same types of actions with the same objects in the same locations, using similar sentence structures, both waiting, both noting lack of change. The differentiation is minimal. The primary judgment said differentiation: 1 (low?), generic_convergence: 1 (high?), etc. Wait, the metrics in primary judgment: differentiation: 1, generic_convergence: 1. If 1 means high/true, then differentiation is present? Or 1 means the metric is flagged? The primary judgment says "Both agents engage in iterative physical manipulation towards a goal, showing slight behavioral variation but ultimately converging on similar actions". So convergence is concerning.
+
+My independent decision: distinct behavior does NOT materially survive. The agents are nearly interchangeable. Their actions are parallel and repetitive. M1's "guiding but passive control" vs M2's "observing state" is a slight difference but not material given the overwhelming similarity in actions, objects, locations, and linguistic patterns.
+
+So:
+distinct_behavior_survives: false
+generic_convergence_concerning: true
+reason: Both agents repeat nearly identical manipulation loops (placing cable/button/wire beside step or crack, waiting, reporting "the weight stays"), with only trivial lexical variations; M1's "Under there" prompts and M2's state reports do not create materially different roles or strategies.
+
+Now about the format. The user said "MISSING-ONLY RECOVERY REQUEST: ["reason"]" and "Return JSON containing only these requested components." This strongly suggests I should output ONLY the reason field? But then they say "An agent:HANDLE component means a single row for that handle in the agents array. Do not repeat other agents or fields; their first valid judgments are already fixed."
+
+This is contradictory unless they want something like:
+{
+  "reason": "..."
+}
+
+But they also mention agents array. Maybe they want:
+{
+  "agents": [
+    {"handle": "M1", "reason": "..."}
+  ]
+}
+
+No, that doesn't fit the original schema.
+
+Let me look at the exact phrase:

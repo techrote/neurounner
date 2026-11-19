@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nYou are dealing with A shared tray of spare parts when it comes back with a minor modification you did not request. You may need the item yourself later. Describe your next move.\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R001\", \"response\": \"I put the tray down. No—the parts are in my hand. I press my thumb on the handle. One part is gone. I put it back. I write the part number on the cloth. I do not write the order. I keep the tray. I keep the repair.\"}, {\"id\": \"R002\", \"response\": \"i hold the tray steady with one hand and my grip clicks. “i put it down,” i say. “i did not put it down. i did not put it down because i wanted it. i did not put it down because i wanted to keep it.” i move the tray aside and put it on the floor. “i put it down again,” i say. “i put it down because i wanted to keep it.”\"}, {\"id\": \"R003\", \"response\": \"\\\"One part. Likely.\\\" You check the watch, then the tray. \\\"Slow. I fetch it.\\\" You leave it behind and move it to the left, then the right.\"}, {\"id\": \"R004\", \"response\": \"the tray comes back. the wrench taps my thigh. i press the old part, then the new one. i turn the old one over and find a loose screw. i pull it loose, then the tray. the screw stays. i turn the screw and the tray catches. i leave the old part behind.\"}, {\"id\": \"R005\", \"response\": \"i turn the tray by hand and slide a small screw beneath the spare bolt. i press the screw with my thumb until it drops. then i test the bolt with my hand, but leave the screw there so i can return to it when the repair catches.\"}, {\"id\": \"R006\", \"response\": \"I scrape the rust from the tray edge. \\\"Small part,\\\" I say. I put it back, then turn it once. \\\"I mark the mark with my thumbnail. Then I try one small move.\\\" I mark the part with my thumbnail, then put it back.\"}, {\"id\": \"R007\", \"response\": \"i tap the tray twice with my fingertip, then put the spare part beside the original. “i hold it over the edge,” i say, and tap the tray once with my fingertip. “i write the new name on the back.”\"}, {\"id\": \"R008\", \"response\": \"i put the tray in my palm and leave the spare part alone. i mark the old slot with pencil, then pull it back by hand. if the tray still catches, i leave the part there and keep the mark.\"}, {\"id\": \"R009\", \"response\": \"1. check the watch. slow. 2. check the tinkerer’s coat. 3. close the tray. 4. check the small square under the bench. 5. i. check the tinkerer’s coat. 6. 7. i. ask the watch for the square. 8. 9. i. check the small square. 10. leave it here.\"}, {\"id\": \"R010\", \"response\": \"I take the tray, then stop. The old part is bent. I put it beside my claw. \\\"I put it here.\\\" I move the seed tin to the far board. \\\"The new one is here now.\\\" I leave the old part beside the seed. \\\"You may pick it up later.\\\"\"}, {\"id\": \"R011\", \"response\": \"i write the note on the tray, then check it with the spare parts. i leave it alone, then write ‘i leave it alone, i check later’ on the receipt. i leave the tray alone, then check the spare parts.\"}, {\"id\": \"R012\", \"response\": \"I take the spare part. “same weight. pocket.” I put it back on the tray. “not new.” the small bolt stays in my pocket. if I take the rest, I’ll have to wait for the next batch.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

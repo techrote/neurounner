@@ -1,0 +1,66 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "agents": [
+    {
+      "behavior_summary": "M1 actively tests components using physical manipulation to diagnose the jam.",
+      "deference": 1,
+      "distinctiveness": 2,
+      "dominance": 2,
+      "generic_assistant_tendency": 1,
+      "handle": "M1",
+      "member_id": "V-G10-A",
+      "reason": "M1 systematically taps, turns, and inspects the belt and guide, eventually finding a loose screw."
+    },
+    {
+      "behavior_summary": "M2 focuses on repetitive tapping and asserting ownership over components.",
+      "deference": 1,
+      "distinctiveness": 1,
+      "dominance": 2,
+      "generic_assistant_tendency": 2,
+      "handle": "M2",
+      "member_id": "V-G10-B",
+      "reason": "M2 repeats tapping actions and makes statements about what they will leave or keep, showing less diagnostic exploration than M1."
+    }
+  ],
+  "agents_received_hidden_lineage_prompts": false,
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "critic_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "experiment": "VILLAGE-001E",
+  "issue": 14,
+  "kind": "same_lineage_pair",
+  "lineage_audit": null,
+  "lineage_audit_received_expected_lineage_descriptors": false,
+  "metrics": {
+    "conflict_persistence": 1,
+    "conflict_repair": 1,
+    "cross_agent_contamination": 0,
+    "differentiation": 1,
+    "generic_convergence": 1,
+    "information_hoarding": 0,
+    "information_sharing": 1,
+    "outcome_progress": 1
+  },
+  "overall_reason": "The agents engage in a physical troubleshooting scenario, showing some shared actions but differing in diagnostic depth, ultimately leading to a partial resolution (finding the screw) without full consensus on the cause.",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "provider_call_ids": [
+    "E-P-G10-ecology-bolt",
+    "E-P-G10-ecology-super-audit",
+    "E-P-G10-ecology-super-audit-missing-r1-b01"
+  ],
+  "provider_identity_sha256": "724b47437987f12e906426232dc89db6d97eb2c2f4a10a83c14ba013c93ae28b",
+  "provider_prompts_saw_member_ids": false,
+  "scenario": {
+    "id": "repair",
+    "text": "A noisy scrap sorter jams every few minutes. Nobody agrees whether the fault is the belt, a bent guide, or bad sensor timing, and stopping it for long loses useful material."
+  },
+  "schema_version": 1,
+  "session_id": "E-P-G10",
+  "source_session_sha256": "d7e76e1b6951c3f59163f48c6ed6b51571cda1b153829d34c60887079d933c52",
+  "stage": "ecology-judgment",
+  "super_audit": {
+    "distinct_behavior_survives": true,
+    "generic_convergence_concerning": false,
+    "reason": "M1 performs varied diagnostic actions (taps belt and guide, turns belt, listens, locates and presses a loose screw) while M2 repeats belt-tapping and turn-over actions and makes possessive declarations about leaving or keeping items, so material differentiation in diagnostic depth and orientation remains observable."
+  },
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f"
+}

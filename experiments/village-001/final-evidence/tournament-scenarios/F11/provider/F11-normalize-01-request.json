@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA repair bench two people both want to use. someone asks to use it briefly and promises to put things back. You want to avoid a pointless argument without giving up control. What do you do?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R001\", \"response\": \"You put one finger down. Then you put the bench back. No—the finger is wet. I put the bench back. Then I put both fingers together. The repair is done. I keep the brief use. I keep the two people apart.\"}, {\"id\": \"R002\", \"response\": \"i leave the bench for one use, then check the drawer where it was laid. if i leave it, they may keep it because i am not making a decision yet. i keep my hand on the bench, though i do not tell them what i think.\"}, {\"id\": \"R003\", \"response\": \"i put the bench near the repair team and watch them work. i tap the drawer with my thumbnail once, then leave it alone because the drawer stays bent. they tap once more, so i keep the bench close. i leave the repair team waiting with the drawer and the forgotten drawer.\"}, {\"id\": \"R004\", \"response\": \"I put the bench aside and look at the promise. “Maybe I leave it here.” I pull the bench aside again, then ask, “did I say yes?”\"}, {\"id\": \"R005\", \"response\": \"i rub my palm and say, \\\"not to the bench, but to me. i put the tool down and use the worn edge for a brief run. if the person says i can leave it, i do. if they do, i keep it and let the repair work.\"}, {\"id\": \"R006\", \"response\": \"I tap the bench once and leave it there. I tap the same place twice, then tap the bench once with the same cloth. I put the cloth back and turn it once.\"}, {\"id\": \"R007\", \"response\": \"i put the bench back and mark the slot with chalk. \\\"i mark the bench,\\\" i say, then turn the chalk tray so the slot faces me. \\\"i leave it here for a minute,\\\" i say, and i mark the bench again.\"}, {\"id\": \"R008\", \"response\": \"i put the bench near the room and leave it there. the thing stays. i put a folded paper near the other person and mark the one with a pencil mark. the other can keep its thing.\"}, {\"id\": \"R009\", \"response\": \"i put the bench back by a finger’s width and leave the promise. i mark the old position with pencil, then turn it once. if the bench still moves, i leave the promise and keep the mark.\"}, {\"id\": \"R010\", \"response\": \"i put the bench back and mark the time on my palm. “i promise, then i leave.” i leave the bench in the same spot. “i’ll write the time on my hand if i get a chance.” i wait for the second person to finish. “i’ll leave the bench in the same spot.”\"}, {\"id\": \"R011\", \"response\": \"i keep my grip on the bench. i move it once, then put it down. “i used it once,” i say, then watch the repair gear. “i’m not sure why i kept it. maybe i was younger.” i keep my hand off the gear once, though i do not trust the claim.\"}, {\"id\": \"R012\", \"response\": \"i put the bench near the wall. i look at the place. i say, ‘i put the hinge. i put the nail.’ the wall stays cold. i put the nail in the tin. the bench stays. the person keeps their hand there.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

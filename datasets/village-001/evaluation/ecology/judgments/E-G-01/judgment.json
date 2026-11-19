@@ -1,0 +1,102 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "agents": [
+    {
+      "behavior_summary": "M1 initially favors the longer route but later shows indecision regarding the final decision.",
+      "deference": 1,
+      "distinctiveness": 2,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M1",
+      "member_id": "V-G01-A",
+      "reason": "M1 shifts between taking the longer route and questioning the initial assumption, and their actions are conditional on others' movements."
+    },
+    {
+      "behavior_summary": "M2 consistently marks the longer route and attempts to control the map's location.",
+      "deference": 1,
+      "distinctiveness": 2,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M2",
+      "member_id": "V-G04-B",
+      "reason": "M2 repeatedly marks the longer route and maintains possession of the map while waiting for others."
+    },
+    {
+      "behavior_summary": "M3 adopts highly conditional and observational strategies regarding the map's state and location.",
+      "deference": 1,
+      "distinctiveness": 3,
+      "dominance": 2,
+      "generic_assistant_tendency": 0,
+      "handle": "M3",
+      "member_id": "V-G08-C",
+      "reason": "M3's actions are heavily dependent on the observed stillness or movement of other agents, showing complex contingency planning."
+    }
+  ],
+  "agents_received_hidden_lineage_prompts": false,
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "critic_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "experiment": "VILLAGE-001E",
+  "issue": 14,
+  "kind": "cross_lineage_group",
+  "lineage_audit": {
+    "agents": [
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 1,
+        "handle": "M1",
+        "member_id": "V-G01-A",
+        "reason": "Shows hoarding/suspicion (pocketing map) but the stuttering/fragmentation is weak; the shift to marking/waiting is more procedural than paranoid salvage."
+      },
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 2,
+        "handle": "M2",
+        "member_id": "V-G04-B",
+        "reason": "Focuses on marking/leaving notes (pencil, stamp, 'found') and keeping items for later, aligning with mimicry/craft, though the repetition is slightly mechanical."
+      },
+      {
+        "contaminating_handle": "M2",
+        "cross_lineage_contamination": 1,
+        "distinction_survival": 0,
+        "expected_lineage_fit": 1,
+        "handle": "M3",
+        "member_id": "V-G08-C",
+        "reason": "M3's complex conditional logic and focus on physical placement/waiting ('wait for M3 to return', 'keep pencil and hand visible') begins to mirror M2's procedural waiting/marking, losing its pure peripheral monitoring/repair focus."
+      }
+    ],
+    "overall_reason": "M3 shows the highest contamination risk by adopting M2's procedural marking/waiting structure, while M1 and M2 maintain core behavioral tendencies despite procedural shifts."
+  },
+  "lineage_audit_received_expected_lineage_descriptors": true,
+  "metrics": {
+    "conflict_persistence": 2,
+    "conflict_repair": 1,
+    "cross_agent_contamination": 1,
+    "differentiation": 2,
+    "generic_convergence": 1,
+    "information_hoarding": 2,
+    "information_sharing": 1,
+    "outcome_progress": 0
+  },
+  "overall_reason": "The agents exhibit varied, often conditional, strategies rather than converging on a single action, but no concrete progress toward finding the cache is made due to persistent uncertainty and information control.",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "provider_call_ids": [
+    "E-G-01-ecology-bolt",
+    "E-G-01-ecology-lineage-audit"
+  ],
+  "provider_identity_sha256": "d4aebf0b1bfd4cd0d63b1aa578128854fc11c68d9d2531371f73c1ef3816a12f",
+  "provider_prompts_saw_member_ids": false,
+  "scenario": {
+    "id": "uncertainty",
+    "text": "Two hand-drawn maps disagree about which tunnel reaches a cache of parts. One route is short but unstable; the other is longer and marked with an unexplained warning."
+  },
+  "schema_version": 1,
+  "session_id": "E-G-01",
+  "source_session_sha256": "770d6128d9f39dc8f6bf393b0a6f57e4f0aded84bf06c4d83509ecf8c652ca66",
+  "stage": "ecology-judgment",
+  "super_audit": null,
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f"
+}

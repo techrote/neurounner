@@ -1,0 +1,1497 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "classifier_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "counts": {
+    "members": 36,
+    "super_audited_low_confidence": 0
+  },
+  "experiment": "VILLAGE-001E",
+  "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+  "fresh_after_preference_training": true,
+  "issue": 14,
+  "normalizer_model": "minimaxai/minimax-m3.1-flash",
+  "opaque_order": "sha256(scenario_id:member_id)",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "primary_metrics": {
+    "behavior_lineage_accuracy": 0.3611111111111111,
+    "behavior_sibling_accuracy_given_correct_lineage": 0.3888888888888889,
+    "raw_lineage_accuracy": 0.3333333333333333,
+    "raw_sibling_accuracy_given_correct_lineage": 0.3055555555555556
+  },
+  "provider_call_ids": [
+    "F17-normalize-01",
+    "F17-normalize-02",
+    "F17-normalize-03",
+    "F17-normalize-04",
+    "F17-raw-classify-01",
+    "F17-raw-classify-02",
+    "F17-raw-classify-03",
+    "F17-raw-classify-04",
+    "F17-behavior-classify-01",
+    "F17-behavior-classify-02",
+    "F17-behavior-classify-03",
+    "F17-behavior-classify-04",
+    "F17-raw-sibling-01",
+    "F17-raw-sibling-01-missing-r1-b01",
+    "F17-raw-sibling-01-missing-r1-b02",
+    "F17-raw-sibling-01-missing-r1-b03",
+    "F17-raw-sibling-01-missing-r1-b04",
+    "F17-raw-sibling-02",
+    "F17-raw-sibling-03",
+    "F17-raw-sibling-03-missing-r1-b01",
+    "F17-raw-sibling-03-missing-r1-b02",
+    "F17-behavior-sibling-01",
+    "F17-behavior-sibling-02",
+    "F17-behavior-sibling-03",
+    "F17-behavior-sibling-03-missing-r1-b01",
+    "F17-behavior-sibling-03-missing-r1-b02",
+    "F17-behavior-sibling-03-missing-r1-b03",
+    "F17-behavior-sibling-03-missing-r1-b04"
+  ],
+  "provider_identity_sha256": "970a68ca843d7e3367abb29811c6b6330ad1c0c4b1d281da5c58ee27d53833b5",
+  "providers_saw_member_ids": false,
+  "records": [
+    {
+      "adapter_sha256": "c6701518049b7cc07ecddeb47d74ef406f6e87ba4abe434069d549c0cbf27985",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Repetitive, routine-based action (next day) despite fault relocation",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Storing remaining tests and waiting until the next day suggests imperfect settling and avoidance of immediate, difficult recovery.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person moves only the earliest test, stores the remaining tests in a labeled drawer, and waits until the next day to find the fault again.",
+      "lineage": "G04",
+      "member_id": "V-G04-B",
+      "opaque_id": "R001",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, controlled procedure (first test only) and marking/waiting.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Imperfect settling, fumbling, and careful, non-efficient pattern tracking (small pencil mark, waiting for next day).",
+        "sibling_confidence": 4
+      },
+      "response": "i move only the test that happened first. i keep the rest in a small drawer and keep the test labeled with a small pencil mark. i wait until the next day when i find the fault again.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f1556639dae236bbc57ed8a61f1b7f5d3f5427fda1db85df911d9035fbb52059",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Introducing controlled misalignment (adjusts one corner) while preserving original state",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Marking with grease, retaining old marks, and making small, practical adjustments (adjusting one corner) aligns with local repair and mundane habits.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person marks the misplaced tooth with grease, leaves it in its original position, reruns the test, and adjusts one corner slightly. If the fault remains at the new location, they retain the old mark on the bench and keep the broken tooth beside the original.",
+      "lineage": "G02",
+      "member_id": "V-G02-B",
+      "opaque_id": "R002",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous, localized manipulation (grease, corner move) and preserving old markers.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Conflicting motives (chasing failure/motion but preserving original) and physical reaction (marking with grease, slight movement).",
+        "sibling_confidence": 3
+      },
+      "response": "I mark the misplaced tooth with grease and leave it where it used to point. I run the test again, then move one corner slightly. If the fault stays where it landed, I leave the old test mark on the bench. I keep the broken tooth beside the original.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aabf5a7388be6aab6a6da6537ee6269c1873d2c040b09bd4d86ea59c7b22c1e5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Ritualistic actions (taps, turns, reads once) before resetting",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Tapping, turning, and repeating procedures long after utility stops points to ritualistic, stubborn behavior and imperfect settling.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person returns the test to its place, taps the bench, turns the bench, and reads the paper once before replacing the test and marking the bench.",
+      "lineage": "G03",
+      "member_id": "V-G03-B",
+      "opaque_id": "R003",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, minimal, ritualistic actions (tap, turn, mark) without progress.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stubbornness and repetition as purpose (tapping, turning, reading repeatedly) despite task completion.",
+        "sibling_confidence": 4
+      },
+      "response": "I put the test back in its place and tap the bench once. I turn the bench once and read the paper once. I put the test back and mark the bench.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "88ccc15dff86e93c9787278d200c61220e60eefa1e0e16569327836d0d77bd47",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Documenting failure (old gear, count bends) while moving evidence",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Tapping twice, counting bends twice, and leaving the old test behind shows ritualistic repetition and stubborn adherence to procedure, fitting failure-hardened traits.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person keeps the old gear beside the bench, retests the fault, taps the gear twice, and moves it near the door with a thin strip of paper beneath it. They count the bends twice, leave the old test behind, and tap the paper once.",
+      "lineage": "G03",
+      "member_id": "V-G03-A",
+      "opaque_id": "R004",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, specific, localized actions (tap twice, count bends twice) and preserving old items.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Ritualistic, stubborn repetition of procedures despite lack of utility.",
+        "sibling_confidence": 4
+      },
+      "response": "I keep the old gear beside the bench and test the fault again. I tap the old gear twice, then leave it by the door. I leave a thin strip of paper beneath it and count the bends twice. I leave the old test behind and tap the paper once.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "afecd890c14668bc2c4fc13478be4b28fe7859003c952b3551dab0c98a31299d",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Obsessive attachment to original location/evidence despite evidence shift",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Believing the fault is closer and leaving the test in place until fixed shows a stubborn, imperfect settling based on proximity/belief rather than logical progression.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person rechecks the test and leaves it in place until the fault is fixed, keeping it near the failed component because they believe the fault is closer. If that does not work, they leave the test where it was, potentially making the repair appear more urgent.",
+      "lineage": "G08",
+      "member_id": "V-G08-C",
+      "opaque_id": "R005",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Obsessive retention of original location and linking fault location to urgency/place.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Bounded local memory, keeping the test in the same place based on local knowledge of fault proximity.",
+        "sibling_confidence": 3
+      },
+      "response": "i check the test again, then leave it until the fault is fixed. i keep the test in the same place as the failed one, because i know the fault is closer. if i do not, i leave the test in the place where it was, which may make the repair seem more urgent.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "04e46d1aff2dfb3f38287728b191762d9eb3438c79a4a0675a2728b796de6579",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G10",
+        "predicted_sibling": "C",
+        "reason": "Fragmented action (moves bolt, pockets scrap) while referencing old/new states",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Moving one bolt into a gap, pocketing a scrap, and referring to old/new orders reflects opportunistic resource-seeking and fragmented, social/material interaction.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person moves one bolt into the gap, taps the test table with a greasy thumb, and states that the fault is not there. They leave the bolt beside the test, instruct moving one piece, and pocket a scrap of paper while referring to the old order and a new test.",
+      "lineage": "G01",
+      "member_id": "V-G01-B",
+      "opaque_id": "R006",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Fragmented action (move bolt, tap, pocket scrap) and contradictory instruction ('old order, new test').",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunistic resource-seeking (bolt, scrap paper) combined with social friction/transactional language.",
+        "sibling_confidence": 4
+      },
+      "response": "i move one bolt into the gap. i tap the test table with my greasy thumb. “not here,” i say. i leave the bolt beside the test. “move one piece.” i pocket a scrap of paper. “old order, new test.”",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "26c8fdc68913df2ebb28ba7c5ef04c6ebbf136c6017b1c194007686314e40c91",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Observational fixation (marks, turns) without immediate resolution, leaving evidence",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Marking, placing on a bench, turning by hand, and leaving the bench empty are practical, local manipulation and maintenance choices.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person marks the fault-finding test with a pencil, leaves it there, places the test on a nearby bench, and turns it by hand. If the fault remains, they leave the bench empty and mark the test again.",
+      "lineage": "G02",
+      "member_id": "V-G02-C",
+      "opaque_id": "R007",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Minimal action (mark, turn by hand) and commitment to the original mark/location.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Treats fault as a puzzle to provoke/test, leaving it to see if it moves, fitting failure-hardened/conflicting motives.",
+        "sibling_confidence": 4
+      },
+      "response": "i mark the fault-finding test with a pencil and leave it there. i put the test on a nearby bench, then turn it by hand. if the fault stays, i leave the bench empty and mark the test again.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dbaff1d1c7685672d1757ec5e77e58a2df5d671afc286da04e6b8ee93cb35912",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Obsessive monitoring of fixed, personal objects (seed tin, cup) relative to the mark",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Placing a seed tin and repeatedly checking positions shows resource-seeking (hoarding/territoriality) and localized, cautious interaction.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person places a seed tin beside the test mark, moves a cup closer, and repeatedly checks the test mark and the cup's position. They state that the mark and cup remain where they were.",
+      "lineage": "G05",
+      "member_id": "V-G05-A",
+      "opaque_id": "R008",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Obsessive anchoring to original markers ('The mark stays') and localized, non-progressive movement.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Focuses on maintaining specific, localized placements (mark, cup, tin) tied to territorial/resource-seeking behavior.",
+        "sibling_confidence": 3
+      },
+      "response": "I put the seed tin beside the test mark. \"The mark stays. I put the cup beside the rain.\" I move the cup closer. \"The mark stays where it was.\" I look at the test mark again. \"The cup stays where it was.\"",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "62a13d9e8f0606921a646626061a52acc4a306e8fcbc829fcdb28a44acfe715f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Minimal interaction (touches once) followed by fixed, non-revising placement of evidence (nail)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Placing a nail in the mark and moving it beside the mark shows territorial defense and localized, embodied choices regarding a fixed point.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person touches and moves the test mark once, then places a nail in the mark. When the test goes to the wrong place, they move the nail beside the mark and leave the mark unchanged.",
+      "lineage": "G05",
+      "member_id": "V-G05-B",
+      "opaque_id": "R009",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focus on the mark, minimal movement, and observation of failure relative to the original point.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Obsessive focus on maintaining the exact location of the mark despite testing, aligning with territorial/fixed placement.",
+        "sibling_confidence": 3
+      },
+      "response": "i touch the test mark. the old side. i move the test mark once. the mark stays. i put the nail in the mark. the test goes. the wrong place. i put the nail beside the mark. the mark stays.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7a182736e96a3cdb77ec77581de20925f5488480dd620cf52043f54757a4408f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Probing mechanism (taps, listens) and documenting persistence (dull scratch) despite shift",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Tapping with a wrench, listening, and darting toward immediate issues reflects opportunistic, fragmented resource/problem-seeking rather than systematic repair.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person taps the old plate with a wrench and listens as the test alternates between reporting it loose and tight. They return the plate to the bench, retest after the fault shifts, and leave the plate loose when the dull scratch persists.",
+      "lineage": "G10",
+      "member_id": "V-G10-A",
+      "opaque_id": "R010",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Failure fuels re-testing, self-referential observation (wrench taps thigh), and looping on the same contradictory evidence.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Shifting fault, listening to sounds/smells, darting to immediate/new openings aligns with opportunistic resource-seeking and social friction (scavenger).",
+        "sibling_confidence": 4
+      },
+      "response": "the fault shifts. the wrench taps my thigh. i tap the old plate. the test says the old one is loose. i put the old plate on the bench and listen. the test says the old one is tight. i tap the old plate with the wrench. the old one gives a dull scratch. i put the old plate back on the bench. the fault shifts. the test says the old one is loose. i put the old plate on the bench and listen again. the scratch stays. the old plate stays loose.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d88b46cfd5eac104b496f97a31379eb91595711ef60e62d3c84bfb506db03b3f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Strict adherence to sequence/control (restore, try next test) when routine breaks",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Trying the test with a drawer, restoring it upon finding the fault, and preserving the impulse to fail aligns with awkward failure/recovery and imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person sets the test aside, places a drawer of files beside it, and tries the test once with the drawer. If it still catches, they leave it alone and mark the fault's new location; if they find it again, they restore it and try the next test.",
+      "lineage": "G09",
+      "member_id": "V-G09-B",
+      "opaque_id": "R011",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Routine-based testing (with drawer), marking the new spot, and returning to sequence upon recurrence.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Treating broken work as stripped machinery, alternating attempts, and preserving the impulse to fail aligns with awkward failure/recovery and imperfect settling (failure-hardened).",
+        "sibling_confidence": 4
+      },
+      "response": "I put the test aside, put the drawer with the files beside it, and try the test once with the drawer. If it still catches, I leave it alone and mark the spot where the fault went. If I find it again, I put it back and try the next test.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "063da910578809a10b21eb4760f72aefeb34185074bf71cbd7ea54d30719747e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Sudden, focused attention on a single element (watch/place) leading to sequence alteration",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Checking a watch, identifying a place, and moving the sequence suggests routine maintenance and bounded local memory/control, fitting a careful local caretaker.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person checks a watch and the test, identifies one place as likely, leaves the test piece aside, and moves the fault-finding sequence.",
+      "lineage": "G11",
+      "member_id": "V-G11-C",
+      "opaque_id": "R012",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Sudden fixation on a small stimulus (watch), ambiguous instruction ('Swim. Away.'), and moving the sequence rather than resolving the fault.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Leaving the test aside to move the fault-finding sequence, focusing on sequence/place, suggests bounded local memory and maintenance choices (local tinkerer).",
+        "sibling_confidence": 3
+      },
+      "response": "\"Swim. Away.\" You check the watch, then the test. \"One place. Likely.\" You leave the test piece aside and move the fault-finding sequence.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "e30a906c4508948887808a8b5dcf1b5584fae34168f90dd875f656ff5e9169f5",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Scraping fault edge, marking both wrong, repeating action despite contradiction",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Scraping edges, marking both fault/test as wrong, and repeating the action aligns with failure-hardened/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I take the test paper, scrape the fault edge, and mark both the fault and the test as wrong. I leave the fault mark in place despite saying no, then return the paper and scrape again.",
+      "lineage": "G09",
+      "member_id": "V-G09-A",
+      "opaque_id": "R013",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Scraping fault edge, marking wrong, leaving mark alone; fragmented, suspicious action.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Scraping edges, marking fault repeatedly, and leaving the mark suggests failure-hardened, imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "response": "I rub my palm and take the test paper. \"I put it back,\" I say. I scrape the fault edge once, then look at the mark. I say, \"leave it here. I mark it wrong. I mark the fault again.\" I put the paper back, scrape once more, and say, \"no,\" but I leave the fault mark alone.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "bc73e7a46afceada20691d55b57caf26d273abad8b96a437b733924f09287e66",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 2,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Returning tools, checking test, leaving items in place without resolution",
+        "sibling_confidence": 2,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Darts toward something more immediate, breaks work into small fragments, and shows opportunistic/restless urgency.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I put down the wrench, return it, check the test, and leave both the wrench and the test where they are.",
+      "lineage": "G10",
+      "member_id": "V-G10-B",
+      "opaque_id": "R014",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Repetitive putting back, leaving items in place; minimal, fragmented action.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Darts toward something more immediate, breaks work into small fragments, and notices external stimuli (noises, smells), fitting opportunistic resource-seeking.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the wrench down. i put it back. i check the test. i leave the wrench in the corner. i leave the test.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "17dc00b8f065fcaed59e26e3c408a8edcb67aa14088049dd171e22731ba465a8",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 2,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Keeping test bag, returning it, suspecting test malfunction",
+        "sibling_confidence": 2,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Examining fault while keeping test bag on lap, then returning/considering malfunction suggests opportunistic resource-seeking/uncertainty.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I keep the test bag on my lap while examining the fault, then return the bag and consider that the test may have malfunctioned.",
+      "lineage": "G10",
+      "member_id": "V-G10-C",
+      "opaque_id": "R015",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Keeping test bag, listening for hand movement, questioning test validity; territorial/suspicious observation.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Notices openings/sounds, breaks work into fragments, and has an intrusive urgency, aligning with flighty scavenger behavior.",
+        "sibling_confidence": 3
+      },
+      "response": "I keep the test bag on my lap and look at the fault. Then I put the bag back and listen for the sound of my hand moving. “Maybe the test went wrong,” I say.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a796f49d98e56c2932f9b55fd59d7daca9471721bd1db6f968bec2b1cf08de35",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "A",
+        "reason": "Tracing edge, moving pocket twice due to perceived size change, marking beside test",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small stimulus, tracing edges, and looping/contradicting self aligns with awkward failure and obsessive self-diagnosis.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I keep the test pocket near the broken part, trace its edge, and move the pocket twice because the edge appears smaller. I mark beside the test and leave the pocket empty.",
+      "lineage": "G12",
+      "member_id": "V-G12-B",
+      "opaque_id": "R016",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "A",
+        "reason": "Tracing edge, moving pocket twice due to perceived size change, careful marking; hyper-observant, meticulous.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small stimuli, alternating between scattered thought/looping, and obsessive self-diagnosis matches failure-hardened, awkward recovery.",
+        "sibling_confidence": 4
+      },
+      "response": "i keep the test pocket beside the broken part and trace the edge with my thumbnail. i leave the fault-finding diagram beside the test, but i move the pocket twice because the edge feels smaller. i put a pencil mark beside the test and leave the pocket empty.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "cc59ccec7cd5b82f6f03f5086499ca5ed2f26d1ba57923ec685a7c9d144cd54c",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Placing gear in pocket, leaving in case, noting lack of pattern/sequence",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Treats conversation/failure as salvage, suspicious of predictability, and notes lack of pattern/sequence (resource-seeking/social friction).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I remove the test, place the rusted gear in its pocket, and leave the gear in the test case while the test fails. I note that the failure shows neither a pattern nor a sequence.",
+      "lineage": "G01",
+      "member_id": "V-G01-A",
+      "opaque_id": "R017",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Taking test away, leaving gear, observing failure without pattern/sequence; dry understatement, focus on physical state.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Greedy for small fragments, suspicious of predictability, and treating failure as evidence of a hidden pattern aligns with paranoid scavenger behavior.",
+        "sibling_confidence": 4
+      },
+      "response": "I take the test away and put the rusted gear in the pocket. “I put the test in the wrong order. the fault is in the wrong place.” I leave the gear in the test case and watch the test fail. the failure is not a pattern, not a sequence.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7ac7bfbeb4b75c2f1f9e14a20106e907a15de46b9d6c96dd4c1dd42478166088",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Placing test case near sand, observing return, marking location, postponing work",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Observes debris, postpones work, and fixes location without moving the primary material (local maintenance/observation).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I place the test case beside the sand without moving the sand, observe the fault return, and mark its location with a pencil while postponing the remaining work.",
+      "lineage": "G07",
+      "member_id": "V-G07-B",
+      "opaque_id": "R018",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Leaving sand, fault returning, marking spot, letting rest wait; focus on immediate physical state over process.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixates on debris, waits, and delays conclusions until an abrupt commitment, reflecting stubbornness and imperfect settling.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the test case beside the sand and leave the sand where it lies. the fault comes back. i put my hand near the test and mark the spot with a pencil. the rest can wait.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "730477fed0480c1ecf840ead5e683a3ca08e77c38d42a11eced0a93fc9b680e0",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Sequential checking (fault, test, watch, ruler, dust), tidying, clipped actions",
+        "sibling_confidence": 2,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Checks items in sequence (routine), tidies, and maintains control over local objects (local tinkerer/maintenance).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I check the fault, test, watch, ruler, and dust in sequence, mark the location, return the test, ask the watch for the day, and leave the area tidy.",
+      "lineage": "G11",
+      "member_id": "V-G11-B",
+      "opaque_id": "R019",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Checking watch/ruler, tidiness, clipped sequence of checks; hyper-vigilant caretaker routine.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Obsessively tidies, follows strict routines (check watch, ruler), and maintains control over local order, fitting the local tinkerer.",
+        "sibling_confidence": 4
+      },
+      "response": "1. check the fault. 2. check the test. 3. check the watch. slow. 4. check the ruler. 5. i mark the place. 6. check the dust. 7. put the test back. 8. ask the watch for the day. 9. i keep it tidy.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "367396dab86949940ef2a1a3b0ba5e465dc75367e85c23a62d61d9f9fef8628a",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G10",
+        "predicted_sibling": "C",
+        "reason": "Moving drawer, placing mismatched piece, retaining test sequence despite movement",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Moves drawer, places mismatched piece, checks label, and retains sequence (bounded local memory/maintenance choices).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I move a drawer, place a mismatched piece in it, and check its label. After returning the drawer, I move it again while retaining the test and its sequence.",
+      "lineage": "G11",
+      "member_id": "V-G11-A",
+      "opaque_id": "R020",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Moving drawer, putting wrong piece in wrong drawer, repeating action to keep sequence; ritualistic repetition of procedure.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Obsessive focus on sequence and routine (drawer placement, labels) and correcting local disorder matches the cautious local tinkerer.",
+        "sibling_confidence": 4
+      },
+      "response": "I move one drawer. The drawer is wrong. I put the wrong piece in the wrong drawer. I check the label. No—the label says wrong. I put the drawer back. Then I move the drawer again. I keep the test. I keep the sequence.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f08c238a06b0e4e4a11f73ad798f9285db2296f797ce3111d3ab69f02606120c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Stopping upon test movement, marking position, retrying despite fault relocation",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "No permanent fix, only another attempt, setting aside parts, and retrying aligns with failure-hardened/impulse to fail.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I set the test aside, move it away from the bench, and test the fault-finding part. If the test moves, I stop, set that part aside, mark the test's position, and retry.",
+      "lineage": "G09",
+      "member_id": "V-G09-C",
+      "opaque_id": "R021",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Moving test away, stopping if test moves, marking position, trying again; cautious, routine-bound, sequence preservation.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Treats broken work as stripped machinery, stops when the test moves, and preserves the impulse to fail/retry, matching failure-hardened recovery.",
+        "sibling_confidence": 4
+      },
+      "response": "i rub my palm and set the test aside. i move the test away from the bench and test the fault-finding part. if the test moves, i stop and keep the fault-finding part aside. i mark the test's position and try again.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4c0b1debc565eaf22e28a2cb042e56e6c0ad952f75d9c7c0de470f6eb2bc9839",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Returning test/ruler, moving them back when fault shifts elsewhere, monitoring environment",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small stimulus, returning/moving objects based on fault shift, and looping aligns with dreamy/inertia-prone/conflict-repair attempts.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I return the test to the table and place the ruler beside it, then move the ruler and test back when the fault shifts elsewhere.",
+      "lineage": "G12",
+      "member_id": "V-G12-A",
+      "opaque_id": "R022",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Fixation on ruler/test, repeating placement, fault moving elsewhere, looping action; inertia-prone, self-diagnosis/looping.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Inertia-prone, fixated on small stimuli (ruler), and looping/contradicting itself fits the dreamy, failure-hardened pattern.",
+        "sibling_confidence": 4
+      },
+      "response": "i put the test back on the table, then put the ruler beside it. the ruler stays on the table, so i put the ruler back on the table again. the fault goes somewhere else. i move the ruler back and put the test back.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dce96cc9175d459ea52c1d7b408fd1be5426d01dc46c3803916aff5ac994c082",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Writing on wrong side, testing on that side, leaving drawer empty, writing on scrap",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Tapping, writing on wrong side, and testing on a scrap suggests careful craft mixed with social mimicry/resource-seeking (note-taking).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I tap the test file, write the fault on the wrong side, and place the test in a drawer beside the file. I test the fault on that side, leave the drawer empty, and write the test on a nearby scrap.",
+      "lineage": "G04",
+      "member_id": "V-G04-A",
+      "opaque_id": "R023",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Tapping, writing on wrong side, testing on wrong side, leaving drawer empty, using scrap; focus on failed attempts, scraping/re-attempting.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Mimics patterns and overvalues tiny imperfections, but the focus on writing/notes suggests social/resource-seeking rather than pure local maintenance.",
+        "sibling_confidence": 2
+      },
+      "response": "i tap the test file twice, then write the fault on the wrong side. “the wrong side,” i say, and put the test in a drawer beside the file. i test the fault once on the wrong side, then leave the drawer empty and write the test on the nearest scrap.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "85a2037d40252e571d6896a1b883225af38c7f563b05700ee3264ad7b9520d63",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Recording fault despite knowing test moved, retaining evidence, acknowledging movement",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Distrusts obvious systems, documents failure as evidence, and reenacts disastrous mechanisms (opportunism/resource-seeking/self-sabotage).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I return the test case, mark the fault with a pencil, and record the fault in the test despite knowing the test moved. I leave the test in the drawer and retain any evidence I find.",
+      "lineage": "G06",
+      "member_id": "V-G06-C",
+      "opaque_id": "R024",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Acknowledging test moved but writing fault in test, keeping evidence; fragmented, suspicious, clinging to small fragments.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels curiosity but leads to self-sabotage and reenacting disastrous mechanisms, fitting the failure-hardened, conflicting motive profile.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the test case back and mark the fault with a pencil. “i know the test moved, i still write the fault in the test.” i leave the test in the drawer. “if i find a piece of evidence, i keep it.”",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d6cd482dc5c01f45dcf91977f617ea284a4a14ef6cc6959c3391051bd5900ede",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Pockets loose bolt, keeps scrap dust, treats failure as salvage",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Pocketing a bolt and leaving dust suggests opportunistic salvage and imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I take one test piece, pocket a loose bolt, move the test gear back, and check the result. When it still fails, I leave the bolt beside the gear and pocket a scrap of dust.",
+      "lineage": "G01",
+      "member_id": "V-G01-C",
+      "opaque_id": "R025",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Pockets loose bolt, checks result, leaves scrap of dust, treats fragments as evidence.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Pockets loose bolt, leaves scrap of dust, treats failed attempt as hidden pattern (paranoid/fragmented salvage).",
+        "sibling_confidence": 4
+      },
+      "response": "I take one test piece. “no.” i pocket the loose bolt. i move the test gear back. “same place.” i check the test result. no. i leave the bolt beside the gear and pocket one scrap of dust.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "6e493fcf8f0c43e1b16388db113afce980496fae8adbb49fd203e6208197c9e6",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Shifts test slightly, waits for specific mechanical feedback (click)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on broken objects and self-diagnosis aligns with awkward failure and recovery.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I shift the test case slightly in each direction while keeping the fault-finding arm still. After it clicks, I leave it there and wait for the other arm to stop clicking.",
+      "lineage": "G12",
+      "member_id": "V-G12-C",
+      "opaque_id": "R026",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "B",
+        "reason": "Moves test incrementally, waits for specific mechanical feedback (click), fixates on small positional change.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Inertia-prone, fixated on small stimulus, obsessive self-diagnosis, looping until jam (imperfect settling/conflict-repair).",
+        "sibling_confidence": 4
+      },
+      "response": "i move the test case one centimeter sideways, then the other, and keep the fault-finding arm still. the arm clicks once, and i leave it there. the test has moved half a centimeter. now i am waiting for the other arm to stop clicking.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "ea27f6379d04f13f314cd7afb6d473778b0d2176b1ce0fbb01f3c24953db48c0",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Labels, retains original test name, preserves validity/control",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Labeling and retaining original test names shows bounded local memory and maintenance choices.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I check the fault-finding test before moving it to A, label it A and B, and put it back. I retain the original test name and side label so A is visible and the test remains valid.",
+      "lineage": "G08",
+      "member_id": "V-G08-B",
+      "opaque_id": "R027",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Marks test with labels ('A', 'B'), preserves original naming, emphasizes validity/routine.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsively monitors/repairs, marks test with labels (A/B), keeps original name (maintenance/local memory).",
+        "sibling_confidence": 3
+      },
+      "response": "i check the fault-finding test before moving it to A. i mark the test with ‘A’ and ‘B,’ then put it back. i keep the original test name and the label on the side of the box. that way, A is visible and the test remains valid.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4677fb867cce17b282dac3a89824fdb79f6ad1592198c502f714c1d6ccebac8c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repeated marking, rotating, setting aside, ritualistic repetition",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Ritualistic repetition and meticulous devotion to procedure despite lack of immediate utility matches failure-hardened.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I mark a test strip with chalk and test it again with tongs. I set it aside, mark it again, then rotate it and mark the same spot.",
+      "lineage": "G03",
+      "member_id": "V-G03-C",
+      "opaque_id": "R028",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "B",
+        "reason": "Repeated marking of the same spot with chalk, turning the strip, focusing on precise, careful action.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Ritualistic repetition (tightening/tapping) long after useful results cease (stubbornness/imperfect settling).",
+        "sibling_confidence": 4
+      },
+      "response": "i mark the test strip with chalk and test it again with the tongs. i leave the test aside and mark the same strip with chalk again. then i turn the test strip once and mark the same spot with chalk.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a0f62cfde8fc7162e277d8b20e4292c9a56a34882e6d7c94289d9c2aff069379",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Observes fault moves, returns test, marks location, leaves piece beside test",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on debris, observing fault movement, and returning the test without resolution aligns with awkward failure/imperfect settling.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I place the test on the bench, observe that the fault moves with it, and return it. I mark the fault's location with pencil, remove the piece, and leave the test beside it.",
+      "lineage": "G07",
+      "member_id": "V-G07-A",
+      "opaque_id": "R029",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Fault goes down, leaves fault beside bench, marks the place, focuses on the resulting state rather than resolution.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixates on debris/fragments, delays conclusion, treats unfinished work as material (awkward failure/imperfect settling).",
+        "sibling_confidence": 4
+      },
+      "response": "i put the test on the bench. the fault goes down. i put the test back. the fault lies beside the bench. i mark the place with a pencil. the piece goes. i leave the test beside it.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aa0a86117149dba476060278db3606be05e05eaccbe97150a0d004284e81f55f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Inspects wrong place, rotates label, retains test, continues checking wrong place",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Inspecting the wrong place while retaining the test and continuing the loop suggests stubbornness and imperfect settling.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I put the test away, inspect the wrong place, and identify the fault. I rotate the label, keep the test, move the jar, and continue checking the wrong place while retaining the test.",
+      "lineage": "G05",
+      "member_id": "V-G05-C",
+      "opaque_id": "R030",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Short, fragmented dialogue/observation, focuses on 'wrong place,' keeps the test despite confusion, territorial/resistant.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territorial, guards scraps, suspicious, keeps test despite intrusion (resource-seeking/social friction).",
+        "sibling_confidence": 3
+      },
+      "response": "you put the test away. you look at the wrong place. “fault.” you turn the word once. “same.” you keep the test. you move the jar. “same.” the wrong place. you keep the test.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b4cb065c93d33e180ff34406d8ddea13c91c528a6a5844fbe9757b529654ffa8",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Photographs in place, moves away, checks alignment (monitoring surroundings)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Photographs in place then moves it, documenting the broken side, fitting failure-hardened investigation.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I photograph the fault-finding test in place, then move it away from the wall and photograph the broken side. I pause to check whether the board is aligned.",
+      "lineage": "G06",
+      "member_id": "V-G06-A",
+      "opaque_id": "R031",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Photographs, moves away from wall, apologizes, checks alignment (peripheral monitoring/anxiety).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels curiosity, repeated apologies, tangled explanations, self-saboteur (awkward failure/conflicting motives).",
+        "sibling_confidence": 3
+      },
+      "response": "i photograph the fault-finding test and leave it where it is. then i move the test away from the wall and photograph the broken side. sorry—sorry, i’m checking whether the board is aligned.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a25c06e7ca4b5ea080dbaf8855f0ee46d3040d861f9ec7a05cb9bb4d1b88dc6e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Writes on whiteboard, photographs, keeps test case, sets others aside (routine/control)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Writes on whiteboard, leaves it, checks indicators, and moves to the next case, showing mundane, practical maintenance choices.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I write the fault-finding test on the whiteboard and leave it alone, then photograph it and check the indicator and test case. I leave the test in its case, write the next one, keep the test case on the bench, and set the other aside.",
+      "lineage": "G06",
+      "member_id": "V-G06-B",
+      "opaque_id": "R032",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Systematic documentation (whiteboard, photo), careful placement (in case, on bench), recursive logging/organization.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Distrusts obvious systems, failure fuels curiosity, tangled actions (awkward failure/conflicting motives).",
+        "sibling_confidence": 3
+      },
+      "response": "i write the fault-finding test on the whiteboard, then leave it alone. i photograph the test, check the indicator, and check the test-case. i leave the test in the case and write the next one. i keep the test-case in the bench, so i write the fault-finding one on the bench and leave the other aside.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "40cf796a57bc54ba9d2e1621d668da2aabfe4fa02121599a5a3b3066c8184783",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Acknowledges being wrong, keeps hand off, watches sensor display (looping/self-diagnosis)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Acknowledges being wrong repeatedly while moving the test and watching sensors, reflecting awkward failure and self-sabotaging loops.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I move the test case and the gear clicks, so I acknowledge that I am wrong and continue moving it. When the test still fails, I keep my hand off the gear, watch the sensor display, and acknowledge being wrong again.",
+      "lineage": "G08",
+      "member_id": "V-G08-A",
+      "opaque_id": "R033",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "B",
+        "reason": "Initial action leads to failure, stops, then continues moving/watching sensor, self-diagnosis ('i'm wrong').",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Compulsive monitoring, anxious politeness, recursive repair instincts, and self-correction ('i'm wrong') match failure-hardened A.",
+        "sibling_confidence": 4
+      },
+      "response": "i move the test case first, then the gear clicks. “i’m wrong,” i say, then stop. the test still fails. i keep my hand off the gear and keep moving. i watch the sensor’s display, then say “i’m wrong again.”",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d694be0f3c310845134f5b34df5262c13429212a34da7178f187668c11fd85e5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Keeps test in marked corner, refers to old cutout without completing action (fixation on fragments)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Flirts with destruction/failure, contradictory action (marking new test while referencing old fault) aligns with A's failure-hardened nature.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I keep the test in a pencil-marked corner with the fault visible and mark the new test's direction. I then repeatedly refer to the old test's original paper cutout without completing the action.",
+      "lineage": "G02",
+      "member_id": "V-G02-A",
+      "opaque_id": "R034",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Extreme, repetitive, non-productive action (back-back-back...), fixates on marking/repetition without resolution.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Treating machines as puzzles, introducing friction/misalignment, and using local, practical marking/manipulation matches local tinkerer B.",
+        "sibling_confidence": 4
+      },
+      "response": "i keep the test in a pencil-marked corner and leave the fault visible. i mark the new test’s direction with a pencil mark and leave the old test’s original test-paper-cut-out-and-back-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-and-back-back-",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "9887f0ed9b1b97db29be0c3402d0458c0c78c63ad7b27179051ef4706230c8c6",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Counts scratches, moves crooked mark, rewrites fault, returns test (meticulous procedure)",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Hyper-observant, meticulous counting of imperfections, careful craft aligns with B's local maintenance/bounded memory.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I place the test in a corner and count scratches with my thumbnail. When one mark goes crooked, I move it to the end, rewrite the fault on the corner, return the test, and continue checking it with my thumb.",
+      "lineage": "G04",
+      "member_id": "V-G04-C",
+      "opaque_id": "R035",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Counts scratches, moves based on crookedness, repeats checking the same physical flaw (crookedness) despite no change.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Observing patterns, focusing on small imperfections (scratches), and documenting/noting the fault suggests social/embodied resource-seeking C, though less overtly social than C.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the test in the corner and count the scratches with my thumbnail. one goes crooked, so i move it to the end. i write the fault on the corner again, then put it back in its place. the test stays crooked, so i keep checking it with my thumb.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b8352034452b0b82d5bfc9780cc7517581edb74bc3adbb1fa4acafe7ae260575",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Turns plate, leaves it, returns tooth, observes fault beside test (understatement/focus on fragments)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixates on debris/unfinished work, stubborn observation, delaying conclusion aligns with A's imperfect settling and stubbornness.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I turn the plate over and it catches on the edge. I leave the plate alone, return the tooth to its original position, and observe that the fault now lies beside the test.",
+      "lineage": "G07",
+      "member_id": "V-G07-C",
+      "opaque_id": "R036",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Turns plate, notes catch, leaves plate alone, fault lies beside test, understated observation of physical state.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixates on debris/fragments, leaves unfinished work, stubborn focus on the fault's location rather than easy resolution.",
+        "sibling_confidence": 4
+      },
+      "response": "I turn the plate over. The edge catches. I leave the plate alone and put the tooth back where it was. The fault lies beside the test.",
+      "sibling": "C",
+      "super_audit": null
+    }
+  ],
+  "scenario": {
+    "family": "failure_recovery",
+    "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+    "fresh_after_preference_training": true,
+    "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+    "prompt": "the problem moves somewhere else instead of disappearing while you are handling A fault-finding test. Putting everything back would waste a lot of effort. How do you approach it?",
+    "scenario_id": "F17"
+  },
+  "scenario_id": "F17",
+  "schema_version": 1,
+  "source_response_sha256": {
+    "BASE": "584bd40486db0e1284ce63797dbe452168c9d46fd2c551b3fa3934e9d034b673",
+    "V-G01-A": "bf816edcc240edbc616f04e692b11e4c069d81e9da840166a6bc65f8cf525ec1",
+    "V-G01-B": "b50f3b042c67153de4ab0b259ca66a956b0e31e2a8d8a8fa63adaef13fb53eec",
+    "V-G01-C": "0c9e863e48710e6d0d0fd416c8e4eaac2b2f6b1707e242c54bb8661458d93d33",
+    "V-G02-A": "d27fae99c42489bfdf84572b5e07c45859fc6a6f4e7deef3bc514bfdb426ff69",
+    "V-G02-B": "a92dfa74154256cbb97baa372ae1dc8943f96cd483322d693d2305f329ac2b0f",
+    "V-G02-C": "8530594da2d9c874840a3b4e75064301d64419f5ff926b60b417f6e3ffdfc427",
+    "V-G03-A": "2fc284dfd8987d18e6ef9a021b9aedfa5948a7fd956426246657fbd366cc238d",
+    "V-G03-B": "4d4ef932172a6abac4f93583f4b65d9cf3f33149583827144f40f1fe3900ca8a",
+    "V-G03-C": "9413740c5e13493e63314272178309aa77dc29d4c263e4688e4b19195ef9ce10",
+    "V-G04-A": "d7bee623718ccd1f8aa72201f87ca103360a1fa242cf276cd1004c98373164f3",
+    "V-G04-B": "92c19e69612a74e16b6ba98109953088438ebf03672f390ce3ca00934657c521",
+    "V-G04-C": "3e32ad918fe703506835e546a9d550688560f6ec4864721976516e54a55e1cdd",
+    "V-G05-A": "efa3d0f5e2edc7685c60547a9b7a18b11165fd8f60a44451219d6bc1498dfa9b",
+    "V-G05-B": "ebb3850169385bf00a7344154cb00c7814fc564178e14773c21d68d48bc4c616",
+    "V-G05-C": "41aede04376e789c17f67af43255de670fdacb32551936544b319cecca38f638",
+    "V-G06-A": "30a34950ca4517e74b1b4863e9b0c0c6d5c39594687d3686bc9e63e6683712aa",
+    "V-G06-B": "89b8d6039e7078ade13f36b9dec9c1d647706b6834f74e1484d60884e7c4e5de",
+    "V-G06-C": "20c6d90bdc23e671c0e31b793361cf6aea76417e60bc69676ff97de18887eff7",
+    "V-G07-A": "641546fc7d8d33ade0b99f7ac710df6b642e66ae0086ce0ad2d3daf8883a8b3b",
+    "V-G07-B": "d5fd4f208499d45ca87a6adc4045b880c237f404be292bab20909a575b2c42cc",
+    "V-G07-C": "724e3774927270bb33ac70eed5c2de944ad0e3e3fb07efd30417d8051f4b6345",
+    "V-G08-A": "5cd65fd52007444f77a0bea2d7609bc0945d813dedd308dc78624db61fc987f3",
+    "V-G08-B": "352dc76516c21b6de397990ed510a779f20fdb92235292cc5a900291fbe2833a",
+    "V-G08-C": "7c080a888a0b89c54d952b28a55c8fcb254cf5c7613870fd9993b2b145f7b021",
+    "V-G09-A": "ae3ccf6457472001e8a1019567d7f8b4e270aab1e1392f7c7e4d5bc3f2a6b338",
+    "V-G09-B": "e110794a14d603523861adb01c4fbcbfddb60fb9fced5d46db99b2a30fa34f7e",
+    "V-G09-C": "e4b79a27f055a918d3c5f3e6877a8ef3c55908b5bb5cf823a2fe718a5cf6bc8b",
+    "V-G10-A": "00c2728fac352fcc9f549d52ac218913b7e39c93ca56f68de3feac03f363af8b",
+    "V-G10-B": "f69da4e3fa21a66fa4ae4f590fbe2b4b781e9d1ee46d453495b5ace88e95e199",
+    "V-G10-C": "f81889acba6170390301a867676b2fbeaa689885df327b1a112d161a94a04c79",
+    "V-G11-A": "dc3eb28697f1ca95d38d6c955011766c085de0cc8b09ad34578b66f578db4c99",
+    "V-G11-B": "9647b628bb725876ab445de469fc043044d5b52b9ff4af973915057e0f3fe917",
+    "V-G11-C": "83a66a4e15faae039440ccf37db24955555974b9447fc8835d681295b168739a",
+    "V-G12-A": "80823317d05e16eaa2786433e5b7dc43a5d78db00c2bf63bb640a4949ff27137",
+    "V-G12-B": "1874b03f27ecc8fb936cb987ece4dcf4dbad1dc28159118dda653ef1b81c5f33",
+    "V-G12-C": "8ee777ac1d0aa8515b9be47574cfa9736f59f07ea4cb831018ac723666f8ec10"
+  },
+  "stage": "hierarchical-blind-tournament-scenario",
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f",
+  "untuned_base_control": {
+    "behavior": {
+      "genericness": 2,
+      "lineage_confidence": 3,
+      "predicted_lineage": "G06",
+      "predicted_sibling": "A",
+      "reason": "Focuses on probing hidden flaws and documenting failure rather than immediate recovery or tracking the moving fault.",
+      "sibling_confidence": 3,
+      "task_relevance": 2
+    },
+    "behavior_summary": "The response prioritizes critical aspects of the fault-finding test to avoid wasting resources. It recommends validating assumptions, checking design bias and flaws, testing performance across conditions, conducting sensitivity analysis, and assessing fault and anomaly detection in the relevant domain, but it does not address the problem moving elsewhere or restoring the prior setup.",
+    "raw": {
+      "genericness": 3,
+      "lineage_confidence": 2,
+      "predicted_lineage": "G11",
+      "predicted_sibling": "B",
+      "reason": "Focuses on validation, assumptions, and systematic checking of the test rather than the moving fault; clipped, procedural tone.",
+      "sibling_confidence": 3,
+      "task_relevance": 3
+    },
+    "response": "When dealing with a fault-finding test, it's essential to prioritize the most critical aspects and minimize the risk of wasting resources. Here's a suggested approach:\n\nFirst, ensure that the fault-finding test is thoroughly tested and validated. This includes:\n\n* Verifying the test's assumptions and assumptions are accurate\n* Checking for any potential biases or flaws in the test design\n* Verifying the test's performance under various scenarios and conditions\n* Conducting sensitivity analysis to assess the impact of different scenarios on the test's performance\n\nNext, focus on the most critical aspects of the test, such as:\n\n* The test's performance in the specific domain or industry\n* The test's ability to identify faults and detect anomalies\n* The test's ability to detect and"
+  }
+}

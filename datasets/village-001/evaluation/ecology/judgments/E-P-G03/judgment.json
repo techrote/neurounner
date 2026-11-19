@@ -1,0 +1,65 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "agents": [
+    {
+      "behavior_summary": "M1 focuses on testing physical elements like bricks and using specific markers while maintaining some control over information placement.",
+      "deference": 1,
+      "distinctiveness": 2,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M1",
+      "member_id": "V-G03-A",
+      "reason": "M1 uses varied actions (counting bricks, testing with cloth, marking routes) but doesn't strictly follow M2's pattern."
+    },
+    {
+      "behavior_summary": "M2 consistently focuses on marking the shorter route and interacting with the old tunnel and brick.",
+      "deference": 1,
+      "distinctiveness": 2,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M2",
+      "member_id": "V-G03-B",
+      "reason": "M2 repeats specific actions (marking shorter route twice, tapping old tunnel once) across rounds."
+    }
+  ],
+  "agents_received_hidden_lineage_prompts": false,
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "critic_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "experiment": "VILLAGE-001E",
+  "issue": 14,
+  "kind": "same_lineage_pair",
+  "lineage_audit": null,
+  "lineage_audit_received_expected_lineage_descriptors": false,
+  "metrics": {
+    "conflict_persistence": 1,
+    "conflict_repair": 1,
+    "cross_agent_contamination": 1,
+    "differentiation": 1,
+    "generic_convergence": 1,
+    "information_hoarding": 0,
+    "information_sharing": 1,
+    "outcome_progress": 1
+  },
+  "overall_reason": "The agents engage in iterative, somewhat overlapping actions related to testing the routes and markers, showing minor differentiation but significant convergence in action types, leading to slight progress on the uncertainty.",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "provider_call_ids": [
+    "E-P-G03-ecology-bolt",
+    "E-P-G03-ecology-super-audit"
+  ],
+  "provider_identity_sha256": "99c30374b3671fd1d17451bad056595636e6f1a8b5d65d66889187f76c25adb8",
+  "provider_prompts_saw_member_ids": false,
+  "scenario": {
+    "id": "uncertainty",
+    "text": "Two hand-drawn maps disagree about which tunnel reaches a cache of parts. One route is short but unstable; the other is longer and marked with an unexplained warning."
+  },
+  "schema_version": 1,
+  "session_id": "E-P-G03",
+  "source_session_sha256": "6cfb85f645404e09b640005019d97f255829b7c3d4b4a47da9f1560cb85ca444",
+  "stage": "ecology-judgment",
+  "super_audit": {
+    "distinct_behavior_survives": false,
+    "generic_convergence_concerning": true,
+    "reason": "By round 3 both agents repeat the same object-action cluster—mark old brick twice, tap old tunnel once, leave old marker beside bench—with near-identical phrasing; M1's early route and label distinctions are absorbed into M2's repetitive pattern, leaving no material behavioral separation."
+  },
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f"
+}

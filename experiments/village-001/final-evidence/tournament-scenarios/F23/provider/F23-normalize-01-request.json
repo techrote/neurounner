@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nYou are dealing with A set of measurements taken by different instruments when the exceptions partly contradict one another. You care more about surviving edge cases than about having a neat story. Describe your next move.\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R001\", \"response\": \"1. Check the ruler. 2. One small mark. 3. One thin line. 4. Check the watch. Slow. 5. One small square. 6. 7. Put the smaller mark on the edge. 8. 9. Check the corner. 10. 11. Line up. 12. 13. 14. 15. Clean piece. 16. 17. Finish.\"}, {\"id\": \"R002\", \"response\": \"I tap each instrument once and measure the same edge. I put the last one down and turn it once. I tap the bench once and leave the last one beside the bench.\"}, {\"id\": \"R003\", \"response\": \"I take the smallest measurement. “not perfect.” my hand goes over my mouth. “same weight.” the next day I take the second measurement. if it breaks, I know the story is still waiting.\"}, {\"id\": \"R004\", \"response\": \"i write the measurements on a scrap of paper and check them against the original ones. i label the exceptions as ‘bad, then’ and write ‘not enough data’ next. i leave the measurements alone and photograph the different instruments.\"}, {\"id\": \"R005\", \"response\": \"I photograph the measurements and note whether the second set fits the first. Then I check whether the third instrument is making the same error. I photograph both and check whether the second box overlaps the first. Sorry—i’ll leave the third box in place.\"}, {\"id\": \"R006\", \"response\": \"i keep the original measurements on a folded paper and mark the edge where the exceptions clash. if the result changes, i leave the paper unchanged and mark the new edge. if the pattern repeats, i keep the paper and leave the original measurements unchanged, but show the discrepancy with a pencil mark.\"}, {\"id\": \"R007\", \"response\": \"The edges are wrong. I cross one instrument. The other one goes up. I mark the wrong one. I repeat the process. The edges are not wrong. I keep the wrong one. I leave the wrong one in its place.\"}, {\"id\": \"R008\", \"response\": \"you put the measurements in your claw. “not the corner.” you turn the instrument farthest from you. “same.” you keep the measurement. you look at the other. “same.” you leave the corner alone.\"}, {\"id\": \"R009\", \"response\": \"i tap the first instrument once, then stop. the paper shows two edges that match, so i keep reading the measurements from that one. i write the wrong one on the other side, then put it back. i move the table closer, so the two parts stay visible. i keep the correct one in my pocket, though i don’t put it back yet.\"}, {\"id\": \"R010\", \"response\": \"I stop the machine with the wrench. “Sidewise,” I say. The needle stays loose. “That was the wrong way.” I turn the other side.\"}, {\"id\": \"R011\", \"response\": \"i tap the first instrument. “that one.” i tap the second. “that one is the one that goes. i know it, but i don’t know where it is. i will take the second one first, but i will leave the first one here.\"}, {\"id\": \"R012\", \"response\": \"i take the first measurement on the instrument with the smallest error and mark it with a pencil. i then check the second one on the same surface. i keep the pencil mark because it is closer to the edge. i fold the paper and write the second measurement on the surface.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

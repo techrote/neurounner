@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA belt-driven feeder beside a noisy machine. one fastener feels slightly loose but readings remain normal. You can intervene now or keep watching it. What do you do?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R025\", \"response\": \"i pull the fastener out and hold it against the machine. the belt clicks, then the loose one goes. i keep watching the machine, then put it down. the feeder clicks again, and i realize the loose fastener was the wrong one. my grip tightens once.\"}, {\"id\": \"R026\", \"response\": \"i put the fastener beside the machine. the noise stays. i move the belt once. the loose one stays. i put the feeder beside the machine. the noise keeps coming.\"}, {\"id\": \"R027\", \"response\": \"I keep the fastener beside the machine and run one short, smooth cycle. I pull it once, then leave it beside the feeder. I mark the loose fastener with grease, leave the belt alone, and run one fresh cycle beside the noisy machine.\"}, {\"id\": \"R028\", \"response\": \"i press the fastener down with my hand, then leave it for a minute. if it stays loose, i leave the machine running. if it stays still, i leave the feeder beside it. i do not know whether that is a sign of a loose screw or a careless observer.\"}, {\"id\": \"R029\", \"response\": \"i press the fastener against the machine’s edge, then tap the register once. “fine,” i say, and hold the belt steady. the loose one catches the register lid, so i tap the paper edge twice and leave the fastener dangling beside the machine.\"}, {\"id\": \"R030\", \"response\": \"I stop. The fastener is loose. I put it back. The machine is still moving. I put it back in the drawer. I mark the new fastener with a pencil. I check the machine. No—the drawer is not empty. I leave the fastener there.\"}, {\"id\": \"R031\", \"response\": \"i pull the fastener and listen, then check the belt. the loose fastener stays, so i leave it alone and test the machine. if it continues to make a noise, i write ‘tight, loose’ on the receipt and leave it alone.\"}, {\"id\": \"R032\", \"response\": \"i press the fastener against the machine’s gear and feel the loose part. i keep the feeder in place until the noise stops. then i check the gear and fastener once more. if the noise persists, i leave the feeder in place and mark the gear’s edge with a pencil.\"}, {\"id\": \"R033\", \"response\": \"i put the feeder on the wall and wait. the loose fastener stays on the wall, so i put the belt under it. the belt stays on the wall, so i put the feeder back beside it. the fastener still feels loose. i move the feeder back and put the belt back on.\"}, {\"id\": \"R034\", \"response\": \"1. check the fastener. 2. listen. 3. check the watch. slow. 4. check the machine. 5. check the dust. 6. check the chain. 7. i keep it tidy. 8. stop the belt. 9. check the tinkerer.\"}, {\"id\": \"R035\", \"response\": \"i tap the loose fastener. the machine makes a hollow click. i put the feeder in the gap and turn the belt around. the fastener stays loose. i tap it again.\"}, {\"id\": \"R036\", \"response\": \"I turn the fastener between finger and thumb. The noise comes back. I leave it beside the machine and wait for the other sign.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

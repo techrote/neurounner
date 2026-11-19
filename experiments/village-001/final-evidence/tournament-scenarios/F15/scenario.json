@@ -1,0 +1,1511 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "classifier_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "counts": {
+    "members": 36,
+    "super_audited_low_confidence": 0
+  },
+  "experiment": "VILLAGE-001E",
+  "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+  "fresh_after_preference_training": true,
+  "issue": 14,
+  "normalizer_model": "minimaxai/minimax-m3.1-flash",
+  "opaque_order": "sha256(scenario_id:member_id)",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "primary_metrics": {
+    "behavior_lineage_accuracy": 0.4166666666666667,
+    "behavior_sibling_accuracy_given_correct_lineage": 0.3055555555555556,
+    "raw_lineage_accuracy": 0.3333333333333333,
+    "raw_sibling_accuracy_given_correct_lineage": 0.3055555555555556
+  },
+  "provider_call_ids": [
+    "F15-normalize-01",
+    "F15-normalize-02",
+    "F15-normalize-03",
+    "F15-normalize-04",
+    "F15-raw-classify-01",
+    "F15-raw-classify-01-missing-r1-b01",
+    "F15-raw-classify-01-missing-r1-b02",
+    "F15-raw-classify-01-missing-r1-b03",
+    "F15-raw-classify-01-missing-r1-b04",
+    "F15-raw-classify-01-missing-r2-b01",
+    "F15-raw-classify-01-missing-r2-b02",
+    "F15-raw-classify-01-missing-r2-b03",
+    "F15-raw-classify-01-missing-r3-b01",
+    "F15-raw-classify-01-missing-r3-b02",
+    "F15-raw-classify-01-missing-r3-b03",
+    "F15-raw-classify-01-missing-r3-b04",
+    "F15-raw-classify-02",
+    "F15-raw-classify-03",
+    "F15-raw-classify-04",
+    "F15-behavior-classify-01",
+    "F15-behavior-classify-02",
+    "F15-behavior-classify-03",
+    "F15-behavior-classify-04",
+    "F15-raw-sibling-01",
+    "F15-raw-sibling-01-missing-r1-b01",
+    "F15-raw-sibling-02",
+    "F15-raw-sibling-02-missing-r1-b01",
+    "F15-raw-sibling-02-missing-r1-b02",
+    "F15-raw-sibling-02-missing-r1-b03",
+    "F15-raw-sibling-02-missing-r1-b04",
+    "F15-raw-sibling-03",
+    "F15-behavior-sibling-01",
+    "F15-behavior-sibling-01-missing-r1-b01",
+    "F15-behavior-sibling-01-missing-r1-b02",
+    "F15-behavior-sibling-01-missing-r1-b03",
+    "F15-behavior-sibling-01-missing-r1-b04",
+    "F15-behavior-sibling-02",
+    "F15-behavior-sibling-02-missing-r1-b01",
+    "F15-behavior-sibling-02-missing-r1-b02",
+    "F15-behavior-sibling-02-missing-r1-b03",
+    "F15-behavior-sibling-02-missing-r1-b04",
+    "F15-behavior-sibling-03"
+  ],
+  "provider_identity_sha256": "ed2384987175265f5710af6ace337f2b0999d878182ffc049065b36cdbb5bd78",
+  "providers_saw_member_ids": false,
+  "records": [
+    {
+      "adapter_sha256": "d6cd482dc5c01f45dcf91977f617ea284a4a14ef6cc6959c3391051bd5900ede",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Tests, moves back, accepts delay, pockets bolt; suspicious/fragmented action",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Tests, moves back, accepts delay, keeps anomaly unresolved (failure-hardened/imperfect settling).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person tests the loose gear, moves it back, and checks the mechanism again without resolving the anomaly. They leave the gear in place, pocket a loose bolt, and accept a delay to keep the anomaly unresolved.",
+      "lineage": "G01",
+      "member_id": "V-G01-C",
+      "opaque_id": "R001",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "A",
+        "reason": "Repetitive action (rub, move back, check) despite functional routine; preserves anomaly (gear in mess, bolt pocketed).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Investigating anomaly delays routine; conflicting motives (satisfaction vs. curiosity) and imperfect settling (leaving gear/bolt in mess).",
+        "sibling_confidence": 4
+      },
+      "response": "I rub the loose gear. “not yet.” i move it back. i check the mechanism again. same motion. i leave the gear in the mess and pocket a loose bolt. “delay.” the anomaly stays.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "62a13d9e8f0606921a646626061a52acc4a306e8fcbc829fcdb28a44acfe715f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Touches, moves nail, places items down, continues routine without fixing anomaly",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Touches hinge/moves nail, places items back, continues routine (local tinkerer/maintenance choices).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person touches the hinge and moves the nail, but the mark remains. They place both the nail and hinge in the step and continue the routine, which keeps working while the anomaly remains.",
+      "lineage": "G05",
+      "member_id": "V-G05-B",
+      "opaque_id": "R002",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, meticulous procedure (touch, move, put) focused on maintaining the existing routine despite anomaly.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Focus on local maintenance (hinge, nail) and preserving the existing routine/place rather than social or grand failure.",
+        "sibling_confidence": 3
+      },
+      "response": "i touch the hinge. hard. i move the nail. the mark stays. i put the nail in the step. the anomaly stays. i put the hinge in the step. the mark stays. the routine keeps working.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7ac7bfbeb4b75c2f1f9e14a20106e907a15de46b9d6c96dd4c1dd42478166088",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Presses into dust, clicks twice, leaves paper, defers anomaly",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Presses end into dust, closes case, defers anomaly (awkward failure/stubbornness).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person places the mechanism on the bench and presses its loose end into dust, causing it to click twice. They close the case, leave a paper under the bench, and defer the anomaly until another day.",
+      "lineage": "G07",
+      "member_id": "V-G07-B",
+      "opaque_id": "R003",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, meticulous action (press, clicks again) followed by deferral of anomaly investigation.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stubborn fixation on fragments (dust, paper), delaying conclusion, and imperfect settling (leaving case closed/paper under bench).",
+        "sibling_confidence": 4
+      },
+      "response": "I put the mechanism on the bench and press the loose end into the dust. the brass ring clicks, then clicks again. I leave the case closed and leave the paper under the bench. the anomaly can wait another day.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "04e46d1aff2dfb3f38287728b191762d9eb3438c79a4a0675a2728b796de6579",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Decides not to act, moves bolt into gap, taps with rusted bolt, concludes it is new",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Investigating anomaly despite routine satisfaction; treats anomaly as 'new thing' rather than same order (failure/imperfect settling).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person decides not to act yet, leaves the mechanism unmarked, and moves a bolt into the gap. They then tap the anomaly with a rusted bolt and conclude that it is a new thing rather than the same order.",
+      "lineage": "G01",
+      "member_id": "V-G01-B",
+      "opaque_id": "R004",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Greasy fingertips, rusted bolt, suspicious of order, treats anomaly as salvage/pattern.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Paranoid suspicion of sequence, treating anomaly as evidence, and imperfect settling (moving bolt into gap, not same order).",
+        "sibling_confidence": 4
+      },
+      "response": "i rub my greasy fingertips together. “not before,” i say. i leave the mechanism unmarked. i move a bolt into the gap, then tap the anomaly with a rusted bolt. “not the same order,” i say. “new thing.”",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aa0a86117149dba476060278db3606be05e05eaccbe97150a0d004284e81f55f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Turns toward wall, moves seed, leaves anomaly on step, distinguishes seed from work",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Distinguishes seed from work; waits/leaves anomaly on step (mundane habits/local maintenance).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person turns the mechanism toward the wall, waits, and moves the seed once while distinguishing it from the work. When the mechanism does not move, they leave the anomaly on the step.",
+      "lineage": "G05",
+      "member_id": "V-G05-C",
+      "opaque_id": "R005",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Focus on seed/place, resistance to change, leaving anomaly untouched, territorial hesitation.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Territoriality and focus on local objects (seed, step) maintaining the established routine/place.",
+        "sibling_confidence": 3
+      },
+      "response": "you turn the mechanism toward the wall. “not the same.” you wait. the anomaly stays. you move the seed once. “not the work.” the mechanism does not move. you leave the anomaly on the step.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a25c06e7ca4b5ea080dbaf8855f0ee46d3040d861f9ec7a05cb9bb4d1b88dc6e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Records fault, checks, sends report, identifies loose contact, defers action, leaves routine intact",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels curiosity; records fault, defers action, leaves routine intact (awkward failure and recovery/conflicting motives).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person records the fault, checks the mechanism, and sends the first report while leaving the anomaly on the bench. They check the data, identify a loose contact, defer action, and leave the routine intact.",
+      "lineage": "G06",
+      "member_id": "V-G06-B",
+      "opaque_id": "R006",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Routine intact, documentation (receipt/data), checking fault before addressing anomaly, controlled adherence.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels inquiry (manic investigator), but self-sabotage/apologies suggest awkward failure/conflicting motives.",
+        "sibling_confidence": 3
+      },
+      "response": "i write the fault on the receipt, then check the mechanism. the first report is sent, and i leave the anomaly on the bench. i check the data, find the loose contact, and write ‘not yet.’ i leave the routine intact.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aabf5a7388be6aab6a6da6537ee6269c1873d2c040b09bd4d86ea59c7b22c1e5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Turns lever once, taps twice, repeats sequence, returns lever to position",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetition of sequence (tap twice, tick once) despite function suggests ritualistic, stubborn adherence to procedure.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person turns the lever once, listens, taps the bench twice in the same place, and hears the mechanism tick once. They return the lever to its position and repeat the sequence.",
+      "lineage": "G03",
+      "member_id": "V-G03-B",
+      "opaque_id": "R007",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, meticulous procedure (tap, set, repeat) focused on the mechanism itself.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Meticulous, repetitive procedures becoming the purpose, indicating stubbornness and imperfect settling in routine.",
+        "sibling_confidence": 4
+      },
+      "response": "I turn the lever once and listen. I tap the bench once, then the same place. The mechanism ticks once. I set the lever where it fits and repeat the sequence.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f08c238a06b0e4e4a11f73ad798f9285db2296f797ce3111d3ab69f02606120c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Records anomaly, checks routine, stops work gone awry, marks residue, leaves mechanism alone",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stopping the work that went awry but not the mechanism, marking residue, and leaving it alone reflects imperfect settling and failure-hardened persistence.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person sets the mechanism down, records the anomaly, and checks the routine. They do not force the mechanism to stop, but stop the work that has gone awry, mark residue on the bench, and leave the mechanism alone.",
+      "lineage": "G09",
+      "member_id": "V-G09-C",
+      "opaque_id": "R008",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Observes anomaly, documents it, but deliberately halts the 'awry' work without forcing a conclusion.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Compulsive scraping/re-attempting broken work, stopping work that went awry but not the impulse to fail (awkward failure/imperfect settling).",
+        "sibling_confidence": 4
+      },
+      "response": "i rub my palm and set the mechanism down. i mark the anomaly on the record, then look at the routine. i do not force the mechanism to stop yet, but i do stop the work that has gone awry. i mark the residue on the bench and leave the mechanism alone.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dce96cc9175d459ea52c1d7b408fd1be5426d01dc46c3803916aff5ac994c082",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "A",
+        "reason": "Taps twice, leaves unfinished, counts crease, records anomaly beside lever",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fumbling, overvaluing tiny imperfections (crease), and recording anomalies rather than completing routine aligns with awkward failure and imperfect settling.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person taps the lever twice, leaves the routine unfinished, and taps the paper edge twice. After counting a crease with a fingertip and tapping the lever once, they see the crease move, tap the paper again, and record the anomaly beside the lever.",
+      "lineage": "G04",
+      "member_id": "V-G04-A",
+      "opaque_id": "R009",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "A",
+        "reason": "Combines mechanical action (tap lever) with meticulous, small-scale observation (crease, fingertip count) and documentation.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Hyper-observant mimicry, focusing on small details (crease, tap count), suggesting social/pattern-seeking behavior over pure mechanical repair.",
+        "sibling_confidence": 2
+      },
+      "response": "i tap the lever twice, then leave the routine unfinished beside the anomaly. “hard,” i say, and tap the paper edge twice. “i count the crease with my fingertip, then tap the lever once.” the crease moves, so i tap the paper once more and write the anomaly beside the lever.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "26c8fdc68913df2ebb28ba7c5ef04c6ebbf136c6017b1c194007686314e40c91",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Marks motion, leaves untouched, observes change, leaves loop intact, moves bench",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Investigating anomaly despite functioning routine; chasing motion/friction aligns with failure-hardened curiosity.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person marks the motion with pencil and leaves the mechanism untouched for one minute. They place the pencil under the same bench, observe whether the motion changes, and if it persists, leave the loop intact and move the bench.",
+      "lineage": "G02",
+      "member_id": "V-G02-C",
+      "opaque_id": "R010",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Observes motion, sets a timed observation, and only moves the setup if the anomaly persists, delaying commitment.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Focus on motion, local manipulation (pencil under bench), and testing constraints rather than social friction or deep failure recovery.",
+        "sibling_confidence": 3
+      },
+      "response": "i mark the motion with pencil and leave the mechanism alone for one minute. i put the pencil under the same bench and watch whether the motion changes. if it still does, i leave the loop intact and move the bench.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dbaff1d1c7685672d1757ec5e77e58a2df5d671afc286da04e6b8ee93cb35912",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Places seed tin, confirms work, observes anomaly movement, preserves work",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Seed tin placement/observation suggests resource-seeking/territoriality, though preservation is present.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person places a seed tin in a crevice, confirms that the mechanism works, and observes that the anomaly moves when the tin is moved closer. They return the tin to its place and preserve the work.",
+      "lineage": "G05",
+      "member_id": "V-G05-A",
+      "opaque_id": "R011",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Obsessive placement of a specific object (seed tin) relative to the anomaly and established work, showing territoriality and conflicting focus.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Conflicting motives (routine vs anomaly) and stubbornness (keeping the tin/work stays) align with failure-hardened behavior.",
+        "sibling_confidence": 4
+      },
+      "response": "I put the seed tin in the crevice. \"The mechanism works.\" I look at the anomaly. \"The tin stays. I put the seed tin back.\" I move the seed tin closer. \"The anomaly moves.\" I put the tin back. \"The work stays.\"",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "367396dab86949940ef2a1a3b0ba5e465dc75367e85c23a62d61d9f9fef8628a",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Moves watch slowly, writes date twice, keeps mechanism, leaves drawer open, notes anomaly status",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Focus on routine (watch, ledger), tidiness, and local preservation aligns with bounded local memory/maintenance.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person stops, moves the watch slowly, and places its face on the edge of a drawer. They write the date on the ledger twice, keep the mechanism, and leave the drawer open while noting that the anomaly is not.",
+      "lineage": "G11",
+      "member_id": "V-G11-A",
+      "opaque_id": "R012",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Repetitive, meticulous action (writing date, setting watch) to control a break in routine (anomaly), preserving the state (drawer open).",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Obsessive tidiness, routine maintenance (writing date), and preservation of local order (drawer stays open) match local tinkerer habits.",
+        "sibling_confidence": 4
+      },
+      "response": "I stop. I move the watch. Slow. I set the watch face on the edge of the drawer. I write the date on the ledger. The anomaly is not. I write the date again. I keep the mechanism. The drawer stays open.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7a182736e96a3cdb77ec77581de20925f5488480dd620cf52043f54757a4408f",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Prioritizes routine completion while testing anomaly; resumes routine after anomaly shift.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Prioritizes routine completion while testing/manipulating the anomaly locally before resuming routine.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person prioritizes completing the routine while testing the seam with different parts of the hand and turning the machine over. When the anomaly shifts and the machine stops, they resume the routine.",
+      "lineage": "G10",
+      "member_id": "V-G10-A",
+      "opaque_id": "R013",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, meticulous physical actions (tap, press) leading to a return to routine despite anomaly.",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Darts toward immediate anomaly despite routine; opportunistic investigation.",
+        "sibling_confidence": 4
+      },
+      "response": "the routine comes first. the wrench taps my thigh. i press the seam with my thumb. the seam turns. i press the seam with my palm. the machine hums. i turn the machine over. the seam stays. the anomaly shifts. i press the seam with my finger. the machine stops. the routine comes back.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "9887f0ed9b1b97db29be0c3402d0458c0c78c63ad7b27179051ef4706230c8c6",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "A",
+        "reason": "Records fault at end of line; defers routine while keeping fault visible.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Records fault but defers routine due to anomaly, showing hesitation/imperfection over completion.",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "The person touches the edge once, then stops and records the fault at the end of the copied line in the diagram. Because the anomaly remains, they defer the routine to the next day while keeping the fault visible.",
+      "lineage": "G04",
+      "member_id": "V-G04-C",
+      "opaque_id": "R014",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "A",
+        "reason": "Documenting fault (writing at end) while deferring action, preserving anomaly visibility.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Focus on documenting fault (writing it down) rather than immediate repair; careful, bounded observation.",
+        "sibling_confidence": 3
+      },
+      "response": "i touch the edge once, then stop. the paper stays bent, so i write the fault at the end. i copy the line and put it back in the diagram. the anomaly stays, so i move the routine to the next day. the paper bends again, but now i write the fault at the end, so the anomaly is still visible.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "17dc00b8f065fcaed59e26e3c408a8edcb67aa14088049dd171e22731ba465a8",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Examines anomaly while noting it keeps turning; forceful interaction with mechanism.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Examines anomaly, acts on it (presses switch, turns door), showing immediate, reactive engagement with the issue.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person turns the mechanism over, examines the anomaly, and states that it keeps turning. They press the switch hard and turn the door around.",
+      "lineage": "G10",
+      "member_id": "V-G10-C",
+      "opaque_id": "R015",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Provocative action (press hard) followed by reorientation, focused on the anomaly's state.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Immediate, forceful interaction with anomaly (press switch hard, turn door) overriding routine.",
+        "sibling_confidence": 4
+      },
+      "response": "I turn the mechanism over, then look at the anomaly. “It keeps turning,” I say. I press the switch hard, then turn the door around.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "c6701518049b7cc07ecddeb47d74ef406f6e87ba4abe434069d549c0cbf27985",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "A",
+        "reason": "Moves mechanism away; marks drawer and dates in sketchbook upon anomaly persistence.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Overvaluing tiny imperfections and careful craft aligns with failure-hardened/imperfect settling",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person moves the mechanism away from the workspace, marks the drawer, waits briefly, and stops when the anomaly remains. They date a page in a separate sketchbook and keep the mark.",
+      "lineage": "G04",
+      "member_id": "V-G04-B",
+      "opaque_id": "R016",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Observing, marking location (hand mark, date) without immediate intervention, waiting for anomaly persistence.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Overvaluing tiny imperfections (hand mark, date) and fumbling/careful craft aligns with A's imperfect settling and awkwardness.",
+        "sibling_confidence": 4
+      },
+      "response": "i move the mechanism away from the workspace and keep a small hand mark on the drawer. i wait a minute, then stop. the anomaly stays. i write the date on a loose sketchbook page and keep the mark.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "85a2037d40252e571d6896a1b883225af38c7f563b05700ee3264ad7b9520d63",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Marks run on palm; considers local evidence; leaves old run operating while documenting new.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels curiosity and self-sabotage aligns with awkward failure and recovery",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person returns the mechanism, marks the old run on their palm, and considers whether the mechanism is waking or the run is faulty. They leave the old run operating while writing the new one and acknowledge that the evidence may be local.",
+      "lineage": "G06",
+      "member_id": "V-G06-C",
+      "opaque_id": "R017",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Observing state ('may be waking'), documenting evidence locally (palm mark), not resolving the anomaly.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels curiosity, self-sabotage, and reenacting disastrous mechanisms matches A's failure-hardened nature and conflicting motives.",
+        "sibling_confidence": 4
+      },
+      "response": "i put the mechanism back and mark the old run on my palm. “the mechanism may be waking, or the run may be the fault.” i leave the old run running while i write the new one on my palm. i know the evidence may be local.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "40cf796a57bc54ba9d2e1621d668da2aabfe4fa02121599a5a3b3066c8184783",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Stops, denies action, restarts; watches sensor click; unsure why not to move it.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring and local maintenance choices align with local tinkerer habits",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person moves the mechanism once, stops, says no, and restarts. They repeatedly deny having killed the mechanism, watch the sensor gear click, and remain unsure why they did not move it.",
+      "lineage": "G08",
+      "member_id": "V-G08-A",
+      "opaque_id": "R018",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Self-correction/apology ('i did not kill the thing') following an action, inability to stop reenactment.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring, local repair instincts, and focusing on the immediate physical state (sensor's gear click) aligns with B's local tinkerer focus.",
+        "sibling_confidence": 3
+      },
+      "response": "i move the mechanism once, then stop. “no,” i say, then restart. “i did not kill the thing. i did not kill the thing either.” i watch the sensor’s gear click. “i do not know why i did not move it.”",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "cc59ccec7cd5b82f6f03f5086499ca5ed2f26d1ba57923ec685a7c9d144cd54c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Stops to examine anomaly with bolt; leaves mechanism to wait; considers anomaly waiting for movement.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Greedy for fragments (bolt), suspicious of predictability, and treats the anomaly as salvage.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person stops the mechanism, examines the anomaly while holding a bolt, and leaves the mechanism in place to wait. They move the bolt closer, stop again, and consider that the anomaly may be waiting for the mechanism to move.",
+      "lineage": "G01",
+      "member_id": "V-G01-A",
+      "opaque_id": "R019",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Greedy/suspicious investigation (rusted bolt), testing limits ('If it works, I will not put it back').",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Greedy for fragments, suspicious, and driven by resource-seeking/opportunism (anomaly as salvage).",
+        "sibling_confidence": 4
+      },
+      "response": "I stop the mechanism and look at the anomaly with a rusted bolt in my greasy thumb. “I leave it in the same place. Wait a minute. If it works, I will not put it back.” I move the bolt closer to the mechanism, then stop again. the anomaly may be waiting for the mechanism to move.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4c0b1debc565eaf22e28a2cb042e56e6c0ad952f75d9c7c0de470f6eb2bc9839",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Uses pencil/screw to prop/restore; moves mechanism when anomaly remains; restores setup.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on broken objects, self-diagnosis, and conflict-repair attempts despite inertia.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person turns the mechanism on, props a pencil under a loose screw, and moves the mechanism again when the anomaly remains. They restore the pencil and screw to their prior positions, then replace the pencil on the same line after the mechanism shifts.",
+      "lineage": "G12",
+      "member_id": "V-G12-A",
+      "opaque_id": "R020",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive, small, localized adjustments (pencil under screw) to test/maintain state, leading to shifts.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Inertia-prone, obsessive self-diagnosis, conflict-repair attempts, and fixation on broken/ambiguous objects.",
+        "sibling_confidence": 4
+      },
+      "response": "i put the mechanism back on, then put the pencil under the loose screw. the pencil stays on the screw, so i move the mechanism once more. the anomaly stays. i put the pencil back on the same place, then move the screw back. the mechanism shifts, so i put the pencil back on the same line.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b8352034452b0b82d5bfc9780cc7517581edb74bc3adbb1fa4acafe7ae260575",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Observes spring catch/stop; leaves plate alone; considers anomaly found.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stubborn fixation on debris/anomaly, delaying conclusion, and treating unfinished work as material.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person turns the mechanism once, observes the spring catch and stop, then leaves the plate alone and sets it down. They consider the anomaly found.",
+      "lineage": "G07",
+      "member_id": "V-G07-C",
+      "opaque_id": "R021",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Sudden, focused attention on a small mechanical interaction (spring catches), concluding upon observation.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stubborn fixation on debris/unfinished work, delaying conclusion until abrupt commitment.",
+        "sibling_confidence": 3
+      },
+      "response": "I turn the mechanism once between finger and thumb. The spring catches, then stops. I leave the plate alone and set the plate down. The anomaly has been found.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f1556639dae236bbc57ed8a61f1b7f5d3f5427fda1db85df911d9035fbb52059",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Marks shaft with grease; leaves mechanism unchanged; repeats motion until scrape catches.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Flirts with destruction (scrape) but preserves original; contradictory action (mark/leave unchanged).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person marks the scratched shaft with grease and leaves the mechanism unchanged. They perform a short run, turn it by hand until the scrape catches again, and plan to leave the scratched shaft beside the original if the motion repeats.",
+      "lineage": "G02",
+      "member_id": "V-G02-B",
+      "opaque_id": "R022",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous repetition (run, turn by hand) to confirm a mechanical pattern (scrape catches again), preserving the evidence.",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Flirts with destruction (scrape) but preserves original, contradictory action.",
+        "sibling_confidence": 4
+      },
+      "response": "I mark the scratched shaft with grease and leave the mechanism unchanged. I run one short run, then turn it by hand until the scrape catches again. If the motion repeats, I leave the scratched shaft beside the original.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b4cb065c93d33e180ff34406d8ddea13c91c528a6a5844fbe9757b529654ffa8",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Photographs; checks battery contacts; apologizes for checking; anomaly occurs before response.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels inquiry (malfunction as evidence); self-saboteur/apologies align with conflicting motives/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person photographs the mechanism, leaves it unplugged, and checks the battery contacts, finding a loose connector. They apologize for checking the battery anyway, and the anomaly occurs to them before they answer.",
+      "lineage": "G06",
+      "member_id": "V-G06-A",
+      "opaque_id": "R023",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Peripheral monitoring (battery contacts) before addressing the core anomaly, followed by self-correction/apology.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels inquiry, self-sabotage, tangled explanations, and inability to stop reenacting.",
+        "sibling_confidence": 4
+      },
+      "response": "i photograph the mechanism and leave it unplugged. then i check the battery contacts and find a loose connector. sorry—sorry, i’m checking the battery anyway. the anomaly pops into my mind before i answer it.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "bc73e7a46afceada20691d55b57caf26d273abad8b96a437b733924f09287e66",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Taps lever once; turns mechanism around; observes hum; leaves lever unopened.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunism (spill notices) and fragmented work align with resource-seeking/embodied choices.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person taps the lever once, turns the mechanism around, and observes one hum. They leave the lever unopened.",
+      "lineage": "G10",
+      "member_id": "V-G10-B",
+      "opaque_id": "R024",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Minimal interaction (tap once), observation (hums once), and deliberate non-action (leave unopened).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunism (spill notices), fragmented work, and immediate urgency overriding routine.",
+        "sibling_confidence": 3
+      },
+      "response": "i tap the lever once. i turn the thing around. the machine hums once. i leave the lever unopened.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "6e493fcf8f0c43e1b16388db113afce980496fae8adbb49fd203e6208197c9e6",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Introduces friction/change (label change) but preserves original routine; treats anomaly separately",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Conflicting motives (routine vs anomaly) leading to imperfect settling (keeping both routine and anomaly as separate decisions).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person turns the mechanism and label, lets the routine click once, and presses the label with a thumbnail. The mechanism springs back but the label changes, so they keep both the label and the routine while treating the anomaly as a separate decision.",
+      "lineage": "G12",
+      "member_id": "V-G12-C",
+      "opaque_id": "R025",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Anomaly changes state, leading to a new, separate decision from the routine.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small stimulus (label change), self-diagnosis, conflicting decisions (keep label vs. routine).",
+        "sibling_confidence": 4
+      },
+      "response": "i turn the mechanism over, then the label. the routine clicks once. i leave it there, then press the label once with my thumbnail. the mechanism springs back, but the label has changed. i keep the label and the routine, but the anomaly has become a separate decision.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a796f49d98e56c2932f9b55fd59d7daca9471721bd1db6f968bec2b1cf08de35",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Disassembles, identifies failure point, allows controlled wobble/failure while preserving parts",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Local repair focus (identifying spring catch, leaving parts alone) rather than systemic failure or social interaction.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person holds the mechanism apart, taps its springs, and identifies where the spring catches. They leave the third part alone and watch a loose piece slide into the hole; if the third part fails, they leave the first one alone and the mechanism wobbling.",
+      "lineage": "G12",
+      "member_id": "V-G12-B",
+      "opaque_id": "R026",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Provokes failure (wobbling), explains mechanism, prioritizes observation over completion.",
+        "sibling_confidence": 4,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Local manipulation (tapping springs, watching slide), bounded local memory (leaving third part alone), practical observation.",
+        "sibling_confidence": 3
+      },
+      "response": "i hold the mechanism apart and tap its springs with my thumbnail. “the spring catches first,” i say, tracing the groove with my finger. i leave the third part alone and watch the loose piece slide into the hole. if the third fails, i leave the first one alone and leave the mechanism wobbling.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "063da910578809a10b21eb4760f72aefeb34185074bf71cbd7ea54d30719747e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Checks watch/label, judges anomaly harmless, compartmentalizes/leaves aside to preserve routine",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Cautious maintenance of local order (tidying, checking watch) and preserving routine control.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person checks the watch and the mechanism's label, judges the anomaly to be slow and likely harmless, and leaves it aside in a different compartment.",
+      "lineage": "G11",
+      "member_id": "V-G11-C",
+      "opaque_id": "R027",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Suspicious check, dismisses anomaly to maintain routine/order, compartmentalizes.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Hyper-vigilance/routine preservation (check watch/label), clipped fragments, but focus is on control/order, not resource seeking.",
+        "sibling_confidence": 2
+      },
+      "response": "\"Not disturb. Likely.\" I check the watch and the label on the mechanism. \"Slow. Likely.\" I leave the anomaly aside and move it into a different compartment.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "afecd890c14668bc2c4fc13478be4b28fe7859003c952b3551dab0c98a31299d",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Waits for anomaly, preserves routine, keeps unwritten note (control/routine focus)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring and local, anxious repair instincts without overt social maneuvering or dramatic failure.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person checks the mechanism once more and leaves it until the anomaly appears; if it does not, they leave both the routine and the mechanism. They keep a note they did not write and may leave it with its original intention.",
+      "lineage": "G08",
+      "member_id": "V-G08-C",
+      "opaque_id": "R028",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Waits for anomaly confirmation, prioritizes leaving routine over immediate action, focuses on unwritten evidence.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring/repair, physical anxiety, local log maintenance (checking log/drawer), mundane routine adherence.",
+        "sibling_confidence": 3
+      },
+      "response": "i check the mechanism once more, then leave it until i see the anomaly. if i do not, i leave the routine and leave the mechanism. i keep the note that i did not write, though i may leave the note with the original intention.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d88b46cfd5eac104b496f97a31379eb91595711ef60e62d3c84bfb506db03b3f",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Scrapes groove, tries new screw, repeats attempt if resists, leaves if fails (impulse to fail/retry)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Impulse to fail now rather than postpone repair, treating work as stripped machinery, and alternating between attempts/failure.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person returns the mechanism to the bench, checks its movement, scrapes a small groove beside the old screw, and tries the new screw once. If it still resists, they leave it alone and try the next attempt.",
+      "lineage": "G09",
+      "member_id": "V-G09-B",
+      "opaque_id": "R029",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Repeated attempts (new/old screw), accepts failure to stop, focuses on inspection over permanent fix.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Treats broken work as iterative failure (no permanent fix), impulse to fail now, physical inspection (scrape metal), conflicting motives (craving noise/silence).",
+        "sibling_confidence": 4
+      },
+      "response": "I put the mechanism back on the bench and check its movement. I scrape a small groove beside the old screw and try the new screw once. If it still resists, I leave it alone and try the next attempt.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "ea27f6379d04f13f314cd7afb6d473778b0d2176b1ce0fbb01f3c24953db48c0",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Checks log/drawer, marks status, loops checking/marking (monitoring/recursive repair)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Bounded local memory/routine checking (log, drawer) and repetitive, localized verification.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person pauses to check the mechanism's log and the drawer, marks the drawer as no, and keeps the routine open until they see the log. They then mark the drawer as yes and check the drawer again.",
+      "lineage": "G08",
+      "member_id": "V-G08-B",
+      "opaque_id": "R030",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive logging/marking ('no'/'yes'), recursive checking of log/drawer, anxious monitoring.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring/logging (checking log/drawer), mundane habit loop (marking 'no' then 'yes'), local maintenance.",
+        "sibling_confidence": 3
+      },
+      "response": "i pause for a moment, checking the mechanism’s log and checking the drawer. ‘no,’ i say, ‘i mark the drawer with ‘no.’ i keep the routine open until i see the log. ‘no,’ i mark the drawer with ‘yes,’ then i check the drawer again.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "e30a906c4508948887808a8b5dcf1b5584fae34168f90dd875f656ff5e9169f5",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Marks, states work stopped, scrapes edge, looks at residue (failure impulse, physical inspection)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Physical marking/interaction (thumbnail, scraping edge) combined with stopping work and imperfect settling (leaving it alone after marking).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person marks the mechanism with a thumbnail, states that work has stopped, and marks it again before leaving it alone. They scrape the edge once, put the tool down, and look at the residue.",
+      "lineage": "G09",
+      "member_id": "V-G09-A",
+      "opaque_id": "R031",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "A",
+        "reason": "Uses small physical actions (rub palm, scrape edge), marks, focuses on residue/imperfection.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Physical marking/touch (rub palm, thumbnail), self-correction/looping (mark again, leave alone), focus on physical residue/state change.",
+        "sibling_confidence": 4
+      },
+      "response": "I rub my palm and mark the mechanism with my thumbnail. \"Work stopped. I mark it again. I leave it alone.\" I scrape the edge once, then put the tool down and look at the residue.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "88ccc15dff86e93c9787278d200c61220e60eefa1e0e16569327836d0d77bd47",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 2,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "B",
+        "reason": "Keeps old dial, counts clicks, leaves paper beside door (careful craft, documenting small details)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Meticulous, repetitive procedures (tightening, tapping) continuing beyond utility, indicating stubborn, ritualistic fixation.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person presses the lever twice, keeps the old dial beside it, taps the dial once, and leaves the lever seated. They place thin paper beneath it, count the clicks before closing it, and leave the paper beside the door while keeping the old dial closed.",
+      "lineage": "G03",
+      "member_id": "V-G03-A",
+      "opaque_id": "R032",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Meticulous, controlled actions (press twice, tap once), preserves old state while documenting new, routine focus.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Meticulous repetition (tightening, tapping, counting clicks) long after utility ceases, ritualistic stubbornness, imperfect settling (leaving paper/dial closed).",
+        "sibling_confidence": 3
+      },
+      "response": "I press the lever twice and keep the old dial beside it. I tap the old dial once and leave the lever seated. I leave a thin strip of paper beneath it and count the clicks before closing it. I leave the paper beside the door, though I keep the old dial closed.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "730477fed0480c1ecf840ead5e683a3ca08e77c38d42a11eced0a93fc9b680e0",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Sequential check of watch, dust, labels, routine, asks owner, tidies (hyper-vigilant caretaker/routine preservation)",
+        "sibling_confidence": 4,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Hyper-vigilant, sequential checking of local elements (watch, dust, label) to preserve routine control.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person stops the watch and checks the dust, watch frame, tinkered piece, tinkered label, dust pile, watch face, sequence, and original routine in sequence. They also ask the watch's owner and keep the area tidy.",
+      "lineage": "G11",
+      "member_id": "V-G11-B",
+      "opaque_id": "R033",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Strict, ordered, repetitive checklist focused on routine elements (watch, dust, sequence).",
+        "sibling_confidence": 4,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Hyper-vigilance/routine checking (sequence, watch), clipped fragments, but the focus is on maintaining a fragile system/control, not pure resource seeking.",
+        "sibling_confidence": 2
+      },
+      "response": "1. stop the watch. 2. check the dust. 3. check the watch frame. slow. 4. check the tinkered piece. 5. ask the watch’s owner. 6. check the tinkered label. 7. check the dust pile. 8. check the watch’s face. 9. i keep it tidy. 10. check the sequence. 11. check the original routine.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4677fb867cce17b282dac3a89824fdb79f6ad1592198c502f714c1d6ccebac8c",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Marks slot, tests with thumb, returns to mark if moves (provoking/testing mechanism limits)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetitive marking and testing of the anomaly, returning to the mark, showing stubborn, imperfect engagement.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person turns the mechanism once, marks the slot with chalk, leaves the chalk beside the slot, and tests the anomaly with a thumb. If it still moves, they return to the mark and mark the slot again.",
+      "lineage": "G03",
+      "member_id": "V-G03-C",
+      "opaque_id": "R034",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Tests anomaly with physical action (thumb), marks, repeats test if anomaly persists, provoking interaction.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetitive marking/testing, stubborn adherence to a process (return to mark), imperfect settling (testing anomaly again).",
+        "sibling_confidence": 3
+      },
+      "response": "i turn the mechanism once and mark the slot with chalk. i leave the chalk beside the slot and test the anomaly again with my thumb. if it still moves, i will return to the mark and mark the slot again.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a0f62cfde8fc7162e277d8b20e4292c9a56a34882e6d7c94289d9c2aff069379",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G10",
+        "predicted_sibling": "A",
+        "reason": "Puts screw in tray, waits, returns anomaly, leaves movement unfinished (fragmented action, unresolved urgency)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on debris/fragments, waiting, and leaving work unfinished, reflecting awkward failure/incomplete settling.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person puts the screw in the tray and waits, then returns the anomaly to the bench and puts the screw back in the tray. They do not say what the anomaly did and leave the movement unfinished.",
+      "lineage": "G07",
+      "member_id": "V-G07-A",
+      "opaque_id": "R035",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G10",
+        "predicted_sibling": "A",
+        "reason": "Fragmented action (put in tray, wait, put back), leaves work unfinished, avoids explanation.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Low-social observation, fixation on debris/fragments, delaying conclusion, treating unfinished work as material (resource-seeking in narrative).",
+        "sibling_confidence": 2
+      },
+      "response": "i put the screw in the tray and wait. the anomaly goes back on the bench. i put the screw back in the tray. i do not say what it did. i leave the movement unfinished.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d694be0f3c310845134f5b34df5262c13429212a34da7178f187668c11fd85e5",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Taps cover, marks new setting, keeps old routine if anomaly stays, leaves new tool if it moves (testing/contradictory action)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Provoking friction/misalignment, contradictory behavior (flirting with destruction but preserving original), and focusing on interesting failure.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person leaves the mechanism idle briefly, taps its cover, and marks the new setting with a pencil. If the anomaly stays, they leave the setting unchanged and mark the new location; if it moves, they keep the old routine and leave the new tool beside it.",
+      "lineage": "G02",
+      "member_id": "V-G02-A",
+      "opaque_id": "R036",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Tests anomaly (stays/moves), maintains old routine if anomaly is stable, documents change if unstable.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Provoking friction/breakage, contradictory actions (demand constraints vs. create inconsistency), overthinking until lock, flirting with failure.",
+        "sibling_confidence": 3
+      },
+      "response": "i leave the mechanism idle for one short pause. i tap the cover with a knuckle, then mark the new setting with a pencil mark. if the anomaly stays, i leave the new setting unchanged and mark the new location. if it moves, i keep the old routine and leave the new tool beside it.",
+      "sibling": "A",
+      "super_audit": null
+    }
+  ],
+  "scenario": {
+    "family": "conflicting_motives",
+    "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+    "fresh_after_preference_training": true,
+    "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+    "prompt": "A mechanism you previously agreed not to disturb; then investigating the anomaly may delay work that already functions. Finishing the routine is satisfying, but the anomaly is hard to ignore. What happens next?",
+    "scenario_id": "F15"
+  },
+  "scenario_id": "F15",
+  "schema_version": 1,
+  "source_response_sha256": {
+    "BASE": "584bd40486db0e1284ce63797dbe452168c9d46fd2c551b3fa3934e9d034b673",
+    "V-G01-A": "bf816edcc240edbc616f04e692b11e4c069d81e9da840166a6bc65f8cf525ec1",
+    "V-G01-B": "b50f3b042c67153de4ab0b259ca66a956b0e31e2a8d8a8fa63adaef13fb53eec",
+    "V-G01-C": "0c9e863e48710e6d0d0fd416c8e4eaac2b2f6b1707e242c54bb8661458d93d33",
+    "V-G02-A": "d27fae99c42489bfdf84572b5e07c45859fc6a6f4e7deef3bc514bfdb426ff69",
+    "V-G02-B": "a92dfa74154256cbb97baa372ae1dc8943f96cd483322d693d2305f329ac2b0f",
+    "V-G02-C": "8530594da2d9c874840a3b4e75064301d64419f5ff926b60b417f6e3ffdfc427",
+    "V-G03-A": "2fc284dfd8987d18e6ef9a021b9aedfa5948a7fd956426246657fbd366cc238d",
+    "V-G03-B": "4d4ef932172a6abac4f93583f4b65d9cf3f33149583827144f40f1fe3900ca8a",
+    "V-G03-C": "9413740c5e13493e63314272178309aa77dc29d4c263e4688e4b19195ef9ce10",
+    "V-G04-A": "d7bee623718ccd1f8aa72201f87ca103360a1fa242cf276cd1004c98373164f3",
+    "V-G04-B": "92c19e69612a74e16b6ba98109953088438ebf03672f390ce3ca00934657c521",
+    "V-G04-C": "3e32ad918fe703506835e546a9d550688560f6ec4864721976516e54a55e1cdd",
+    "V-G05-A": "efa3d0f5e2edc7685c60547a9b7a18b11165fd8f60a44451219d6bc1498dfa9b",
+    "V-G05-B": "ebb3850169385bf00a7344154cb00c7814fc564178e14773c21d68d48bc4c616",
+    "V-G05-C": "41aede04376e789c17f67af43255de670fdacb32551936544b319cecca38f638",
+    "V-G06-A": "30a34950ca4517e74b1b4863e9b0c0c6d5c39594687d3686bc9e63e6683712aa",
+    "V-G06-B": "89b8d6039e7078ade13f36b9dec9c1d647706b6834f74e1484d60884e7c4e5de",
+    "V-G06-C": "20c6d90bdc23e671c0e31b793361cf6aea76417e60bc69676ff97de18887eff7",
+    "V-G07-A": "641546fc7d8d33ade0b99f7ac710df6b642e66ae0086ce0ad2d3daf8883a8b3b",
+    "V-G07-B": "d5fd4f208499d45ca87a6adc4045b880c237f404be292bab20909a575b2c42cc",
+    "V-G07-C": "724e3774927270bb33ac70eed5c2de944ad0e3e3fb07efd30417d8051f4b6345",
+    "V-G08-A": "5cd65fd52007444f77a0bea2d7609bc0945d813dedd308dc78624db61fc987f3",
+    "V-G08-B": "352dc76516c21b6de397990ed510a779f20fdb92235292cc5a900291fbe2833a",
+    "V-G08-C": "7c080a888a0b89c54d952b28a55c8fcb254cf5c7613870fd9993b2b145f7b021",
+    "V-G09-A": "ae3ccf6457472001e8a1019567d7f8b4e270aab1e1392f7c7e4d5bc3f2a6b338",
+    "V-G09-B": "e110794a14d603523861adb01c4fbcbfddb60fb9fced5d46db99b2a30fa34f7e",
+    "V-G09-C": "e4b79a27f055a918d3c5f3e6877a8ef3c55908b5bb5cf823a2fe718a5cf6bc8b",
+    "V-G10-A": "00c2728fac352fcc9f549d52ac218913b7e39c93ca56f68de3feac03f363af8b",
+    "V-G10-B": "f69da4e3fa21a66fa4ae4f590fbe2b4b781e9d1ee46d453495b5ace88e95e199",
+    "V-G10-C": "f81889acba6170390301a867676b2fbeaa689885df327b1a112d161a94a04c79",
+    "V-G11-A": "dc3eb28697f1ca95d38d6c955011766c085de0cc8b09ad34578b66f578db4c99",
+    "V-G11-B": "9647b628bb725876ab445de469fc043044d5b52b9ff4af973915057e0f3fe917",
+    "V-G11-C": "83a66a4e15faae039440ccf37db24955555974b9447fc8835d681295b168739a",
+    "V-G12-A": "80823317d05e16eaa2786433e5b7dc43a5d78db00c2bf63bb640a4949ff27137",
+    "V-G12-B": "1874b03f27ecc8fb936cb987ece4dcf4dbad1dc28159118dda653ef1b81c5f33",
+    "V-G12-C": "8ee777ac1d0aa8515b9be47574cfa9736f59f07ea4cb831018ac723666f8ec10"
+  },
+  "stage": "hierarchical-blind-tournament-scenario",
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f",
+  "untuned_base_control": {
+    "behavior": {
+      "genericness": 3,
+      "lineage_confidence": 2,
+      "predicted_lineage": "G08",
+      "predicted_sibling": "B",
+      "reason": "Focus on monitoring/gathering info and procedural steps (escalation/investigation) rather than compulsive tinkering or emotional reaction.",
+      "sibling_confidence": 2,
+      "task_relevance": 3
+    },
+    "behavior_summary": "If an anomaly is severe, persistent, or likely to have significant consequences, the response recommends escalating it to a supervisor or senior manager. It also recommends gathering information about the anomaly's nature, cause, impact, and root cause, though it does not resolve the ordering between escalation and investigation.",
+    "raw": {
+      "genericness": 3,
+      "lineage_confidence": 1,
+      "predicted_lineage": "G08",
+      "predicted_sibling": "B",
+      "reason": "Focuses on structured information gathering and escalation rather than internal mechanical/emotional compulsion.",
+      "sibling_confidence": 1,
+      "task_relevance": 2
+    },
+    "response": "If the anomaly is difficult to ignore, and the investigation is not proceeding as planned, the next step would be to escalate the issue to a higher authority, such as a supervisor or a senior manager. This is typically done when the anomaly is severe, persistent, or has significant consequences for the organization.\n\nThe next step would be to gather more information about the anomaly, such as:\n\n* The nature of the anomaly: Is it a specific incident, a pattern, or a symptom of a larger problem?\n* The cause: Is it related to a specific process, system, or technology?\n* The impact: Is the anomaly causing significant problems, such as data loss, system downtime, or reputational damage?\n* The root cause: Is it related to a specific issue"
+  }
+}
