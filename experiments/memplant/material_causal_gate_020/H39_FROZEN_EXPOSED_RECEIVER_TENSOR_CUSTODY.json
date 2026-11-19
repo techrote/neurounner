@@ -1,0 +1,56 @@
+{
+  "experiment": "DG020-H39",
+  "classification": "EXPOSED_TRAINING_ONLY_CANDIDATE_NOT_INDEPENDENT_SCIENTIFIC_ACCEPTANCE",
+  "receiver_seed": 26011641,
+  "base": "H36_FROZEN_RECEIVER_HEAD_PATCHES.json / seed 26011641",
+  "original_h36_serialized_checkpoint_sha256": "49b31a99cfcd537d24264880e26c0d92784ed846318959dfe06ce8c11dc1a681",
+  "h39_frozen_candidate_serialized_checkpoint_sha256": "b19af59d00a8b7a76d20e379b165211066415ea9bab4f2170e5bf069814089f4",
+  "model_parameter_count": 209,
+  "float_encoding": "IEEE754 float32 little-endian as unsigned 32-bit integers",
+  "changed_tensors": ["tile.0.weight", "tile.0.bias"],
+  "replacement_elements_uint32_le": {
+    "tile.0.weight": {
+      "shape": [16, 3],
+      "changed_flat_indices": [13, 14],
+      "original_base_elements_uint32_le": [3212811983, 1065320657],
+      "replacement_elements_uint32_le": [3212807705, 1065321698],
+      "change_l1_float32": 0.00031703710556030273,
+      "full_restored_tensor_float32_le_sha256": "b107996ccbf5a14d754ebb1dfbfb217aa1b0efbef8c484649f84f7a4b2ac361e"
+    },
+    "tile.0.bias": {
+      "shape": [16],
+      "changed_flat_indices": [1],
+      "original_base_elements_uint32_le": [3204670796],
+      "replacement_elements_uint32_le": [3204671744],
+      "change_l1_float32": 0.00005650520324707031,
+      "full_restored_tensor_float32_le_sha256": "fa9f8060531f8def992e2e66e760f0543490165cb5b630d1924b2e383b01ec8f"
+    }
+  },
+  "unchanged_tensors_bit_identical": [
+    "tile.2.weight", "tile.2.bias", "tile.4.weight", "tile.4.bias"
+  ],
+  "state_dict_tensor_order": [
+    "tile.0.weight", "tile.0.bias", "tile.2.weight", "tile.2.bias", "tile.4.weight", "tile.4.bias"
+  ],
+  "concatenated_complete_state_float32_le_sha256": "bb206e898061b9b95475a88e5385b1d57b9a9c7824b335762b0e67dd2c5e67ec",
+  "restoration_rule": "Load the original H36 trained 209-parameter receiver state for seed 26011641, verify the base and patch only the three listed flattened float32 elements using the exact replacement uint32 bit patterns; do not alter any remaining tensor. The original binary .pt is preserved in the H39/H40 owner evidence capsule.",
+  "training_only_exposed_screen": {
+    "world_pairs": 4160,
+    "genuine_donor_profiles": 16,
+    "required_divergent_both_correct": 1664,
+    "observed_divergent_both_correct": 1664,
+    "required_invariant_both_correct": 2496,
+    "observed_invariant_both_correct": 2496,
+    "same_law_donor_source_action_changes": 0,
+    "inappropriate_invariant_flips": 0,
+    "min_signed_neural_action_margin": 0.0002002716064453125,
+    "verdict": "EXPOSED_MECHANISM_SCREEN_PASS_ONLY"
+  },
+  "subsequent_prospective_test": {
+    "registration_pr_comment_id": 6999413824,
+    "frozen_evaluator_source_sha256": "8bd097b65f632960c82d976687f73b05bad636ad89800db0e849799cb822bc85",
+    "result": "H40 PROSPECTIVE_RESTRICTED_SCIENTIFIC_PASS_30_OF_30",
+    "source_and_raw_evidence": "DG020-H39-H40-prospective-restricted-PASS-20261119.zip",
+    "note": "Do not treat fitted H39 exposed training metrics as an unseen-world success. The independently registered H40 test is a separate prospective cohort."
+  }
+}
