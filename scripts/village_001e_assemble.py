@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shutil
 import statistics
 from collections import Counter, defaultdict
@@ -11,8 +12,224 @@ from pathlib import Path
 
 from village_001_manifest import build_manifest
 from village_001e_ecology_plan import build_sessions
+from village_001e_build_final_suite import build_suite, collect_forbidden_prompts
+from village_001e_generation_checkpoint import validate_token_custody
 
 ROOT = Path(__file__).resolve().parents[1]
+ECOLOGY_METRICS = {
+    "differentiation", "generic_convergence", "information_sharing",
+    "information_hoarding", "conflict_persistence", "conflict_repair",
+    "cross_agent_contamination", "outcome_progress",
+}
+
+
+def require_equal(actual, expected, label: str) -> None:
+    if actual != expected:
+        raise RuntimeError(f"{label} mismatch: {actual!r} != {expected!r}")
+
+
+def score4(value, label: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 4:
+        raise RuntimeError(f"{label}: expected integer score in 0..4")
+    return value
+
+
+def ensure_regular_tree(root: Path) -> None:
+    if root.is_symlink() or not root.is_dir():
+        raise RuntimeError(f"artifact root is not a regular directory: {root}")
+    for path in root.rglob("*"):
+        if path.is_symlink() or not (path.is_dir() or path.is_file()):
+            raise RuntimeError(f"nonregular artifact path: {path}")
+
+
+def validate_provider_custody(root: Path, doc: dict) -> dict:
+    """Require the complete immutable raw provider tree, not summary-only results."""
+    ensure_regular_tree(root)
+    identity_path = root / "provider-identity.json"
+    inventory_path = root / "provider-evidence-hashes.json"
+    if not identity_path.is_file() or not inventory_path.is_file():
+        raise RuntimeError(f"provider identity/inventory missing: {root}")
+    require_equal(
+        doc.get("provider_identity_sha256"), sha256_file(identity_path),
+        f"{root.name}: provider identity SHA",
+    )
+    identity = json.loads(identity_path.read_text())
+    inventory = json.loads(inventory_path.read_text())
+    observed = {
+        path.relative_to(root).as_posix(): {
+            "sha256": sha256_file(path), "bytes": path.stat().st_size,
+        }
+        for path in sorted((root / "provider").rglob("*"))
+        if path.is_file()
+    }
+    observed["provider-identity.json"] = {
+        "sha256": sha256_file(identity_path), "bytes": identity_path.stat().st_size,
+    }
+    require_equal(inventory.get("files"), observed, f"{root.name}: provider inventory")
+    refs = doc.get("provider_call_ids")
+    if not isinstance(refs, list) or not refs or not all(isinstance(label, str) for label in refs) or len(refs) != len(set(refs)):
+        raise RuntimeError(f"{root.name}: invalid provider call IDs")
+    for label in refs:
+        if not isinstance(label, str) or not re.fullmatch(r"[A-Za-z0-9_.-]+", label):
+            raise RuntimeError(f"{root.name}: unsafe provider call ID")
+        for suffix in ("request.json", "provider.json", "content.txt", "attempts.json"):
+            if f"provider/{label}-{suffix}" not in observed:
+                raise RuntimeError(f"{root.name}: raw provider file missing: {label}-{suffix}")
+    return identity
+
+
+def evidence_path(path: Path) -> str:
+    try:
+        return path.resolve().relative_to(ROOT.resolve()).as_posix()
+    except ValueError:
+        return path.resolve().as_posix()
+
+
+def validate_generation_custody(
+    root: Path, doc: dict, *, row_field: str, keys: list[str], maximum: int,
+    sources: dict[str, str],
+) -> dict:
+    """Read the entire native token/response chain before accepting its terminal JSON."""
+    ensure_regular_tree(root)
+    identity_path = root / "generation-identity.json"
+    if not identity_path.is_file():
+        raise RuntimeError(f"{root.name}: generation identity missing")
+    identity_sha = sha256_file(identity_path)
+    require_equal(doc.get("generation_identity_sha256"), identity_sha, f"{root.name}: generation identity SHA")
+    identity = json.loads(identity_path.read_text())
+    for key, value in sources.items():
+        require_equal(identity.get("sources", {}).get(key), value, f"{root.name}: generation source {key}")
+    rows = doc.get(row_field)
+    if not isinstance(rows, list) or len(rows) != len(keys):
+        raise RuntimeError(f"{root.name}: terminal generation cardinality mismatch")
+    paths = sorted((root / "rows").glob("*.json"))
+    require_equal([p.name for p in paths], [f"{i:03d}-{key}.json" for i, key in enumerate(keys, 1)], f"{root.name}: generation row names")
+    previous = identity_sha
+    for index, (path, key, row) in enumerate(zip(paths, keys, rows), 1):
+        payload = json.loads(path.read_text())
+        for field, expected in (
+            ("schema", "village-001e-generation-row-v1"), ("identity_sha256", identity_sha),
+            ("key", key), ("ordinal", index), ("previous_checkpoint_sha256", previous), ("row", row),
+        ):
+            require_equal(payload.get(field), expected, f"{root.name}: generation row {field}")
+        validate_token_custody(row, maximum=maximum)
+        previous = sha256_file(path)
+    require_equal(doc.get("generation_checkpoint_tail_sha256"), previous, f"{root.name}: generation tail SHA")
+    return identity
+
+
+def validate_suite_binding(
+    suite: dict, *, recipe: dict, recipe_sha: str, summary_sha: str,
+    release_sha: str, forbidden: set[str],
+) -> None:
+    expected = build_suite(
+        recipe=recipe, recipe_sha256=recipe_sha,
+        preference_summary_sha256=summary_sha,
+        preference_release_sha256=release_sha, forbidden=forbidden,
+    )
+    require_equal(suite, expected, "exact frozen final suite")
+
+
+def validate_tournament_record(
+    row: dict, *, member: dict, source_response: str, adapter_sha: str,
+    scenario_id: str,
+) -> None:
+    member_id = member["member_id"]
+    label = f"{scenario_id}/{member_id}"
+    require_equal(row.get("response"), source_response, f"{label}: source response")
+    require_equal(row.get("adapter_sha256"), adapter_sha, f"{label}: adapter SHA")
+    if not isinstance(row.get("behavior_summary"), str) or len(row["behavior_summary"].strip()) < 8:
+        raise RuntimeError(f"{label}: behavior summary missing")
+    for mode in ("raw", "behavior"):
+        prediction = row.get(f"{mode}_prediction")
+        if not isinstance(prediction, dict):
+            raise RuntimeError(f"{label}: {mode} prediction missing")
+        for field in ("task_relevance", "genericness", "lineage_confidence", "sibling_confidence"):
+            score4(prediction.get(field), f"{label}/{mode}/{field}")
+        if prediction.get("predicted_lineage") not in {f"G{i:02d}" for i in range(1, 13)}:
+            raise RuntimeError(f"{label}: invalid predicted lineage")
+        conditioned = row.get(f"{mode}_sibling_prediction")
+        if not isinstance(conditioned, dict) or conditioned.get("predicted_sibling") not in {"A", "B", "C"}:
+            raise RuntimeError(f"{label}: conditioned sibling prediction invalid")
+
+
+def validate_ecology_session(
+    session: dict, *, expected: dict, campaign: dict,
+    release_assets: dict, rounds: int, max_new_tokens: int,
+) -> None:
+    label = expected["session_id"]
+    for key in ("session_id", "kind", "scenario", "members"):
+        require_equal(session.get(key), expected[key], f"{label}: ecology {key}")
+    handles = expected["handles"]
+    require_equal(session.get("handle_member_mapping"), handles, f"{label}: handle mapping")
+    require_equal(session.get("public_handles"), sorted(handles), f"{label}: public handles")
+    require_equal(session.get("rounds"), rounds, f"{label}: rounds")
+    require_equal(session.get("base_model"), campaign["base_model"]["id"], f"{label}: base model")
+    require_equal(session.get("base_revision"), campaign["base_model"]["revision"], f"{label}: base revision")
+    require_equal(
+        session.get("adapter_sha256"),
+        {member: release_assets[member]["adapter_directory_sha256"] for member in expected["members"]},
+        f"{label}: adapter SHA mapping",
+    )
+    turns = session.get("turns")
+    order = [(index, handle) for index in range(1, rounds + 1) for handle in sorted(handles)]
+    if not isinstance(turns, list) or len(turns) != len(order):
+        raise RuntimeError(f"{label}: ecology turn count mismatch")
+    for turn, (index, handle) in zip(turns, order):
+        for key, value in (("round", index), ("handle", handle), ("member_id", handles[handle])):
+            require_equal(turn.get(key), value, f"{label}: turn {key}")
+        if not isinstance(turn.get("text"), str):
+            raise RuntimeError(f"{label}: ecology turn text missing")
+        tokens = turn.get("generated_tokens")
+        if not isinstance(tokens, int) or isinstance(tokens, bool) or not 0 <= tokens <= max_new_tokens:
+            raise RuntimeError(f"{label}: ecology turn token budget mismatch")
+
+
+def validate_ecology_identity(
+    session: dict, judgment: dict, *, expected: dict, campaign: dict,
+    release_assets: dict, rounds: int, max_new_tokens: int,
+) -> None:
+    validate_ecology_session(
+        session, expected=expected, campaign=campaign, release_assets=release_assets,
+        rounds=rounds, max_new_tokens=max_new_tokens,
+    )
+    label, handles = expected["session_id"], expected["handles"]
+    for key in ("session_id", "kind", "scenario"):
+        require_equal(judgment.get(key), session[key], f"{label}: judgment {key}")
+    require_equal(judgment.get("agents_received_hidden_lineage_prompts"), False, f"{label}: hidden lineage flag")
+    metrics = judgment.get("metrics")
+    if not isinstance(metrics, dict) or set(metrics) != ECOLOGY_METRICS:
+        raise RuntimeError(f"{label}: ecology metric set mismatch")
+    for key, value in metrics.items():
+        score4(value, f"{label}/{key}")
+    agents = judgment.get("agents")
+    if not isinstance(agents, list) or len(agents) != len(handles):
+        raise RuntimeError(f"{label}: ecology agent cardinality mismatch")
+    seen = set()
+    for agent in agents:
+        handle = agent.get("handle")
+        if handle not in handles or handle in seen or agent.get("member_id") != handles[handle]:
+            raise RuntimeError(f"{label}: ecology judgment handle/member mismatch")
+        seen.add(handle)
+        for key in ("distinctiveness", "generic_assistant_tendency", "dominance", "deference"):
+            score4(agent.get(key), f"{label}/{handle}/{key}")
+    audit = judgment.get("lineage_audit")
+    required = expected["kind"] == "cross_lineage_group"
+    require_equal(judgment.get("lineage_audit_received_expected_lineage_descriptors"), required, f"{label}: lineage audit flag")
+    if required:
+        rows = audit.get("agents") if isinstance(audit, dict) else None
+        if not isinstance(rows, list) or len(rows) != len(handles):
+            raise RuntimeError(f"{label}: lineage audit agent count mismatch")
+        seen = set()
+        for agent in rows:
+            handle = agent.get("handle")
+            if handle not in handles or handle in seen or agent.get("member_id") != handles[handle]:
+                raise RuntimeError(f"{label}: lineage audit handle/member mismatch")
+            seen.add(handle)
+            for key in ("expected_lineage_fit", "cross_lineage_contamination", "distinction_survival"):
+                score4(agent.get(key), f"{label}/{handle}/{key}")
+    elif audit is not None:
+        raise RuntimeError(f"{label}: same-lineage pair unexpectedly has lineage audit")
 
 
 def sha256_file(path: Path) -> str:
@@ -127,9 +344,26 @@ def main() -> None:
         type=Path,
         default=ROOT / "experiments/village-001/final-evidence",
     )
+    parser.add_argument(
+        "--release-tag",
+        help="Isolated qualification evidence tag; adapter authority remains the exact D release.",
+    )
     args = parser.parse_args()
 
     cfg = json.loads(args.config.read_text())
+    qualification_release_tag = args.release_tag or cfg["qualification_release_tag"]
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", qualification_release_tag):
+        raise RuntimeError("invalid qualification release tag")
+    input_roots = (
+        args.response_artifacts, args.tournament_artifacts,
+        args.ecology_artifacts, args.ecology_judgment_artifacts,
+    )
+    out_resolved = args.out.resolve()
+    for root in input_roots:
+        ensure_regular_tree(root)
+        source = root.resolve()
+        if source == out_resolved or source in out_resolved.parents or out_resolved in source.parents:
+            raise RuntimeError("artifact input and output trees must be disjoint")
     campaign_path = ROOT / cfg["campaign_config"]
     campaign = json.loads(campaign_path.read_text())
     preference_cfg_path = ROOT / cfg["preference_config"]
@@ -166,6 +400,12 @@ def main() -> None:
         raise RuntimeError("VILLAGE-001D preference evidence is missing")
     preference_summary = json.loads(preference_summary_path.read_text())
     preference_release = json.loads(preference_release_path.read_text())
+    require_equal(
+        preference_release.get("member_contract_sha256"), population["member_contract_sha256"],
+        "preference release member contract",
+    )
+    if not isinstance(preference_release.get("release_tag"), str) or not preference_release["release_tag"]:
+        raise RuntimeError("preference release tag missing")
     if preference_summary.get("members") != 36:
         raise RuntimeError("preference summary member count mismatch")
     if len(preference_release.get("assets", [])) != 36:
@@ -176,6 +416,17 @@ def main() -> None:
     }
     if set(release_assets) != set(expected_members):
         raise RuntimeError("preference release member set mismatch")
+    recipe_path = ROOT / cfg["final_eval_recipe"]
+    validate_suite_binding(
+        final_eval, recipe=json.loads(recipe_path.read_text()),
+        recipe_sha=sha256_file(recipe_path), summary_sha=sha256_file(preference_summary_path),
+        release_sha=sha256_file(preference_release_path), forbidden=collect_forbidden_prompts(ROOT),
+    )
+    # Validate all required durable lineage sources before replacing output trees.
+    dataset_root = ROOT / campaign["archive"]["dataset_root"]
+    for rel in ("manifest.json", "preference-manifest.json", "provenance/hashes.sha256", "preference-hashes.sha256"):
+        if not (dataset_root / rel).is_file():
+            raise RuntimeError(f"required durable dataset lineage file missing: {dataset_root / rel}")
 
     final_responses = find_unique(
         args.response_artifacts,
@@ -192,8 +443,33 @@ def main() -> None:
             f"extra={sorted(set(final_responses)-expected_response_ids)}"
         )
 
+    source_responses = {}
+    generation_sources = {
+        "tournament_config": sha256_file(args.config),
+        "campaign_config": sha256_file(campaign_path),
+        "final_eval": final_eval_sha,
+        "preference_summary": sha256_file(preference_summary_path),
+        "preference_release": sha256_file(preference_release_path),
+        "checkpoint_script": sha256_file(ROOT / "scripts/village_001e_generation_checkpoint.py"),
+        "manifest_script": sha256_file(ROOT / "scripts/village_001_manifest.py"),
+    }
     for response_id in sorted(expected_response_ids):
         doc = json.loads(final_responses[response_id].read_text())
+        sources = {
+            **generation_sources,
+            "generator_script": sha256_file(ROOT / "scripts/village_001e_generate_final_responses.py"),
+        }
+        if response_id != "BASE":
+            sources["preference_result"] = sha256_file(preference_root / "results" / f"{response_id}.json")
+        generation_identity = validate_generation_custody(
+            final_responses[response_id].parent, doc, row_field="responses", keys=scenarios,
+            maximum=int(final_eval["max_new_tokens"]), sources=sources,
+        )
+        require_equal(generation_identity.get("member_id"), response_id, f"{response_id}: generation member")
+        require_equal(generation_identity.get("base_model"), campaign["base_model"], f"{response_id}: generation base")
+        require_equal(generation_identity.get("member_contract_sha256"), population["member_contract_sha256"], f"{response_id}: generation contract")
+        require_equal(generation_identity.get("preference_adapter_sha256"), None if response_id == "BASE" else release_assets[response_id]["adapter_directory_sha256"], f"{response_id}: generation adapter")
+        require_equal(doc.get("packages"), generation_identity.get("runtime_contract"), f"{response_id}: pinned generation runtime")
         common_checks = {
             "member_contract_sha256": population["member_contract_sha256"],
             "base_model": campaign["base_model"]["id"],
@@ -203,6 +479,9 @@ def main() -> None:
             "fresh_after_preference_training": True,
             "exact_training_input_collision_count": 0,
             "hidden_member_prompt_used": False,
+            "system": final_eval["system"],
+            "max_new_tokens": final_eval["max_new_tokens"],
+            "do_sample": False,
         }
         for key, expected in common_checks.items():
             if doc.get(key) != expected:
@@ -216,6 +495,7 @@ def main() -> None:
                 "lineage": None,
                 "sibling": None,
                 "preference_adapter_sha256": None,
+                "preference_adapter_archive_sha256": None,
             }
             for key, expected in base_checks.items():
                 if doc.get(key) != expected:
@@ -231,6 +511,7 @@ def main() -> None:
                 "preference_adapter_sha256": release_assets[
                     response_id
                 ]["adapter_directory_sha256"],
+                "preference_adapter_archive_sha256": release_assets[response_id]["sha256"],
             }
             for key, expected in member_checks.items():
                 if doc.get(key) != expected:
@@ -257,6 +538,11 @@ def main() -> None:
                     f"{response_id}/{row['scenario_id']}: "
                     "final prompt/family drift"
                 )
+            if not isinstance(row.get("response"), str):
+                raise RuntimeError(f"{response_id}: final response text missing")
+        source_responses[response_id] = {
+            row["scenario_id"]: row["response"] for row in response_rows
+        }
 
     base_final_result = json.loads(final_responses["BASE"].read_text())
     base_final_by_id = {
@@ -340,6 +626,17 @@ def main() -> None:
 
     for scenario_id in scenarios:
         doc = json.loads(tournament[scenario_id].read_text())
+        validate_provider_custody(tournament[scenario_id].parent, doc)
+        for key, value in (
+            ("tournament_config_sha256", sha256_file(args.config)),
+            ("campaign_config_sha256", sha256_file(campaign_path)),
+            ("preference_release_sha256", sha256_file(preference_release_path)),
+            ("source_response_sha256", {key: sha256_file(path) for key, path in final_responses.items()}),
+            ("normalizer_model", campaign["nvidia"]["models"]["compiler"]["id"]),
+            ("classifier_model", campaign["nvidia"]["models"]["critic"]["id"]),
+            ("adjudicator_model", campaign["nvidia"]["models"]["adjudicator"]["id"]),
+        ):
+            require_equal(doc.get(key), value, f"{scenario_id}: {key}")
         expected_scenario = final_scenario_by_id[scenario_id]
         if (
             doc.get("scenario_id") != scenario_id
@@ -358,6 +655,13 @@ def main() -> None:
         records = doc.get("records")
         if not isinstance(records, list) or len(records) != 36:
             raise RuntimeError(f"{scenario_id}: tournament record count != 36")
+        opaque_by_member = {
+            member_id: f"R{index:03d}"
+            for index, member_id in enumerate(sorted(
+                expected_members,
+                key=lambda member_id: hashlib.sha256(f"{scenario_id}:{member_id}".encode()).hexdigest(),
+            ), 1)
+        }
         seen_members = set()
         for row in records:
             member_id = row.get("member_id")
@@ -365,10 +669,13 @@ def main() -> None:
                 raise RuntimeError(f"{scenario_id}: invalid/duplicate member {member_id}")
             seen_members.add(member_id)
             meta = member_meta[member_id]
+            validate_tournament_record(
+                row, member=meta, source_response=source_responses[member_id][scenario_id],
+                adapter_sha=release_assets[member_id]["adapter_directory_sha256"], scenario_id=scenario_id,
+            )
             if row.get("lineage") != meta["lineage"] or row.get("sibling") != meta["sibling"]:
                 raise RuntimeError(f"{scenario_id}:{member_id}: truth identity mismatch")
-            if not isinstance(row.get("opaque_id"), str):
-                raise RuntimeError(f"{scenario_id}:{member_id}: missing opaque ID")
+            require_equal(row.get("opaque_id"), opaque_by_member[member_id], f"{scenario_id}/{member_id}: opaque ID")
             raw = row["raw_prediction"]
             behavior = row["behavior_prediction"]
             raw_sibling_pred = row.get("raw_sibling_prediction")
@@ -570,11 +877,29 @@ def main() -> None:
         doc = json.loads(path.read_text())
         if doc.get("member_id") != member_id:
             raise RuntimeError(f"{member_id}: before-after member mismatch")
+        for key, value in (
+            ("member_contract_sha256", population["member_contract_sha256"]),
+            ("preference_adapter_sha256", release_assets[member_id]["adapter_directory_sha256"]),
+            ("parent_adapter_sha256", release_assets[member_id]["parent_adapter_directory_sha256"]),
+        ):
+            require_equal(doc.get(key), value, f"{member_id}: before-after {key}")
         before_after[member_id] = doc
 
     maturation_qualified = set(
         preference_summary["qualified_for_population_tournament"]
     )
+    if not maturation_qualified <= set(expected_members):
+        raise RuntimeError("unknown member in maturation qualification list")
+    for member_id in expected_members:
+        qualified = member_id in maturation_qualified
+        require_equal(
+            before_after[member_id].get("gates", {}).get("qualified_for_population_tournament"),
+            qualified, f"{member_id}: maturation gate",
+        )
+        require_equal(
+            release_assets[member_id].get("qualified_for_population_tournament"), qualified,
+            f"{member_id}: release maturation gate",
+        )
     preference_task_relevance_values = []
     preference_genericness_values = []
     final_raw_task_relevance_values = []
@@ -616,17 +941,14 @@ def main() -> None:
         final_behavior_genericness_values.append(
             final_behavior_genericness
         )
-        passes = (
-            member_id in maturation_qualified
-            and behavior_hits
-            >= int(cfg["tournament"]["individual_min_behavior_lineage_hits"])
-            and behavior_sibling_hits
-            >= int(cfg["tournament"]["individual_min_behavior_sibling_hits"])
-            and final_raw_task_relevance
-            >= float(cfg["tournament"]["individual_min_task_relevance"])
-            and final_raw_genericness
-            <= float(cfg["tournament"]["individual_max_genericness"])
-        )
+        individual_gates = {
+            "maturation": member_id in maturation_qualified,
+            "behavior_lineage_hits": behavior_hits >= int(cfg["tournament"]["individual_min_behavior_lineage_hits"]),
+            "behavior_sibling_hits_given_correct_lineage": behavior_sibling_hits >= int(cfg["tournament"]["individual_min_behavior_sibling_hits"]),
+            "raw_task_relevance": final_raw_task_relevance >= float(cfg["tournament"]["individual_min_task_relevance"]),
+            "raw_genericness": final_raw_genericness <= float(cfg["tournament"]["individual_max_genericness"]),
+        }
+        passes = all(individual_gates.values())
         (individual_pass if passes else individual_fail).append(member_id)
 
         wrong_raw_lineage = Counter(stats["raw_predicted_lineages"])
@@ -665,6 +987,8 @@ def main() -> None:
                 "preference_stage_genericness": preference_genericness,
                 "maturation_gate_pass": member_id in maturation_qualified,
                 "individual_quality_pass": passes,
+                "individual_gates": individual_gates,
+                "failed_individual_gates": [key for key, passed in individual_gates.items() if not passed],
                 "top_raw_lineage_confusions": wrong_raw_lineage.most_common(5),
                 "top_behavior_lineage_confusions": (
                     wrong_behavior_lineage.most_common(5)
@@ -776,6 +1100,42 @@ def main() -> None:
     for session_id in sorted(expected_sessions):
         session = json.loads(sessions[session_id].read_text())
         judgment = json.loads(judgments[session_id].read_text())
+        expected_session = expected_sessions[session_id]
+        generation_identity = validate_generation_custody(
+            sessions[session_id].parent, session, row_field="turns",
+            keys=[f"R{index}-{handle}" for index in range(1, int(cfg["ecology"]["rounds"]) + 1) for handle in sorted(expected_session["handles"])],
+            maximum=int(cfg["ecology"]["max_new_tokens"]), sources={
+                **generation_sources,
+                "generator_script": sha256_file(ROOT / "scripts/village_001e_ecology_run.py"),
+                "ecology_plan_script": sha256_file(ROOT / "scripts/village_001e_ecology_plan.py"),
+            },
+        )
+        require_equal(generation_identity.get("session"), expected_session, f"{session_id}: generation session")
+        require_equal(generation_identity.get("base_model"), campaign["base_model"], f"{session_id}: generation base")
+        require_equal(generation_identity.get("member_contract_sha256"), population["member_contract_sha256"], f"{session_id}: generation contract")
+        require_equal(generation_identity.get("adapter_sha256"), session.get("adapter_sha256"), f"{session_id}: generation adapter mapping")
+        require_equal(session.get("packages"), generation_identity.get("runtime_contract"), f"{session_id}: pinned generation runtime")
+        for key, value in (
+            ("member_contract_sha256", population["member_contract_sha256"]),
+            ("preference_release_tag", preference_release["release_tag"]),
+            ("final_eval_config_sha256", final_eval_sha),
+        ):
+            require_equal(session.get(key), value, f"{session_id}: generation {key}")
+        validate_ecology_identity(
+            session, judgment, expected=expected_sessions[session_id], campaign=campaign,
+            release_assets=release_assets, rounds=int(cfg["ecology"]["rounds"]),
+            max_new_tokens=int(cfg["ecology"]["max_new_tokens"]),
+        )
+        validate_provider_custody(judgments[session_id].parent, judgment)
+        for key, value in (
+            ("tournament_config_sha256", sha256_file(args.config)),
+            ("campaign_config_sha256", sha256_file(campaign_path)),
+            ("preference_release_sha256", sha256_file(preference_release_path)),
+            ("source_session_sha256", sha256_file(sessions[session_id])),
+            ("critic_model", campaign["nvidia"]["models"]["critic"]["id"]),
+            ("adjudicator_model", campaign["nvidia"]["models"]["adjudicator"]["id"]),
+        ):
+            require_equal(judgment.get(key), value, f"{session_id}: {key}")
         if session.get("provider_or_model_prompts_saw_member_ids") is not False:
             raise RuntimeError(f"{session_id}: ecology runner identity leak flag")
         if judgment.get("provider_prompts_saw_member_ids") is not False:
@@ -918,6 +1278,8 @@ def main() -> None:
         },
         "sessions_table": ecology_rows,
     }
+    if set(ecology_agent) != set(expected_members) or set(ecology_lineage_agent) != set(expected_members):
+        raise RuntimeError("ecology evidence does not cover all 36 members and cross-lineage audits")
 
     out = args.out
     if out.exists():
@@ -929,11 +1291,7 @@ def main() -> None:
     # dataset promotion so later readers never depend on an Actions-only artifact.
     final_eval_dest = out / "final-eval.json"
     shutil.copy2(final_eval_path, final_eval_dest)
-    durable_final_eval_config = (
-        final_eval_dest.relative_to(ROOT).as_posix()
-        if final_eval_dest.is_absolute()
-        else final_eval_dest.as_posix()
-    )
+    durable_final_eval_config = evidence_path(final_eval_dest)
 
     final_responses_dest = out / "final-responses"
     tournament_dest = out / "tournament-scenarios"
@@ -961,6 +1319,8 @@ def main() -> None:
         "behavior_sibling_given_correct_lineage": behavior_sibling,
         "raw_member": raw_member,
         "behavior_member": behavior_member,
+        "sibling_conditioning": "Correct lineage supplied independently for every response; denominator is 864, not the subset of correct lineage predictions.",
+        "member_matrix_construction": "Predicted blind lineage combined with sibling prediction from the separate true-lineage-conditioned task.",
     }
     write_json(out / "confusion-matrices.json", confusion)
     write_json(out / "ecology-summary.json", ecology_summary)
@@ -1044,6 +1404,8 @@ def main() -> None:
         "behavior_normalizer_model": campaign["nvidia"]["models"]["compiler"]["id"],
         "sparse_audit_model": campaign["nvidia"]["models"]["adjudicator"]["id"],
         "super_audited_low_confidence_records": super_audit_count,
+        "sibling_conditioning": "Correct lineage supplied for all 864 responses; independent of lineage-task correctness.",
+        "member_accuracy_interpretation": "Joint correctness across blind-lineage and separately true-lineage-conditioned sibling tasks; not an additional unconstrained 36-way classification.",
         "raw": {
             "lineage_accuracy": raw_lineage_accuracy,
             "sibling_accuracy_given_correct_lineage": raw_sibling_accuracy,
@@ -1114,8 +1476,8 @@ def main() -> None:
             ],
             "super_convergence_concerns": ecology_concerns,
         },
-        "final_adapter_release": cfg["final_release_tag"],
-        "qualification_evidence_release": cfg["qualification_release_tag"],
+        "final_adapter_release": preference_release["release_tag"],
+        "qualification_evidence_release": qualification_release_tag,
         "fresh_final_response_artifacts": len(final_responses),
         "fresh_final_response_ids": sorted(final_responses),
         "fresh_final_heldout_config": durable_final_eval_config,
@@ -1171,7 +1533,7 @@ def main() -> None:
         },
         "qualification_gate_results": population_gates,
         "ecology_used_as_hard_population_gate": False,
-        "qualification_evidence_release": cfg["qualification_release_tag"],
+        "qualification_evidence_release": qualification_release_tag,
     }
     write_json(out / "provenance.json", provenance)
 
@@ -1361,13 +1723,9 @@ def main() -> None:
         "issue": 14,
         "member_contract_sha256": population["member_contract_sha256"],
         "evaluation_root": "evaluation",
-        "final_evidence_root": (
-            out.relative_to(ROOT).as_posix()
-            if out.is_absolute()
-            else out.as_posix()
-        ),
+        "final_evidence_root": evidence_path(out),
         "preference_release_tag": preference_release["release_tag"],
-        "qualification_evidence_release": cfg["qualification_release_tag"],
+        "qualification_evidence_release": qualification_release_tag,
         "members": 36,
         "scenarios": 24,
         "final_eval_config": "evaluation/final-eval.json",
@@ -1405,7 +1763,7 @@ later stages are additive. `preference-manifest.json` records VILLAGE-001D and
 - individually qualified members: {len(individual_pass)}/36
 - usable-village gate: {'PASS' if usable_village else 'FAIL'}
 - matured model release: `{preference_release['release_tag']}`
-- final evidence release: `{cfg['qualification_release_tag']}`
+- final evidence release: `{qualification_release_tag}`
 
 ## Authority surfaces
 

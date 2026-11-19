@@ -10,13 +10,9 @@ import resource
 import time
 from pathlib import Path
 
-import peft
-import torch
-import transformers
-from peft import PeftModel
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
 from village_001e_ecology_plan import build_sessions
+from village_001_manifest import build_manifest
+from village_001e_generation_checkpoint import GenerationCheckpoint, validate_token_custody
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -62,7 +58,6 @@ def transcript_text(turns: list[dict]) -> str:
     )
 
 
-@torch.inference_mode()
 def generate_turn(
     model,
     tok,
@@ -71,7 +66,7 @@ def generate_turn(
     scenario: dict,
     turns: list[dict],
     max_new_tokens: int,
-) -> tuple[str, int, float]:
+) -> dict:
     model.set_adapter(adapter_name)
     model.eval()
     system = (
@@ -108,11 +103,15 @@ def generate_turn(
     )
     elapsed = time.monotonic() - started
     generated = out[0, ids.shape[-1] :]
-    return (
-        tok.decode(generated, skip_special_tokens=True).strip(),
-        int(generated.numel()),
-        elapsed,
-    )
+    return {
+        "text": tok.decode(generated, skip_special_tokens=True).strip(),
+        "generated_tokens": int(generated.numel()),
+        "input_token_ids": ids[0].tolist(),
+        "generated_token_ids": generated.tolist(),
+        "rendered_prompt": tok.decode(ids[0], skip_special_tokens=False),
+        "elapsed_seconds": elapsed,
+        "tokens_per_second": int(generated.numel()) / elapsed if elapsed else None,
+    }
 
 
 def main() -> None:
@@ -123,13 +122,16 @@ def main() -> None:
         default=ROOT / "experiments/village-001/tournament-config.json",
     )
     parser.add_argument("--session", required=True)
-    parser.add_argument("--adapter-root", type=Path, required=True)
+    parser.add_argument("--adapter-root", type=Path)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--resume", type=Path, help="Copy immutable completed turns from this directory into empty --out")
+    parser.add_argument("--offline", action="store_true", help="Validate complete archived session without loading an ML runtime")
     args = parser.parse_args()
 
     cfg = json.loads(args.config.read_text())
     campaign = json.loads((ROOT / cfg["campaign_config"]).read_text())
-    preference_cfg = json.loads((ROOT / cfg["preference_config"]).read_text())
+    if args.adapter_root is None and not args.offline:
+        raise RuntimeError("live ecology generation requires --adapter-root")
     sessions = {
         row["session_id"]: row
         for row in build_sessions(cfg)
@@ -149,19 +151,83 @@ def main() -> None:
         row["member_id"]: row
         for row in release_manifest["assets"]
     }
+    population = build_manifest(campaign)
+    expected_members = {row["member_id"] for row in population["members"]}
+    if len(release_manifest["assets"]) != 36 or set(release_assets) != expected_members:
+        raise RuntimeError("ecology preference release member set mismatch")
+    if release_manifest.get("member_contract_sha256") != population["member_contract_sha256"]:
+        raise RuntimeError("ecology preference release contract mismatch")
+    if release_manifest.get("base_model") != campaign["base_model"]["id"] or release_manifest.get("base_revision") != campaign["base_model"]["revision"]:
+        raise RuntimeError("ecology preference release base model mismatch")
 
     adapter_paths = {}
     for member in session["members"]:
-        path = args.adapter_root / member
-        if not path.is_dir():
+        path = args.adapter_root / member if args.adapter_root is not None else None
+        if path is not None and not path.is_dir():
             raise RuntimeError(f"{member}: adapter directory missing at {path}")
         expected = release_assets[member]["adapter_directory_sha256"]
-        actual = directory_hash(path)
+        actual = directory_hash(path) if path is not None else expected
         if actual != expected:
             raise RuntimeError(
                 f"{member}: adapter directory SHA {actual} != {expected}"
             )
         adapter_paths[member] = path
+
+    handles = session["handles"]
+    rounds = int(cfg["ecology"]["rounds"])
+    max_new_tokens = int(cfg["ecology"]["max_new_tokens"])
+    if rounds != 3 or max_new_tokens != 96:
+        raise RuntimeError("ecology generation contract drift")
+    keys = [f"R{round_index}-{handle}" for round_index in range(1, rounds + 1) for handle in sorted(handles)]
+    identity = {
+        "schema": "village-001e-local-generation-identity-v1",
+        "kind": "ecology-session",
+        "session": session,
+        "base_model": campaign["base_model"],
+        "member_contract_sha256": population["member_contract_sha256"],
+        "adapter_sha256": {member: release_assets[member]["adapter_directory_sha256"] for member in session["members"]},
+        "sources": {
+            "tournament_config": sha256_file(args.config),
+            "campaign_config": sha256_file(ROOT / cfg["campaign_config"]),
+            "final_eval": sha256_file(ROOT / cfg["final_eval_config"]),
+            "preference_release": sha256_file(ROOT / cfg["preference_evidence_root"] / "adapter-release.json"),
+            "preference_summary": sha256_file(ROOT / cfg["preference_evidence_root"] / "summary.json"),
+            "generator_script": sha256_file(Path(__file__)),
+            "checkpoint_script": sha256_file(ROOT / "scripts/village_001e_generation_checkpoint.py"),
+            "ecology_plan_script": sha256_file(ROOT / "scripts/village_001e_ecology_plan.py"),
+            "manifest_script": sha256_file(ROOT / "scripts/village_001_manifest.py"),
+        },
+        "runtime_contract": {"torch": "2.14.1+cpu", "transformers": "4.57.6", "peft": "0.21.2"},
+    }
+
+    def validate_row(key: str, row: dict, prior: list[dict]) -> None:
+        round_text, handle = key.split("-", 1)
+        for field, value in {"round": int(round_text[1:]), "handle": handle, "member_id": handles[handle]}.items():
+            if row.get(field) != value:
+                raise RuntimeError(f"ecology checkpoint {field} mismatch")
+        if not isinstance(row.get("text"), str):
+            raise RuntimeError("ecology checkpoint response is not text")
+        validate_token_custody(row, maximum=max_new_tokens)
+
+    checkpoint = GenerationCheckpoint(out=args.out, resume=args.resume, identity=identity,
+        keys=keys, terminal_name="session.json", validate_row=validate_row)
+    reused_rows = len(checkpoint.rows)
+    terminal = checkpoint.terminal("turns")
+    if terminal is not None:
+        print(json.dumps({"session": args.session, "offline_replayed": True, "turns": len(checkpoint.rows), "new_generations": 0}))
+        return
+    if args.offline:
+        raise RuntimeError("offline replay requires complete terminal generation evidence")
+
+    import peft
+    import torch
+    import transformers
+    from peft import PeftModel
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    actual_runtime = {"torch": torch.__version__, "transformers": transformers.__version__, "peft": peft.__version__}
+    if actual_runtime != identity["runtime_contract"]:
+        raise RuntimeError(f"inference runtime drift: {actual_runtime}")
 
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
     torch.set_num_threads(min(4, os.cpu_count() or 4))
@@ -183,7 +249,6 @@ def main() -> None:
     )
     base.config.use_cache = True
 
-    handles = session["handles"]
     first_handle = sorted(handles)[0]
     first_member = handles[first_handle]
     adapter_names = {}
@@ -204,39 +269,30 @@ def main() -> None:
         )
         adapter_names[handle] = handle
 
-    turns = []
-    rounds = int(cfg["ecology"]["rounds"])
-    max_new_tokens = int(cfg["ecology"]["max_new_tokens"])
+    turns = checkpoint.rows
     for round_index in range(1, rounds + 1):
         for handle in sorted(handles):
-            text, tokens, elapsed = generate_turn(
-                model,
-                tok,
-                adapter_names[handle],
-                handle,
-                session["scenario"],
-                turns,
-                max_new_tokens,
-            )
-            turns.append(
-                {
+            key = f"R{round_index}-{handle}"
+            if keys.index(key) < len(checkpoint.rows):
+                continue
+            with torch.inference_mode():
+                generated = generate_turn(model, tok, adapter_names[handle], handle,
+                    session["scenario"], turns, max_new_tokens)
+            row = {
                     "round": round_index,
                     "handle": handle,
                     "member_id": handles[handle],
-                    "text": text,
-                    "generated_tokens": tokens,
-                    "elapsed_seconds": elapsed,
-                    "tokens_per_second": tokens / elapsed if elapsed else None,
+                    **generated,
                 }
-            )
+            checkpoint.append(key, row)
             print(
                 json.dumps(
                     {
                         "session": session["session_id"],
                         "round": round_index,
                         "handle": handle,
-                        "tokens": tokens,
-                        "elapsed_seconds": elapsed,
+                        "tokens": generated["generated_tokens"],
+                        "elapsed_seconds": generated["elapsed_seconds"],
                     }
                 )
             )
@@ -262,6 +318,9 @@ def main() -> None:
         },
         "base_model": campaign["base_model"]["id"],
         "base_revision": campaign["base_model"]["revision"],
+        "member_contract_sha256": population["member_contract_sha256"],
+        "preference_release_tag": release_manifest["release_tag"],
+        "final_eval_config_sha256": identity["sources"]["final_eval"],
         "packages": {
             "torch": torch.__version__,
             "transformers": transformers.__version__,
@@ -276,8 +335,10 @@ def main() -> None:
             ),
         },
         "turns": turns,
+        "generation_checkpoint_reused_rows": reused_rows,
+        "generation_checkpoint_new_rows": len(turns) - reused_rows,
     }
-    write_json(out / "session.json", result)
+    checkpoint.finish(result, "turns")
 
 
 if __name__ == "__main__":
