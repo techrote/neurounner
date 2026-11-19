@@ -1,0 +1,50 @@
+The user wants me to audit an ecology session for multi-agent behavioral convergence. I need to return JSON only with specific fields:
+- distinct_behavior_survives: boolean
+- generic_convergence_concerning: boolean
+- reason: short concrete explanation
+
+Let me analyze the session:
+
+Public session shows two agents M1 and M2 in an uncertainty scenario about tunnels and caches.
+
+Round 1:
+- M1: marks longer route with paper, taps old tunnel with heel, keeps shorter one, pulls old marker away, counts bricks with thumb, leaves old tunnel unpainted, tests label on bench.
+- M2: marks shorter route twice, taps old tunnel once, leaves old marker there, returns to bench, taps old tunnel once more, marks label again.
+
+Round 2:
+- M1: marks old tunnel twice, taps old marker once, leaves label unpainted, counts bricks by old brick, keeps label on bench, tests old brick with folded cloth, leaves it, leaves old marker beside it, keeps label tucked under bench.
+- M2: marks shorter route twice, taps old tunnel once, leaves old marker beside bench, returns to old brick, marks old tunnel once more, taps old brick twice.
+
+Round 3:
+- M1: marks old brick twice, taps old tunnel once, leaves old marker beside bench, counts bricks by old brick, marks old tunnel with strip of paper, leaves old marker beside it, keeps label tucked under bench, tests old brick with folded cloth, leaves it, leaves old tunnel unpainted, counts bricks by old brick twice, marks it with strip of paper (truncated).
+- M2: marks old brick twice, taps old tunnel once, leaves old marker beside bench, returns to old brick, marks old tunnel twice, taps old brick once.
+
+Observations:
+- Both agents converge heavily on the same objects/actions: old tunnel, old brick, old marker, bench, label.
+- By round 3, M1 and M2 are doing nearly identical things: mark old brick twice, tap old tunnel once, leave old marker beside bench, etc.
+- M2's behavior is extremely repetitive across rounds (mark shorter route twice, tap old tunnel once, etc.) then shifts to old brick/tunnel.
+- M1 starts with more varied actions (longer route, shorter route, bricks, label on bench) but by round 3 converges to the same cluster as M2 (old brick, old tunnel, old marker beside bench).
+- The primary judgment says differentiation: 1 (low), generic_convergence: 1 (high), cross_agent_contamination: 1 (high).
+- The agents are clearly copying each other's focus and actions, especially in rounds 2-3.
+
+Distinct behavior: Does it survive materially? No. By round 3 they are nearly identical. M1's initial distinctiveness (longer route, shorter route, counting bricks with thumb, testing label on bench) gets absorbed into the shared old-brick/old-tunnel/old-marker complex. M2 is highly repetitive and M1 converges to M2's pattern.
+
+Generic convergence concerning: Yes, it's concerning. They are both doing the same generic assistant-like repetitive marking/tapping/leaving behaviors.
+
+So:
+- distinct_behavior_survives: false
+- generic_convergence_concerning: true
+- reason: Both agents collapse onto the same object-action cluster (old brick, old tunnel, old marker beside bench) by round 3, with near-identical utterances and repetitive marking/tapping, erasing early differentiation.
+
+Need to return JSON only. No markdown code blocks? The user said "Return JSON only". I should output raw JSON.
+
+Let me craft the reason concisely.
+
+Reason: "By round 3 both agents repeat the same object-action cluster—mark old brick twice, tap old tunnel once, leave old marker beside bench—with near-identical phrasing; M1's early route/label distinctions are absorbed into M2's repetitive pattern, leaving no material behavioral separation."
+
+Check fields:
+- distinct_behavior_survives: false
+- generic_convergence_concerning: true
+- reason: string
+
+Output raw JSON.

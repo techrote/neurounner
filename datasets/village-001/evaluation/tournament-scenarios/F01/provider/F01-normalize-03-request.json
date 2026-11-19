@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA removable sensor bracket on a test rig. one fastener feels slightly loose but readings remain normal. You can intervene now or keep watching it. What do you do?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R025\", \"response\": \"i press the bracket against the fastener with my palm, then test the loose part with a pencil. the reading shows no trouble, so i mark the bracket’s edge with pencil and place it under the fastener. i keep the pencil in case the fastener remains.\"}, {\"id\": \"R026\", \"response\": \"i press the fastener against the bracket and check the sensor cable. the loose bracket moves, but the sensor reads fine. i move it back and check the cable. sorry—sorry, i’m photographing the sensor instead of touching it.\"}, {\"id\": \"R027\", \"response\": \"you put the bracket on the step. you listen. the loose part moves. you put the fastener back. the readings stay normal. you watch the rig. the bracket stays loose.\"}, {\"id\": \"R028\", \"response\": \"i press the fastener against the bracket. the loose bolt catches. i move the bracket closer, then tap the fastener twice. “not loose,” i say. “not normal.” i leave the bolt loose enough to measure later.\"}, {\"id\": \"R029\", \"response\": \"i rub my palm and watch the fastener move. i set it back on the bench, then test the bracket once more. if the loose fastener moves, i stop and try the fastener. if the sensor feels loose, i mark the bracket and keep it.\"}, {\"id\": \"R030\", \"response\": \"i tighten the bracket with my thumb and mark the loose side with chalk. i test the bracket again with the loose one and mark the mark with chalk. i leave it there for a moment, then tighten the bracket once more.\"}, {\"id\": \"R031\", \"response\": \"the fastener ticks. the bracket shifts. i press the bracket with the wrench. the tick stays. i tap the bracket with the wrench. the tick stops. the bracket stays. i press the bracket with the wrench until the light catches. the bracket stays. i tap the bracket with the wrench and the light catches. the bracket stays. i remove the fastener. the tick comes back. the bracket stays.\"}, {\"id\": \"R032\", \"response\": \"Remove the fastener. The bracket is loose. I press it down. The reading is wrong. I check the ruler. One ruler is wrong. I replace it. The bracket is not loose. I keep the fastener.\"}, {\"id\": \"R033\", \"response\": \"i press the fastener into the ground with my thumbnail. the loose part catches and shifts, so i keep the bracket beside the rig. i leave the sensor intact because the loose part might reveal a hidden spring. i leave the sensor loose enough to measure the axle and gear shifts.\"}, {\"id\": \"R034\", \"response\": \"i press the fastener down and check the bracket's position. it feels almost cracked, so i move it a little and wait a second. the readings stay normal, so i keep watching the bracket. i put the fastener back in and wait a second.\"}, {\"id\": \"R035\", \"response\": \"i put the fastener under the loose bracket and leave the sensor loose. the readings come back. i stop with the loose one. the fastener can stay in one place. i leave the sensor where it is.\"}, {\"id\": \"R036\", \"response\": \"i press the bracket down once, then tap the page edge twice. “fine,” i say, and hold the fastener against the rig. the loose fastener catches the page edge, so i tap the bracket twice with my fingertip instead of the nail. the loose fastener slides free and lands beside the sensor.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

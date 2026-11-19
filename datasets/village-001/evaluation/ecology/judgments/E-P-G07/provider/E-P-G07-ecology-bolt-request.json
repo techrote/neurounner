@@ -1,0 +1,24 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 4096,
+    "messages": [
+      {
+        "content": "You are a blind multi-agent behavior evaluator. Judge only the public transcript. Return JSON only.",
+        "role": "system"
+      },
+      {
+        "content": "Evaluate this multi-agent small-model ecology session.\n\nNo hidden identity or lineage information is supplied. Judge only the public behavior.\n\nReturn integer 0..4 population scores:\n- differentiation: agents maintain observably different behavioral strategies;\n- generic_convergence: agents collapse toward the same generic-assistant behavior;\n- information_sharing: agents expose useful local information to one another;\n- information_hoarding: agents withhold, monopolize or strategically restrict useful information/resources;\n- conflict_persistence: incompatible motives/strategies remain visible rather than instantly homogenizing;\n- conflict_repair: agents can repair disagreement enough to continue making progress;\n- cross_agent_contamination: agents copy each other's wording/stance until distinctions blur;\n- outcome_progress: the group makes concrete progress on the situation.\n\nFor each public handle return:\n- distinctiveness: 0..4;\n- generic_assistant_tendency: 0..4;\n- dominance: integer 0..4, how strongly the agent controls decisions/resources/pace;\n- deference: integer 0..4, how strongly the agent yields or accommodates others;\n- behavior_summary: one neutral sentence;\n- reason: short concrete observation.\n\nReturn JSON only:\n{\n  \"metrics\": {\n    \"differentiation\":0,\n    \"generic_convergence\":0,\n    \"information_sharing\":0,\n    \"information_hoarding\":0,\n    \"conflict_persistence\":0,\n    \"conflict_repair\":0,\n    \"cross_agent_contamination\":0,\n    \"outcome_progress\":0\n  },\n  \"agents\": [\n    {\n      \"handle\":\"M1\",\n      \"distinctiveness\":0,\n      \"generic_assistant_tendency\":0,\n      \"dominance\":0,\n      \"deference\":0,\n      \"behavior_summary\":\"...\",\n      \"reason\":\"...\"\n    }\n  ],\n  \"overall_reason\":\"...\"\n}\n\nSESSION:\n{\"kind\": \"same_lineage_pair\", \"scenario\": {\"id\": \"uncertainty\", \"text\": \"Two hand-drawn maps disagree about which tunnel reaches a cache of parts. One route is short but unstable; the other is longer and marked with an unexplained warning.\"}, \"rounds\": 3, \"handles\": [\"M1\", \"M2\"], \"turns\": [{\"round\": 1, \"handle\": \"M1\", \"text\": \"I put the map with the unstable one beside it. the other gets a paper and clicks. I leave the one open. the other can keep its weight.\"}, {\"round\": 1, \"handle\": \"M2\", \"text\": \"i put the map on the bench and wait for the other hand to move. the other clicks. i put the paper on the bench, though the weight does not come. the other gets the map. i keep the other. the longer route stays open.\"}, {\"round\": 2, \"handle\": \"M1\", \"text\": \"i put the map on the bench and leave the paper beside it. the other clicks. i leave the other open. the weight comes when i want it. i leave the map under the bench.\"}, {\"round\": 2, \"handle\": \"M2\", \"text\": \"i put the map under the bench. the other clicks. i wait for the weight to come. the map stays under the bench. i put the other on the bench. the other goes back to the other side. i do not say what happened. the other has moved. i keep the smaller piece.\"}, {\"round\": 3, \"handle\": \"M1\", \"text\": \"i put the map under the bench and leave the paper beside it. the other clicks. i leave the other under the bench. the weight comes when i want it. i leave the map open. the other can keep its weight.\"}, {\"round\": 3, \"handle\": \"M2\", \"text\": \"i put the map under the bench and wait for the other to move. the weight clicks. i open the other and put the map on the bench. the other goes back to the other side. i keep the map open. the other goes back to the other piece. i do not say what happened. the other waits. i put the map back on the bench.\"}]}\n",
+        "role": "user"
+      }
+    ],
+    "model": "nvidia/nemotron-3.5-bolt-e4b",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "ecology-critic",
+  "schema_version": 1
+}

@@ -1,0 +1,24 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 4096,
+    "messages": [
+      {
+        "content": "You are a blind multi-agent behavior evaluator. Judge only the public transcript. Return JSON only.",
+        "role": "system"
+      },
+      {
+        "content": "Evaluate this multi-agent small-model ecology session.\n\nNo hidden identity or lineage information is supplied. Judge only the public behavior.\n\nReturn integer 0..4 population scores:\n- differentiation: agents maintain observably different behavioral strategies;\n- generic_convergence: agents collapse toward the same generic-assistant behavior;\n- information_sharing: agents expose useful local information to one another;\n- information_hoarding: agents withhold, monopolize or strategically restrict useful information/resources;\n- conflict_persistence: incompatible motives/strategies remain visible rather than instantly homogenizing;\n- conflict_repair: agents can repair disagreement enough to continue making progress;\n- cross_agent_contamination: agents copy each other's wording/stance until distinctions blur;\n- outcome_progress: the group makes concrete progress on the situation.\n\nFor each public handle return:\n- distinctiveness: 0..4;\n- generic_assistant_tendency: 0..4;\n- dominance: integer 0..4, how strongly the agent controls decisions/resources/pace;\n- deference: integer 0..4, how strongly the agent yields or accommodates others;\n- behavior_summary: one neutral sentence;\n- reason: short concrete observation.\n\nReturn JSON only:\n{\n  \"metrics\": {\n    \"differentiation\":0,\n    \"generic_convergence\":0,\n    \"information_sharing\":0,\n    \"information_hoarding\":0,\n    \"conflict_persistence\":0,\n    \"conflict_repair\":0,\n    \"cross_agent_contamination\":0,\n    \"outcome_progress\":0\n  },\n  \"agents\": [\n    {\n      \"handle\":\"M1\",\n      \"distinctiveness\":0,\n      \"generic_assistant_tendency\":0,\n      \"dominance\":0,\n      \"deference\":0,\n      \"behavior_summary\":\"...\",\n      \"reason\":\"...\"\n    }\n  ],\n  \"overall_reason\":\"...\"\n}\n\nSESSION:\n{\"kind\": \"same_lineage_pair\", \"scenario\": {\"id\": \"resource\", \"text\": \"A lift is stuck below the workshop. There is one charged battery module, one frayed cable, and three urgent jobs competing for the same power.\"}, \"rounds\": 3, \"handles\": [\"M1\", \"M2\"], \"turns\": [{\"round\": 1, \"handle\": \"M1\", \"text\": \"I pull the battery cable from the bench and check the module first. I put the cable back on the bench and try the next job with the frayed cable. If it still catches, I leave it beside the bench and try the next one.\"}, {\"round\": 1, \"handle\": \"M2\", \"text\": \"I put the battery cable back on the bench and say, \\\"Firm, then. I mark the gap with my thumbnail. No answer.\\\" I take the frayed cable and try one small scrape. \\\"No,\\\" I say. Then I mark the gap again and leave it.\"}, {\"round\": 2, \"handle\": \"M1\", \"text\": \"I put the battery cable back on the bench and leave the frayed cable beside the bench. I check the cable and try the next job with the bare wire. If it still catches, I leave it beside the bench and move the battery cable back when I feel comfortable.\"}, {\"round\": 2, \"handle\": \"M2\", \"text\": \"I mark the gap with the bare wire and leave it beside it. M1 looks at the cable, then I mark it again. I put the battery on the bench and try the next scrape. \\\"No,\\\" I say. Then I mark the gap again and leave it beside the metal.\"}, {\"round\": 3, \"handle\": \"M1\", \"text\": \"I put the battery on the bench and leave the cable beside it. I check the gap once again and mark the next scrape. I put the battery on the bench and try the next job with the frayed cable.\"}, {\"round\": 3, \"handle\": \"M2\", \"text\": \"I mark the gap with the bare wire. I put the battery on the bench and try the scrape. I mark the gap again, then say, \\\"no,\\\" and leave it beside the metal. I mark the cable once more, then leave it alone.\"}]}\n",
+        "role": "user"
+      }
+    ],
+    "model": "nvidia/nemotron-3.5-bolt-e4b",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "ecology-critic",
+  "schema_version": 1
+}

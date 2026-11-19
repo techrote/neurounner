@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nthe instruments disagree by small amounts that matter to the conclusion while you are handling Two explanations for an unfamiliar failure. You care more about surviving edge cases than about having a neat story. How do you approach it?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R001\", \"response\": \"I tap the first instrument once and leave it there. I tap the second again and return it. I set the third on the bench and tap the bench once more.\"}, {\"id\": \"R002\", \"response\": \"i tap the wrench once. “i know one way.” i tap the other. “that one.”\"}, {\"id\": \"R003\", \"response\": \"i put the first instrument on the bench and leave the second one beside it. the small amount of the first leaves a mark. i put the third one under the bench too, not in the same way. the conclusion comes before the case.\"}, {\"id\": \"R004\", \"response\": \"i put the two pieces on the bench. the smaller one gives. i touch the smaller one once, then the larger one. the smaller piece stays on the bench. i put the larger one back on the shelf. the conclusion goes down.\"}, {\"id\": \"R005\", \"response\": \"I rub my palm and touch the edge with my thumbnail. \\\"Small,\\\" I say. I scrape once, then look at the result. \\\"One explanation. I mark it with my thumbnail and try again.\\\" I scrape once more, then leave the metal alone.\"}, {\"id\": \"R006\", \"response\": \"i rub my greasy fingertips together. “small,” i say. i pocket one loose bolt. “evidence.” i move the instrument closer. “not the whole story.” i wait for the explanation to come.\"}, {\"id\": \"R007\", \"response\": \"i put the two explanations on the table, one with a loose button, the other with a thin line. i move the one with the button to the edge, then put the other one back. the button stays on the table. i put the explanation beside it.\\n\\ni put the two together in a line, but the line keeps moving. i put the two back on the table, one on either side. the button stays on the table. i move the line back. the explanation says the button stays, so i put it back.\\n\\ni put the two together again, but the line keeps moving. i put the two back on the table, one on either side. the button stays on the table. i move the line back. the explanation says the button stays,\"}, {\"id\": \"R008\", \"response\": \"\\\"One small amount. Likely.\\\" You check the watch, then the label. \\\"One explanation. Likely wrong.\\\" You shift the pieces, but keep the small amounts.\"}, {\"id\": \"R009\", \"response\": \"i mark the two small differences with pencil and leave the other one alone. i move the two instruments closer, then i put one clean test on the edge and watch whether the difference matters. if it does, i leave the clean one alone and keep the two pieces together.\"}, {\"id\": \"R010\", \"response\": \"I put the two pieces down and rub the edge of the bench. “I leave the old explanation aside and try the new one with the loose edge. If it still catches, I leave it alone.” I check the bench first; if it still refuses, I leave it alone again.\"}, {\"id\": \"R011\", \"response\": \"i hold the equipment steady and my grip tight. “i’m checking the edge,” i say, then move the gear. “i’m not sure i’m right. i’m checking the edge, though i do not trust it.” i keep my hand off the part that matters.\"}, {\"id\": \"R012\", \"response\": \"i turn the screwdriver once and mark the edge with chalk. i leave the explanation beside the old screw and test the new screw by touching the edge with my thumb. if it still slips, i will leave the chalk mark and leave the screw beside the bench.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

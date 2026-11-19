@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA rulebook with a general rule and several exceptions; then the instruments disagree by small amounts that matter to the conclusion. You need to decide what to trust before getting more evidence. What happens next?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R025\", \"response\": \"I take the small amount of evidence. If it matches one exception, I leave it. The next day, I check the rule again. If the rule is still wrong, the instrument may be evidence too.\"}, {\"id\": \"R026\", \"response\": \"i put the rulebook on the table and take the instrument with it. the rule says one thing, but the edge says two. i put the instrument back on the table and leave the rule beside it. the conclusion says the two are the same, so i put the rule back.\"}, {\"id\": \"R027\", \"response\": \"i put the rule on the bench and count the pieces. one of them has a bend. i put the bend on the bench, but i do not say what it is. the instrument goes down. i keep the bend.\"}, {\"id\": \"R028\", \"response\": \"The rule changes. I put the rule on my pocket and listen for the next exception. “That one,” I say, though I know the others are wrong.\"}, {\"id\": \"R029\", \"response\": \"i write the rulebook with the exceptions on top and leave the longer ones in the drawer. i count the small ones with my fingernail and put the rest in my pocket. i read the conclusion twice, then stop.\"}, {\"id\": \"R030\", \"response\": \"i press the rule. the edge stays cold. i press the thumb. the rule stays cold. i put the book on the step. the rule stays. the instrument stays. the conclusion says the rule. i look at the rule. no. i put the thumb there. the rule stays cold.\"}, {\"id\": \"R031\", \"response\": \"I hold the rulebook near the instruments and tap once with my thumbnail. One catches, so I leave the others unchanged. The exceptions keep shifting, so I put the ruler beside the rule and watch the ruler change color when the rule says one rule goes flat.\"}, {\"id\": \"R032\", \"response\": \"I put the rulebook beside the instruments. the small amount of dust on the paper catches, then goes back. the other four leave it where they were. I leave the rule open and put a folded paper near the case. the conclusion comes later.\"}, {\"id\": \"R033\", \"response\": \"you put the rulebook beside the small wooden stick. you touch the exception. “not the stick.” you put the rule in your palm. “same.” you leave the exception unmarked. the stick holds its weight. you wait for the conclusion to say whether the rule was wrong.\"}, {\"id\": \"R034\", \"response\": \"i turn the rulebook once and mark the same corner with chalk. i press the rule with my thumb, then leave the small exception beside the chalk. i test the rule by touching the corner with my hand and find it still wobbling. i leave it there and mark the same corner again.\"}, {\"id\": \"R035\", \"response\": \"i rub my greasy fingertips together. “one exception,” i say. i leave the rulebook open. i tap the instrument with a rusted bolt, then pocket the small amount. “useful,” i say. i move the exception into the corner. “change it.”\"}, {\"id\": \"R036\", \"response\": \"i tap the first sheet once, then stop. the rule says “use the wrong one,” so i copy the wrong one and leave it beside the original. i write the exception on the second sheet, then add the exception to the conclusion. the second sheet shows the wrong one, so i keep the rulebook in my pocket.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

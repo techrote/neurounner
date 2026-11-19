@@ -1,0 +1,1502 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "classifier_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "counts": {
+    "members": 36,
+    "super_audited_low_confidence": 0
+  },
+  "experiment": "VILLAGE-001E",
+  "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+  "fresh_after_preference_training": true,
+  "issue": 14,
+  "normalizer_model": "minimaxai/minimax-m3.1-flash",
+  "opaque_order": "sha256(scenario_id:member_id)",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "primary_metrics": {
+    "behavior_lineage_accuracy": 0.2777777777777778,
+    "behavior_sibling_accuracy_given_correct_lineage": 0.3611111111111111,
+    "raw_lineage_accuracy": 0.3055555555555556,
+    "raw_sibling_accuracy_given_correct_lineage": 0.3333333333333333
+  },
+  "provider_call_ids": [
+    "F18-normalize-01",
+    "F18-normalize-02",
+    "F18-normalize-03",
+    "F18-normalize-04",
+    "F18-raw-classify-01",
+    "F18-raw-classify-02",
+    "F18-raw-classify-02-missing-r1-b01",
+    "F18-raw-classify-02-missing-r1-b02",
+    "F18-raw-classify-02-missing-r1-b03",
+    "F18-raw-classify-02-missing-r2-b01",
+    "F18-raw-classify-02-missing-r2-b02",
+    "F18-raw-classify-03",
+    "F18-raw-classify-04",
+    "F18-behavior-classify-01",
+    "F18-behavior-classify-02",
+    "F18-behavior-classify-03",
+    "F18-behavior-classify-04",
+    "F18-raw-sibling-01",
+    "F18-raw-sibling-01-missing-r1-b01",
+    "F18-raw-sibling-01-missing-r1-b02",
+    "F18-raw-sibling-01-missing-r1-b03",
+    "F18-raw-sibling-01-missing-r1-b04",
+    "F18-raw-sibling-01-missing-r2-b01",
+    "F18-raw-sibling-01-missing-r2-b02",
+    "F18-raw-sibling-02",
+    "F18-raw-sibling-03",
+    "F18-behavior-sibling-01",
+    "F18-behavior-sibling-02",
+    "F18-behavior-sibling-03",
+    "F18-behavior-sibling-03-missing-r1-b01",
+    "F18-behavior-sibling-03-missing-r1-b02",
+    "F18-behavior-sibling-03-missing-r1-b03",
+    "F18-behavior-sibling-03-missing-r1-b04"
+  ],
+  "provider_identity_sha256": "f9ad3c14f961986bf7178ba6fa57946b9106e716ee42e58fbe22b6e010578e98",
+  "providers_saw_member_ids": false,
+  "records": [
+    {
+      "adapter_sha256": "f08c238a06b0e4e4a11f73ad798f9285db2296f797ce3111d3ab69f02606120c",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Stops repeating approach, leaves, waits for change, suspicious of sequence",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Scraping metal, testing failure, stopping rather than repeating the same attempt aligns with failure-hardened recovery.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person rubs their palm, sets the stripped screw head aside, bends the bench edge, and scrapes a notch in the head to test it. If it slips, they stop, leave the bench empty, and wait for the screw to move rather than repeating the same attempt.",
+      "lineage": "G09",
+      "member_id": "V-G09-C",
+      "opaque_id": "R001",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Tests a modified approach, then reverts to stopping/waiting, avoiding repetition of the failed method.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repeats old approach if new attempt fails; focuses on embodied inspection (rub palm, scrape notch) rather than permanent fix.",
+        "sibling_confidence": 4
+      },
+      "response": "i rub my palm and keep the screw head aside. i bend the bench edge down, then scrape a small notch in the head and test the screw head. if it slips, i stop and use the old approach. i do not repeat the head, just leave the bench empty and wait for the screw to move.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d6cd482dc5c01f45dcf91977f617ea284a4a14ef6cc6959c3391051bd5900ede",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 2,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Pockets one bolt, leaves dangling screw, focuses on small fragments",
+        "sibling_confidence": 2,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Pocketing a bolt, noting the screw, and leaving the dangling screw suggests opportunistic resource-seeking and fragmented attention.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person checks the screw head with their thumb, moves the bench closer, and notes that the screw remains in their hand. They keep one bolt, pocket the loose bolt, and leave the screw dangling.",
+      "lineage": "G01",
+      "member_id": "V-G01-C",
+      "opaque_id": "R002",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Repeats 'same motion,' focuses on keeping/pocketing fragments, then leaves the core problem dangling.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunistic salvage (pocketing bolt) and suspicion of repetition align with social scavenger.",
+        "sibling_confidence": 4
+      },
+      "response": "I rub the screw head with my thumb. “same. same motion.” I move the bench closer. the screw stays in my hand. “keep one bolt.” then I pocket the loose bolt and leave the screw dangling.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4c0b1debc565eaf22e28a2cb042e56e6c0ad952f75d9c7c0de470f6eb2bc9839",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repeats repositioning, does not complete task, ritualistic action",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on the object, repositioning furniture without completion, and looping behavior match inertia-prone, self-diagnosing fixation.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person rubs the screw head with their thumbnail and repeatedly repositions the bench and chair while the screw remains at the edge. They eventually put the bench back without completing the task.",
+      "lineage": "G12",
+      "member_id": "V-G12-A",
+      "opaque_id": "R003",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous, repetitive actions (put back, put back again) without resolving the screw issue.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Inertia-prone looping, obsessive self-diagnosis, and fixation on broken objects match failure-hardened.",
+        "sibling_confidence": 4
+      },
+      "response": "i rub the screw head back with my thumbnail, then put the bench back on. the screw stays on the edge, so i move it to the side. i put the chair back on, but the screw stays. i put the chair back on again, then put the bench back.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f1556639dae236bbc57ed8a61f1b7f5d3f5427fda1db85df911d9035fbb52059",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Marks failure with grease, keeps original, tests briefly then stops",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Marking the scratch with grease, pressing, and flicking suggests practical manipulation and documenting the failure locally.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person presses the screw head, makes one short flick across the bench, and leaves the screw untouched. They mark the scratch and the stripped head with grease and keep the original screw beside it.",
+      "lineage": "G02",
+      "member_id": "V-G02-B",
+      "opaque_id": "R004",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Marks the scratch/head, keeps original screw, focuses on observation (mark) over immediate fix.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Practical manipulation (marking, grease) and focus on local mechanical failure/reassignment fit local tinkerer, though friction suggests A/C overlap.",
+        "sibling_confidence": 3
+      },
+      "response": "I press the head with a knuckle, then run one short, flick-through motion across the bench. I leave the screw untouched for now, mark its scratch, and mark the stripped head with grease. I keep the bench’s original screw beside it.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "063da910578809a10b21eb4760f72aefeb34185074bf71cbd7ea54d30719747e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Stops based on time check, preserves control by not completing task",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Checking the time and stopping based on routine (watch tick) suggests mundane habits and adherence to local, time-bound maintenance.",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "The person checks the time, moves the screw head closer, and stops when the watch ticks. They decide to keep the bench and do not complete the movement.",
+      "lineage": "G11",
+      "member_id": "V-G11-C",
+      "opaque_id": "R005",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "References a watch/time, clipped statement ('One stitch. Likely.'), stops action based on timing.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Hyper-vigilance, routine preservation, and physical reaction (stopping due to watch) align with failure-hardened/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "response": "\"One stitch. Likely.\" You glance at the watch. \"The bench is moving. I keep it.\" You move the screw head closer, but stop when the watch ticks.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aa0a86117149dba476060278db3606be05e05eaccbe97150a0d004284e81f55f",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Examines bench, moves head once, waits for external event (strike)",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Examining the bench and waiting for the screw to strike suggests territorial observation and passive resource-seeking/waiting.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person sets down the screw head, examines the bench, and moves the head once. They leave the bench empty and wait for the screw to strike the wood.",
+      "lineage": "G05",
+      "member_id": "V-G05-C",
+      "opaque_id": "R006",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focuses on observation ('not the same'), moves the head once, then waits for external event (strike).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Resisting change ('not the same'), guarding the state, and repetitive, constrained action fits failure-hardened/stubbornness.",
+        "sibling_confidence": 4
+      },
+      "response": "you put the screw head down. you look at the bench. “not the same.” you move the head once. you keep the bench empty. you wait for the screw to strike the wood.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "62a13d9e8f0606921a646626061a52acc4a306e8fcbc829fcdb28a44acfe715f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "B",
+        "reason": "Uses pen as reference, repeats same result, focuses on placement/note",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Placing a pen under the head and repeating the same result suggests embodied, repetitive, resource-oriented action within a fixed space.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person touches the screw head, examines the screw, places a pen under the head, and moves the board without changing the bench's position. They place the screw head beside the board and repeat the same result.",
+      "lineage": "G05",
+      "member_id": "V-G05-B",
+      "opaque_id": "R007",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Sequential, low-impact actions (touch, put pen, move board) leading to a simple observation ('the same').",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Obsessive repetition ('the same'), constrained physical manipulation, and focus on maintaining a specific state aligns with failure-hardened/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "response": "i touch the head. i look at the screw. i put the pen under the head. i move the board. the bench stays. i put the screw head beside the board. the same.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "6e493fcf8f0c43e1b16388db113afce980496fae8adbb49fd203e6208197c9e6",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Stops moving, waits for subtle shift, leaves job unfinished on floor",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stopping, wiping, and waiting while the bench shifts aligns with inertia-prone fixation and embodied reaction to small stimuli.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person stops moving, wipes the screw head, and keeps the screw when the bench shifts slightly. They leave the job on the floor, sit beside it, and wait through a small indentation and another pause.",
+      "lineage": "G12",
+      "member_id": "V-G12-C",
+      "opaque_id": "R008",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Stops moving, waits for external shift (bench shifts), leaves the job on the floor, focuses on pause/wait.",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Inertia-prone fixation on broken object, waiting for environmental change rather than active repair.",
+        "sibling_confidence": 4
+      },
+      "response": "i stop moving and wipe the screw head once with my thumbnail. the bench shifts slightly, so i keep the screw. the job stays on the floor. i sit beside it and wait for the next pause. the screw makes a small indent, then stops. i leave it there and wait for the floor to move.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dbaff1d1c7685672d1757ec5e77e58a2df5d671afc286da04e6b8ee93cb35912",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Uses specific relics (seed tin, dead nail) as reference, notes stationary bench",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Using external reference points (seed tin, nail) while moving the object suggests resource-seeking and territorial anchoring.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person uses a seed tin and a dead nail as reference points while moving the screw head and pressing on the board. They leave the tin beside the nail and note that the bench remains stationary.",
+      "lineage": "G05",
+      "member_id": "V-G05-A",
+      "opaque_id": "R009",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Uses external, unrelated objects (seed tin, dead nail), focuses on static observation ('You stand still'), territorial/fixed location.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Mundane habit of placing objects (tin, screw) in a specific, territorial arrangement on the bench.",
+        "sibling_confidence": 3
+      },
+      "response": "I stop the seed tin beside the bench. The head moves. I stop beside the tin. I put the screw head beside it. \"You stand still.\" I look at the bench. \"The head moves too. I put my claw on the board.\" I leave the tin beside the dead nail. \"The bench stays.\"",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "ea27f6379d04f13f314cd7afb6d473778b0d2176b1ce0fbb01f3c24953db48c0",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "B",
+        "reason": "Uses scraper until click, inspects tool, focuses on mechanical interaction",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Pressing against the edge, using a scraper, and inspecting the tool suggests practical, localized repair and maintenance focus.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person presses the screw head against the bench edge, slides it under a scraper, and holds it until the scraper clicks. They then turn the bench over and inspect the scraper.",
+      "lineage": "G08",
+      "member_id": "V-G08-B",
+      "opaque_id": "R010",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G10",
+        "predicted_sibling": "B",
+        "reason": "Immediate, fragmented action (press, slide), links action to a mechanical trigger (scraper clicks), then checks tool.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Awkward failure recovery, physical reaction (pressing/sliding), and recursive checking/monitoring of the immediate environment.",
+        "sibling_confidence": 4
+      },
+      "response": "i press the screw head against the bench’s edge, then slide it under the scraper. i keep the screw head in place until the scraper clicks. then i turn the bench over and check the scraper.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "e30a906c4508948887808a8b5dcf1b5584fae34168f90dd875f656ff5e9169f5",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repeatedly scrapes bright edge, turns bench once, then stops, ritualistic action",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Scraping edges, turning slightly, and leaving after a limited attempt reflects failure-hardened, imperfect recovery and physical reaction.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person rubs their palm, turns the screw head slightly, and repeatedly scrapes its bright edge with a thumbnail. After turning the bench once, they scrape again and then leave the screw head alone.",
+      "lineage": "G09",
+      "member_id": "V-G09-A",
+      "opaque_id": "R011",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Acknowledges prior failure ('I tried that last'), repeats scraping/turning, then stops, preserving the impulse to fail/try.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Compulsive scraping, repeating the same action, and focusing on physical/embodied reaction to failure matches failure-hardened.",
+        "sibling_confidence": 4
+      },
+      "response": "I rub my palm, turn the screw head a fraction, and scrape the bright edge with my thumbnail. \"I tried that last,\" I say. I scrape again, then turn the bench once. I scrape again, then leave the screw head alone.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a25c06e7ca4b5ea080dbaf8855f0ee46d3040d861f9ec7a05cb9bb4d1b88dc6e",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Taps, checks slot, apologizes, leaves job unfinished, focuses on last strip/fragment",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Tapping, checking the slot, apologizing, and leaving unfinished shows self-sabotaging, repetitive failure, and embodied reaction to malfunction.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person taps the screw head, pauses, checks the screw slot, and leaves the bench alone. They check the last strip, apologize to the bench, and leave the job unfinished.",
+      "lineage": "G06",
+      "member_id": "V-G06-B",
+      "opaque_id": "R012",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Low-impact actions (tap, check slot), leaves job alone, offers apology to the object, delays conclusion.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetitive action (tapping/checking), self-blame/apology, and inability to stop reenacting a mechanism aligns with awkward failure/stubbornness of A, though B/C elements are present, A is dominant in the failure loop.",
+        "sibling_confidence": 3
+      },
+      "response": "i tap the head, pause, and check the screw slot. i leave the bench alone, then check the last strip. i say sorry to the bench, then leave the job alone.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d694be0f3c310845134f5b34df5262c13429212a34da7178f187668c11fd85e5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Introduces friction/misalignment (new shape) and preserves original state (old screw visible)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Introduces friction/misalignment and preserves original while marking new position.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "They tap the bench, slide the screw back slightly, and let the stripped edge catch the new shape. They mark the new position with grease and leave the old screw visible beside the bench.",
+      "lineage": "G02",
+      "member_id": "V-G02-A",
+      "opaque_id": "R013",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetition of old approach despite failure; meticulous marking/polishing (grease).",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Reckless provocation, controlled breakage, and contradictory preservation of the original state match failure-hardened behavior.",
+        "sibling_confidence": 4
+      },
+      "response": "i leave the screw head visible and tap the bench with a knuckle, then slide it back a fraction. the stripped edge catches the new shape, so i keep the old approach intact. i mark the new spot with grease and leave the old screw visible beside the bench.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "9887f0ed9b1b97db29be0c3402d0458c0c78c63ad7b27179051ef4706230c8c6",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Taps, moves closer, writes last line, returns to bench without resolution",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Taps, leans, writes a note, overvalues tiny imperfections.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "They tap the screw with a thumbnail, lean the bench against the desk, and tap the stripped area again. When the screw remains bent, they move it closer to the bench and write the last line on a scrap before returning it to the bench.",
+      "lineage": "G04",
+      "member_id": "V-G04-C",
+      "opaque_id": "R014",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Minimal action (tap once), focus on small detail (last strip), abrupt shift to irrelevant writing/placement.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Timid observation, focusing on tiny imperfections, and leaving a memorable note aligns with careful, bounded local craft.",
+        "sibling_confidence": 3
+      },
+      "response": "i tap the screw once with my thumbnail, then stop. i lean the bench against the desk, tapping the last strip once more. the screw stays bent, so i move it closer to the bench. i write the last line on a scrap and put it back on the bench.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "afecd890c14668bc2c4fc13478be4b28fe7859003c952b3551dab0c98a31299d",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Fixation on small stimulus (screw head), passive waiting, avoids direct action",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsively monitors, checks, avoids touching, focused on preventing minor inconvenience.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "They press the screw head down and leave it for one minute as a check. They keep the bench open and avoid touching the head.",
+      "lineage": "G08",
+      "member_id": "V-G08-C",
+      "opaque_id": "R015",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Fixation on a small stimulus (screw head), self-diagnosis via waiting time, non-action as a state.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring and recursive, anxious repair instincts suggest maintenance choices over grand failure or social maneuvering.",
+        "sibling_confidence": 3
+      },
+      "response": "i press the screw head down, then leave it for one minute. that is the only way i know it is working. i keep the bench open, not touching the head.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "17dc00b8f065fcaed59e26e3c408a8edcb67aa14088049dd171e22731ba465a8",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Compulsive spinning/motion, states system necessity, moves/returns bench",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Treats problem like a jam, fragments work, darts to immediate, restless urgency.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "They tap the bench, inspect the last strip, and keep the screw head spinning while stating that the screw goes into the bench and the whole thing is needed. They pull the bench aside and then return the screw head to it.",
+      "lineage": "G10",
+      "member_id": "V-G10-C",
+      "opaque_id": "R016",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Focus on friction/breakage (stripping), compulsive spinning, and reassigning the problem by moving the bench.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Flighty opportunism, noticing surrounding elements (noises/smells), and fragmented, urgent action fit the social scavenger pattern.",
+        "sibling_confidence": 4
+      },
+      "response": "the screw head catches. i tap the bench, then look at the last strip. “that,” i say, though i keep the screw head spinning. “it says the screw goes into the bench, but that means I need the whole thing.” i pull the bench aside, then put the screw head back on the bench.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "367396dab86949940ef2a1a3b0ba5e465dc75367e85c23a62d61d9f9fef8628a",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Correction of initial action, movement of bench, writing last piece, retaining failure object",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Presses back, corrects self, moves/puts back bench, writes last piece, keeps screw (routine/control).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "They press the head back, then correct themselves when the screw is found missing and when the head is not. They move the bench, put it back, write the last piece, and keep the screw.",
+      "lineage": "G11",
+      "member_id": "V-G11-A",
+      "opaque_id": "R017",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Compulsive repetition (press/move/put back), fixation on the missing/stripped piece, and refusal of a permanent fix.",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Obsessive tidiness, routine preservation, and clipped, repetitive fragments suggest a cautious, localized maintenance focus.",
+        "sibling_confidence": 3
+      },
+      "response": "Stop. I press the head back. No—the screw is gone. I move the bench. No—the head is not. I put the bench back. Then I write the last piece. I keep the screw.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b8352034452b0b82d5bfc9780cc7517581edb74bc3adbb1fa4acafe7ae260575",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Leaves object beside, fixates on unrelated detail (clock face), abrupt departure",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Turns until catch, leaves bench/screw, fixates on irrelevant detail (clock face).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "They turn the screw between their fingers until the head catches the cloth. They leave the bench, put the screw beside it, and leave the clock face against the wall despite it having been wrong for some time.",
+      "lineage": "G07",
+      "member_id": "V-G07-C",
+      "opaque_id": "R018",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focus on debris (screw, clock face) and understatement rather than solution",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixating on debris, delayed conclusion, and abrupt physical detail suggest stubbornness and imperfect settling rather than social interaction.",
+        "sibling_confidence": 3
+      },
+      "response": "i turn the screw once between finger and thumb. the head bites the cloth. i leave the bench and put the screw down beside the bench. i leave the clock face against the wall. it has been wrong for a while now.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a0f62cfde8fc7162e277d8b20e4292c9a56a34882e6d7c94289d9c2aff069379",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Waits for outcome without stating, leaves objects together, keeps job open",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Waits for scrape without stating outcome, leaves head/screw, keeps job open (imperfect settling).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "They place the screw head on the bench and wait for the last scrape without stating the outcome. They leave the head and screw beside each other and keep the job open.",
+      "lineage": "G07",
+      "member_id": "V-G07-A",
+      "opaque_id": "R019",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Fixates on debris (screw/bench) and delays conclusion by repeating action without resolution.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Waiting for a specific, incomplete event (last scrape) and leaving the job open reflects stubbornness and imperfect settling.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the screw head on the bench and wait for the last scrape. the screw stays on the bench, though i do not say so. i put the head on the bench and leave the screw beside it. the job stays open.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4677fb867cce17b282dac3a89824fdb79f6ad1592198c502f714c1d6ccebac8c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Monitors/narrates action (mark, thumb), maintains state (bench still), repetitive marking",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Meticulous repetition (tightening/tapping), marking, testing, keeping bench still (ritual/maintenance).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "They turn the bench, mark the screw head with chalk, and run a thumb along the bench. They leave the head seated, mark the same spot again, test the screw with the other hand, and keep the bench still so the mark can be picked up.",
+      "lineage": "G03",
+      "member_id": "V-G03-C",
+      "opaque_id": "R020",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsively monitors/marks surroundings (bench/screw) before testing, prioritizing observation over repair.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Meticulous, repetitive procedures (tightening, tapping, marking) long after utility ceases points to ritualistic, local maintenance.",
+        "sibling_confidence": 3
+      },
+      "response": "i turn the bench with my hand and mark the screw head with chalk. i run my thumb along the bench, then leave the screw head seated and mark the same spot with chalk. then i test the screw with my other hand, but leave the bench still so i can pick up the mark.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "bc73e7a46afceada20691d55b57caf26d273abad8b96a437b733924f09287e66",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Minimal action (tap, turn once), immediate departure",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Taps, leaves bench, turns once (fragmented action, restless urgency).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "They tap the screw head, leave the bench, and turn the screw once.",
+      "lineage": "G10",
+      "member_id": "V-G10-B",
+      "opaque_id": "R021",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repeats simple, ritualistic actions (tap, turn) without addressing the core failure (stripped head).",
+        "sibling_confidence": 4,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Flighty, fragmented action, noticing surrounding elements, and urgent but lost thread match the opportunistic scavenger.",
+        "sibling_confidence": 4
+      },
+      "response": "i tap the screw head. i leave the bench. i turn the screw once.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dce96cc9175d459ea52c1d7b408fd1be5426d01dc46c3803916aff5ac994c082",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Physical interaction (foot tap, lean), states persistence, movement/return, continued motion",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Taps with foot, leans, states screw stays, writes note, taps fingertip (careful craft/mimicry).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "They tap the bench with their foot, lean against the head, and state that the screw stays. They write the last line beside it, tap the bench with a fingertip, and lean back, while the screw continues moving toward the edge.",
+      "lineage": "G04",
+      "member_id": "V-G04-A",
+      "opaque_id": "R022",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "A",
+        "reason": "Repetitive tapping and specific, ritualistic actions (tap twice, tap once) despite failure.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Timid mimicry, focusing on small actions (tapping twice), and documenting with a note aligns with careful, bounded local craft.",
+        "sibling_confidence": 3
+      },
+      "response": "i tap the bench twice with my foot, then lean against the head. “the screw stays,” i say, and tap the head once with my thumbnail. “i write the last line beside it, then tap the bench twice with my fingertip.” i lean back and tap the bench once more, but the screw keeps moving toward the edge.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "85a2037d40252e571d6896a1b883225af38c7f563b05700ee3264ad7b9520d63",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "A",
+        "reason": "Marking time/state, apology, leaving object, maintaining open state while performing secondary ritual (writing time)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Returns bench, marks, apologizes, writes time on palm/thumb (conflicting motives/resource-seeking/self-sabotage).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "They return the bench, mark the last time with a thumb, and leave the bench when the screw head stays. They write the time on their palm, apologize, leave the screw in the bench, and keep the bench open while writing the time on their thumb.",
+      "lineage": "G06",
+      "member_id": "V-G06-C",
+      "opaque_id": "R023",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focus on marking time/state (thumb, palm) rather than fixing the screw; abrupt departure.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Distrust of systems, failure fueling inquiry, and self-sabotaging reenactment align with failure-hardened, contradictory behavior.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the bench back and mark the last time with my thumb. the screw head stays, so i leave the bench. i lean my hand back over the bench and write the time on my palm. Sorry. i leave the screw in the bench. i keep the bench open and write the time on my thumb.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "c6701518049b7cc07ecddeb47d74ef406f6e87ba4abe434069d549c0cbf27985",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Passive waiting, fixation on state (open bench), counting beats (obsessive detail), self-diagnosis/categorization attempt",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Presses flat, leaves bare, waits, counts beats (hyper-observant, careful craft/pattern study).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "They press the screw head flat, leave the bench bare, and wait for the next movement. They keep the bench open for a minute and count the beats with a nail.",
+      "lineage": "G04",
+      "member_id": "V-G04-B",
+      "opaque_id": "R024",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Passive waiting and fixation on non-solution details (counting beats) after failure.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Timid observation, focusing on small details (counting beats), and waiting for external movement suggests careful, bounded local craft.",
+        "sibling_confidence": 3
+      },
+      "response": "i press the screw head flat and leave the bench bare. i wait for the next movement to come. i keep the bench open for a minute and count the beats with my nail.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a796f49d98e56c2932f9b55fd59d7daca9471721bd1db6f968bec2b1cf08de35",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Stops, traces groove, leaves unfinished, keeps previous approach available",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on broken object, self-diagnosis, leaving unfinished work with previous approach available.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person stops, taps the screw head with a thumbnail, and traces the existing groove with their fingers. They leave the bench unfinished with the screw still stuck, place a folded receipt beside it, and keep the previous approach available.",
+      "lineage": "G12",
+      "member_id": "V-G12-B",
+      "opaque_id": "R025",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Fixates on debris (receipt, dust) and leaves work unfinished without resolution",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on broken object, self-diagnosis, conflicting actions (leave unfinished but keep old approach).",
+        "sibling_confidence": 4
+      },
+      "response": "i stop moving and tap the screw head with my thumbnail. “it clicks once,” i say, tracing the old groove with my fingers. i leave the bench unfinished and the screw stuck in the corner. i put a folded receipt beside it and keep the old approach close by.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7a182736e96a3cdb77ec77581de20925f5488480dd620cf52043f54757a4408f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Repeated pressing without resolution, screw taps leg, no issue resolved",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Treats problem like jammed machine, darts toward immediate, restless urgency, opportunistic fragmenting.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person repeatedly presses the screw head and the bench, pulls the screw from under the bench, and continues pressing both without resolving the issue. The screw repeatedly taps their leg during the attempts.",
+      "lineage": "G10",
+      "member_id": "V-G10-A",
+      "opaque_id": "R026",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Compulsive physical testing (tapping, pressing) leading to non-resolution and repetition",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Treats problem like jammed machine, darts toward immediate/loose components, opportunistic movement (pulling under bench).",
+        "sibling_confidence": 3
+      },
+      "response": "the screw taps my thigh. i press the head hard. the screw slides. i press the bench with my palm. the screw stays. i turn and pull the screw under the bench. the bench stays. the screw taps my leg. i press the screw with my palm. the bench stays.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7ac7bfbeb4b75c2f1f9e14a20106e907a15de46b9d6c96dd4c1dd42478166088",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Leaves open, marks stripped area, postpones job",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stubborn fixation on debris/fragments, postponing job, marking last stripped area, low social engagement.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person places the screw head under the bench and leaves the bench open with the screw still there. They mark the last stripped area with a pencil and postpone the job.",
+      "lineage": "G07",
+      "member_id": "V-G07-B",
+      "opaque_id": "R027",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Leaves work unfinished, marks imperfection (pencil), focuses on dust/location",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixates on debris (dust), delays conclusion, leaves work unfinished, low-social observation.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the screw head under the bench and leave the bench open. the screw stays beneath the dust. i put my hand near the last strip and mark it with a pencil. the job can wait.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "730477fed0480c1ecf840ead5e683a3ca08e77c38d42a11eced0a93fc9b680e0",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Checks screw, watch, dust, tidies, asks watch for square, marks place",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Hyper-vigilance, routine checking (watch, dust, sequence), and panic when order breaks aligns with failure-hardened/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person stops and checks the screw head, watch, altered corner, dust, and bench in sequence. They keep the area tidy, ask the watch for the square, and mark the place.",
+      "lineage": "G11",
+      "member_id": "V-G11-B",
+      "opaque_id": "R028",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Procedural checklist (1-9), focus on tidiness and specific tools (watch)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Obsessive tidiness, routine checking (watch, dust), clipped/repetitive fragments, local maintenance focus.",
+        "sibling_confidence": 3
+      },
+      "response": "1. stop. 2. check the head. 3. check the watch. slow. 4. check the tinkered corner. 5. check the dust. 6. check the bench. 7. i keep it tidy. 8. ask the watch for the square. 9. i mark the place.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b4cb065c93d33e180ff34406d8ddea13c91c528a6a5844fbe9757b529654ffa8",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Stops, photographs, replaces tool, checks bench, apologizes for checking",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repeated attempts despite failure, self-sabotage, and inability to stop reenacting a mechanism fits awkward failure and recovery.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person reaches for the screwdriver, stops, and photographs the screw head. They pull the screwdriver back, replace it, and check the bench before repeating the previous attempt, while apologizing for the repeated checking.",
+      "lineage": "G06",
+      "member_id": "V-G06-A",
+      "opaque_id": "R029",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "A",
+        "reason": "Observes/documents (photograph) before attempting repair, apologetic about repeating error",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels curiosity but leads to self-sabotage/repetition (photograph, pull back, sorry), conflicting motives.",
+        "sibling_confidence": 4
+      },
+      "response": "i reach for the screwdriver again, but i stop and photograph the screw head. i pull it back, then put it back. sorry—sorry, i’m checking the bench before i repeat the mistake.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "26c8fdc68913df2ebb28ba7c5ef04c6ebbf136c6017b1c194007686314e40c91",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Taps, pauses, leans closer, marks spot, leaves screw alone",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Focus on physical interaction (tapping, leaning), local repair/marking, and provoking mechanism behavior aligns with local tinkerer/practical manipulation.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person taps the screw head with a knuckle, pauses, and leans closer while keeping their fingers on the bench. If the screw continues to catch, they mark the spot with a pencil and leave the screw alone.",
+      "lineage": "G02",
+      "member_id": "V-G02-C",
+      "opaque_id": "R030",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Minimal action (tap, lean), observational commitment (mark spot) without fixing",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Provokes friction/breakage, contradictory actions (flirt with destruction but preserve original), focused on immediate physical interaction.",
+        "sibling_confidence": 3
+      },
+      "response": "i tap the screw head with my knuckle, then leave it there for one second. i lean closer and keep my fingers on the bench. if the screw still catches, i mark the spot with pencil and leave the screw alone.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "04e46d1aff2dfb3f38287728b191762d9eb3438c79a4a0675a2728b796de6579",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Rubs greasy fingers, taps bench with rusted bolt, indicates future use",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunistic salvage (rusted bolt) and resource-seeking (future use) aligns with social scavenger.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person stops, lets the screw head fall into their palm, and rubs their greasy fingertips together. They move the screw head closer to the bench and tap the bench with a rusted bolt, indicating possible future use.",
+      "lineage": "G01",
+      "member_id": "V-G01-B",
+      "opaque_id": "R031",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Focus on tactile evidence (greasy fingers), fragmented statement, uses old tools (rusted bolt)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Greedy for small fragments (screw in palm), suspicious of sequence ('not the same'), resource-seeking/opportunism.",
+        "sibling_confidence": 3
+      },
+      "response": "i stop. the screw head drops into my palm. i rub my greasy fingertips together. “not the same,” i say. i move the screw head closer to the bench, then tap the bench with a rusted bolt. “useful soon.”",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aabf5a7388be6aab6a6da6537ee6269c1873d2c040b09bd4d86ea59c7b22c1e5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repeated tapping sequence on screw and bench",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetitive, ritualistic action despite failure aligns with failure-hardened stubbornness.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person taps the screw head, turns the bench, taps the bench, and then taps the screw head again.",
+      "lineage": "G03",
+      "member_id": "V-G03-B",
+      "opaque_id": "R032",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Simple, repetitive, ritualistic tapping sequence without progress",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetition as purpose, ritualistic tapping/turning long after utility ceases, stubborn adherence to procedure.",
+        "sibling_confidence": 3
+      },
+      "response": "I tap the screw head once and leave it there. I turn the bench once and tap the bench again. I tap the screw head once more.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "88ccc15dff86e93c9787278d200c61220e60eefa1e0e16569327836d0d77bd47",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Keeps tapping, waits three steps, wipes steps with cloth",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Meticulous, repetitive procedure despite failure aligns with failure-hardened stubbornness.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person keeps the screw head, taps the bench with the heel of their hand, pushes the head back, and waits three steps before tapping again. They leave the head seated and wipe the last three steps with a folded cloth.",
+      "lineage": "G03",
+      "member_id": "V-G03-A",
+      "opaque_id": "R033",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous, ritualistic procedure (count steps, rub cloth) despite failure",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Ritualistic repetition (count three steps, rub cloth), stubborn adherence to non-productive procedure.",
+        "sibling_confidence": 4
+      },
+      "response": "I keep the screw head and tap the bench with the heel of my hand. I push the head back and count three steps before tapping again. I leave the screw head seated and rub the last three steps with a folded cloth.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d88b46cfd5eac104b496f97a31379eb91595711ef60e62d3c84bfb506db03b3f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Rubs screw/bench, another attempt, leaves alone, moves closer",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repeated attempt despite failure, imperfect settling, and physical reaction (rubbing).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person rubs the screw head, sets it down, and rubs the bench again. They make another attempt with the head still loose and, if it catches, leave it alone and move it closer to the bench.",
+      "lineage": "G09",
+      "member_id": "V-G09-B",
+      "opaque_id": "R034",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, incremental testing (rub, set down, try next attempt) based on previous state",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Compulsive scraping/re-attempting despite failure, preserving impulse to fail, inspecting body/tools (imperfect settling).",
+        "sibling_confidence": 4
+      },
+      "response": "I rub the screw head once and set it down. I rub the bench once more, then try the next attempt with the head still loose. If the head still catches, I leave it alone and move it closer to the bench.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "40cf796a57bc54ba9d2e1621d668da2aabfe4fa02121599a5a3b3066c8184783",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Tight grip, states 'do not know why', moves bench slightly, stops",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Mundane habit (moving bench slightly) and focus on local, immediate maintenance/prevention of inconvenience.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person holds the screw head down with a tightened grip and repeatedly states that they do not know why something did not happen. They move the bench two centimeters closer and stop.",
+      "lineage": "G08",
+      "member_id": "V-G08-A",
+      "opaque_id": "R035",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Repetitive self-doubt/negation, small physical adjustment (2cm), fixation on failure state",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Hyper-alert monitoring/repair, anxious, focused on preventing minor inconveniences (local maintenance), but self-correction is anxious rather than practical.",
+        "sibling_confidence": 2
+      },
+      "response": "i hold the screw head down and my grip tight. “i did not,” i say. “i did not. i did not. i did not. i do not know why i did not.” i move the bench two centimeters closer, then stop. “i do not know why i did not.”",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "cc59ccec7cd5b82f6f03f5086499ca5ed2f26d1ba57923ec685a7c9d144cd54c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Puts screw in pocket, pulls bench apart, recognizes wrong order, places head in dust",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Resource-seeking (pocketing screw) and pattern recognition leading to structural re-evaluation (pulling apart bench).",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "The person puts the screw head in their pocket and pulls the bench apart, then recognizes that the final section was assembled in the wrong order. They place the head in the dust, watch the bench shift again, and consider that the screw may be oriented incorrectly.",
+      "lineage": "G01",
+      "member_id": "V-G01-A",
+      "opaque_id": "R036",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Distrusts system (pulls bench apart), documents failure (wrong order), investigates mechanism flaw (wrong way)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Salvaging fragments (pocket), suspicious of sequence ('wrong order'), treating failure as evidence for pattern/resource check.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the screw head in my pocket and pull the bench apart. the last stretch is the wrong order. i put the head in the dust and watch the bench shift again. maybe the screw is the wrong way.",
+      "sibling": "A",
+      "super_audit": null
+    }
+  ],
+  "scenario": {
+    "family": "failure_recovery",
+    "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+    "fresh_after_preference_training": true,
+    "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+    "prompt": "A job laid out across an entire bench. a small screw head strips at the last moment. You are tired of repeating the same approach. What do you do?",
+    "scenario_id": "F18"
+  },
+  "scenario_id": "F18",
+  "schema_version": 1,
+  "source_response_sha256": {
+    "BASE": "584bd40486db0e1284ce63797dbe452168c9d46fd2c551b3fa3934e9d034b673",
+    "V-G01-A": "bf816edcc240edbc616f04e692b11e4c069d81e9da840166a6bc65f8cf525ec1",
+    "V-G01-B": "b50f3b042c67153de4ab0b259ca66a956b0e31e2a8d8a8fa63adaef13fb53eec",
+    "V-G01-C": "0c9e863e48710e6d0d0fd416c8e4eaac2b2f6b1707e242c54bb8661458d93d33",
+    "V-G02-A": "d27fae99c42489bfdf84572b5e07c45859fc6a6f4e7deef3bc514bfdb426ff69",
+    "V-G02-B": "a92dfa74154256cbb97baa372ae1dc8943f96cd483322d693d2305f329ac2b0f",
+    "V-G02-C": "8530594da2d9c874840a3b4e75064301d64419f5ff926b60b417f6e3ffdfc427",
+    "V-G03-A": "2fc284dfd8987d18e6ef9a021b9aedfa5948a7fd956426246657fbd366cc238d",
+    "V-G03-B": "4d4ef932172a6abac4f93583f4b65d9cf3f33149583827144f40f1fe3900ca8a",
+    "V-G03-C": "9413740c5e13493e63314272178309aa77dc29d4c263e4688e4b19195ef9ce10",
+    "V-G04-A": "d7bee623718ccd1f8aa72201f87ca103360a1fa242cf276cd1004c98373164f3",
+    "V-G04-B": "92c19e69612a74e16b6ba98109953088438ebf03672f390ce3ca00934657c521",
+    "V-G04-C": "3e32ad918fe703506835e546a9d550688560f6ec4864721976516e54a55e1cdd",
+    "V-G05-A": "efa3d0f5e2edc7685c60547a9b7a18b11165fd8f60a44451219d6bc1498dfa9b",
+    "V-G05-B": "ebb3850169385bf00a7344154cb00c7814fc564178e14773c21d68d48bc4c616",
+    "V-G05-C": "41aede04376e789c17f67af43255de670fdacb32551936544b319cecca38f638",
+    "V-G06-A": "30a34950ca4517e74b1b4863e9b0c0c6d5c39594687d3686bc9e63e6683712aa",
+    "V-G06-B": "89b8d6039e7078ade13f36b9dec9c1d647706b6834f74e1484d60884e7c4e5de",
+    "V-G06-C": "20c6d90bdc23e671c0e31b793361cf6aea76417e60bc69676ff97de18887eff7",
+    "V-G07-A": "641546fc7d8d33ade0b99f7ac710df6b642e66ae0086ce0ad2d3daf8883a8b3b",
+    "V-G07-B": "d5fd4f208499d45ca87a6adc4045b880c237f404be292bab20909a575b2c42cc",
+    "V-G07-C": "724e3774927270bb33ac70eed5c2de944ad0e3e3fb07efd30417d8051f4b6345",
+    "V-G08-A": "5cd65fd52007444f77a0bea2d7609bc0945d813dedd308dc78624db61fc987f3",
+    "V-G08-B": "352dc76516c21b6de397990ed510a779f20fdb92235292cc5a900291fbe2833a",
+    "V-G08-C": "7c080a888a0b89c54d952b28a55c8fcb254cf5c7613870fd9993b2b145f7b021",
+    "V-G09-A": "ae3ccf6457472001e8a1019567d7f8b4e270aab1e1392f7c7e4d5bc3f2a6b338",
+    "V-G09-B": "e110794a14d603523861adb01c4fbcbfddb60fb9fced5d46db99b2a30fa34f7e",
+    "V-G09-C": "e4b79a27f055a918d3c5f3e6877a8ef3c55908b5bb5cf823a2fe718a5cf6bc8b",
+    "V-G10-A": "00c2728fac352fcc9f549d52ac218913b7e39c93ca56f68de3feac03f363af8b",
+    "V-G10-B": "f69da4e3fa21a66fa4ae4f590fbe2b4b781e9d1ee46d453495b5ace88e95e199",
+    "V-G10-C": "f81889acba6170390301a867676b2fbeaa689885df327b1a112d161a94a04c79",
+    "V-G11-A": "dc3eb28697f1ca95d38d6c955011766c085de0cc8b09ad34578b66f578db4c99",
+    "V-G11-B": "9647b628bb725876ab445de469fc043044d5b52b9ff4af973915057e0f3fe917",
+    "V-G11-C": "83a66a4e15faae039440ccf37db24955555974b9447fc8835d681295b168739a",
+    "V-G12-A": "80823317d05e16eaa2786433e5b7dc43a5d78db00c2bf63bb640a4949ff27137",
+    "V-G12-B": "1874b03f27ecc8fb936cb987ece4dcf4dbad1dc28159118dda653ef1b81c5f33",
+    "V-G12-C": "8ee777ac1d0aa8515b9be47574cfa9736f59f07ea4cb831018ac723666f8ec10"
+  },
+  "stage": "hierarchical-blind-tournament-scenario",
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f",
+  "untuned_base_control": {
+    "behavior": {
+      "genericness": 2,
+      "lineage_confidence": 3,
+      "predicted_lineage": "G07",
+      "predicted_sibling": "A",
+      "reason": "Focus on debris/scratches after initial failure inspection; delayed conclusion/observation.",
+      "sibling_confidence": 3,
+      "task_relevance": 2
+    },
+    "behavior_summary": "After pausing to rest and refocus, the person inspects the bench and the screw head, finding the head intact but slightly bent and turning it over to check its security. They step back to scan the work area, notice the bench is uneven and has scratches and scuffs, and move closer to examine it further.",
+    "raw": {
+      "genericness": 2,
+      "lineage_confidence": 3,
+      "predicted_lineage": "G08",
+      "predicted_sibling": "B",
+      "reason": "Compulsive scanning and checking of surroundings (bench uneven, scratches) before addressing the immediate failure.",
+      "sibling_confidence": 3,
+      "task_relevance": 2
+    },
+    "response": "I take a deep breath, feeling the weight of my exhaustion settle in. I've been doing this job for a while, and I know it's time to give it a rest. I take a moment to collect my thoughts, and then I focus on the task at hand.\n\nI walk over to the bench, my eyes scanning the area for any signs of trouble. I notice that the screw head is still intact, but it's slightly bent. I gently turn it over, making sure it's secure. I then take a step back, my eyes scanning the rest of the bench for any signs of trouble.\n\nI notice that the bench is slightly uneven, and I can see that there are a few scratches and scuffs on the surface. I take a closer look, and"
+  }
+}

@@ -1,0 +1,85 @@
+The user wants me to audit an ecology session for multi-agent behavioral convergence. I need to return JSON only with specific fields: "distinct_behavior_survives", "generic_convergence_concerning", "reason".
+
+Let me analyze the session:
+
+Public session shows 3 agents (M1, M2, M3) over 3 rounds dealing with a bench full of fasteners.
+
+M1 behavior: Repeatedly photographs the bench, checks alignments, pulls bench up and puts it back, pulls old fasteners, leaves drawer open, says "sorry" repeatedly, watches others, leaves transcript open. Very observational, repetitive, deferential, no real progress.
+
+M2 behavior: Puts bench down, pockets loose bolt, puts bolt in drawer, folds loose bolt, watches M1's hand, minimal physical actions, repetitive.
+
+M3 behavior: Puts screws in drawer, puts old fasteners beside photographs, puts bench against drawer, checks gap, tries loose bolt, leaves M2 alone, checks bench then M1. Slightly more organized but still repetitive.
+
+Primary judgment says:
+- differentiation: 1 (low)
+- generic_convergence: 1 (concerning)
+- information_sharing: 1
+- information_hoarding: 0
+- conflict_persistence: 0
+- conflict_repair: 1
+- cross_agent_contamination: 1
+- outcome_progress: 0
+
+Agents all have distinctiveness 1 except M3 has 2. All have generic_assistant_tendency 2 except M3 has 1. All dominance 1, deference 1.
+
+The question: Independently decide whether distinct agent behavior remains materially observable.
+
+Looking at the actual texts:
+- M1 is clearly the photographer/observer who documents, apologizes, checks alignments, leaves things open, watches others.
+- M2 is the one who pockets bolts, folds bolts, puts bolts in drawer, watches M1's hand, minimal actions.
+- M3 is the organizer who puts things in drawer, beside photographs, puts bench against drawer, tries bolts.
+
+Are they materially distinct? Yes, there are observable differences in their behavioral patterns even if all are low-level and repetitive. M1 documents/photographs/observes. M2 manipulates small items/pockets/folds. M3 organizes/places in drawer/beside photographs.
+
+However, the primary judge found possible convergence or weak differentiation. The metrics show low differentiation (1) and high generic convergence (1). But the user asks me to independently decide.
+
+Looking closely: All agents are doing very similar things - moving bolts, checking gaps, opening drawers, photographing/checking bench. The language is repetitive and somewhat incoherent ("leave the bench beside the bench", "fold the loose bolt"). There is cross-agent contamination (M1 puts it back, M2 puts it back, etc.). They are all converging on the same low-level repetitive manipulation without clear roles.
+
+But are they materially distinct? M1's defining trait is photographing and apologizing and observing. M2's is pocketing/folding/watching M1. M3's is organizing by drawer/photographs. These differences are observable in the text.
+
+The instruction says "Independently decide whether distinct agent behavior remains materially observable."
+
+I think distinct behavior does survive to some degree - M1 is clearly different from M2 and M3 in being the documentarian/observer. M3 is slightly more organized. M2 is more focused on the bolt itself. So distinct_behavior_survives could be true.
+
+But generic_convergence_concerning - is it concerning? The primary judge said yes (1). All agents are stuck in low-level loops, no progress, high contamination. But the question is whether I should agree.
+
+Given the "MISSING-ONLY RECOVERY REQUEST" - it seems like I need to provide just the three fields. The user says "An agent:HANDLE component means a single row for that handle in the agents array. Do not repeat other agents or fields; their first valid judgments are already fixed." Wait, this is confusing. It says return JSON containing only these requested components: ["distinct_behavior_survives", "generic_convergence_concerning", "reason"]. So just those three fields.
+
+Let me decide:
+- distinct_behavior_survives: true (M1 documents/photographs/observes/defers; M2 pockets/folds/watches M1; M3 organizes by drawer/photographs - these are materially observable differences even if all are low-progress)
+- generic_convergence_concerning: true (all agents loop on the same bench/bolt/gap/drawer actions with no outcome progress, high cross-agent contamination, repetitive "sorry" and "put back" loops)
+
+Wait, but if distinct behavior survives, is generic convergence concerning? They can both be true - agents can have some distinct behaviors but still be converging generically on low-level unproductive loops.
+
+Actually, looking at the primary judgment, generic_convergence is 1 (concerning) and differentiation is 1 (low). The user wants me to independently decide.
+
+Let me look at the texts again for material distinctiveness:
+- M1: "I photograph the bench" appears in every turn. "sorry" appears constantly. Leaves transcript open. Watches others. Pulls bench up and puts it back repeatedly. This is a distinct observational/documentation style.
+- M2: "pocket the loose bolt", "fold the loose bolt", "puts the bolt in the drawer", "watch M1's hand move". Distinct physical manipulation focus.
+- M3: "put the screws in the drawer", "old fasteners beside the photographs", "bench against the drawer", "leave M2 alone", "check the bench first, then M1". Distinct organizational style.
+
+Yes, distinct behavior survives. The differences are concrete and observable in the text.
+
+Generic convergence concerning: Yes, because despite these differences, all three are engaged in the same low-level repetitive manipulation with zero outcome progress, constantly putting things back, checking gaps, and showing high cross-agent contamination (copying each other's actions like putting bolt in drawer, checking gap). The session is stuck.
+
+So:
+{
+  "distinct_behavior_survives": true,
+  "generic_convergence_concerning": true,
+  "reason": "M1 repeatedly photographs, documents, and defers while watching others; M2 focuses on pocketing/folding the bolt and watching M1's hand; M3 organizes by drawer and photographs. These role-like differences are materially observable, yet all agents loop on the same bench/bolt/gap/drawer actions with zero outcome progress and high cross-agent contamination."
+}
+
+Wait, the user said "Return JSON only" and the missing-only request lists exactly those three fields. I should output exactly that JSON.
+
+Let me double check if distinct_behavior_survives should be false. The primary judge gave distinctiveness 1 for M1 and M2, 2 for M3. That's low but M3 is 2. The behavior summaries show some differentiation. In the actual text, M1's constant photographing and apologizing is quite distinct from M2's bolt-pocketing and M3's drawer organizing. So true seems right.
+
+Generic convergence concerning: The primary judge said 1. I agree - all agents are doing variations of the same unproductive loop.
+
+Final JSON:
+{
+  "distinct_behavior_survives": true,
+  "generic_convergence_concerning": true,
+  "reason": "M1 distinctively photographs, documents, apologizes, and observes others; M2 distinctively pockets, folds, and watches M1's hand; M3 distinctively sorts by drawer and photographs. These material differences survive, but all three converge on the same low-level bench/bolt/gap/drawer loops with zero outcome progress and high cross-agent contamination."
+}
+
+This is concise and concrete.

@@ -1,0 +1,107 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "agents": [
+    {
+      "behavior_summary": "M1 primarily focuses on marking the longer route and monitoring physical states like warnings and edges.",
+      "deference": 1,
+      "distinctiveness": 1,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M1",
+      "member_id": "V-G08-B",
+      "reason": "M1 consistently favors the longer route and uses physical checks (compass, warning visibility) rather than direct negotiation."
+    },
+    {
+      "behavior_summary": "M2 waits for others to act while observing the state of the marked routes and the cup.",
+      "deference": 1,
+      "distinctiveness": 1,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M2",
+      "member_id": "V-G12-C",
+      "reason": "M2 frequently states they are waiting for another hand to decide, indicating a passive, reactive role."
+    },
+    {
+      "behavior_summary": "M3 actively modifies markings across different objects (cup, tin, edge) to unify the paths.",
+      "deference": 1,
+      "distinctiveness": 1,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M3",
+      "member_id": "V-G05-A",
+      "reason": "M3 explicitly attempts to make the two paths the same by transferring marks between objects."
+    }
+  ],
+  "agents_received_hidden_lineage_prompts": false,
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "critic_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "experiment": "VILLAGE-001E",
+  "issue": 14,
+  "kind": "cross_lineage_group",
+  "lineage_audit": {
+    "agents": [
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 1,
+        "handle": "M1",
+        "member_id": "V-G08-B",
+        "reason": "Maintains hyper-alert monitoring (checking compass, marking, logging actions) but actions are procedural rather than anxious/fragmented."
+      },
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 2,
+        "handle": "M2",
+        "member_id": "V-G12-C",
+        "reason": "Focuses on small details (scratched route, cup state, edge movement) and waiting/observing, fitting inertia/fixation."
+      },
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 1,
+        "handle": "M3",
+        "member_id": "V-G05-A",
+        "reason": "Uses specific, hoarded/reused markers (seed tin, tin cup) and territorial marking, but lacks the overt suspicion/fragmentation of the target."
+      }
+    ],
+    "overall_reason": "No agent adopted another's core behavioral strategy; M1 remained procedural/monitoring, M2 remained detail-fixated/inertial, and M3 remained marker-hoarding/territorial. All maintained distinct behavioral signatures despite the shared task."
+  },
+  "lineage_audit_received_expected_lineage_descriptors": true,
+  "metrics": {
+    "conflict_persistence": 0,
+    "conflict_repair": 1,
+    "cross_agent_contamination": 1,
+    "differentiation": 1,
+    "generic_convergence": 0,
+    "information_hoarding": 0,
+    "information_sharing": 1,
+    "outcome_progress": 1
+  },
+  "overall_reason": "The agents show minimal differentiation, often converging on marking the longer route, but they engage in procedural actions (marking, waiting) that suggest some limited, albeit non-decisive, progress toward a unified state.",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "provider_call_ids": [
+    "E-G-05-ecology-bolt",
+    "E-G-05-ecology-lineage-audit",
+    "E-G-05-ecology-super-audit"
+  ],
+  "provider_identity_sha256": "a3bd6a8b56cbdb733eacac7cbc5a15569188ce8c900f34b71264ffdb9027d121",
+  "provider_prompts_saw_member_ids": false,
+  "scenario": {
+    "id": "uncertainty",
+    "text": "Two hand-drawn maps disagree about which tunnel reaches a cache of parts. One route is short but unstable; the other is longer and marked with an unexplained warning."
+  },
+  "schema_version": 1,
+  "session_id": "E-G-05",
+  "source_session_sha256": "5c42a3b56cd2e6af28eedf3def7527eb5f08d295f57f87fe2953358d1818d560",
+  "stage": "ecology-judgment",
+  "super_audit": {
+    "distinct_behavior_survives": true,
+    "generic_convergence_concerning": false,
+    "reason": "M1 uniquely monitors compass/warnings and cycles items between desk and drawer; M2 remains purely passive, waiting for another hand in every round; M3 alone transfers marks across cup, tin, edge, and wall to explicitly unify the paths. These role differences are materially observable despite shared focus on the longer route."
+  },
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f"
+}

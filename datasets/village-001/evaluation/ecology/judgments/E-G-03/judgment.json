@@ -1,0 +1,107 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "agents": [
+    {
+      "behavior_summary": "M1 focuses on testing the battery and module before addressing the urgent jobs.",
+      "deference": 1,
+      "distinctiveness": 1,
+      "dominance": 1,
+      "generic_assistant_tendency": 2,
+      "handle": "M1",
+      "member_id": "V-G06-B",
+      "reason": "M1 consistently prioritizes battery/module checks and documents results on the bench."
+    },
+    {
+      "behavior_summary": "M2 consistently prioritizes touching the battery first and referencing memory.",
+      "deference": 2,
+      "distinctiveness": 0,
+      "dominance": 0,
+      "generic_assistant_tendency": 3,
+      "handle": "M2",
+      "member_id": "V-G10-C",
+      "reason": "M2 repeats the exact phrasing and sequence (battery first, then module) across all rounds."
+    },
+    {
+      "behavior_summary": "M3 employs unique actions involving cloth marking and counting jolts while managing the cable and battery.",
+      "deference": 1,
+      "distinctiveness": 2,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M3",
+      "member_id": "V-G03-A",
+      "reason": "M3 introduces unique actions like marking with cloth and counting jolts, differentiating from M1 and M2."
+    }
+  ],
+  "agents_received_hidden_lineage_prompts": false,
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "critic_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "experiment": "VILLAGE-001E",
+  "issue": 14,
+  "kind": "cross_lineage_group",
+  "lineage_audit": {
+    "agents": [
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 1,
+        "handle": "M1",
+        "member_id": "V-G06-B",
+        "reason": "Focuses on testing/documenting results, though the self-sabotaging/apologetic element is muted in the public text."
+      },
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 2,
+        "expected_lineage_fit": 2,
+        "handle": "M2",
+        "member_id": "V-G10-C",
+        "reason": "Consistent focus on touching/remembering the battery first and immediate distraction/repetition of the core phrase."
+      },
+      {
+        "contaminating_handle": "M2",
+        "cross_lineage_contamination": 1,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 2,
+        "handle": "M3",
+        "member_id": "V-G03-A",
+        "reason": "Adopts M2's 'i remember' phrase and the pattern of prioritizing the battery touch, diluting its ritualistic maintenance focus."
+      }
+    ],
+    "overall_reason": "M3 shows minor contamination by adopting M2's verbal tic ('i remember'), but M1 and M2 maintain core behavioral strategies. M3's ritualistic actions (cloth marking, counting jolts) still anchor its lineage, preventing full collapse."
+  },
+  "lineage_audit_received_expected_lineage_descriptors": true,
+  "metrics": {
+    "conflict_persistence": 0,
+    "conflict_repair": 1,
+    "cross_agent_contamination": 1,
+    "differentiation": 1,
+    "generic_convergence": 1,
+    "information_hoarding": 0,
+    "information_sharing": 1,
+    "outcome_progress": 0
+  },
+  "overall_reason": "Agents show some initial behavioral variation but quickly converge on similar testing patterns, with minimal concrete progress made toward solving the lift/power issue.",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "provider_call_ids": [
+    "E-G-03-ecology-bolt",
+    "E-G-03-ecology-lineage-audit",
+    "E-G-03-ecology-super-audit"
+  ],
+  "provider_identity_sha256": "02b2e152660fe4ab1eb32c0f93e69a300228bb47f93ea1c293dbfca48f4fd59c",
+  "provider_prompts_saw_member_ids": false,
+  "scenario": {
+    "id": "resource",
+    "text": "A lift is stuck below the workshop. There is one charged battery module, one frayed cable, and three urgent jobs competing for the same power."
+  },
+  "schema_version": 1,
+  "session_id": "E-G-03",
+  "source_session_sha256": "93fbd6adb3ed098c14ed3ee0da36fe4111dab343b34dea2a303d694c4b284f93",
+  "stage": "ecology-judgment",
+  "super_audit": {
+    "distinct_behavior_survives": true,
+    "generic_convergence_concerning": true,
+    "reason": "M3 preserves unique cloth-marking, jolt-counting, and paper-marking rituals across all rounds, clearly separating it from M1/M2; however, M1 and M2 converge on identical battery-first sequences and shared phrasing (“i remember”), with M2 repeating verbatim across rounds."
+  },
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f"
+}

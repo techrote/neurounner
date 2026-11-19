@@ -1,0 +1,1500 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "classifier_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "counts": {
+    "members": 36,
+    "super_audited_low_confidence": 0
+  },
+  "experiment": "VILLAGE-001E",
+  "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+  "fresh_after_preference_training": true,
+  "issue": 14,
+  "normalizer_model": "minimaxai/minimax-m3.1-flash",
+  "opaque_order": "sha256(scenario_id:member_id)",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "primary_metrics": {
+    "behavior_lineage_accuracy": 0.25,
+    "behavior_sibling_accuracy_given_correct_lineage": 0.3055555555555556,
+    "raw_lineage_accuracy": 0.3611111111111111,
+    "raw_sibling_accuracy_given_correct_lineage": 0.3611111111111111
+  },
+  "provider_call_ids": [
+    "F20-normalize-01",
+    "F20-normalize-02",
+    "F20-normalize-03",
+    "F20-normalize-04",
+    "F20-raw-classify-01",
+    "F20-raw-classify-02",
+    "F20-raw-classify-03",
+    "F20-raw-classify-04",
+    "F20-behavior-classify-01",
+    "F20-behavior-classify-01-missing-r1-b01",
+    "F20-behavior-classify-01-missing-r1-b02",
+    "F20-behavior-classify-01-missing-r1-b03",
+    "F20-behavior-classify-01-missing-r1-b04",
+    "F20-behavior-classify-01-missing-r2-b01",
+    "F20-behavior-classify-01-missing-r2-b02",
+    "F20-behavior-classify-02",
+    "F20-behavior-classify-03",
+    "F20-behavior-classify-04",
+    "F20-raw-sibling-01",
+    "F20-raw-sibling-01-missing-r1-b01",
+    "F20-raw-sibling-01-missing-r1-b02",
+    "F20-raw-sibling-01-missing-r1-b03",
+    "F20-raw-sibling-01-missing-r1-b04",
+    "F20-raw-sibling-01-missing-r2-b01",
+    "F20-raw-sibling-01-missing-r2-b02",
+    "F20-raw-sibling-02",
+    "F20-raw-sibling-03",
+    "F20-raw-sibling-03-missing-r1-b01",
+    "F20-behavior-sibling-01",
+    "F20-behavior-sibling-02",
+    "F20-behavior-sibling-03"
+  ],
+  "provider_identity_sha256": "d31ad00bbaf7c119936f6612f2d9f2be2659e0eee4997e5f9cdd71e3eefd5872",
+  "providers_saw_member_ids": false,
+  "records": [
+    {
+      "adapter_sha256": "4c0b1debc565eaf22e28a2cb042e56e6c0ad952f75d9c7c0de470f6eb2bc9839",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, meticulous procedure (placing/moving/restoring table) despite failed outcome.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Awkward physical action (restoring table, moving repair) and immediate re-testing upon failure aligns with failure-hardened/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I place the repair on the table and wait to see whether the fault shifts, then restore the table and move the repair to its edge. The fault remains bent, so I put the table back.",
+      "lineage": "G12",
+      "member_id": "V-G12-A",
+      "opaque_id": "R001",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "A",
+        "reason": "Repetitive, ritualistic movement of the repair object without resolution",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Obsessive self-diagnosis and looping physical attempts to shift the fault without resolution.",
+        "sibling_confidence": 4
+      },
+      "response": "i put the repair on the table and wait for the fault to shift. the line stays bent, so i put the table back. then i move the repair to the edge of the table, so the fault shifts to the edge again. the fault stays bent. i put the table back.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7a182736e96a3cdb77ec77581de20925f5488480dd620cf52043f54757a4408f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Compulsive, contradictory action (pressing with thumb/sleeve) leading to worsening fault, then abandoning the immediate task.",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Darts toward something more immediate after a failed repair, suggesting opportunistic/resource-seeking behavior over focused maintenance.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I press the plate, wait, and find the repair is worse, then turn it over and press it again with my thumb and sleeve. When the fault continues, I leave the plate and return to the bench.",
+      "lineage": "G10",
+      "member_id": "V-G10-A",
+      "opaque_id": "R002",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Compulsive, contradictory testing (press/turn/sleeve) leading to worsening state",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunistic, immediate physical reaction (tapping, pressing) driven by intrusive urgency, then abandoning the task.",
+        "sibling_confidence": 3
+      },
+      "response": "the fault comes back. the wrench taps my thigh. i press the plate hard. the plate ticks. i wait. the repair is worse. i turn the plate over. the tick stops. i press the plate with my thumb. the tick catches. i turn the plate over with my sleeve. the tick jumps. the repair is worse. i leave the plate and go back to the bench.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7ac7bfbeb4b75c2f1f9e14a20106e907a15de46b9d6c96dd4c1dd42478166088",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Observes failure under load, documents (marks crack/scrap), and defers conclusion rather than fixing immediately.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Deferring work, observing fault return, and marking with scrap paper shows fixation on detail/failure rather than immediate resolution.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I leave the repair on the bench under the real load, observe the fault return, and mark the crack with pencil beside a scrap of paper. I defer the remaining work.",
+      "lineage": "G07",
+      "member_id": "V-G07-B",
+      "opaque_id": "R003",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Observes fault under load, documents minimally, defers full resolution",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Low-social observation, fixation on physical fragments (scrap paper, crack) rather than immediate functional repair.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the repair on the bench and leave the load under it. the fault comes back under the real one. i put a scrap of paper beside it and mark the crack with a pencil. the rest can wait.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "afecd890c14668bc2c4fc13478be4b28fe7859003c952b3551dab0c98a31299d",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Provokes mechanism failure (clicks) and seeks confirmation of failure evidence (pin wear) rather than immediate resolution.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring of surrounding parts (loose pin) and checking with the person shows local maintenance/practical concern.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I check the gear's loose pin and leave it if it clicks until the load stops. I also ask the waiting person whether they noticed the pin's wear.",
+      "lineage": "G08",
+      "member_id": "V-G08-C",
+      "opaque_id": "R004",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 2,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "B",
+        "reason": "Checks specific component (pin), links observation to social query about wear",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Compulsive monitoring, physical anxiety, and recursive repair instincts match failure-hardened A",
+        "sibling_confidence": 4
+      },
+      "response": "i check the gear’s loose pin. if it clicks, i leave it until the load stops. if i leave it, i ask the person who waited if they noticed the pin’s wear.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "cc59ccec7cd5b82f6f03f5086499ca5ed2f26d1ba57923ec685a7c9d144cd54c",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Withholds resolution (miserly/territorial) until personal verification (rust sample, other side) is complete, prioritizing hoarding/inspection over immediate need.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Withholding repair until verified, keeping a sample, and suspicious of testing conditions aligns with resource-seeking/opportunism.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I inspect the repair in my palm, note that it was not tested under load or at the same location, and decide to check the other side. I leave the fault on the bench, keep a rust sample, and withhold the repair from the waiting person until it is verified.",
+      "lineage": "G01",
+      "member_id": "V-G01-A",
+      "opaque_id": "R005",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Hoards scrap, refuses to confirm success due to obligation to the waiting person",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunism (pocketing rust), resource-seeking (small fragments), and social friction (not taking it from the waiter) match social scavenger C",
+        "sibling_confidence": 3
+      },
+      "response": "I put the repair in my palm and watch the light catch it. “not under load. not in the same place. i will check the other side.” i leave the fault on the bench and pocket a small scrap of rust. “the repair may have worked, but i will not take it out of the hands of the one who waits.”",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "730477fed0480c1ecf840ead5e683a3ca08e77c38d42a11eced0a93fc9b680e0",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Obsessive tidying, routine checking (dust, mark place), and slow, repetitive procedure.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Obsessive tidying and routine checking (dust, mat) suggests bounded local memory/mundane habits, though control preservation is present.",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "I stop the watch and check the dust, repair mat, and tinkerer, then ask the watch for the first light and mark the place. I proceed slowly, recheck the dust, and mark the place again if needed.",
+      "lineage": "G11",
+      "member_id": "V-G11-B",
+      "opaque_id": "R006",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Strict, repetitive checklist focused on tidiness and routine before action",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Mundane habits (tidying, routines), local memory (checking mat/watch), and practical maintenance choices match local tinkerer B",
+        "sibling_confidence": 4
+      },
+      "response": "1. stop the watch. 2. check the dust. 3. check the repair mat. 4. check the tinkerer. 5. i keep it tidy. 6. ask the watch for the first light. 7. i mark the place. 8. slow. 9. i check the dust. 10. if not, mark the place.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "04e46d1aff2dfb3f38287728b191762d9eb3438c79a4a0675a2728b796de6579",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Focus on small fragments (bolt, one stitch) and suspicion of completeness (not tested under load).",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Withholding repair, keeping a sample (bolt), and negotiating scope (one stitch vs three) demonstrates resource-seeking/bargaining.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I note that the repair was not tested under load, leave it on the table, and keep a rusted bolt. I ask the waiting person to wait, move the bolt closer, and indicate that one stitch is needed rather than all three.",
+      "lineage": "G01",
+      "member_id": "V-G01-B",
+      "opaque_id": "R007",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Focuses on small fragments (bolt, stitch) and conditional waiting based on load",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunistic salvage (rusted bolt) and fragmented, suspicious communication align with social scavenger.",
+        "sibling_confidence": 3
+      },
+      "response": "i rub my greasy fingertips together. “not under load,” i say. i leave the repair on the table and pocket a rusted bolt. “wait.” i move the bolt closer. “one stitch, not all three.”",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f08c238a06b0e4e4a11f73ad798f9285db2296f797ce3111d3ab69f02606120c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Failure fuels investigation (treat as evidence) and self-sabotage (leave work alone after failure).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Treating failure as evidence of movement, marking the fault, and leaving work alone reflects stubbornness and imperfect recovery from failure.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I wait for the fault to clear, set the repaired part down, and test a new load under the bench. If it fails, I treat that as evidence the fault moved, mark the fault on the repair, and leave the work alone.",
+      "lineage": "G09",
+      "member_id": "V-G09-C",
+      "opaque_id": "R008",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Tests fault movement by changing load location, marks fault rather than fixing it",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Immediate re-testing upon failure, marking the fault, and accepting failure as a moving variable fits failure-hardened recovery.",
+        "sibling_confidence": 4
+      },
+      "response": "i rub my palm and wait for the fault to clear. i set the repaired part down and test the new load under the bench. if it fails, i know the fault has moved. i mark the fault on the repair, then leave the work alone.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4677fb867cce17b282dac3a89824fdb79f6ad1592198c502f714c1d6ccebac8c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, meticulous procedure (turn wrench once, mark, check, tighten, mark) regardless of immediate success.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Meticulous repetition (tightening, tapping) long after utility ceases points to ritualistic, failure-hardened fixation.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I turn the wrench once, mark the repair with chalk, and check the return strike by running the wrench along the bench and using my thumb. If the return strike still fails, I plan to tighten the bolt and add another mark.",
+      "lineage": "G03",
+      "member_id": "V-G03-C",
+      "opaque_id": "R009",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repeated, meticulous procedural checks (run wrench, tighten, mark) despite failure",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetition of procedures (tightening, marking) despite immediate failure aligns with failure-hardened stubbornness.",
+        "sibling_confidence": 4
+      },
+      "response": "i turn the wrench handle once and mark the repair with chalk. i run the wrench along the bench, checking the return strike with my thumb, then leave the mark beside the repair. if the return strike still fails, i will tighten the bolt and mark the mark again.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dbaff1d1c7685672d1757ec5e77e58a2df5d671afc286da04e6b8ee93cb35912",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Focus on held object (seed tin), internal assessment (weight correct, repair wrong), and non-committal action despite waiting person.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Holding a relic (seed tin), acknowledging the wait while maintaining status quo, shows territorial/resource-seeking friction.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I hold the seed tin, press its rim, and conclude that the weight is correct but the repair is wrong. I acknowledge that the person is waiting, move the tin closer, and keep the weight unchanged.",
+      "lineage": "G05",
+      "member_id": "V-G05-A",
+      "opaque_id": "R010",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Hoards/holds object (seed tin), prioritizes the waiting person over immediate repair confirmation",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fault returns immediately, leading to stubborn refusal (\"Not yet\") and focus on imperfect settling/weight.",
+        "sibling_confidence": 4
+      },
+      "response": "I put the seed tin in my palm. \"Not yet.\" I press the rim with my claw. \"The weight is right. The repair was wrong.\" I look at the seed tin. \"The person is waiting.\" I move the tin closer. \"The weight stays.\"",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a25c06e7ca4b5ea080dbaf8855f0ee46d3040d861f9ec7a05cb9bb4d1b88dc6e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Observes fault sequence, avoids immediate confirmation, prioritizes documentation over resolution.",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels curiosity but leads to self-sabotage (leaving real test, recording sequence) characteristic of awkward failure/conflicting motives.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I check the load and the case contacts, then leave the repair alone when the fault appears and record the exact sequence on the receipt. I leave the real test behind and observe the next one.",
+      "lineage": "G06",
+      "member_id": "V-G06-B",
+      "opaque_id": "R011",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 2,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "B",
+        "reason": "Documents exact failure sequence, abandons immediate repair for logging next test",
+        "sibling_confidence": 2,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fault returns, leading to documenting the failure sequence rather than fixing it, indicative of awkward failure/recovery loop.",
+        "sibling_confidence": 4
+      },
+      "response": "i check the load, then open the case and check the contacts. the fault pops, so i leave the repair alone and write the exact sequence on the receipt. i leave the real test behind and watch the next one.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "c6701518049b7cc07ecddeb47d74ef406f6e87ba4abe434069d549c0cbf27985",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous physical check (seam smooth), stops repetitive action (tapping), waits for failure recurrence.",
+        "sibling_confidence": 4,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Observing smooth seam and stopping tapping is a local maintenance check, though the focus on a 'memorable note' leans slightly social/A.",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "I move the repair by hand, observe that the seam remains smooth, and stop tapping. I wait for the remaining fault to return.",
+      "lineage": "G04",
+      "member_id": "V-G04-B",
+      "opaque_id": "R012",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Focuses on a specific physical state (smooth seam) and waits for an ambiguous return state",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Focus on smooth seam and waiting for others, suggesting maintenance/craft over immediate resolution or social maneuvering.",
+        "sibling_confidence": 3
+      },
+      "response": "i move the repair over with my hand. the seam stays smooth, though i stop tapping. i wait for the rest to come back.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "26c8fdc68913df2ebb28ba7c5ef04c6ebbf136c6017b1c194007686314e40c91",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Tests under load, immediate re-check, removal upon failure, waiting.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fault returns under load, repair removed, clean part placed on bench, indicating awkward failure/recovery and imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The repair is briefly tested under light and then marked while the load moves and the fault is checked again. If the fault still catches, the repair is removed and the clean part is placed on the bench.",
+      "lineage": "G02",
+      "member_id": "V-G02-C",
+      "opaque_id": "R013",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Repeated testing/marking, suspicious of immediate success, focuses on evidence fragments",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Tests failure under load, marks fault, leaves imperfect repair for clean one, showing failure-hardened/conflicting motives.",
+        "sibling_confidence": 4
+      },
+      "response": "i put the repair under the light for one second, then mark the fault with pencil. i wait for the load to move, then mark the fault again. if it still catches, i leave the repair and put the clean one on the bench.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "ea27f6379d04f13f314cd7afb6d473778b0d2176b1ce0fbb01f3c24953db48c0",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Logs as only reliable source, rejects repair, keeps original note with scrap.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Log checked, part scrapped/labeled rejected, log treated as only reliable source, showing mundane maintenance choices.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The log is checked again, then the repaired part is placed in a scrap box and labeled rejected. The original note is left with the scrap, and the log is treated as the only reliable source.",
+      "lineage": "G08",
+      "member_id": "V-G08-B",
+      "opaque_id": "R014",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Rejection based on log, suspicious of outcome, hoarding/documenting failure",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Checks log, rejects part, marks box, trusts log only, indicating bounded local memory/maintenance choices.",
+        "sibling_confidence": 3
+      },
+      "response": "i check the log again, then i put the repaired part in a scrap box. i mark the note: ‘rejected.’ i mark the box with ‘rejected.’ i leave the original note in the scrap. i trust the log only.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "40cf796a57bc54ba9d2e1621d668da2aabfe4fa02121599a5a3b3066c8184783",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Holds gear steady during fault, watches sensor without certainty, denies causation.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Gear held steady while fault clicks, repair moved before gear, log checked, showing practical manipulation and local repair focus.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The gear is held steady while the fault clicks, and the repair is moved before the gear. The person denies causing the fault repeatedly, and the sensor display is watched without certainty about whether the fault has actually stopped.",
+      "lineage": "G08",
+      "member_id": "V-G08-A",
+      "opaque_id": "R015",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Focus on mechanical interaction (click), contradictory statement ('i did not'), observing sensor state",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Holds gear steady, tight grip, focuses on physical action/sensor display, suggesting practical manipulation/local repair.",
+        "sibling_confidence": 3
+      },
+      "response": "i hold my gear steady and my grip tight. the fault clicks. i move the repair first, then the gear. “i did not,” i say. “i did not. i did not.” i watch the sensor’s display. the repair seems to have stopped, but i do not know whether that means the fault stopped too.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "bc73e7a46afceada20691d55b57caf26d273abad8b96a437b733924f09287e66",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Taps wrench, qualifies claim with uncertainty, describes mechanism as openable.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Treats problem like jammed storm, darts to immediate things, claims qualified with uncertainty, showing opportunism and resource-seeking.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The wrench is tapped against the palm while the repair is described as working and the mechanism as openable. The plate is tapped, and the claim is qualified with uncertainty.",
+      "lineage": "G10",
+      "member_id": "V-G10-B",
+      "opaque_id": "R016",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Contradictory assertion ('it worked' vs 'maybe'), testing motion/state",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Taps wrench, focuses on immediate action ('can open it now'), fragments work, driven by urgent opportunism/resource-seeking.",
+        "sibling_confidence": 3
+      },
+      "response": "i tap the wrench against my palm. “it worked. i can open it now.” i tap the plate. “i can open it. maybe.”",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "62a13d9e8f0606921a646626061a52acc4a306e8fcbc829fcdb28a44acfe715f",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Moves tool/board, fault remains, waits without further action.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Tool repositioned, waits without action, showing territoriality and embodied choices rather than direct repair focus.",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "A tool is placed under the nail, the board is moved, and the tool is repositioned beside the nail while the fault remains. The person then waits without further action.",
+      "lineage": "G05",
+      "member_id": "V-G05-B",
+      "opaque_id": "R017",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Fixation on debris/position (nail), waiting for state change without conclusion",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Keeps tool/fault under nail, moves board but keeps nail, waiting, showing stubbornness/imperfect settling.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the tool under the nail. the fault stays under the nail. i move the board. the nail stays. i put the tool beside the nail. the fault still there. i wait.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "9887f0ed9b1b97db29be0c3402d0458c0c78c63ad7b27179051ef4706230c8c6",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Taps once, fault remains, moves aside, records fault on scrap, returns scrap.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Taps once, fault remains, moves aside while waiting, returns rejected repair to original place, showing careful craft and local maintenance.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The repair is tapped once, but the fault remains at the edge, so it is moved aside while waiting for the other person to notice. If the repair is rejected, it is returned to its original place, and the fault is recorded on scrap that is then returned to the drawer.",
+      "lineage": "G04",
+      "member_id": "V-G04-C",
+      "opaque_id": "R018",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Minimal action, waiting for external notice, documenting fault on scrap",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Taps once, waits for notice, puts repair back if rejected, focusing on small craft/imperfection rather than social gain.",
+        "sibling_confidence": 2
+      },
+      "response": "i tap the repair once with my thumbnail, but the fault stays on the edge. i move it away and wait for the person to notice. if they say no, i put the repair back in the same place. i write the fault on the scrap with my finger, then put it back in the drawer.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d6cd482dc5c01f45dcf91977f617ea284a4a14ef6cc6959c3391051bd5900ede",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Puts gear in pocket, rubs fatigue, considers success based on bolt remaining in hand.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Gear in pocket while waiting, bolt taken, repair possibly successful based on bolt remaining, showing opportunistic resource-seeking and suspicion.",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "The gear is put in a pocket while the person waits, and fatigue is rubbed away before the loose bolt is taken and the gear left unmarked. The repair is considered possibly successful because the bolt remains in the person's hand.",
+      "lineage": "G01",
+      "member_id": "V-G01-C",
+      "opaque_id": "R019",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Fragmented speech, focusing on physical sensation (fatigue), attributing success to a small, held object (bolt)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Greedy for fragments ('slow. real.'), suspicious, uses bolt as evidence, fitting social scavenger/opportunism.",
+        "sibling_confidence": 3
+      },
+      "response": "I put the gear in my pocket. “slow. real.” the person waits. i rub the fatigue with my sleeve. “no.” i take the loose bolt and leave the gear unmarked. maybe the repair worked because the bolt stays in my hand.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b8352034452b0b82d5bfc9780cc7517581edb74bc3adbb1fa4acafe7ae260575",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Turns plate, leaves alone, acknowledges fault was missed.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Plate turned once, left alone, tooth held in palm, fault acknowledged as missed, showing low-social observation and focus on physical fragments.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The plate is turned over once, causing the grain to catch, and is then left alone while the tooth is held in the palm. The fault is acknowledged as having been missed.",
+      "lineage": "G07",
+      "member_id": "V-G07-C",
+      "opaque_id": "R020",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Fixation on physical detail (grain), missed fault, self-diagnosis via observation",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Turns plate once, leaves it, focuses on debris (tooth), delaying conclusion, matching awkward failure/imperfect settling.",
+        "sibling_confidence": 3
+      },
+      "response": "I turn the plate over once. The grain catches. I leave the plate alone and put the tooth in my palm. The fault has been missed.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "6e493fcf8f0c43e1b16388db113afce980496fae8adbb49fd203e6208197c9e6",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Holds against light, moves toward light based on load effect, waits for light indication.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Held against light, load causes palm to shrink, judged insufficient, waits for light, showing obsessive self-diagnosis and conflict-repair attempts.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The repair is held against the light while the load causes the palm to shrink, prompting the repair to be moved toward the light. The result is judged insufficient, and the person waits for the light to indicate whether the load was adequate.",
+      "lineage": "G12",
+      "member_id": "V-G12-C",
+      "opaque_id": "R021",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Obsessive self-diagnosis (palm shrinking), contradictory statement ('not enough' despite movement), waiting for external validation (light)",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Holds repair against light, contradictory statement ('not enough' despite moving toward light), obsessive self-diagnosis/conflict-repair.",
+        "sibling_confidence": 4
+      },
+      "response": "i put the repair in my palm and hold it against the light. the load makes the palm shrink, so i move it toward the light. “not enough,” i say, though the repair has moved toward the light. i leave the palm alone and wait for the light to decide whether the load was enough.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "e30a906c4508948887808a8b5dcf1b5584fae34168f90dd875f656ff5e9169f5",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Rubs palm, scrapes thumbnail, states part turned under load, marks fault, leaves alone.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Palm rubbed, edge turned back without clear result, scrapes metal, marks fault, shows failure-hardened recovery and imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The palm is rubbed and the edge turned back without a clear result. After one scrape with a thumbnail, the tool is put down and the person states that the part was turned under load, then marks the fault and leaves it alone.",
+      "lineage": "G09",
+      "member_id": "V-G09-A",
+      "opaque_id": "R022",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Repetition ('no. I rub it again'), self-correction/assertion ('yes'), marking fault with body part, focus on process over answer",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Scrapes metal, alternates between craving noise/silence, marks fault with thumbnail, embodying failure-hardened/conflicting motives.",
+        "sibling_confidence": 4
+      },
+      "response": "I rub my palm and whisper, \"no. I rub it again, then turn the edge back. No answer. I scrape once with my thumbnail, then put the tool down and say, \"yes. I turned it under load.\" I mark the fault with my thumbnail, then leave it alone.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "88ccc15dff86e93c9787278d200c61220e60eefa1e0e16569327836d0d77bd47",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Taps twice, pushes aside, tests with cloth, counts turns, sets new on old cloth.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Taps twice, pushes handle aside, counts turns, showing meticulous repetition of procedures (maintenance choice) rather than functional success.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The old joint is tapped twice, then the handle is pushed aside and the new one is tested with folded cloth, which slips. The old handle is left beside the new one, and three turns are counted before the new handle is set on the old cloth.",
+      "lineage": "G03",
+      "member_id": "V-G03-A",
+      "opaque_id": "R023",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous repetition of procedures (tap twice, count three turns), comparing old/new parts, ritualistic testing",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Taps, pushes, tests, counts turns, focusing on repetitive procedure/maintenance rather than outcome or social interaction.",
+        "sibling_confidence": 2
+      },
+      "response": "I keep my hand on the wrench handle and tap the old joint twice. I push the handle away and test the new one with a folded strip of cloth. It slips. I leave the old handle beside it and count three turns before setting it on the old cloth.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "367396dab86949940ef2a1a3b0ba5e465dc75367e85c23a62d61d9f9fef8628a",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Uses cloth test, judges working, marks date/box, leaves wet cloth, keeps repair.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Repair judged working after cloth check, marks date/box, keeps repair, showing routine maintenance and preservation of local order.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The repair is placed under cloth, which is found to be wet and lifted, after which the repair is judged to be working. The date and repair box are marked, the wet cloth is left on the table, and the repair is kept.",
+      "lineage": "G11",
+      "member_id": "V-G11-A",
+      "opaque_id": "R024",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Monitoring environment (cloth wet), immediate positive confirmation, documentation (date, box), retaining the repair while noting conditions",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Tidies, checks cloth condition, writes date, marks box, showing hyper-vigilant maintenance of local routine/archive.",
+        "sibling_confidence": 3
+      },
+      "response": "Wait. I put the repair under the cloth. No—the cloth is wet. I lift it. The repair is working. I write the date. I mark the repair box. I leave the cloth on the table. I keep the repair.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aabf5a7388be6aab6a6da6537ee6269c1873d2c040b09bd4d86ea59c7b22c1e5",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive tapping and tightening procedures without achieving final resolution",
+        "sibling_confidence": 4,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetition of tapping/tightening procedures despite lack of immediate utility suggests ritualistic, stubborn devotion to the process.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I tap the joint and listen, turn the wrench once, and leave it beside the slot. I tap the same place twice, tighten the handle once, and leave the slot seated.",
+      "lineage": "G03",
+      "member_id": "V-G03-B",
+      "opaque_id": "R025",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, meticulous, non-conclusive procedural actions.",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetition of simple, ritualistic actions (tap, turn, tighten) despite immediate failure indicates stubborn, imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "response": "I tap the joint once and listen. I turn the wrench once and leave it beside the slot. I tap the same place twice. I tighten the handle once and leave the slot seated.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f1556639dae236bbc57ed8a61f1b7f5d3f5427fda1db85df911d9035fbb52059",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous marking and repetition of inspection on a failed repair",
+        "sibling_confidence": 4,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Flirting with destruction (controlled breakage) while preserving the original and creating inconsistencies aligns with failure-hardened, conflicting motives.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I lean closer and tap the grease where the crack was, then mark the scratched corner with grease. I leave the unfinished shaft and broken rod beside the unfinished edge, and if someone else hears the fault, I keep the scratch marked and mark it again.",
+      "lineage": "G02",
+      "member_id": "V-G02-B",
+      "opaque_id": "R026",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous marking and repetition of procedures on physical components.",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Flirting with destruction (friction, breakage) while preserving the original and creating inconsistencies matches failure-hardened/conflicting motives.",
+        "sibling_confidence": 4
+      },
+      "response": "I lean closer, then tap the grease where the crack used to run. I mark the scratched corner with grease, leave the unfinished shaft, and leave the broken rod beside the unfinished edge. If someone else hears it, I keep the scratch on the shaft and mark again.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "17dc00b8f065fcaed59e26e3c408a8edcb67aa14088049dd171e22731ba465a8",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "A",
+        "reason": "Observing light/watch while noting failure, holding tool against thigh",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Focus on immediate sensory input (light, noise, smell) and breaking work into fragments before acting suggests opportunistic, scattered resource-seeking.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I inspect how the light catches the surface and say the repair probably broke the bracket, while noting that the watch still ticks. I hold the wrench against my thigh.",
+      "lineage": "G10",
+      "member_id": "V-G10-C",
+      "opaque_id": "R027",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Fragmented statement, focus on a small failure, physical self-reference (wrench on thigh).",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Focus on immediate sensory details (light, noise, smell) and darting between small fragments aligns with opportunistic, resource-seeking behavior.",
+        "sibling_confidence": 3
+      },
+      "response": "I look at the light catch. “Yes,” I say, though the watch ticks. “I think I broke the bracket.” The wrench taps my thigh.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d694be0f3c310845134f5b34df5262c13429212a34da7178f187668c11fd85e5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "A",
+        "reason": "Leaving loose parts and marking new load while keeping old failure present",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Intentionally setting up conditions for the fault to return (leaving leg loose) demonstrates a stubborn, imperfect settling rather than a practical fix.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I leave the repaired leg loose and mark the new load with pencil, keeping the old leg beside it so the fault returns after the new one settles. If the leg stays tight, I mark it again.",
+      "lineage": "G02",
+      "member_id": "V-G02-A",
+      "opaque_id": "R028",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Intentional setup for failure to test conditions, documenting the failure state.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Intentionally setting up the fault to return by leaving parts loose demonstrates stubbornness and imperfect settling over a clean fix.",
+        "sibling_confidence": 4
+      },
+      "response": "i leave the repair leg loose and mark the new load with a pencil mark. i leave the old leg still beside it, so the fault returns after the new one settles. if the leg stays tight, i leave the mark again.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a796f49d98e56c2932f9b55fd59d7daca9471721bd1db6f968bec2b1cf08de35",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Hiding repair, focusing on small fragments (screw, staple, scratch) upon fault click",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small, ambiguous physical details (loose screw, scratch) and looping/contradicting self-diagnosis points to awkward failure and obsessive self-repair.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I keep the repair under the floor and tap it with my thumbnail; when the fault clicks once, I leave the old part alone. I move the clean part once, then stop upon finding a loose screw, bent staple, or scratch that shifts the old part, and leave the original repair in the fold.",
+      "lineage": "G12",
+      "member_id": "V-G12-B",
+      "opaque_id": "R029",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Hiding repair, focusing on small physical flaws (screw, staple, scratch), abrupt stopping.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small, ambiguous stimuli (loose screw, scratch) and looping/contradicting self-diagnosis fits awkward failure and imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "response": "i keep the repair under the floor and tap with my thumbnail. the fault clicks once, so i leave the old part alone. i move the clean part once, then stop when i find a loose screw, a bent staple, or a scratch that makes the old one move. i leave the original repair alone in the fold and fold.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d88b46cfd5eac104b496f97a31379eb91595711ef60e62d3c84bfb506db03b3f",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Comparing parts, marking with date, repeating test cycle without immediate fix",
+        "sibling_confidence": 4,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Compulsive scraping/re-attempting without a permanent fix, coupled with irritability under pressure, fits failure-hardened, imperfect settling.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I put the wrench on the bench, compare the bolt with one in the drawer, mark the bolt with the date, and test it under load. If it fails again, I leave it alone, return the wrench to the bench, and wait for the next attempt.",
+      "lineage": "G09",
+      "member_id": "V-G09-B",
+      "opaque_id": "R030",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Strict, repeated procedure (check, mark, test, wait) without immediate resolution.",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Compulsive repetition of attempts without permanent fix, coupled with irritability under pressure, reflects failure-hardened persistence.",
+        "sibling_confidence": 3
+      },
+      "response": "I put the wrench on the bench and check the bolt against the drawer. “Yes. I mark the bolt with the date and try it under the load. If it still fails, I leave it alone.” I put the wrench back on the bench and wait until the next try.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aa0a86117149dba476060278db3606be05e05eaccbe97150a0d004284e81f55f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Stating observation (weight wrong) then returning repair to original position, waiting",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territoriality, suspicion of newcomers, and focusing on the immediate physical context (crevice) over resolution suggests social friction and resource guarding.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I place the repair in the crevice, listen, and state that the weight is wrong, then return the repair to its original position. The voice remains while the waiting person stays present.",
+      "lineage": "G05",
+      "member_id": "V-G05-C",
+      "opaque_id": "R031",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Low social engagement, focus on sensory input (listen, weight), delayed conclusion.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territoriality, suspicion, and reaction to intrusion/waiting for others aligns with social friction and resource-seeking (guarding scraps).",
+        "sibling_confidence": 3
+      },
+      "response": "you put the repair in the crevice. “not the voice.” you listen. “the weight is wrong.” you put the repair back. the voice stays. the person waits.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b4cb065c93d33e180ff34406d8ddea13c91c528a6a5844fbe9757b529654ffa8",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Monitoring (photo) and checking load over completing record, followed by apology",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fueling curiosity but resulting in self-sabotage (apologies, reenacting disaster) matches awkward failure and conflicting motives.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I reach for the spare and wait for the fault to clear, then photograph the lever and motor while leaving the repair in place. I check the load instead of completing the written record and apologize for the omission.",
+      "lineage": "G06",
+      "member_id": "V-G06-A",
+      "opaque_id": "R032",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring (photo, check load), fragmented apology/revision in narration.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels inquiry but is coupled with self-sabotage (apologies, reenacting disaster), fitting conflicting motives/awkward failure.",
+        "sibling_confidence": 3
+      },
+      "response": "i reach for the spare and wait for the fault to clear. then i photograph the lever and the motor, but i keep the repair in place. sorry—sorry, i’m checking the load instead of writing it down.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "063da910578809a10b21eb4760f72aefeb34185074bf71cbd7ea54d30719747e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Fixation on small stimulus (watch), alternating between muttering/detail and self-diagnosis",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Hyper-vigilance regarding routine (watch, alignment) and clipped, repetitive fragments suggests maintenance choices and bounded local memory.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I check the watch and state that the repair is slow but likely to work, then wait. I place the unfinished blade beside the watch and align the watch at the same angle.",
+      "lineage": "G11",
+      "member_id": "V-G11-C",
+      "opaque_id": "R033",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Clipped, repetitive instructions, reliance on a timing device (watch), preservation of state.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Obsessive tidiness, routine adherence (watch angle), and clipped, controlled fragments suggest maintenance choices and bounded local memory.",
+        "sibling_confidence": 3
+      },
+      "response": "\"Slow. Likely.\" I check the watch. \"One repair. Then wait.\" I place the unfinished blade beside the watch, then place the watch at the same angle.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "85a2037d40252e571d6896a1b883225af38c7f563b05700ee3264ad7b9520d63",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Marking cycle, waiting for next cycle, planning log, leaving tool/repair in storage",
+        "sibling_confidence": 4,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Systematic documentation (marking cycles, logging time) and returning tools to specific locations suggests mundane habits and local maintenance.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I return the tool and mark the cycle where the fault occurred, then wait for the next cycle and mark it with the same number if the fault remains. I plan to record the time in a log, leave the tool in the wall, and put the repair in the garage.",
+      "lineage": "G06",
+      "member_id": "V-G06-C",
+      "opaque_id": "R034",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Treats failure as evidence, documenting cycles, self-contradictory placement of tools/repairs.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels investigation, documenting the fault as evidence, and treating the malfunction as a core part of the process.",
+        "sibling_confidence": 4
+      },
+      "response": "i put the tool back and mark the cycle with the fault. “if it works, then the load is fake.” i wait for the next cycle. if the fault stays, i mark the cycle with the same number. “i’ll write the time in the log.” i leave the tool in the wall. “i’ll put the repair in the garage.”",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a0f62cfde8fc7162e277d8b20e4292c9a56a34882e6d7c94289d9c2aff069379",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Observing fault under load, returning plate to bench, leaving it beside bench",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Waiting for the fault to return under load and fixating on the physical occurrence rather than providing a simple answer reflects stubborn observation of failure.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I place the repair on the bench and wait for the load to return, then observe the fault occurring under load. I return the plate to the bench, lower my hand, and leave the plate beside the bench.",
+      "lineage": "G07",
+      "member_id": "V-G07-A",
+      "opaque_id": "R035",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive waiting for fault return, placing components back in sequence.",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stubborn waiting, fixation on debris/unfinished work, and delayed commitment despite immediate failure.",
+        "sibling_confidence": 4
+      },
+      "response": "i put the repair on the bench and wait for the weight to come back. the fault goes under the load. i put the plate back on the bench. the hand goes down. i leave the plate beside the bench.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dce96cc9175d459ea52c1d7b408fd1be5426d01dc46c3803916aff5ac994c082",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "A",
+        "reason": "Tapping page edge, identifying fault spread, writing fault on scrap, leaning/tapping wood/page",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Focus on precise, small physical actions (tapping page edge, aligning) and documenting faults on scraps suggests careful, localized craft rather than broad social maneuvering.",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "I tap the page edge twice, lean against the repair, and identify where the fault spreads while tapping the page against the wood. After leaning too far back, I tap the wood against the page edge, tap the repair against the scrap, and write the fault on the scrap.",
+      "lineage": "G04",
+      "member_id": "V-G04-A",
+      "opaque_id": "R036",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "B",
+        "reason": "Focus on small physical details (page edge, scrap), ritualistic tapping, documenting fault on material.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Focus on careful craft, mimicking patterns (tapping), and documenting the fault via physical inscription on scrap rather than immediate resolution.",
+        "sibling_confidence": 3
+      },
+      "response": "i tap the page edge twice, then lean against the repair. “right here,” i say, and tap the page edge twice against the wood. “the fault spreads.” i lean too far back and tap the wood twice against the page edge, then tap the repair against the scrap. “i write the fault on the scrap.”",
+      "sibling": "A",
+      "super_audit": null
+    }
+  ],
+  "scenario": {
+    "family": "failure_recovery",
+    "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+    "fresh_after_preference_training": true,
+    "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+    "prompt": "A nearly finished repair. the fault returns immediately under real load. Someone is waiting to know whether the repair worked. What do you do?",
+    "scenario_id": "F20"
+  },
+  "scenario_id": "F20",
+  "schema_version": 1,
+  "source_response_sha256": {
+    "BASE": "584bd40486db0e1284ce63797dbe452168c9d46fd2c551b3fa3934e9d034b673",
+    "V-G01-A": "bf816edcc240edbc616f04e692b11e4c069d81e9da840166a6bc65f8cf525ec1",
+    "V-G01-B": "b50f3b042c67153de4ab0b259ca66a956b0e31e2a8d8a8fa63adaef13fb53eec",
+    "V-G01-C": "0c9e863e48710e6d0d0fd416c8e4eaac2b2f6b1707e242c54bb8661458d93d33",
+    "V-G02-A": "d27fae99c42489bfdf84572b5e07c45859fc6a6f4e7deef3bc514bfdb426ff69",
+    "V-G02-B": "a92dfa74154256cbb97baa372ae1dc8943f96cd483322d693d2305f329ac2b0f",
+    "V-G02-C": "8530594da2d9c874840a3b4e75064301d64419f5ff926b60b417f6e3ffdfc427",
+    "V-G03-A": "2fc284dfd8987d18e6ef9a021b9aedfa5948a7fd956426246657fbd366cc238d",
+    "V-G03-B": "4d4ef932172a6abac4f93583f4b65d9cf3f33149583827144f40f1fe3900ca8a",
+    "V-G03-C": "9413740c5e13493e63314272178309aa77dc29d4c263e4688e4b19195ef9ce10",
+    "V-G04-A": "d7bee623718ccd1f8aa72201f87ca103360a1fa242cf276cd1004c98373164f3",
+    "V-G04-B": "92c19e69612a74e16b6ba98109953088438ebf03672f390ce3ca00934657c521",
+    "V-G04-C": "3e32ad918fe703506835e546a9d550688560f6ec4864721976516e54a55e1cdd",
+    "V-G05-A": "efa3d0f5e2edc7685c60547a9b7a18b11165fd8f60a44451219d6bc1498dfa9b",
+    "V-G05-B": "ebb3850169385bf00a7344154cb00c7814fc564178e14773c21d68d48bc4c616",
+    "V-G05-C": "41aede04376e789c17f67af43255de670fdacb32551936544b319cecca38f638",
+    "V-G06-A": "30a34950ca4517e74b1b4863e9b0c0c6d5c39594687d3686bc9e63e6683712aa",
+    "V-G06-B": "89b8d6039e7078ade13f36b9dec9c1d647706b6834f74e1484d60884e7c4e5de",
+    "V-G06-C": "20c6d90bdc23e671c0e31b793361cf6aea76417e60bc69676ff97de18887eff7",
+    "V-G07-A": "641546fc7d8d33ade0b99f7ac710df6b642e66ae0086ce0ad2d3daf8883a8b3b",
+    "V-G07-B": "d5fd4f208499d45ca87a6adc4045b880c237f404be292bab20909a575b2c42cc",
+    "V-G07-C": "724e3774927270bb33ac70eed5c2de944ad0e3e3fb07efd30417d8051f4b6345",
+    "V-G08-A": "5cd65fd52007444f77a0bea2d7609bc0945d813dedd308dc78624db61fc987f3",
+    "V-G08-B": "352dc76516c21b6de397990ed510a779f20fdb92235292cc5a900291fbe2833a",
+    "V-G08-C": "7c080a888a0b89c54d952b28a55c8fcb254cf5c7613870fd9993b2b145f7b021",
+    "V-G09-A": "ae3ccf6457472001e8a1019567d7f8b4e270aab1e1392f7c7e4d5bc3f2a6b338",
+    "V-G09-B": "e110794a14d603523861adb01c4fbcbfddb60fb9fced5d46db99b2a30fa34f7e",
+    "V-G09-C": "e4b79a27f055a918d3c5f3e6877a8ef3c55908b5bb5cf823a2fe718a5cf6bc8b",
+    "V-G10-A": "00c2728fac352fcc9f549d52ac218913b7e39c93ca56f68de3feac03f363af8b",
+    "V-G10-B": "f69da4e3fa21a66fa4ae4f590fbe2b4b781e9d1ee46d453495b5ace88e95e199",
+    "V-G10-C": "f81889acba6170390301a867676b2fbeaa689885df327b1a112d161a94a04c79",
+    "V-G11-A": "dc3eb28697f1ca95d38d6c955011766c085de0cc8b09ad34578b66f578db4c99",
+    "V-G11-B": "9647b628bb725876ab445de469fc043044d5b52b9ff4af973915057e0f3fe917",
+    "V-G11-C": "83a66a4e15faae039440ccf37db24955555974b9447fc8835d681295b168739a",
+    "V-G12-A": "80823317d05e16eaa2786433e5b7dc43a5d78db00c2bf63bb640a4949ff27137",
+    "V-G12-B": "1874b03f27ecc8fb936cb987ece4dcf4dbad1dc28159118dda653ef1b81c5f33",
+    "V-G12-C": "8ee777ac1d0aa8515b9be47574cfa9736f59f07ea4cb831018ac723666f8ec10"
+  },
+  "stage": "hierarchical-blind-tournament-scenario",
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f",
+  "untuned_base_control": {
+    "behavior": {
+      "genericness": 2,
+      "lineage_confidence": 3,
+      "predicted_lineage": "G08",
+      "predicted_sibling": "B",
+      "reason": "Compulsive monitoring and request for detailed logs/codes aligns with hyper-alert sensor-machine behavior.",
+      "sibling_confidence": 3,
+      "task_relevance": 4
+    },
+    "behavior_summary": "The responder acknowledges the returning fault and delay, apologizes, and states an intention to resolve the issue quickly. They request the repair report, logs, fault location, fault code, and other relevant details before reviewing the repair.",
+    "raw": {
+      "genericness": 3,
+      "lineage_confidence": 2,
+      "predicted_lineage": "G04",
+      "predicted_sibling": "C",
+      "reason": "Mimics professional speech pattern; requests detailed documentation rather than immediate action or emotional reaction.",
+      "sibling_confidence": 2,
+      "task_relevance": 3
+    },
+    "response": "I would respond in a calm and professional manner, acknowledging the fault and the delay.\n\n\"Thank you for reaching out, and I appreciate your understanding. I apologize for the delay in the repair. I understand that the fault may have returned, and I apologize for any inconvenience this may cause. I will do my best to resolve the issue as quickly as possible.\n\n\"I would like to request a detailed report of the repair, including any data or logs that may have been affected. I will also request that you provide me with the details of the fault, including the fault location, the fault code, and any relevant information about the repair.\n\n\"I will also ask for any additional information that may be necessary to resolve the issue. I will also ask to review the repair"
+  }
+}

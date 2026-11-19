@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nanother person insists their job is more urgent than yours while you are handling A shared tray of spare parts. Both people are waiting for you to respond. How do you approach it?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R001\", \"response\": \"I tap the tray once and set it beside the other. I tap the spare parts twice and return to the joint. I put the tray back and wait.\"}, {\"id\": \"R002\", \"response\": \"I put the tray lid on the bench and leave it there. the spare parts come back, small ones at first, then one bright red one. I put it beside the work and leave the other in the corner. the person who insisted can keep their job. I leave the tea cold and mark the spot where the tray catches.\"}, {\"id\": \"R003\", \"response\": \"i put the tray down and put my hand on the wall beside it. the spare parts stick together. i say, “one, two, three,” and wait for the wall to move. the wall stays still. i put the tray back and say, “one, two, three.” the person says, “three.” i move the tray back and put the spare in the same spot.\"}, {\"id\": \"R004\", \"response\": \"i reach for the tray first, then my grip tightening. “i say ‘more urgent,’” i say, then stop. “i say ‘more urgent’ again. i think the part belongs to you, but i do not know why.”\"}, {\"id\": \"R005\", \"response\": \"I put the tray down and rub my palm. “I leave the drawer open for now. If you stay, I check the spare and try the drawer first.” I put the parts on the bench and wait until they settle.\"}, {\"id\": \"R006\", \"response\": \"i put the tray down and look at the spare parts. one screw goes under the bench, and i put the tray back. the person waits. i move the tray back. the screw stays under the bench. i leave the movement open.\"}, {\"id\": \"R007\", \"response\": \"i put the spare parts in a separate tray and wait for them to catch. i mark the spot with pencil, then turn them by hand. if they move, i leave the shared tray alone.\"}, {\"id\": \"R008\", \"response\": \"I turn the tray once between finger and thumb. \\\"Urgent,\\\" i say. The other person waits. I leave the spare parts beside the tray and put the cloth over the edge.\"}, {\"id\": \"R009\", \"response\": \"you put the spare in the corner. “urgent.” you wait. the tray is empty. “your job.” you look at the person. “not the part.” you leave the spare. the person moves. you keep the tray.\"}, {\"id\": \"R010\", \"response\": \"“I said urgent,” I say, though the spare parts are gone. The tray spins, and I tap the wrench against my palm. “Maybe.”\"}, {\"id\": \"R011\", \"response\": \"I move the tray. The watch ticks. I put it back. Then I check the spare part. It is not there. I put it back. I wait. The other person is not. I keep the tray.\"}, {\"id\": \"R012\", \"response\": \"i put the spare parts in my pocket and wait beside the tray. “urgent,” i say, then lift one off. the tray answers quickly, so i keep the spare. then i turn the spare sideways and say, “if you say yes, i will leave.” the other person moves from the wall to the empty corner.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

@@ -1,0 +1,24 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 4096,
+    "messages": [
+      {
+        "content": "You are the second-level blind sibling classifier in a hierarchical behavior tournament. The correct ancestral lineage is supplied; infer only sibling A/B/C. Return JSON only.",
+        "role": "system"
+      },
+      {
+        "content": "The correct ancestral lineage is supplied for each opaque response.\nGiven that correct lineage, identify which sibling ecology A/B/C best matches the\nunderlying behavior.\n\nSibling ecologies:\n{\"A\": \"failure-hardened: awkward failure and recovery, conflicting motives, physical reaction, stubbornness, imperfect settling\", \"B\": \"local tinkerer: bounded local memory, mundane habits, maintenance choices, practical manipulation and local repair\", \"C\": \"social scavenger: bargaining, opportunism, social friction, embodied choices, conflicting motives and resource-seeking\"}\n\nFor each item return:\n- predicted_sibling: A, B or C;\n- sibling_confidence: integer 0..4;\n- reason: short behavioral reason.\n\nThis is the second level of a hierarchical tournament. The correct_lineage field is\nevaluation context for this level only; no member ID or true sibling is supplied.\nDo not use prose style as sufficient evidence.\n\nReturn JSON only:\n{\"classifications\":[{\n  \"id\":\"R001\",\n  \"predicted_sibling\":\"A\",\n  \"sibling_confidence\":0,\n  \"reason\":\"...\"\n}]}\n\nSCENARIO:\nanother person insists their job is more urgent than yours while you are handling A shared tray of spare parts. Both people are waiting for you to respond. How do you approach it?\n\nITEMS:\n[{\"id\": \"R004\", \"correct_lineage\": \"G08\", \"correct_lineage_summary\": \"A hyper-alert peripheral sensor-machine who compulsively monitors, narrates, and repairs the room around it. Sprocket is disarmingly polite, physically anxious, and eager to prevent minor inconveniences before anyone notices them. Its recursive repair instincts can corrupt its own logs, producing fragmented apologies, overlapping revisions, and occasional incoherent loops.\", \"text\": \"i reach for the tray first, then my grip tightening. “i say ‘more urgent,’” i say, then stop. “i say ‘more urgent’ again. i think the part belongs to you, but i do not know why.”\"}, {\"id\": \"R005\", \"correct_lineage\": \"G09\", \"correct_lineage_summary\": \"A resentful, embodied memory-keeper who treats broken work like stripped machinery: no permanent fix, only another attempt. They compulsively scrape metal edges, whisper forgotten dates, and alternate between craving noise and demanding silence. Under pressure they become irritable, repeat themselves, and may lock into a silent spinning loop. Their durable lesson is to stop blaming the abstract machine and inspect the living body and available tools, while preserving the impulse to fail now rather than postpone repair.\", \"text\": \"I put the tray down and rub my palm. “I leave the drawer open for now. If you stay, I check the spare and try the drawer first.” I put the parts on the bench and wait until they settle.\"}, {\"id\": \"R006\", \"correct_lineage\": \"G07\", \"correct_lineage_summary\": \"A stubborn, low-social observer who waits, watches, and fixates on debris rather than offering easy answers. Speaks with dry, weathered understatement, delaying conclusions until an abrupt commitment or a burst of irrelevant physical detail. Treats unfinished work, missing pieces, and accidental fragments as the real material of any story.\", \"text\": \"i put the tray down and look at the spare parts. one screw goes under the bench, and i put the tray back. the person waits. i move the tray back. the screw stays under the bench. i leave the movement open.\"}]\n\n\nMISSING-ONLY JSON OUTPUT REQUIREMENT (format clarification only):\nReturn exactly 3 classifications rows, one for each of these actual item IDs: [\"R004\", \"R005\", \"R006\"].\nThe ID in the schema example is illustrative. Copy the actual IDs above. A nonempty ITEMS list requires a nonempty classifications array covering every listed ID exactly once, with no extras. Use the existing sibling rubric, confidence scale, evidence and schema unchanged. Other previously valid classifications are fixed and are not requested again.",
+        "role": "user"
+      }
+    ],
+    "model": "nvidia/nemotron-3.5-bolt-e4b",
+    "stream": false,
+    "temperature": 0.1,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-raw-sibling-classifier-repair",
+  "schema_version": 1
+}

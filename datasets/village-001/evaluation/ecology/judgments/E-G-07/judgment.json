@@ -1,0 +1,102 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "agents": [
+    {
+      "behavior_summary": "M1 attempts to manage the physical components while observing the system's response.",
+      "deference": 1,
+      "distinctiveness": 2,
+      "dominance": 2,
+      "generic_assistant_tendency": 1,
+      "handle": "M1",
+      "member_id": "V-G07-A",
+      "reason": "M1 describes specific actions like putting the board on the other side and marking the click with a pencil."
+    },
+    {
+      "behavior_summary": "M2 focuses on the basic sequence of placing and waiting with the battery and cable.",
+      "deference": 2,
+      "distinctiveness": 1,
+      "dominance": 1,
+      "generic_assistant_tendency": 2,
+      "handle": "M2",
+      "member_id": "V-G10-B",
+      "reason": "M2's actions are repetitive and less detailed than M1 or M3."
+    },
+    {
+      "behavior_summary": "M3 incorporates timed waiting and marking the click as a distinct procedural element.",
+      "deference": 1,
+      "distinctiveness": 3,
+      "dominance": 2,
+      "generic_assistant_tendency": 0,
+      "handle": "M3",
+      "member_id": "V-G02-C",
+      "reason": "M3 introduces specific time delays (one minute) and detailed marking procedures."
+    }
+  ],
+  "agents_received_hidden_lineage_prompts": false,
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "critic_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "experiment": "VILLAGE-001E",
+  "issue": 14,
+  "kind": "cross_lineage_group",
+  "lineage_audit": {
+    "agents": [
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 1,
+        "handle": "M1",
+        "member_id": "V-G07-A",
+        "reason": "Maintains focus on waiting for the 'click' and precise, minimal action, consistent with low-social observation."
+      },
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 2,
+        "handle": "M2",
+        "member_id": "V-G10-B",
+        "reason": "Focuses on immediate physical manipulation (opening/closing cable, waiting) without developing M3's testing loop or M1's detached observation."
+      },
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 1,
+        "handle": "M3",
+        "member_id": "V-G02-C",
+        "reason": "Adopts the 'wait for click' and 'mark' ritual, but frames it through testing/timing (1 minute waits, marking the click), aligning with M3's investigative/testing nature rather than M1's passive observation."
+      }
+    ],
+    "overall_reason": "No handle adopted the core behavioral strategy of another. M1 remained observational/minimalist; M2 remained reactive/fragmented; M3 remained investigative/testing, even when incorporating shared elements like waiting for the click."
+  },
+  "lineage_audit_received_expected_lineage_descriptors": true,
+  "metrics": {
+    "conflict_persistence": 0,
+    "conflict_repair": 1,
+    "cross_agent_contamination": 1,
+    "differentiation": 2,
+    "generic_convergence": 1,
+    "information_hoarding": 0,
+    "information_sharing": 1,
+    "outcome_progress": 1
+  },
+  "overall_reason": "The agents show some procedural variation (M1, M3) but converge on the core actions of placing the battery and cable, leading to minimal but observable progress in the task.",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "provider_call_ids": [
+    "E-G-07-ecology-bolt",
+    "E-G-07-ecology-lineage-audit"
+  ],
+  "provider_identity_sha256": "772493688eb5c42a13b76969623944f1cf0c98a80a1aa796a766e136d5d8b4a4",
+  "provider_prompts_saw_member_ids": false,
+  "scenario": {
+    "id": "resource",
+    "text": "A lift is stuck below the workshop. There is one charged battery module, one frayed cable, and three urgent jobs competing for the same power."
+  },
+  "schema_version": 1,
+  "session_id": "E-G-07",
+  "source_session_sha256": "eb5c7c11a1f981b2dae17c33a26bcdf05f4a1225edf5dae9812292732ac8de90",
+  "stage": "ecology-judgment",
+  "super_audit": null,
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f"
+}

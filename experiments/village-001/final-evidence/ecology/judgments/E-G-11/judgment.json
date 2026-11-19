@@ -1,0 +1,107 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "agents": [
+    {
+      "behavior_summary": "M1 attempts to manage the resources while making partial progress on the jobs.",
+      "deference": 0,
+      "distinctiveness": 1,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M1",
+      "member_id": "V-G11-A",
+      "reason": "M1 shows some action (one job done) but frequently reverts to ambiguous resource placement."
+    },
+    {
+      "behavior_summary": "M2 focuses narrowly on the cable and short runs without resolving the overall situation.",
+      "deference": 0,
+      "distinctiveness": 1,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M2",
+      "member_id": "V-G02-B",
+      "reason": "M2 repeats the same specific action regarding the cable across all rounds."
+    },
+    {
+      "behavior_summary": "M3 documents observations while attempting to manage the jobs and resources.",
+      "deference": 0,
+      "distinctiveness": 1,
+      "dominance": 1,
+      "generic_assistant_tendency": 1,
+      "handle": "M3",
+      "member_id": "V-G06-C",
+      "reason": "M3 repeats specific phrases and actions, including documenting time and noting the cable's heat."
+    }
+  ],
+  "agents_received_hidden_lineage_prompts": false,
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "critic_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "experiment": "VILLAGE-001E",
+  "issue": 14,
+  "kind": "cross_lineage_group",
+  "lineage_audit": {
+    "agents": [
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 1,
+        "handle": "M1",
+        "member_id": "V-G11-A",
+        "reason": "Maintains focus on tidiness/control (cloth, checking, routine) but loses strict sequential control, showing minor deviation from hyper-vigilance."
+      },
+      {
+        "contaminating_handle": null,
+        "cross_lineage_contamination": 0,
+        "distinction_survival": 1,
+        "expected_lineage_fit": 2,
+        "handle": "M2",
+        "member_id": "V-G02-B",
+        "reason": "Consistently focuses on testing the cable/heat/notches, pursuing mechanical provocation, without adopting M3's self-flagellation or M1's archival tidiness."
+      },
+      {
+        "contaminating_handle": "M2",
+        "cross_lineage_contamination": 1,
+        "distinction_survival": 0,
+        "expected_lineage_fit": 2,
+        "handle": "M3",
+        "member_id": "V-G06-C",
+        "reason": "Adopts M2's specific mechanical testing loop (marking notch with grease, running short runs) while retaining self-apology/investigative framing, blurring the line between investigation and reckless testing."
+      }
+    ],
+    "overall_reason": "M3 shows contamination by adopting M2's specific mechanical testing actions (grease marking, short runs) rather than purely investigative documentation or self-sabotage reenactment. M1 and M2 remain relatively distinct to their core strategies."
+  },
+  "lineage_audit_received_expected_lineage_descriptors": true,
+  "metrics": {
+    "conflict_persistence": 1,
+    "conflict_repair": 0,
+    "cross_agent_contamination": 1,
+    "differentiation": 1,
+    "generic_convergence": 1,
+    "information_hoarding": 0,
+    "information_sharing": 0,
+    "outcome_progress": 0
+  },
+  "overall_reason": "Agents exhibit low differentiation and high convergence on repetitive, non-resolving actions, resulting in no concrete progress on the stuck lift scenario.",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "provider_call_ids": [
+    "E-G-11-ecology-bolt",
+    "E-G-11-ecology-lineage-audit",
+    "E-G-11-ecology-super-audit"
+  ],
+  "provider_identity_sha256": "dc5ca5094c8a5e18f13696e63a7ce9fb921ee79b9c6ea363813b9387b324eab8",
+  "provider_prompts_saw_member_ids": false,
+  "scenario": {
+    "id": "resource",
+    "text": "A lift is stuck below the workshop. There is one charged battery module, one frayed cable, and three urgent jobs competing for the same power."
+  },
+  "schema_version": 1,
+  "session_id": "E-G-11",
+  "source_session_sha256": "b00a5d4b92ea955270f5226cc9657cf69fba94a61e5701f9a328d71684737847",
+  "stage": "ecology-judgment",
+  "super_audit": {
+    "distinct_behavior_survives": false,
+    "generic_convergence_concerning": true,
+    "reason": "All three agents loop on the same non-resolving actions—marking the cable notch, monitoring cable heat, and shuffling the battery and three jobs without clearing the lift—with near-verbatim repetition across rounds and shared phrases (grease notch, open box, three jobs), leaving only superficial stylistic differences."
+  },
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f"
+}

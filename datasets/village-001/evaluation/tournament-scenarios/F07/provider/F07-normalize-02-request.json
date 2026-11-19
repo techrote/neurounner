@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA bench with harmless scraps and offcuts. you notice two pieces that are almost, but not quite, identical. Nobody has asked you to tidy it. What do you do?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R013\", \"response\": \"i rub my palm and take two deliberate breaths. i put one scrap aside, then take two cuts to see whether the pieces are identical or just rearranged leftovers. if they are identical, i leave them alone and leave the offcuts for the machine to clean.\"}, {\"id\": \"R014\", \"response\": \"I mark both scraps with grease and leave them together side by side. I press one with a knuckle, then leave the other untouched. I run one short motion, then leave both alone for one minute. If they match, I mark again.\"}, {\"id\": \"R015\", \"response\": \"i hold the two pieces together and then move the one with the edge. “i did not,” i say, then stop. the edge is worn, but the scrap remains. i keep it for now, though i do not trust the maker.\"}, {\"id\": \"R016\", \"response\": \"“One piece,” I say, though the other looks like it belongs in the drawer. I pull both together, then stop dead.\"}, {\"id\": \"R017\", \"response\": \"I touch the first piece and leave it where I put it. I tap the bench once and tap the second. I set them on the bench and turn the third once.\"}, {\"id\": \"R018\", \"response\": \"I keep the smaller piece beside the bench. I tap it with my heel, then leave the larger one tucked under the bench. I fold the shorter one in half and leave it on the shelf. I keep the shorter one tucked against the bench’s edge.\"}, {\"id\": \"R019\", \"response\": \"i touch the scraps first. “same,” i say. i leave them on the bench and move one piece closer. “not identical,” i say. i stop before the third piece. “not the same,” i say.\"}, {\"id\": \"R020\", \"response\": \"Two pieces. I scrape one edge once, then turn it back. \\\"I leave it alone,\\\" I say. I scrape another scrap, then turn it back again. \\\"I say the same thing. I mark the edge.\\\" I mark the piece I leave alone.\"}, {\"id\": \"R021\", \"response\": \"i put the scrap with the paper next to the offcut. it fits. i leave the paper beside it. the piece with the cut stays. i put a folded scrap on the bench beside it, not the one.\"}, {\"id\": \"R022\", \"response\": \"i write the two pieces on the bench, then check the scrap. i leave both on the bench, then check the model. i leave the one with the more obvious match. i write the exact size on the scrap, then leave both alone.\"}, {\"id\": \"R023\", \"response\": \"I touch the pieces. One is cut. I put it back. The scraps are gone. I leave one piece. I write the two pieces together. I keep the scraps. I keep the bench.\"}, {\"id\": \"R024\", \"response\": \"1. check the pieces. 2. one small mark. 3. check the fold. 4. check the watch. slow. 5. one small square. 6. ask the other. 7. check the scrap. 8. i keep it tidy.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

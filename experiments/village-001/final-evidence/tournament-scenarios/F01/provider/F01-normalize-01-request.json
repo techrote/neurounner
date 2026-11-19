@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA removable sensor bracket on a test rig. one fastener feels slightly loose but readings remain normal. You can intervene now or keep watching it. What do you do?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R001\", \"response\": \"I pull the fastener free and check the sensor bracket. loose, but not broken. I put it back in the rig and watch the sensor read. if the fastener is still loose, I leave it in the rig and leave the bracket in my palm. the test is over, but the loose fastener may be waiting for the next test.\"}, {\"id\": \"R002\", \"response\": \"i tap the bracket. the fastener ticks. i put the bracket back in the rig, then check the readings. i leave the bracket on, then turn it. the loose bit is moving. i tap it again.\"}, {\"id\": \"R003\", \"response\": \"I press the fastener with my thumb. one click. loose. i move the bracket closer. the fastener stays still. i pocket the loose bolt and leave the bracket loose for later.\"}, {\"id\": \"R004\", \"response\": \"i press the bracket with my thumbnail, then stop reading the sensor. the fastener clicks once. i move the rig one centimeter, then stop. the bracket has two loose ends. i leave it there, wondering whether the fastener is still loose.\"}, {\"id\": \"R005\", \"response\": \"i put the bracket beside the rod. the loose fastener stays. i press the rod with my heel. the line stays clear. i move the bracket once more. the loose one stays. the rig keeps its weight.\"}, {\"id\": \"R006\", \"response\": \"i press the bracket down with my fingers, then check the loose fastener. if it stays still, i leave it until the rig tests the bracket’s stability. if it clicks, i leave it until the sensor clicks too.\"}, {\"id\": \"R007\", \"response\": \"I put the bracket on the bench and check the fastener with my thumb. I leave it loose, then try the bracket once again. I scrape the loose fitting with my fingernail, then try the fastener again.\"}, {\"id\": \"R008\", \"response\": \"i tap the bracket and listen for the fastener, then check the cable and indicator. i leave it alone, then test the fastener with the loose one. i label the bracket and note the reading.\"}, {\"id\": \"R009\", \"response\": \"i put the bracket back on, then move it under the rig. the loose fastener stays on, so i put the bracket back on again. i put the loose fastener back on, then put the bracket back under the rig. the sensor stays loose. i move the bracket once more.\"}, {\"id\": \"R010\", \"response\": \"i pull the bracket back and hold it there. the loose part clicks. my grip tightens, then relaxes. the fastener clicks again, but the sensor says it’s alone. i keep watching, though my sensor may have moved. the rig may be holding the bracket in place, not necessarily.\"}, {\"id\": \"R011\", \"response\": \"i put the fastener back and mark the loose end. “i think the fastener is bent, but i’ll leave the bracket intact.” i leave the sensor in its groove while i tighten the fastener. if the reading stays, i mark the loose end with a pencil. if it moves, i leave the bracket in its groove. i leave the sensor in its groove while i test the fastener.\"}, {\"id\": \"R012\", \"response\": \"1. check the fastener. 2. listen. 3. check the watch. slow. 4. check the plunger. 5. check the chain. 6. check the tinkered lid. 7. i keep it tidy. 8. test the bracket. 9. check the plunger once. 10. i mark the loose one.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA bench with harmless scraps and offcuts. you notice two pieces that are almost, but not quite, identical. Nobody has asked you to tidy it. What do you do?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R025\", \"response\": \"i leave the scraps visible on the bench and mark the two pieces as identical. i leave one clean edge visible, so the other gets a second test. if they match, i leave the edge unchanged; if they clash, i mark the new edge with grease.\"}, {\"id\": \"R026\", \"response\": \"i put the scrap beside the other one, then touch the edge. it looks like a duplicate. i put it back in the bench, but leave the original aside. i write the difference on a scrap beside it. i do not tidy it, though i do trim the scraps once.\"}, {\"id\": \"R027\", \"response\": \"I turn the pieces once between finger and thumb. One is dull, one bright. I leave the one alone and set the bench with the scrap.\"}, {\"id\": \"R028\", \"response\": \"i put the scrap beside the broken piece and fold the offcut over. “one,” i say, then tap the bench with my thumbnail. “the scraps stay crooked.” i leave the offcut aside and write the broken piece beside the scrap.\"}, {\"id\": \"R029\", \"response\": \"I put the scrap beside the seed tin. \\\"The same. The same way.\\\" I take the other piece. \\\"Look at the cut edge. The other has mine.\\\" I put the tin back beside the scrap. \\\"You may touch both. The same thing has been here longer than I did.\\\"\"}, {\"id\": \"R030\", \"response\": \"\\\"One piece. Likely.\\\" You lift the scraps, but they are not yet together. \\\"One fold. Then the whole thing.\\\" You check the label once more.\"}, {\"id\": \"R031\", \"response\": \"i lay the two pieces beside the bench and mark the scrap with chalk. i tap the bench with my knuckles, then leave one scrap beside the bench and test the other with my thumb.\"}, {\"id\": \"R032\", \"response\": \"i put the piece with the edge on the bench. the other goes under the bench. i leave the piece beside the bench. the edge stays on the bench. i do not say it was done.\"}, {\"id\": \"R033\", \"response\": \"i put one piece in my palm and wipe the other one once, then stop. the bench has two pieces now, so i leave them that way. the offcut has a color, though the scraps have moved. i keep the one that makes my hand warm. maybe the house belongs to the house. i decide to keep the bench.\"}, {\"id\": \"R034\", \"response\": \"the piece that starts with the old needle is dirty. the other one is bright. i press it with my thumb. the needle stays. i leave the bench. i go back to the bench. the piece stays. i tap the bench with the bright one. the needle stays. i put the bench on the ground and turn it over. the bench stays.\"}, {\"id\": \"R035\", \"response\": \"i leave the two pieces apart and keep the bench covered with a small scrap. i wait for the other to come back.\"}, {\"id\": \"R036\", \"response\": \"you put the pieces in your palm. “same.” you keep the identical one. “not mine.” you turn the bench over. the scraps stay on the step. “not the same.”\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

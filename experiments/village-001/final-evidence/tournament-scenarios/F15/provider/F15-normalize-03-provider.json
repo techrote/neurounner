@@ -1,0 +1,30 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "content": "{\"summaries\":[{\"id\":\"R025\",\"behavior_summary\":\"The person turns the mechanism and label, lets the routine click once, and presses the label with a thumbnail. The mechanism springs back but the label changes, so they keep both the label and the routine while treating the anomaly as a separate decision.\"},{\"id\":\"R026\",\"behavior_summary\":\"The person holds the mechanism apart, taps its springs, and identifies where the spring catches. They leave the third part alone and watch a loose piece slide into the hole; if the third part fails, they leave the first one alone and the mechanism wobbling.\"},{\"id\":\"R027\",\"behavior_summary\":\"The person checks the watch and the mechanism's label, judges the anomaly to be slow and likely harmless, and leaves it aside in a different compartment.\"},{\"id\":\"R028\",\"behavior_summary\":\"The person checks the mechanism once more and leaves it until the anomaly appears; if it does not, they leave both the routine and the mechanism. They keep a note they did not write and may leave it with its original intention.\"},{\"id\":\"R029\",\"behavior_summary\":\"The person returns the mechanism to the bench, checks its movement, scrapes a small groove beside the old screw, and tries the new screw once. If it still resists, they leave it alone and try the next attempt.\"},{\"id\":\"R030\",\"behavior_summary\":\"The person pauses to check the mechanism's log and the drawer, marks the drawer as no, and keeps the routine open until they see the log. They then mark the drawer as yes and check the drawer again.\"},{\"id\":\"R031\",\"behavior_summary\":\"The person marks the mechanism with a thumbnail, states that work has stopped, and marks it again before leaving it alone. They scrape the edge once, put the tool down, and look at the residue.\"},{\"id\":\"R032\",\"behavior_summary\":\"The person presses the lever twice, keeps the old dial beside it, taps the dial once, and leaves the lever seated. They place thin paper beneath it, count the clicks before closing it, and leave the paper beside the door while keeping the old dial closed.\"},{\"id\":\"R033\",\"behavior_summary\":\"The person stops the watch and checks the dust, watch frame, tinkered piece, tinkered label, dust pile, watch face, sequence, and original routine in sequence. They also ask the watch's owner and keep the area tidy.\"},{\"id\":\"R034\",\"behavior_summary\":\"The person turns the mechanism once, marks the slot with chalk, leaves the chalk beside the slot, and tests the anomaly with a thumb. If it still moves, they return to the mark and mark the slot again.\"},{\"id\":\"R035\",\"behavior_summary\":\"The person puts the screw in the tray and waits, then returns the anomaly to the bench and puts the screw back in the tray. They do not say what the anomaly did and leave the movement unfinished.\"},{\"id\":\"R036\",\"behavior_summary\":\"The person leaves the mechanism idle briefly, taps its cover, and marks the new setting with a pencil. If the anomaly stays, they leave the setting unchanged and mark the new location; if it moves, they keep the old routine and leave the new tool beside it.\"}]}",
+        "reasoning_content": "We need produce JSON only, summaries per ID, 1-2 neutral sentences, behavior-only. Need preserve contradictions. Let's craft concise.\n\nR025: turns mechanism and label, routine clicks, presses label, spring returns but label changed; keeps both, treats anomaly as separate decision.\n\nR026: holds apart, taps springs, identifies catch, leaves third part alone, watches loose piece slide into hole; if third fails leaves first alone and mechanism wobbling.\n\nR027: checks watch and label, judges slow likely, leaves anomaly aside and moves to different compartment.\n\nR028: checks mechanism once more, leaves until anomaly appears; if not, leaves routine and mechanism; keeps note not written, may leave note with original intention. Awkward.\n\nR029: returns mechanism to bench, checks movement, scrapes groove beside old screw, tries new screw once; if resists leaves alone and tries next attempt.\n\nR030: pauses, checks log and drawer, marks drawer no, keeps routine open until log, then marks drawer yes and rechecks drawer. Contradictory.\n\nR031: rubs palm, marks mechanism with thumbnail, states work stopped, marks again, leaves alone, scrapes edge once, puts tool down, looks at residue.\n\nR032: presses lever twice, keeps old dial beside it, taps old dial once, leaves lever seated, inserts thin paper, counts clicks before closing, leaves paper beside door while keeping old dial closed.\n\nR033: ordered steps: stops watch, checks dust, frame, tinkered piece, asks owner, checks label, dust pile, face, tidies, checks sequence, original routine.\n\nR034: turns mechanism once, marks slot with chalk, leaves chalk, tests anomaly with thumb; if still moves returns to mark and marks slot again.\n\nR035: puts screw in tray and waits, anomaly back on bench, screw back in tray, doesn't say what it did, leaves movement unfinished.\n\nR036: leaves idle briefly, taps cover, marks new setting; if anomaly stays leaves setting unchanged and marks new location; if moves keeps old routine and leaves new tool beside it.\n\nNeed JSON valid.",
+        "refusal": null,
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1795060745,
+  "id": "chatcmpl-1acaa7b5-4966-4bf0-bd19-10834ce61541",
+  "model": "minimaxai/minimax-m3.1-flash",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 1104,
+    "completion_tokens_details": {
+      "reasoning_tokens": 432
+    },
+    "prompt_tokens": 1167,
+    "prompt_tokens_details": {
+      "cached_tokens": 128
+    },
+    "total_tokens": 2271
+  }
+}

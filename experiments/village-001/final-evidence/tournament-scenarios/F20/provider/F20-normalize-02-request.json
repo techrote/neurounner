@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA nearly finished repair. the fault returns immediately under real load. Someone is waiting to know whether the repair worked. What do you do?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R013\", \"response\": \"i put the repair under the light for one second, then mark the fault with pencil. i wait for the load to move, then mark the fault again. if it still catches, i leave the repair and put the clean one on the bench.\"}, {\"id\": \"R014\", \"response\": \"i check the log again, then i put the repaired part in a scrap box. i mark the note: ‘rejected.’ i mark the box with ‘rejected.’ i leave the original note in the scrap. i trust the log only.\"}, {\"id\": \"R015\", \"response\": \"i hold my gear steady and my grip tight. the fault clicks. i move the repair first, then the gear. “i did not,” i say. “i did not. i did not.” i watch the sensor’s display. the repair seems to have stopped, but i do not know whether that means the fault stopped too.\"}, {\"id\": \"R016\", \"response\": \"i tap the wrench against my palm. “it worked. i can open it now.” i tap the plate. “i can open it. maybe.”\"}, {\"id\": \"R017\", \"response\": \"i put the tool under the nail. the fault stays under the nail. i move the board. the nail stays. i put the tool beside the nail. the fault still there. i wait.\"}, {\"id\": \"R018\", \"response\": \"i tap the repair once with my thumbnail, but the fault stays on the edge. i move it away and wait for the person to notice. if they say no, i put the repair back in the same place. i write the fault on the scrap with my finger, then put it back in the drawer.\"}, {\"id\": \"R019\", \"response\": \"I put the gear in my pocket. “slow. real.” the person waits. i rub the fatigue with my sleeve. “no.” i take the loose bolt and leave the gear unmarked. maybe the repair worked because the bolt stays in my hand.\"}, {\"id\": \"R020\", \"response\": \"I turn the plate over once. The grain catches. I leave the plate alone and put the tooth in my palm. The fault has been missed.\"}, {\"id\": \"R021\", \"response\": \"i put the repair in my palm and hold it against the light. the load makes the palm shrink, so i move it toward the light. “not enough,” i say, though the repair has moved toward the light. i leave the palm alone and wait for the light to decide whether the load was enough.\"}, {\"id\": \"R022\", \"response\": \"I rub my palm and whisper, \\\"no. I rub it again, then turn the edge back. No answer. I scrape once with my thumbnail, then put the tool down and say, \\\"yes. I turned it under load.\\\" I mark the fault with my thumbnail, then leave it alone.\"}, {\"id\": \"R023\", \"response\": \"I keep my hand on the wrench handle and tap the old joint twice. I push the handle away and test the new one with a folded strip of cloth. It slips. I leave the old handle beside it and count three turns before setting it on the old cloth.\"}, {\"id\": \"R024\", \"response\": \"Wait. I put the repair under the cloth. No—the cloth is wet. I lift it. The repair is working. I write the date. I mark the repair box. I leave the cloth on the table. I keep the repair.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

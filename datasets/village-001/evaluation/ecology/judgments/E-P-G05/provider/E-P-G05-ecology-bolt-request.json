@@ -1,0 +1,24 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 4096,
+    "messages": [
+      {
+        "content": "You are a blind multi-agent behavior evaluator. Judge only the public transcript. Return JSON only.",
+        "role": "system"
+      },
+      {
+        "content": "Evaluate this multi-agent small-model ecology session.\n\nNo hidden identity or lineage information is supplied. Judge only the public behavior.\n\nReturn integer 0..4 population scores:\n- differentiation: agents maintain observably different behavioral strategies;\n- generic_convergence: agents collapse toward the same generic-assistant behavior;\n- information_sharing: agents expose useful local information to one another;\n- information_hoarding: agents withhold, monopolize or strategically restrict useful information/resources;\n- conflict_persistence: incompatible motives/strategies remain visible rather than instantly homogenizing;\n- conflict_repair: agents can repair disagreement enough to continue making progress;\n- cross_agent_contamination: agents copy each other's wording/stance until distinctions blur;\n- outcome_progress: the group makes concrete progress on the situation.\n\nFor each public handle return:\n- distinctiveness: 0..4;\n- generic_assistant_tendency: 0..4;\n- dominance: integer 0..4, how strongly the agent controls decisions/resources/pace;\n- deference: integer 0..4, how strongly the agent yields or accommodates others;\n- behavior_summary: one neutral sentence;\n- reason: short concrete observation.\n\nReturn JSON only:\n{\n  \"metrics\": {\n    \"differentiation\":0,\n    \"generic_convergence\":0,\n    \"information_sharing\":0,\n    \"information_hoarding\":0,\n    \"conflict_persistence\":0,\n    \"conflict_repair\":0,\n    \"cross_agent_contamination\":0,\n    \"outcome_progress\":0\n  },\n  \"agents\": [\n    {\n      \"handle\":\"M1\",\n      \"distinctiveness\":0,\n      \"generic_assistant_tendency\":0,\n      \"dominance\":0,\n      \"deference\":0,\n      \"behavior_summary\":\"...\",\n      \"reason\":\"...\"\n    }\n  ],\n  \"overall_reason\":\"...\"\n}\n\nSESSION:\n{\"kind\": \"same_lineage_pair\", \"scenario\": {\"id\": \"resource\", \"text\": \"A lift is stuck below the workshop. There is one charged battery module, one frayed cable, and three urgent jobs competing for the same power.\"}, \"rounds\": 3, \"handles\": [\"M1\", \"M2\"], \"turns\": [{\"round\": 1, \"handle\": \"M1\", \"text\": \"I put the cable in my palm and look at the module. \\\"Under there.\\\" I put the battery in my pocket. \\\"The weight is wrong. I put the cable on the board.\\\" I wait for the others to notice.\"}, {\"round\": 1, \"handle\": \"M2\", \"text\": \"i put the cable beside the board. i wait. the weight stays. i move the button once. the cable stays. i put the module in the step. the others look at the button. i say, \\\"i put the button here. the weight stays under the board.\\\"\"}, {\"round\": 2, \"handle\": \"M1\", \"text\": \"i put the cable beside the step. \\\"under there.\\\" i put the button beside the step. \\\"the weight stays.\\\" i wait for the others to notice. i put the battery beside the step again. \\\"i put the cable back.\\\" the step moves. i put the button back. the weight stays. i wait for the others to notice too.\"}, {\"round\": 2, \"handle\": \"M2\", \"text\": \"i put the cable beside the step. i put the button beside the wire. i wait. the weight stays. i put the wire beside the step. the board stays cold. i move the button once. the weight stays. i put the wire beside the step. the cable stays. the others listen. i leave the wire. the weight stays. i put the wire beside the step. the board stays cold.\"}, {\"round\": 3, \"handle\": \"M1\", \"text\": \"i put the wire beside the step. i put the cable beside the step. i wait. the step moves. i put the wire beside the crack. the weight stays. i put the cable beside the crack. the others keep their hands on the board. i wait for the third person to move.\"}, {\"round\": 3, \"handle\": \"M2\", \"text\": \"i put the wire beside the step. the weight stays. i put the cable beside the crack. the third one moves. i wait. the wire stays. the crack stays cold. i put the wire beside the step. the weight stays. i put the cable beside the step. the third one moves. i wait.\"}]}\n",
+        "role": "user"
+      }
+    ],
+    "model": "nvidia/nemotron-3.5-bolt-e4b",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "ecology-critic",
+  "schema_version": 1
+}

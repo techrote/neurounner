@@ -1,0 +1,30 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "content": "{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"The response taps the shelf, the edge of a label, and the tape twice, then leaves the tape where it is without organizing the items.\"},{\"id\":\"R002\",\"behavior_summary\":\"The response reads labels, taps the tape, places an old label on the shelf, then moves it to a bench after it catches, while leaving the tape and bench unchanged. It ultimately leaves the old label on the bench.\"},{\"id\":\"R003\",\"behavior_summary\":\"The response returns three labels, removes and replaces the tape, and writes on a label corner after judging the labels wrong. It checks another label under a cloth, leaves that label in place, and keeps the labels.\"},{\"id\":\"R004\",\"behavior_summary\":\"The response tentatively assigns one home and one mark, lifts the tape while leaving the labels, then checks the watch and sets it aside.\"},{\"id\":\"R005\",\"behavior_summary\":\"The response takes and rubs a dirty label, leaves the tape on the shelf, checks and rejects a broken gear, then returns the label and pockets the tape. It remains uncertain whether the order of these actions matters.\"},{\"id\":\"R006\",\"behavior_summary\":\"After tapping the tape and reading a label that says no, the response copies the last sentence onto a label corner and returns the label to the shelf. It leaves the tape untouched and does not handle the labels again.\"},{\"id\":\"R007\",\"behavior_summary\":\"The response taps the shelf and tape, places a label on the shelf, leaves the tape there, and then puts the label back on the shelf.\"},{\"id\":\"R008\",\"behavior_summary\":\"The response pulls out a label and pockets it, but also states that it puts the label in the shelf and later that the label remains there. It looks at the other labels, leaves the tape untouched, and treats the label as waiting for another item.\"},{\"id\":\"R009\",\"behavior_summary\":\"The response taps the tape with a pencil until it slips, finds the label stuck, and marks the spot as having no home. It records the tape and the missing-home mark in a log, favors the tape as more durable, and marks the label with the tape.\"},{\"id\":\"R010\",\"behavior_summary\":\"The response taps the tape once and a label edge twice, says one, and taps the shelf edge twice. Because the tape keeps moving, it writes the label upside down and copies the label onto a nearby scrap.\"},{\"id\":\"R011\",\"behavior_summary\":\"The response taps the tape once with a fingernail, leaves the labels where they are, and puts the items in a drawer for later.\"},{\"id\":\"R012\",\"behavior_summary\":\"The response leaves the half-used labels aside and marks the shelf with a pencil. If the tape sticks, it leaves the label intact and marks the new spot; if the tape stays, it places the old label beside the new one and shows the difference.\"}]}",
+        "reasoning_content": "We need produce JSON only, 12 summaries, neutral behavior-only, preserve contradictions. Need careful.\n\nR001 taps shelf, label edge, tape twice, leaves tape. No organizing.\n\nR002 reads labels, taps tape, puts old label on shelf, tape stays, taps shelf with other one, old catches, moves old to bench, leaves old there, bench stays. Contradictions preserved.\n\nR003 returns labels one two three, removes tape, sees wrong labels, writes wrong one on corner, returns tape, checks label under cloth, leaves wrong label, keeps labels.\n\nR004 second person \"You\" but neutral summary can say \"The response states...\" Better describe actions: lifts tape, leaves labels, checks watch, sets watch aside. Mentions \"one home likely\" etc. Include tentative categorization.\n\nR005 takes label, rubs dirty, says keep, leaves tape, checks broken gear, rejects, returns label, pockets tape, considers order.\n\nR006 taps tape, label says no, copies last sentence on corner, returns label, leaves tape, doesn't touch labels further.\n\nR007 taps shelf/tape, puts label shelf, leaves tape shelf, puts label back shelf.\n\nR008 pulls label, pockets it, then says puts it in shelf (contradiction), looks at others, leaves tape, label stays shelf waiting. Preserve contradiction.\n\nR009 taps tape with pencil until slips, label sticks, marks spot no home, logs tape/no home, prefers tape durability, marks label with tape.\n\nR010 taps tape once, label edge twice, says one, taps shelf edge twice, writes label upside down because tape moves, copies label on scrap.\n\nR011 taps tape fingernail, leaves labels, keeps items drawer.\n\nR012 leaves labels aside, taps shelf with pencil mark, conditional behavior based tape sticking: if sticks leave label intact mark new spot; if stays leave old label beside new and show difference. Note \"if it stays\" ambiguous. Preserve.\n\nNeed one or two sentences each. JSON valid.",
+        "refusal": null,
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1795056252,
+  "id": "chatcmpl-7e42c068-8990-46f4-9ef8-29699c57d9fa",
+  "model": "minimaxai/minimax-m3.1-flash",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 1019,
+    "completion_tokens_details": {
+      "reasoning_tokens": 406
+    },
+    "prompt_tokens": 1124,
+    "prompt_tokens_details": {
+      "cached_tokens": 128
+    },
+    "total_tokens": 2143
+  }
+}
