@@ -1,0 +1,135 @@
+name: VILLAGE-001E preserve the named recovery before its job deadline
+
+on:
+  push:
+    branches: [work/village-001e-preserve-20261119]
+    paths: ['experiments/village-001/qualification-20261119/preserve-request.json']
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  preserve:
+    if: ${{ github.repository == 'techrote/neurounner' && github.event_name == 'push' && github.ref == 'refs/heads/work/village-001e-preserve-20261119' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Normally stop only the verified active provider step and retain custody
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import datetime,json,os,pathlib,subprocess,time
+          REPO='techrote/neurounner'
+          TARGET=44443194861
+          SOURCE='abd44e3c21a9bcd63cef1f9310df34e05806f40b'
+          JOB=135289021869
+          BRANCH='work/village-001e-preserve-20261119'
+          PROVIDER='Complete only missing provider fields within the frozen global ceiling'
+          REQUEST='experiments/village-001/qualification-20261119/preserve-request.json'
+          EXPECTED_REQUEST={'schema':'village-001e-preserve-request-v1','run_id':TARGET,'head_sha':SOURCE,'head_branch':'work/village-001e-qualification-20261119','workflow_path':'.github/workflows/village-001e-recovery.yml','run_attempt':1,'job_id':JOB,'job_name':'recover','provider_step_number':5,'provider_step_name':PROVIDER,'minimum_job_elapsed_seconds':7200,'control_branch':BRANCH,'control_parent_sha':SOURCE,'preserve_all_artifacts':True,'force_cancel':False}
+          out=pathlib.Path('preserve-custody');out.mkdir()
+          outcome={'target_run_id':TARGET,'target_job_id':JOB,'control_run_id':os.environ.get('GITHUB_RUN_ID'),'cancel_post_attempts':0,'force_cancel':False,'artifacts_deleted':False,'decision':'not_evaluated'}
+          def save(name,value):
+              (out/name).write_text(json.dumps(value,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          def require(value,message):
+              if not value:raise RuntimeError(message)
+          def get(suffix):
+              result=subprocess.run(['gh','api',f'repos/{REPO}/actions/runs/{TARGET}'+suffix],capture_output=True,text=True,timeout=15)
+              if result.returncode:
+                  save('last-get-error.json',{'suffix':suffix,'returncode':result.returncode,'stdout':result.stdout,'stderr':result.stderr})
+                  raise RuntimeError('metadata read failed: '+suffix)
+              return json.loads(result.stdout)
+          def snapshot(prefix):
+              run=get('');save(prefix+'-run.json',run)
+              jobs=get('/jobs?filter=all&per_page=100');save(prefix+'-jobs.json',jobs)
+              artifacts=get('/artifacts?per_page=100');save(prefix+'-artifacts.json',artifacts)
+              return run,jobs
+          def eligibility(run,listing,now):
+              expected={'id':TARGET,'head_sha':SOURCE,'head_branch':'work/village-001e-qualification-20261119','path':'.github/workflows/village-001e-recovery.yml','run_attempt':1,'event':'push'}
+              require(all(run.get(k)==v for k,v in expected.items()),'target run identity mismatch')
+              require(all(run.get(k,{}).get('id')==1432134981 and run[k].get('full_name')==REPO for k in ('repository','head_repository')),'target repository mismatch')
+              if run.get('status')=='completed':return 'noop_run_terminal'
+              require(type(listing.get('total_count')) is int and listing['total_count']==len(listing.get('jobs',[]))<=100,'complete bounded jobs inventory required')
+              matches=[job for job in listing['jobs'] if job.get('id')==JOB]
+              require(len(matches)==1,'exact recovery job missing or duplicated')
+              job=matches[0]
+              require(all(job.get(k)==v for k,v in {'run_id':TARGET,'head_sha':SOURCE,'run_attempt':1,'name':'recover'}.items()),'target job identity mismatch')
+              if job.get('status')=='completed':return 'noop_job_terminal'
+              steps=job.get('steps',[])
+              require(all(type(step.get('number')) is int for step in steps),'invalid step numbering')
+              if any(step['number']>5 and step.get('status') in ('in_progress','completed') for step in steps):return 'noop_advanced_beyond_provider'
+              matches=[step for step in steps if step['number']==5]
+              require(len(matches)==1 and matches[0].get('name')==PROVIDER,'provider step identity mismatch')
+              if run.get('status')!='in_progress' or job.get('status')!='in_progress' or matches[0].get('status')!='in_progress':return 'noop_provider_not_active'
+              started=datetime.datetime.fromisoformat(job['started_at'].replace('Z','+00:00'))
+              require(started.tzinfo is not None,'job start lacks timezone')
+              elapsed=(now-started).total_seconds()
+              require(elapsed>=0,'job start is in the future')
+              if elapsed<7200:return 'noop_minimum_elapsed_not_met'
+              return 'eligible_normal_cancel'
+          error=None
+          try:
+              require(os.environ.get('GITHUB_REPOSITORY')==REPO and os.environ.get('GITHUB_REF')=='refs/heads/'+BRANCH and os.environ.get('GITHUB_EVENT_NAME')=='push','wrong control execution surface')
+              require(os.environ.get('GITHUB_RUN_ATTEMPT')=='1','preservation request is single-use; reruns forbidden')
+              require(int(os.environ['GITHUB_RUN_ID'])!=TARGET,'control cannot target itself')
+              require(subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==os.environ['GITHUB_SHA'],'control checkout mismatch')
+              require(subprocess.check_output(['git','rev-parse','HEAD^'],text=True).strip()==SOURCE,'control must be a direct child of the frozen E source')
+              request=json.loads(pathlib.Path(REQUEST).read_text(encoding='utf-8'))
+              save('request.json',request)
+              require(request==EXPECTED_REQUEST,'unexpected preservation request')
+              run,jobs=snapshot('before')
+              outcome['decision']=eligibility(run,jobs,datetime.datetime.now(datetime.timezone.utc))
+              if outcome['decision']=='eligible_normal_cancel':
+                  # Refresh immediately before the sole POST; an advanced job is a safe no-op.
+                  run=get('');save('pre-cancel-run.json',run)
+                  jobs=get('/jobs?filter=all&per_page=100');save('pre-cancel-jobs.json',jobs)
+                  outcome['decision']=eligibility(run,jobs,datetime.datetime.now(datetime.timezone.utc))
+                  if outcome['decision']=='eligible_normal_cancel':
+                      endpoint=f'repos/{REPO}/actions/runs/{TARGET}/cancel'
+                      outcome['cancel_post_attempts']=1
+                      save('cancel-request.json',{'method':'POST','endpoint':endpoint,'force_cancel':False,'observed_at':datetime.datetime.now(datetime.timezone.utc).isoformat()})
+                      try:
+                          response=subprocess.run(['gh','api','--include','--method','POST',endpoint],capture_output=True,text=True,timeout=30)
+                      except subprocess.TimeoutExpired as exc:
+                          def decoded(value):return value.decode('utf-8',errors='replace') if isinstance(value,bytes) else value
+                          save('cancel-response.json',{'timed_out':True,'stdout':decoded(exc.stdout),'stderr':decoded(exc.stderr),'automatic_retry':False})
+                          raise RuntimeError('normal cancel response timed out; request will not be retried')
+                      save('cancel-response.json',{'returncode':response.returncode,'stdout':response.stdout,'stderr':response.stderr,'automatic_retry':False})
+                      require(response.returncode==0,'normal cancel API failed or raced completion; no retry or force cancellation')
+                      outcome['decision']='normal_cancel_requested'
+                      deadline=time.monotonic()+240
+                      index=0
+                      while time.monotonic()<deadline:
+                          run=get('');save(f'observed-run-{index:03d}.json',run)
+                          if run.get('status')=='completed':
+                              outcome['decision']='normal_cancel_observed_terminal';break
+                          index+=1
+                          time.sleep(min(10,max(0,deadline-time.monotonic())))
+              print(json.dumps(outcome,sort_keys=True))
+          except Exception as exc:
+              error=type(exc).__name__+': '+str(exc)
+              outcome['error']=error
+          finally:
+              try:
+                  run,jobs=snapshot('after')
+                  outcome['after_run_status']=run.get('status')
+                  outcome['after_run_conclusion']=run.get('conclusion')
+              except Exception as exc:
+                  outcome['after_snapshot_error']=type(exc).__name__+': '+str(exc)
+              save('outcome.json',outcome)
+          if error:raise SystemExit(error)
+          PY
+      - name: Preserve control records on every outcome
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001e-preserve-custody-${{ github.run_id }}
+          path: preserve-custody
+          if-no-files-found: warn
+          retention-days: 30
