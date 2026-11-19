@@ -1,0 +1,525 @@
+name: VILLAGE-001F matched mask and Sprocket diagnostics
+'on':
+  push:
+    branches:
+    - work/village-001f-causal-diagnostics-20261119
+    paths:
+    - experiments/village-001/diagnostic-20261119/request.json
+  pull_request:
+    paths:
+    - .github/workflows/village-001f-diagnostics.yml
+    - scripts/village_001f_*.py
+    - tests/test_village_001f_*.py
+    - experiments/village-001/diagnostic-20261119/**
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: village-001f-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref
+    }}
+  cancel-in-progress: false
+env:
+  F_ROOT: experiments/village-001/diagnostic-20261119
+  PYTHONUNBUFFERED: '1'
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - name: Test bounded causal and feedback diagnostics
+      run: |
+        python3 -m unittest discover -s tests -p 'test_village_001f_*.py' -v
+        python3 -O -m unittest discover -s tests -p 'test_village_001f_*.py'
+        python3 scripts/village_001f_worker_diagnostic.py self-test
+        python3 scripts/village_001f_worker_diagnostic.py plan --out "$RUNNER_TEMP/worker-plan"
+        python3 scripts/village_001f_sprocket_diagnostic.py --out "$RUNNER_TEMP/sprocket-plan"
+        python3 -m py_compile scripts/village_001f_*.py
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - name: Require accepted Stage E and immutable pilot contract
+      run: |
+        python3 scripts/village_001f_operator.py verify
+      id: verify
+      env:
+        GH_TOKEN: ${{ github.token }}
+    needs: offline
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/work/village-001f-causal-diagnostics-20261119'
+      }}
+    outputs:
+      phase: ${{ steps.verify.outputs.phase }}
+      members: ${{ steps.verify.outputs.members }}
+      arms: ${{ steps.verify.outputs.arms }}
+      resume_requested: ${{ steps.verify.outputs.resume_requested }}
+  train:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      with:
+        path: ~/.cache/huggingface/hub
+        key: smollm2-135m-12fd25f7-cpu-v1
+    - name: Install frozen CPU runtime
+      run: |
+        python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+        python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'peft==0.21.2'
+    - name: Recover prior matched training if requested
+      run: |
+        python3 scripts/village_001f_operator.py recover --name "village001f-train-$MEMBER-$ARM" --out resume/lane
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: Retrieve and verify exact original C parent
+      run: |
+        mkdir -p downloads "parent"
+        python3 scripts/village_001f_operator.py assets --member "$MEMBER" --source C > asset.tsv
+        IFS=$'\t' read -r tag file sha < asset.tsv
+        for attempt in 1 2 3 4; do
+          if gh release download "$tag" --pattern "$file" --dir downloads; then break; fi
+          test "$attempt" -lt 4 || exit 1
+          sleep "$((2 ** attempt))"
+        done
+        echo "$sha  downloads/$file" | sha256sum -c -
+        tar -xzf "downloads/$file" -C "parent"
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: Train one fixed 120-step matched arm
+      run: |
+        args=(train --member "$MEMBER" --mask-mode "$ARM" --parent-adapter parent --out out)
+        if [ -d resume/lane ]; then args+=(--resume resume/lane); fi
+        python3 scripts/village_001f_worker_diagnostic.py "${args[@]}"
+    - name: Preserve village001f-train-${{ matrix.member }}-${{ matrix.arm }}
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-train-${{ matrix.member }}-${{ matrix.arm }}
+        path: out
+        if-no-files-found: warn
+        retention-days: 30
+    - name: Preserve village001f-recovery-train-${{ matrix.member }}-${{ matrix.arm }}
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-recovery-train-${{ matrix.member }}-${{ matrix.arm }}
+        path: |-
+          resume/lane.zip
+          resume/lane-custody.json
+          resume/history
+        if-no-files-found: warn
+        retention-days: 30
+    needs: plan
+    if: ${{ needs.plan.outputs.phase == 'generate' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        member: ${{ fromJSON(needs.plan.outputs.members) }}
+        arm: ${{ fromJSON(needs.plan.outputs.arms) }}
+    env:
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      TOKENIZERS_PARALLELISM: 'false'
+      MEMBER: ${{ matrix.member }}
+      ARM: ${{ matrix.arm }}
+  base:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      with:
+        path: ~/.cache/huggingface/hub
+        key: smollm2-135m-12fd25f7-cpu-v1
+    - name: Install frozen CPU runtime
+      run: |
+        python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+        python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'peft==0.21.2'
+    - name: Recover prior shared BASE outputs
+      run: |
+        python3 scripts/village_001f_operator.py recover --name village001f-infer-BASE --out resume/lane
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: Generate fixed Q BASE control
+      run: |
+        args=(infer --stage BASE --out out)
+        if [ -d resume/lane ]; then args+=(--resume resume/lane); fi
+        python3 scripts/village_001f_worker_diagnostic.py "${args[@]}"
+        python3 scripts/village_001f_worker_diagnostic.py infer --stage BASE --resume out --out replay
+    - name: Preserve village001f-infer-BASE
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-infer-BASE
+        path: out
+        if-no-files-found: warn
+        retention-days: 30
+    - name: Preserve village001f-recovery-infer-BASE
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-recovery-infer-BASE
+        path: |-
+          resume/lane.zip
+          resume/lane-custody.json
+          resume/history
+        if-no-files-found: warn
+        retention-days: 30
+    needs: plan
+    if: ${{ needs.plan.outputs.phase == 'generate' }}
+    env:
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      TOKENIZERS_PARALLELISM: 'false'
+  token_audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      with:
+        path: ~/.cache/huggingface/hub
+        key: smollm2-135m-12fd25f7-cpu-v1
+    - name: Install frozen CPU runtime
+      run: |
+        python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+        python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'peft==0.21.2'
+    - name: Measure actual native token-mask errors
+      run: |
+        python3 scripts/village_001f_worker_diagnostic.py token-audit --out out
+    - name: Preserve village001f-token-audit
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-token-audit
+        path: out
+        if-no-files-found: warn
+        retention-days: 30
+    needs: plan
+    if: ${{ needs.plan.outputs.phase == 'generate' }}
+    env:
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      TOKENIZERS_PARALLELISM: 'false'
+  infer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      with:
+        path: ~/.cache/huggingface/hub
+        key: smollm2-135m-12fd25f7-cpu-v1
+    - name: Install frozen CPU runtime
+      run: |
+        python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
+        python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'peft==0.21.2'
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      with:
+        pattern: village001f-train-${{ matrix.member }}-*
+        path: training
+    - name: Recover fixed Q outputs if requested
+      run: |
+        python3 scripts/village_001f_operator.py recover --name "village001f-infer-$MEMBER" --out resume/lane
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: Retrieve exact C and original D references
+      run: |
+        mkdir -p downloads "reference/C"
+        python3 scripts/village_001f_operator.py assets --member "$MEMBER" --source C > asset.tsv
+        IFS=$'\t' read -r tag file sha < asset.tsv
+        for attempt in 1 2 3 4; do
+          if gh release download "$tag" --pattern "$file" --dir downloads; then break; fi
+          test "$attempt" -lt 4 || exit 1
+          sleep "$((2 ** attempt))"
+        done
+        echo "$sha  downloads/$file" | sha256sum -c -
+        tar -xzf "downloads/$file" -C "reference/C"
+        mkdir -p downloads "reference/D_ORIGINAL"
+        python3 scripts/village_001f_operator.py assets --member "$MEMBER" --source D > asset.tsv
+        IFS=$'\t' read -r tag file sha < asset.tsv
+        for attempt in 1 2 3 4; do
+          if gh release download "$tag" --pattern "$file" --dir downloads; then break; fi
+          test "$attempt" -lt 4 || exit 1
+          sleep "$((2 ** attempt))"
+        done
+        echo "$sha  downloads/$file" | sha256sum -c -
+        tar -xzf "downloads/$file" -C "reference/D_ORIGINAL"
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: Compare four fixed model stages on the same Q reserve
+      run: |
+        for stage in C D_ORIGINAL D_REPRODUCED D_CORRECTED; do
+          args=(infer --stage "$stage" --member "$MEMBER" --out "out/$stage")
+          case "$stage" in
+            C|D_ORIGINAL) args+=(--adapter "reference/$stage");;
+            D_REPRODUCED) args+=(--training-evidence "training/village001f-train-$MEMBER-historical_token_id_mask");;
+            D_CORRECTED) args+=(--training-evidence "training/village001f-train-$MEMBER-length_derived_mask");;
+          esac
+          if [ -d "resume/lane/$stage" ]; then args+=(--resume "resume/lane/$stage"); fi
+          python3 scripts/village_001f_worker_diagnostic.py "${args[@]}"
+          replay=(infer --stage "$stage" --member "$MEMBER" --resume "out/$stage" --out "replay/$stage")
+          case "$stage" in
+            C|D_ORIGINAL) replay+=(--adapter "reference/$stage");;
+            D_REPRODUCED) replay+=(--training-evidence "training/village001f-train-$MEMBER-historical_token_id_mask");;
+            D_CORRECTED) replay+=(--training-evidence "training/village001f-train-$MEMBER-length_derived_mask");;
+          esac
+          python3 scripts/village_001f_worker_diagnostic.py "${replay[@]}"
+        done
+        for stage in BASE C D_ORIGINAL; do
+          args=(score --stage "$stage" --member "$MEMBER" --out "out/scores/$stage")
+          if [ "$stage" != BASE ]; then args+=(--adapter "reference/$stage"); fi
+          python3 scripts/village_001f_worker_diagnostic.py "${args[@]}"
+        done
+    - name: Preserve village001f-infer-${{ matrix.member }}
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-infer-${{ matrix.member }}
+        path: out
+        if-no-files-found: warn
+        retention-days: 30
+    - name: Preserve village001f-recovery-infer-${{ matrix.member }}
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-recovery-infer-${{ matrix.member }}
+        path: |-
+          resume/lane.zip
+          resume/lane-custody.json
+          resume/history
+        if-no-files-found: warn
+        retention-days: 30
+    needs:
+    - plan
+    - train
+    if: ${{ needs.plan.outputs.phase == 'generate' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        member: ${{ fromJSON(needs.plan.outputs.members) }}
+    env:
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      TOKENIZERS_PARALLELISM: 'false'
+      MEMBER: ${{ matrix.member }}
+  sprocket:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - name: Initialize isolated native runtime cache
+      run: |
+        echo "NEURO_CACHE=$RUNNER_TEMP/village001f-cache" >> "$GITHUB_ENV"
+    - name: Recover previous native diagnostic if requested
+      run: |
+        python3 scripts/village_001f_operator.py recover --name village001f-sprocket --out resume/lane
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: Verify pinned runtime and Sprocket weights
+      run: |
+        bash scripts/bootstrap.sh sprocket
+    - name: Run 36 bounded native prompt comparisons
+      run: |
+        args=(--execute --out out)
+        if [ -d resume/lane ]; then args+=(--resume resume/lane); fi
+        python3 scripts/village_001f_sprocket_diagnostic.py "${args[@]}"
+        python3 scripts/village_001f_sprocket_diagnostic.py --resume out --out replay --offline
+    - name: Preserve village001f-sprocket
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-sprocket
+        path: out
+        if-no-files-found: warn
+        retention-days: 30
+    - name: Preserve village001f-recovery-sprocket
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-recovery-sprocket
+        path: |-
+          resume/lane.zip
+          resume/lane-custody.json
+          resume/history
+        if-no-files-found: warn
+        retention-days: 30
+    needs: plan
+    if: ${{ needs.plan.outputs.phase == 'generate' }}
+  archive_inputs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: true
+        fetch-depth: 0
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      with:
+        pattern: village001f-train-*
+        path: artifacts/training
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      with:
+        pattern: village001f-infer-*
+        path: artifacts/worker
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      with:
+        name: village001f-token-audit
+        path: artifacts/token-audit
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      with:
+        name: village001f-sprocket
+        path: artifacts/sprocket
+    - name: Gather complete recovery custody when resuming
+      if: ${{ needs.plan.outputs.resume_requested == 'true' }}
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      with:
+        pattern: village001f-recovery-*
+        path: artifacts/recovery
+    - name: Validate and freeze all diagnostic inputs
+      run: |
+        python3 scripts/village_001f_operator.py archive-inputs --artifacts artifacts --release-dir "$RUNNER_TEMP/village001f-input-release"
+        tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf "$RUNNER_TEMP/village001f-input-release/village001f-complete-inputs.tar" "$F_ROOT"
+        python3 scripts/village_001f_operator.py release-inventory --directory "$RUNNER_TEMP/village001f-input-release" --manifest "$F_ROOT/input-release-assets.json" --tag village-001f-pilot-inputs-20261119
+        remote_head=$(git ls-remote origin "refs/heads/$GITHUB_REF_NAME" | cut -f1)
+        test "$remote_head" = "$GITHUB_SHA"
+        git config user.name 'neurounner experiment bot'
+        git config user.email '261801702+techrote@users.noreply.github.com'
+        git add "$F_ROOT/inputs" "$F_ROOT/input-custody.json" "$F_ROOT/input-release-assets.json"
+        git commit -m 'Freeze matched mask pilot, Sprocket comparison and diagnostic inputs'
+        git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+    - name: Publish all 12 pilot adapters and complete input custody
+      run: |
+        gh release create village-001f-pilot-inputs-20261119 --target "$(git rev-parse HEAD)" --prerelease --title 'VILLAGE-001F matched pilot inputs and adapters' --notes-file "$F_ROOT/WORKER_MASK_PILOT.md" "$RUNNER_TEMP/village001f-input-release"/*
+        python3 scripts/village_001f_operator.py verify-release --manifest "$F_ROOT/input-release-assets.json" --tag village-001f-pilot-inputs-20261119
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: Preserve village001f-input-custody-${{ github.run_id }}
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-input-custody-${{ github.run_id }}
+        path: |-
+          experiments/village-001/diagnostic-20261119/inputs
+          experiments/village-001/diagnostic-20261119/input-custody.json
+          experiments/village-001/diagnostic-20261119/input-release-assets.json
+          ${{ runner.temp }}/village001f-input-release
+        if-no-files-found: warn
+        retention-days: 30
+    needs:
+    - plan
+    - train
+    - base
+    - infer
+    - token_audit
+    - sprocket
+    if: ${{ needs.plan.outputs.phase == 'generate' }}
+    permissions:
+      contents: write
+      actions: read
+  judge:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        persist-credentials: true
+        fetch-depth: 0
+    - name: Verify frozen input custody and recover any prior judgment checkpoint
+      run: |
+        python3 scripts/village_001f_operator.py verify-inputs
+        python3 scripts/village_001f_operator.py recover --name village001f-judgments --out resume/lane
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: Blindly measure causal effects and feedback grounding
+      run: |
+        args=(--worker-artifacts "$F_ROOT/inputs/worker" --training-artifacts "$F_ROOT/inputs/training" --sprocket-artifacts "$F_ROOT/inputs/sprocket")
+        resume=()
+        if [ -d resume/lane ]; then resume=(--resume resume/lane); fi
+        python3 scripts/village_001f_judge.py "${args[@]}" "${resume[@]}" --out "$F_ROOT/results"
+        env -u NVIDIA_API_KEY python3 scripts/village_001f_judge.py "${args[@]}" --resume "$F_ROOT/results" --out replay --offline
+      env:
+        NVIDIA_API_KEY: ${{ secrets.NVKEY }}
+    - name: Archive complete diagnostic evidence and results
+      run: |
+        mkdir -p "$RUNNER_TEMP/village001f-final-release"
+        if [ -f resume/lane-custody.json ]; then
+          python3 scripts/village_001f_operator.py archive-recovery --artifacts resume --evidence "$F_ROOT/recovery/judge" --release-dir "$RUNNER_TEMP/village001f-final-release"
+        fi
+        for name in summary worker-paired-effects sprocket-grounding judgments; do
+          cp "$F_ROOT/results/$name.json" "$RUNNER_TEMP/village001f-final-release/"
+        done
+        tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -cf "$RUNNER_TEMP/village001f-final-release/village001f-complete-evidence.tar" "$F_ROOT"
+        python3 scripts/village_001f_operator.py release-inventory --directory "$RUNNER_TEMP/village001f-final-release" --manifest "$F_ROOT/final-release-assets.json" --tag village-001f-mask-sprocket-20261119
+        remote_head=$(git ls-remote origin "refs/heads/$GITHUB_REF_NAME" | cut -f1)
+        test "$remote_head" = "$GITHUB_SHA"
+        git config user.name 'neurounner experiment bot'
+        git config user.email '261801702+techrote@users.noreply.github.com'
+        git add "$F_ROOT/results" "$F_ROOT/final-release-assets.json"
+        if [ -d "$F_ROOT/recovery" ]; then git add "$F_ROOT/recovery"; fi
+        git commit -m 'Archive blinded causal mask and Sprocket grounding results'
+        git push origin "HEAD:refs/heads/$GITHUB_REF_NAME"
+    - name: Publish isolated final diagnostic report
+      run: |
+        gh release create village-001f-mask-sprocket-20261119 --target "$(git rev-parse HEAD)" --prerelease --title 'VILLAGE-001F causal mask and Sprocket diagnostic results' --notes-file "$F_ROOT/results/REPORT.md" "$RUNNER_TEMP/village001f-final-release"/*
+        python3 scripts/village_001f_operator.py verify-release --manifest "$F_ROOT/final-release-assets.json" --tag village-001f-mask-sprocket-20261119
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: Preserve village001f-judgments
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-judgments
+        path: experiments/village-001/diagnostic-20261119/results
+        if-no-files-found: warn
+        retention-days: 30
+    - name: Preserve village001f-final-${{ github.run_id }}
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-final-${{ github.run_id }}
+        path: |-
+          ${{ runner.temp }}/village001f-final-release
+          experiments/village-001/diagnostic-20261119/final-release-assets.json
+        if-no-files-found: warn
+        retention-days: 30
+    - name: Preserve village001f-recovery-judgments
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-recovery-judgments
+        path: |-
+          resume/lane.zip
+          resume/lane-custody.json
+          resume/history
+        if-no-files-found: warn
+        retention-days: 30
+    needs: plan
+    if: ${{ needs.plan.outputs.phase == 'judge' }}
+    permissions:
+      contents: write
+      actions: read
