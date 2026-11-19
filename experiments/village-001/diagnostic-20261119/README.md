@@ -4,6 +4,8 @@ Parent [#9](https://github.com/techrote/neurounner/issues/9); execution [#256](h
 
 **Completed on 19 November 2026: working-effect criteria NOT MET.** Corrected and reproduced training both average 1.75/4 relevance; exact gain is zero, three of six members improve, and the worst member changes by −0.25. Both Sprocket prompts produce 0/18 structurally valid critiques; grounded prose is 9/18 original versus 8/18 compact, with no structure-required actionable gain. Read the [complete interpretation and independent acceptance](review/COMPLETION.md), [paired result report](results/REPORT.md), and [final release](https://github.com/techrote/neurounner/releases/tag/village-001f-mask-sprocket-20261119). The usable-village objective in #9 remains unmet.
 
+The [independent main readback](review/main-readback.json) passes at `9626737d2c373a7671941bfe3def381018b0336b` with `closure_ready:true`. Original publication receipts retain their pre-main flags as historical records.
+
 ## Accepted E context and first launch
 
 Stage E is accepted on main at 498cbfb8caed6e962ee4dd7af951aa34281352e6 and issue #14 is closed completed. Its [fresh-main readback](../qualification-20261119/review/main-readback.json) returns closure_ready true and binds summary SHA-256 d49cfb48427718dbc9588d3de34a819f9f4018f4e501431ef070b3e3db4b2479. E's usable-village gate fails: lineage identification passes, conditioned sibling recognition and the required member count fail, while all 36 members meet the frozen raw relevance/genericness minima. D/T and E/F quality means use different cohorts and judging contexts; their numerical difference is not a training improvement. See the [complete interpretation](../qualification-20261119/review/COMPLETION.md).
