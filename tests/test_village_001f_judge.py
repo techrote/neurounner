@@ -29,6 +29,12 @@ def fingerprint(seed="a"):
             "tensor_count": 1, "tensors": {"fixture.weight": row}}
 
 
+def execution_result():
+    return {"runner": {"cpu_model": "Fixture CPU", "cpu_count": 4, "platform": "Fixture Linux"},
+        "packages": {"python": "3.12.3", **j.worker.RUNTIME},
+        "recovery": {"resumed": False, "resumed_from_step": 0}}
+
+
 def write_archive(kw, answer):
     out, label = kw["outdir"], kw["label"]
     write_once(out / f"{label}-request.json", {"provider": "nvidia", "role": kw["role"], "payload": kw["payload"]})
@@ -62,7 +68,10 @@ def synthetic_population():
         rows = [{"scenario_id": s["id"], "family": s["family"], "prompt": s["prompt"], "response": f"A concrete action for {s['id']}."} for s in suite["scenarios"]]
         workers[(member, stage)] = {"rows": rows, "result": {"adapter_directory_sha256": "a" * 64, "adapter_weight_fingerprint": fingerprint()}}
         if stage in ("D_REPRODUCED", "D_CORRECTED"):
-            training[(member, stage)] = {"receipt": {"adapter_directory_sha256": "a" * 64, "adapter_weight_fingerprint": fingerprint()}}
+            result, historical = execution_result(), execution_result()
+            training[(member, stage)] = {"result": result, "original_D_result": historical,
+                "receipt": {"adapter_directory_sha256": "a" * 64, "adapter_weight_fingerprint": fingerprint(),
+                    "training_result_sha256": j.sha256_value(result), "original_D_reference_result_sha256": j.sha256_value(historical)}}
     sp, mapping, source_rows = [], {}, []
     for case in range(1, 7):
         for seed in range(1, 4):
@@ -236,6 +245,114 @@ class BlindPlanAndAggregationTests(unittest.TestCase):
         self.assertEqual(len(result["sprocket"]["matched_case_seed_effects"]), 18)
 
 
+class ExecutionDisclosureTests(unittest.TestCase):
+    setUp = BlindPlanAndAggregationTests.setUp
+    ratings = BlindPlanAndAggregationTests.ratings
+    aggregate = BlindPlanAndAggregationTests.aggregate
+
+    def test_matched_execution_retains_all_metadata_and_hashes(self):
+        summary = self.aggregate(self.ratings())
+        member = summary["worker"]["per_member"][0]
+        execution = member["training_execution"]
+        self.assertEqual(set(execution["records"]), {"D_ORIGINAL", "D_REPRODUCED", "D_CORRECTED"})
+        for row in execution["records"].values():
+            self.assertEqual(row["result_sha256"], j.sha256_value(execution_result()))
+            self.assertEqual(row["packages"], execution_result()["packages"])
+            self.assertEqual(row["recorded_result_host"], execution_result()["runner"])
+            self.assertTrue(row["evidence_path"].startswith("sources/"))
+        for comparison in ("paired_arms", "original_vs_reproduced"):
+            row = execution[comparison]
+            for key in ("cpu_model_match", "cpu_count_match", "platform_match", "recorded_hardware_match", "recorded_host_match", "full_package_metadata_match"):
+                self.assertIs(row[key], True)
+            self.assertEqual(row["differences"], {})
+            self.assertEqual(row["unknown_fields"], [])
+        self.assertEqual(member["attribution_limitations"], [])
+        self.assertTrue(member["original_D_reproduced_tensor_hash_equal"])
+        self.assertEqual(summary["worker"]["original_D_reproduced_exact_responses"], 72)
+        report = j.report(summary)
+        self.assertIn("only planned algorithmic intervention", report)
+        self.assertIn("Hardware allocation remains uncontrolled", report)
+        self.assertIn("python=3.12.3", report)
+        self.assertNotIn("The recorded experimental difference", report)
+
+    def test_mismatched_execution_is_disclosed_without_changing_quality_criteria(self):
+        ratings = self.ratings()
+        for ident, row in ratings["primary"].items():
+            corrected = "A" if self.mapping["primary"][ident]["A"] == "D_CORRECTED" else "B"
+            row[corrected], row["B" if corrected == "A" else "A"] = worker_score(3), worker_score(1)
+        before = self.aggregate(ratings)
+        lane = self.training[(j.worker.PANEL[0], "D_CORRECTED")]
+        lane["result"]["runner"] = {"cpu_model": "Different CPU", "cpu_count": 8, "platform": "Different Linux"}
+        lane["result"]["packages"]["python"] = "3.12.4"
+        lane["result"]["packages"]["extra_library"] = "1.0"
+        lane["result"]["recovery"] = {"resumed": True, "resumed_from_step": 30}
+        lane["receipt"]["training_result_sha256"] = j.sha256_value(lane["result"])
+        summary = self.aggregate(ratings)
+        self.assertEqual(summary["worker"]["working_effect_criteria"], before["worker"]["working_effect_criteria"])
+        self.assertTrue(summary["worker"]["working_effect_signal"])
+        member = summary["worker"]["per_member"][0]
+        execution = member["training_execution"]
+        row = execution["paired_arms"]
+        for key in ("cpu_model_match", "cpu_count_match", "platform_match", "recorded_hardware_match", "recorded_host_match"):
+            self.assertIs(row[key], False)
+        self.assertIs(row["full_package_metadata_match"], False)
+        self.assertIs(row["package_matches"]["python"], False)
+        self.assertEqual(set(row["differences"]), {"runner.cpu_model", "runner.cpu_count", "runner.platform", "packages.python", "packages.extra_library"})
+        self.assertEqual(execution["records"]["D_CORRECTED"]["result_sha256"], lane["receipt"]["training_result_sha256"])
+        limits = " ".join(member["attribution_limitations"])
+        self.assertIn("cannot attribute the observed paired effect uniquely", limits)
+        self.assertIn("every earlier execution segment", limits)
+        self.assertTrue(member["original_D_reproduced_tensor_hash_equal"])
+        self.assertEqual(member["original_D_reproduced_exact_responses"], 12)
+        report = j.report(summary)
+        for text in ("Different CPU", "Different Linux", "python=3.12.4", "extra_library=1.0", "True / 30", "do not exclude members"):
+            self.assertIn(text, report)
+
+    def test_historical_metadata_difference_is_distinct_from_paired_arm_difference(self):
+        member_id = j.worker.PANEL[0]
+        for stage in ("D_REPRODUCED", "D_CORRECTED"):
+            lane = self.training[(member_id, stage)]
+            lane["original_D_result"]["runner"]["cpu_model"] = "Historical CPU"
+            lane["receipt"]["original_D_reference_result_sha256"] = j.sha256_value(lane["original_D_result"])
+        member = self.aggregate(self.ratings())["worker"]["per_member"][0]
+        self.assertIs(member["training_execution"]["paired_arms"]["recorded_host_match"], True)
+        self.assertIs(member["training_execution"]["original_vs_reproduced"]["cpu_model_match"], False)
+        self.assertTrue(member["original_D_reproduced_tensor_hash_equal"])
+        self.assertEqual(len(member["attribution_limitations"]), 1)
+        self.assertIn("metadata difference alone does not establish", member["attribution_limitations"][0])
+
+    def test_missing_metadata_never_counts_as_hardware_match(self):
+        for stage in ("D_REPRODUCED", "D_CORRECTED"):
+            lane = self.training[(j.worker.PANEL[0], stage)]
+            del lane["result"]["runner"]["cpu_model"]
+            lane["receipt"]["training_result_sha256"] = j.sha256_value(lane["result"])
+        summary = self.aggregate(self.ratings())
+        member = summary["worker"]["per_member"][0]
+        row = member["training_execution"]["paired_arms"]
+        self.assertIsNone(row["cpu_model_match"])
+        self.assertIsNone(row["recorded_hardware_match"])
+        self.assertIn("runner.cpu_model", row["unknown_fields"])
+        self.assertIn("missing fields do not establish", " ".join(member["attribution_limitations"]))
+        self.assertIn("unknown", j.report(summary))
+
+    def test_tensor_and_text_reproduction_checks_survive_matched_hardware(self):
+        member_id = j.worker.PANEL[0]
+        self.training[(member_id, "D_REPRODUCED")]["receipt"]["adapter_weight_fingerprint"] = fingerprint("b")
+        self.training[(member_id, "D_REPRODUCED")]["receipt"]["adapter_directory_sha256"] = "b" * 64
+        self.workers[(member_id, "D_ORIGINAL")]["rows"][0]["response"] = "A different historical response."
+        summary = self.aggregate(self.ratings())
+        member = summary["worker"]["per_member"][0]
+        self.assertIs(member["training_execution"]["paired_arms"]["recorded_host_match"], True)
+        for key in ("original_D_reproduced_tensor_hash_equal", "original_D_reproduced_safetensors_file_hash_equal", "original_D_reproduced_adapter_hash_equal"):
+            self.assertIs(member[key], False)
+        self.assertEqual(member["original_D_reproduced_exact_responses"], 11)
+        self.assertEqual(summary["worker"]["original_D_reproduced_exact_responses"], 71)
+        report = j.report(summary)
+        self.assertIn("tensor fingerprint was not reproduced", report)
+        self.assertIn("agree for 5/6 members", report)
+        self.assertIn("11/12 exact Q responses", report)
+
+
 class BudgetAndReplayTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -360,7 +477,7 @@ class NativeSourceTests(unittest.TestCase):
                     "training_config": pref["preference_training"], "training_identity_sha256": j.sha256_file(out / "training-identity.json"),
                     "new_Q_reserve_used_for_training": False, "training": {"optimizer_steps": 120, "pair_count": 60},
                     "engine_source_sha256": engine_sha, "adapter": {"sha256": adapter},
-                    "packages": wcfg["runtime"], "evaluation": {"responses": []}}
+                    **execution_result(), "evaluation": {"responses": []}}
                 write_once(out / "result.json", result)
                 write_once(out / "training.json", {"schema": "village-001f-matched-mask-training-v1",
                     "member_id": member, "mask_mode": arm, "training_identity_sha256": j.sha256_file(out / "training-identity.json"),
@@ -421,6 +538,28 @@ class NativeSourceTests(unittest.TestCase):
             (lane / "training.json").write_bytes(j.json_bytes(receipt))
             with self.assertRaisesRegex(RuntimeError, "source/seed/config drift"):
                 j.load_training(train_root, cfg, wcfg, campaign, pref)
+
+    def test_execution_metadata_remains_bound_to_validated_result_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg, wcfg, _, campaign, pref, train_root, _, _ = self.frozen_worker_fixture(Path(tmp))
+            member = wcfg["members"][0]
+            lane = train_root / member / "length_derived_mask"
+            result = j.read(lane / "result.json")
+            result["runner"]["cpu_model"] = "A different recorded CPU"
+            (lane / "result.json").write_bytes(j.json_bytes(result))
+            with self.assertRaisesRegex(RuntimeError, "training result hash mismatch"):
+                j.load_training(train_root, cfg, wcfg, campaign, pref)
+            receipt = j.read(lane / "training.json")
+            receipt["training_result_sha256"] = j.sha256_file(lane / "result.json")
+            (lane / "training.json").write_bytes(j.json_bytes(receipt))
+            training, sources = j.load_training(train_root, cfg, wcfg, campaign, pref)
+            disclosure = j.training_execution_disclosure(member, training)
+            self.assertFalse(disclosure["paired_arms"]["cpu_model_match"])
+            self.assertEqual(disclosure["records"]["D_CORRECTED"]["result_sha256"], receipt["training_result_sha256"])
+            original = disclosure["records"]["D_ORIGINAL"]
+            self.assertEqual(original["result_sha256"], j.sha256_file(sources[original["evidence_path"].removeprefix("sources/")]))
+            self.assertEqual(original["recorded_result_host"], j.worker.source_result(member, "D")["runner"])
+            self.assertEqual(len([key for key in sources if key.startswith("training-references/")]), 6)
 
     def sprocket_fixture(self, root):
         d = j.sprocket

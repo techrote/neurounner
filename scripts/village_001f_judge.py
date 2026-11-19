@@ -143,7 +143,9 @@ def load_training(root: Path, cfg: dict, wcfg: dict, campaign: dict, pref: dict)
         equal(receipt.get("training_result_sha256"), sha256_file(result_path), "training result hash mismatch")
         population, member_meta = worker.member_contract(campaign, member)
         parent = worker.source_result(member, "C")["adapter"]["sha256"]
-        historical = worker.source_result(member, "D")["adapter"]["sha256"]
+        historical_path = ROOT / "experiments/village-001/preference-evidence/results" / f"{member}.json"
+        historical_result = read(historical_path)
+        historical = historical_result["adapter"]["sha256"]
         expected_identity = worker.run_identity(ROOT / cfg["worker_config"], wcfg,
             kind="matched-preference-mask-training", member=member, stage=arm, adapter_sha=parent)
         expected_identity.update(mask_mode=arm, member_seed=member_meta["seed"],
@@ -168,13 +170,14 @@ def load_training(root: Path, cfg: dict, wcfg: dict, campaign: dict, pref: dict)
         expected_engine_sha = sha256_file(ROOT / "scripts/village_001d_preference_train.py")
         equal(receipt.get("engine_source_sha256"), expected_engine_sha, "training engine source mismatch")
         equal(result.get("engine_source_sha256"), expected_engine_sha, "training result engine source mismatch")
-        equal(receipt.get("original_D_reference_result_sha256"), sha256_file(ROOT / "experiments/village-001/preference-evidence/results" / f"{member}.json"), "historical D result hash mismatch")
+        equal(receipt.get("original_D_reference_result_sha256"), sha256_file(historical_path), "historical D result hash mismatch")
         equal(result["adapter"]["sha256"], receipt.get("adapter_directory_sha256"), "new adapter hash mismatch")
         validate_fingerprint(receipt.get("adapter_weight_fingerprint"))
         for package, version in wcfg["runtime"].items():
             equal(result["packages"].get(package), version, "matched training runtime drift")
         equal(result.get("evaluation", {}).get("responses"), [], "new training used legacy heldouts")
-        found[key] = {"receipt": receipt, "identity": identity, "result": result}
+        found[key] = {"receipt": receipt, "identity": identity, "result": result, "original_D_result": historical_result}
+        sources[f"training-references/original-D/{member}.json"] = historical_path
         for selected in (path, identity_path, result_path):
             sources[f"training/{member}/{arm}/{selected.name}"] = selected
     expected = {(member, stage) for member in wcfg["members"] for stage in ARM_STAGE.values()}
@@ -411,6 +414,69 @@ def mean(values) -> float:
     return statistics.mean(values)
 
 
+def training_execution_disclosure(member: str, training: dict) -> dict:
+    """Describe validated result receipts without making host equality a gate."""
+    reproduced = training[(member, "D_REPRODUCED")]
+    original = reproduced["original_D_result"]
+    records = {}
+    inputs = {"D_ORIGINAL": (original, reproduced["receipt"]["original_D_reference_result_sha256"],
+        f"sources/training-references/original-D/{member}.json")}
+    for arm, stage in ARM_STAGE.items():
+        lane = training[(member, stage)]
+        inputs[stage] = (lane["result"], lane["receipt"]["training_result_sha256"],
+            f"sources/training/{member}/{arm}/result.json")
+    for stage, (result, digest, path) in inputs.items():
+        host = result.get("runner", {})
+        records[stage] = {"result_sha256": digest, "evidence_path": path,
+            "recorded_result_host": {key: host.get(key) for key in ("cpu_model", "cpu_count", "platform")},
+            "packages": dict(result.get("packages", {})), "recovery": dict(result.get("recovery", {}))}
+
+    def compare(left_stage, right_stage):
+        left, right = records[left_stage], records[right_stage]
+        package_keys = sorted(set(left["packages"]) | set(right["packages"]) | {"python", "torch", "transformers", "peft"})
+        values = {f"runner.{key}": (left["recorded_result_host"][key], right["recorded_result_host"][key])
+            for key in ("cpu_model", "cpu_count", "platform")}
+        values.update({f"packages.{key}": (left["packages"].get(key), right["packages"].get(key)) for key in package_keys})
+        matches = {key: None if a is None or b is None else a == b for key, (a, b) in values.items()}
+        def combined_match(keys):
+            values = [matches[key] for key in keys]
+            return False if False in values else (None if None in values else True)
+        return {"left_stage": left_stage, "right_stage": right_stage,
+            "cpu_model_match": matches["runner.cpu_model"], "cpu_count_match": matches["runner.cpu_count"],
+            "platform_match": matches["runner.platform"],
+            "recorded_hardware_match": combined_match(("runner.cpu_model", "runner.cpu_count")),
+            "recorded_host_match": combined_match(("runner.cpu_model", "runner.cpu_count", "runner.platform")),
+            "full_package_metadata_match": False if left["packages"] != right["packages"] else combined_match([f"packages.{key}" for key in package_keys]),
+            "package_matches": {key: matches[f"packages.{key}"] for key in package_keys},
+            "differences": {key: {left_stage: a, right_stage: b} for key, (a, b) in values.items() if a != b},
+            "unknown_fields": [key for key, value in matches.items() if value is None]}
+
+    return {"records": records, "paired_arms": compare("D_REPRODUCED", "D_CORRECTED"),
+        "original_vs_reproduced": compare("D_ORIGINAL", "D_REPRODUCED")}
+
+
+def attribution_limitations(member: dict) -> list[str]:
+    execution = member["training_execution"]
+    limits = []
+    paired = execution["paired_arms"]
+    if paired["differences"]:
+        limits.append("Paired training receipts differ in " + ", ".join(paired["differences"]) +
+            "; this pilot cannot attribute the observed paired effect uniquely to masking. The numerical effect of those execution differences is unmeasured.")
+    historical = execution["original_vs_reproduced"]
+    if historical["differences"]:
+        limits.append("Original and reproduced D training receipts differ in " + ", ".join(historical["differences"]) +
+            "; this metadata difference alone does not establish a weight or behavior effect or explain a reproduction failure.")
+    if paired["unknown_fields"] or historical["unknown_fields"]:
+        limits.append("Some execution metadata is unrecorded; missing fields do not establish host or package equivalence.")
+    if any(record["recovery"].get("resumed") for record in execution["records"].values()):
+        limits.append("At least one training lane resumed. Its result host does not describe every earlier execution segment.")
+    if not member["original_D_reproduced_tensor_hash_equal"]:
+        limits.append("The original D tensor fingerprint was not reproduced. The paired effect applies to these new executions and does not by itself isolate a repair of the historical D run.")
+    if member["original_D_reproduced_exact_responses"] != member["cases"]:
+        limits.append(f"Original and reproduced D agree on {member['original_D_reproduced_exact_responses']}/{member['cases']} exact Q responses; historical behavior was not fully reproduced.")
+    return limits
+
+
 def aggregate(ratings: dict, mapping: dict, blinded: dict, workers: dict, training: dict, sp_rows: list[dict], wcfg: dict) -> dict:
     paired, contextual, sp = [], [], []
     paired_inputs = {r["id"]: r for r in blinded["primary"]}
@@ -429,7 +495,7 @@ def aggregate(ratings: dict, mapping: dict, blinded: dict, workers: dict, traini
         require(len(rows) == 12, "paired member case count drift")
         reproduced = {r["scenario_id"]: r["response"] for r in workers[(member, "D_REPRODUCED")]["rows"]}
         original = {r["scenario_id"]: r["response"] for r in workers[(member, "D_ORIGINAL")]["rows"]}
-        per_member.append({"member_id": member, "cases": 12,
+        record = {"member_id": member, "cases": 12,
             "corrected": {key: mean(r["corrected"][key] for r in rows) for key in WORKER_SCORES},
             "reproduced": {key: mean(r["reproduced"][key] for r in rows) for key in WORKER_SCORES},
             "mean_delta": {key: mean(r["delta"][key] for r in rows) for key in WORKER_SCORES},
@@ -438,7 +504,10 @@ def aggregate(ratings: dict, mapping: dict, blinded: dict, workers: dict, traini
             "original_D_reproduced_exact_responses": sum(reproduced[k] == original[k] for k in original),
             "original_D_reproduced_tensor_hash_equal": training[(member, "D_REPRODUCED")]["receipt"]["adapter_weight_fingerprint"]["canonical_tensor_sha256"] == workers[(member, "D_ORIGINAL")]["result"]["adapter_weight_fingerprint"]["canonical_tensor_sha256"],
             "original_D_reproduced_safetensors_file_hash_equal": training[(member, "D_REPRODUCED")]["receipt"]["adapter_weight_fingerprint"]["safetensors_file_sha256"] == workers[(member, "D_ORIGINAL")]["result"]["adapter_weight_fingerprint"]["safetensors_file_sha256"],
-            "original_D_reproduced_adapter_hash_equal": training[(member, "D_REPRODUCED")]["receipt"]["adapter_directory_sha256"] == workers[(member, "D_ORIGINAL")]["result"]["adapter_directory_sha256"]})
+            "original_D_reproduced_adapter_hash_equal": training[(member, "D_REPRODUCED")]["receipt"]["adapter_directory_sha256"] == workers[(member, "D_ORIGINAL")]["result"]["adapter_directory_sha256"],
+            "training_execution": training_execution_disclosure(member, training)}
+        record["attribution_limitations"] = attribution_limitations(record)
+        per_member.append(record)
     for ident, judgment in ratings["context"].items():
         contextual.append({"review_id": ident, **mapping["context"][ident], **judgment})
     gains = [row["mean_delta"]["task_relevance"] for row in per_member]
@@ -511,6 +580,8 @@ def aggregate(ratings: dict, mapping: dict, blinded: dict, workers: dict, traini
             "case_effects": sp_case_effects, "matched_case_seed_effects": sp_matched, "reviews": sp,
             "interpretation": "Syntax, grounding and usefulness are separate measurements. This small matched prompt pilot does not establish a causal benefit to worker learning."},
         "limitations": ["Six prespecified members and twelve new prompts do not establish full-population generalization.",
+            "Training arms run in separate hosted jobs. CPU model, platform and full package metadata are recorded, not allocation-controlled; matching metadata does not guarantee numerical equivalence.",
+            "Execution and reproduction differences qualify attribution without changing the prespecified panel, quality criteria or workload.",
             "Remote critic backend is not version-pinned; scores are evidence from this archived request cohort.",
             "Repeated prompts and Sprocket seeds are within-case observations, not independent replications.",
             "No Stage E outcome selected the panel, Q prompts, arms or thresholds.",
@@ -527,13 +598,38 @@ def report(summary: dict) -> str:
         "|---|---:|---:|---:|---:|"]
     for row in w["per_member"]:
         lines.append(f"| {row['member_id']} | {row['reproduced']['task_relevance']:.3f} | {row['corrected']['task_relevance']:.3f} | {row['mean_delta']['task_relevance']:+.3f} | {row['original_D_reproduced_exact_responses']}/12 |")
-    lines += ["", "The paired arms retain the same C parent, pair bytes, original member seed, optimizer, objective, 120-step budget and runtime. The recorded experimental difference is the attention mask.",
+    lines += ["", "The attention mask is the only planned algorithmic intervention. C parent weights, pair bytes, original member seed, optimizer, objective, 120-step budget and required library versions are fixed. Training arms run in separate hosted jobs; their recorded execution and reproduction differences are reported below.",
         "", "## Context and reproducibility", "", w["context_design"], "",
         "| Stage | Responses | Relevance | Coherence | Genericness | Groundedness |", "|---|---:|---:|---:|---:|---:|"]
     for stage, row in w["context_summary"].items():
         lines.append(f"| {stage} | {row['responses']} | " + " | ".join(f"{row['means'][k]:.3f}" for k in WORKER_SCORES) + " |")
     lines += ["", f"Original D versus reproduced D has exact output-text agreement on {w['original_D_reproduced_exact_responses']}/72 Q cases. This is measured rather than assumed.",
         f"Canonical named-tensor fingerprints agree for {sum(r['original_D_reproduced_tensor_hash_equal'] for r in w['per_member'])}/6 members; safetensors file hashes agree for {sum(r['original_D_reproduced_safetensors_file_hash_equal'] for r in w['per_member'])}/6. Directory hashes include auxiliary files and are reported separately.",
+        "", "### Recorded training execution", "",
+        "Each stage links to its complete hash-bound training result. Exact result SHA-256s, full package metadata and field-level differences are also retained in summary.json. The recorded result host does not attest every earlier host of a resumed lane. Matching recorded metadata does not guarantee numerical equivalence.", "",
+        "| Member | Stage / result | Recorded CPU model | Logical CPUs | Platform | Packages | Resumed / step |",
+        "|---|---|---|---:|---|---|---|"]
+    cell = lambda value: str(value).replace("|", "\\|").replace("\n", " ") if value is not None else "unrecorded"
+    flag = lambda value: "unknown" if value is None else ("match" if value else "different")
+    for member in w["per_member"]:
+        for stage, row in member["training_execution"]["records"].items():
+            host, recovery = row["recorded_result_host"], row["recovery"]
+            packages = "; ".join(f"{key}={value}" for key, value in sorted(row["packages"].items())) or "unrecorded"
+            lines.append(f"| {member['member_id']} | [{stage}]({row['evidence_path']}) | {cell(host['cpu_model'])} | {cell(host['cpu_count'])} | {cell(host['platform'])} | {cell(packages)} | {cell(recovery.get('resumed'))} / {cell(recovery.get('resumed_from_step'))} |")
+    lines += ["", "| Member | Compared stages | CPU model | CPU count | Platform | Full package metadata | Recorded differences |",
+        "|---|---|---|---|---|---|---|"]
+    for member in w["per_member"]:
+        for comparison in ("paired_arms", "original_vs_reproduced"):
+            row = member["training_execution"][comparison]
+            differences = "; ".join(f"{key}: {values[row['left_stage']]} -> {values[row['right_stage']]}" for key, values in row["differences"].items()) or "none"
+            lines.append(f"| {member['member_id']} | {row['left_stage']} / {row['right_stage']} | {flag(row['cpu_model_match'])} | {flag(row['cpu_count_match'])} | {flag(row['platform_match'])} | {flag(row['full_package_metadata_match'])} | {cell(differences)} |")
+    observed_limits = [(row["member_id"], limit) for row in w["per_member"] for limit in row["attribution_limitations"]]
+    lines += ["", "### Attribution qualifications", ""]
+    if observed_limits:
+        lines.extend(f"- **{member}:** {limit}" for member, limit in observed_limits)
+    else:
+        lines.append("No recorded execution mismatch or measured baseline reproduction failure was found. Hardware allocation remains uncontrolled; these checks do not prove complete numerical equivalence.")
+    lines += ["", "These disclosures do not exclude members, change the prespecified working-effect criteria or authorize additional training.",
         "", "## Sprocket feedback pilot", "", "| Arm | Strict JSON/schema | Grounded | Strict, grounded and actionable | Response grounding | Scenario grounding | Usefulness |",
         "|---|---:|---:|---:|---:|---:|---:|"]
     for arm, row in s["arms"].items():
