@@ -1,0 +1,88 @@
+{
+  "experiment": "DG020_H60",
+  "classification": "PROSPECTIVE_PRE_INFERENCE_PREREGISTRATION; CPU-only; fixed two-law additive two-route task",
+  "registered_utc": "2026-11-19",
+  "current_pr_parent_sha": "6d83748b9c9656ab312848db38813a2e042f8c9c",
+  "training": {
+    "original_209_parameter_receiver_sha256": "0647f98131e30026e5f8211570cda73adcf6172a8e6238430f7b73efbac5df1f",
+    "candidate_209_parameter_receiver_sha256": "7e9953b832a905ba8e5166b37cd20010bf82ac8c64d6e508ee7b7ec4c05cb3f6",
+    "candidate_fitting": "Only 8 final-layer weights fitted by L1-minimal linear programming with fixed 201 authentic previously-trained parameters; all supervised labels computed using nominal physical material-law costs rather than learned donor estimates.",
+    "training_worlds": 13600,
+    "training_seeds": [
+      "H40 exposed only",
+      31060063,
+      31060079,
+      31060097,
+      31060111,
+      31060129
+    ],
+    "original_genuine_donors": "8 frozen H34 trained donor checkpoints; four independent source profiles",
+    "training_lp_json_sha256": "37d415138f506512d9e4a3fb6847f1caa3600f6ae66dfa591483c2cbe2d1dc17",
+    "training_constraints": "108800 both-law four-donor-source endpoint constraints; 814998 full ReLU-knot invariant training-only constraints; nominal physical 0.35/2.30 oracle; no H55/H56/H58/H59a sealed evaluation decisions used in fitting",
+    "guardrail": "No training on any prospective H60 world or any revealed H56/H58/H59a evaluation answer."
+  },
+  "evaluation": {
+    "frozen_evaluator_source_sha256": "bbb4c33650737d13b0fe6a5a75c2917fa4f5b4fae5e7854595314f392e9414dd",
+    "frozen_reference_H56_source_sha256": "f8c059eec92215af7cbbe4752a15733667ca75dbadf2147b6ed6a8810572b871",
+    "frozen_candidate_checkpoint_sha256": "7e9953b832a905ba8e5166b37cd20010bf82ac8c64d6e508ee7b7ec4c05cb3f6",
+    "other_receiver_sha256": {
+      "26011640": "b1662812437ae4a83e16f0f345e2c8291acf48e8748776340d98f4be9a9fc9fc",
+      "26011641": "acec1cc9ac7ac221131e60b515d2c3025f20cd9b95afd134c27b48d23f63a542"
+    },
+    "seed_worlds": 31060177,
+    "seed_shuffled_controls": 31060191,
+    "preflight_world_count": 2400,
+    "preflight_world_fingerprint_sha256": "b6c59c48162fa5acbdbc4e44ac012fb99aaa20974cf1eea89371de49012d15ce",
+    "preflight_only_no_neural_inference_yet": true,
+    "families": [
+      "edge_bookends",
+      "central_bank",
+      "modular_spokes"
+    ],
+    "buckets": [
+      "cheap_divergent",
+      "expensive_divergent",
+      "wet_rich_invariant",
+      "wet_poor_invariant",
+      "equal_wet_invariant"
+    ],
+    "near_margin_strata": [
+      [
+        0.0005,
+        0.0015
+      ],
+      [
+        0.0015,
+        0.004
+      ],
+      [
+        0.004,
+        0.012
+      ],
+      [
+        0.012,
+        0.04
+      ]
+    ],
+    "acceptance": {
+      "pass_cells_required": 45,
+      "all_worlds_both_law_all_4_genuine_source_correct_per_cell": 160,
+      "invariant_inappropriate_flips_max": 0,
+      "source_sham_disagreement_worlds_max": 0,
+      "wrong_neural_actions_max": 0,
+      "illegal_actions_max": 0,
+      "divergent_law_correct_flips_required": 11520,
+      "wrong_law_swapped_both_correct_max_per_divergent_cell": 0,
+      "shuffled_both_correct_max_per_divergent_cell": 64,
+      "continuous_invariant_wrong_cost_intervals_max": 0,
+      "continuous_invariant_intervals_expected": 17280,
+      "action_balance_per_cell": "80 each direction"
+    },
+    "require_independent_float64_replay": true
+  },
+  "controls": "Genuine same-law source shams, opposite-law swap, zero and neutral controls, pre-inference shuffled donor-law assignment; no zero/neutral causal inference.",
+  "isolation": "Same geometry, goal, per-tile fees, legal masks and receiver weights within pairs; only inherited trained-donor wet cost changes.",
+  "scope": "Only restricted additive-routing material-law selectivity. No general spatial/game policy or memory transplant claims.",
+  "negative_history": "Preserve H54 INVALID, H56 historical restricted PASS, H58 interior FAIL, H59a endpoint FAIL and full combined harness INVALID.",
+  "governance": "Existing techrote/neurounner Draft/HOLD PR #253 only; no new branches, issues, PRs, merge, Ready, paid GPU/API, CyberSand or DRIV3R edits."
+}
