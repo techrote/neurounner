@@ -14,6 +14,7 @@ from urllib.parse import quote
 from village_001d_recover_completed import get_bytes, safe_extract, verify_zip
 import village_001e_isolated as isolated
 import village_001e_recover_provider_budget as recovery
+import village_001e_reallocate_provider_budget as reallocation
 
 ROOT = Path(__file__).resolve().parents[1]
 REL = Path("experiments/village-001/qualification-20261119")
@@ -44,7 +45,7 @@ def gh(resource):
 def request():
     r = read(WORK / "recovery-request.json")
     expected = {"schema", "publish_branch", "execution_revision", "original_run_id", "original_source_head", "manifest_sha256", "resume_recovery_run_id", "new_training", "new_local_generations", "release_tag"}
-    require(set(r) == expected, "unexpected recovery request fields")
+    require(set(r) in (expected, expected | {"allocation_manifest_sha256"}), "unexpected recovery request fields")
     require(r["schema"] == "village-001e-bounded-provider-recovery-request-v1" and r["publish_branch"] == BRANCH, "wrong recovery request")
     require(r["original_run_id"] == ORIGINAL_RUN and r["original_source_head"] == ORIGINAL_HEAD, "original campaign changed")
     require(type(r["execution_revision"]) is int and r["execution_revision"] > 0, "invalid recovery revision")
@@ -61,9 +62,30 @@ def request():
     require(recovery.sha256_file(CUSTODY / "original-artifacts.json") == manifest["artifact_inventory_sha256"], "artifact receipt hash changed")
     require({a["name"] for a in inventory["artifacts"]} == {row["artifact_name"] for row in manifest["lanes"] if row.get("artifact") is not None}, "uploaded original artifact set differs from manifest")
     require(recovery.sha256_file(CUSTODY / "original-jobs.json") == manifest["jobs_record_sha256"], "original job-step proof changed")
+    allocation_context(r, manifest, config)
     isolated.request()
     isolated.verify_generation()
     return r, manifest, config
+
+
+def allocation_context(r, manifest=None, config=None):
+    """An explicit extension augments the original manifest; it never replaces it."""
+    if "allocation_manifest_sha256" not in r:
+        return None
+    digest = r["allocation_manifest_sha256"]
+    require(isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest), "invalid allocation manifest SHA")
+    require(r["execution_revision"] >= 2 and r["resume_recovery_run_id"] is not None, "allocation extension requires a preserved prior execution")
+    path = CUSTODY / "allocation-extension.json"
+    require(recovery.sha256_file(path) == digest, "allocation manifest bytes changed")
+    allocation, original, allocation_config = reallocation.load_allocation(path)
+    require(allocation["original_manifest"]["sha256"] == r["manifest_sha256"], "allocation extension changed original budget authority")
+    if manifest is not None:
+        require(original == manifest, "allocation extension loaded another original manifest")
+    if config is not None:
+        require(allocation_config.resolve() == config.resolve(), "allocation extension changed qualification config")
+    baseline = allocation["prior_recovery_run"]
+    check_run(baseline, run_id=baseline["id"], workflow=WORKFLOW)
+    return path, allocation, original, allocation_config
 
 
 def verify():
@@ -78,7 +100,10 @@ def verify():
     require(not tag.strip(), "immutable qualification tag already exists")
     release = subprocess.run(["gh", "api", f"repos/{REPO}/releases/tags/{r['release_tag']}"], capture_output=True, text=True)
     require(release.returncode != 0 and "HTTP 404" in release.stderr, "qualification release exists or absence is uncertain")
-    print(json.dumps({"original_run": ORIGINAL_RUN, "pending_lanes": [x["lane"] for x in manifest["lanes"] if x["status"] == "pending"], "budget": manifest["budget"]}, indent=2))
+    active = allocation_context(r, manifest)
+    plan = active[1] if active else manifest
+    status_key = "baseline_status" if active else "status"
+    print(json.dumps({"original_run": ORIGINAL_RUN, "pending_lanes": [x["lane"] for x in plan["lanes"] if x[status_key] == "pending"], "budget": plan["budget"]}, indent=2))
 
 
 def paged(resource, key):
@@ -101,11 +126,14 @@ def verify_run_history(r):
     older = sorted((x for x in runs if x["id"] != current_id), key=lambda x: x["run_number"])
     require(all(x["run_number"] < current[0]["run_number"] and x["status"] == "completed" for x in older), "another recovery execution is pending or newer")
     spent_runs = []
+    allocated_spending = False
     for run in older:
         check_run(run, run_id=run["id"], workflow=WORKFLOW)
         subprocess.run(["git", "merge-base", "--is-ancestor", run["head_sha"], "HEAD"], check=True)
         previous = json.loads(subprocess.check_output(["git", "show", run["head_sha"] + ":" + str(REL / "recovery-request.json")], text=True))
         require(previous.get("manifest_sha256") == r["manifest_sha256"] and previous.get("original_run_id") == ORIGINAL_RUN, "prior recovery used another budget manifest")
+        if previous.get("allocation_manifest_sha256") is not None:
+            require(previous["allocation_manifest_sha256"] == r.get("allocation_manifest_sha256"), "active allocation extension cannot be dropped or replaced")
         jobs = paged(f"actions/runs/{run['id']}/jobs", "jobs")
         recovery_jobs = [job for job in jobs if job["name"] == "recover"]
         require(len(recovery_jobs) <= 1, "ambiguous prior recovery job")
@@ -114,6 +142,7 @@ def verify_run_history(r):
             require(len(steps) == 1, "prior provider execution cannot be established")
             if steps[0].get("conclusion") != "skipped":
                 spent_runs.append(run)
+                allocated_spending = allocated_spending or previous.get("allocation_manifest_sha256") is not None
     if older:
         previous = json.loads(subprocess.check_output(["git", "show", older[-1]["head_sha"] + ":" + str(REL / "recovery-request.json")], text=True))
         require(r["execution_revision"] == previous["execution_revision"] + 1, "recovery revision must advance exactly once from latest request")
@@ -121,6 +150,9 @@ def verify_run_history(r):
         require(r["execution_revision"] == 1, "first recovery revision must be one")
     expected_resume = spent_runs[-1]["id"] if spent_runs else None
     require(r["resume_recovery_run_id"] == expected_resume, "must resume the latest earlier provider execution; fresh recovery would reset campaign spending")
+    active = allocation_context(r)
+    if active and not allocated_spending:
+        require(active[1]["prior_recovery_run"]["id"] == expected_resume, "first allocation execution must resume its exact frozen baseline run")
     print(json.dumps({"prior_recovery_runs": len(older), "prior_provider_executions": len(spent_runs), "required_resume_run_id": expected_resume}))
 
 
@@ -204,7 +236,9 @@ def run_all(original, out, prior=None):
     r, manifest, config = request()
     require(not out.exists(), "recovery output must be new")
     manifest_path = CUSTODY / "manifest.json"
-    rows = manifest["lanes"]
+    active = allocation_context(r, manifest, config)
+    rows = active[1]["lanes"] if active else manifest["lanes"]
+    original_rows = {row["artifact_name"]: row for row in manifest["lanes"]}
     sources = {}
     require((r["resume_recovery_run_id"] is None) == (prior is None), "declared prior recovery must be supplied, and unsolicited prior recovery is refused")
     if prior is not None:
@@ -222,6 +256,20 @@ def run_all(original, out, prior=None):
         require({p.name for p in (prior / "inherited").iterdir()} == expected, "prior inherited forest must retain all 48 lanes")
         if (prior / "lanes").exists():
             require({p.name for p in (prior / "lanes").iterdir()} <= expected, "unexpected prior output lane")
+        if active:
+            baseline = active[1]["prior_recovery_run"]
+            if r["resume_recovery_run_id"] == baseline["id"]:
+                baseline_receipt = receipt
+                baseline_zip = prior.parent / "prior-recovery.zip"
+                reallocation.validate_baseline_bundle(prior, active[1])
+            else:
+                baseline_receipt = read(prior / "custody" / f"resume-recovery-{baseline['id']}.json")
+                baseline_zip = prior / "custody" / f"recovery-run-{baseline['id']}.zip"
+            check_run(baseline_receipt["run"], run_id=baseline["id"], workflow=WORKFLOW, head=baseline["head_sha"])
+            frozen_artifact = active[1]["prior_recovery_artifact"]
+            for key in ("id", "name", "digest", "size_in_bytes", "archive_download_url", "workflow_run"):
+                require(baseline_receipt["artifact"][key] == frozen_artifact[key], "allocation baseline artifact custody changed: " + key)
+            verify_zip(baseline_zip, frozen_artifact)
     # Preflight every source before spending any provider request.
     for row in rows:
         path = original / row["artifact_name"]
@@ -233,10 +281,13 @@ def run_all(original, out, prior=None):
                 require(all(current.get(name) == value for name, value in inherited.items()), "prior output lost immutable inherited history; refusing budget reset")
             else:
                 path = prior / "inherited" / row["artifact_name"]
-        recovery.preserve_original(path, row)
+        if active:
+            reallocation.validate_prior_source(path, active[1], row, original=manifest)
+        else:
+            recovery.preserve_original(path, row)
         existing = path / "budget-recovery-identity.json"
         if existing.exists():
-            require(read(existing) == recovery.recovery_identity(manifest_path, manifest, row), "prior recovery belongs to another manifest")
+            require(read(existing) == recovery.recovery_identity(manifest_path, manifest, original_rows[row["artifact_name"]]), "prior recovery belongs to another manifest")
         sources[row["artifact_name"]] = path
     # A cancellation halfway through this invocation must retain source lanes
     # that were completed in older invocations but not yet visited in this one.
@@ -257,26 +308,33 @@ def run_all(original, out, prior=None):
     for row in rows:
         name = row["artifact_name"]
         try:
-            recovery.run_lane(manifest_path, manifest, config, row, out / "inherited" / name, out / "lanes" / name, offline=row["status"] == "completed")
+            if active:
+                reallocation.run_lane(*active, row, out / "inherited" / name, out / "lanes" / name, offline=row["baseline_status"] == "completed")
+            else:
+                recovery.run_lane(manifest_path, manifest, config, row, out / "inherited" / name, out / "lanes" / name, offline=row["status"] == "completed")
         except Exception as exc:
             failures.append({"lane": row["lane"], "error": type(exc).__name__ + ": " + str(exc)})
             print(json.dumps(failures[-1]), flush=True)
             # Validate the formatting continuation on already-started lanes
             # before permitting untouched tournament lanes to spend requests.
-            if row.get("kind") == "tournament" and row["status"] == "pending":
+            if row.get("kind") == "tournament" and row["baseline_status" if active else "status"] == "pending":
                 break
     if failures:
         recovery.write_once(out / "recovery-failures.json", failures)
         raise RuntimeError("bounded recovery has incomplete lanes; original and new raw files are retained")
-    result = recovery.verify_complete(manifest_path, manifest, config, out / "lanes")
+    result = reallocation.verify_complete(*active, out / "lanes") if active else recovery.verify_complete(manifest_path, manifest, config, out / "lanes")
     recovery.write_once(CUSTODY / "accounting.json", result)
     print(json.dumps({k: result[k] for k in ("actual_logical_requests", "actual_supplemental_logical_requests", "all_48_lanes_reconstructed_offline")}, indent=2))
 
 
 def layout(source, destination):
-    _, manifest, _ = request()
+    r, manifest, config = request()
     require(not destination.exists(), "assembly layout must be new")
-    recovery.verify_complete(CUSTODY / "manifest.json", manifest, ROOT / manifest["config"], source)
+    active = allocation_context(r, manifest, config)
+    if active:
+        reallocation.verify_complete(*active, source)
+    else:
+        recovery.verify_complete(CUSTODY / "manifest.json", manifest, config, source)
     for row in manifest["lanes"]:
         group = "tournament" if row["kind"] == "tournament" else "ecology-judgments"
         shutil.copytree(source / row["artifact_name"], destination / group / row["artifact_name"])

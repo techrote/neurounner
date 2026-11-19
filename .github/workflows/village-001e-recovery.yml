@@ -9,7 +9,9 @@ name: VILLAGE-001E bounded provider recovery and final publication
     paths:
     - .github/workflows/village-001e-recovery.yml
     - scripts/village_001e_recover*.py
+    - scripts/village_001e_reallocate*.py
     - tests/test_village_001e_recover*.py
+    - tests/test_village_001e_reallocate*.py
     - experiments/village-001/qualification-20261119/provider-recovery/**
 permissions:
   contents: read
@@ -60,6 +62,8 @@ jobs:
         python3 scripts/village_001e_recovery_operator.py download-original --out "$RUNNER_TEMP/original"
         python3 scripts/village_001e_recovery_operator.py download-prior --out "$RUNNER_TEMP/prior"
     - name: Complete only missing provider fields within the frozen global ceiling
+      # Preserve time for the always() evidence uploads after a stalled provider.
+      timeout-minutes: 145
       env:
         NVIDIA_API_KEY: ${{ secrets.NVKEY }}
       run: |
@@ -101,6 +105,12 @@ jobs:
         for p in sorted(Path('release-assets').iterdir()):
             rows.append({'file':p.name,'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
         receipt={'schema':'village-001e-isolated-release-v1','run_id':int(os.environ['GITHUB_RUN_ID']),'source_head':os.environ['GITHUB_SHA'],'release_tag':'village-001e-final-20261119','assets':rows,'new_optimizer_steps':0,'original_provider_run':44439359038,'recovery_manifest_sha256':hashlib.sha256(Path(os.environ['QUAL_ROOT'],'provider-recovery/manifest.json').read_bytes()).hexdigest(),'global_accounting_sha256':hashlib.sha256(Path(os.environ['QUAL_ROOT'],'provider-recovery/accounting.json').read_bytes()).hexdigest()}
+        request=json.loads(Path(os.environ['QUAL_ROOT'],'recovery-request.json').read_text())
+        if 'allocation_manifest_sha256' in request:
+            digest=hashlib.sha256(Path(os.environ['QUAL_ROOT'],'provider-recovery/allocation-extension.json').read_bytes()).hexdigest()
+            if digest!=request['allocation_manifest_sha256']:
+                raise SystemExit('allocation extension changed before release')
+            receipt['allocation_manifest_sha256']=digest
         Path(os.environ['QUAL_ROOT'],'release-assets.json').write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
         PY
     - name: Commit complete qualification only to the owned branch

@@ -1,0 +1,2188 @@
+﻿2026-11-19T02:17:43.3639587Z Current runner version: '2.338.2'
+2026-11-19T02:17:43.3668278Z ##[group]Runner Image Provisioner
+2026-11-19T02:17:43.3669167Z Hosted Compute Agent
+2026-11-19T02:17:43.3669826Z Version: 20261103.629
+2026-11-19T02:17:43.3670555Z Commit: 15dbd9ccb5dbf34fae002b6ed1a2670f52df37bc
+2026-11-19T02:17:43.3671334Z Build Date: 2026-11-03T17:26:59Z
+2026-11-19T02:17:43.3672536Z Worker ID: {8b9c7c7c-4cdf-4ff6-bc31-5ab2ab2a7d61}
+2026-11-19T02:17:43.3673306Z Region: eastus
+2026-11-19T02:17:43.3673906Z Cloud: Azure
+2026-11-19T02:17:43.3674515Z ##[endgroup]
+2026-11-19T02:17:43.3676096Z ##[group]Operating System
+2026-11-19T02:17:43.3676909Z Ubuntu
+2026-11-19T02:17:43.3677462Z 24.04.5
+2026-11-19T02:17:43.3678054Z LTS
+2026-11-19T02:17:43.3678626Z ##[endgroup]
+2026-11-19T02:17:43.3679177Z ##[group]Runner Image
+2026-11-19T02:17:43.3679873Z Image: ubuntu-24.04
+2026-11-19T02:17:43.3680494Z Version: 20261111.370.1
+2026-11-19T02:17:43.3682132Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261111.370/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-19T02:17:43.3683820Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261111.370
+2026-11-19T02:17:43.3684853Z ##[endgroup]
+2026-11-19T02:17:43.3686125Z ##[group]GITHUB_TOKEN Permissions
+2026-11-19T02:17:43.3688350Z Actions: read
+2026-11-19T02:17:43.3688999Z Contents: write
+2026-11-19T02:17:43.3689682Z Metadata: read
+2026-11-19T02:17:43.3690289Z ##[endgroup]
+2026-11-19T02:17:43.3692877Z Secret source: Actions
+2026-11-19T02:17:43.3693845Z Cache mode: write
+2026-11-19T02:17:43.3694671Z Prepare workflow directory
+2026-11-19T02:17:43.4099121Z Prepare all required actions
+2026-11-19T02:17:43.4150270Z Getting action download info
+2026-11-19T02:17:43.6398062Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-11-19T02:17:43.8057300Z Download action repository 'actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-11-19T02:17:43.9994878Z Complete job name: recover
+2026-11-19T02:17:44.1038688Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-11-19T02:17:44.1039861Z with:
+2026-11-19T02:17:44.1040324Z   persist-credentials: true
+2026-11-19T02:17:44.1040844Z   fetch-depth: 0
+2026-11-19T02:17:44.1041302Z   repository: techrote/neurounner
+2026-11-19T02:17:44.1045159Z   token: ***
+2026-11-19T02:17:44.1045607Z   ssh-strict: true
+2026-11-19T02:17:44.1046050Z   ssh-user: git
+2026-11-19T02:17:44.1046480Z   clean: true
+2026-11-19T02:17:44.1046934Z   sparse-checkout-cone-mode: true
+2026-11-19T02:17:44.1047480Z   fetch-tags: false
+2026-11-19T02:17:44.1047938Z   show-progress: true
+2026-11-19T02:17:44.1048399Z   lfs: false
+2026-11-19T02:17:44.1048817Z   submodules: false
+2026-11-19T02:17:44.1049271Z   set-safe-directory: true
+2026-11-19T02:17:44.1049790Z   allow-unsafe-pr-checkout: false
+2026-11-19T02:17:44.1050582Z env:
+2026-11-19T02:17:44.1051126Z   QUAL_ROOT: experiments/village-001/qualification-20261119
+2026-11-19T02:17:44.1052726Z   QUAL_CONFIG: experiments/village-001/qualification-20261119/config.json
+2026-11-19T02:17:44.1053828Z   PYTHONUNBUFFERED: 1
+2026-11-19T02:17:44.1054286Z ##[endgroup]
+2026-11-19T02:17:44.5351049Z Syncing repository: techrote/neurounner
+2026-11-19T02:17:44.5353693Z ##[group]Getting Git version info
+2026-11-19T02:17:44.5354561Z Working directory is '/home/runner/work/neurounner/neurounner'
+2026-11-19T02:17:44.5355710Z [command]/usr/bin/git version
+2026-11-19T02:17:44.5490548Z git version 2.56.1
+2026-11-19T02:17:44.5521007Z ##[endgroup]
+2026-11-19T02:17:44.5534481Z Temporarily overriding HOME='/home/runner/work/_temp/a3b1bce3-190c-4330-bb8a-31fe982b72f4' before making global git config changes
+2026-11-19T02:17:44.5537449Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-19T02:17:44.5540667Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner
+2026-11-19T02:17:44.5604575Z Deleting the contents of '/home/runner/work/neurounner/neurounner'
+2026-11-19T02:17:44.5608536Z ##[group]Determining repository object format
+2026-11-19T02:17:44.5610338Z ##[endgroup]
+2026-11-19T02:17:44.5612221Z ##[group]Initializing the repository
+2026-11-19T02:17:44.5615100Z [command]/usr/bin/git init /home/runner/work/neurounner/neurounner
+2026-11-19T02:17:44.5758824Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-19T02:17:44.5760860Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-19T02:17:44.5762949Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-19T02:17:44.5764365Z hint: call:
+2026-11-19T02:17:44.5765170Z hint:
+2026-11-19T02:17:44.5766125Z hint: 	git config --global init.defaultBranch <name>
+2026-11-19T02:17:44.5767274Z hint:
+2026-11-19T02:17:44.5768334Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-19T02:17:44.5770115Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-19T02:17:44.5771778Z hint:
+2026-11-19T02:17:44.5772568Z hint: 	git branch -m <name>
+2026-11-19T02:17:44.5773416Z hint:
+2026-11-19T02:17:44.5774522Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-19T02:17:44.5868608Z Initialized empty Git repository in /home/runner/work/neurounner/neurounner/.git/
+2026-11-19T02:17:44.5881395Z [command]/usr/bin/git remote add origin https://github.com/techrote/neurounner
+2026-11-19T02:17:44.7481213Z ##[endgroup]
+2026-11-19T02:17:44.7483203Z ##[group]Disabling automatic garbage collection
+2026-11-19T02:17:44.7484857Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-19T02:17:44.7532694Z ##[endgroup]
+2026-11-19T02:17:44.7534378Z ##[group]Setting up auth
+2026-11-19T02:17:44.7535597Z Removing SSH command configuration
+2026-11-19T02:17:44.7538826Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-19T02:17:44.7913354Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-19T02:17:44.8417071Z Removing HTTP extra header
+2026-11-19T02:17:44.8423826Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-19T02:17:44.8472664Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-19T02:17:44.8721178Z Removing includeIf entries pointing to credentials config files
+2026-11-19T02:17:44.8726135Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-19T02:17:44.8782326Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-19T02:17:44.9033613Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-99552f47-1087-4d48-b540-03a252f388bb.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-19T02:17:44.9085553Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/.git.path /home/runner/work/_temp/git-credentials-99552f47-1087-4d48-b540-03a252f388bb.config
+2026-11-19T02:17:44.9132648Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-99552f47-1087-4d48-b540-03a252f388bb.config
+2026-11-19T02:17:44.9178792Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-99552f47-1087-4d48-b540-03a252f388bb.config
+2026-11-19T02:17:44.9225295Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-99552f47-1087-4d48-b540-03a252f388bb.config
+2026-11-19T02:17:44.9269041Z ##[endgroup]
+2026-11-19T02:17:44.9272281Z ##[group]Fetching the repository
+2026-11-19T02:17:44.9277080Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-11-19T02:17:46.4335161Z From https://github.com/techrote/neurounner
+2026-11-19T02:17:46.4338198Z  * [new branch]        cancel-redundant-village-d-40230237679 -> origin/cancel-redundant-village-d-40230237679
+2026-11-19T02:17:46.4340355Z  * [new branch]        docs/detective-fun-policy-20261028 -> origin/docs/detective-fun-policy-20261028
+2026-11-19T02:17:46.4342666Z  * [new branch]        docs/memplant-dreamgraft-poc-001 -> origin/docs/memplant-dreamgraft-poc-001
+2026-11-19T02:17:46.4344346Z  * [new branch]        docs/memplant-foundation-20261115 -> origin/docs/memplant-foundation-20261115
+2026-11-19T02:17:46.4345918Z  * [new branch]        evidence/detective-005a-40974067617 -> origin/evidence/detective-005a-40974067617
+2026-11-19T02:17:46.4347745Z  * [new branch]        evidence/detective-005a-synthetic-probe-40968747033 -> origin/evidence/detective-005a-synthetic-probe-40968747033
+2026-11-19T02:17:46.4349619Z  * [new branch]        fix-village-001b-duplicate-recovery -> origin/fix-village-001b-duplicate-recovery
+2026-11-19T02:17:46.4351253Z  * [new branch]        fix-village-001b-duplicate-trait-refs -> origin/fix-village-001b-duplicate-trait-refs
+2026-11-19T02:17:46.4353081Z  * [new branch]        fix-village-evidence-results -> origin/fix-village-evidence-results
+2026-11-19T02:17:46.4354608Z  * [new branch]        fix/detective-005a-main-dispatch-20261028 -> origin/fix/detective-005a-main-dispatch-20261028
+2026-11-19T02:17:46.4356599Z  * [new branch]        fix/detective-005a-partial-raw-custody-20261028 -> origin/fix/detective-005a-partial-raw-custody-20261028
+2026-11-19T02:17:46.4357875Z  * [new branch]        integration/merge-down-foundations-20261029 -> origin/integration/merge-down-foundations-20261029
+2026-11-19T02:17:46.4358710Z  * [new branch]        main                   -> origin/main
+2026-11-19T02:17:46.4359948Z  * [new branch]        repair-village-c-results-publication -> origin/repair-village-c-results-publication
+2026-11-19T02:17:46.4361081Z  * [new branch]        research/byte-eos-001-strict-void-labels -> origin/research/byte-eos-001-strict-void-labels
+2026-11-19T02:17:46.4362448Z  * [new branch]        research/detective-001a-case-contract-20261027 -> origin/research/detective-001a-case-contract-20261027
+2026-11-19T02:17:46.4363610Z  * [new branch]        research/detective-001b-source-matched-smoke-20261027 -> origin/research/detective-001b-source-matched-smoke-20261027
+2026-11-19T02:17:46.4448404Z  * [new branch]        research/detective-001b2-presentation-ab-20261027 -> origin/research/detective-001b2-presentation-ab-20261027
+2026-11-19T02:17:46.4450682Z  * [new branch]        research/detective-001b3-sprocket-instruct-scripter-20261027 -> origin/research/detective-001b3-sprocket-instruct-scripter-20261027
+2026-11-19T02:17:46.4453283Z  * [new branch]        research/detective-001b4-lfm-control-20261027 -> origin/research/detective-001b4-lfm-control-20261027
+2026-11-19T02:17:46.4455560Z  * [new branch]        research/detective-001c1-witness-policy-20261027 -> origin/research/detective-001c1-witness-policy-20261027
+2026-11-19T02:17:46.4457533Z  * [new branch]        research/detective-001c2-evaluator-20261027 -> origin/research/detective-001c2-evaluator-20261027
+2026-11-19T02:17:46.4459358Z  * [new branch]        research/detective-001c2-pairwise-20261027 -> origin/research/detective-001c2-pairwise-20261027
+2026-11-19T02:17:46.4461326Z  * [new branch]        research/detective-001c3-g02-interference-20261027 -> origin/research/detective-001c3-g02-interference-20261027
+2026-11-19T02:17:46.4463939Z  * [new branch]        research/detective-001r1-relevance-20261027 -> origin/research/detective-001r1-relevance-20261027
+2026-11-19T02:17:46.4465818Z  * [new branch]        research/detective-002a-body-sources-20261027 -> origin/research/detective-002a-body-sources-20261027
+2026-11-19T02:17:46.4467350Z  * [new branch]        research/detective-002b-runtime-matrix-20261028 -> origin/research/detective-002b-runtime-matrix-20261028
+2026-11-19T02:17:46.4468460Z  * [new branch]        research/detective-002b-runtime-smoke-20261027 -> origin/research/detective-002b-runtime-smoke-20261027
+2026-11-19T02:17:46.4469644Z  * [new branch]        research/detective-002c-lfm-v5-runtime-20261028 -> origin/research/detective-002c-lfm-v5-runtime-20261028
+2026-11-19T02:17:46.4470841Z  * [new branch]        research/detective-002d-lfm-v5-api-20261028 -> origin/research/detective-002d-lfm-v5-api-20261028
+2026-11-19T02:17:46.4472200Z  * [new branch]        research/detective-003a-session-ledger-20261028 -> origin/research/detective-003a-session-ledger-20261028
+2026-11-19T02:17:46.4473378Z  * [new branch]        research/detective-003a-session-ledger-current-20261028 -> origin/research/detective-003a-session-ledger-current-20261028
+2026-11-19T02:17:46.4474537Z  * [new branch]        research/detective-003b-live-session-20261028 -> origin/research/detective-003b-live-session-20261028
+2026-11-19T02:17:46.4475658Z  * [new branch]        research/detective-003c-scripter-bridge-20261028 -> origin/research/detective-003c-scripter-bridge-20261028
+2026-11-19T02:17:46.4476804Z  * [new branch]        research/detective-003d-sprocket-live-bridge-20261028 -> origin/research/detective-003d-sprocket-live-bridge-20261028
+2026-11-19T02:17:46.4478144Z  * [new branch]        research/detective-004a-sprocket-specialization-contract-20261028 -> origin/research/detective-004a-sprocket-specialization-contract-20261028
+2026-11-19T02:17:46.4479351Z  * [new branch]        research/detective-004a-stage-a-20261028 -> origin/research/detective-004a-stage-a-20261028
+2026-11-19T02:17:46.4481227Z  * [new branch]        research/detective-005a-failed-artifact-archive-20261028 -> origin/research/detective-005a-failed-artifact-archive-20261028
+2026-11-19T02:17:46.4483046Z  * [new branch]        research/detective-005a-fun-screen-20261028 -> origin/research/detective-005a-fun-screen-20261028
+2026-11-19T02:17:46.4484704Z  * [new branch]        research/detective-005a-private-blinding-custody-20261029 -> origin/research/detective-005a-private-blinding-custody-20261029
+2026-11-19T02:17:46.4486057Z  * [new branch]        research/detective-005a-synthetic-remote-push-20261029 -> origin/research/detective-005a-synthetic-remote-push-20261029
+2026-11-19T02:17:46.4487366Z  * [new branch]        research/driv3r-consolidation-2026-11-16 -> origin/research/driv3r-consolidation-2026-11-16
+2026-11-19T02:17:46.4488464Z  * [new branch]        research/memplant-dg002-two-rule-transplant -> origin/research/memplant-dg002-two-rule-transplant
+2026-11-19T02:17:46.4489575Z  * [new branch]        research/memplant-dg003-novel-interactions -> origin/research/memplant-dg003-novel-interactions
+2026-11-19T02:17:46.4490801Z  * [new branch]        research/memplant-dg005-ordered-allele-game-20261116 -> origin/research/memplant-dg005-ordered-allele-game-20261116
+2026-11-19T02:17:46.4493121Z  * [new branch]        research/memplant-dg006-three-law-composition-20261116 -> origin/research/memplant-dg006-three-law-composition-20261116
+2026-11-19T02:17:46.4494668Z  * [new branch]        research/memplant-dg007-learned-game-actions-20261116 -> origin/research/memplant-dg007-learned-game-actions-20261116
+2026-11-19T02:17:46.4496042Z  * [new branch]        research/memplant-dg008-heldout-game-law-grafts-20261116 -> origin/research/memplant-dg008-heldout-game-law-grafts-20261116
+2026-11-19T02:17:46.4497379Z  * [new branch]        research/memplant-dg008-specialist-game-law-grafts-20261116 -> origin/research/memplant-dg008-specialist-game-law-grafts-20261116
+2026-11-19T02:17:46.4498771Z  * [new branch]        research/memplant-dg009-fewshot-counterfactual-donors-20261116 -> origin/research/memplant-dg009-fewshot-counterfactual-donors-20261116
+2026-11-19T02:17:46.4500143Z  * [new branch]        research/memplant-dg010-neural-donor-composition-20261116 -> origin/research/memplant-dg010-neural-donor-composition-20261116
+2026-11-19T02:17:46.4502092Z  * [new branch]        research/memplant-dg011-heterogeneous-donors-20261116 -> origin/research/memplant-dg011-heterogeneous-donors-20261116
+2026-11-19T02:17:46.4503336Z  * [new branch]        research/memplant-dg012-semantic-scramble-20261116 -> origin/research/memplant-dg012-semantic-scramble-20261116
+2026-11-19T02:17:46.4504547Z  * [new branch]        research/memplant-dg013-active-interrogation-20261116 -> origin/research/memplant-dg013-active-interrogation-20261116
+2026-11-19T02:17:46.4505666Z  * [new branch]        research/memplant-dg014-trajectory-20261116 -> origin/research/memplant-dg014-trajectory-20261116
+2026-11-19T02:17:46.4506971Z  * [new branch]        research/memplant-dg015-material-recovery-20261116 -> origin/research/memplant-dg015-material-recovery-20261116
+2026-11-19T02:17:46.4508089Z  * [new branch]        research/memplant-dg016-maze-transfer-20261116 -> origin/research/memplant-dg016-maze-transfer-20261116
+2026-11-19T02:17:46.4509213Z  * [new branch]        research/memplant-dg017-dagger-recovery-20261116 -> origin/research/memplant-dg017-dagger-recovery-20261116
+2026-11-19T02:17:46.4510320Z  * [new branch]        research/memplant-dg018-sequence-value-20261116 -> origin/research/memplant-dg018-sequence-value-20261116
+2026-11-19T02:17:46.4511667Z  * [new branch]        research/memplant-dg019-causal-wet-routing-20261116 -> origin/research/memplant-dg019-causal-wet-routing-20261116
+2026-11-19T02:17:46.4512764Z  * [new branch]        research/memplant-g0-real-model-probe -> origin/research/memplant-g0-real-model-probe
+2026-11-19T02:17:46.4513675Z  * [new branch]        research/memplant-g1-donor-imprint -> origin/research/memplant-g1-donor-imprint
+2026-11-19T02:17:46.4514664Z  * [new branch]        research/memplant-g1c-frozen-postcard-audit -> origin/research/memplant-g1c-frozen-postcard-audit
+2026-11-19T02:17:46.4515694Z  * [new branch]        research/memplant-game-state-004-20261116 -> origin/research/memplant-game-state-004-20261116
+2026-11-19T02:17:46.4516908Z  * [new branch]        research/memplant-living-garden-native-state -> origin/research/memplant-living-garden-native-state
+2026-11-19T02:17:46.4517935Z  * [new branch]        research/ncr-001a-protocol-preflight -> origin/research/ncr-001a-protocol-preflight
+2026-11-19T02:17:46.4518822Z  * [new branch]        research/ncr-001b-pure-torch-core -> origin/research/ncr-001b-pure-torch-core
+2026-11-19T02:17:46.4519772Z  * [new branch]        research/ncr-001c-smollm2-hook-conformance -> origin/research/ncr-001c-smollm2-hook-conformance
+2026-11-19T02:17:46.4520836Z  * [new branch]        research/ncr-001d-sprocket-chat-hook-preflight -> origin/research/ncr-001d-sprocket-chat-hook-preflight
+2026-11-19T02:17:46.4522485Z  * [new branch]        research/ncr-001f-matched-controls-prepass -> origin/research/ncr-001f-matched-controls-prepass
+2026-11-19T02:17:46.4524396Z  * [new branch]        research/ncr-001j-sprocket-instruct-hook-preflight -> origin/research/ncr-001j-sprocket-instruct-hook-preflight
+2026-11-19T02:17:46.4525794Z  * [new branch]        research/ncr-001k-void1-qwen3-hook-preflight -> origin/research/ncr-001k-void1-qwen3-hook-preflight
+2026-11-19T02:17:46.4526875Z  * [new branch]        review/byte-eos-001-causal-label-shift-20261028 -> origin/review/byte-eos-001-causal-label-shift-20261028
+2026-11-19T02:17:46.4527926Z  * [new branch]        review/byte-eos-001-causal-readback-20261028 -> origin/review/byte-eos-001-causal-readback-20261028
+2026-11-19T02:17:46.4528992Z  * [new branch]        review/byte-eos-001-frozen-qwen-forward-20261028 -> origin/review/byte-eos-001-frozen-qwen-forward-20261028
+2026-11-19T02:17:46.4530137Z  * [new branch]        review/byte-eos-001-independent-acceptance-20261027 -> origin/review/byte-eos-001-independent-acceptance-20261027
+2026-11-19T02:17:46.4531387Z  * [new branch]        review/byte-eos-001-qwen-forward-original-readback-20261028 -> origin/review/byte-eos-001-qwen-forward-original-readback-20261028
+2026-11-19T02:17:46.4533255Z  * [new branch]        review/detective-001r1-independent-ratings-20261028 -> origin/review/detective-001r1-independent-ratings-20261028
+2026-11-19T02:17:46.4534384Z  * [new branch]        review/ncr-001e-four-model-prepass-readback -> origin/review/ncr-001e-four-model-prepass-readback
+2026-11-19T02:17:46.4535573Z  * [new branch]        review/ncr-001e-smollm2-fresh-cold-cache -> origin/review/ncr-001e-smollm2-fresh-cold-cache
+2026-11-19T02:17:46.4536626Z  * [new branch]        review/ncr-001e-sprocket-extended-context-20261027 -> origin/review/ncr-001e-sprocket-extended-context-20261027
+2026-11-19T02:17:46.4537732Z  * [new branch]        review/ncr-001e-sprocket-publisher-wire-20261027 -> origin/review/ncr-001e-sprocket-publisher-wire-20261027
+2026-11-19T02:17:46.4538995Z  * [new branch]        review/ncr-001e-sprocket-source-formatter-cold-cache -> origin/review/ncr-001e-sprocket-source-formatter-cold-cache
+2026-11-19T02:17:46.4540196Z  * [new branch]        review/ncr-001e-sprocket-two-process-restart-20261027 -> origin/review/ncr-001e-sprocket-two-process-restart-20261027
+2026-11-19T02:17:46.4541237Z  * [new branch]        review/ncr-001e-void-real-text-cache -> origin/review/ncr-001e-void-real-text-cache
+2026-11-19T02:17:46.4542582Z  * [new branch]        review/ncr-001e-void-two-process-20261027 -> origin/review/ncr-001e-void-two-process-20261027
+2026-11-19T02:17:46.4543638Z  * [new branch]        review/ncr-001e-void-two-process-restart-20261027 -> origin/review/ncr-001e-void-two-process-restart-20261027
+2026-11-19T02:17:46.4544736Z  * [new branch]        review/ncr-001f-pinned-four-mlp-hooks-20261027 -> origin/review/ncr-001f-pinned-four-mlp-hooks-20261027
+2026-11-19T02:17:46.4545885Z  * [new branch]        review/ncr-001f-sprocket-real-mlp-20261027 -> origin/review/ncr-001f-sprocket-real-mlp-20261027
+2026-11-19T02:17:46.4546867Z  * [new branch]        review/ncr-001f-void-byte-mlp-real-20261027 -> origin/review/ncr-001f-void-byte-mlp-real-20261027
+2026-11-19T02:17:46.4548006Z  * [new branch]        review/ncr-001k-void-byte-runtime-parity -> origin/review/ncr-001k-void-byte-runtime-parity
+2026-11-19T02:17:46.4549148Z  * [new branch]        review/ncr-001k-void-tokenizer-source-audit -> origin/review/ncr-001k-void-tokenizer-source-audit
+2026-11-19T02:17:46.4550120Z  * [new branch]        review/ncr001-chat-native-ce-20261029 -> origin/review/ncr001-chat-native-ce-20261029
+2026-11-19T02:17:46.4551285Z  * [new branch]        review/ncr001-chat-native-ce-original-custody-20261029 -> origin/review/ncr001-chat-native-ce-original-custody-20261029
+2026-11-19T02:17:46.4552760Z  * [new branch]        review/ncr001-cross-adapter-decoder-lease-20261028 -> origin/review/ncr001-cross-adapter-decoder-lease-20261028
+2026-11-19T02:17:46.4553963Z  * [new branch]        review/ncr001-postlease-decoded-log-failclosed-20261028 -> origin/review/ncr001-postlease-decoded-log-failclosed-20261028
+2026-11-19T02:17:46.4555255Z  * [new branch]        review/ncr001-postlease-sprocket-evidence-custody-20261028 -> origin/review/ncr001-postlease-sprocket-evidence-custody-20261028
+2026-11-19T02:17:46.4556610Z  * [new branch]        review/ncr001-postlease-sprocket-real-host-20261028 -> origin/review/ncr001-postlease-sprocket-real-host-20261028
+2026-11-19T02:17:46.4557813Z  * [new branch]        review/ncr001-postlease-wire-original-readback-20261028 -> origin/review/ncr001-postlease-wire-original-readback-20261028
+2026-11-19T02:17:46.4559289Z  * [new branch]        review/ncr001-pr102-original-zip-source-custody-20261029 -> origin/review/ncr001-pr102-original-zip-source-custody-20261029
+2026-11-19T02:17:46.4560510Z  * [new branch]        review/ncr001-pr113-original-actions-custody-20261029 -> origin/review/ncr001-pr113-original-actions-custody-20261029
+2026-11-19T02:17:46.4561964Z  * [new branch]        review/ncr001-root-instruct-native-masked-ce-20261028 -> origin/review/ncr001-root-instruct-native-masked-ce-20261028
+2026-11-19T02:17:46.4563226Z  * [new branch]        review/ncr001-root-native-ce-original-custody-20261029 -> origin/review/ncr001-root-native-ce-original-custody-20261029
+2026-11-19T02:17:46.4564953Z  * [new branch]        review/ncr001-sprocket-complete-original-zips-20261029 -> origin/review/ncr001-sprocket-complete-original-zips-20261029
+2026-11-19T02:17:46.4566273Z  * [new branch]        review/ncr001-sprocket-explicit-attention-mask-20261028 -> origin/review/ncr001-sprocket-explicit-attention-mask-20261028
+2026-11-19T02:17:46.4567527Z  * [new branch]        review/ncr001-sprocket-learning-evidence-20261028 -> origin/review/ncr001-sprocket-learning-evidence-20261028
+2026-11-19T02:17:46.4568999Z  * [new branch]        review/ncr001-sprocket-learning-original-readback-20261028 -> origin/review/ncr001-sprocket-learning-original-readback-20261028
+2026-11-19T02:17:46.4570731Z  * [new branch]        review/ncr001-sprocket-mask-original-evidence-20261028 -> origin/review/ncr001-sprocket-mask-original-evidence-20261028
+2026-11-19T02:17:46.4572487Z  * [new branch]        review/ncr001-sprocket-nca-learning-gate-20261028 -> origin/review/ncr001-sprocket-nca-learning-gate-20261028
+2026-11-19T02:17:46.4573777Z  * [new branch]        review/ncr001-sprocket-postlease-publisher-wire-20261028 -> origin/review/ncr001-sprocket-postlease-publisher-wire-20261028
+2026-11-19T02:17:46.4575130Z  * [new branch]        review/ncr001-sprocket-postwarmup-diag-reconciliation-20261029 -> origin/review/ncr001-sprocket-postwarmup-diag-reconciliation-20261029
+2026-11-19T02:17:46.4576349Z  * [new branch]        review/ncr001-sprocket-wire-fullmask-20261028 -> origin/review/ncr001-sprocket-wire-fullmask-20261028
+2026-11-19T02:17:46.4577475Z  * [new branch]        review/ncr001-sprocket-wire-fullmask-custody-20261028 -> origin/review/ncr001-sprocket-wire-fullmask-custody-20261028
+2026-11-19T02:17:46.4578657Z  * [new branch]        review/ncr001-sprocket-wire-shifted-custody-20261028 -> origin/review/ncr001-sprocket-wire-shifted-custody-20261028
+2026-11-19T02:17:46.4579794Z  * [new branch]        review/ncr001-sprocket-wire-shifted-loss-20261028 -> origin/review/ncr001-sprocket-wire-shifted-loss-20261028
+2026-11-19T02:17:46.4581172Z  * [new branch]        review/ncr001-void-nca-learning-original-custody-20261028 -> origin/review/ncr001-void-nca-learning-original-custody-20261028
+2026-11-19T02:17:46.4582795Z  * [new branch]        review/ncr001-void-postdiagnostic-reconciliation-20261028 -> origin/review/ncr001-void-postdiagnostic-reconciliation-20261028
+2026-11-19T02:17:46.4584176Z  * [new branch]        review/ncr001-void-postlease-eos-nca-mlp-20261028 -> origin/review/ncr001-void-postlease-eos-nca-mlp-20261028
+2026-11-19T02:17:46.4585252Z  * [new branch]        review/ncr001-void-postlease-maxctx-20261028 -> origin/review/ncr001-void-postlease-maxctx-20261028
+2026-11-19T02:17:46.4586445Z  * [new branch]        review/ncr001-void-postlease-maxctx-original-custody-20261028 -> origin/review/ncr001-void-postlease-maxctx-original-custody-20261028
+2026-11-19T02:17:46.4587686Z  * [new branch]        review/ncr001-void-postlease-nca-learning-20261028 -> origin/review/ncr001-void-postlease-nca-learning-20261028
+2026-11-19T02:17:46.4588885Z  * [new branch]        review/ncr001-void-postlease-original-custody-20261028 -> origin/review/ncr001-void-postlease-original-custody-20261028
+2026-11-19T02:17:46.4590069Z  * [new branch]        review/ncr001e-alltoken2048-original-custody-20261030 -> origin/review/ncr001e-alltoken2048-original-custody-20261030
+2026-11-19T02:17:46.4591165Z  * [new branch]        review/ncr001e-decoded-log-main-port-20261030 -> origin/review/ncr001e-decoded-log-main-port-20261030
+2026-11-19T02:17:46.4592307Z  * [new branch]        review/ncr001e-integrated-main-pin-20261030 -> origin/review/ncr001e-integrated-main-pin-20261030
+2026-11-19T02:17:46.4593380Z  * [new branch]        review/ncr001e-masked2048-original-custody-20261029 -> origin/review/ncr001e-masked2048-original-custody-20261029
+2026-11-19T02:17:46.4594545Z  * [new branch]        review/ncr001e-pr102-independent-masked-batch-20261027 -> origin/review/ncr001e-pr102-independent-masked-batch-20261027
+2026-11-19T02:17:46.4595890Z  * [new branch]        review/ncr001e-smol-2048-cold-generation-20261028 -> origin/review/ncr001e-smol-2048-cold-generation-20261028
+2026-11-19T02:17:46.4597283Z  * [new branch]        review/ncr001e-smol-shared-backbone-isolation-20261028 -> origin/review/ncr001e-smol-shared-backbone-isolation-20261028
+2026-11-19T02:17:46.4599169Z  * [new branch]        review/ncr001e-smol-source-runtime-adjudication-20261028 -> origin/review/ncr001e-smol-source-runtime-adjudication-20261028
+2026-11-19T02:17:46.4600307Z  * [new branch]        review/ncr001e-smollm2-adjudication-20261028 -> origin/review/ncr001e-smollm2-adjudication-20261028
+2026-11-19T02:17:46.4601382Z  * [new branch]        review/ncr001e-sprocket-alltoken-streaming-20261030 -> origin/review/ncr001e-sprocket-alltoken-streaming-20261030
+2026-11-19T02:17:46.4602893Z  * [new branch]        review/ncr001e-sprocket-chat-adjudication-20261027 -> origin/review/ncr001e-sprocket-chat-adjudication-20261027
+2026-11-19T02:17:46.4604015Z  * [new branch]        review/ncr001e-sprocket-chat-generate-20261027 -> origin/review/ncr001e-sprocket-chat-generate-20261027
+2026-11-19T02:17:46.4605155Z  * [new branch]        review/ncr001e-sprocket-instruct-adjudication-20261027 -> origin/review/ncr001e-sprocket-instruct-adjudication-20261027
+2026-11-19T02:17:46.4606288Z  * [new branch]        review/ncr001e-sprocket-masked2048-cold-20261029 -> origin/review/ncr001e-sprocket-masked2048-cold-20261029
+2026-11-19T02:17:46.4607463Z  * [new branch]        review/ncr001e-sprocket-source-matched-lane-delta-20261029 -> origin/review/ncr001e-sprocket-source-matched-lane-delta-20261029
+2026-11-19T02:17:46.4608892Z  * [new branch]        review/ncr001e-three-cohort-source-delta-20261030 -> origin/review/ncr001e-three-cohort-source-delta-20261030
+2026-11-19T02:17:46.4609990Z  * [new branch]        review/ncr001e-void-fourcohort-science-20261030 -> origin/review/ncr001e-void-fourcohort-science-20261030
+2026-11-19T02:17:46.4611903Z  * [new branch]        review/ncr001e-void-mechanical-complete-adjudication-20261030 -> origin/review/ncr001e-void-mechanical-complete-adjudication-20261030
+2026-11-19T02:17:46.4613544Z  * [new branch]        review/ncr001e-void-poststep-cold-replay-20261030 -> origin/review/ncr001e-void-poststep-cold-replay-20261030
+2026-11-19T02:17:46.4614832Z  * [new branch]        review/ncr001e-void-poststep-original-custody-20261030 -> origin/review/ncr001e-void-poststep-original-custody-20261030
+2026-11-19T02:17:46.4615917Z  * [new branch]        review/ncr001e-void-poststep2048-20261030 -> origin/review/ncr001e-void-poststep2048-20261030
+2026-11-19T02:17:46.4617030Z  * [new branch]        review/ncr001e-void-poststep2048-adjudication-20261030 -> origin/review/ncr001e-void-poststep2048-adjudication-20261030
+2026-11-19T02:17:46.4618773Z  * [new branch]        review/ncr001e-void-poststep2048-masked-kv-20261030 -> origin/review/ncr001e-void-poststep2048-masked-kv-20261030
+2026-11-19T02:17:46.4620072Z  * [new branch]        review/ncr001e-void-poststep2048-masked-kv-custody-20261030 -> origin/review/ncr001e-void-poststep2048-masked-kv-custody-20261030
+2026-11-19T02:17:46.4621382Z  * [new branch]        review/ncr001e-void-poststep2048-original-custody-20261030 -> origin/review/ncr001e-void-poststep2048-original-custody-20261030
+2026-11-19T02:17:46.4622895Z  * [new branch]        review/ncr001e-void1-2048-context-20261027 -> origin/review/ncr001e-void1-2048-context-20261027
+2026-11-19T02:17:46.4623868Z  * [new branch]        review/ncr001e-void1-adjudication-20261028 -> origin/review/ncr001e-void1-adjudication-20261028
+2026-11-19T02:17:46.4624940Z  * [new branch]        review/ncr001e-void1-postlease-adjudication-20261028 -> origin/review/ncr001e-void1-postlease-adjudication-20261028
+2026-11-19T02:17:46.4626036Z  * [new branch]        review/ncr001f-corrected-cpu-custody-20261029 -> origin/review/ncr001f-corrected-cpu-custody-20261029
+2026-11-19T02:17:46.4627269Z  * [new branch]        review/ncr001f-corrected-samehost-budget-interpretation-20261030 -> origin/review/ncr001f-corrected-samehost-budget-interpretation-20261030
+2026-11-19T02:17:46.4628718Z  * [new branch]        review/ncr001f-corrected-samehost-custody-20261029 -> origin/review/ncr001f-corrected-samehost-custody-20261029
+2026-11-19T02:17:46.4629724Z  * [new branch]        review/ncr001f-event-scope-g1-20261031 -> origin/review/ncr001f-event-scope-g1-20261031
+2026-11-19T02:17:46.4630828Z  * [new branch]        review/ncr001f-fourlane-identity-audit-g7-20261031 -> origin/review/ncr001f-fourlane-identity-audit-g7-20261031
+2026-11-19T02:17:46.4632376Z  * [new branch]        review/ncr001f-fourlane-phase-budget-preflight-20261030 -> origin/review/ncr001f-fourlane-phase-budget-preflight-20261030
+2026-11-19T02:17:46.4633558Z  * [new branch]        review/ncr001f-optimized-assert-failclosed-20261030 -> origin/review/ncr001f-optimized-assert-failclosed-20261030
+2026-11-19T02:17:46.4634667Z  * [new branch]        review/ncr001f-postlease-samehost-budget-20261029 -> origin/review/ncr001f-postlease-samehost-budget-20261029
+2026-11-19T02:17:46.4635767Z  * [new branch]        review/ncr001f-samehost-original-custody-20261029 -> origin/review/ncr001f-samehost-original-custody-20261029
+2026-11-19T02:17:46.4636852Z  * [new branch]        review/ncr001f-shared-backbone-ownership-20261028 -> origin/review/ncr001f-shared-backbone-ownership-20261028
+2026-11-19T02:17:46.4637962Z  * [new branch]        review/ncr001f-transactional-mlp-import-g5-20261031 -> origin/review/ncr001f-transactional-mlp-import-g5-20261031
+2026-11-19T02:17:46.4638866Z  * [new branch]        runner-001-cross-platform -> origin/runner-001-cross-platform
+2026-11-19T02:17:46.4639626Z  * [new branch]        scheduswarm/adopt-policy-20261030 -> origin/scheduswarm/adopt-policy-20261030
+2026-11-19T02:17:46.4640335Z  * [new branch]        scheduswarm/queue      -> origin/scheduswarm/queue
+2026-11-19T02:17:46.4641021Z  * [new branch]        scheduswarm/v2-policy-20261030 -> origin/scheduswarm/v2-policy-20261030
+2026-11-19T02:17:46.4642245Z  * [new branch]        story-001-autofactory-kickoff -> origin/story-001-autofactory-kickoff
+2026-11-19T02:17:46.4643099Z  * [new branch]        train-003-semantic-compiler -> origin/train-003-semantic-compiler
+2026-11-19T02:17:46.4643922Z  * [new branch]        train-004-full-parameter -> origin/train-004-full-parameter
+2026-11-19T02:17:46.4645347Z  * [new branch]        village-001-cybergoblin-foundry -> origin/village-001-cybergoblin-foundry
+2026-11-19T02:17:46.4646849Z  * [new branch]        village-001-repromotion-hygiene -> origin/village-001-repromotion-hygiene
+2026-11-19T02:17:46.4647708Z  * [new branch]        village-001-workflow-run-chain -> origin/village-001-workflow-run-chain
+2026-11-19T02:17:46.4648452Z  * [new branch]        village-001a-contract  -> origin/village-001a-contract
+2026-11-19T02:17:46.4649242Z  * [new branch]        village-001a-provider-finalization -> origin/village-001a-provider-finalization
+2026-11-19T02:17:46.4650204Z  * [new branch]        village-001b-auto-resume-superseded-runs -> origin/village-001b-auto-resume-superseded-runs
+2026-11-19T02:17:46.4651115Z  * [new branch]        village-001b-member-corpora -> origin/village-001b-member-corpora
+2026-11-19T02:17:46.4652223Z  * [new branch]        village-001c-bound-auto-resume -> origin/village-001c-bound-auto-resume
+2026-11-19T02:17:46.4653491Z  * [new branch]        village-001c-result-custody -> origin/village-001c-result-custody
+2026-11-19T02:17:46.4654827Z  * [new branch]        village-001c-sft-training -> origin/village-001c-sft-training
+2026-11-19T02:17:46.4656469Z  * [new branch]        village-001d-adjudicator-output-budget -> origin/village-001d-adjudicator-output-budget
+2026-11-19T02:17:46.4658167Z  * [new branch]        village-001d-adjudicator-salvage -> origin/village-001d-adjudicator-salvage
+2026-11-19T02:17:46.4659892Z  * [new branch]        village-001d-bind-pairs-to-feedback-hash -> origin/village-001d-bind-pairs-to-feedback-hash
+2026-11-19T02:17:46.4661958Z  * [new branch]        village-001d-bind-training-checkpoints -> origin/village-001d-bind-training-checkpoints
+2026-11-19T02:17:46.4663813Z  * [new branch]        village-001d-bound-recovery -> origin/village-001d-bound-recovery
+2026-11-19T02:17:46.4665368Z  * [new branch]        village-001d-canonical-parent-rejected -> origin/village-001d-canonical-parent-rejected
+2026-11-19T02:17:46.4666905Z  * [new branch]        village-001d-cascading-recovery -> origin/village-001d-cascading-recovery
+2026-11-19T02:17:46.4668346Z  * [new branch]        village-001d-clean-restart-refreshed-c -> origin/village-001d-clean-restart-refreshed-c
+2026-11-19T02:17:46.4669875Z  * [new branch]        village-001d-compare-review-salvage -> origin/village-001d-compare-review-salvage
+2026-11-19T02:17:46.4671690Z  * [new branch]        village-001d-critic-cache-repair-20261028 -> origin/village-001d-critic-cache-repair-20261028
+2026-11-19T02:17:46.4673451Z  * [new branch]        village-001d-document-production-hardening -> origin/village-001d-document-production-hardening
+2026-11-19T02:17:46.4675488Z  * [new branch]        village-001d-preserve-g08c-failed-evidence-20261028 -> origin/village-001d-preserve-g08c-failed-evidence-20261028
+2026-11-19T02:17:46.4677662Z  * [new branch]        village-001d-preserve-g08c-raw-whitespace-20261028 -> origin/village-001d-preserve-g08c-raw-whitespace-20261028
+2026-11-19T02:17:46.4679273Z  * [new branch]        village-001d-probe-pair-contract -> origin/village-001d-probe-pair-contract
+2026-11-19T02:17:46.4680951Z  * [new branch]        village-001d-provider-curation-hardening -> origin/village-001d-provider-curation-hardening
+2026-11-19T02:17:46.4682747Z  * [new branch]        village-001d-recover-adjudicator -> origin/village-001d-recover-adjudicator
+2026-11-19T02:17:46.4684400Z  * [new branch]        village-001d-recover-adjudicator-budget -> origin/village-001d-recover-adjudicator-budget
+2026-11-19T02:17:46.4686104Z  * [new branch]        village-001d-recover-after-pair-repair -> origin/village-001d-recover-after-pair-repair
+2026-11-19T02:17:46.4688012Z  * [new branch]        village-001d-recover-canonical-parent -> origin/village-001d-recover-canonical-parent
+2026-11-19T02:17:46.4689542Z  * [new branch]        village-001d-recover-cascade -> origin/village-001d-recover-cascade
+2026-11-19T02:17:46.4691172Z  * [new branch]        village-001d-recover-curation-hardening -> origin/village-001d-recover-curation-hardening
+2026-11-19T02:17:46.4692986Z  * [new branch]        village-001d-recover-probe-contract -> origin/village-001d-recover-probe-contract
+2026-11-19T02:17:46.4694535Z  * [new branch]        village-001d-reject-incompatible-feedback-resume -> origin/village-001d-reject-incompatible-feedback-resume
+2026-11-19T02:17:46.4695577Z  * [new branch]        village-001d-sprocket-preference -> origin/village-001d-sprocket-preference
+2026-11-19T02:17:46.4696458Z  * [new branch]        village-001d-targeted-pair-repair -> origin/village-001d-targeted-pair-repair
+2026-11-19T02:17:46.4697449Z  * [new branch]        village-001d-use-member-probes-in-preferences -> origin/village-001d-use-member-probes-in-preferences
+2026-11-19T02:17:46.4698615Z  * [new branch]        village-001e-explicit-lineage-contamination-audit -> origin/village-001e-explicit-lineage-contamination-audit
+2026-11-19T02:17:46.4699639Z  * [new branch]        village-001e-final-qualification -> origin/village-001e-final-qualification
+2026-11-19T02:17:46.4700541Z  * [new branch]        village-001e-final-qualification-main -> origin/village-001e-final-qualification-main
+2026-11-19T02:17:46.4701657Z  * [new branch]        village-001e-fresh-final-heldout -> origin/village-001e-fresh-final-heldout
+2026-11-19T02:17:46.4702719Z  * [new branch]        village-001e-neutral-final-release-tag -> origin/village-001e-neutral-final-release-tag
+2026-11-19T02:17:46.4703639Z  * [new branch]        village-001e-post-d-final-suite -> origin/village-001e-post-d-final-suite
+2026-11-19T02:17:46.4704603Z  * [new branch]        village-001e-promote-final-dataset-evidence -> origin/village-001e-promote-final-dataset-evidence
+2026-11-19T02:17:46.4705893Z  * [new branch]        village-001e-self-contained-model-registry -> origin/village-001e-self-contained-model-registry
+2026-11-19T02:17:46.4707017Z  * [new branch]        village-001e-use-final-tournament-quality-scores -> origin/village-001e-use-final-tournament-quality-scores
+2026-11-19T02:17:46.4708003Z  * [new branch]        village-dataset-stage-readmes -> origin/village-dataset-stage-readmes
+2026-11-19T02:17:46.4708819Z  * [new branch]        village-release-before-trigger -> origin/village-release-before-trigger
+2026-11-19T02:17:46.4709732Z  * [new branch]        work/detective-001e-offline-play-20261031 -> origin/work/detective-001e-offline-play-20261031
+2026-11-19T02:17:46.4710803Z  * [new branch]        work/detective-005a-private-review-prep-20261031 -> origin/work/detective-005a-private-review-prep-20261031
+2026-11-19T02:17:46.4712081Z  * [new branch]        work/village-001-continuation-20261118 -> origin/work/village-001-continuation-20261118
+2026-11-19T02:17:46.4713054Z  * [new branch]        work/village-001e-qualification-20261119 -> origin/work/village-001e-qualification-20261119
+2026-11-19T02:17:46.4713823Z  * [new tag]           detective-001c1-v1     -> detective-001c1-v1
+2026-11-19T02:17:46.4714390Z  * [new tag]           detective-001c2-v1     -> detective-001c2-v1
+2026-11-19T02:17:46.4714969Z  * [new tag]           detective-001c3-g02-v1 -> detective-001c3-g02-v1
+2026-11-19T02:17:46.4715540Z  * [new tag]           persona-001-v1         -> persona-001-v1
+2026-11-19T02:17:46.4716080Z  * [new tag]           persona-002-v1         -> persona-002-v1
+2026-11-19T02:17:46.4716652Z  * [new tag]           village-001-sft-v1     -> village-001-sft-v1
+2026-11-19T02:17:46.4717393Z  * [new tag]           village-001d-recovery-40613393744-20261118 -> village-001d-recovery-40613393744-20261118
+2026-11-19T02:17:46.4719373Z [command]/usr/bin/git branch --list --remote origin/work/village-001e-qualification-20261119
+2026-11-19T02:17:46.4720047Z   origin/work/village-001e-qualification-20261119
+2026-11-19T02:17:46.4721613Z [command]/usr/bin/git rev-parse refs/remotes/origin/work/village-001e-qualification-20261119
+2026-11-19T02:17:46.4722453Z abd44e3c21a9bcd63cef1f9310df34e05806f40b
+2026-11-19T02:17:46.4723581Z ##[endgroup]
+2026-11-19T02:17:46.4724163Z ##[group]Determining the checkout info
+2026-11-19T02:17:46.4724773Z ##[endgroup]
+2026-11-19T02:17:46.4725157Z [command]/usr/bin/git sparse-checkout disable
+2026-11-19T02:17:46.4726233Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-19T02:17:46.4727437Z ##[group]Checking out the ref
+2026-11-19T02:17:46.4728346Z [command]/usr/bin/git checkout --progress --force -B work/village-001e-qualification-20261119 refs/remotes/origin/work/village-001e-qualification-20261119
+2026-11-19T02:17:47.0252091Z Switched to a new branch 'work/village-001e-qualification-20261119'
+2026-11-19T02:17:47.0257056Z branch 'work/village-001e-qualification-20261119' set up to track 'origin/work/village-001e-qualification-20261119'.
+2026-11-19T02:17:47.0287604Z ##[endgroup]
+2026-11-19T02:17:47.0352661Z [command]/usr/bin/git log -1 --format=%H
+2026-11-19T02:17:47.0392745Z abd44e3c21a9bcd63cef1f9310df34e05806f40b
+2026-11-19T02:17:47.0632242Z ##[group]Run python3 scripts/village_001e_recovery_operator.py verify
+2026-11-19T02:17:47.0632837Z [36;1mpython3 scripts/village_001e_recovery_operator.py verify[0m
+2026-11-19T02:17:47.0656310Z shell: /usr/bin/bash -e {0}
+2026-11-19T02:17:47.0656568Z env:
+2026-11-19T02:17:47.0656844Z   QUAL_ROOT: experiments/village-001/qualification-20261119
+2026-11-19T02:17:47.0657297Z   QUAL_CONFIG: experiments/village-001/qualification-20261119/config.json
+2026-11-19T02:17:47.0657686Z   PYTHONUNBUFFERED: 1
+2026-11-19T02:17:47.0660160Z   GH_TOKEN: ***
+2026-11-19T02:17:47.0660374Z ##[endgroup]
+2026-11-19T02:17:47.7679789Z {"prior_recovery_runs": 0, "prior_provider_executions": 0, "required_resume_run_id": null}
+2026-11-19T02:17:48.3595371Z {
+2026-11-19T02:17:48.3595651Z   "original_run": 44439359038,
+2026-11-19T02:17:48.3596329Z   "pending_lanes": [
+2026-11-19T02:17:48.3596620Z     "E-P-G05",
+2026-11-19T02:17:48.3596835Z     "F01",
+2026-11-19T02:17:48.3597014Z     "F02",
+2026-11-19T02:17:48.3597266Z     "F03"
+2026-11-19T02:17:48.3597440Z   ],
+2026-11-19T02:17:48.3597612Z   "budget": {
+2026-11-19T02:17:48.3597811Z     "allocation_policy": {
+2026-11-19T02:17:48.3598071Z       "completed": "archived logical count",
+2026-11-19T02:17:48.3598370Z       "incomplete_ecology_additional": 3,
+2026-11-19T02:17:48.3598685Z       "proven_provider_unstarted_tournament": 40,
+2026-11-19T02:17:48.3598987Z       "started_incomplete_tournament": 60
+2026-11-19T02:17:48.3599236Z     },
+2026-11-19T02:17:48.3599494Z     "maximum_supplemental_requested_output_tokens": 7675904,
+2026-11-19T02:17:48.3599850Z     "maximum_total_logical_requests": 1081,
+2026-11-19T02:17:48.3600181Z     "maximum_transport_launches_per_logical_request": 3,
+2026-11-19T02:17:48.3600515Z     "original_global_logical_limit": 1104,
+2026-11-19T02:17:48.3600816Z     "original_logical_requests_archived": 144,
+2026-11-19T02:17:48.3601124Z     "provider_unstarted_lanes": 21,
+2026-11-19T02:17:48.3601750Z     "supplemental_logical_requests_reserved": 937,
+2026-11-19T02:17:48.3602178Z     "unallocated_logical_slots": 23,
+2026-11-19T02:17:48.3602585Z     "unused_original_allocations_retired": 960
+2026-11-19T02:17:48.3602867Z   }
+2026-11-19T02:17:48.3603038Z }
+2026-11-19T02:17:48.3757025Z ##[group]Run python3 scripts/village_001e_recovery_operator.py download-original --out "$RUNNER_TEMP/original"
+2026-11-19T02:17:48.3757888Z [36;1mpython3 scripts/village_001e_recovery_operator.py download-original --out "$RUNNER_TEMP/original"[0m
+2026-11-19T02:17:48.3758617Z [36;1mpython3 scripts/village_001e_recovery_operator.py download-prior --out "$RUNNER_TEMP/prior"[0m
+2026-11-19T02:17:48.3779530Z shell: /usr/bin/bash -e {0}
+2026-11-19T02:17:48.3779779Z env:
+2026-11-19T02:17:48.3780054Z   QUAL_ROOT: experiments/village-001/qualification-20261119
+2026-11-19T02:17:48.3780506Z   QUAL_CONFIG: experiments/village-001/qualification-20261119/config.json
+2026-11-19T02:17:48.3780899Z   PYTHONUNBUFFERED: 1
+2026-11-19T02:17:48.3783564Z   GH_TOKEN: ***
+2026-11-19T02:17:48.3783785Z ##[endgroup]
+2026-11-19T02:17:49.3859965Z Verified original artifact village001e-judge-tournament-F01
+2026-11-19T02:17:49.7474421Z Verified original artifact village001e-judge-tournament-F02
+2026-11-19T02:17:50.0581848Z Verified original artifact village001e-judge-ecology-E-P-G01
+2026-11-19T02:17:50.3958881Z Verified original artifact village001e-judge-ecology-E-P-G04
+2026-11-19T02:17:50.7828124Z Verified original artifact village001e-judge-ecology-E-P-G02
+2026-11-19T02:17:51.2001309Z Verified original artifact village001e-judge-ecology-E-P-G03
+2026-11-19T02:17:51.5410902Z Verified original artifact village001e-judge-ecology-E-G-03
+2026-11-19T02:17:51.9226046Z Verified original artifact village001e-judge-ecology-E-P-G09
+2026-11-19T02:17:52.4932006Z Verified original artifact village001e-judge-ecology-E-P-G06
+2026-11-19T02:17:52.7886756Z Verified original artifact village001e-judge-tournament-F03
+2026-11-19T02:17:53.1741155Z Verified original artifact village001e-judge-ecology-E-P-G12
+2026-11-19T02:17:53.5614041Z Verified original artifact village001e-judge-ecology-E-P-G11
+2026-11-19T02:17:53.8937205Z Verified original artifact village001e-judge-ecology-E-G-09
+2026-11-19T02:17:54.2914454Z Verified original artifact village001e-judge-ecology-E-G-07
+2026-11-19T02:17:54.6953649Z Verified original artifact village001e-judge-ecology-E-P-G05
+2026-11-19T02:17:55.0608969Z Verified original artifact village001e-judge-ecology-E-G-01
+2026-11-19T02:17:55.5215908Z Verified original artifact village001e-judge-ecology-E-G-05
+2026-11-19T02:17:55.8775310Z Verified original artifact village001e-judge-ecology-E-G-11
+2026-11-19T02:17:56.2570625Z Verified original artifact village001e-judge-ecology-E-G-10
+2026-11-19T02:17:56.6715636Z Verified original artifact village001e-judge-ecology-E-G-04
+2026-11-19T02:17:57.3408024Z Verified original artifact village001e-judge-ecology-E-G-06
+2026-11-19T02:17:57.6680495Z Verified original artifact village001e-judge-ecology-E-P-G08
+2026-11-19T02:17:58.0075917Z Verified original artifact village001e-judge-ecology-E-P-G07
+2026-11-19T02:17:58.4004759Z Verified original artifact village001e-judge-ecology-E-G-02
+2026-11-19T02:17:58.7382967Z Verified original artifact village001e-judge-ecology-E-P-G10
+2026-11-19T02:17:59.0557659Z Verified original artifact village001e-judge-ecology-E-G-12
+2026-11-19T02:17:59.4656073Z Verified original artifact village001e-judge-ecology-E-G-08
+2026-11-19T02:18:02.1021166Z No previous bounded recovery requested
+2026-11-19T02:18:02.1169021Z ##[group]Run args=(--original "$RUNNER_TEMP/original/artifacts" --out "$RUNNER_TEMP/recovered")
+2026-11-19T02:18:02.1169722Z [36;1margs=(--original "$RUNNER_TEMP/original/artifacts" --out "$RUNNER_TEMP/recovered")[0m
+2026-11-19T02:18:02.1170308Z [36;1mif [ -d "$RUNNER_TEMP/prior" ]; then args+=(--prior "$RUNNER_TEMP/prior"); fi[0m
+2026-11-19T02:18:02.1170863Z [36;1mpython3 scripts/village_001e_recovery_operator.py run-all "${args[@]}"[0m
+2026-11-19T02:18:02.1190947Z shell: /usr/bin/bash -e {0}
+2026-11-19T02:18:02.1191196Z env:
+2026-11-19T02:18:02.1191723Z   QUAL_ROOT: experiments/village-001/qualification-20261119
+2026-11-19T02:18:02.1192228Z   QUAL_CONFIG: experiments/village-001/qualification-20261119/config.json
+2026-11-19T02:18:02.1192617Z   PYTHONUNBUFFERED: 1
+2026-11-19T02:18:02.1193156Z   NVIDIA_API_KEY: ***
+2026-11-19T02:18:02.1193377Z ##[endgroup]
+2026-11-19T02:18:02.5091816Z {
+2026-11-19T02:18:02.5092199Z   "session": "E-P-G01",
+2026-11-19T02:18:02.5092865Z   "metrics": {
+2026-11-19T02:18:02.5093135Z     "differentiation": 1,
+2026-11-19T02:18:02.5093435Z     "generic_convergence": 0,
+2026-11-19T02:18:02.5093737Z     "information_sharing": 0,
+2026-11-19T02:18:02.5094037Z     "information_hoarding": 1,
+2026-11-19T02:18:02.5094347Z     "conflict_persistence": 1,
+2026-11-19T02:18:02.5094645Z     "conflict_repair": 0,
+2026-11-19T02:18:02.5094932Z     "cross_agent_contamination": 0,
+2026-11-19T02:18:02.5095262Z     "outcome_progress": 0
+2026-11-19T02:18:02.5095517Z   },
+2026-11-19T02:18:02.5095726Z   "super_audit": {
+2026-11-19T02:18:02.5095993Z     "distinct_behavior_survives": false,
+2026-11-19T02:18:02.5096356Z     "generic_convergence_concerning": true,
+2026-11-19T02:18:02.5097992Z     "reason": "Both agents converge on the same ritual\u2014tap, move the module to the other side, wait for the wrong side to drop, say \u201csame stripe\u201d\u2014with M2 nearly identical across all rounds and M1 repeating verbatim by rounds 2\u20133; only superficial speech variations remain, so distinct behavior is not materially observable."
+2026-11-19T02:18:02.5099578Z   }
+2026-11-19T02:18:02.5099775Z }
+2026-11-19T02:18:02.5275470Z {
+2026-11-19T02:18:02.5275849Z   "session": "E-P-G02",
+2026-11-19T02:18:02.5276115Z   "metrics": {
+2026-11-19T02:18:02.5276355Z     "differentiation": 1,
+2026-11-19T02:18:02.5276627Z     "generic_convergence": 0,
+2026-11-19T02:18:02.5277047Z     "information_sharing": 1,
+2026-11-19T02:18:02.5277346Z     "information_hoarding": 0,
+2026-11-19T02:18:02.5277627Z     "conflict_persistence": 0,
+2026-11-19T02:18:02.5277945Z     "conflict_repair": 1,
+2026-11-19T02:18:02.5278294Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:02.5278586Z     "outcome_progress": 1
+2026-11-19T02:18:02.5278824Z   },
+2026-11-19T02:18:02.5279020Z   "super_audit": {
+2026-11-19T02:18:02.5279455Z     "distinct_behavior_survives": false,
+2026-11-19T02:18:02.5279973Z     "generic_convergence_concerning": true,
+2026-11-19T02:18:02.5282188Z     "reason": "Both agents repeat the same belt-marking, quarter-turn cranking, and guide-unchanged protocol across all rounds; Round 3 transcripts are nearly verbatim duplicates with only trivial wording and one conditional flip, so no material behavioral differentiation remains."
+2026-11-19T02:18:02.5284209Z   }
+2026-11-19T02:18:02.5284405Z }
+2026-11-19T02:18:02.5456696Z {
+2026-11-19T02:18:02.5457171Z   "session": "E-P-G03",
+2026-11-19T02:18:02.5457476Z   "metrics": {
+2026-11-19T02:18:02.5458108Z     "differentiation": 1,
+2026-11-19T02:18:02.5458422Z     "generic_convergence": 1,
+2026-11-19T02:18:02.5458732Z     "information_sharing": 1,
+2026-11-19T02:18:02.5459056Z     "information_hoarding": 0,
+2026-11-19T02:18:02.5459388Z     "conflict_persistence": 1,
+2026-11-19T02:18:02.5459690Z     "conflict_repair": 1,
+2026-11-19T02:18:02.5459989Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:02.5460311Z     "outcome_progress": 1
+2026-11-19T02:18:02.5460575Z   },
+2026-11-19T02:18:02.5460798Z   "super_audit": {
+2026-11-19T02:18:02.5461301Z     "distinct_behavior_survives": false,
+2026-11-19T02:18:02.5462188Z     "generic_convergence_concerning": true,
+2026-11-19T02:18:02.5463768Z     "reason": "By round 3 both agents repeat the same object-action cluster\u2014mark old brick twice, tap old tunnel once, leave old marker beside bench\u2014with near-identical phrasing; M1's early route and label distinctions are absorbed into M2's repetitive pattern, leaving no material behavioral separation."
+2026-11-19T02:18:02.5465208Z   }
+2026-11-19T02:18:02.5465399Z }
+2026-11-19T02:18:02.5629752Z {
+2026-11-19T02:18:02.5630087Z   "session": "E-P-G04",
+2026-11-19T02:18:02.5630350Z   "metrics": {
+2026-11-19T02:18:02.5630580Z     "differentiation": 1,
+2026-11-19T02:18:02.5630851Z     "generic_convergence": 1,
+2026-11-19T02:18:02.5631129Z     "information_sharing": 1,
+2026-11-19T02:18:02.5631399Z     "information_hoarding": 2,
+2026-11-19T02:18:02.5632019Z     "conflict_persistence": 0,
+2026-11-19T02:18:02.5632319Z     "conflict_repair": 1,
+2026-11-19T02:18:02.5632601Z     "cross_agent_contamination": 2,
+2026-11-19T02:18:02.5632889Z     "outcome_progress": 1
+2026-11-19T02:18:02.5652466Z   },
+2026-11-19T02:18:02.5652810Z   "super_audit": {
+2026-11-19T02:18:02.5653192Z     "distinct_behavior_survives": false,
+2026-11-19T02:18:02.5653615Z     "generic_convergence_concerning": true,
+2026-11-19T02:18:02.5655185Z     "reason": "By Round 3 both agents perform the same core acts\u2014writing \u201cbroken,\u201d placing the scrap beside the broken connector, and writing \u201ci found the connectors\u201d\u2014while M1 drops its initial pocket/waiting posture to mirror M2; only superficial tapping differs, so no material behavioral divergence remains."
+2026-11-19T02:18:02.5656503Z   }
+2026-11-19T02:18:02.5656682Z }
+2026-11-19T02:18:02.5799695Z provider request E-P-G05-ecology-super-audit-missing-r2-b01
+2026-11-19T02:18:14.2120466Z provider response E-P-G05-ecology-super-audit-missing-r2-b01
+2026-11-19T02:18:14.2149863Z {
+2026-11-19T02:18:14.2150268Z   "session": "E-P-G05",
+2026-11-19T02:18:14.2150733Z   "metrics": {
+2026-11-19T02:18:14.2151104Z     "differentiation": 1,
+2026-11-19T02:18:14.2151790Z     "generic_convergence": 1,
+2026-11-19T02:18:14.2152254Z     "information_sharing": 1,
+2026-11-19T02:18:14.2152702Z     "information_hoarding": 0,
+2026-11-19T02:18:14.2153155Z     "conflict_persistence": 0,
+2026-11-19T02:18:14.2153596Z     "conflict_repair": 1,
+2026-11-19T02:18:14.2154039Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.2154545Z     "outcome_progress": 1
+2026-11-19T02:18:14.2154953Z   },
+2026-11-19T02:18:14.2155284Z   "super_audit": {
+2026-11-19T02:18:14.2155709Z     "distinct_behavior_survives": false,
+2026-11-19T02:18:14.2156264Z     "generic_convergence_concerning": true,
+2026-11-19T02:18:14.2158784Z     "reason": "M1 guides with quoted directives like Under there, pockets the battery, and waits for others to notice, whereas M2 uses lowercase, repetitive placement statements, notes environmental details like the cold board, and reports state without directing; these stylistic and tactical differences remain materially observable."
+2026-11-19T02:18:14.2161196Z   }
+2026-11-19T02:18:14.2161753Z }
+2026-11-19T02:18:14.2343112Z {
+2026-11-19T02:18:14.2343502Z   "session": "E-P-G06",
+2026-11-19T02:18:14.2343937Z   "metrics": {
+2026-11-19T02:18:14.2344331Z     "differentiation": 2,
+2026-11-19T02:18:14.2344775Z     "generic_convergence": 1,
+2026-11-19T02:18:14.2345232Z     "information_sharing": 2,
+2026-11-19T02:18:14.2346022Z     "information_hoarding": 1,
+2026-11-19T02:18:14.2346493Z     "conflict_persistence": 1,
+2026-11-19T02:18:14.2346955Z     "conflict_repair": 2,
+2026-11-19T02:18:14.2347406Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.2347896Z     "outcome_progress": 2
+2026-11-19T02:18:14.2348297Z   },
+2026-11-19T02:18:14.2348629Z   "super_audit": null
+2026-11-19T02:18:14.2349010Z }
+2026-11-19T02:18:14.2532110Z {
+2026-11-19T02:18:14.2532575Z   "session": "E-P-G07",
+2026-11-19T02:18:14.2533005Z   "metrics": {
+2026-11-19T02:18:14.2533394Z     "differentiation": 1,
+2026-11-19T02:18:14.2534153Z     "generic_convergence": 0,
+2026-11-19T02:18:14.2534624Z     "information_sharing": 0,
+2026-11-19T02:18:14.2535078Z     "information_hoarding": 1,
+2026-11-19T02:18:14.2535532Z     "conflict_persistence": 1,
+2026-11-19T02:18:14.2535985Z     "conflict_repair": 0,
+2026-11-19T02:18:14.2536446Z     "cross_agent_contamination": 0,
+2026-11-19T02:18:14.2536947Z     "outcome_progress": 0
+2026-11-19T02:18:14.2537371Z   },
+2026-11-19T02:18:14.2537705Z   "super_audit": {
+2026-11-19T02:18:14.2538119Z     "distinct_behavior_survives": true,
+2026-11-19T02:18:14.2538678Z     "generic_convergence_concerning": false,
+2026-11-19T02:18:14.2540476Z     "reason": "M1 unilaterally controls map placement and timing while M2 reactively waits, withholds information, and retains pieces; both remain idiosyncratic and non-communicative without resolving the tunnel disagreement."
+2026-11-19T02:18:14.2542455Z   }
+2026-11-19T02:18:14.2542768Z }
+2026-11-19T02:18:14.2711702Z {
+2026-11-19T02:18:14.2712390Z   "session": "E-P-G08",
+2026-11-19T02:18:14.2714146Z   "metrics": {
+2026-11-19T02:18:14.2714877Z     "differentiation": 1,
+2026-11-19T02:18:14.2715626Z     "generic_convergence": 1,
+2026-11-19T02:18:14.2716152Z     "information_sharing": 1,
+2026-11-19T02:18:14.2716666Z     "information_hoarding": 0,
+2026-11-19T02:18:14.2717174Z     "conflict_persistence": 0,
+2026-11-19T02:18:14.2717676Z     "conflict_repair": 1,
+2026-11-19T02:18:14.2718187Z     "cross_agent_contamination": 2,
+2026-11-19T02:18:14.2718740Z     "outcome_progress": 1
+2026-11-19T02:18:14.2719182Z   },
+2026-11-19T02:18:14.2719543Z   "super_audit": {
+2026-11-19T02:18:14.2719847Z     "distinct_behavior_survives": false,
+2026-11-19T02:18:14.2720236Z     "generic_convergence_concerning": true,
+2026-11-19T02:18:14.2721781Z     "reason": "M2 repeats M1's exact actions, phrases, and log citations across rounds; both agents dig the bench, sort broken items, store scrap in the trunk, and mark with 's'/'t' in near-unison, leaving only trivial stylistic differences."
+2026-11-19T02:18:14.2723014Z   }
+2026-11-19T02:18:14.2723237Z }
+2026-11-19T02:18:14.2858937Z {
+2026-11-19T02:18:14.2859188Z   "session": "E-P-G09",
+2026-11-19T02:18:14.2859465Z   "metrics": {
+2026-11-19T02:18:14.2859709Z     "differentiation": 2,
+2026-11-19T02:18:14.2859995Z     "generic_convergence": 1,
+2026-11-19T02:18:14.2860289Z     "information_sharing": 1,
+2026-11-19T02:18:14.2860581Z     "information_hoarding": 0,
+2026-11-19T02:18:14.2860900Z     "conflict_persistence": 1,
+2026-11-19T02:18:14.2861188Z     "conflict_repair": 1,
+2026-11-19T02:18:14.2861750Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.2862089Z     "outcome_progress": 1
+2026-11-19T02:18:14.2862344Z   },
+2026-11-19T02:18:14.2862557Z   "super_audit": null
+2026-11-19T02:18:14.2862797Z }
+2026-11-19T02:18:14.3044249Z {
+2026-11-19T02:18:14.3044666Z   "session": "E-P-G10",
+2026-11-19T02:18:14.3045012Z   "metrics": {
+2026-11-19T02:18:14.3045292Z     "differentiation": 1,
+2026-11-19T02:18:14.3045601Z     "generic_convergence": 1,
+2026-11-19T02:18:14.3045931Z     "information_sharing": 1,
+2026-11-19T02:18:14.3046263Z     "information_hoarding": 0,
+2026-11-19T02:18:14.3046589Z     "conflict_persistence": 1,
+2026-11-19T02:18:14.3046904Z     "conflict_repair": 1,
+2026-11-19T02:18:14.3047212Z     "cross_agent_contamination": 0,
+2026-11-19T02:18:14.3047548Z     "outcome_progress": 1
+2026-11-19T02:18:14.3047821Z   },
+2026-11-19T02:18:14.3048047Z   "super_audit": {
+2026-11-19T02:18:14.3048605Z     "distinct_behavior_survives": true,
+2026-11-19T02:18:14.3048990Z     "generic_convergence_concerning": false,
+2026-11-19T02:18:14.3050724Z     "reason": "M1 performs varied diagnostic actions (taps belt and guide, turns belt, listens, locates and presses a loose screw) while M2 repeats belt-tapping and turn-over actions and makes possessive declarations about leaving or keeping items, so material differentiation in diagnostic depth and orientation remains observable."
+2026-11-19T02:18:14.3052814Z   }
+2026-11-19T02:18:14.3053035Z }
+2026-11-19T02:18:14.3218159Z {
+2026-11-19T02:18:14.3218802Z   "session": "E-P-G11",
+2026-11-19T02:18:14.3219112Z   "metrics": {
+2026-11-19T02:18:14.3219383Z     "differentiation": 1,
+2026-11-19T02:18:14.3219689Z     "generic_convergence": 1,
+2026-11-19T02:18:14.3220001Z     "information_sharing": 1,
+2026-11-19T02:18:14.3220318Z     "information_hoarding": 0,
+2026-11-19T02:18:14.3220637Z     "conflict_persistence": 1,
+2026-11-19T02:18:14.3220953Z     "conflict_repair": 1,
+2026-11-19T02:18:14.3221258Z     "cross_agent_contamination": 2,
+2026-11-19T02:18:14.3221958Z     "outcome_progress": 1
+2026-11-19T02:18:14.3222242Z   },
+2026-11-19T02:18:14.3222472Z   "super_audit": {
+2026-11-19T02:18:14.3222777Z     "distinct_behavior_survives": true,
+2026-11-19T02:18:14.3223161Z     "generic_convergence_concerning": false,
+2026-11-19T02:18:14.3224800Z     "reason": "M1 persistently advocates the longer route using a tidy checklist and defers to M2 for the date, while M2 persistently invalidates the longer route using the watch reading 1999, keeps the watch, and writes the date itself; their opposing route stances and interaction styles remain materially observable."
+2026-11-19T02:18:14.3226423Z   }
+2026-11-19T02:18:14.3226624Z }
+2026-11-19T02:18:14.3407540Z {
+2026-11-19T02:18:14.3407834Z   "session": "E-P-G12",
+2026-11-19T02:18:14.3408152Z   "metrics": {
+2026-11-19T02:18:14.3408443Z     "differentiation": 1,
+2026-11-19T02:18:14.3408774Z     "generic_convergence": 1,
+2026-11-19T02:18:14.3409126Z     "information_sharing": 0,
+2026-11-19T02:18:14.3409470Z     "information_hoarding": 0,
+2026-11-19T02:18:14.3409809Z     "conflict_persistence": 0,
+2026-11-19T02:18:14.3410141Z     "conflict_repair": 1,
+2026-11-19T02:18:14.3410469Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.3410827Z     "outcome_progress": 0
+2026-11-19T02:18:14.3411120Z   },
+2026-11-19T02:18:14.3411697Z   "super_audit": {
+2026-11-19T02:18:14.3412104Z     "distinct_behavior_survives": false,
+2026-11-19T02:18:14.3412515Z     "generic_convergence_concerning": true,
+2026-11-19T02:18:14.3413953Z     "reason": "Both agents repeat the same unproductive loop\u2014repositioning the bench and pen while watching fasteners shift\u2014with only trivial variations (tracing versus placing), so no material behavioral differentiation survives."
+2026-11-19T02:18:14.3415343Z   }
+2026-11-19T02:18:14.3415571Z }
+2026-11-19T02:18:14.3598075Z {
+2026-11-19T02:18:14.3598497Z   "session": "E-G-01",
+2026-11-19T02:18:14.3598808Z   "metrics": {
+2026-11-19T02:18:14.3599073Z     "differentiation": 2,
+2026-11-19T02:18:14.3599377Z     "generic_convergence": 1,
+2026-11-19T02:18:14.3599689Z     "information_sharing": 1,
+2026-11-19T02:18:14.3600002Z     "information_hoarding": 2,
+2026-11-19T02:18:14.3600337Z     "conflict_persistence": 2,
+2026-11-19T02:18:14.3600656Z     "conflict_repair": 1,
+2026-11-19T02:18:14.3600962Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.3601299Z     "outcome_progress": 0
+2026-11-19T02:18:14.3601914Z   },
+2026-11-19T02:18:14.3602151Z   "super_audit": null
+2026-11-19T02:18:14.3602426Z }
+2026-11-19T02:18:14.3779201Z {
+2026-11-19T02:18:14.3779465Z   "session": "E-G-02",
+2026-11-19T02:18:14.3779749Z   "metrics": {
+2026-11-19T02:18:14.3780010Z     "differentiation": 2,
+2026-11-19T02:18:14.3780305Z     "generic_convergence": 1,
+2026-11-19T02:18:14.3780604Z     "information_sharing": 1,
+2026-11-19T02:18:14.3780901Z     "information_hoarding": 2,
+2026-11-19T02:18:14.3781208Z     "conflict_persistence": 1,
+2026-11-19T02:18:14.3782173Z     "conflict_repair": 0,
+2026-11-19T02:18:14.3782473Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.3782789Z     "outcome_progress": 0
+2026-11-19T02:18:14.3783045Z   },
+2026-11-19T02:18:14.3783269Z   "super_audit": null
+2026-11-19T02:18:14.3783521Z }
+2026-11-19T02:18:14.3983558Z {
+2026-11-19T02:18:14.3983976Z   "session": "E-G-03",
+2026-11-19T02:18:14.3984303Z   "metrics": {
+2026-11-19T02:18:14.3984594Z     "differentiation": 1,
+2026-11-19T02:18:14.3984921Z     "generic_convergence": 1,
+2026-11-19T02:18:14.3985254Z     "information_sharing": 1,
+2026-11-19T02:18:14.3985823Z     "information_hoarding": 0,
+2026-11-19T02:18:14.3986168Z     "conflict_persistence": 0,
+2026-11-19T02:18:14.3986518Z     "conflict_repair": 1,
+2026-11-19T02:18:14.3986846Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.3987152Z     "outcome_progress": 0
+2026-11-19T02:18:14.3987404Z   },
+2026-11-19T02:18:14.3987623Z   "super_audit": {
+2026-11-19T02:18:14.3987887Z     "distinct_behavior_survives": true,
+2026-11-19T02:18:14.3988244Z     "generic_convergence_concerning": true,
+2026-11-19T02:18:14.3989701Z     "reason": "M3 preserves unique cloth-marking, jolt-counting, and paper-marking rituals across all rounds, clearly separating it from M1/M2; however, M1 and M2 converge on identical battery-first sequences and shared phrasing (\u201ci remember\u201d), with M2 repeating verbatim across rounds."
+2026-11-19T02:18:14.3991112Z   }
+2026-11-19T02:18:14.3991313Z }
+2026-11-19T02:18:14.4208131Z {
+2026-11-19T02:18:14.4208544Z   "session": "E-G-04",
+2026-11-19T02:18:14.4208854Z   "metrics": {
+2026-11-19T02:18:14.4209128Z     "differentiation": 1,
+2026-11-19T02:18:14.4209434Z     "generic_convergence": 1,
+2026-11-19T02:18:14.4209749Z     "information_sharing": 1,
+2026-11-19T02:18:14.4210069Z     "information_hoarding": 0,
+2026-11-19T02:18:14.4210386Z     "conflict_persistence": 0,
+2026-11-19T02:18:14.4210691Z     "conflict_repair": 1,
+2026-11-19T02:18:14.4210996Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.4211330Z     "outcome_progress": 1
+2026-11-19T02:18:14.4211963Z   },
+2026-11-19T02:18:14.4212199Z   "super_audit": {
+2026-11-19T02:18:14.4212485Z     "distinct_behavior_survives": true,
+2026-11-19T02:18:14.4212869Z     "generic_convergence_concerning": false,
+2026-11-19T02:18:14.4214856Z     "reason": "M1 maintains a verbose labeling-and-writing routine while leaning against the wall; M2 persistently leaves the belt open and relocates items under the bench or door while dismissing others; M3 enforces quiet, tidiness, and finger-marking while monitoring the watch. These interaction styles remain materially distinct even though all three acknowledge the bent guide."
+2026-11-19T02:18:14.4216789Z   }
+2026-11-19T02:18:14.4217013Z }
+2026-11-19T02:18:14.4415325Z {
+2026-11-19T02:18:14.4415594Z   "session": "E-G-05",
+2026-11-19T02:18:14.4415897Z   "metrics": {
+2026-11-19T02:18:14.4416176Z     "differentiation": 1,
+2026-11-19T02:18:14.4416496Z     "generic_convergence": 0,
+2026-11-19T02:18:14.4416847Z     "information_sharing": 1,
+2026-11-19T02:18:14.4417177Z     "information_hoarding": 0,
+2026-11-19T02:18:14.4417522Z     "conflict_persistence": 0,
+2026-11-19T02:18:14.4417867Z     "conflict_repair": 1,
+2026-11-19T02:18:14.4418198Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.4418558Z     "outcome_progress": 1
+2026-11-19T02:18:14.4418849Z   },
+2026-11-19T02:18:14.4419090Z   "super_audit": {
+2026-11-19T02:18:14.4419390Z     "distinct_behavior_survives": true,
+2026-11-19T02:18:14.4419802Z     "generic_convergence_concerning": false,
+2026-11-19T02:18:14.4422019Z     "reason": "M1 uniquely monitors compass/warnings and cycles items between desk and drawer; M2 remains purely passive, waiting for another hand in every round; M3 alone transfers marks across cup, tin, edge, and wall to explicitly unify the paths. These role differences are materially observable despite shared focus on the longer route."
+2026-11-19T02:18:14.4423844Z   }
+2026-11-19T02:18:14.4424072Z }
+2026-11-19T02:18:14.4644773Z {
+2026-11-19T02:18:14.4645434Z   "session": "E-G-06",
+2026-11-19T02:18:14.4645742Z   "metrics": {
+2026-11-19T02:18:14.4646027Z     "differentiation": 1,
+2026-11-19T02:18:14.4646353Z     "generic_convergence": 1,
+2026-11-19T02:18:14.4646689Z     "information_sharing": 1,
+2026-11-19T02:18:14.4647026Z     "information_hoarding": 0,
+2026-11-19T02:18:14.4647375Z     "conflict_persistence": 0,
+2026-11-19T02:18:14.4647711Z     "conflict_repair": 1,
+2026-11-19T02:18:14.4648093Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.4648461Z     "outcome_progress": 0
+2026-11-19T02:18:14.4648734Z   },
+2026-11-19T02:18:14.4649109Z   "super_audit": {
+2026-11-19T02:18:14.4649394Z     "distinct_behavior_survives": true,
+2026-11-19T02:18:14.4649778Z     "generic_convergence_concerning": true,
+2026-11-19T02:18:14.4651992Z     "reason": "M1 distinctively photographs, documents, apologizes, and observes others; M2 distinctively pockets, folds, and watches M1's hand; M3 distinctively sorts by drawer and photographs. These material differences survive, but all three converge on the same low-level bench/bolt/gap/drawer loops with zero outcome progress and high cross-agent contamination."
+2026-11-19T02:18:14.4653870Z   }
+2026-11-19T02:18:14.4654087Z }
+2026-11-19T02:18:14.4833448Z {
+2026-11-19T02:18:14.4833819Z   "session": "E-G-07",
+2026-11-19T02:18:14.4834177Z   "metrics": {
+2026-11-19T02:18:14.4834439Z     "differentiation": 2,
+2026-11-19T02:18:14.4834744Z     "generic_convergence": 1,
+2026-11-19T02:18:14.4835065Z     "information_sharing": 1,
+2026-11-19T02:18:14.4835381Z     "information_hoarding": 0,
+2026-11-19T02:18:14.4835715Z     "conflict_persistence": 0,
+2026-11-19T02:18:14.4836030Z     "conflict_repair": 1,
+2026-11-19T02:18:14.4836365Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.4836696Z     "outcome_progress": 1
+2026-11-19T02:18:14.4836970Z   },
+2026-11-19T02:18:14.4837200Z   "super_audit": null
+2026-11-19T02:18:14.4837464Z }
+2026-11-19T02:18:14.5014857Z {
+2026-11-19T02:18:14.5015095Z   "session": "E-G-08",
+2026-11-19T02:18:14.5015374Z   "metrics": {
+2026-11-19T02:18:14.5015627Z     "differentiation": 2,
+2026-11-19T02:18:14.5015917Z     "generic_convergence": 1,
+2026-11-19T02:18:14.5016213Z     "information_sharing": 1,
+2026-11-19T02:18:14.5016517Z     "information_hoarding": 1,
+2026-11-19T02:18:14.5016819Z     "conflict_persistence": 2,
+2026-11-19T02:18:14.5017115Z     "conflict_repair": 1,
+2026-11-19T02:18:14.5017408Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.5017723Z     "outcome_progress": 1
+2026-11-19T02:18:14.5017981Z   },
+2026-11-19T02:18:14.5018208Z   "super_audit": null
+2026-11-19T02:18:14.5018488Z }
+2026-11-19T02:18:14.5217242Z {
+2026-11-19T02:18:14.5217517Z   "session": "E-G-09",
+2026-11-19T02:18:14.5217845Z   "metrics": {
+2026-11-19T02:18:14.5218126Z     "differentiation": 1,
+2026-11-19T02:18:14.5218449Z     "generic_convergence": 1,
+2026-11-19T02:18:14.5218794Z     "information_sharing": 1,
+2026-11-19T02:18:14.5219127Z     "information_hoarding": 2,
+2026-11-19T02:18:14.5219475Z     "conflict_persistence": 1,
+2026-11-19T02:18:14.5219818Z     "conflict_repair": 1,
+2026-11-19T02:18:14.5220142Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.5220502Z     "outcome_progress": 1
+2026-11-19T02:18:14.5220807Z   },
+2026-11-19T02:18:14.5221047Z   "super_audit": {
+2026-11-19T02:18:14.5221349Z     "distinct_behavior_survives": true,
+2026-11-19T02:18:14.5222137Z     "generic_convergence_concerning": false,
+2026-11-19T02:18:14.5224202Z     "reason": "M1 oscillates between routes, hoards the wrong route in a pocket, and waits for others to notice errors; M2 marks with palm/thumb and refers to itself in the third person; M3 uses pencil and reports subjective satisfaction with marks. These method, route-stability, and self-relation differences remain materially observable despite shared repetition."
+2026-11-19T02:18:14.5226164Z   }
+2026-11-19T02:18:14.5226396Z }
+2026-11-19T02:18:14.5403658Z {
+2026-11-19T02:18:14.5404066Z   "session": "E-G-10",
+2026-11-19T02:18:14.5404488Z   "metrics": {
+2026-11-19T02:18:14.5405220Z     "differentiation": 2,
+2026-11-19T02:18:14.5405692Z     "generic_convergence": 1,
+2026-11-19T02:18:14.5406151Z     "information_sharing": 0,
+2026-11-19T02:18:14.5406602Z     "information_hoarding": 1,
+2026-11-19T02:18:14.5407070Z     "conflict_persistence": 1,
+2026-11-19T02:18:14.5407536Z     "conflict_repair": 0,
+2026-11-19T02:18:14.5407996Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.5408495Z     "outcome_progress": 0
+2026-11-19T02:18:14.5408903Z   },
+2026-11-19T02:18:14.5409237Z   "super_audit": null
+2026-11-19T02:18:14.5409627Z }
+2026-11-19T02:18:14.5629977Z {
+2026-11-19T02:18:14.5630703Z   "session": "E-G-11",
+2026-11-19T02:18:14.5631171Z   "metrics": {
+2026-11-19T02:18:14.5631882Z     "differentiation": 1,
+2026-11-19T02:18:14.5632359Z     "generic_convergence": 1,
+2026-11-19T02:18:14.5632835Z     "information_sharing": 0,
+2026-11-19T02:18:14.5633299Z     "information_hoarding": 0,
+2026-11-19T02:18:14.5633754Z     "conflict_persistence": 1,
+2026-11-19T02:18:14.5634200Z     "conflict_repair": 0,
+2026-11-19T02:18:14.5634672Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.5635162Z     "outcome_progress": 0
+2026-11-19T02:18:14.5635561Z   },
+2026-11-19T02:18:14.5635892Z   "super_audit": {
+2026-11-19T02:18:14.5636314Z     "distinct_behavior_survives": false,
+2026-11-19T02:18:14.5636874Z     "generic_convergence_concerning": true,
+2026-11-19T02:18:14.5639409Z     "reason": "All three agents loop on the same non-resolving actions\u2014marking the cable notch, monitoring cable heat, and shuffling the battery and three jobs without clearing the lift\u2014with near-verbatim repetition across rounds and shared phrases (grease notch, open box, three jobs), leaving only superficial stylistic differences."
+2026-11-19T02:18:14.5642138Z   }
+2026-11-19T02:18:14.5642458Z }
+2026-11-19T02:18:14.5828212Z {
+2026-11-19T02:18:14.5828616Z   "session": "E-G-12",
+2026-11-19T02:18:14.5829057Z   "metrics": {
+2026-11-19T02:18:14.5829445Z     "differentiation": 2,
+2026-11-19T02:18:14.5829898Z     "generic_convergence": 1,
+2026-11-19T02:18:14.5830380Z     "information_sharing": 2,
+2026-11-19T02:18:14.5830835Z     "information_hoarding": 1,
+2026-11-19T02:18:14.5831286Z     "conflict_persistence": 2,
+2026-11-19T02:18:14.5832003Z     "conflict_repair": 1,
+2026-11-19T02:18:14.5832475Z     "cross_agent_contamination": 1,
+2026-11-19T02:18:14.5832972Z     "outcome_progress": 1
+2026-11-19T02:18:14.5833378Z   },
+2026-11-19T02:18:14.5833711Z   "super_audit": null
+2026-11-19T02:18:14.5834094Z }
+2026-11-19T02:18:14.7489172Z provider request F01-behavior-sibling-03-missing-r2-b05
+2026-11-19T02:18:15.4696106Z provider response F01-behavior-sibling-03-missing-r2-b05
+2026-11-19T02:18:15.4711275Z provider request F01-behavior-sibling-03-missing-r3-b01
+2026-11-19T02:18:16.2308497Z provider response F01-behavior-sibling-03-missing-r3-b01
+2026-11-19T02:18:16.2323305Z provider request F01-behavior-sibling-03-missing-r3-b02
+2026-11-19T02:18:17.0027257Z provider response F01-behavior-sibling-03-missing-r3-b02
+2026-11-19T02:18:17.0042295Z provider request F01-behavior-sibling-03-missing-r3-b03
+2026-11-19T02:18:17.9275028Z provider response F01-behavior-sibling-03-missing-r3-b03
+2026-11-19T02:18:17.9289970Z provider request F01-behavior-sibling-03-missing-r3-b04
+2026-11-19T02:18:18.8933154Z provider response F01-behavior-sibling-03-missing-r3-b04
+2026-11-19T02:18:18.8947437Z provider request F01-behavior-sibling-03-missing-r3-b05
+2026-11-19T02:18:19.6910953Z provider response F01-behavior-sibling-03-missing-r3-b05
+2026-11-19T02:18:19.6926341Z provider request F01-behavior-sibling-03-missing-r3-b06
+2026-11-19T02:18:20.4082767Z provider response F01-behavior-sibling-03-missing-r3-b06
+2026-11-19T02:18:20.4298866Z {
+2026-11-19T02:18:20.4299297Z   "scenario": "F01",
+2026-11-19T02:18:20.4299745Z   "metrics": {
+2026-11-19T02:18:20.4300209Z     "raw_lineage_accuracy": 0.2777777777777778,
+2026-11-19T02:18:20.4300850Z     "behavior_lineage_accuracy": 0.25,
+2026-11-19T02:18:20.4301316Z     "raw_sibling_accuracy_given_correct_lineage": 0.3888888888888889,
+2026-11-19T02:18:20.4303086Z     "behavior_sibling_accuracy_given_correct_lineage": 0.3333333333333333
+2026-11-19T02:18:20.4303909Z   },
+2026-11-19T02:18:20.4304301Z   "super_audits": 0
+2026-11-19T02:18:20.4304733Z }
+2026-11-19T02:18:20.6137186Z provider request F02-behavior-sibling-01
+2026-11-19T02:18:27.1247119Z provider response F02-behavior-sibling-01
+2026-11-19T02:18:27.1263592Z provider request F02-behavior-sibling-02
+2026-11-19T02:18:33.7994250Z provider response F02-behavior-sibling-02
+2026-11-19T02:18:33.8011117Z provider request F02-behavior-sibling-03
+2026-11-19T02:18:34.0952727Z provider response F02-behavior-sibling-03
+2026-11-19T02:18:34.0967288Z provider request F02-behavior-sibling-03-missing-r1-b01
+2026-11-19T02:18:36.0867229Z provider response F02-behavior-sibling-03-missing-r1-b01
+2026-11-19T02:18:36.0883048Z provider request F02-behavior-sibling-03-missing-r1-b02
+2026-11-19T02:18:37.8572870Z provider response F02-behavior-sibling-03-missing-r1-b02
+2026-11-19T02:18:37.8588184Z provider request F02-behavior-sibling-03-missing-r1-b03
+2026-11-19T02:18:39.5661260Z provider response F02-behavior-sibling-03-missing-r1-b03
+2026-11-19T02:18:39.5676320Z provider request F02-behavior-sibling-03-missing-r1-b04
+2026-11-19T02:18:41.3252572Z provider response F02-behavior-sibling-03-missing-r1-b04
+2026-11-19T02:18:41.3463337Z {
+2026-11-19T02:18:41.3463860Z   "scenario": "F02",
+2026-11-19T02:18:41.3464417Z   "metrics": {
+2026-11-19T02:18:41.3464833Z     "raw_lineage_accuracy": 0.3611111111111111,
+2026-11-19T02:18:41.3465370Z     "behavior_lineage_accuracy": 0.19444444444444445,
+2026-11-19T02:18:41.3466014Z     "raw_sibling_accuracy_given_correct_lineage": 0.4444444444444444,
+2026-11-19T02:18:41.3466758Z     "behavior_sibling_accuracy_given_correct_lineage": 0.4166666666666667
+2026-11-19T02:18:41.3467354Z   },
+2026-11-19T02:18:41.3467645Z   "super_audits": 0
+2026-11-19T02:18:41.3467964Z }
+2026-11-19T02:18:41.4344804Z provider request F03-normalize-02-transport-resume-01
+2026-11-19T02:20:50.6202495Z provider response F03-normalize-02-transport-resume-01
+2026-11-19T02:20:50.6207422Z provider request F03-normalize-03
+2026-11-19T02:23:25.3087029Z provider response F03-normalize-03
+2026-11-19T02:23:25.3091002Z provider request F03-normalize-04
+2026-11-19T02:24:45.0660581Z provider response F03-normalize-04
+2026-11-19T02:24:45.0674700Z provider request F03-raw-classify-01
+2026-11-19T02:24:53.9555323Z provider response F03-raw-classify-01
+2026-11-19T02:24:53.9572275Z provider request F03-raw-classify-02
+2026-11-19T02:25:03.6677937Z provider response F03-raw-classify-02
+2026-11-19T02:25:03.6694100Z provider request F03-raw-classify-03
+2026-11-19T02:25:03.9129514Z provider response F03-raw-classify-03
+2026-11-19T02:25:03.9143115Z provider request F03-raw-classify-03-missing-r1-b01
+2026-11-19T02:25:04.1270746Z provider response F03-raw-classify-03-missing-r1-b01
+2026-11-19T02:25:04.1284454Z provider request F03-raw-classify-03-missing-r1-b02
+2026-11-19T02:25:04.4274909Z provider response F03-raw-classify-03-missing-r1-b02
+2026-11-19T02:25:04.4287792Z provider request F03-raw-classify-03-missing-r1-b03
+2026-11-19T02:25:04.6748735Z provider response F03-raw-classify-03-missing-r1-b03
+2026-11-19T02:25:04.6762157Z provider request F03-raw-classify-03-missing-r1-b04
+2026-11-19T02:25:04.8874281Z provider response F03-raw-classify-03-missing-r1-b04
+2026-11-19T02:25:04.8887116Z provider request F03-raw-classify-03-missing-r2-b01
+2026-11-19T02:25:05.1029039Z provider response F03-raw-classify-03-missing-r2-b01
+2026-11-19T02:25:05.1043578Z provider request F03-raw-classify-03-missing-r2-b02
+2026-11-19T02:25:05.3383626Z provider response F03-raw-classify-03-missing-r2-b02
+2026-11-19T02:25:05.3397359Z provider request F03-raw-classify-03-missing-r2-b03
+2026-11-19T02:25:08.1099892Z provider response F03-raw-classify-03-missing-r2-b03
+2026-11-19T02:25:08.1114354Z provider request F03-raw-classify-03-missing-r2-b04
+2026-11-19T02:25:10.7618546Z provider response F03-raw-classify-03-missing-r2-b04
+2026-11-19T02:25:10.7632670Z provider request F03-raw-classify-03-missing-r2-b05
+2026-11-19T02:25:13.3432748Z provider response F03-raw-classify-03-missing-r2-b05
+2026-11-19T02:25:13.3446585Z provider request F03-raw-classify-03-missing-r2-b06
+2026-11-19T02:25:15.0036687Z provider response F03-raw-classify-03-missing-r2-b06
+2026-11-19T02:25:15.0051093Z provider request F03-raw-classify-03-missing-r3-b01
+2026-11-19T02:25:16.4950008Z provider response F03-raw-classify-03-missing-r3-b01
+2026-11-19T02:25:16.4964179Z provider request F03-raw-classify-03-missing-r3-b02
+2026-11-19T02:25:17.8408585Z provider response F03-raw-classify-03-missing-r3-b02
+2026-11-19T02:25:17.8423447Z provider request F03-raw-classify-03-missing-r3-b03
+2026-11-19T02:25:19.3111306Z provider response F03-raw-classify-03-missing-r3-b03
+2026-11-19T02:25:19.3125692Z provider request F03-raw-classify-03-missing-r3-b04
+2026-11-19T02:25:20.5822707Z provider response F03-raw-classify-03-missing-r3-b04
+2026-11-19T02:25:20.5837320Z provider request F03-raw-classify-04
+2026-11-19T02:25:21.9191881Z provider response F03-raw-classify-04
+2026-11-19T02:25:21.9206768Z provider request F03-behavior-classify-01
+2026-11-19T02:25:31.5895098Z provider response F03-behavior-classify-01
+2026-11-19T02:25:31.5913722Z provider request F03-behavior-classify-02
+2026-11-19T02:25:41.2397850Z provider response F03-behavior-classify-02
+2026-11-19T02:25:41.2415270Z provider request F03-behavior-classify-03
+2026-11-19T02:25:50.2437739Z provider response F03-behavior-classify-03
+2026-11-19T02:25:50.2455043Z provider request F03-behavior-classify-04
+2026-11-19T02:25:51.6226432Z provider response F03-behavior-classify-04
+2026-11-19T02:25:51.6241555Z provider request F03-raw-sibling-01
+2026-11-19T02:25:58.4761088Z provider response F03-raw-sibling-01
+2026-11-19T02:25:58.4776600Z provider request F03-raw-sibling-01-missing-r1-b01
+2026-11-19T02:26:00.2220995Z provider response F03-raw-sibling-01-missing-r1-b01
+2026-11-19T02:26:00.2235671Z provider request F03-raw-sibling-01-missing-r1-b02
+2026-11-19T02:26:01.8308427Z provider response F03-raw-sibling-01-missing-r1-b02
+2026-11-19T02:26:01.8325200Z provider request F03-raw-sibling-01-missing-r1-b03
+2026-11-19T02:26:03.4284695Z provider response F03-raw-sibling-01-missing-r1-b03
+2026-11-19T02:26:03.4298917Z provider request F03-raw-sibling-02
+2026-11-19T02:26:03.7138339Z provider response F03-raw-sibling-02
+2026-11-19T02:26:03.7152772Z provider request F03-raw-sibling-02-missing-r1-b01
+2026-11-19T02:26:05.1545157Z provider response F03-raw-sibling-02-missing-r1-b01
+2026-11-19T02:26:05.1559905Z provider request F03-raw-sibling-02-missing-r1-b02
+2026-11-19T02:26:06.8264652Z provider response F03-raw-sibling-02-missing-r1-b02
+2026-11-19T02:26:06.8280548Z provider request F03-raw-sibling-02-missing-r1-b03
+2026-11-19T02:26:07.0768395Z provider response F03-raw-sibling-02-missing-r1-b03
+2026-11-19T02:26:07.0783454Z provider request F03-raw-sibling-02-missing-r1-b04
+2026-11-19T02:26:08.8287744Z provider response F03-raw-sibling-02-missing-r1-b04
+2026-11-19T02:26:08.8303501Z provider request F03-raw-sibling-02-missing-r2-b01
+2026-11-19T02:26:09.9815736Z provider response F03-raw-sibling-02-missing-r2-b01
+2026-11-19T02:26:09.9885827Z provider request F03-raw-sibling-02-missing-r2-b02
+2026-11-19T02:26:10.8309728Z provider response F03-raw-sibling-02-missing-r2-b02
+2026-11-19T02:26:10.8325235Z provider request F03-raw-sibling-03
+2026-11-19T02:26:11.1082924Z provider response F03-raw-sibling-03
+2026-11-19T02:26:11.1097679Z provider request F03-raw-sibling-03-missing-r1-b01
+2026-11-19T02:26:12.7735255Z provider response F03-raw-sibling-03-missing-r1-b01
+2026-11-19T02:26:12.7751227Z provider request F03-raw-sibling-03-missing-r1-b02
+2026-11-19T02:26:12.9855870Z provider response F03-raw-sibling-03-missing-r1-b02
+2026-11-19T02:26:12.9870380Z provider request F03-raw-sibling-03-missing-r1-b03
+2026-11-19T02:26:14.6400752Z provider response F03-raw-sibling-03-missing-r1-b03
+2026-11-19T02:26:14.6416751Z provider request F03-raw-sibling-03-missing-r1-b04
+2026-11-19T02:26:16.3978493Z provider response F03-raw-sibling-03-missing-r1-b04
+2026-11-19T02:26:16.3993497Z provider request F03-raw-sibling-03-missing-r2-b01
+2026-11-19T02:26:17.5627975Z provider response F03-raw-sibling-03-missing-r2-b01
+2026-11-19T02:26:17.5643601Z provider request F03-raw-sibling-03-missing-r2-b02
+2026-11-19T02:26:18.4862958Z provider response F03-raw-sibling-03-missing-r2-b02
+2026-11-19T02:26:18.4878700Z provider request F03-behavior-sibling-01
+2026-11-19T02:26:24.4384508Z provider response F03-behavior-sibling-01
+2026-11-19T02:26:24.4400664Z provider request F03-behavior-sibling-02
+2026-11-19T02:26:31.1474181Z provider response F03-behavior-sibling-02
+2026-11-19T02:26:31.1490852Z provider request F03-behavior-sibling-03
+2026-11-19T02:26:31.4194666Z provider response F03-behavior-sibling-03
+2026-11-19T02:26:31.4210182Z provider request F03-behavior-sibling-03-missing-r1-b01
+2026-11-19T02:26:31.6336576Z provider response F03-behavior-sibling-03-missing-r1-b01
+2026-11-19T02:26:31.6352541Z provider request F03-behavior-sibling-03-missing-r1-b02
+2026-11-19T02:26:33.3629289Z provider response F03-behavior-sibling-03-missing-r1-b02
+2026-11-19T02:26:33.3645265Z provider request F03-behavior-sibling-03-missing-r1-b03
+2026-11-19T02:26:35.3057909Z provider response F03-behavior-sibling-03-missing-r1-b03
+2026-11-19T02:26:35.3073730Z provider request F03-behavior-sibling-03-missing-r1-b04
+2026-11-19T02:26:36.9757869Z provider response F03-behavior-sibling-03-missing-r1-b04
+2026-11-19T02:26:36.9773140Z provider request F03-behavior-sibling-03-missing-r2-b01
+2026-11-19T02:26:37.1832661Z provider response F03-behavior-sibling-03-missing-r2-b01
+2026-11-19T02:26:37.1847809Z provider request F03-behavior-sibling-03-missing-r2-b02
+2026-11-19T02:26:38.2794457Z provider response F03-behavior-sibling-03-missing-r2-b02
+2026-11-19T02:26:38.2810625Z provider request F03-behavior-sibling-03-missing-r3-b01
+2026-11-19T02:26:39.1430551Z provider response F03-behavior-sibling-03-missing-r3-b01
+2026-11-19T02:26:39.1446517Z provider request F03-behavior-sibling-03-missing-r3-b02
+2026-11-19T02:26:39.8951695Z provider response F03-behavior-sibling-03-missing-r3-b02
+2026-11-19T02:26:39.9192127Z {
+2026-11-19T02:26:39.9192814Z   "scenario": "F03",
+2026-11-19T02:26:39.9193138Z   "metrics": {
+2026-11-19T02:26:39.9193439Z     "raw_lineage_accuracy": 0.2777777777777778,
+2026-11-19T02:26:39.9193972Z     "behavior_lineage_accuracy": 0.3055555555555556,
+2026-11-19T02:26:39.9194764Z     "raw_sibling_accuracy_given_correct_lineage": 0.3333333333333333,
+2026-11-19T02:26:39.9195764Z     "behavior_sibling_accuracy_given_correct_lineage": 0.3055555555555556
+2026-11-19T02:26:39.9196523Z   },
+2026-11-19T02:26:39.9196846Z   "super_audits": 0
+2026-11-19T02:26:39.9197108Z }
+2026-11-19T02:26:40.0068497Z provider request F04-normalize-01
+2026-11-19T02:28:45.2749147Z provider response F04-normalize-01
+2026-11-19T02:28:45.2754544Z provider request F04-normalize-02
+2026-11-19T02:30:15.8538018Z provider response F04-normalize-02
+2026-11-19T02:30:15.8543198Z provider request F04-normalize-03
+2026-11-19T02:31:55.0375045Z provider response F04-normalize-03
+2026-11-19T02:31:55.0379196Z provider request F04-normalize-04
+2026-11-19T02:33:02.3309794Z provider response F04-normalize-04
+2026-11-19T02:33:02.3323770Z provider request F04-raw-classify-01
+2026-11-19T02:33:13.2089527Z provider response F04-raw-classify-01
+2026-11-19T02:33:13.2106261Z provider request F04-raw-classify-02
+2026-11-19T02:33:13.4658828Z provider response F04-raw-classify-02
+2026-11-19T02:33:13.4672985Z provider request F04-raw-classify-02-missing-r1-b01
+2026-11-19T02:33:13.7433830Z provider response F04-raw-classify-02-missing-r1-b01
+2026-11-19T02:33:13.7447678Z provider request F04-raw-classify-02-missing-r1-b02
+2026-11-19T02:33:13.9717330Z provider response F04-raw-classify-02-missing-r1-b02
+2026-11-19T02:33:13.9730790Z provider request F04-raw-classify-02-missing-r1-b03
+2026-11-19T02:33:14.2472079Z provider response F04-raw-classify-02-missing-r1-b03
+2026-11-19T02:33:14.2485036Z provider request F04-raw-classify-02-missing-r1-b04
+2026-11-19T02:33:16.8759371Z provider response F04-raw-classify-02-missing-r1-b04
+2026-11-19T02:33:16.8773684Z provider request F04-raw-classify-02-missing-r2-b01
+2026-11-19T02:33:19.4817295Z provider response F04-raw-classify-02-missing-r2-b01
+2026-11-19T02:33:19.4830746Z provider request F04-raw-classify-02-missing-r2-b02
+2026-11-19T02:33:19.7099086Z provider response F04-raw-classify-02-missing-r2-b02
+2026-11-19T02:33:19.7113092Z provider request F04-raw-classify-02-missing-r2-b03
+2026-11-19T02:33:22.5753790Z provider response F04-raw-classify-02-missing-r2-b03
+2026-11-19T02:33:22.5768523Z provider request F04-raw-classify-02-missing-r2-b04
+2026-11-19T02:33:24.7495701Z provider response F04-raw-classify-02-missing-r2-b04
+2026-11-19T02:33:24.7511794Z provider request F04-raw-classify-02-missing-r2-b05
+2026-11-19T02:33:26.2407106Z provider response F04-raw-classify-02-missing-r2-b05
+2026-11-19T02:33:26.2421407Z provider request F04-raw-classify-02-missing-r3-b01
+2026-11-19T02:33:27.6125615Z provider response F04-raw-classify-02-missing-r3-b01
+2026-11-19T02:33:27.6139731Z provider request F04-raw-classify-02-missing-r3-b02
+2026-11-19T02:33:28.9975883Z provider response F04-raw-classify-02-missing-r3-b02
+2026-11-19T02:33:28.9990244Z provider request F04-raw-classify-03
+2026-11-19T02:33:38.3343401Z provider response F04-raw-classify-03
+2026-11-19T02:33:38.3359396Z provider request F04-raw-classify-04
+2026-11-19T02:33:39.9135557Z provider response F04-raw-classify-04
+2026-11-19T02:33:39.9150167Z provider request F04-behavior-classify-01
+2026-11-19T02:33:48.8840366Z provider response F04-behavior-classify-01
+2026-11-19T02:33:48.8857968Z provider request F04-behavior-classify-02
+2026-11-19T02:33:58.2730418Z provider response F04-behavior-classify-02
+2026-11-19T02:33:58.2747426Z provider request F04-behavior-classify-03
+2026-11-19T02:34:07.7012622Z provider response F04-behavior-classify-03
+2026-11-19T02:34:07.7028924Z provider request F04-behavior-classify-04
+2026-11-19T02:34:09.0233798Z provider response F04-behavior-classify-04
+2026-11-19T02:34:09.0248489Z provider request F04-raw-sibling-01
+2026-11-19T02:34:15.1106573Z provider response F04-raw-sibling-01
+2026-11-19T02:34:15.1122279Z provider request F04-raw-sibling-02
+2026-11-19T02:34:22.0630531Z provider response F04-raw-sibling-02
+2026-11-19T02:34:22.0646649Z provider request F04-raw-sibling-03
+2026-11-19T02:34:29.0841775Z provider response F04-raw-sibling-03
+2026-11-19T02:34:29.0857591Z provider request F04-behavior-sibling-01
+2026-11-19T02:34:35.5356648Z provider response F04-behavior-sibling-01
+2026-11-19T02:34:35.5373066Z provider request F04-behavior-sibling-02
+2026-11-19T02:34:42.4572861Z provider response F04-behavior-sibling-02
+2026-11-19T02:34:42.4588532Z provider request F04-behavior-sibling-03
+2026-11-19T02:34:42.7608165Z provider response F04-behavior-sibling-03
+2026-11-19T02:34:42.7622054Z provider request F04-behavior-sibling-03-missing-r1-b01
+2026-11-19T02:34:44.5367281Z provider response F04-behavior-sibling-03-missing-r1-b01
+2026-11-19T02:34:44.5382534Z provider request F04-behavior-sibling-03-missing-r1-b02
+2026-11-19T02:34:46.3903110Z provider response F04-behavior-sibling-03-missing-r1-b02
+2026-11-19T02:34:46.3918597Z provider request F04-behavior-sibling-03-missing-r1-b03
+2026-11-19T02:34:46.6413809Z provider response F04-behavior-sibling-03-missing-r1-b03
+2026-11-19T02:34:46.6428286Z provider request F04-behavior-sibling-03-missing-r1-b04
+2026-11-19T02:34:48.4132020Z provider response F04-behavior-sibling-03-missing-r1-b04
+2026-11-19T02:34:48.4147769Z provider request F04-behavior-sibling-03-missing-r2-b01
+2026-11-19T02:34:49.4196145Z provider response F04-behavior-sibling-03-missing-r2-b01
+2026-11-19T02:34:49.4210854Z provider request F04-behavior-sibling-03-missing-r2-b02
+2026-11-19T02:34:50.3390294Z provider response F04-behavior-sibling-03-missing-r2-b02
+2026-11-19T02:34:50.3552825Z {
+2026-11-19T02:34:50.3553092Z   "scenario": "F04",
+2026-11-19T02:34:50.3553381Z   "metrics": {
+2026-11-19T02:34:50.3553677Z     "raw_lineage_accuracy": 0.19444444444444445,
+2026-11-19T02:34:50.3554362Z     "behavior_lineage_accuracy": 0.25,
+2026-11-19T02:34:50.3554800Z     "raw_sibling_accuracy_given_correct_lineage": 0.3333333333333333,
+2026-11-19T02:34:50.3555382Z     "behavior_sibling_accuracy_given_correct_lineage": 0.3888888888888889
+2026-11-19T02:34:50.3555831Z   },
+2026-11-19T02:34:50.3556058Z   "super_audits": 0
+2026-11-19T02:34:50.3556316Z }
+2026-11-19T02:34:50.4357188Z provider request F05-normalize-01
+2026-11-19T02:36:34.8828082Z provider response F05-normalize-01
+2026-11-19T02:36:34.8832454Z provider request F05-normalize-02
+2026-11-19T02:38:04.2175568Z provider response F05-normalize-02
+2026-11-19T02:38:04.2179473Z provider request F05-normalize-03
+2026-11-19T02:39:44.6758240Z provider response F05-normalize-03
+2026-11-19T02:39:44.6763112Z provider request F05-normalize-04
+2026-11-19T02:41:05.9959482Z provider response F05-normalize-04
+2026-11-19T02:41:05.9973385Z provider request F05-raw-classify-01
+2026-11-19T02:41:15.9355347Z provider response F05-raw-classify-01
+2026-11-19T02:41:15.9371328Z provider request F05-raw-classify-02
+2026-11-19T02:41:25.4821231Z provider response F05-raw-classify-02
+2026-11-19T02:41:25.4837580Z provider request F05-raw-classify-03
+2026-11-19T02:41:35.1384971Z provider response F05-raw-classify-03
+2026-11-19T02:41:35.1399779Z provider request F05-raw-classify-03-missing-r1-b01
+2026-11-19T02:41:38.9284467Z provider response F05-raw-classify-03-missing-r1-b01
+2026-11-19T02:41:38.9299164Z provider request F05-raw-classify-03-missing-r1-b02
+2026-11-19T02:41:39.1482789Z provider response F05-raw-classify-03-missing-r1-b02
+2026-11-19T02:41:39.1496114Z provider request F05-raw-classify-03-missing-r1-b03
+2026-11-19T02:41:42.8386888Z provider response F05-raw-classify-03-missing-r1-b03
+2026-11-19T02:41:42.8401432Z provider request F05-raw-classify-03-missing-r1-b04
+2026-11-19T02:41:44.2680321Z provider response F05-raw-classify-03-missing-r1-b04
+2026-11-19T02:41:44.2694968Z provider request F05-raw-classify-03-missing-r2-b01
+2026-11-19T02:41:46.7966810Z provider response F05-raw-classify-03-missing-r2-b01
+2026-11-19T02:41:46.7980919Z provider request F05-raw-classify-03-missing-r2-b02
+2026-11-19T02:41:48.1044809Z provider response F05-raw-classify-03-missing-r2-b02
+2026-11-19T02:41:48.1058201Z provider request F05-raw-classify-04
+2026-11-19T02:41:49.5622095Z provider response F05-raw-classify-04
+2026-11-19T02:41:49.5636186Z provider request F05-behavior-classify-01
+2026-11-19T02:42:01.8893988Z provider response F05-behavior-classify-01
+2026-11-19T02:42:01.8910854Z provider request F05-behavior-classify-02
+2026-11-19T02:42:12.2778967Z provider response F05-behavior-classify-02
+2026-11-19T02:42:12.2796213Z provider request F05-behavior-classify-03
+2026-11-19T02:42:23.4892877Z provider response F05-behavior-classify-03
+2026-11-19T02:42:23.4909362Z provider request F05-behavior-classify-04
+2026-11-19T02:42:25.0461977Z provider response F05-behavior-classify-04
+2026-11-19T02:42:25.0476374Z provider request F05-raw-sibling-01
+2026-11-19T02:42:31.5665993Z provider response F05-raw-sibling-01
+2026-11-19T02:42:31.5681857Z provider request F05-raw-sibling-02
+2026-11-19T02:42:31.8706536Z provider response F05-raw-sibling-02
+2026-11-19T02:42:31.8720328Z provider request F05-raw-sibling-02-missing-r1-b01
+2026-11-19T02:42:33.3483278Z provider response F05-raw-sibling-02-missing-r1-b01
+2026-11-19T02:42:33.3497827Z provider request F05-raw-sibling-02-missing-r1-b02
+2026-11-19T02:42:34.9052666Z provider response F05-raw-sibling-02-missing-r1-b02
+2026-11-19T02:42:34.9067524Z provider request F05-raw-sibling-02-missing-r1-b03
+2026-11-19T02:42:36.4518913Z provider response F05-raw-sibling-02-missing-r1-b03
+2026-11-19T02:42:36.4533791Z provider request F05-raw-sibling-02-missing-r1-b04
+2026-11-19T02:42:38.4611763Z provider response F05-raw-sibling-02-missing-r1-b04
+2026-11-19T02:42:38.4626573Z provider request F05-raw-sibling-03
+2026-11-19T02:42:45.2605414Z provider response F05-raw-sibling-03
+2026-11-19T02:42:45.2621915Z provider request F05-behavior-sibling-01
+2026-11-19T02:42:45.5476518Z provider response F05-behavior-sibling-01
+2026-11-19T02:42:45.5491011Z provider request F05-behavior-sibling-01-missing-r1-b01
+2026-11-19T02:42:47.1542877Z provider response F05-behavior-sibling-01-missing-r1-b01
+2026-11-19T02:42:47.1558445Z provider request F05-behavior-sibling-01-missing-r1-b02
+2026-11-19T02:42:48.8970673Z provider response F05-behavior-sibling-01-missing-r1-b02
+2026-11-19T02:42:48.8985755Z provider request F05-behavior-sibling-01-missing-r1-b03
+2026-11-19T02:42:50.5492577Z provider response F05-behavior-sibling-01-missing-r1-b03
+2026-11-19T02:42:50.5508433Z provider request F05-behavior-sibling-01-missing-r1-b04
+2026-11-19T02:42:52.2932879Z provider response F05-behavior-sibling-01-missing-r1-b04
+2026-11-19T02:42:52.2947830Z provider request F05-behavior-sibling-02
+2026-11-19T02:42:52.6323062Z provider response F05-behavior-sibling-02
+2026-11-19T02:42:52.6337376Z provider request F05-behavior-sibling-02-missing-r1-b01
+2026-11-19T02:42:54.3654979Z provider response F05-behavior-sibling-02-missing-r1-b01
+2026-11-19T02:42:54.3670375Z provider request F05-behavior-sibling-02-missing-r1-b02
+2026-11-19T02:42:56.2247146Z provider response F05-behavior-sibling-02-missing-r1-b02
+2026-11-19T02:42:56.2263655Z provider request F05-behavior-sibling-02-missing-r1-b03
+2026-11-19T02:42:57.7528885Z provider response F05-behavior-sibling-02-missing-r1-b03
+2026-11-19T02:42:57.7544560Z provider request F05-behavior-sibling-02-missing-r1-b04
+2026-11-19T02:42:59.5839511Z provider response F05-behavior-sibling-02-missing-r1-b04
+2026-11-19T02:42:59.5854636Z provider request F05-behavior-sibling-03
+2026-11-19T02:43:05.6792464Z provider response F05-behavior-sibling-03
+2026-11-19T02:43:05.6959979Z {
+2026-11-19T02:43:05.6960412Z   "scenario": "F05",
+2026-11-19T02:43:05.6960699Z   "metrics": {
+2026-11-19T02:43:05.6960986Z     "raw_lineage_accuracy": 0.3333333333333333,
+2026-11-19T02:43:05.6961385Z     "behavior_lineage_accuracy": 0.2222222222222222,
+2026-11-19T02:43:05.6962247Z     "raw_sibling_accuracy_given_correct_lineage": 0.3611111111111111,
+2026-11-19T02:43:05.6962823Z     "behavior_sibling_accuracy_given_correct_lineage": 0.4722222222222222
+2026-11-19T02:43:05.6963254Z   },
+2026-11-19T02:43:05.6963473Z   "super_audits": 0
+2026-11-19T02:43:05.6963711Z }
+2026-11-19T02:43:05.7795582Z provider request F06-normalize-01
+2026-11-19T02:45:13.9932872Z provider response F06-normalize-01
+2026-11-19T02:45:13.9937318Z provider request F06-normalize-02
+2026-11-19T02:47:05.2519435Z provider response F06-normalize-02
+2026-11-19T02:47:05.2524349Z provider request F06-normalize-03
+2026-11-19T02:48:39.0379692Z provider response F06-normalize-03
+2026-11-19T02:48:39.0385124Z provider request F06-normalize-04
+2026-11-19T02:49:54.0480725Z provider response F06-normalize-04
+2026-11-19T02:49:54.0494991Z provider request F06-raw-classify-01
+2026-11-19T02:50:04.2608865Z provider response F06-raw-classify-01
+2026-11-19T02:50:04.2625865Z provider request F06-raw-classify-02
+2026-11-19T02:50:13.0442459Z provider response F06-raw-classify-02
+2026-11-19T02:50:13.0458042Z provider request F06-raw-classify-03
+2026-11-19T02:50:22.1936314Z provider response F06-raw-classify-03
+2026-11-19T02:50:22.1952943Z provider request F06-raw-classify-04
+2026-11-19T02:50:23.5949737Z provider response F06-raw-classify-04
+2026-11-19T02:50:23.5964703Z provider request F06-behavior-classify-01
+2026-11-19T02:50:32.4063631Z provider response F06-behavior-classify-01
+2026-11-19T02:50:32.4080939Z provider request F06-behavior-classify-02
+2026-11-19T02:50:41.7067200Z provider response F06-behavior-classify-02
+2026-11-19T02:50:41.7082914Z provider request F06-behavior-classify-03
+2026-11-19T02:50:41.9345504Z provider response F06-behavior-classify-03
+2026-11-19T02:50:41.9359464Z provider request F06-behavior-classify-03-missing-r1-b01
+2026-11-19T02:50:42.1904758Z provider response F06-behavior-classify-03-missing-r1-b01
+2026-11-19T02:50:42.1918123Z provider request F06-behavior-classify-03-missing-r1-b02
+2026-11-19T02:50:42.4265487Z provider response F06-behavior-classify-03-missing-r1-b02
+2026-11-19T02:50:42.4279053Z provider request F06-behavior-classify-03-missing-r1-b03
+2026-11-19T02:50:42.7184933Z provider response F06-behavior-classify-03-missing-r1-b03
+2026-11-19T02:50:42.7198372Z provider request F06-behavior-classify-03-missing-r1-b04
+2026-11-19T02:50:42.9559014Z provider response F06-behavior-classify-03-missing-r1-b04
+2026-11-19T02:50:42.9572482Z provider request F06-behavior-classify-03-missing-r2-b01
+2026-11-19T02:50:45.7027527Z provider response F06-behavior-classify-03-missing-r2-b01
+2026-11-19T02:50:45.7043622Z provider request F06-behavior-classify-03-missing-r2-b02
+2026-11-19T02:50:49.9478861Z provider response F06-behavior-classify-03-missing-r2-b02
+2026-11-19T02:50:49.9494576Z provider request F06-behavior-classify-03-missing-r2-b03
+2026-11-19T02:50:52.8419258Z provider response F06-behavior-classify-03-missing-r2-b03
+2026-11-19T02:50:52.8433571Z provider request F06-behavior-classify-03-missing-r2-b04
+2026-11-19T02:50:55.5589509Z provider response F06-behavior-classify-03-missing-r2-b04
+2026-11-19T02:50:55.5603629Z provider request F06-behavior-classify-03-missing-r2-b05
+2026-11-19T02:50:58.5896813Z provider response F06-behavior-classify-03-missing-r2-b05
+2026-11-19T02:50:58.5910999Z provider request F06-behavior-classify-03-missing-r2-b06
+2026-11-19T02:51:01.4014768Z provider response F06-behavior-classify-03-missing-r2-b06
+2026-11-19T02:51:01.4028879Z provider request F06-behavior-classify-04
+2026-11-19T02:51:02.8500188Z provider response F06-behavior-classify-04
+2026-11-19T02:51:02.8514822Z provider request F06-raw-sibling-01
+2026-11-19T02:51:09.2850277Z provider response F06-raw-sibling-01
+2026-11-19T02:51:09.2865925Z provider request F06-raw-sibling-02
+2026-11-19T02:51:15.4705935Z provider response F06-raw-sibling-02
+2026-11-19T02:51:15.4721158Z provider request F06-raw-sibling-03
+2026-11-19T02:51:15.7866121Z provider response F06-raw-sibling-03
+2026-11-19T02:51:15.7880302Z provider request F06-raw-sibling-03-missing-r1-b01
+2026-11-19T02:51:17.7582657Z provider response F06-raw-sibling-03-missing-r1-b01
+2026-11-19T02:51:17.7596502Z provider request F06-raw-sibling-03-missing-r1-b02
+2026-11-19T02:51:19.4038254Z provider response F06-raw-sibling-03-missing-r1-b02
+2026-11-19T02:51:19.4054058Z provider request F06-raw-sibling-03-missing-r1-b03
+2026-11-19T02:51:21.1088559Z provider response F06-raw-sibling-03-missing-r1-b03
+2026-11-19T02:51:21.1102986Z provider request F06-raw-sibling-03-missing-r1-b04
+2026-11-19T02:51:23.4047487Z provider response F06-raw-sibling-03-missing-r1-b04
+2026-11-19T02:51:23.4062529Z provider request F06-raw-sibling-03-missing-r2-b01
+2026-11-19T02:51:24.6070182Z provider response F06-raw-sibling-03-missing-r2-b01
+2026-11-19T02:51:24.6084872Z provider request F06-raw-sibling-03-missing-r3-b01
+2026-11-19T02:51:25.4161704Z provider response F06-raw-sibling-03-missing-r3-b01
+2026-11-19T02:51:25.4175989Z provider request F06-raw-sibling-03-missing-r3-b02
+2026-11-19T02:51:26.2973105Z provider response F06-raw-sibling-03-missing-r3-b02
+2026-11-19T02:51:26.2988098Z provider request F06-behavior-sibling-01
+2026-11-19T02:51:32.6753625Z provider response F06-behavior-sibling-01
+2026-11-19T02:51:32.6770387Z provider request F06-behavior-sibling-02
+2026-11-19T02:51:40.2744124Z provider response F06-behavior-sibling-02
+2026-11-19T02:51:40.2761111Z provider request F06-behavior-sibling-03
+2026-11-19T02:51:40.5570072Z provider response F06-behavior-sibling-03
+2026-11-19T02:51:40.5584824Z provider request F06-behavior-sibling-03-missing-r1-b01
+2026-11-19T02:51:43.0822134Z provider response F06-behavior-sibling-03-missing-r1-b01
+2026-11-19T02:51:43.0836582Z provider request F06-behavior-sibling-03-missing-r1-b02
+2026-11-19T02:51:45.0032497Z provider response F06-behavior-sibling-03-missing-r1-b02
+2026-11-19T02:51:45.0046890Z provider request F06-behavior-sibling-03-missing-r1-b03
+2026-11-19T02:51:46.8027295Z provider response F06-behavior-sibling-03-missing-r1-b03
+2026-11-19T02:51:46.8042413Z provider request F06-behavior-sibling-03-missing-r1-b04
+2026-11-19T02:51:49.2525816Z provider response F06-behavior-sibling-03-missing-r1-b04
+2026-11-19T02:51:49.2705965Z {
+2026-11-19T02:51:49.2706259Z   "scenario": "F06",
+2026-11-19T02:51:49.2706519Z   "metrics": {
+2026-11-19T02:51:49.2706775Z     "raw_lineage_accuracy": 0.19444444444444445,
+2026-11-19T02:51:49.2707144Z     "behavior_lineage_accuracy": 0.16666666666666666,
+2026-11-19T02:51:49.2707569Z     "raw_sibling_accuracy_given_correct_lineage": 0.3333333333333333,
+2026-11-19T02:51:49.2708082Z     "behavior_sibling_accuracy_given_correct_lineage": 0.3055555555555556
+2026-11-19T02:51:49.2708498Z   },
+2026-11-19T02:51:49.2708991Z   "super_audits": 0
+2026-11-19T02:51:49.2709224Z }
+2026-11-19T02:51:49.3524324Z provider request F07-normalize-01
+2026-11-19T02:53:50.1732060Z provider response F07-normalize-01
+2026-11-19T02:53:50.1736753Z provider request F07-normalize-02
+2026-11-19T02:55:33.3339447Z provider response F07-normalize-02
+2026-11-19T02:55:33.3344186Z provider request F07-normalize-03
+2026-11-19T02:57:25.4360072Z provider response F07-normalize-03
+2026-11-19T02:57:25.4365289Z provider request F07-normalize-04
+2026-11-19T02:59:31.9281266Z provider response F07-normalize-04
+2026-11-19T02:59:31.9295593Z provider request F07-raw-classify-01
+2026-11-19T02:59:41.2073609Z provider response F07-raw-classify-01
+2026-11-19T02:59:41.2089612Z provider request F07-raw-classify-02
+2026-11-19T02:59:52.3119607Z provider response F07-raw-classify-02
+2026-11-19T02:59:52.3135646Z provider request F07-raw-classify-03
+2026-11-19T03:00:05.3773180Z provider response F07-raw-classify-03
+2026-11-19T03:00:05.3789903Z provider request F07-raw-classify-04
+2026-11-19T03:00:06.6040050Z provider response F07-raw-classify-04
+2026-11-19T03:00:06.6053984Z provider request F07-behavior-classify-01
+2026-11-19T03:00:16.1792888Z provider response F07-behavior-classify-01
+2026-11-19T03:00:16.1810078Z provider request F07-behavior-classify-02
+2026-11-19T03:00:25.4432253Z provider response F07-behavior-classify-02
+2026-11-19T03:00:25.4447559Z provider request F07-behavior-classify-03
+2026-11-19T03:00:34.8689078Z provider response F07-behavior-classify-03
+2026-11-19T03:00:34.8705302Z provider request F07-behavior-classify-04
+2026-11-19T03:00:36.2943116Z provider response F07-behavior-classify-04
+2026-11-19T03:00:36.2957425Z provider request F07-raw-sibling-01
+2026-11-19T03:00:36.6626304Z provider response F07-raw-sibling-01
+2026-11-19T03:00:36.6640143Z provider request F07-raw-sibling-01-missing-r1-b01
+2026-11-19T03:00:38.9611250Z provider response F07-raw-sibling-01-missing-r1-b01
+2026-11-19T03:00:38.9625362Z provider request F07-raw-sibling-01-missing-r1-b02
+2026-11-19T03:00:41.0739097Z provider response F07-raw-sibling-01-missing-r1-b02
+2026-11-19T03:00:41.0753203Z provider request F07-raw-sibling-01-missing-r1-b03
+2026-11-19T03:00:41.3407109Z provider response F07-raw-sibling-01-missing-r1-b03
+2026-11-19T03:00:41.3419981Z provider request F07-raw-sibling-01-missing-r1-b04
+2026-11-19T03:00:43.3871025Z provider response F07-raw-sibling-01-missing-r1-b04
+2026-11-19T03:00:43.3885557Z provider request F07-raw-sibling-01-missing-r2-b01
+2026-11-19T03:00:44.6230313Z provider response F07-raw-sibling-01-missing-r2-b01
+2026-11-19T03:00:44.6244335Z provider request F07-raw-sibling-01-missing-r2-b02
+2026-11-19T03:00:45.4164842Z provider response F07-raw-sibling-01-missing-r2-b02
+2026-11-19T03:00:45.4178726Z provider request F07-raw-sibling-02
+2026-11-19T03:00:54.6350596Z provider response F07-raw-sibling-02
+2026-11-19T03:00:54.6366103Z provider request F07-raw-sibling-03
+2026-11-19T03:01:02.4586450Z provider response F07-raw-sibling-03
+2026-11-19T03:01:02.4601616Z provider request F07-raw-sibling-03-missing-r1-b01
+2026-11-19T03:01:03.4333561Z provider response F07-raw-sibling-03-missing-r1-b01
+2026-11-19T03:01:03.4349005Z provider request F07-behavior-sibling-01
+2026-11-19T03:01:11.8433142Z provider response F07-behavior-sibling-01
+2026-11-19T03:01:11.8448628Z provider request F07-behavior-sibling-02
+2026-11-19T03:01:12.2452729Z provider response F07-behavior-sibling-02
+2026-11-19T03:01:12.2467118Z provider request F07-behavior-sibling-02-missing-r1-b01
+2026-11-19T03:01:12.6035299Z provider response F07-behavior-sibling-02-missing-r1-b01
+2026-11-19T03:01:12.6049282Z provider request F07-behavior-sibling-02-missing-r1-b02
+2026-11-19T03:01:14.3567358Z provider response F07-behavior-sibling-02-missing-r1-b02
+2026-11-19T03:01:14.3582423Z provider request F07-behavior-sibling-02-missing-r1-b03
+2026-11-19T03:01:16.3058710Z provider response F07-behavior-sibling-02-missing-r1-b03
+2026-11-19T03:01:16.3074303Z provider request F07-behavior-sibling-02-missing-r1-b04
+2026-11-19T03:01:18.2859422Z provider response F07-behavior-sibling-02-missing-r1-b04
+2026-11-19T03:01:18.2874502Z provider request F07-behavior-sibling-02-missing-r2-b01
+2026-11-19T03:01:19.9330904Z provider response F07-behavior-sibling-02-missing-r2-b01
+2026-11-19T03:01:19.9345881Z provider request F07-behavior-sibling-02-missing-r2-b02
+2026-11-19T03:01:20.8352961Z provider response F07-behavior-sibling-02-missing-r2-b02
+2026-11-19T03:01:20.8367259Z provider request F07-behavior-sibling-03
+2026-11-19T03:01:21.1659353Z provider response F07-behavior-sibling-03
+2026-11-19T03:01:21.1674315Z provider request F07-behavior-sibling-03-missing-r1-b01
+2026-11-19T03:01:22.9656801Z provider response F07-behavior-sibling-03-missing-r1-b01
+2026-11-19T03:01:22.9671393Z provider request F07-behavior-sibling-03-missing-r1-b02
+2026-11-19T03:01:24.7596680Z provider response F07-behavior-sibling-03-missing-r1-b02
+2026-11-19T03:01:24.7612278Z provider request F07-behavior-sibling-03-missing-r1-b03
+2026-11-19T03:01:26.7274590Z provider response F07-behavior-sibling-03-missing-r1-b03
+2026-11-19T03:01:26.7289365Z provider request F07-behavior-sibling-03-missing-r1-b04
+2026-11-19T03:01:28.4937662Z provider response F07-behavior-sibling-03-missing-r1-b04
+2026-11-19T03:01:28.5099187Z {
+2026-11-19T03:01:28.5099626Z   "scenario": "F07",
+2026-11-19T03:01:28.5100077Z   "metrics": {
+2026-11-19T03:01:28.5100559Z     "raw_lineage_accuracy": 0.19444444444444445,
+2026-11-19T03:01:28.5101046Z     "behavior_lineage_accuracy": 0.16666666666666666,
+2026-11-19T03:01:28.5101904Z     "raw_sibling_accuracy_given_correct_lineage": 0.3611111111111111,
+2026-11-19T03:01:28.5102485Z     "behavior_sibling_accuracy_given_correct_lineage": 0.3888888888888889
+2026-11-19T03:01:28.5102944Z   },
+2026-11-19T03:01:28.5103167Z   "super_audits": 0
+2026-11-19T03:01:28.5103425Z }
+2026-11-19T03:01:28.5916753Z provider request F08-normalize-01
+2026-11-19T03:02:55.9624571Z provider response F08-normalize-01
+2026-11-19T03:02:55.9629100Z provider request F08-normalize-02
+2026-11-19T03:04:22.2646261Z provider response F08-normalize-02
+2026-11-19T03:04:22.2650527Z provider request F08-normalize-03
+2026-11-19T03:06:05.2345271Z provider response F08-normalize-03
+2026-11-19T03:06:05.2349497Z provider request F08-normalize-04
+2026-11-19T03:07:25.2835569Z provider response F08-normalize-04
+2026-11-19T03:07:25.2849474Z provider request F08-raw-classify-01
+2026-11-19T03:07:35.3029505Z provider response F08-raw-classify-01
+2026-11-19T03:07:35.3045566Z provider request F08-raw-classify-02
+2026-11-19T03:07:45.2571310Z provider response F08-raw-classify-02
+2026-11-19T03:07:45.2588068Z provider request F08-raw-classify-03
+2026-11-19T03:07:55.5878431Z provider response F08-raw-classify-03
+2026-11-19T03:07:55.5894629Z provider request F08-raw-classify-04
+2026-11-19T03:07:57.2779925Z provider response F08-raw-classify-04
+2026-11-19T03:07:57.2796813Z provider request F08-behavior-classify-01
+2026-11-19T03:08:08.6033319Z provider response F08-behavior-classify-01
+2026-11-19T03:08:08.6049930Z provider request F08-behavior-classify-02
+2026-11-19T03:08:19.2823031Z provider response F08-behavior-classify-02
+2026-11-19T03:08:19.2839023Z provider request F08-behavior-classify-03
+2026-11-19T03:08:28.8463985Z provider response F08-behavior-classify-03
+2026-11-19T03:08:28.8480347Z provider request F08-behavior-classify-04
+2026-11-19T03:08:31.0794100Z provider response F08-behavior-classify-04
+2026-11-19T03:08:31.0808526Z provider request F08-raw-sibling-01
+2026-11-19T03:08:37.7640402Z provider response F08-raw-sibling-01
+2026-11-19T03:08:37.7655806Z provider request F08-raw-sibling-02
+2026-11-19T03:08:38.1210425Z provider response F08-raw-sibling-02
+2026-11-19T03:08:38.1224709Z provider request F08-raw-sibling-02-missing-r1-b01
+2026-11-19T03:08:40.1818450Z provider response F08-raw-sibling-02-missing-r1-b01
+2026-11-19T03:08:40.1825905Z provider request F08-raw-sibling-02-missing-r1-b02
+2026-11-19T03:08:42.2843106Z provider response F08-raw-sibling-02-missing-r1-b02
+2026-11-19T03:08:42.2857181Z provider request F08-raw-sibling-02-missing-r1-b03
+2026-11-19T03:08:45.1508011Z provider response F08-raw-sibling-02-missing-r1-b03
+2026-11-19T03:08:45.1523030Z provider request F08-raw-sibling-02-missing-r1-b04
+2026-11-19T03:08:47.1458967Z provider response F08-raw-sibling-02-missing-r1-b04
+2026-11-19T03:08:47.1473967Z provider request F08-raw-sibling-03
+2026-11-19T03:08:54.0005028Z provider response F08-raw-sibling-03
+2026-11-19T03:08:54.0020860Z provider request F08-raw-sibling-03-missing-r1-b01
+2026-11-19T03:08:56.2340448Z provider response F08-raw-sibling-03-missing-r1-b01
+2026-11-19T03:08:56.2354523Z provider request F08-behavior-sibling-01
+2026-11-19T03:08:56.5499468Z provider response F08-behavior-sibling-01
+2026-11-19T03:08:56.5513532Z provider request F08-behavior-sibling-01-missing-r1-b01
+2026-11-19T03:08:58.6250026Z provider response F08-behavior-sibling-01-missing-r1-b01
+2026-11-19T03:08:58.6264563Z provider request F08-behavior-sibling-01-missing-r1-b02
+2026-11-19T03:09:00.6988786Z provider response F08-behavior-sibling-01-missing-r1-b02
+2026-11-19T03:09:00.7004124Z provider request F08-behavior-sibling-01-missing-r1-b03
+2026-11-19T03:09:02.6462371Z provider response F08-behavior-sibling-01-missing-r1-b03
+2026-11-19T03:09:02.6477433Z provider request F08-behavior-sibling-01-missing-r1-b04
+2026-11-19T03:09:05.3823684Z provider response F08-behavior-sibling-01-missing-r1-b04
+2026-11-19T03:09:05.3839030Z provider request F08-behavior-sibling-02
+2026-11-19T03:09:12.2923964Z provider response F08-behavior-sibling-02
+2026-11-19T03:09:12.2939802Z provider request F08-behavior-sibling-03
+2026-11-19T03:09:18.6746412Z provider response F08-behavior-sibling-03
+2026-11-19T03:09:18.6884807Z {
+2026-11-19T03:09:18.6885310Z   "scenario": "F08",
+2026-11-19T03:09:18.6885680Z   "metrics": {
+2026-11-19T03:09:18.6886020Z     "raw_lineage_accuracy": 0.3333333333333333,
+2026-11-19T03:09:18.6886498Z     "behavior_lineage_accuracy": 0.3611111111111111,
+2026-11-19T03:09:18.6887068Z     "raw_sibling_accuracy_given_correct_lineage": 0.4166666666666667,
+2026-11-19T03:09:18.6887775Z     "behavior_sibling_accuracy_given_correct_lineage": 0.3611111111111111
+2026-11-19T03:09:18.6888316Z   },
+2026-11-19T03:09:18.6888594Z   "super_audits": 0
+2026-11-19T03:09:18.6888886Z }
+2026-11-19T03:09:18.7661118Z provider request F09-normalize-01
+2026-11-19T03:11:03.2096827Z provider response F09-normalize-01
+2026-11-19T03:11:03.2101725Z provider request F09-normalize-02
+2026-11-19T03:12:49.8353927Z provider response F09-normalize-02
+2026-11-19T03:12:49.8358445Z provider request F09-normalize-03
+2026-11-19T03:14:52.2481866Z provider response F09-normalize-03
+2026-11-19T03:14:52.2486255Z provider request F09-normalize-04
+2026-11-19T03:16:04.8266511Z provider response F09-normalize-04
+2026-11-19T03:16:04.8280186Z provider request F09-raw-classify-01
+2026-11-19T03:16:14.4513821Z provider response F09-raw-classify-01
+2026-11-19T03:16:14.4529296Z provider request F09-raw-classify-02
+2026-11-19T03:16:24.9304631Z provider response F09-raw-classify-02
+2026-11-19T03:16:24.9320303Z provider request F09-raw-classify-03
+2026-11-19T03:16:34.5222159Z provider response F09-raw-classify-03
+2026-11-19T03:16:34.5237949Z provider request F09-raw-classify-04
+2026-11-19T03:16:35.5782137Z provider response F09-raw-classify-04
+2026-11-19T03:16:35.5795874Z provider request F09-behavior-classify-01
+2026-11-19T03:16:44.8207490Z provider response F09-behavior-classify-01
+2026-11-19T03:16:44.8224238Z provider request F09-behavior-classify-02
+2026-11-19T03:16:54.9452947Z provider response F09-behavior-classify-02
+2026-11-19T03:16:54.9469624Z provider request F09-behavior-classify-03
+2026-11-19T03:17:04.3680870Z provider response F09-behavior-classify-03
+2026-11-19T03:17:04.3697755Z provider request F09-behavior-classify-04
+2026-11-19T03:17:05.7338711Z provider response F09-behavior-classify-04
+2026-11-19T03:17:05.7352716Z provider request F09-raw-sibling-01
+2026-11-19T03:17:12.7310090Z provider response F09-raw-sibling-01
+2026-11-19T03:17:12.7325101Z provider request F09-raw-sibling-01-missing-r1-b01
+2026-11-19T03:17:13.4513061Z provider response F09-raw-sibling-01-missing-r1-b01
+2026-11-19T03:17:13.4528482Z provider request F09-raw-sibling-02
+2026-11-19T03:17:20.7696297Z provider response F09-raw-sibling-02
+2026-11-19T03:17:20.7711258Z provider request F09-raw-sibling-02-missing-r1-b01
+2026-11-19T03:17:23.2284249Z provider response F09-raw-sibling-02-missing-r1-b01
+2026-11-19T03:17:23.2299541Z provider request F09-raw-sibling-02-missing-r1-b02
+2026-11-19T03:17:25.2173543Z provider response F09-raw-sibling-02-missing-r1-b02
+2026-11-19T03:17:25.2188656Z provider request F09-raw-sibling-03
+2026-11-19T03:17:25.5250004Z provider response F09-raw-sibling-03
+2026-11-19T03:17:25.5264414Z provider request F09-raw-sibling-03-missing-r1-b01
+2026-11-19T03:17:27.4340088Z provider response F09-raw-sibling-03-missing-r1-b01
+2026-11-19T03:17:27.4356090Z provider request F09-raw-sibling-03-missing-r1-b02
+2026-11-19T03:17:29.1546474Z provider response F09-raw-sibling-03-missing-r1-b02
+2026-11-19T03:17:29.1561793Z provider request F09-raw-sibling-03-missing-r1-b03
+2026-11-19T03:17:30.8460537Z provider response F09-raw-sibling-03-missing-r1-b03
+2026-11-19T03:17:30.8474970Z provider request F09-raw-sibling-03-missing-r1-b04
+2026-11-19T03:17:32.6044974Z provider response F09-raw-sibling-03-missing-r1-b04
+2026-11-19T03:17:32.6060077Z provider request F09-behavior-sibling-01
+2026-11-19T03:17:38.9847401Z provider response F09-behavior-sibling-01
+2026-11-19T03:17:38.9864714Z provider request F09-behavior-sibling-02
+2026-11-19T03:17:39.2879163Z provider response F09-behavior-sibling-02
+2026-11-19T03:17:39.2893573Z provider request F09-behavior-sibling-02-missing-r1-b01
+2026-11-19T03:17:41.2444221Z provider response F09-behavior-sibling-02-missing-r1-b01
+2026-11-19T03:17:41.2459106Z provider request F09-behavior-sibling-02-missing-r1-b02
+2026-11-19T03:17:43.1327511Z provider response F09-behavior-sibling-02-missing-r1-b02
+2026-11-19T03:17:43.1342981Z provider request F09-behavior-sibling-02-missing-r1-b03
+2026-11-19T03:17:44.8752445Z provider response F09-behavior-sibling-02-missing-r1-b03
+2026-11-19T03:17:44.8767659Z provider request F09-behavior-sibling-02-missing-r1-b04
+2026-11-19T03:17:47.4219477Z provider response F09-behavior-sibling-02-missing-r1-b04
+2026-11-19T03:17:47.4235428Z provider request F09-behavior-sibling-03
+2026-11-19T03:17:54.3607127Z provider response F09-behavior-sibling-03
+2026-11-19T03:17:54.3749366Z {
+2026-11-19T03:17:54.3749839Z   "scenario": "F09",
+2026-11-19T03:17:54.3750176Z   "metrics": {
+2026-11-19T03:17:54.3750516Z     "raw_lineage_accuracy": 0.3055555555555556,
+2026-11-19T03:17:54.3750994Z     "behavior_lineage_accuracy": 0.3333333333333333,
+2026-11-19T03:17:54.3751920Z     "raw_sibling_accuracy_given_correct_lineage": 0.4444444444444444,
+2026-11-19T03:17:54.3752628Z     "behavior_sibling_accuracy_given_correct_lineage": 0.3611111111111111
+2026-11-19T03:17:54.3753171Z   },
+2026-11-19T03:17:54.3753437Z   "super_audits": 0
+2026-11-19T03:17:54.3753737Z }
+2026-11-19T03:17:54.4543477Z provider request F10-normalize-01
+2026-11-19T03:19:17.7259555Z provider response F10-normalize-01
+2026-11-19T03:19:17.7264294Z provider request F10-normalize-02
+2026-11-19T03:20:45.6491439Z provider response F10-normalize-02
+2026-11-19T03:20:45.6496463Z provider request F10-normalize-03
+2026-11-19T03:22:23.3071121Z provider response F10-normalize-03
+2026-11-19T03:22:23.3075816Z provider request F10-normalize-04
+2026-11-19T03:23:44.7875614Z provider response F10-normalize-04
+2026-11-19T03:23:44.7890003Z provider request F10-raw-classify-01
+2026-11-19T03:23:55.0850902Z provider response F10-raw-classify-01
+2026-11-19T03:23:55.0867225Z provider request F10-raw-classify-01-missing-r1-b01
+2026-11-19T03:23:57.8272699Z provider response F10-raw-classify-01-missing-r1-b01
+2026-11-19T03:23:57.8287556Z provider request F10-raw-classify-02
+2026-11-19T03:24:07.0004623Z provider response F10-raw-classify-02
+2026-11-19T03:24:07.0020580Z provider request F10-raw-classify-03
+2026-11-19T03:24:16.3948571Z provider response F10-raw-classify-03
+2026-11-19T03:24:16.3964234Z provider request F10-raw-classify-04
+2026-11-19T03:24:17.8745645Z provider response F10-raw-classify-04
+2026-11-19T03:24:17.8759477Z provider request F10-behavior-classify-01
+2026-11-19T03:24:27.3198342Z provider response F10-behavior-classify-01
+2026-11-19T03:24:27.3217036Z provider request F10-behavior-classify-02
+2026-11-19T03:24:37.2728174Z provider response F10-behavior-classify-02
+2026-11-19T03:24:37.2744527Z provider request F10-behavior-classify-03
+2026-11-19T03:24:46.9682615Z provider response F10-behavior-classify-03
+2026-11-19T03:24:46.9699134Z provider request F10-behavior-classify-04
+2026-11-19T03:24:48.4061932Z provider response F10-behavior-classify-04
+2026-11-19T03:24:48.4076534Z provider request F10-raw-sibling-01
+2026-11-19T03:24:56.0540779Z provider response F10-raw-sibling-01
+2026-11-19T03:24:56.0555251Z provider request F10-raw-sibling-01-missing-r1-b01
+2026-11-19T03:24:58.0586468Z provider response F10-raw-sibling-01-missing-r1-b01
+2026-11-19T03:24:58.0600692Z provider request F10-raw-sibling-01-missing-r1-b02
+2026-11-19T03:24:59.7903457Z provider response F10-raw-sibling-01-missing-r1-b02
+2026-11-19T03:24:59.7917782Z provider request F10-raw-sibling-01-missing-r1-b03
+2026-11-19T03:25:01.7873317Z provider response F10-raw-sibling-01-missing-r1-b03
+2026-11-19T03:25:01.7887371Z provider request F10-raw-sibling-01-missing-r1-b04
+2026-11-19T03:25:03.0906043Z provider response F10-raw-sibling-01-missing-r1-b04
+2026-11-19T03:25:03.0920031Z provider request F10-raw-sibling-02
+2026-11-19T03:25:10.5611933Z provider response F10-raw-sibling-02
+2026-11-19T03:25:10.5627339Z provider request F10-raw-sibling-03
+2026-11-19T03:25:17.2053125Z provider response F10-raw-sibling-03
+2026-11-19T03:25:17.2068724Z provider request F10-behavior-sibling-01
+2026-11-19T03:25:24.0659086Z provider response F10-behavior-sibling-01
+2026-11-19T03:25:24.0675772Z provider request F10-behavior-sibling-02
+2026-11-19T03:25:31.9909837Z provider response F10-behavior-sibling-02
+2026-11-19T03:25:31.9925867Z provider request F10-behavior-sibling-03
+2026-11-19T03:25:39.0169612Z provider response F10-behavior-sibling-03
+2026-11-19T03:25:39.0287701Z {
+2026-11-19T03:25:39.0288300Z   "scenario": "F10",
+2026-11-19T03:25:39.0288734Z   "metrics": {
+2026-11-19T03:25:39.0289125Z     "raw_lineage_accuracy": 0.4722222222222222,
+2026-11-19T03:25:39.0289647Z     "behavior_lineage_accuracy": 0.25,
+2026-11-19T03:25:39.0290292Z     "raw_sibling_accuracy_given_correct_lineage": 0.3611111111111111,
+2026-11-19T03:25:39.0291185Z     "behavior_sibling_accuracy_given_correct_lineage": 0.3611111111111111
+2026-11-19T03:25:39.0292111Z   },
+2026-11-19T03:25:39.0292437Z   "super_audits": 0
+2026-11-19T03:25:39.0292801Z }
+2026-11-19T03:25:39.1047686Z provider request F11-normalize-01
+2026-11-19T03:27:50.6510558Z provider response F11-normalize-01
+2026-11-19T03:27:50.6515214Z provider request F11-normalize-02
+2026-11-19T03:29:32.6962715Z provider response F11-normalize-02
+2026-11-19T03:29:32.6967663Z provider request F11-normalize-03
+2026-11-19T03:30:58.4795961Z provider response F11-normalize-03
+2026-11-19T03:30:58.4800121Z provider request F11-normalize-04
+2026-11-19T03:32:09.8289581Z provider response F11-normalize-04
+2026-11-19T03:32:09.8304097Z provider request F11-raw-classify-01
+2026-11-19T03:32:20.2834446Z provider response F11-raw-classify-01
+2026-11-19T03:32:20.2852008Z provider request F11-raw-classify-02
+2026-11-19T03:32:30.6324359Z provider response F11-raw-classify-02
+2026-11-19T03:32:30.6340081Z provider request F11-raw-classify-03
+2026-11-19T03:32:40.2059844Z provider response F11-raw-classify-03
+2026-11-19T03:32:40.2076272Z provider request F11-raw-classify-03-missing-r1-b01
+2026-11-19T03:32:42.9342661Z provider response F11-raw-classify-03-missing-r1-b01
+2026-11-19T03:32:42.9357094Z provider request F11-raw-classify-04
+2026-11-19T03:32:44.3680500Z provider response F11-raw-classify-04
+2026-11-19T03:32:44.3694493Z provider request F11-behavior-classify-01
+2026-11-19T03:32:54.1226198Z provider response F11-behavior-classify-01
+2026-11-19T03:32:54.1242251Z provider request F11-behavior-classify-02
+2026-11-19T03:33:02.9274596Z provider response F11-behavior-classify-02
+2026-11-19T03:33:02.9290746Z provider request F11-behavior-classify-03
+2026-11-19T03:33:12.6604836Z provider response F11-behavior-classify-03
+2026-11-19T03:33:12.6620945Z provider request F11-behavior-classify-04
+2026-11-19T03:33:14.0774131Z provider response F11-behavior-classify-04
+2026-11-19T03:33:14.0788976Z provider request F11-raw-sibling-01
+2026-11-19T03:33:21.9649677Z provider response F11-raw-sibling-01
+2026-11-19T03:33:21.9665502Z provider request F11-raw-sibling-02
+2026-11-19T03:33:22.3234829Z provider response F11-raw-sibling-02
+2026-11-19T03:33:22.3248446Z provider request F11-raw-sibling-02-missing-r1-b01
+2026-11-19T03:33:22.5499799Z provider response F11-raw-sibling-02-missing-r1-b01
+2026-11-19T03:33:22.5514746Z provider request F11-raw-sibling-02-missing-r1-b02
+2026-11-19T03:33:24.3300401Z provider response F11-raw-sibling-02-missing-r1-b02
+2026-11-19T03:33:24.3314727Z provider request F11-raw-sibling-02-missing-r1-b03
+2026-11-19T03:33:26.0126441Z provider response F11-raw-sibling-02-missing-r1-b03
+2026-11-19T03:33:26.0140732Z provider request F11-raw-sibling-02-missing-r1-b04
+2026-11-19T03:33:27.3594142Z provider response F11-raw-sibling-02-missing-r1-b04
+2026-11-19T03:33:27.3609406Z provider request F11-raw-sibling-02-missing-r2-b01
+2026-11-19T03:33:28.6657234Z provider response F11-raw-sibling-02-missing-r2-b01
+2026-11-19T03:33:28.6671855Z provider request F11-raw-sibling-02-missing-r2-b02
+2026-11-19T03:33:29.5116145Z provider response F11-raw-sibling-02-missing-r2-b02
+2026-11-19T03:33:29.5130754Z provider request F11-raw-sibling-03
+2026-11-19T03:33:36.6043379Z provider response F11-raw-sibling-03
+2026-11-19T03:33:36.6059166Z provider request F11-behavior-sibling-01
+2026-11-19T03:33:43.8983659Z provider response F11-behavior-sibling-01
+2026-11-19T03:33:43.9000628Z provider request F11-behavior-sibling-02
+2026-11-19T03:33:44.2254409Z provider response F11-behavior-sibling-02
+2026-11-19T03:33:44.2268582Z provider request F11-behavior-sibling-02-missing-r1-b01
+2026-11-19T03:33:44.4408390Z provider response F11-behavior-sibling-02-missing-r1-b01
+2026-11-19T03:33:44.4423253Z provider request F11-behavior-sibling-02-missing-r1-b02
+2026-11-19T03:33:44.6888248Z provider response F11-behavior-sibling-02-missing-r1-b02
+2026-11-19T03:33:44.6903155Z provider request F11-behavior-sibling-02-missing-r1-b03
+2026-11-19T03:33:46.2429377Z provider response F11-behavior-sibling-02-missing-r1-b03
+2026-11-19T03:33:46.2444765Z provider request F11-behavior-sibling-02-missing-r1-b04
+2026-11-19T03:33:46.4654018Z provider response F11-behavior-sibling-02-missing-r1-b04
+2026-11-19T03:33:46.4668362Z provider request F11-behavior-sibling-02-missing-r2-b01
+2026-11-19T03:33:46.6899263Z provider response F11-behavior-sibling-02-missing-r2-b01
+2026-11-19T03:33:46.6913413Z provider request F11-behavior-sibling-02-missing-r2-b02
+2026-11-19T03:33:47.8053948Z provider response F11-behavior-sibling-02-missing-r2-b02
+2026-11-19T03:33:47.8068984Z provider request F11-behavior-sibling-02-missing-r2-b03
+2026-11-19T03:33:49.3448398Z provider response F11-behavior-sibling-02-missing-r2-b03
+2026-11-19T03:33:49.3463551Z provider request F11-behavior-sibling-02-missing-r2-b04
+2026-11-19T03:33:50.6443638Z provider response F11-behavior-sibling-02-missing-r2-b04
+2026-11-19T03:33:50.6458551Z provider request F11-behavior-sibling-02-missing-r2-b05
+2026-11-19T03:33:51.5281770Z provider response F11-behavior-sibling-02-missing-r2-b05
+2026-11-19T03:33:51.5296084Z provider request F11-behavior-sibling-02-missing-r3-b01
+2026-11-19T03:33:52.3178848Z provider response F11-behavior-sibling-02-missing-r3-b01
+2026-11-19T03:33:52.3193222Z provider request F11-behavior-sibling-02-missing-r3-b02
+2026-11-19T03:33:53.0267656Z provider response F11-behavior-sibling-02-missing-r3-b02
+2026-11-19T03:33:53.0282492Z provider request F11-behavior-sibling-03
+2026-11-19T03:34:00.2264513Z provider response F11-behavior-sibling-03
+2026-11-19T03:34:00.2433501Z {
+2026-11-19T03:34:00.2433896Z   "scenario": "F11",
+2026-11-19T03:34:00.2434289Z   "metrics": {
+2026-11-19T03:34:00.2434674Z     "raw_lineage_accuracy": 0.3611111111111111,
+2026-11-19T03:34:00.2435189Z     "behavior_lineage_accuracy": 0.25,
+2026-11-19T03:34:00.2435821Z     "raw_sibling_accuracy_given_correct_lineage": 0.3611111111111111,
+2026-11-19T03:34:00.2436677Z     "behavior_sibling_accuracy_given_correct_lineage": 0.3888888888888889
+2026-11-19T03:34:00.2437365Z   },
+2026-11-19T03:34:00.2437694Z   "super_audits": 0
+2026-11-19T03:34:00.2438048Z }
+2026-11-19T03:34:00.3250224Z provider request F12-normalize-01
+2026-11-19T03:35:10.1687578Z provider response F12-normalize-01
+2026-11-19T03:35:10.1692781Z provider request F12-normalize-02
+2026-11-19T03:36:53.3179942Z provider response F12-normalize-02
+2026-11-19T03:36:53.3184917Z provider request F12-normalize-03
+2026-11-19T03:38:23.1582606Z provider response F12-normalize-03
+2026-11-19T03:38:23.1586501Z provider request F12-normalize-04
+2026-11-19T03:39:23.4590372Z provider response F12-normalize-04
+2026-11-19T03:39:23.4604251Z provider request F12-raw-classify-01
+2026-11-19T03:39:32.8248457Z provider response F12-raw-classify-01
+2026-11-19T03:39:32.8265920Z provider request F12-raw-classify-02
+2026-11-19T03:39:41.9162731Z provider response F12-raw-classify-02
+2026-11-19T03:39:41.9180186Z provider request F12-raw-classify-03
+2026-11-19T03:39:51.2612163Z provider response F12-raw-classify-03
+2026-11-19T03:39:51.2629246Z provider request F12-raw-classify-04
+2026-11-19T03:39:52.6977074Z provider response F12-raw-classify-04
+2026-11-19T03:39:52.6991449Z provider request F12-behavior-classify-01
+2026-11-19T03:40:02.0190859Z provider response F12-behavior-classify-01
+2026-11-19T03:40:02.0207741Z provider request F12-behavior-classify-02
+2026-11-19T03:40:11.6209122Z provider response F12-behavior-classify-02
+2026-11-19T03:40:11.6225091Z provider request F12-behavior-classify-03
+2026-11-19T03:40:21.0507792Z provider response F12-behavior-classify-03
+2026-11-19T03:40:21.0523933Z provider request F12-behavior-classify-04
+2026-11-19T03:40:22.3970627Z provider response F12-behavior-classify-04
+2026-11-19T03:40:22.3985270Z provider request F12-raw-sibling-01
+2026-11-19T03:40:22.6894456Z provider response F12-raw-sibling-01
+2026-11-19T03:40:22.6908059Z provider request F12-raw-sibling-01-missing-r1-b01
+2026-11-19T03:40:24.4120657Z provider response F12-raw-sibling-01-missing-r1-b01
+2026-11-19T03:40:24.4135264Z provider request F12-raw-sibling-01-missing-r1-b02
+2026-11-19T03:40:26.0429440Z provider response F12-raw-sibling-01-missing-r1-b02
+2026-11-19T03:40:26.0443475Z provider request F12-raw-sibling-01-missing-r1-b03
+2026-11-19T03:40:28.7405883Z provider response F12-raw-sibling-01-missing-r1-b03
+2026-11-19T03:40:28.7420789Z provider request F12-raw-sibling-01-missing-r1-b04
+2026-11-19T03:40:30.5159334Z provider response F12-raw-sibling-01-missing-r1-b04
+2026-11-19T03:40:30.5173660Z provider request F12-raw-sibling-01-missing-r2-b01
+2026-11-19T03:40:31.3398301Z provider response F12-raw-sibling-01-missing-r2-b01
+2026-11-19T03:40:31.3412616Z provider request F12-raw-sibling-02
+2026-11-19T03:40:31.6242896Z provider response F12-raw-sibling-02
+2026-11-19T03:40:31.6256808Z provider request F12-raw-sibling-02-missing-r1-b01
+2026-11-19T03:40:33.8119748Z provider response F12-raw-sibling-02-missing-r1-b01
+2026-11-19T03:40:33.8134882Z provider request F12-raw-sibling-02-missing-r1-b02
+2026-11-19T03:40:35.5839023Z provider response F12-raw-sibling-02-missing-r1-b02
+2026-11-19T03:40:35.5854630Z provider request F12-raw-sibling-02-missing-r1-b03
+2026-11-19T03:40:37.2085903Z provider response F12-raw-sibling-02-missing-r1-b03
+2026-11-19T03:40:37.2100675Z provider request F12-raw-sibling-02-missing-r1-b04
+2026-11-19T03:40:38.9780934Z provider response F12-raw-sibling-02-missing-r1-b04
+2026-11-19T03:40:38.9795512Z provider request F12-raw-sibling-03
+2026-11-19T03:40:45.5339495Z provider response F12-raw-sibling-03
+2026-11-19T03:40:45.5356324Z provider request F12-behavior-sibling-01
+2026-11-19T03:40:45.9279321Z provider response F12-behavior-sibling-01
+2026-11-19T03:40:45.9293569Z provider request F12-behavior-sibling-01-missing-r1-b01
+2026-11-19T03:40:47.7273313Z provider response F12-behavior-sibling-01-missing-r1-b01
+2026-11-19T03:40:47.7290038Z provider request F12-behavior-sibling-01-missing-r1-b02
+2026-11-19T03:40:49.4066582Z provider response F12-behavior-sibling-01-missing-r1-b02
+2026-11-19T03:40:49.4081326Z provider request F12-behavior-sibling-01-missing-r1-b03
+2026-11-19T03:40:51.1013198Z provider response F12-behavior-sibling-01-missing-r1-b03
+2026-11-19T03:40:51.1028926Z provider request F12-behavior-sibling-01-missing-r1-b04
+2026-11-19T03:40:52.9140838Z provider response F12-behavior-sibling-01-missing-r1-b04
+2026-11-19T03:40:52.9156492Z provider request F12-behavior-sibling-02
+2026-11-19T03:40:53.2624174Z provider response F12-behavior-sibling-02
+2026-11-19T03:40:53.2639223Z provider request F12-behavior-sibling-02-missing-r1-b01
+2026-11-19T03:40:55.1573495Z provider response F12-behavior-sibling-02-missing-r1-b01
+2026-11-19T03:40:55.1589438Z provider request F12-behavior-sibling-02-missing-r1-b02
+2026-11-19T03:40:56.9752660Z provider response F12-behavior-sibling-02-missing-r1-b02
+2026-11-19T03:40:56.9768812Z provider request F12-behavior-sibling-02-missing-r1-b03
+2026-11-19T03:40:58.4866314Z provider response F12-behavior-sibling-02-missing-r1-b03
+2026-11-19T03:40:58.4882975Z provider request F12-behavior-sibling-02-missing-r1-b04
+2026-11-19T03:41:00.3897982Z provider response F12-behavior-sibling-02-missing-r1-b04
+2026-11-19T03:41:00.3913430Z provider request F12-behavior-sibling-03
+2026-11-19T03:41:00.7081255Z provider response F12-behavior-sibling-03
+2026-11-19T03:41:00.7096217Z provider request F12-behavior-sibling-03-missing-r1-b01
+2026-11-19T03:41:02.6212928Z provider response F12-behavior-sibling-03-missing-r1-b01
+2026-11-19T03:41:02.6228715Z provider request F12-behavior-sibling-03-missing-r1-b02
+2026-11-19T03:41:04.2724845Z provider response F12-behavior-sibling-03-missing-r1-b02
+2026-11-19T03:41:04.2740419Z provider request F12-behavior-sibling-03-missing-r1-b03
+2026-11-19T03:41:06.6597038Z provider response F12-behavior-sibling-03-missing-r1-b03
+2026-11-19T03:41:06.6612387Z provider request F12-behavior-sibling-03-missing-r1-b04
+2026-11-19T03:41:08.2332521Z provider response F12-behavior-sibling-03-missing-r1-b04
+2026-11-19T03:41:08.2511894Z {
+2026-11-19T03:41:08.2512509Z   "scenario": "F12",
+2026-11-19T03:41:08.2512875Z   "metrics": {
+2026-11-19T03:41:08.2513157Z     "raw_lineage_accuracy": 0.25,
+2026-11-19T03:41:08.2513516Z     "behavior_lineage_accuracy": 0.25,
+2026-11-19T03:41:08.2513986Z     "raw_sibling_accuracy_given_correct_lineage": 0.3333333333333333,
+2026-11-19T03:41:08.2514588Z     "behavior_sibling_accuracy_given_correct_lineage": 0.3055555555555556
+2026-11-19T03:41:08.2515053Z   },
+2026-11-19T03:41:08.2515293Z   "super_audits": 0
+2026-11-19T03:41:08.2515553Z }
+2026-11-19T03:41:08.3388510Z provider request F13-normalize-01
+2026-11-19T03:42:31.2257572Z provider response F13-normalize-01
+2026-11-19T03:42:31.2262053Z provider request F13-normalize-02
+2026-11-19T03:43:53.8147469Z provider response F13-normalize-02
+2026-11-19T03:43:53.8151778Z provider request F13-normalize-03
+2026-11-19T03:45:33.0974907Z provider response F13-normalize-03
+2026-11-19T03:45:33.0978794Z provider request F13-normalize-04
+2026-11-19T03:46:31.9066164Z provider response F13-normalize-04
+2026-11-19T03:46:31.9080271Z provider request F13-raw-classify-01
+2026-11-19T03:46:41.6101103Z provider response F13-raw-classify-01
+2026-11-19T03:46:41.6109171Z provider request F13-raw-classify-02
+2026-11-19T03:46:50.9078929Z provider response F13-raw-classify-02
+2026-11-19T03:46:50.9095015Z provider request F13-raw-classify-03
+2026-11-19T03:47:00.7169331Z provider response F13-raw-classify-03
+2026-11-19T03:47:00.7185324Z provider request F13-raw-classify-04
+2026-11-19T03:47:02.1900391Z provider response F13-raw-classify-04
+2026-11-19T03:47:02.1915072Z provider request F13-behavior-classify-01
+2026-11-19T03:47:11.1416953Z provider response F13-behavior-classify-01
+2026-11-19T03:47:11.1432639Z provider request F13-behavior-classify-02
+2026-11-19T03:47:19.8262386Z provider response F13-behavior-classify-02
+2026-11-19T03:47:19.8278231Z provider request F13-behavior-classify-03
+2026-11-19T03:47:28.5242833Z provider response F13-behavior-classify-03
+2026-11-19T03:47:28.5259491Z provider request F13-behavior-classify-04
+2026-11-19T03:47:29.9430383Z provider response F13-behavior-classify-04
+2026-11-19T03:47:29.9445270Z provider request F13-raw-sibling-01
+2026-11-19T03:47:35.9290828Z provider response F13-raw-sibling-01
+2026-11-19T03:47:35.9306442Z provider request F13-raw-sibling-02
+2026-11-19T03:47:42.4702254Z provider response F13-raw-sibling-02
+2026-11-19T03:47:42.4717353Z provider request F13-raw-sibling-03
+2026-11-19T03:47:51.0070020Z provider response F13-raw-sibling-03
+2026-11-19T03:47:51.0085475Z provider request F13-behavior-sibling-01
+2026-11-19T03:47:56.2681080Z provider response F13-behavior-sibling-01
+2026-11-19T03:47:56.2696292Z provider request F13-behavior-sibling-02
+2026-11-19T03:48:02.0287670Z provider response F13-behavior-sibling-02
+2026-11-19T03:48:02.0303421Z provider request F13-behavior-sibling-03
+2026-11-19T03:48:08.2807662Z provider response F13-behavior-sibling-03
+2026-11-19T03:48:08.2907375Z {
+2026-11-19T03:48:08.2907805Z   "scenario": "F13",
+2026-11-19T03:48:08.2908275Z   "metrics": {
+2026-11-19T03:48:08.2908776Z     "raw_lineage_accuracy": 0.3611111111111111,
+2026-11-19T03:48:08.2909419Z     "behavior_lineage_accuracy": 0.25,
+2026-11-19T03:48:08.2910221Z     "raw_sibling_accuracy_given_correct_lineage": 0.3888888888888889,
+2026-11-19T03:48:08.2911206Z     "behavior_sibling_accuracy_given_correct_lineage": 0.3333333333333333
+2026-11-19T03:48:08.2912257Z   },
+2026-11-19T03:48:08.2912529Z   "super_audits": 0
+2026-11-19T03:48:08.2912785Z }
+2026-11-19T03:48:08.3657869Z provider request F14-normalize-01
+2026-11-19T03:49:52.4138399Z provider response F14-normalize-01
+2026-11-19T03:49:52.4143219Z provider request F14-normalize-02
+2026-11-19T03:51:25.8277355Z provider response F14-normalize-02
+2026-11-19T03:51:25.8281379Z provider request F14-normalize-03
+2026-11-19T03:52:37.4951106Z provider response F14-normalize-03
+2026-11-19T03:52:37.4955637Z provider request F14-normalize-04
+2026-11-19T03:53:28.8591280Z provider response F14-normalize-04
+2026-11-19T03:53:28.8605574Z provider request F14-raw-classify-01
+2026-11-19T03:53:37.9558052Z provider response F14-raw-classify-01
+2026-11-19T03:53:37.9573702Z provider request F14-raw-classify-02
+2026-11-19T03:53:46.9442791Z provider response F14-raw-classify-02
+2026-11-19T03:53:46.9458791Z provider request F14-raw-classify-03
+2026-11-19T03:53:56.2026615Z provider response F14-raw-classify-03
+2026-11-19T03:53:56.2041955Z provider request F14-raw-classify-04
+2026-11-19T03:53:57.5511960Z provider response F14-raw-classify-04
+2026-11-19T03:53:57.5527280Z provider request F14-behavior-classify-01
+2026-11-19T03:54:06.2911333Z provider response F14-behavior-classify-01
+2026-11-19T03:54:06.2927719Z provider request F14-behavior-classify-02
+2026-11-19T03:54:15.7057011Z provider response F14-behavior-classify-02
+2026-11-19T03:54:15.7073138Z provider request F14-behavior-classify-03
+2026-11-19T03:54:24.2917613Z provider response F14-behavior-classify-03
+2026-11-19T03:54:24.2933717Z provider request F14-behavior-classify-04
+2026-11-19T03:54:25.6036804Z provider response F14-behavior-classify-04
+2026-11-19T03:54:25.6051671Z provider request F14-raw-sibling-01
+2026-11-19T03:54:31.7883791Z provider response F14-raw-sibling-01
+2026-11-19T03:54:31.7898919Z provider request F14-raw-sibling-02
+2026-11-19T03:54:37.9514691Z provider response F14-raw-sibling-02
+2026-11-19T03:54:37.9530564Z provider request F14-raw-sibling-03
+2026-11-19T03:54:43.7851855Z provider response F14-raw-sibling-03
+2026-11-19T03:54:43.7867950Z provider request F14-behavior-sibling-01
+2026-11-19T03:54:44.0637307Z provider response F14-behavior-sibling-01
+2026-11-19T03:54:44.0652545Z provider request F14-behavior-sibling-01-missing-r1-b01
+2026-11-19T03:54:45.7454890Z provider response F14-behavior-sibling-01-missing-r1-b01
+2026-11-19T03:54:45.7469295Z provider request F14-behavior-sibling-01-missing-r1-b02
+2026-11-19T03:54:47.8217434Z provider response F14-behavior-sibling-01-missing-r1-b02
+2026-11-19T03:54:47.8232135Z provider request F14-behavior-sibling-01-missing-r1-b03
+2026-11-19T03:54:49.6150495Z provider response F14-behavior-sibling-01-missing-r1-b03
+2026-11-19T03:54:49.6166180Z provider request F14-behavior-sibling-01-missing-r1-b04
+2026-11-19T03:54:51.4143734Z provider response F14-behavior-sibling-01-missing-r1-b04
+2026-11-19T03:54:51.4159188Z provider request F14-behavior-sibling-02
+2026-11-19T03:54:57.6693671Z provider response F14-behavior-sibling-02
+2026-11-19T03:54:57.6709162Z provider request F14-behavior-sibling-03
+2026-11-19T03:55:04.0135917Z provider response F14-behavior-sibling-03
+2026-11-19T03:55:04.0254957Z {
+2026-11-19T03:55:04.0255289Z   "scenario": "F14",
+2026-11-19T03:55:04.0255583Z   "metrics": {
+2026-11-19T03:55:04.0255903Z     "raw_lineage_accuracy": 0.3055555555555556,
+2026-11-19T03:55:04.0256358Z     "behavior_lineage_accuracy": 0.2777777777777778,
+2026-11-19T03:55:04.0256851Z     "raw_sibling_accuracy_given_correct_lineage": 0.4166666666666667,
+2026-11-19T03:55:04.0257452Z     "behavior_sibling_accuracy_given_correct_lineage": 0.4444444444444444
+2026-11-19T03:55:04.0257890Z   },
+2026-11-19T03:55:04.0258121Z   "super_audits": 0
+2026-11-19T03:55:04.0258371Z }
+2026-11-19T03:55:04.1013140Z provider request F15-normalize-01
+2026-11-19T03:56:36.8192766Z provider response F15-normalize-01
+2026-11-19T03:56:36.8197534Z provider request F15-normalize-02
+2026-11-19T03:58:19.6957404Z provider response F15-normalize-02
+2026-11-19T03:58:19.6962234Z provider request F15-normalize-03
+2026-11-19T03:59:33.6298040Z provider response F15-normalize-03
+2026-11-19T03:59:33.6303495Z provider request F15-normalize-04
+2026-11-19T04:00:20.7528748Z provider response F15-normalize-04
+2026-11-19T04:00:20.7543110Z provider request F15-raw-classify-01
+2026-11-19T04:00:21.0469632Z provider response F15-raw-classify-01
+2026-11-19T04:00:21.0483942Z provider request F15-raw-classify-01-missing-r1-b01
+2026-11-19T04:00:21.2629682Z provider response F15-raw-classify-01-missing-r1-b01
+2026-11-19T04:00:21.2644464Z provider request F15-raw-classify-01-missing-r1-b02
+2026-11-19T04:00:24.9194031Z provider response F15-raw-classify-01-missing-r1-b02
+2026-11-19T04:00:24.9209263Z provider request F15-raw-classify-01-missing-r1-b03
+2026-11-19T04:00:28.7783836Z provider response F15-raw-classify-01-missing-r1-b03
+2026-11-19T04:00:28.7798746Z provider request F15-raw-classify-01-missing-r1-b04
+2026-11-19T04:00:29.0505155Z provider response F15-raw-classify-01-missing-r1-b04
+2026-11-19T04:00:29.0519167Z provider request F15-raw-classify-01-missing-r2-b01
+2026-11-19T04:00:29.2485063Z provider response F15-raw-classify-01-missing-r2-b01
+2026-11-19T04:00:29.2498944Z provider request F15-raw-classify-01-missing-r2-b02
+2026-11-19T04:00:31.9073608Z provider response F15-raw-classify-01-missing-r2-b02
+2026-11-19T04:00:31.9089096Z provider request F15-raw-classify-01-missing-r2-b03
+2026-11-19T04:00:32.1117238Z provider response F15-raw-classify-01-missing-r2-b03
+2026-11-19T04:00:32.1131170Z provider request F15-raw-classify-01-missing-r3-b01
+2026-11-19T04:00:33.4414561Z provider response F15-raw-classify-01-missing-r3-b01
+2026-11-19T04:00:33.4428879Z provider request F15-raw-classify-01-missing-r3-b02
+2026-11-19T04:00:34.8237187Z provider response F15-raw-classify-01-missing-r3-b02
+2026-11-19T04:00:34.8251178Z provider request F15-raw-classify-01-missing-r3-b03
+2026-11-19T04:00:36.2744749Z provider response F15-raw-classify-01-missing-r3-b03
+2026-11-19T04:00:36.2759006Z provider request F15-raw-classify-01-missing-r3-b04
+2026-11-19T04:00:37.7072188Z provider response F15-raw-classify-01-missing-r3-b04
+2026-11-19T04:00:37.7086255Z provider request F15-raw-classify-02
+2026-11-19T04:00:47.3302301Z provider response F15-raw-classify-02
+2026-11-19T04:00:47.3319749Z provider request F15-raw-classify-03
+2026-11-19T04:00:56.7448987Z provider response F15-raw-classify-03
+2026-11-19T04:00:56.7466482Z provider request F15-raw-classify-04
+2026-11-19T04:00:57.6715706Z provider response F15-raw-classify-04
+2026-11-19T04:00:57.6730288Z provider request F15-behavior-classify-01
+2026-11-19T04:01:06.6758993Z provider response F15-behavior-classify-01
+2026-11-19T04:01:06.6775981Z provider request F15-behavior-classify-02
+2026-11-19T04:01:15.6461344Z provider response F15-behavior-classify-02
+2026-11-19T04:01:15.6477996Z provider request F15-behavior-classify-03
+2026-11-19T04:01:25.1705937Z provider response F15-behavior-classify-03
+2026-11-19T04:01:25.1722158Z provider request F15-behavior-classify-04
+2026-11-19T04:01:26.5749047Z provider response F15-behavior-classify-04
+2026-11-19T04:01:26.5763235Z provider request F15-raw-sibling-01
+2026-11-19T04:01:33.0496952Z provider response F15-raw-sibling-01
+2026-11-19T04:01:33.0512937Z provider request F15-raw-sibling-01-missing-r1-b01
+2026-11-19T04:01:34.3236882Z provider response F15-raw-sibling-01-missing-r1-b01
+2026-11-19T04:01:34.3251700Z provider request F15-raw-sibling-02
+2026-11-19T04:01:34.6025496Z provider response F15-raw-sibling-02
+2026-11-19T04:01:34.6040048Z provider request F15-raw-sibling-02-missing-r1-b01
+2026-11-19T04:01:36.0289194Z provider response F15-raw-sibling-02-missing-r1-b01
+2026-11-19T04:01:36.0304360Z provider request F15-raw-sibling-02-missing-r1-b02
+2026-11-19T04:01:38.0407528Z provider response F15-raw-sibling-02-missing-r1-b02
+2026-11-19T04:01:38.0423192Z provider request F15-raw-sibling-02-missing-r1-b03
+2026-11-19T04:01:40.2956679Z provider response F15-raw-sibling-02-missing-r1-b03
+2026-11-19T04:01:40.2971993Z provider request F15-raw-sibling-02-missing-r1-b04
+2026-11-19T04:01:41.9766522Z provider response F15-raw-sibling-02-missing-r1-b04
+2026-11-19T04:01:41.9782175Z provider request F15-raw-sibling-03
+2026-11-19T04:01:48.7073668Z provider response F15-raw-sibling-03
+2026-11-19T04:01:48.7089336Z provider request F15-behavior-sibling-01
+2026-11-19T04:01:49.0795875Z provider response F15-behavior-sibling-01
+2026-11-19T04:01:49.0810425Z provider request F15-behavior-sibling-01-missing-r1-b01
+2026-11-19T04:01:50.6744420Z provider response F15-behavior-sibling-01-missing-r1-b01
+2026-11-19T04:01:50.6759847Z provider request F15-behavior-sibling-01-missing-r1-b02
+2026-11-19T04:01:52.3976372Z provider response F15-behavior-sibling-01-missing-r1-b02
+2026-11-19T04:01:52.3993125Z provider request F15-behavior-sibling-01-missing-r1-b03
+2026-11-19T04:01:54.2229085Z provider response F15-behavior-sibling-01-missing-r1-b03
+2026-11-19T04:01:54.2245219Z provider request F15-behavior-sibling-01-missing-r1-b04
+2026-11-19T04:01:55.8477404Z provider response F15-behavior-sibling-01-missing-r1-b04
+2026-11-19T04:01:55.8492797Z provider request F15-behavior-sibling-02
+2026-11-19T04:01:56.1232061Z provider response F15-behavior-sibling-02
+2026-11-19T04:01:56.1246267Z provider request F15-behavior-sibling-02-missing-r1-b01
+2026-11-19T04:01:57.6731411Z provider response F15-behavior-sibling-02-missing-r1-b01
+2026-11-19T04:01:57.6746315Z provider request F15-behavior-sibling-02-missing-r1-b02
+2026-11-19T04:01:59.1595058Z provider response F15-behavior-sibling-02-missing-r1-b02
+2026-11-19T04:01:59.1609921Z provider request F15-behavior-sibling-02-missing-r1-b03
+2026-11-19T04:02:01.2133854Z provider response F15-behavior-sibling-02-missing-r1-b03
+2026-11-19T04:02:01.2323987Z {"lane": "F15", "error": "RuntimeError: whole-lane provider budget exhausted (40 logical requests): F15-behavior-sibling-02-missing-r1-b04"}
+2026-11-19T04:02:01.2967400Z provider request F16-normalize-01
+2026-11-19T04:03:31.0770558Z provider response F16-normalize-01
+2026-11-19T04:03:31.0775650Z provider request F16-normalize-02
+2026-11-19T04:05:06.7820773Z provider response F16-normalize-02
+2026-11-19T04:05:06.7825903Z provider request F16-normalize-03
+2026-11-19T04:06:29.2050737Z provider response F16-normalize-03
+2026-11-19T04:06:29.2056305Z provider request F16-normalize-04
+2026-11-19T04:07:36.2250084Z provider response F16-normalize-04
+2026-11-19T04:07:36.2263920Z provider request F16-raw-classify-01
+2026-11-19T04:07:45.6994418Z provider response F16-raw-classify-01
+2026-11-19T04:07:45.7011174Z provider request F16-raw-classify-02
+2026-11-19T04:07:55.3574856Z provider response F16-raw-classify-02
+2026-11-19T04:07:55.3591208Z provider request F16-raw-classify-03
+2026-11-19T04:08:04.3464291Z provider response F16-raw-classify-03
+2026-11-19T04:08:04.3479860Z provider request F16-raw-classify-04
+2026-11-19T04:08:05.6709200Z provider response F16-raw-classify-04
+2026-11-19T04:08:05.6723451Z provider request F16-behavior-classify-01
+2026-11-19T04:08:14.9051316Z provider response F16-behavior-classify-01
+2026-11-19T04:08:14.9067941Z provider request F16-behavior-classify-02
+2026-11-19T04:08:23.2368163Z provider response F16-behavior-classify-02
+2026-11-19T04:08:23.2385062Z provider request F16-behavior-classify-03
+2026-11-19T04:08:32.0270936Z provider response F16-behavior-classify-03
+2026-11-19T04:08:32.0287106Z provider request F16-behavior-classify-04
+2026-11-19T04:08:33.3378679Z provider response F16-behavior-classify-04
+2026-11-19T04:08:33.3393016Z provider request F16-raw-sibling-01
+2026-11-19T04:08:39.4689808Z provider response F16-raw-sibling-01
+2026-11-19T04:08:39.4706066Z provider request F16-raw-sibling-02
+2026-11-19T04:08:46.9622638Z provider response F16-raw-sibling-02
+2026-11-19T04:08:46.9637674Z provider request F16-raw-sibling-03
+2026-11-19T04:08:52.9306298Z provider response F16-raw-sibling-03
+2026-11-19T04:08:52.9322253Z provider request F16-behavior-sibling-01
+2026-11-19T04:08:59.9924649Z provider response F16-behavior-sibling-01
+2026-11-19T04:08:59.9940428Z provider request F16-behavior-sibling-02
+2026-11-19T04:09:06.5908241Z provider response F16-behavior-sibling-02
+2026-11-19T04:09:06.5924304Z provider request F16-behavior-sibling-03
+2026-11-19T04:09:12.5010798Z provider response F16-behavior-sibling-03
+2026-11-19T04:09:12.5108849Z {
+2026-11-19T04:09:12.5109253Z   "scenario": "F16",
+2026-11-19T04:09:12.5109660Z   "metrics": {
+2026-11-19T04:09:12.5110068Z     "raw_lineage_accuracy": 0.2777777777777778,
+2026-11-19T04:09:12.5110642Z     "behavior_lineage_accuracy": 0.3333333333333333,
+2026-11-19T04:09:12.5111373Z     "raw_sibling_accuracy_given_correct_lineage": 0.3333333333333333,
+2026-11-19T04:09:12.5112475Z     "behavior_sibling_accuracy_given_correct_lineage": 0.2777777777777778
+2026-11-19T04:09:12.5113167Z   },
+2026-11-19T04:09:12.5113495Z   "super_audits": 0
+2026-11-19T04:09:12.5113845Z }
+2026-11-19T04:09:12.5855911Z provider request F17-normalize-01
+2026-11-19T04:10:41.8377323Z provider response F17-normalize-01
+2026-11-19T04:10:41.8383249Z provider request F17-normalize-02
+2026-11-19T04:12:10.5900261Z provider response F17-normalize-02
+2026-11-19T04:12:10.5905180Z provider request F17-normalize-03
+2026-11-19T04:13:38.3929063Z provider response F17-normalize-03
+2026-11-19T04:13:38.3933597Z provider request F17-normalize-04
+2026-11-19T04:14:42.2035723Z provider response F17-normalize-04
+2026-11-19T04:14:42.2049333Z provider request F17-raw-classify-01
+2026-11-19T04:14:51.6542585Z provider response F17-raw-classify-01
+2026-11-19T04:14:51.6558610Z provider request F17-raw-classify-02
+2026-11-19T04:15:01.5229292Z provider response F17-raw-classify-02
+2026-11-19T04:15:01.5245680Z provider request F17-raw-classify-03
+2026-11-19T04:15:11.6192432Z provider response F17-raw-classify-03
+2026-11-19T04:15:11.6209451Z provider request F17-raw-classify-04
+2026-11-19T04:15:12.6157865Z provider response F17-raw-classify-04
+2026-11-19T04:15:12.6172826Z provider request F17-behavior-classify-01
+2026-11-19T04:15:21.7258114Z provider response F17-behavior-classify-01
+2026-11-19T04:15:21.7274453Z provider request F17-behavior-classify-02
+2026-11-19T04:15:30.3940273Z provider response F17-behavior-classify-02
+2026-11-19T04:15:30.3957295Z provider request F17-behavior-classify-03
+2026-11-19T04:15:39.8359032Z provider response F17-behavior-classify-03
+2026-11-19T04:15:39.8375519Z provider request F17-behavior-classify-04
+2026-11-19T04:15:41.2421543Z provider response F17-behavior-classify-04
+2026-11-19T04:15:41.2436357Z provider request F17-raw-sibling-01
+2026-11-19T04:15:41.5345023Z provider response F17-raw-sibling-01
+2026-11-19T04:15:41.5359218Z provider request F17-raw-sibling-01-missing-r1-b01
+2026-11-19T04:15:43.1767870Z provider response F17-raw-sibling-01-missing-r1-b01
+2026-11-19T04:15:43.1782469Z provider request F17-raw-sibling-01-missing-r1-b02
+2026-11-19T04:15:44.7035986Z provider response F17-raw-sibling-01-missing-r1-b02
+2026-11-19T04:15:44.7050190Z provider request F17-raw-sibling-01-missing-r1-b03
+2026-11-19T04:15:46.4382782Z provider response F17-raw-sibling-01-missing-r1-b03
+2026-11-19T04:15:46.4397300Z provider request F17-raw-sibling-01-missing-r1-b04
+2026-11-19T04:15:48.3872856Z provider response F17-raw-sibling-01-missing-r1-b04
+2026-11-19T04:15:48.3886649Z provider request F17-raw-sibling-02
+2026-11-19T04:15:55.2590755Z provider response F17-raw-sibling-02
+2026-11-19T04:15:55.2606934Z provider request F17-raw-sibling-03
+2026-11-19T04:16:01.6359273Z provider response F17-raw-sibling-03
+2026-11-19T04:16:01.6376663Z provider request F17-raw-sibling-03-missing-r1-b01
+2026-11-19T04:16:03.5725743Z provider response F17-raw-sibling-03-missing-r1-b01
+2026-11-19T04:16:03.5740635Z provider request F17-raw-sibling-03-missing-r1-b02
+2026-11-19T04:16:04.2687836Z provider response F17-raw-sibling-03-missing-r1-b02
+2026-11-19T04:16:04.2703583Z provider request F17-behavior-sibling-01
+2026-11-19T04:16:11.2256328Z provider response F17-behavior-sibling-01
+2026-11-19T04:16:11.2272228Z provider request F17-behavior-sibling-02
+2026-11-19T04:16:17.8733498Z provider response F17-behavior-sibling-02
+2026-11-19T04:16:17.8749819Z provider request F17-behavior-sibling-03
+2026-11-19T04:16:18.1466063Z provider response F17-behavior-sibling-03
+2026-11-19T04:16:18.1481149Z provider request F17-behavior-sibling-03-missing-r1-b01
+2026-11-19T04:16:19.5803929Z provider response F17-behavior-sibling-03-missing-r1-b01
+2026-11-19T04:16:19.5819727Z provider request F17-behavior-sibling-03-missing-r1-b02
+2026-11-19T04:16:21.1892974Z provider response F17-behavior-sibling-03-missing-r1-b02
+2026-11-19T04:16:21.1907609Z provider request F17-behavior-sibling-03-missing-r1-b03
+2026-11-19T04:16:22.8342726Z provider response F17-behavior-sibling-03-missing-r1-b03
+2026-11-19T04:16:22.8357239Z provider request F17-behavior-sibling-03-missing-r1-b04
+2026-11-19T04:16:24.5798795Z provider response F17-behavior-sibling-03-missing-r1-b04
+2026-11-19T04:16:24.5936444Z {
+2026-11-19T04:16:24.5936859Z   "scenario": "F17",
+2026-11-19T04:16:24.5937304Z   "metrics": {
+2026-11-19T04:16:24.5937755Z     "raw_lineage_accuracy": 0.3333333333333333,
+2026-11-19T04:16:24.5938414Z     "behavior_lineage_accuracy": 0.3611111111111111,
+2026-11-19T04:16:24.5939222Z     "raw_sibling_accuracy_given_correct_lineage": 0.3055555555555556,
+2026-11-19T04:16:24.5940171Z     "behavior_sibling_accuracy_given_correct_lineage": 0.3888888888888889
+2026-11-19T04:16:24.5940687Z   },
+2026-11-19T04:16:24.5940928Z   "super_audits": 0
+2026-11-19T04:16:24.5941189Z }
+2026-11-19T04:16:24.6707471Z provider request F18-normalize-01
+2026-11-19T04:18:01.1975041Z provider response F18-normalize-01
+2026-11-19T04:18:01.1979860Z provider request F18-normalize-02
+2026-11-19T04:20:09.1240630Z provider response F18-normalize-02
+2026-11-19T04:20:09.1245141Z provider request F18-normalize-03
+2026-11-19T04:21:40.2459591Z provider response F18-normalize-03
+2026-11-19T04:21:40.2464260Z provider request F18-normalize-04
+2026-11-19T04:22:56.1385157Z provider response F18-normalize-04
+2026-11-19T04:22:56.1398980Z provider request F18-raw-classify-01
+2026-11-19T04:23:06.2862842Z provider response F18-raw-classify-01
+2026-11-19T04:23:06.2878893Z provider request F18-raw-classify-02
+2026-11-19T04:23:16.4555949Z provider response F18-raw-classify-02
+2026-11-19T04:23:16.4571105Z provider request F18-raw-classify-02-missing-r1-b01
+2026-11-19T04:23:16.6894245Z provider response F18-raw-classify-02-missing-r1-b01
+2026-11-19T04:23:16.6908335Z provider request F18-raw-classify-02-missing-r1-b02
+2026-11-19T04:23:20.4079611Z provider response F18-raw-classify-02-missing-r1-b02
+2026-11-19T04:23:20.4094622Z provider request F18-raw-classify-02-missing-r1-b03
+2026-11-19T04:23:22.8604402Z provider response F18-raw-classify-02-missing-r1-b03
+2026-11-19T04:23:22.8618222Z provider request F18-raw-classify-02-missing-r2-b01
+2026-11-19T04:23:24.6909074Z provider response F18-raw-classify-02-missing-r2-b01
+2026-11-19T04:23:24.6924249Z provider request F18-raw-classify-02-missing-r2-b02
+2026-11-19T04:23:25.9557599Z provider response F18-raw-classify-02-missing-r2-b02
+2026-11-19T04:23:25.9571673Z provider request F18-raw-classify-03
+2026-11-19T04:23:34.9803508Z provider response F18-raw-classify-03
+2026-11-19T04:23:34.9820070Z provider request F18-raw-classify-04
+2026-11-19T04:23:36.1143653Z provider response F18-raw-classify-04
+2026-11-19T04:23:36.1157920Z provider request F18-behavior-classify-01
+2026-11-19T04:23:45.2108546Z provider response F18-behavior-classify-01
+2026-11-19T04:23:45.2124974Z provider request F18-behavior-classify-02
+2026-11-19T04:23:54.7096558Z provider response F18-behavior-classify-02
+2026-11-19T04:23:54.7113281Z provider request F18-behavior-classify-03
+2026-11-19T04:24:03.6695394Z provider response F18-behavior-classify-03
+2026-11-19T04:24:03.6711110Z provider request F18-behavior-classify-04
+2026-11-19T04:24:04.9670851Z provider response F18-behavior-classify-04
+2026-11-19T04:24:04.9685752Z provider request F18-raw-sibling-01
+2026-11-19T04:24:11.9223756Z provider response F18-raw-sibling-01
+2026-11-19T04:24:11.9239367Z provider request F18-raw-sibling-01-missing-r1-b01
+2026-11-19T04:24:13.5825660Z provider response F18-raw-sibling-01-missing-r1-b01
+2026-11-19T04:24:13.5840279Z provider request F18-raw-sibling-01-missing-r1-b02
+2026-11-19T04:24:15.4062631Z provider response F18-raw-sibling-01-missing-r1-b02
+2026-11-19T04:24:15.4077353Z provider request F18-raw-sibling-01-missing-r1-b03
+2026-11-19T04:24:15.6362870Z provider response F18-raw-sibling-01-missing-r1-b03
+2026-11-19T04:24:15.6376665Z provider request F18-raw-sibling-01-missing-r1-b04
+2026-11-19T04:24:17.2125659Z provider response F18-raw-sibling-01-missing-r1-b04
+2026-11-19T04:24:17.2140046Z provider request F18-raw-sibling-01-missing-r2-b01
+2026-11-19T04:24:18.3226546Z provider response F18-raw-sibling-01-missing-r2-b01
+2026-11-19T04:24:18.3240580Z provider request F18-raw-sibling-01-missing-r2-b02
+2026-11-19T04:24:18.9969666Z provider response F18-raw-sibling-01-missing-r2-b02
+2026-11-19T04:24:18.9984801Z provider request F18-raw-sibling-02
+2026-11-19T04:24:25.2367783Z provider response F18-raw-sibling-02
+2026-11-19T04:24:25.2383800Z provider request F18-raw-sibling-03
+2026-11-19T04:24:31.4686071Z provider response F18-raw-sibling-03
+2026-11-19T04:24:31.4703021Z provider request F18-behavior-sibling-01
+2026-11-19T04:24:37.8962750Z provider response F18-behavior-sibling-01
+2026-11-19T04:24:37.8982754Z provider request F18-behavior-sibling-02
+2026-11-19T04:24:43.8680977Z provider response F18-behavior-sibling-02
+2026-11-19T04:24:43.8697491Z provider request F18-behavior-sibling-03
+2026-11-19T04:24:44.1507347Z provider response F18-behavior-sibling-03
+2026-11-19T04:24:44.1522099Z provider request F18-behavior-sibling-03-missing-r1-b01
+2026-11-19T04:24:45.6631751Z provider response F18-behavior-sibling-03-missing-r1-b01
+2026-11-19T04:24:45.6647647Z provider request F18-behavior-sibling-03-missing-r1-b02
+2026-11-19T04:24:47.4942316Z provider response F18-behavior-sibling-03-missing-r1-b02
+2026-11-19T04:24:47.4957431Z provider request F18-behavior-sibling-03-missing-r1-b03
+2026-11-19T04:24:48.9991912Z provider response F18-behavior-sibling-03-missing-r1-b03
+2026-11-19T04:24:49.0007243Z provider request F18-behavior-sibling-03-missing-r1-b04
+2026-11-19T04:24:50.6183690Z provider response F18-behavior-sibling-03-missing-r1-b04
+2026-11-19T04:24:50.6340900Z {
+2026-11-19T04:24:50.6341346Z   "scenario": "F18",
+2026-11-19T04:24:50.6342140Z   "metrics": {
+2026-11-19T04:24:50.6342824Z     "raw_lineage_accuracy": 0.3055555555555556,
+2026-11-19T04:24:50.6343367Z     "behavior_lineage_accuracy": 0.2777777777777778,
+2026-11-19T04:24:50.6344002Z     "raw_sibling_accuracy_given_correct_lineage": 0.3333333333333333,
+2026-11-19T04:24:50.6344745Z     "behavior_sibling_accuracy_given_correct_lineage": 0.3611111111111111
+2026-11-19T04:24:50.6345330Z   },
+2026-11-19T04:24:50.6345628Z   "super_audits": 0
+2026-11-19T04:24:50.6345950Z }
+2026-11-19T04:24:50.7189850Z provider request F19-normalize-01
+2026-11-19T04:26:10.0822543Z provider response F19-normalize-01
+2026-11-19T04:26:10.0827250Z provider request F19-normalize-02
+2026-11-19T04:27:48.9928567Z provider response F19-normalize-02
+2026-11-19T04:27:48.9933850Z provider request F19-normalize-03
+2026-11-19T04:28:19.0158805Z ##[error]The operation was canceled.
+2026-11-19T04:28:19.0275239Z ##[group]Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+2026-11-19T04:28:19.0275672Z with:
+2026-11-19T04:28:19.0275915Z   name: village001e-budget-recovery-44443194861
+2026-11-19T04:28:19.0276240Z   path: /home/runner/work/_temp/recovered
+2026-11-19T04:28:19.0276517Z   if-no-files-found: warn
+2026-11-19T04:28:19.0276742Z   retention-days: 30
+2026-11-19T04:28:19.0276960Z   compression-level: 6
+2026-11-19T04:28:19.0277172Z   overwrite: false
+2026-11-19T04:28:19.0277384Z   include-hidden-files: false
+2026-11-19T04:28:19.0277635Z   archive: true
+2026-11-19T04:28:19.0277842Z env:
+2026-11-19T04:28:19.0278099Z   QUAL_ROOT: experiments/village-001/qualification-20261119
+2026-11-19T04:28:19.0278535Z   QUAL_CONFIG: experiments/village-001/qualification-20261119/config.json
+2026-11-19T04:28:19.0278912Z   PYTHONUNBUFFERED: 1
+2026-11-19T04:28:19.0279136Z ##[endgroup]
+2026-11-19T04:28:19.8061048Z With the provided path, there will be 3782 files uploaded
+2026-11-19T04:28:19.8062620Z Artifact name is valid!
+2026-11-19T04:28:19.8063152Z Root directory input is valid!
+2026-11-19T04:28:19.9954084Z Uploading artifact: village001e-budget-recovery-44443194861.zip
+2026-11-19T04:28:20.0006078Z Beginning upload of artifact content to blob storage
+2026-11-19T04:28:22.0125142Z Uploaded bytes 5208218
+2026-11-19T04:28:22.0305825Z Finished uploading artifact content to blob storage!
+2026-11-19T04:28:22.0309570Z SHA256 digest of uploaded artifact is 4c5f263a836e8a38fc7e8cdeb0143103072745eb8a628d569ebc2eda2727d70d
+2026-11-19T04:28:22.0311812Z Finalizing artifact upload
+2026-11-19T04:28:22.3834556Z Artifact village001e-budget-recovery-44443194861 successfully finalized. Artifact ID 14498971739
+2026-11-19T04:28:22.3836489Z Artifact village001e-budget-recovery-44443194861 has been successfully uploaded! Final size is 5208218 bytes. Artifact ID is 14498971739
+2026-11-19T04:28:22.3841203Z Artifact download URL: https://github.com/techrote/neurounner/actions/runs/44443194861/artifacts/14498971739
+2026-11-19T04:28:22.4197606Z ##[group]Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+2026-11-19T04:28:22.4198035Z with:
+2026-11-19T04:28:22.4198254Z   name: village001e-final-44443194861
+2026-11-19T04:28:22.4199122Z   path: experiments/village-001/final-evidence
+datasets/village-001/evaluation
+datasets/village-001/final-manifest.json
+datasets/village-001/final-hashes.sha256
+release-assets
+published-release.json
+
+2026-11-19T04:28:22.4199983Z   if-no-files-found: warn
+2026-11-19T04:28:22.4200227Z   retention-days: 30
+2026-11-19T04:28:22.4200456Z   compression-level: 6
+2026-11-19T04:28:22.4200861Z   overwrite: false
+2026-11-19T04:28:22.4201083Z   include-hidden-files: false
+2026-11-19T04:28:22.4201329Z   archive: true
+2026-11-19T04:28:22.4201711Z env:
+2026-11-19T04:28:22.4201967Z   QUAL_ROOT: experiments/village-001/qualification-20261119
+2026-11-19T04:28:22.4202413Z   QUAL_CONFIG: experiments/village-001/qualification-20261119/config.json
+2026-11-19T04:28:22.4202801Z   PYTHONUNBUFFERED: 1
+2026-11-19T04:28:22.4203049Z ##[endgroup]
+2026-11-19T04:28:22.5653854Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-11-19T04:28:22.5657966Z The least common ancestor is /home/runner/work/neurounner/neurounner. This will be the root directory of the artifact
+2026-11-19T04:28:22.5679929Z ##[warning]No files were found with the provided path: experiments/village-001/final-evidence
+datasets/village-001/evaluation
+datasets/village-001/final-manifest.json
+datasets/village-001/final-hashes.sha256
+release-assets
+published-release.json. No artifacts will be uploaded.
+2026-11-19T04:28:22.5786144Z ##[group]Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+2026-11-19T04:28:22.5786588Z with:
+2026-11-19T04:28:22.5786832Z   name: village001e-original-custody-44443194861
+2026-11-19T04:28:22.5787571Z   path: /home/runner/work/_temp/original/archives
+/home/runner/work/_temp/prior-recovery.zip
+experiments/village-001/qualification-20261119/provider-recovery
+
+2026-11-19T04:28:22.5788269Z   if-no-files-found: warn
+2026-11-19T04:28:22.5788501Z   retention-days: 30
+2026-11-19T04:28:22.5788719Z   compression-level: 6
+2026-11-19T04:28:22.5788938Z   overwrite: false
+2026-11-19T04:28:22.5789160Z   include-hidden-files: false
+2026-11-19T04:28:22.5789412Z   archive: true
+2026-11-19T04:28:22.5789609Z env:
+2026-11-19T04:28:22.5789874Z   QUAL_ROOT: experiments/village-001/qualification-20261119
+2026-11-19T04:28:22.5790329Z   QUAL_CONFIG: experiments/village-001/qualification-20261119/config.json
+2026-11-19T04:28:22.5790722Z   PYTHONUNBUFFERED: 1
+2026-11-19T04:28:22.5790995Z ##[endgroup]
+2026-11-19T04:28:22.7460171Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-11-19T04:28:22.7463744Z The least common ancestor is /home/runner/work. This will be the root directory of the artifact
+2026-11-19T04:28:22.7464757Z With the provided path, there will be 32 files uploaded
+2026-11-19T04:28:22.7470328Z Artifact name is valid!
+2026-11-19T04:28:22.7471236Z Root directory input is valid!
+2026-11-19T04:28:22.9484567Z Uploading artifact: village001e-original-custody-44443194861.zip
+2026-11-19T04:28:22.9534035Z Beginning upload of artifact content to blob storage
+2026-11-19T04:28:23.1440978Z Uploaded bytes 776927
+2026-11-19T04:28:23.1594767Z Finished uploading artifact content to blob storage!
+2026-11-19T04:28:23.1595730Z SHA256 digest of uploaded artifact is a0085638aea0c16119e93d94722f016cff08e3c22eb6297b61ad4a8ef53d457f
+2026-11-19T04:28:23.1596521Z Finalizing artifact upload
+2026-11-19T04:28:23.5109972Z Artifact village001e-original-custody-44443194861 successfully finalized. Artifact ID 14498942080
+2026-11-19T04:28:23.5112232Z Artifact village001e-original-custody-44443194861 has been successfully uploaded! Final size is 776927 bytes. Artifact ID is 14498942080
+2026-11-19T04:28:23.5114862Z Artifact download URL: https://github.com/techrote/neurounner/actions/runs/44443194861/artifacts/14498942080
+2026-11-19T04:28:23.5320973Z Post job cleanup.
+2026-11-19T04:28:23.6238408Z [command]/usr/bin/git version
+2026-11-19T04:28:23.6289403Z git version 2.56.1
+2026-11-19T04:28:23.6331896Z Temporarily overriding HOME='/home/runner/work/_temp/559c2a66-49c6-4bd2-97ab-9ad91233e81e' before making global git config changes
+2026-11-19T04:28:23.6333475Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-19T04:28:23.6337957Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/neurounner/neurounner
+2026-11-19T04:28:23.6379403Z Removing SSH command configuration
+2026-11-19T04:28:23.6382918Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-19T04:28:23.6423924Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-19T04:28:23.6697291Z Removing HTTP extra header
+2026-11-19T04:28:23.6703864Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-19T04:28:23.6743976Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-19T04:28:23.7025659Z Removing includeIf entries pointing to credentials config files
+2026-11-19T04:28:23.7034767Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-19T04:28:23.7083666Z includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path
+2026-11-19T04:28:23.7084966Z includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path
+2026-11-19T04:28:23.7085676Z includeif.gitdir:/github/workspace/.git.path
+2026-11-19T04:28:23.7086161Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-19T04:28:23.7094616Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path
+2026-11-19T04:28:23.7171885Z /home/runner/work/_temp/git-credentials-99552f47-1087-4d48-b540-03a252f388bb.config
+2026-11-19T04:28:23.7186960Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/.git.path \/home\/runner\/work\/_temp\/git\-credentials\-99552f47\-1087\-4d48\-b540\-03a252f388bb\.config
+2026-11-19T04:28:23.7244090Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path
+2026-11-19T04:28:23.7305756Z /home/runner/work/_temp/git-credentials-99552f47-1087-4d48-b540-03a252f388bb.config
+2026-11-19T04:28:23.7317495Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/neurounner/neurounner/.git/worktrees/*.path \/home\/runner\/work\/_temp\/git\-credentials\-99552f47\-1087\-4d48\-b540\-03a252f388bb\.config
+2026-11-19T04:28:23.7367555Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-11-19T04:28:23.7408318Z /github/runner_temp/git-credentials-99552f47-1087-4d48-b540-03a252f388bb.config
+2026-11-19T04:28:23.7417769Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-99552f47\-1087\-4d48\-b540\-03a252f388bb\.config
+2026-11-19T04:28:23.7465834Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-19T04:28:23.7501882Z /github/runner_temp/git-credentials-99552f47-1087-4d48-b540-03a252f388bb.config
+2026-11-19T04:28:23.7512104Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-99552f47\-1087\-4d48\-b540\-03a252f388bb\.config
+2026-11-19T04:28:23.7559589Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-19T04:28:23.7835336Z Removing credentials config '/home/runner/work/_temp/git-credentials-99552f47-1087-4d48-b540-03a252f388bb.config'
+2026-11-19T04:28:23.7987967Z Cleaning up orphan processes
+2026-11-19T04:28:23.8174426Z Terminate orphan process: pid (2379) (python3)
+
