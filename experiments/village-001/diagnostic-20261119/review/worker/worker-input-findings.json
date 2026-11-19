@@ -1,0 +1,944 @@
+{
+  "fixed_forward_descriptive_by_stage": [
+    {
+      "length_minus_historical": {
+        "chosen_mean_logp": {
+          "max": 0.04819774627685547,
+          "mean": -0.02382784088452657,
+          "min": -0.11097955703735352
+        },
+        "margin": {
+          "max": 0.09924912452697754,
+          "mean": -0.015252642333507538,
+          "min": -0.10112190246582031
+        },
+        "rejected_mean_logp": {
+          "max": 0.039464712142944336,
+          "mean": -0.0085751973092556,
+          "min": -0.10795831680297852
+        }
+      },
+      "members": 6,
+      "model_forward_batches": 96,
+      "nonzero_chosen_logp_changes": 48,
+      "nonzero_margin_changes": 48,
+      "nonzero_rejected_logp_changes": 48,
+      "pair_rows": 48,
+      "positive_margin_flips": 0,
+      "stage": "BASE"
+    },
+    {
+      "length_minus_historical": {
+        "chosen_mean_logp": {
+          "max": 0.0991067886352539,
+          "mean": 0.025146971146265667,
+          "min": -0.03412151336669922
+        },
+        "margin": {
+          "max": 0.0685964822769165,
+          "mean": -0.004120351125796636,
+          "min": -0.08047449588775635
+        },
+        "rejected_mean_logp": {
+          "max": 0.13389527797698975,
+          "mean": 0.02926731730500857,
+          "min": -0.009028464555740356
+        }
+      },
+      "members": 6,
+      "model_forward_batches": 96,
+      "nonzero_chosen_logp_changes": 48,
+      "nonzero_margin_changes": 48,
+      "nonzero_rejected_logp_changes": 48,
+      "pair_rows": 48,
+      "positive_margin_flips": 0,
+      "stage": "C"
+    },
+    {
+      "length_minus_historical": {
+        "chosen_mean_logp": {
+          "max": 0.0513150691986084,
+          "mean": 0.006846077740192413,
+          "min": -0.0434720516204834
+        },
+        "margin": {
+          "max": 0.12133073806762695,
+          "mean": -0.019537014265855152,
+          "min": -0.156402587890625
+        },
+        "rejected_mean_logp": {
+          "max": 0.16042232513427734,
+          "mean": 0.026383089522520702,
+          "min": -0.10966110229492188
+        }
+      },
+      "members": 6,
+      "model_forward_batches": 96,
+      "nonzero_chosen_logp_changes": 48,
+      "nonzero_margin_changes": 48,
+      "nonzero_rejected_logp_changes": 48,
+      "pair_rows": 48,
+      "positive_margin_flips": 0,
+      "stage": "D_ORIGINAL"
+    }
+  ],
+  "generation_counts_by_stage": {
+    "BASE": {
+      "empty_responses": 0,
+      "generated_tokens": 1897,
+      "responses": 12,
+      "token_limit_without_terminal_eos": 11
+    },
+    "C": {
+      "empty_responses": 0,
+      "generated_tokens": 5940,
+      "responses": 72,
+      "token_limit_without_terminal_eos": 16
+    },
+    "D_CORRECTED": {
+      "empty_responses": 0,
+      "generated_tokens": 3326,
+      "responses": 72,
+      "token_limit_without_terminal_eos": 0
+    },
+    "D_ORIGINAL": {
+      "empty_responses": 0,
+      "generated_tokens": 3508,
+      "responses": 72,
+      "token_limit_without_terminal_eos": 0
+    },
+    "D_REPRODUCED": {
+      "empty_responses": 0,
+      "generated_tokens": 3505,
+      "responses": 72,
+      "token_limit_without_terminal_eos": 0
+    }
+  },
+  "generation_run_id": 44467827716,
+  "generation_source": "eaeddb22142339c0cd838e588bc09daaa980f652",
+  "input_analysis_sha256": "d61a6349996288aef85875c6420385851db72f994b30fe3219873e1e2f6863a2",
+  "input_custody_sha256": "a2b1453aa3cb629c3e975025fe092eba41e662c8e0879a38b35b48fbb08b0ccb",
+  "input_publication_commit": "783a73ca7c8e97c3e03ef4e56fb5a5b125d58785",
+  "input_tag": "village-001f-pilot-inputs-20261119",
+  "interpretation_limits": [
+    "Original D versus reproduction differs in recorded hardware/platform and exact tensor bytes; a different tensor hash does not quantify the numerical distance or identify its cause.",
+    "Fixed forward changes are recorded computations on original T/P training cases, not held-out task-quality outcomes. All144 pair margins retain their original sign under the two masks.",
+    "The assistant im_end is penultimate and followed by a supervised newline. The2160 masked-position count does not imply equally influential loss contributions.",
+    "F paired arms are controlled on the actual same runner with distinct processes and the predeclared3+3 order; none of these input-only results establishes a quality benefit."
+  ],
+  "native_audit_sha256": "3566f8a5279ba5acf367f019fbdb23c32cbad611a5942e8b159d655f1d8c82f5",
+  "new_model_tokenizer_or_provider_calls": 0,
+  "paired_execution": [
+    {
+      "arms": [
+        {
+          "arm": "historical_token_id_mask",
+          "execution": {
+            "boot_id": "216f5bfe-ab25-4000-86f8-d27d7b2c44c2",
+            "cpu_count": 4,
+            "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+            "hostname": "ip-10-0-128-105",
+            "job": "train",
+            "member_id": "V-G01-A",
+            "packages": {
+              "peft": "0.21.2",
+              "python": "3.12.3",
+              "torch": "2.14.1+cpu",
+              "transformers": "4.57.6"
+            },
+            "paired_job_nonce": "3f8b087a0d1a47358beff639637d43e7",
+            "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+            "process_id": 2369,
+            "repository": "techrote/neurounner",
+            "run_attempt": "1",
+            "run_id": "44467827716",
+            "runner_name": "GitHub Actions 1000132513",
+            "source_head": "eaeddb22142339c0cd838e588bc09daaa980f652",
+            "started_at_utc": "2026-11-19T05:51:09.768625+00:00",
+            "started_monotonic_ns": 391940788767
+          },
+          "finish_sha256": "34ab4fb48c282097a9414c3aaa35b23f12fd5f65f6fb109abf37cfff38e7b124",
+          "finished_at_utc": "2026-11-19T05:53:54.123416+00:00",
+          "finished_monotonic_ns": 556295578759,
+          "recorded_invocation_seconds": 164.354791,
+          "start_sha256": "24695da7c3dc4833e89fa3a10c72732626dace058dbc1a4227d70cd6f8385111"
+        },
+        {
+          "arm": "length_derived_mask",
+          "execution": {
+            "boot_id": "216f5bfe-ab25-4000-86f8-d27d7b2c44c2",
+            "cpu_count": 4,
+            "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+            "hostname": "ip-10-0-128-105",
+            "job": "train",
+            "member_id": "V-G01-A",
+            "packages": {
+              "peft": "0.21.2",
+              "python": "3.12.3",
+              "torch": "2.14.1+cpu",
+              "transformers": "4.57.6"
+            },
+            "paired_job_nonce": "3f8b087a0d1a47358beff639637d43e7",
+            "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+            "process_id": 2446,
+            "repository": "techrote/neurounner",
+            "run_attempt": "1",
+            "run_id": "44467827716",
+            "runner_name": "GitHub Actions 1000132513",
+            "source_head": "eaeddb22142339c0cd838e588bc09daaa980f652",
+            "started_at_utc": "2026-11-19T05:53:56.838430+00:00",
+            "started_monotonic_ns": 559010590779
+          },
+          "finish_sha256": "5b6df78ec17ad52a1f248678657b7daf9aab2a0a37c55c23c02bafff749cb381",
+          "finished_at_utc": "2026-11-19T05:56:38.385605+00:00",
+          "finished_monotonic_ns": 720557767054,
+          "recorded_invocation_seconds": 161.547175,
+          "start_sha256": "0df2c32cc438333d1ae29111ae277f7438d03e138e823fef20c2d254b1c5b8ec"
+        }
+      ],
+      "distinct_processes": true,
+      "fresh_same_job_runner": true,
+      "matched_F_recorded_environment": {
+        "cpu_count": 4,
+        "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+        "packages": {
+          "peft": "0.21.2",
+          "python": "3.12.3",
+          "torch": "2.14.1+cpu",
+          "transformers": "4.57.6"
+        },
+        "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39"
+      },
+      "member_id": "V-G01-A",
+      "nonoverlapping_predeclared_order": true,
+      "original_D_environment_differing_fields": [
+        "cpu_model",
+        "platform"
+      ],
+      "original_D_recorded_environment": {
+        "cpu_count": 4,
+        "cpu_model": "AMD EPYC 7763 64-Core Processor",
+        "packages": {
+          "peft": "0.21.2",
+          "python": "3.12.3",
+          "torch": "2.14.1+cpu",
+          "transformers": "4.57.6"
+        },
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39"
+      },
+      "predeclared_arm_order": [
+        "historical_token_id_mask",
+        "length_derived_mask"
+      ]
+    },
+    {
+      "arms": [
+        {
+          "arm": "length_derived_mask",
+          "execution": {
+            "boot_id": "d2b31e58-a428-463d-a731-094bc85357fd",
+            "cpu_count": 4,
+            "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+            "hostname": "ip-10-0-135-97",
+            "job": "train",
+            "member_id": "V-G03-B",
+            "packages": {
+              "peft": "0.21.2",
+              "python": "3.12.3",
+              "torch": "2.14.1+cpu",
+              "transformers": "4.57.6"
+            },
+            "paired_job_nonce": "f55f0dad1d75453a88ffbd1f176c6f08",
+            "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+            "process_id": 2388,
+            "repository": "techrote/neurounner",
+            "run_attempt": "1",
+            "run_id": "44467827716",
+            "runner_name": "GitHub Actions 1000132512",
+            "source_head": "eaeddb22142339c0cd838e588bc09daaa980f652",
+            "started_at_utc": "2026-11-19T05:51:08.400517+00:00",
+            "started_monotonic_ns": 398225930911
+          },
+          "finish_sha256": "3bf97d576d8396e49c2066427de9f7b7a08aaff0b8c1deea532dbc16924b9a68",
+          "finished_at_utc": "2026-11-19T05:53:38.112197+00:00",
+          "finished_monotonic_ns": 547937613384,
+          "recorded_invocation_seconds": 149.71168,
+          "start_sha256": "cbd9a43dc99ba610d2ca53d31371e4e005ff3e745428af9d52b87d78b20a68cd"
+        },
+        {
+          "arm": "historical_token_id_mask",
+          "execution": {
+            "boot_id": "d2b31e58-a428-463d-a731-094bc85357fd",
+            "cpu_count": 4,
+            "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+            "hostname": "ip-10-0-135-97",
+            "job": "train",
+            "member_id": "V-G03-B",
+            "packages": {
+              "peft": "0.21.2",
+              "python": "3.12.3",
+              "torch": "2.14.1+cpu",
+              "transformers": "4.57.6"
+            },
+            "paired_job_nonce": "f55f0dad1d75453a88ffbd1f176c6f08",
+            "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+            "process_id": 2442,
+            "repository": "techrote/neurounner",
+            "run_attempt": "1",
+            "run_id": "44467827716",
+            "runner_name": "GitHub Actions 1000132512",
+            "source_head": "eaeddb22142339c0cd838e588bc09daaa980f652",
+            "started_at_utc": "2026-11-19T05:53:40.920014+00:00",
+            "started_monotonic_ns": 550745427800
+          },
+          "finish_sha256": "5ff5bb02651fef6a56f42c7b6fc270bff6e711c6f74c26d11ec79b0802d866b9",
+          "finished_at_utc": "2026-11-19T05:56:08.995056+00:00",
+          "finished_monotonic_ns": 698820469507,
+          "recorded_invocation_seconds": 148.075042,
+          "start_sha256": "14918ff91a2ccfc9ad2592b61d4ff2141c3092b93a45e5276db631dd267054d3"
+        }
+      ],
+      "distinct_processes": true,
+      "fresh_same_job_runner": true,
+      "matched_F_recorded_environment": {
+        "cpu_count": 4,
+        "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+        "packages": {
+          "peft": "0.21.2",
+          "python": "3.12.3",
+          "torch": "2.14.1+cpu",
+          "transformers": "4.57.6"
+        },
+        "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39"
+      },
+      "member_id": "V-G03-B",
+      "nonoverlapping_predeclared_order": true,
+      "original_D_environment_differing_fields": [
+        "cpu_model",
+        "platform"
+      ],
+      "original_D_recorded_environment": {
+        "cpu_count": 4,
+        "cpu_model": "AMD EPYC 7763 64-Core Processor",
+        "packages": {
+          "peft": "0.21.2",
+          "python": "3.12.3",
+          "torch": "2.14.1+cpu",
+          "transformers": "4.57.6"
+        },
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39"
+      },
+      "predeclared_arm_order": [
+        "length_derived_mask",
+        "historical_token_id_mask"
+      ]
+    },
+    {
+      "arms": [
+        {
+          "arm": "historical_token_id_mask",
+          "execution": {
+            "boot_id": "22e2c9c1-1cd2-4b77-82fe-6eff8da7c38c",
+            "cpu_count": 4,
+            "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+            "hostname": "ip-10-0-129-166",
+            "job": "train",
+            "member_id": "V-G05-C",
+            "packages": {
+              "peft": "0.21.2",
+              "python": "3.12.3",
+              "torch": "2.14.1+cpu",
+              "transformers": "4.57.6"
+            },
+            "paired_job_nonce": "affd6c6bc7f7429d8f8f5ae33be82f06",
+            "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+            "process_id": 2382,
+            "repository": "techrote/neurounner",
+            "run_attempt": "1",
+            "run_id": "44467827716",
+            "runner_name": "GitHub Actions 1000132507",
+            "source_head": "eaeddb22142339c0cd838e588bc09daaa980f652",
+            "started_at_utc": "2026-11-19T05:51:11.487081+00:00",
+            "started_monotonic_ns": 474382570703
+          },
+          "finish_sha256": "89b5473018b5e31f0d810e69e47b74334709b760b0d593412482afb75c4b4e72",
+          "finished_at_utc": "2026-11-19T05:54:06.525459+00:00",
+          "finished_monotonic_ns": 649420948515,
+          "recorded_invocation_seconds": 175.038378,
+          "start_sha256": "bd818f3c0222d7fa77c6d6486c94c44aff4f9f9cc11d76b9820705d090a66633"
+        },
+        {
+          "arm": "length_derived_mask",
+          "execution": {
+            "boot_id": "22e2c9c1-1cd2-4b77-82fe-6eff8da7c38c",
+            "cpu_count": 4,
+            "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+            "hostname": "ip-10-0-129-166",
+            "job": "train",
+            "member_id": "V-G05-C",
+            "packages": {
+              "peft": "0.21.2",
+              "python": "3.12.3",
+              "torch": "2.14.1+cpu",
+              "transformers": "4.57.6"
+            },
+            "paired_job_nonce": "affd6c6bc7f7429d8f8f5ae33be82f06",
+            "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+            "process_id": 2444,
+            "repository": "techrote/neurounner",
+            "run_attempt": "1",
+            "run_id": "44467827716",
+            "runner_name": "GitHub Actions 1000132507",
+            "source_head": "eaeddb22142339c0cd838e588bc09daaa980f652",
+            "started_at_utc": "2026-11-19T05:54:09.209634+00:00",
+            "started_monotonic_ns": 652105122913
+          },
+          "finish_sha256": "3f795b48cb0245c29eadd63814f3f8221fd5474d5696a8434f1100710169fc13",
+          "finished_at_utc": "2026-11-19T05:56:59.776198+00:00",
+          "finished_monotonic_ns": 822671687247,
+          "recorded_invocation_seconds": 170.566564,
+          "start_sha256": "0ada80ed38de0e70ca93bd8c49269389f73fcd01cbf2b9be335a3661c5efa431"
+        }
+      ],
+      "distinct_processes": true,
+      "fresh_same_job_runner": true,
+      "matched_F_recorded_environment": {
+        "cpu_count": 4,
+        "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+        "packages": {
+          "peft": "0.21.2",
+          "python": "3.12.3",
+          "torch": "2.14.1+cpu",
+          "transformers": "4.57.6"
+        },
+        "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39"
+      },
+      "member_id": "V-G05-C",
+      "nonoverlapping_predeclared_order": true,
+      "original_D_environment_differing_fields": [
+        "cpu_model",
+        "platform"
+      ],
+      "original_D_recorded_environment": {
+        "cpu_count": 4,
+        "cpu_model": "AMD EPYC 7763 64-Core Processor",
+        "packages": {
+          "peft": "0.21.2",
+          "python": "3.12.3",
+          "torch": "2.14.1+cpu",
+          "transformers": "4.57.6"
+        },
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39"
+      },
+      "predeclared_arm_order": [
+        "historical_token_id_mask",
+        "length_derived_mask"
+      ]
+    },
+    {
+      "arms": [
+        {
+          "arm": "length_derived_mask",
+          "execution": {
+            "boot_id": "b5aa6240-fe97-436b-ab2c-f47ede3d898c",
+            "cpu_count": 4,
+            "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+            "hostname": "ip-10-0-138-80",
+            "job": "train",
+            "member_id": "V-G07-A",
+            "packages": {
+              "peft": "0.21.2",
+              "python": "3.12.3",
+              "torch": "2.14.1+cpu",
+              "transformers": "4.57.6"
+            },
+            "paired_job_nonce": "2a23413c018b46468d9a9cb6144b4100",
+            "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+            "process_id": 2365,
+            "repository": "techrote/neurounner",
+            "run_attempt": "1",
+            "run_id": "44467827716",
+            "runner_name": "GitHub Actions 1000132511",
+            "source_head": "eaeddb22142339c0cd838e588bc09daaa980f652",
+            "started_at_utc": "2026-11-19T05:51:09.260256+00:00",
+            "started_monotonic_ns": 457995478011
+          },
+          "finish_sha256": "8935af75932cd0e527ce054e7be90ea7b87427e097874bece2fd7bd3387ad220",
+          "finished_at_utc": "2026-11-19T05:54:02.632446+00:00",
+          "finished_monotonic_ns": 631367669726,
+          "recorded_invocation_seconds": 173.37219,
+          "start_sha256": "2e60f5ca4b8250250ca3e175deb41818e882848c47a8959d12c7d48461d0bde9"
+        },
+        {
+          "arm": "historical_token_id_mask",
+          "execution": {
+            "boot_id": "b5aa6240-fe97-436b-ab2c-f47ede3d898c",
+            "cpu_count": 4,
+            "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+            "hostname": "ip-10-0-138-80",
+            "job": "train",
+            "member_id": "V-G07-A",
+            "packages": {
+              "peft": "0.21.2",
+              "python": "3.12.3",
+              "torch": "2.14.1+cpu",
+              "transformers": "4.57.6"
+            },
+            "paired_job_nonce": "2a23413c018b46468d9a9cb6144b4100",
+            "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+            "process_id": 2428,
+            "repository": "techrote/neurounner",
+            "run_attempt": "1",
+            "run_id": "44467827716",
+            "runner_name": "GitHub Actions 1000132511",
+            "source_head": "eaeddb22142339c0cd838e588bc09daaa980f652",
+            "started_at_utc": "2026-11-19T05:54:05.480705+00:00",
+            "started_monotonic_ns": 634215926920
+          },
+          "finish_sha256": "6555d132dc145aaeec16f89a157fc207548b037b4fed2f4a36a47709f6ebffa9",
+          "finished_at_utc": "2026-11-19T05:56:56.447717+00:00",
+          "finished_monotonic_ns": 805182938629,
+          "recorded_invocation_seconds": 170.967012,
+          "start_sha256": "1d1f9a625e3f9924b04bd6627011e38350e375ff2d3a56f637f712302f11dd92"
+        }
+      ],
+      "distinct_processes": true,
+      "fresh_same_job_runner": true,
+      "matched_F_recorded_environment": {
+        "cpu_count": 4,
+        "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+        "packages": {
+          "peft": "0.21.2",
+          "python": "3.12.3",
+          "torch": "2.14.1+cpu",
+          "transformers": "4.57.6"
+        },
+        "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39"
+      },
+      "member_id": "V-G07-A",
+      "nonoverlapping_predeclared_order": true,
+      "original_D_environment_differing_fields": [
+        "cpu_model",
+        "platform"
+      ],
+      "original_D_recorded_environment": {
+        "cpu_count": 4,
+        "cpu_model": "AMD EPYC 7763 64-Core Processor",
+        "packages": {
+          "peft": "0.21.2",
+          "python": "3.12.3",
+          "torch": "2.14.1+cpu",
+          "transformers": "4.57.6"
+        },
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39"
+      },
+      "predeclared_arm_order": [
+        "length_derived_mask",
+        "historical_token_id_mask"
+      ]
+    },
+    {
+      "arms": [
+        {
+          "arm": "historical_token_id_mask",
+          "execution": {
+            "boot_id": "7d05822b-39a8-4ec1-b993-1f489e1b8f71",
+            "cpu_count": 4,
+            "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+            "hostname": "ip-10-0-138-166",
+            "job": "train",
+            "member_id": "V-G09-B",
+            "packages": {
+              "peft": "0.21.2",
+              "python": "3.12.3",
+              "torch": "2.14.1+cpu",
+              "transformers": "4.57.6"
+            },
+            "paired_job_nonce": "1db59049e45946d38e5fc0513279e656",
+            "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+            "process_id": 2345,
+            "repository": "techrote/neurounner",
+            "run_attempt": "1",
+            "run_id": "44467827716",
+            "runner_name": "GitHub Actions 1000132510",
+            "source_head": "eaeddb22142339c0cd838e588bc09daaa980f652",
+            "started_at_utc": "2026-11-19T05:51:14.188022+00:00",
+            "started_monotonic_ns": 89082111317
+          },
+          "finish_sha256": "6382fd763320dae0718c037a6ade52ce31021eca5b57c0c5aa31938f8a57a655",
+          "finished_at_utc": "2026-11-19T05:53:52.922811+00:00",
+          "finished_monotonic_ns": 247816901638,
+          "recorded_invocation_seconds": 158.734789,
+          "start_sha256": "c509ed45d07f4e1ffb96e91eb538280a461f5bde97b3558edcbbe135c41fc25f"
+        },
+        {
+          "arm": "length_derived_mask",
+          "execution": {
+            "boot_id": "7d05822b-39a8-4ec1-b993-1f489e1b8f71",
+            "cpu_count": 4,
+            "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+            "hostname": "ip-10-0-138-166",
+            "job": "train",
+            "member_id": "V-G09-B",
+            "packages": {
+              "peft": "0.21.2",
+              "python": "3.12.3",
+              "torch": "2.14.1+cpu",
+              "transformers": "4.57.6"
+            },
+            "paired_job_nonce": "1db59049e45946d38e5fc0513279e656",
+            "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+            "process_id": 2418,
+            "repository": "techrote/neurounner",
+            "run_attempt": "1",
+            "run_id": "44467827716",
+            "runner_name": "GitHub Actions 1000132510",
+            "source_head": "eaeddb22142339c0cd838e588bc09daaa980f652",
+            "started_at_utc": "2026-11-19T05:53:55.625428+00:00",
+            "started_monotonic_ns": 250519517012
+          },
+          "finish_sha256": "9bb54518355788c3fd1d31ad0afa0382bbfcd9cd177707eda28381a16e00cf05",
+          "finished_at_utc": "2026-11-19T05:56:30.988120+00:00",
+          "finished_monotonic_ns": 405882210079,
+          "recorded_invocation_seconds": 155.362692,
+          "start_sha256": "ace0a8fa7903dcc7837aa81c1fca76bcdc728b5b86b48714327f18b9ed94eefd"
+        }
+      ],
+      "distinct_processes": true,
+      "fresh_same_job_runner": true,
+      "matched_F_recorded_environment": {
+        "cpu_count": 4,
+        "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+        "packages": {
+          "peft": "0.21.2",
+          "python": "3.12.3",
+          "torch": "2.14.1+cpu",
+          "transformers": "4.57.6"
+        },
+        "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39"
+      },
+      "member_id": "V-G09-B",
+      "nonoverlapping_predeclared_order": true,
+      "original_D_environment_differing_fields": [
+        "cpu_model",
+        "platform"
+      ],
+      "original_D_recorded_environment": {
+        "cpu_count": 4,
+        "cpu_model": "AMD EPYC 7763 64-Core Processor",
+        "packages": {
+          "peft": "0.21.2",
+          "python": "3.12.3",
+          "torch": "2.14.1+cpu",
+          "transformers": "4.57.6"
+        },
+        "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39"
+      },
+      "predeclared_arm_order": [
+        "historical_token_id_mask",
+        "length_derived_mask"
+      ]
+    },
+    {
+      "arms": [
+        {
+          "arm": "length_derived_mask",
+          "execution": {
+            "boot_id": "c8e26ba5-a9b2-4c7f-b723-53204ff459de",
+            "cpu_count": 4,
+            "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+            "hostname": "ip-10-0-142-35",
+            "job": "train",
+            "member_id": "V-G11-C",
+            "packages": {
+              "peft": "0.21.2",
+              "python": "3.12.3",
+              "torch": "2.14.1+cpu",
+              "transformers": "4.57.6"
+            },
+            "paired_job_nonce": "208c53977d5e4f1da066c03cd9d43daa",
+            "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+            "process_id": 2390,
+            "repository": "techrote/neurounner",
+            "run_attempt": "1",
+            "run_id": "44467827716",
+            "runner_name": "GitHub Actions 1000132509",
+            "source_head": "eaeddb22142339c0cd838e588bc09daaa980f652",
+            "started_at_utc": "2026-11-19T05:51:13.822302+00:00",
+            "started_monotonic_ns": 658482451778
+          },
+          "finish_sha256": "962bb5ecf37ff10e56f7dddad5ed1d395078a1daa0fe8888f51361a9178444e9",
+          "finished_at_utc": "2026-11-19T05:53:31.508640+00:00",
+          "finished_monotonic_ns": 796168791292,
+          "recorded_invocation_seconds": 137.686338,
+          "start_sha256": "d8f083572d17c2296768646da278e14ae3a9e794439b19f19a0d858e10d664db"
+        },
+        {
+          "arm": "historical_token_id_mask",
+          "execution": {
+            "boot_id": "c8e26ba5-a9b2-4c7f-b723-53204ff459de",
+            "cpu_count": 4,
+            "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+            "hostname": "ip-10-0-142-35",
+            "job": "train",
+            "member_id": "V-G11-C",
+            "packages": {
+              "peft": "0.21.2",
+              "python": "3.12.3",
+              "torch": "2.14.1+cpu",
+              "transformers": "4.57.6"
+            },
+            "paired_job_nonce": "208c53977d5e4f1da066c03cd9d43daa",
+            "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+            "process_id": 2444,
+            "repository": "techrote/neurounner",
+            "run_attempt": "1",
+            "run_id": "44467827716",
+            "runner_name": "GitHub Actions 1000132509",
+            "source_head": "eaeddb22142339c0cd838e588bc09daaa980f652",
+            "started_at_utc": "2026-11-19T05:53:34.242240+00:00",
+            "started_monotonic_ns": 798902386609
+          },
+          "finish_sha256": "482129577cb738e7f8554d17d7aa128733bbb65673077f828eefe535aada2b90",
+          "finished_at_utc": "2026-11-19T05:55:47.800916+00:00",
+          "finished_monotonic_ns": 932461062604,
+          "recorded_invocation_seconds": 133.558676,
+          "start_sha256": "aaeb3d1e7f08df411fe5032d87c0cce8d6a682d7db83daa8bb9c2a40b4acd743"
+        }
+      ],
+      "distinct_processes": true,
+      "fresh_same_job_runner": true,
+      "matched_F_recorded_environment": {
+        "cpu_count": 4,
+        "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+        "packages": {
+          "peft": "0.21.2",
+          "python": "3.12.3",
+          "torch": "2.14.1+cpu",
+          "transformers": "4.57.6"
+        },
+        "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39"
+      },
+      "member_id": "V-G11-C",
+      "nonoverlapping_predeclared_order": true,
+      "original_D_environment_differing_fields": [
+        "cpu_model",
+        "platform"
+      ],
+      "original_D_recorded_environment": {
+        "cpu_count": 4,
+        "cpu_model": "AMD EPYC 9V45 96-Core Processor",
+        "packages": {
+          "peft": "0.21.2",
+          "python": "3.12.3",
+          "torch": "2.14.1+cpu",
+          "transformers": "4.57.6"
+        },
+        "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39"
+      },
+      "predeclared_arm_order": [
+        "length_derived_mask",
+        "historical_token_id_mask"
+      ]
+    }
+  ],
+  "preliminary_native_audit_exactly_matches_published": true,
+  "raw_evidence_modified": false,
+  "readback_worktree_clean": true,
+  "reproduction": [
+    {
+      "member_id": "V-G01-A",
+      "original_D_vs_reproduced_D": {
+        "adapter_directory_hash_equal": false,
+        "canonical_tensor_hash_equal": false,
+        "cases": 12,
+        "changed_tensor_count": 420,
+        "exact_generated_token_matches": 11,
+        "exact_text_matches": 11,
+        "safetensors_file_hash_equal": false,
+        "union_tensor_count": 420,
+        "weight_bytes_independently_verified_here": false
+      },
+      "reproduced_D_vs_corrected_D": {
+        "adapter_directory_hash_equal": false,
+        "canonical_tensor_hash_equal": false,
+        "cases": 12,
+        "changed_tensor_count": 420,
+        "exact_generated_token_matches": 0,
+        "exact_text_matches": 0,
+        "safetensors_file_hash_equal": false,
+        "union_tensor_count": 420,
+        "weight_bytes_independently_verified_here": false
+      }
+    },
+    {
+      "member_id": "V-G03-B",
+      "original_D_vs_reproduced_D": {
+        "adapter_directory_hash_equal": false,
+        "canonical_tensor_hash_equal": false,
+        "cases": 12,
+        "changed_tensor_count": 420,
+        "exact_generated_token_matches": 12,
+        "exact_text_matches": 12,
+        "safetensors_file_hash_equal": false,
+        "union_tensor_count": 420,
+        "weight_bytes_independently_verified_here": false
+      },
+      "reproduced_D_vs_corrected_D": {
+        "adapter_directory_hash_equal": false,
+        "canonical_tensor_hash_equal": false,
+        "cases": 12,
+        "changed_tensor_count": 420,
+        "exact_generated_token_matches": 2,
+        "exact_text_matches": 2,
+        "safetensors_file_hash_equal": false,
+        "union_tensor_count": 420,
+        "weight_bytes_independently_verified_here": false
+      }
+    },
+    {
+      "member_id": "V-G05-C",
+      "original_D_vs_reproduced_D": {
+        "adapter_directory_hash_equal": false,
+        "canonical_tensor_hash_equal": false,
+        "cases": 12,
+        "changed_tensor_count": 420,
+        "exact_generated_token_matches": 12,
+        "exact_text_matches": 12,
+        "safetensors_file_hash_equal": false,
+        "union_tensor_count": 420,
+        "weight_bytes_independently_verified_here": false
+      },
+      "reproduced_D_vs_corrected_D": {
+        "adapter_directory_hash_equal": false,
+        "canonical_tensor_hash_equal": false,
+        "cases": 12,
+        "changed_tensor_count": 420,
+        "exact_generated_token_matches": 2,
+        "exact_text_matches": 2,
+        "safetensors_file_hash_equal": false,
+        "union_tensor_count": 420,
+        "weight_bytes_independently_verified_here": false
+      }
+    },
+    {
+      "member_id": "V-G07-A",
+      "original_D_vs_reproduced_D": {
+        "adapter_directory_hash_equal": false,
+        "canonical_tensor_hash_equal": false,
+        "cases": 12,
+        "changed_tensor_count": 420,
+        "exact_generated_token_matches": 12,
+        "exact_text_matches": 12,
+        "safetensors_file_hash_equal": false,
+        "union_tensor_count": 420,
+        "weight_bytes_independently_verified_here": false
+      },
+      "reproduced_D_vs_corrected_D": {
+        "adapter_directory_hash_equal": false,
+        "canonical_tensor_hash_equal": false,
+        "cases": 12,
+        "changed_tensor_count": 420,
+        "exact_generated_token_matches": 0,
+        "exact_text_matches": 0,
+        "safetensors_file_hash_equal": false,
+        "union_tensor_count": 420,
+        "weight_bytes_independently_verified_here": false
+      }
+    },
+    {
+      "member_id": "V-G09-B",
+      "original_D_vs_reproduced_D": {
+        "adapter_directory_hash_equal": false,
+        "canonical_tensor_hash_equal": false,
+        "cases": 12,
+        "changed_tensor_count": 420,
+        "exact_generated_token_matches": 12,
+        "exact_text_matches": 12,
+        "safetensors_file_hash_equal": false,
+        "union_tensor_count": 420,
+        "weight_bytes_independently_verified_here": false
+      },
+      "reproduced_D_vs_corrected_D": {
+        "adapter_directory_hash_equal": false,
+        "canonical_tensor_hash_equal": false,
+        "cases": 12,
+        "changed_tensor_count": 420,
+        "exact_generated_token_matches": 0,
+        "exact_text_matches": 0,
+        "safetensors_file_hash_equal": false,
+        "union_tensor_count": 420,
+        "weight_bytes_independently_verified_here": false
+      }
+    },
+    {
+      "member_id": "V-G11-C",
+      "original_D_vs_reproduced_D": {
+        "adapter_directory_hash_equal": false,
+        "canonical_tensor_hash_equal": false,
+        "cases": 12,
+        "changed_tensor_count": 420,
+        "exact_generated_token_matches": 12,
+        "exact_text_matches": 12,
+        "safetensors_file_hash_equal": false,
+        "union_tensor_count": 420,
+        "weight_bytes_independently_verified_here": false
+      },
+      "reproduced_D_vs_corrected_D": {
+        "adapter_directory_hash_equal": false,
+        "canonical_tensor_hash_equal": false,
+        "cases": 12,
+        "changed_tensor_count": 420,
+        "exact_generated_token_matches": 1,
+        "exact_text_matches": 1,
+        "safetensors_file_hash_equal": false,
+        "union_tensor_count": 420,
+        "weight_bytes_independently_verified_here": false
+      }
+    }
+  ],
+  "same_native_Q_wire_all_25_cohorts": true,
+  "schema": "village-001f-published-worker-input-findings-v1",
+  "scientific_source_commit": "78a72238a8403c4cddb9e8651242a89e17ee21be",
+  "source_files_sha256": {
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G01-A/historical_token_id_mask/training-invocations/invocation-0001-finish.json": "34ab4fb48c282097a9414c3aaa35b23f12fd5f65f6fb109abf37cfff38e7b124",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G01-A/historical_token_id_mask/training-invocations/invocation-0001-start.json": "24695da7c3dc4833e89fa3a10c72732626dace058dbc1a4227d70cd6f8385111",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G01-A/length_derived_mask/training-invocations/invocation-0001-finish.json": "5b6df78ec17ad52a1f248678657b7daf9aab2a0a37c55c23c02bafff749cb381",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G01-A/length_derived_mask/training-invocations/invocation-0001-start.json": "0df2c32cc438333d1ae29111ae277f7438d03e138e823fef20c2d254b1c5b8ec",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G03-B/historical_token_id_mask/training-invocations/invocation-0001-finish.json": "5ff5bb02651fef6a56f42c7b6fc270bff6e711c6f74c26d11ec79b0802d866b9",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G03-B/historical_token_id_mask/training-invocations/invocation-0001-start.json": "14918ff91a2ccfc9ad2592b61d4ff2141c3092b93a45e5276db631dd267054d3",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G03-B/length_derived_mask/training-invocations/invocation-0001-finish.json": "3bf97d576d8396e49c2066427de9f7b7a08aaff0b8c1deea532dbc16924b9a68",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G03-B/length_derived_mask/training-invocations/invocation-0001-start.json": "cbd9a43dc99ba610d2ca53d31371e4e005ff3e745428af9d52b87d78b20a68cd",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G05-C/historical_token_id_mask/training-invocations/invocation-0001-finish.json": "89b5473018b5e31f0d810e69e47b74334709b760b0d593412482afb75c4b4e72",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G05-C/historical_token_id_mask/training-invocations/invocation-0001-start.json": "bd818f3c0222d7fa77c6d6486c94c44aff4f9f9cc11d76b9820705d090a66633",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G05-C/length_derived_mask/training-invocations/invocation-0001-finish.json": "3f795b48cb0245c29eadd63814f3f8221fd5474d5696a8434f1100710169fc13",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G05-C/length_derived_mask/training-invocations/invocation-0001-start.json": "0ada80ed38de0e70ca93bd8c49269389f73fcd01cbf2b9be335a3661c5efa431",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G07-A/historical_token_id_mask/training-invocations/invocation-0001-finish.json": "6555d132dc145aaeec16f89a157fc207548b037b4fed2f4a36a47709f6ebffa9",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G07-A/historical_token_id_mask/training-invocations/invocation-0001-start.json": "1d1f9a625e3f9924b04bd6627011e38350e375ff2d3a56f637f712302f11dd92",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G07-A/length_derived_mask/training-invocations/invocation-0001-finish.json": "8935af75932cd0e527ce054e7be90ea7b87427e097874bece2fd7bd3387ad220",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G07-A/length_derived_mask/training-invocations/invocation-0001-start.json": "2e60f5ca4b8250250ca3e175deb41818e882848c47a8959d12c7d48461d0bde9",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G09-B/historical_token_id_mask/training-invocations/invocation-0001-finish.json": "6382fd763320dae0718c037a6ade52ce31021eca5b57c0c5aa31938f8a57a655",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G09-B/historical_token_id_mask/training-invocations/invocation-0001-start.json": "c509ed45d07f4e1ffb96e91eb538280a461f5bde97b3558edcbbe135c41fc25f",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G09-B/length_derived_mask/training-invocations/invocation-0001-finish.json": "9bb54518355788c3fd1d31ad0afa0382bbfcd9cd177707eda28381a16e00cf05",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G09-B/length_derived_mask/training-invocations/invocation-0001-start.json": "ace0a8fa7903dcc7837aa81c1fca76bcdc728b5b86b48714327f18b9ed94eefd",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G11-C/historical_token_id_mask/training-invocations/invocation-0001-finish.json": "482129577cb738e7f8554d17d7aa128733bbb65673077f828eefe535aada2b90",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G11-C/historical_token_id_mask/training-invocations/invocation-0001-start.json": "aaeb3d1e7f08df411fe5032d87c0cce8d6a682d7db83daa8bb9c2a40b4acd743",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G11-C/length_derived_mask/training-invocations/invocation-0001-finish.json": "962bb5ecf37ff10e56f7dddad5ed1d395078a1daa0fe8888f51361a9178444e9",
+    "experiments/village-001/diagnostic-20261119/inputs/training/V-G11-C/length_derived_mask/training-invocations/invocation-0001-start.json": "d8f083572d17c2296768646da278e14ae3a9e794439b19f19a0d858e10d664db",
+    "experiments/village-001/preference-evidence/results/V-G01-A.json": "e565f46e3455c565bc3f1e0ab1c4efa70d25a1927bf22860fe4e3726bc0c4437",
+    "experiments/village-001/preference-evidence/results/V-G03-B.json": "2969611e5d03aac65c1446b0cec47bb970e811233096a6255f76b91a71122837",
+    "experiments/village-001/preference-evidence/results/V-G05-C.json": "469db7c2de770d48c6ea7fe7352a25cf1addae86e6b6812e83a53c59f1295cf6",
+    "experiments/village-001/preference-evidence/results/V-G07-A.json": "bcd27d4559f3eb2c45b07aafa5f4263d92449b8b962a91cc53f773b387411cda",
+    "experiments/village-001/preference-evidence/results/V-G09-B.json": "cc6d0cfe9b8fa146c166b0175724913537343c11a079563ee5256d9ca8988cba",
+    "experiments/village-001/preference-evidence/results/V-G11-C.json": "5e2acc5d37b7f9044b6c3c4145727adcb9ef3fb452d332b33b2c8d4cb87951a3"
+  },
+  "task_quality": "not_evaluated_pending_complete_blinded_judgments",
+  "workload": {
+    "fixed_forward_batches": 288,
+    "mask_sequences": 720,
+    "response_lanes": 25,
+    "responses": 300,
+    "retained_optimizer_steps": 1440,
+    "training_lanes": 12
+  }
+}
