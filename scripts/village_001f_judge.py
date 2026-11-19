@@ -176,16 +176,22 @@ def load_training(root: Path, cfg: dict, wcfg: dict, campaign: dict, pref: dict)
         for package, version in wcfg["runtime"].items():
             equal(result["packages"].get(package), version, "matched training runtime drift")
         equal(result.get("evaluation", {}).get("responses"), [], "new training used legacy heldouts")
-        found[key] = {"receipt": receipt, "identity": identity, "result": result, "original_D_result": historical_result}
+        provenance, provenance_files = worker.validate_training_provenance(path.parent, wcfg, require_complete=True)
+        found[key] = {"receipt": receipt, "identity": identity, "result": result, "original_D_result": historical_result,
+            "execution_provenance": provenance, "paired_arm_order": worker.training_arm_order(wcfg, member)}
         sources[f"training-references/original-D/{member}.json"] = historical_path
         for selected in (path, identity_path, result_path):
             sources[f"training/{member}/{arm}/{selected.name}"] = selected
+        for relative, selected in provenance_files.items():
+            equal(selected.resolve(), (path.parent / relative).resolve(), "training provenance source path mismatch")
+            sources[f"training/{member}/{arm}/{relative}"] = selected
     expected = {(member, stage) for member in wcfg["members"] for stage in ARM_STAGE.values()}
     equal(set(found), expected, "matched training receipt population incomplete")
     for member in wcfg["members"]:
         left = {k: v for k, v in found[(member, "D_REPRODUCED")]["identity"].items() if k not in {"stage", "mask_mode"}}
         right = {k: v for k, v in found[(member, "D_CORRECTED")]["identity"].items() if k not in {"stage", "mask_mode"}}
         equal(left, right, "paired training identities differ beyond mask")
+        paired_execution_provenance(member, found)
     return found, sources
 
 
@@ -414,8 +420,106 @@ def mean(values) -> float:
     return statistics.mean(values)
 
 
+def paired_execution_provenance(member: str, training: dict) -> dict:
+    """Validate the planned fresh pairing and disclose every retained trajectory.
+
+    A resumed or copied lane remains in the prespecified panel. Only positive
+    optimizer segments contribute execution hosts; a completed copy contributes
+    custody history, not another training host. Unknown interrupted segments
+    cannot establish that the full trajectories shared a job or runner.
+    """
+    job_fields = ("repository", "run_id", "run_attempt", "job", "member_id", "paired_job_nonce", "source_head")
+    host_fields = ("runner_name", "boot_id", "hostname")
+    arms, executions, unknown_segments = {}, [], []
+    fresh, order = {}, None
+    for arm, stage in ARM_STAGE.items():
+        lane = training[(member, stage)]
+        provenance = lane["execution_provenance"]
+        equal(provenance["member_id"], member, "paired provenance member changed")
+        equal(provenance["mask_mode"], arm, "paired provenance arm changed")
+        equal(provenance["retained_optimizer_steps"], 120, "paired provenance must retain120 optimizer steps")
+        if order is None:
+            order = lane["paired_arm_order"]
+        equal(lane["paired_arm_order"], order, "paired provenance order differs between arms")
+        equal(set(order), set(ARM_STAGE), "paired provenance order must include both arms")
+        equal(len(order), 2, "paired provenance order cardinality changed")
+        segments = provenance["optimizer_segments"]
+        unknown = provenance["unattributed_optimizer_segments"]
+        for segment in [*segments, *unknown]:
+            require(type(segment["steps"]) is int and segment["steps"] > 0
+                and segment["end_step"] - segment["start_step"] == segment["steps"],
+                "invalid retained optimizer segment")
+        equal(sum(segment["steps"] for segment in [*segments, *unknown]), 120,
+            "paired provenance segment accounting changed")
+        invocations = provenance["invocations"]
+        fresh[stage] = (len(invocations) == len(segments) == 1 and not unknown
+            and not any(provenance[key] for key in ("resume_invocations", "zero_step_copies", "unfinished_invocations"))
+            and invocations[0]["start"]["source_kind"] == "fresh"
+            and invocations[0]["start"]["resume_requested"] is False
+            and invocations[0]["start"]["start_step"] == 0
+            and invocations[0]["finish"] is not None
+            and invocations[0]["finish"]["status"] == "completed"
+            and invocations[0]["finish"]["end_step"] == 120
+            and (segments[0]["start_step"], segments[0]["end_step"]) == (0, 120))
+        prefix = f"sources/training/{member}/{arm}"
+        arms[stage] = {"mask_mode": arm, "evidence_prefix": prefix,
+            "retained_optimizer_steps": 120, "optimizer_segments": segments,
+            "unattributed_optimizer_segments": unknown,
+            "invocations": [{"ordinal": invocation["ordinal"],
+                "start_evidence_path": f"{prefix}/training-invocations/invocation-{invocation['ordinal']:04d}-start.json",
+                "finish_evidence_path": (f"{prefix}/training-invocations/invocation-{invocation['ordinal']:04d}-finish.json"
+                    if invocation["finish"] is not None else None),
+                "source_kind": invocation["start"]["source_kind"],
+                "resume_requested": invocation["start"]["resume_requested"],
+                "start_step": invocation["start"]["start_step"],
+                "retained_end_step": invocation["retained_end_step"],
+                "finish_status": invocation["finish"]["status"] if invocation["finish"] else None,
+                "execution": invocation["start"]["execution"]} for invocation in invocations],
+            "resume_invocations": provenance["resume_invocations"], "zero_step_copies": provenance["zero_step_copies"],
+            "unfinished_invocations": provenance["unfinished_invocations"], "files": provenance["files"]}
+        executions.extend(segment["execution"] for segment in segments)
+        unknown_segments.extend(unknown)
+
+    def shared(fields):
+        values = [[execution.get(field) for field in fields] for execution in executions]
+        known = [[value for value in column if value is not None and value != ""] for column in zip(*values)]
+        if any(any(value != column[0] for value in column[1:]) for column in known if column):
+            return False
+        if unknown_segments or not values or any(value is None or value == "" for row in values for value in row):
+            return None
+        return True
+
+    same_job, same_runner = shared(job_fields), shared(host_fields)
+    same_execution = False if False in (same_job, same_runner) else (
+        True if same_job is True and same_runner is True else None)
+    fresh_pair = all(fresh.values())
+    distinct_processes, observed_order = None, None
+    if fresh_pair:
+        require(same_execution is True, "fresh paired arms must share the recorded job and runner instance")
+        first_stage, second_stage = (ARM_STAGE[arm] for arm in order)
+        first = training[(member, first_stage)]["execution_provenance"]["invocations"][0]
+        second = training[(member, second_stage)]["execution_provenance"]["invocations"][0]
+        first_exec, second_exec = first["start"]["execution"], second["start"]["execution"]
+        pids = (first_exec.get("process_id"), second_exec.get("process_id"))
+        distinct_processes = all(type(pid) is int and pid > 0 for pid in pids) and pids[0] != pids[1]
+        require(distinct_processes, "fresh paired arms must use distinct recorded processes")
+        times = (first_exec.get("started_monotonic_ns"), first["finish"].get("finished_monotonic_ns"),
+            second_exec.get("started_monotonic_ns"), second["finish"].get("finished_monotonic_ns"))
+        observed_order = all(type(value) is int and value >= 0 for value in times) and list(times) == sorted(times)
+        require(observed_order, "fresh paired arms violated their predeclared sequential order")
+    classification = ("fresh_same_job_same_runner" if fresh_pair else
+        "recovered_same_job_same_runner" if same_execution is True else
+        "recovered_mixed_job_or_runner" if same_execution is False else "recovered_incomplete_execution_provenance")
+    return {"schema": "village-001f-paired-execution-provenance-v1", "member_id": member,
+        "predeclared_arm_order": order, "fresh_uninterrupted_pair": fresh_pair,
+        "same_job_for_optimizer_segments": same_job, "same_runner_instance_for_optimizer_segments": same_runner,
+        "same_job_and_runner_for_all_optimizer_segments": same_execution,
+        "distinct_fresh_processes": distinct_processes, "counterbalanced_order_observed": observed_order,
+        "classification": classification, "historical_D_full_execution_provenance_available": False, "arms": arms}
+
+
 def training_execution_disclosure(member: str, training: dict) -> dict:
-    """Describe validated result receipts without making host equality a gate."""
+    """Describe validated host metadata alongside native execution provenance."""
     reproduced = training[(member, "D_REPRODUCED")]
     original = reproduced["original_D_result"]
     records = {}
@@ -451,7 +555,8 @@ def training_execution_disclosure(member: str, training: dict) -> dict:
             "differences": {key: {left_stage: a, right_stage: b} for key, (a, b) in values.items() if a != b},
             "unknown_fields": [key for key, value in matches.items() if value is None]}
 
-    return {"records": records, "paired_arms": compare("D_REPRODUCED", "D_CORRECTED"),
+    return {"records": records, "paired_execution_provenance": paired_execution_provenance(member, training),
+        "paired_arms": compare("D_REPRODUCED", "D_CORRECTED"),
         "original_vs_reproduced": compare("D_ORIGINAL", "D_REPRODUCED")}
 
 
@@ -470,6 +575,14 @@ def attribution_limitations(member: dict) -> list[str]:
         limits.append("Some execution metadata is unrecorded; missing fields do not establish host or package equivalence.")
     if any(record["recovery"].get("resumed") for record in execution["records"].values()):
         limits.append("At least one training lane resumed. Its result host does not describe every earlier execution segment.")
+    provenance = execution["paired_execution_provenance"]
+    if not provenance["fresh_uninterrupted_pair"]:
+        if provenance["same_job_and_runner_for_all_optimizer_segments"] is True:
+            limits.append("The pair has recovery or copy history. Its retained optimizer segments share one recorded job and runner; later zero-step copies do not establish another training host or an uninterrupted fresh pair.")
+        elif provenance["same_job_and_runner_for_all_optimizer_segments"] is False:
+            limits.append("Retained optimizer segments cross recorded jobs or runner instances. This recovered pair remains in the panel, but execution allocation was not fully paired and its numerical effect is unmeasured.")
+        else:
+            limits.append("Interrupted or incomplete invocation evidence leaves some optimizer execution provenance unknown. A shared job and runner for the full paired trajectories is not established.")
     if not member["original_D_reproduced_tensor_hash_equal"]:
         limits.append("The original D tensor fingerprint was not reproduced. The paired effect applies to these new executions and does not by itself isolate a repair of the historical D run.")
     if member["original_D_reproduced_exact_responses"] != member["cases"]:
@@ -511,9 +624,12 @@ def aggregate(ratings: dict, mapping: dict, blinded: dict, workers: dict, traini
     for ident, judgment in ratings["context"].items():
         contextual.append({"review_id": ident, **mapping["context"][ident], **judgment})
     gains = [row["mean_delta"]["task_relevance"] for row in per_member]
+    # Every member has exactly12 cases. Averaging the integer case deltas is the
+    # same equal-member estimate without rounding each member mean first.
+    mean_delta = {key: mean(row["delta"][key] for row in paired) for key in WORKER_SCORES}
     analysis = wcfg["primary_analysis"]
     criteria = {
-        "mean_gain": mean(gains) >= analysis["working_effect_threshold"],
+        "mean_gain": mean_delta["task_relevance"] >= analysis["working_effect_threshold"],
         "members_positive": sum(x > 0 for x in gains) >= analysis["minimum_members_with_positive_mean_gain"],
         "maximum_member_regression": min(gains) >= -analysis["maximum_member_mean_relevance_regression"],
     }
@@ -561,7 +677,7 @@ def aggregate(ratings: dict, mapping: dict, blinded: dict, workers: dict, traini
     return {"schema": "village-001f-diagnostic-results-v1", "experiment": "VILLAGE-001F",
         "worker": {"primary_design": "Paired blind scoring of corrected and reproduced responses; six prespecified member means are replication units, not 72 independent models.",
             "primary_case_pairs": 72, "member_replication_units": 6, "per_member": per_member,
-            "mean_delta": {key: mean(r["mean_delta"][key] for r in per_member) for key in WORKER_SCORES},
+            "mean_delta": mean_delta,
             "positive_member_relevance_gains": sum(x > 0 for x in gains), "worst_member_relevance_delta": min(gains),
             "working_effect_criteria": criteria, "working_effect_signal": all(criteria.values()),
             "classification": worker_classification,
@@ -571,6 +687,7 @@ def aggregate(ratings: dict, mapping: dict, blinded: dict, workers: dict, traini
             "context_design": "BASE/C/original D were scored individually in different requests; contrasts with paired-arm ratings are contextual, not the primary causal estimate.",
             "context_summary": context_summary, "context_cases": contextual,
             "training_lanes": 12, "optimizer_steps": 1440, "native_responses": 300,
+            "paired_execution_classifications": dict(Counter(r["training_execution"]["paired_execution_provenance"]["classification"] for r in per_member)),
             "original_D_reproduced_exact_responses": sum(r["original_D_reproduced_exact_responses"] for r in per_member)},
         "sprocket": {"responses": 36, "cases": 6, "seeds_per_case": 3, "arms": sp_arms,
             "compact_minus_original": {key: compact["means"][key] - original["means"][key] for key in SPROCKET_SCORES},
@@ -580,7 +697,8 @@ def aggregate(ratings: dict, mapping: dict, blinded: dict, workers: dict, traini
             "case_effects": sp_case_effects, "matched_case_seed_effects": sp_matched, "reviews": sp,
             "interpretation": "Syntax, grounding and usefulness are separate measurements. This small matched prompt pilot does not establish a causal benefit to worker learning."},
         "limitations": ["Six prespecified members and twelve new prompts do not establish full-population generalization.",
-            "Training arms run in separate hosted jobs. CPU model, platform and full package metadata are recorded, not allocation-controlled; matching metadata does not guarantee numerical equivalence.",
+            "Each member's two fresh training processes are assigned to one shared runner job in predeclared counterbalanced order. Native invocation receipts establish whether that pairing survived execution or recovery; a shared runner does not guarantee numerical determinism.",
+            "Original D lacks the new per-invocation execution provenance. Historical CPU, platform and package comparisons cannot establish that its full optimizer trajectory shared the new execution environment.",
             "Execution and reproduction differences qualify attribution without changing the prespecified panel, quality criteria or workload.",
             "Remote critic backend is not version-pinned; scores are evidence from this archived request cohort.",
             "Repeated prompts and Sprocket seeds are within-case observations, not independent replications.",
@@ -598,19 +716,39 @@ def report(summary: dict) -> str:
         "|---|---:|---:|---:|---:|"]
     for row in w["per_member"]:
         lines.append(f"| {row['member_id']} | {row['reproduced']['task_relevance']:.3f} | {row['corrected']['task_relevance']:.3f} | {row['mean_delta']['task_relevance']:+.3f} | {row['original_D_reproduced_exact_responses']}/12 |")
-    lines += ["", "The attention mask is the only planned algorithmic intervention. C parent weights, pair bytes, original member seed, optimizer, objective, 120-step budget and required library versions are fixed. Training arms run in separate hosted jobs; their recorded execution and reproduction differences are reported below.",
+    lines += ["", "The attention mask is the only planned algorithmic intervention. C parent weights, pair bytes, original member seed, optimizer, objective, 120-step budget and required library versions are fixed. Each member's two fresh processes are assigned to one shared runner job, with three members per predeclared arm order. Actual optimizer provenance and reproduction differences are reported below.",
         "", "## Context and reproducibility", "", w["context_design"], "",
         "| Stage | Responses | Relevance | Coherence | Genericness | Groundedness |", "|---|---:|---:|---:|---:|---:|"]
     for stage, row in w["context_summary"].items():
         lines.append(f"| {stage} | {row['responses']} | " + " | ".join(f"{row['means'][k]:.3f}" for k in WORKER_SCORES) + " |")
     lines += ["", f"Original D versus reproduced D has exact output-text agreement on {w['original_D_reproduced_exact_responses']}/72 Q cases. This is measured rather than assumed.",
         f"Canonical named-tensor fingerprints agree for {sum(r['original_D_reproduced_tensor_hash_equal'] for r in w['per_member'])}/6 members; safetensors file hashes agree for {sum(r['original_D_reproduced_safetensors_file_hash_equal'] for r in w['per_member'])}/6. Directory hashes include auxiliary files and are reported separately.",
+        "", "### Paired optimizer execution", "",
+        "Immutable start, durable-checkpoint and finish receipts identify each invocation and the optimizer steps it retained. Shared-job and shared-runner checks use those positive-step segments, including prior invocations after a resume. A completed copy adds no optimizer host. Fresh uninterrupted pairs must use distinct processes in the predeclared sequential order; recovered pairs remain in the analysis with their limitations disclosed.", "",
+        "| Member | Execution classification | Predeclared first arm | Shared optimizer job | Shared optimizer runner | Retained steps | Copy invocations | Unfinished invocations |",
+        "|---|---|---|---|---|---:|---:|---:|"]
+    cell = lambda value: str(value).replace("|", "\\|").replace("\n", " ") if value is not None else "unrecorded"
+    flag = lambda value: "unknown" if value is None else ("match" if value else "different")
+    for member in w["per_member"]:
+        proof = member["training_execution"]["paired_execution_provenance"]
+        arms = list(proof["arms"].values())
+        lines.append(f"| {member['member_id']} | {proof['classification']} | {proof['predeclared_arm_order'][0]} | {flag(proof['same_job_for_optimizer_segments'])} | {flag(proof['same_runner_instance_for_optimizer_segments'])} | "
+            + " / ".join(str(arm['retained_optimizer_steps']) for arm in arms)
+            + f" | {sum(len(arm['zero_step_copies']) for arm in arms)} | {sum(len(arm['unfinished_invocations']) for arm in arms)} |")
+    lines += ["", "| Member / arm | Invocation evidence | Retained steps | Run / attempt / job | Paired-job nonce | Runner / boot ID / hostname | Process | Status |",
+        "|---|---|---:|---|---|---|---:|---|"]
+    for member in w["per_member"]:
+        for stage, arm in member["training_execution"]["paired_execution_provenance"]["arms"].items():
+            for invocation in arm["invocations"]:
+                execution = invocation["execution"]
+                job = " / ".join(cell(execution.get(key)) for key in ("run_id", "run_attempt", "job"))
+                runner = " / ".join(cell(execution.get(key)) for key in ("runner_name", "boot_id", "hostname"))
+                lines.append(f"| {member['member_id']} / {stage} | [start {invocation['ordinal']}]({invocation['start_evidence_path']}) | {invocation['start_step']}–{invocation['retained_end_step']} | {job} | {cell(execution.get('paired_job_nonce'))} | {runner} | {cell(execution.get('process_id'))} | {cell(invocation['finish_status'])} |")
+    lines += ["", "Full native provenance, exact source hashes and any unattributed interrupted segments are retained in summary.json and the linked source files. Same-runner execution does not guarantee numerical determinism. Original D has no equivalent invocation history, so historical comparisons remain more limited.",
         "", "### Recorded training execution", "",
         "Each stage links to its complete hash-bound training result. Exact result SHA-256s, full package metadata and field-level differences are also retained in summary.json. The recorded result host does not attest every earlier host of a resumed lane. Matching recorded metadata does not guarantee numerical equivalence.", "",
         "| Member | Stage / result | Recorded CPU model | Logical CPUs | Platform | Packages | Resumed / step |",
         "|---|---|---|---:|---|---|---|"]
-    cell = lambda value: str(value).replace("|", "\\|").replace("\n", " ") if value is not None else "unrecorded"
-    flag = lambda value: "unknown" if value is None else ("match" if value else "different")
     for member in w["per_member"]:
         for stage, row in member["training_execution"]["records"].items():
             host, recovery = row["recorded_result_host"], row["recovery"]
@@ -628,7 +766,7 @@ def report(summary: dict) -> str:
     if observed_limits:
         lines.extend(f"- **{member}:** {limit}" for member, limit in observed_limits)
     else:
-        lines.append("No recorded execution mismatch or measured baseline reproduction failure was found. Hardware allocation remains uncontrolled; these checks do not prove complete numerical equivalence.")
+        lines.append("No recorded execution mismatch or measured baseline reproduction failure was found. The shared-runner pairing and these reproduction checks do not prove complete numerical equivalence or determinism.")
     lines += ["", "These disclosures do not exclude members, change the prespecified working-effect criteria or authorize additional training.",
         "", "## Sprocket feedback pilot", "", "| Arm | Strict JSON/schema | Grounded | Strict, grounded and actionable | Response grounding | Scenario grounding | Usefulness |",
         "|---|---:|---:|---:|---:|---:|---:|"]

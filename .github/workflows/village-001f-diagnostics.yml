@@ -59,8 +59,10 @@ jobs:
       phase: ${{ steps.verify.outputs.phase }}
       members: ${{ steps.verify.outputs.members }}
       arms: ${{ steps.verify.outputs.arms }}
+      train_pairs: ${{ steps.verify.outputs.train_pairs }}
       resume_requested: ${{ steps.verify.outputs.resume_requested }}
   train:
+    name: train (${{ matrix.member }})
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
@@ -76,11 +78,16 @@ jobs:
       run: |
         python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.14.1+cpu'
         python3 -m pip install --disable-pip-version-check 'transformers==4.57.6' 'peft==0.21.2'
-    - name: Recover prior matched training if requested
+    - name: Recover both prior matched training arms if requested
       run: |
-        python3 scripts/village_001f_operator.py recover --name "village001f-train-$MEMBER-$ARM" --out resume/lane
+        python3 scripts/village_001f_operator.py recover --name "village001f-train-$MEMBER-$FIRST_ARM" --out "resume/$FIRST_ARM/lane"
+        python3 scripts/village_001f_operator.py recover --name "village001f-train-$MEMBER-$SECOND_ARM" --out "resume/$SECOND_ARM/lane"
       env:
         GH_TOKEN: ${{ github.token }}
+    - name: Preserve both prior arms before any training
+      run: |
+        python3 scripts/village_001f_operator.py stage-training --member "$MEMBER" --resume-root resume --work-root work --out out
+        python3 -c 'import os,uuid; open(os.environ["GITHUB_ENV"], "a").write("F_PAIRED_JOB_NONCE=" + uuid.uuid4().hex + "\n")'
     - name: Retrieve and verify exact original C parent
       run: |
         mkdir -p downloads "parent"
@@ -95,44 +102,74 @@ jobs:
         tar -xzf "downloads/$file" -C "parent"
       env:
         GH_TOKEN: ${{ github.token }}
-    - name: Train one fixed 120-step matched arm
+    - name: Train first fixed 120-step matched arm
+      timeout-minutes: 30
       run: |
-        args=(train --member "$MEMBER" --mask-mode "$ARM" --parent-adapter parent --out out)
-        if [ -d resume/lane ]; then args+=(--resume resume/lane); fi
+        args=(train --member "$MEMBER" --mask-mode "$FIRST_ARM" --parent-adapter parent --out "work/$FIRST_ARM")
+        if [ -d "resume/$FIRST_ARM/lane" ]; then args+=(--resume "resume/$FIRST_ARM/lane"); fi
         python3 scripts/village_001f_worker_diagnostic.py "${args[@]}"
-    - name: Preserve village001f-train-${{ matrix.member }}-${{ matrix.arm }}
+    - name: Train second fixed 120-step matched arm
+      timeout-minutes: 30
+      run: |
+        args=(train --member "$MEMBER" --mask-mode "$SECOND_ARM" --parent-adapter parent --out "work/$SECOND_ARM")
+        if [ -d "resume/$SECOND_ARM/lane" ]; then args+=(--resume "resume/$SECOND_ARM/lane"); fi
+        python3 scripts/village_001f_worker_diagnostic.py "${args[@]}"
+    - name: Stage newest native training custody for both arms
+      if: always()
+      run: |
+        python3 scripts/village_001f_operator.py stage-training --member "$MEMBER" --resume-root resume --work-root work --out out
+    - name: Preserve village001f-train-${{ matrix.member }}-${{ matrix.first_arm }}
       if: always()
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
       with:
-        name: village001f-train-${{ matrix.member }}-${{ matrix.arm }}
-        path: out
+        name: village001f-train-${{ matrix.member }}-${{ matrix.first_arm }}
+        path: out/${{ matrix.first_arm }}
         if-no-files-found: warn
         retention-days: 30
-    - name: Preserve village001f-recovery-train-${{ matrix.member }}-${{ matrix.arm }}
+    - name: Preserve village001f-train-${{ matrix.member }}-${{ matrix.second_arm }}
       if: always()
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
       with:
-        name: village001f-recovery-train-${{ matrix.member }}-${{ matrix.arm }}
+        name: village001f-train-${{ matrix.member }}-${{ matrix.second_arm }}
+        path: out/${{ matrix.second_arm }}
+        if-no-files-found: warn
+        retention-days: 30
+    - name: Preserve village001f-recovery-train-${{ matrix.member }}-${{ matrix.first_arm }}
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-recovery-train-${{ matrix.member }}-${{ matrix.first_arm }}
         path: |-
-          resume/lane.zip
-          resume/lane-custody.json
-          resume/history
+          resume/${{ matrix.first_arm }}/lane.zip
+          resume/${{ matrix.first_arm }}/lane-custody.json
+          resume/${{ matrix.first_arm }}/history
+        if-no-files-found: warn
+        retention-days: 30
+    - name: Preserve village001f-recovery-train-${{ matrix.member }}-${{ matrix.second_arm }}
+      if: always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: village001f-recovery-train-${{ matrix.member }}-${{ matrix.second_arm }}
+        path: |-
+          resume/${{ matrix.second_arm }}/lane.zip
+          resume/${{ matrix.second_arm }}/lane-custody.json
+          resume/${{ matrix.second_arm }}/history
         if-no-files-found: warn
         retention-days: 30
     needs: plan
     if: ${{ needs.plan.outputs.phase == 'generate' }}
     strategy:
       fail-fast: false
-      max-parallel: 12
+      max-parallel: 6
       matrix:
-        member: ${{ fromJSON(needs.plan.outputs.members) }}
-        arm: ${{ fromJSON(needs.plan.outputs.arms) }}
+        include: ${{ fromJSON(needs.plan.outputs.train_pairs) }}
     env:
       OMP_NUM_THREADS: '4'
       MKL_NUM_THREADS: '4'
       TOKENIZERS_PARALLELISM: 'false'
       MEMBER: ${{ matrix.member }}
-      ARM: ${{ matrix.arm }}
+      FIRST_ARM: ${{ matrix.first_arm }}
+      SECOND_ARM: ${{ matrix.second_arm }}
   base:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
@@ -456,6 +493,8 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
     - name: Blindly measure causal effects and feedback grounding
+      # Leave time for custody uploads if the shared provider transport stalls.
+      timeout-minutes: 85
       run: |
         args=(--worker-artifacts "$F_ROOT/inputs/worker" --training-artifacts "$F_ROOT/inputs/training" --sprocket-artifacts "$F_ROOT/inputs/sprocket")
         resume=()

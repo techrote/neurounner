@@ -48,14 +48,14 @@ New pilot receipts explicitly disclose this condition if a pilot resumes.
 
 The panel is fixed independently of E scores:
 
-| Member | Lineage | Sibling |
-|---|---|---|
-| V-G01-A | G01 | A |
-| V-G03-B | G03 | B |
-| V-G05-C | G05 | C |
-| V-G07-A | G07 | A |
-| V-G09-B | G09 | B |
-| V-G11-C | G11 | C |
+| Member | Lineage | Sibling | Paired execution order |
+|---|---|---|---|
+| V-G01-A | G01 | A | Historical, then corrected |
+| V-G03-B | G03 | B | Corrected, then historical |
+| V-G05-C | G05 | C | Historical, then corrected |
+| V-G07-A | G07 | A | Corrected, then historical |
+| V-G09-B | G09 | B | Historical, then corrected |
+| V-G11-C | G11 | C | Corrected, then historical |
 
 There are two members of each sibling type and six distinct lineages. Findings
 apply directly to this panel; it is not a population-wide qualification.
@@ -63,8 +63,8 @@ apply directly to this panel; it is not a population-wide qualification.
 Each member starts twice from the same exact archived C adapter and trains on
 the same original 60 preference pairs for the same 120 optimizer steps. Parent
 bytes, pair bytes, member seed, order, token IDs, labels, optimizer, learning
-rate, objective, gradient clipping, and runtime are fixed. The only optimization
-variable is the attention mask:
+rate, objective, gradient clipping, and library versions are fixed. The intended
+algorithmic intervention is the attention mask:
 
 | Arm | Attention rule |
 |---|---|
@@ -82,6 +82,62 @@ remain explicit references.
 Runtime is pinned to torch 2.14.1+cpu, transformers 4.57.6, and peft 0.21.2. The
 base is SmolLM2-135M-Instruct at revision
 `12fd25f77366fa6b3b4b768ec3050bf629380bac`.
+
+## Prospective paired-runner amendment
+
+Before any F model or provider execution, the original twelve independent
+training jobs were replaced by **six member jobs, each running two fresh CLI
+processes in sequence**. The twelve lanes, all original pairs, 120 steps per
+lane, 1,440 total steps, panel, Q reserve, objective, seeds, quality criteria and
+provider budgets remain unchanged. Three members run historical first and three
+run corrected first; each sibling type has one member in each order, as fixed in
+the table above and `training.paired_execution.member_arm_order`.
+
+The motivation is an observed hardware difference in the accepted controls:
+five selected original D jobs recorded AMD EPYC 7763, while V-G11-C recorded AMD
+EPYC 9V45. All recorded four logical CPUs. The new pair therefore shares one
+runner allocation on an uninterrupted fresh execution. Each subprocess reloads
+the same verified C parent and independently applies the original member seed;
+there is no shared model or optimizer object and no change to the D engine.
+
+Original D [training receipts](../preference-evidence/results/) and the archived
+[job timestamps](../recovery-20261118/evidence/source-jobs.json) give these actual
+runtime references:
+
+| Member | Recorded training seconds | Entire original job | CPU model |
+|---|---:|---:|---|
+| V-G01-A | 263.5 | 8m 18s | AMD EPYC 7763 |
+| V-G03-B | 233.7 | 7m 07s | AMD EPYC 7763 |
+| V-G05-C | 267.2 | 8m 05s | AMD EPYC 7763 |
+| V-G07-A | 262.6 | 8m 01s | AMD EPYC 7763 |
+| V-G09-B | 240.1 | 7m 40s | AMD EPYC 7763 |
+| V-G11-C | 131.5 | 4m 22s | AMD EPYC 9V45 |
+
+Training seconds exclude checkpoint serialization and preference evaluation;
+whole-job durations include setup, training, evaluation and upload. Twice the
+longest observed job is 16m 36s, a planning reference with substantial headroom
+inside the paired job's 90-minute cap. It is not a guaranteed runtime bound.
+Each historical job also generated 24 T responses, omitted symmetrically from
+the two F arms. No new model execution was used to obtain these timings.
+
+Each lane retains immutable `training-invocations/` sidecars. A start record binds
+the unchanged training identity, all inherited sidecars, arm order, retained
+starting step, run/attempt/job, per-job nonce, runner/boot/host identity, process
+ID, package and CPU metadata, and clocks. Checkpoint and finish records bind the
+start and retained native loss-trace prefixes. These are separate from the
+immutable experiment identity, so an authorized resume can append its own host
+record without rewriting the original trajectory.
+
+A fresh pair is established from two complete 0-to-120 optimizer segments on the
+same job and runner, with distinct processes and the declared sequential order.
+Completed copies append zero-step records and preserve original result and
+training receipts byte-for-byte. Partial resumes retain every earlier segment;
+an interrupted native checkpoint that survives before its sidecar is written is
+explicitly an unattributed segment. The report distinguishes fresh paired work,
+same-host optimizer histories later copied elsewhere, and recovered or mixed-host
+work. Unknown or different execution hosts qualify attribution; they do not
+remove members, change quality criteria or authorize extra steps. Matching
+hardware metadata alone does not establish numerical or baseline reproduction.
 
 ## Evaluation reserve and workload
 
@@ -103,7 +159,7 @@ checkpoint chains are retained.
 
 The full bounded worker pilot is:
 
-- 12 training lanes × 120 steps = 1,440 completed optimizer steps.
+- Six paired member jobs containing 12 training lanes × 120 steps = 1,440 completed optimizer steps.
 - 25 inference lanes × 12 prompts = 300 responses, at most 48,000 generated tokens.
 - One tokenizer-only audit of 720 existing chosen/rejected sequences.
 - 18 fixed-weight scoring lanes: BASE, C, and original D for each member. Eight
@@ -158,7 +214,7 @@ The driver is `scripts/village_001f_worker_diagnostic.py`; every command accepts
 | plan | Verify all frozen sources, panel, pair/parent bindings, and prompt exclusions | worker-plan.json |
 | self-test | Offline contract, synthetic mask boundary, and mocked actual train-wrapper checks | stdout |
 | token-audit | Tokenizer-only native mask and label audit | token-mask-audit.json |
-| train | One explicitly selected member and mask arm | adapter/, result.json, training.json, training-identity.json |
+| train | One explicitly selected member and mask arm | adapter/, result.json, training.json, training-identity.json, training-invocations/ |
 | infer | One member/stage or the shared BASE | result.json, generation-identity.json, rows/ |
 | score | Both attention masks at fixed BASE/C/original-D weights | score.json |
 
@@ -167,6 +223,12 @@ and inference support `--resume` into a new empty output directory. Full output
 trees, including identity and checkpoint files, must remain together. Adapters
 belong in separate release assets, not ordinary Git history. Dataset/config/
 report custody is separate from model-weight storage.
+
+The controlled workflow supplies the run/job/runner environment and creates
+`F_PAIRED_JOB_NONCE` once per member job before either training process. Missing
+execution identity fails before optimization. Source recovery ZIPs remain in
+release custody; every native invocation sidecar is also retained with the
+receipt-only training evidence in Git and in the final judge evidence.
 
 New adapter inference requires `--training-evidence` so the correct member,
 arm, config, completed step count, result hash, and adapter bytes are verified.

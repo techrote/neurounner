@@ -201,6 +201,42 @@
     "optimizer_steps_per_lane": 120,
     "original_training_config_sha256": "53d365c5dcb0001892073bbc13df6a00cf07787413700af91c5e8c62306720a4",
     "pair_count_per_member": 60,
+    "paired_execution": {
+      "fresh_cli_processes_per_job": 2,
+      "fresh_pair_evidence": "Same member job nonce, run/attempt/job, runner name and boot ID; distinct process IDs; nonoverlapping counterbalanced invocation times; each uninterrupted optimizer trajectory runs from 0 to 120.",
+      "member_arm_order": {
+        "V-G01-A": [
+          "historical_token_id_mask",
+          "length_derived_mask"
+        ],
+        "V-G03-B": [
+          "length_derived_mask",
+          "historical_token_id_mask"
+        ],
+        "V-G05-C": [
+          "historical_token_id_mask",
+          "length_derived_mask"
+        ],
+        "V-G07-A": [
+          "length_derived_mask",
+          "historical_token_id_mask"
+        ],
+        "V-G09-B": [
+          "historical_token_id_mask",
+          "length_derived_mask"
+        ],
+        "V-G11-C": [
+          "length_derived_mask",
+          "historical_token_id_mask"
+        ]
+      },
+      "member_jobs": 6,
+      "order_balance": "Three historical-first and three corrected-first members, balanced across sibling A/B/C.",
+      "prelaunch_amendment": "Declared before any Stage F model or provider execution; the intended algorithmic intervention remains only the attention mask.",
+      "provenance_directory": "training-invocations",
+      "recovery_policy": "Keep every inherited invocation. Completed copies add zero optimizer steps. Partial or interrupted trajectories retain all recorded optimizer hosts and explicitly qualify missing provenance; no pair is removed because hosts differ.",
+      "schema": "village-001f-paired-runner-policy-v1"
+    },
     "post_training_legacy_T_generation": "Omitted from both new arms; optimizer trajectory unaffected. Evaluate the frozen new Q reserve in a separate identical inference program."
   }
 }

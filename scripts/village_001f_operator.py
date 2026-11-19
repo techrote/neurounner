@@ -29,6 +29,7 @@ INPUT_TAG = "village-001f-pilot-inputs-20261119"
 FINAL_TAG = "village-001f-mask-sprocket-20261119"
 MEMBERS = ["V-G01-A", "V-G03-B", "V-G05-C", "V-G07-A", "V-G09-B", "V-G11-C"]
 ARMS = ["historical_token_id_mask", "length_derived_mask"]
+PAIRED_TRAIN_STEPS = ("Train first fixed 120-step matched arm", "Train second fixed 120-step matched arm")
 E_SUMMARY = "experiments/village-001/final-evidence/summary.json"
 WEIGHT_SUFFIXES = (".safetensors", ".bin", ".pt", ".pth", ".gguf", ".onnx", ".ckpt")
 CONTAINER_SUFFIXES = (".zip", ".tar", ".tar.gz", ".tgz", ".npy", ".npz")
@@ -71,6 +72,17 @@ def evidence_files(root: Path) -> dict:
     return inventory
 
 
+def training_pairs(cfg: dict) -> list[dict]:
+    """The workflow and historical spending guard share the frozen arm order."""
+    pairs = []
+    for member in MEMBERS:
+        order = worker.training_arm_order(cfg, member)
+        require(len(order) == 2 and set(order) == set(ARMS), "paired training arm order is incomplete")
+        pairs.append({"member": member, "first_arm": order[0], "second_arm": order[1]})
+    require(sum(row["first_arm"] == ARMS[0] for row in pairs) == 3, "paired training order must be counterbalanced three plus three")
+    return pairs
+
+
 def request() -> dict:
     r = json.loads((WORK / "request.json").read_text())
     require(r.get("schema") == "village-001f-post-e-request-v1" and r.get("publish_branch") == BRANCH, "wrong diagnostic request")
@@ -89,6 +101,7 @@ def request() -> dict:
     require(set(r.get("contract_sha256", {})) == {"worker-config.json", "worker-eval.json", "sprocket-config.json", "judge-config.json"}, "contract inventory incomplete")
     cfg, _, _, _ = load_contract(WORK / "worker-config.json")
     require(cfg["members"] == MEMBERS and cfg["arms"] == ARMS, "panel or arms changed")
+    training_pairs(cfg)
     return r
 
 
@@ -112,10 +125,12 @@ def verify_execution_history(r: dict) -> None:
     runs = inventory.get("workflow_runs", [])
     require(type(inventory.get("total_count")) is int and inventory["total_count"] == len(runs) <= 100, "complete bounded diagnostic run history required")
     spending, required_artifacts = [], set()
-    step_names = ({"Train one fixed 120-step matched arm", "Generate fixed Q BASE control",
+    step_names = ({"Train one fixed 120-step matched arm", *PAIRED_TRAIN_STEPS, "Generate fixed Q BASE control",
         "Compare four fixed model stages on the same Q reserve", "Run 36 bounded native prompt comparisons"}
         if r["phase"] == "generate" else {"Blindly measure causal effects and feedback grounding"})
     job_names = ("train", "base", "infer", "sprocket") if r["phase"] == "generate" else ("judge",)
+    cfg, _, _, _ = load_contract(WORK / "worker-config.json")
+    orders = {row["member"]: [row["first_arm"], row["second_arm"]] for row in training_pairs(cfg)}
     for run in runs:
         require(type(run.get("id")) is int and run["id"] > 0, "invalid prior diagnostic run ID")
         if run["id"] == run_id:
@@ -144,8 +159,20 @@ def verify_execution_history(r: dict) -> None:
                 elif name == "sprocket":
                     artifact_name = "village001f-sprocket"
                 elif name.startswith("train ("):
+                    paired = re.fullmatch(r"train \((V-G[0-9]{2}-[ABC])\)", name)
+                    if paired:
+                        require(paired[1] in orders, "unknown spending training member")
+                        matched = [step for step in steps if step.get("name") in PAIRED_TRAIN_STEPS]
+                        require(len(matched) == 2 and {step["name"] for step in matched} == set(PAIRED_TRAIN_STEPS), "paired training history must show both arm steps")
+                        by_name = {step["name"]: step for step in matched}
+                        entered = [by_name[key].get("status") in ("in_progress", "completed") and by_name[key].get("conclusion") != "skipped" for key in PAIRED_TRAIN_STEPS]
+                        require(not entered[1] or (entered[0] and by_name[PAIRED_TRAIN_STEPS[0]].get("conclusion") == "success"), "second training arm entered without a successful first step")
+                        require(any(entered), "paired training job contains an unrecognized spending step")
+                        required_artifacts.update(f"village001f-train-{paired[1]}-{arm}" for arm, did_enter in zip(orders[paired[1]], entered) if did_enter)
+                        spent = True
+                        continue
                     match = re.fullmatch(r"train \((V-G[0-9]{2}-[ABC]), (historical_token_id_mask|length_derived_mask)\)", name)
-                    require(match and match[1] in MEMBERS, "unknown spending training lane")
+                    require(match and match[1] in MEMBERS and len(steps) == 1 and steps[0]["name"] == "Train one fixed 120-step matched arm", "unknown spending training lane")
                     artifact_name = f"village001f-train-{match[1]}-{match[2]}"
                 else:
                     match = re.fullmatch(r"infer \((V-G[0-9]{2}-[ABC])\)", name)
@@ -161,13 +188,17 @@ def verify_execution_history(r: dict) -> None:
         return
     source = max(spending, key=lambda run: run["id"])
     require(r["resume_run_id"] == source["id"], "phase must resume the latest prior spending run")
-    head = source.get("head_sha", "")
-    require(re.fullmatch(r"[0-9a-f]{40}", head), "invalid prior diagnostic source head")
-    subprocess.run(["git", "fetch", "--no-tags", "origin", head], check=True, stdout=subprocess.DEVNULL)
-    subprocess.run(["git", "merge-base", "--is-ancestor", head, "HEAD"], check=True)
-    prior_request = json.loads(subprocess.check_output(["git", "show", head + ":" + (REL / "request.json").as_posix()]))
-    for key in ("phase", "contract_sha256", "stage_e_main_commit", "stage_e_summary_sha256", "input_release_tag", "final_release_tag"):
-        require(prior_request.get(key) == r[key], "prior spending run has different frozen authority: " + key)
+    # Every entered arm above was interpreted using this exact frozen order.
+    # Bind all spending sources, so an older order cannot be silently remapped.
+    for prior in spending:
+        head = prior.get("head_sha", "")
+        require(re.fullmatch(r"[0-9a-f]{40}", head), "invalid prior diagnostic source head")
+        subprocess.run(["git", "fetch", "--no-tags", "origin", head], check=True, stdout=subprocess.DEVNULL)
+        subprocess.run(["git", "merge-base", "--is-ancestor", head, "HEAD"], check=True)
+        prior_request = json.loads(subprocess.check_output(["git", "show", head + ":" + (REL / "request.json").as_posix()]))
+        for key in ("phase", "contract_sha256", "stage_e_main_commit", "stage_e_summary_sha256", "input_release_tag", "final_release_tag"):
+            require(prior_request.get(key) == r[key], "prior spending run has different frozen authority: " + key)
+    head = source["head_sha"]
     artifact_document = gh(f"actions/runs/{source['id']}/artifacts?per_page=100")
     artifacts = artifact_document.get("artifacts", [])
     require(type(artifact_document.get("total_count")) is int and artifact_document["total_count"] == len(artifacts) <= 100, "complete recovery artifact inventory required")
@@ -202,8 +233,10 @@ def verify() -> None:
         subprocess.run(["git", "merge-base", "--is-ancestor", custody["source_head"], "HEAD"], check=True)
         verify_release(WORK / "input-release-assets.json", INPUT_TAG)
     absent_tag(FINAL_TAG)
+    cfg, _, _, _ = load_contract(WORK / "worker-config.json")
     with open(os.environ["GITHUB_OUTPUT"], "a") as stream:
         for key, value in {"phase": r["phase"], "members": MEMBERS, "arms": ARMS,
+                "train_pairs": training_pairs(cfg),
                 "resume_requested": "true" if r["resume_run_id"] is not None else "false"}.items():
             stream.write(key + "=" + (value if isinstance(value, str) else json.dumps(value, separators=(",", ":"))) + "\n")
 
@@ -215,6 +248,39 @@ def assets(member: str, source: str) -> None:
     row = next(x for x in release["assets"] if x["member_id"] == member)
     require(re.fullmatch(r"[A-Za-z0-9_.-]+", row["file"]), "unsafe asset name")
     print("\t".join([release["release_tag"], row["file"], row["sha256"]]))
+
+
+def stage_training(member: str, resume_root: Path, work_root: Path, out: Path) -> None:
+    """Preserve both prior arms before work, then publish each newest native tree.
+
+    An incomplete new tree always supersedes its prior copy. It must never be
+    hidden by falling back to an older checkpoint after an interrupted step.
+    """
+    cfg, _, _, _ = load_contract(WORK / "worker-config.json")
+    require(member in MEMBERS, "unknown paired training member")
+    roots = [resume_root, work_root, out]
+    for index, root in enumerate(roots):
+        require(not root.is_symlink(), "paired custody root cannot be a symlink")
+        for other in roots[index + 1:]:
+            require(root.resolve() != other.resolve() and root.resolve() not in other.resolve().parents and other.resolve() not in root.resolve().parents, "paired custody roots must be separate")
+    for arm in worker.training_arm_order(cfg, member):
+        latest, prior, destination = work_root / arm, resume_root / arm / "lane", out / arm
+        source = latest if latest.exists() or latest.is_symlink() else prior
+        if not source.exists() and not source.is_symlink():
+            require(not destination.exists(), "orphan paired training publication tree")
+            continue
+        inventory = files(source)
+        require(inventory, "empty native training tree cannot replace preserved custody")
+        if destination.exists() or destination.is_symlink():
+            files(destination)
+        out.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix=".paired-training-", dir=out.parent) as temporary:
+            staged = Path(temporary) / "lane"
+            shutil.copytree(source, staged)
+            require(files(staged) == inventory, "paired native custody copy mismatch")
+            if destination.exists():
+                shutil.rmtree(destination)
+            shutil.move(str(staged), destination)
 
 
 def validate_recovery_run(run: dict, run_id: int) -> str:
@@ -435,12 +501,20 @@ def archive_inputs(artifacts: Path, release_dir: Path) -> None:
     validate_input_sources(artifacts)
     recovery = recovery_sources(artifacts / "recovery", r["phase"])
     # Validate every exact training directory/adapter before copying any bytes.
+    training_provenance = {}
     for member in MEMBERS:
         require((artifacts / "worker" / f"village001f-infer-{member}").is_dir(), "missing worker inference")
         for arm in ARMS:
             lane = artifacts / "training" / f"village001f-train-{member}-{arm}"
             files(lane)
             checked_adapter(cfg, member, "D_REPRODUCED" if arm == ARMS[0] else "D_CORRECTED", lane / "adapter", lane)
+            _, provenance = worker.validate_training_provenance(lane, cfg, require_complete=True)
+            require(provenance, "native paired training provenance is missing")
+            for relative, path in provenance.items():
+                require(Path(relative).parts[:1] == ("training-invocations",) and ".." not in Path(relative).parts and path == lane / relative and path.is_file() and not path.is_symlink(), "invalid training provenance source path")
+            evidence_files(lane / "training-invocations")
+            require(set(provenance) == {"training-invocations/" + name for name in files(lane / "training-invocations")}, "training provenance inventory must retain every invocation record")
+            training_provenance[(member, arm)] = provenance
     release_dir.parent.mkdir(parents=True, exist_ok=True)
     release_dir.mkdir(parents=True, exist_ok=False)
     with tempfile.TemporaryDirectory(prefix="village001f-input-staging-", dir=release_dir.parent) as temporary:
@@ -452,6 +526,9 @@ def archive_inputs(artifacts: Path, release_dir: Path) -> None:
                 target.mkdir(parents=True, exist_ok=True)
                 for name in ("training.json", "training-identity.json", "result.json"):
                     shutil.copy2(lane / name, target / name)
+                for relative, path in training_provenance[(member, arm)].items():
+                    (target / relative).parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(path, target / relative)
                 archive = release_dir / f"village001f-{member}-{arm}.tar.gz"
                 with archive.open("xb") as raw, gzip.GzipFile(filename="", fileobj=raw, mode="wb", mtime=0) as zipped, tarfile.open(fileobj=zipped, mode="w") as tar:
                     for name in sorted(files(lane / "adapter")):
@@ -512,6 +589,7 @@ def main():
     sub.add_parser("verify-inputs")
     p = sub.add_parser("assets"); p.add_argument("--member", required=True); p.add_argument("--source", choices=("C", "D"), required=True)
     p = sub.add_parser("recover"); p.add_argument("--name", required=True); p.add_argument("--out", type=Path, required=True)
+    p = sub.add_parser("stage-training"); p.add_argument("--member", required=True); p.add_argument("--resume-root", type=Path, required=True); p.add_argument("--work-root", type=Path, required=True); p.add_argument("--out", type=Path, required=True)
     p = sub.add_parser("archive-inputs"); p.add_argument("--artifacts", type=Path, required=True); p.add_argument("--release-dir", type=Path, required=True)
     p = sub.add_parser("archive-recovery"); p.add_argument("--artifacts", type=Path, required=True); p.add_argument("--evidence", type=Path, required=True); p.add_argument("--release-dir", type=Path, required=True)
     p = sub.add_parser("release-inventory"); p.add_argument("--directory", type=Path, required=True); p.add_argument("--manifest", type=Path, required=True); p.add_argument("--tag", required=True)
@@ -521,6 +599,7 @@ def main():
     elif args.command == "verify-inputs": verify_inputs()
     elif args.command == "assets": assets(args.member, args.source)
     elif args.command == "recover": recover(args.name, args.out)
+    elif args.command == "stage-training": stage_training(args.member, args.resume_root, args.work_root, args.out)
     elif args.command == "archive-inputs": archive_inputs(args.artifacts, args.release_dir)
     elif args.command == "archive-recovery": archive_recovery(args.artifacts, args.evidence, args.release_dir)
     elif args.command == "release-inventory": release_inventory(args.directory, args.manifest, args.tag)

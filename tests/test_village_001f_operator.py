@@ -48,7 +48,9 @@ class OperatorFixture(unittest.TestCase):
             "contract_sha256": self.contracts}
         self.save_request()
         self.output = self.home / "github-output.txt"
-        self.cfg = {"members": op.MEMBERS, "arms": op.ARMS}
+        self.cfg = {"members": op.MEMBERS, "arms": op.ARMS, "training": {"paired_execution": {
+            "member_jobs": 6, "fresh_cli_processes_per_job": 2,
+            "member_arm_order": {member: list(op.ARMS if index % 2 == 0 else reversed(op.ARMS)) for index, member in enumerate(op.MEMBERS)}}}}
         self.stack = ExitStack()
         self.addCleanup(self.stack.close)
         self.stack.enter_context(mock.patch.object(op, "ROOT", self.root))
@@ -163,6 +165,7 @@ class LaunchGuardTests(OperatorFixture):
         self.assertEqual(outputs["phase"], "generate")
         self.assertEqual(json.loads(outputs["members"]), op.MEMBERS)
         self.assertEqual(json.loads(outputs["arms"]), op.ARMS)
+        self.assertEqual(json.loads(outputs["train_pairs"]), op.training_pairs(self.cfg))
 
     def test_judge_phase_requires_frozen_inputs_and_verified_input_release(self):
         self.native_inputs()
@@ -337,7 +340,8 @@ class ExecutionHistoryTests(OperatorFixture):
             if parts[3].startswith("jobs?"):
                 return {"total_count": 1, "jobs": [case[1]]}
             if parts[3].startswith("artifacts?"):
-                return {"total_count": 1, "artifacts": [case[2]]}
+                artifacts = case[2] if isinstance(case[2], list) else [case[2]]
+                return {"total_count": len(artifacts), "artifacts": artifacts}
             raise AssertionError("unexpected history read")
         self.github.side_effect = github
         def source_request(command, **kwargs):
@@ -416,6 +420,91 @@ class ExecutionHistoryTests(OperatorFixture):
         with self.assertRaisesRegex(RuntimeError, "lacks its bounded execution step"):
             HISTORY_GUARD(self.req)
 
+    def paired_spending(self, member, *, second=False):
+        run, job, artifact, request = self.prior_spending()
+        order = op.worker.training_arm_order(self.cfg, member)
+        job["name"] = f"train ({member})"
+        job["steps"] = [{"name": op.PAIRED_TRAIN_STEPS[0], "status": "completed", "conclusion": "success" if second else "failure"},
+                        {"name": op.PAIRED_TRAIN_STEPS[1], "status": "completed", "conclusion": "failure" if second else "skipped"}]
+        artifacts = []
+        for index, arm in enumerate(order[:2 if second else 1]):
+            item = {**artifact, "id": 900 + index, "name": f"village001f-train-{member}-{arm}",
+                    "archive_download_url": f"https://api.github.com/repos/{op.REPO}/actions/artifacts/{900 + index}/zip"}
+            artifacts.append(item)
+        return run, job, artifacts, request
+
+    def test_counterbalanced_first_arm_failure_does_not_spend_skipped_second(self):
+        self.assertEqual([row["first_arm"] for row in op.training_pairs(self.cfg)], [op.ARMS[i % 2] for i in range(6)])
+        for member in op.MEMBERS:
+            with self.subTest(member=member):
+                case = self.paired_spending(member)
+                self.history_fixture([case])
+                HISTORY_GUARD({**self.req, "resume_run_id": 91})
+                case[2][0]["name"] = f"village001f-train-{member}-{op.worker.training_arm_order(self.cfg, member)[1]}"
+                with self.assertRaisesRegex(RuntimeError, "lost a previously spending lane"):
+                    HISTORY_GUARD({**self.req, "resume_run_id": 91})
+
+    def test_second_entered_arm_requires_both_artifacts_and_successful_first(self):
+        case = self.paired_spending(op.MEMBERS[1], second=True)
+        self.history_fixture([case])
+        HISTORY_GUARD({**self.req, "resume_run_id": 91})
+        second = case[2].pop()
+        with self.assertRaisesRegex(RuntimeError, "lost a previously spending lane"):
+            HISTORY_GUARD({**self.req, "resume_run_id": 91})
+        case[2].append(second)
+        case[1]["steps"][0]["conclusion"] = "failure"
+        with self.assertRaisesRegex(RuntimeError, "without a successful first"):
+            HISTORY_GUARD({**self.req, "resume_run_id": 91})
+
+    def test_paired_history_requires_explicit_second_step_visibility(self):
+        case = self.paired_spending(op.MEMBERS[0])
+        case[1]["steps"].pop()
+        self.history_fixture([case])
+        with self.assertRaisesRegex(RuntimeError, "show both arm steps"):
+            HISTORY_GUARD({**self.req, "resume_run_id": 91})
+
+    def test_older_spending_order_contract_cannot_be_remapped(self):
+        older = self.prior_spending(run_id=90, head="e" * 40)
+        older[3]["contract_sha256"] = {**self.contracts, "worker-config.json": "f" * 64}
+        self.history_fixture([older, self.prior_spending(run_id=91)])
+        with self.assertRaisesRegex(RuntimeError, "different frozen authority"):
+            HISTORY_GUARD({**self.req, "resume_run_id": 91})
+
+
+class PairedStagingTests(OperatorFixture):
+    def test_prior_second_arm_survives_first_arm_failure_with_latest_partial(self):
+        resume, work, out = [self.home / name for name in ("resume", "work", "out")]
+        for arm in op.ARMS:
+            op.dump(resume / arm / "lane/checkpoint.json", {"mask_mode": arm, "completed_steps": 60})
+            op.dump(resume / arm / "lane/training-invocations/invocation-0001-start.json", {"prior": arm})
+        original_second = op.files(resume / op.ARMS[1] / "lane")
+        op.stage_training(op.MEMBERS[0], resume, work, out)
+        self.assertEqual(op.files(out / op.ARMS[1]), original_second)
+        op.dump(work / op.ARMS[0] / "checkpoint.json", {"mask_mode": op.ARMS[0], "completed_steps": 90})
+        op.dump(work / op.ARMS[0] / "training-invocations/invocation-0002-start.json", {"interrupted": True})
+        op.stage_training(op.MEMBERS[0], resume, work, out)
+        self.assertEqual(op.files(out / op.ARMS[0]), op.files(work / op.ARMS[0]))
+        self.assertEqual(op.files(out / op.ARMS[1]), original_second)
+        self.assertEqual(json.loads((resume / op.ARMS[0] / "lane/checkpoint.json").read_text())["completed_steps"], 60)
+
+    def test_unentered_fresh_second_arm_is_not_fabricated(self):
+        resume, work, out = [self.home / name for name in ("resume", "work", "out")]
+        op.stage_training(op.MEMBERS[1], resume, work, out)
+        self.assertFalse(out.exists())
+        first, second = op.worker.training_arm_order(self.cfg, op.MEMBERS[1])
+        op.dump(work / first / "training-identity.json", {"mask_mode": first})
+        op.stage_training(op.MEMBERS[1], resume, work, out)
+        self.assertTrue((out / first / "training-identity.json").is_file())
+        self.assertFalse((out / second).exists())
+
+    def test_paired_staging_rejects_overlapping_roots_and_symlinks(self):
+        with self.assertRaisesRegex(RuntimeError, "must be separate"):
+            op.stage_training(op.MEMBERS[0], self.home / "resume", self.home / "work", self.home / "work/out")
+        (self.home / "work").mkdir()
+        (self.home / "work" / op.ARMS[0]).symlink_to(self.work)
+        with self.assertRaisesRegex(RuntimeError, "nonregular"):
+            op.stage_training(op.MEMBERS[0], self.home / "resume", self.home / "work", self.home / "out")
+
 
 class ArchivePublicationTests(OperatorFixture):
     def archive_fixture(self):
@@ -428,6 +517,8 @@ class ArchivePublicationTests(OperatorFixture):
                 lane = artifacts / "training" / f"village001f-train-{member}-{arm}"
                 for name in ("training.json", "training-identity.json", "result.json"):
                     op.dump(lane / name, {"member_id": member, "mask_mode": arm, "file": name})
+                for name in ("invocation-0001-start.json", "invocation-0001-checkpoint-000120.json", "invocation-0001-finish.json"):
+                    op.dump(lane / "training-invocations" / name, {"member_id": member, "mask_mode": arm, "file": name})
                 op.dump(lane / "checkpoint.json", {"transient": "do not publish"})
                 op.dump(lane / "adapter/adapter_config.json", {"fixture": True})
                 (lane / "adapter/adapter_model.safetensors").write_bytes((member + arm).encode())
@@ -435,6 +526,10 @@ class ArchivePublicationTests(OperatorFixture):
         op.dump(artifacts / "sprocket/summary.json", {"local_generations": 36})
         (artifacts / "sprocket/native-response.txt").write_bytes(b"  exact raw native response\n\n")
         op.dump(artifacts / "token-audit/token-mask-audit.json", {"sequences": 720})
+        def provenance(root, _cfg, *, require_complete=True):
+            self.assertTrue(require_complete)
+            return {}, {path.relative_to(root).as_posix(): path for path in sorted((root / "training-invocations").glob("*.json"))}
+        self.stack.enter_context(mock.patch.object(op.worker, "validate_training_provenance", side_effect=provenance))
         return artifacts
 
     def test_source_validation_failure_precedes_all_publication_writes(self):
@@ -480,8 +575,9 @@ class ArchivePublicationTests(OperatorFixture):
         for member in op.MEMBERS:
             for arm in op.ARMS:
                 kept = self.work / "inputs/training" / member / arm
-                self.assertEqual({p.name for p in kept.iterdir()}, {"training.json", "training-identity.json", "result.json"})
+                self.assertEqual({p.name for p in kept.iterdir()}, {"training.json", "training-identity.json", "result.json", "training-invocations"})
                 lane = artifacts / "training" / f"village001f-train-{member}-{arm}"
+                self.assertEqual(op.files(kept / "training-invocations"), op.files(lane / "training-invocations"))
                 with tarfile.open(release / f"village001f-{member}-{arm}.tar.gz") as archive:
                     self.assertEqual(set(archive.getnames()), {"adapter_config.json", "adapter_model.safetensors"})
                     for entry in archive.getmembers():

@@ -35,6 +35,34 @@ def execution_result():
         "recovery": {"resumed": False, "resumed_from_step": 0}}
 
 
+def arm_order(member):
+    return list(j.worker.MASKS if member in j.worker.HISTORICAL_FIRST else reversed(j.worker.MASKS))
+
+
+def invocation_execution(member, arm):
+    position = arm_order(member).index(arm) + 1
+    return {"repository": "techrote/neurounner", "run_id": "123", "run_attempt": "1", "job": "train",
+        "member_id": member, "paired_job_nonce": "fixture-job-" + member, "source_head": "a" * 40,
+        "runner_name": "fixture-runner-" + member, "boot_id": "fixture-boot-" + member,
+        "hostname": "fixture-host-" + member, **execution_result()["runner"],
+        "packages": execution_result()["packages"], "process_id": 1000 + position,
+        "started_at_utc": f"2026-11-19T00:00:0{position}+00:00", "started_monotonic_ns": position * 200 - 100}
+
+
+def fresh_provenance(member, arm):
+    execution = invocation_execution(member, arm)
+    start = {"member_id": member, "mask_mode": arm, "arm_order": arm_order(member),
+        "arm_position": arm_order(member).index(arm) + 1, "resume_requested": False,
+        "source_kind": "fresh", "start_step": 0, "execution": execution}
+    finish = {"status": "completed", "end_step": 120, "finished_monotonic_ns": execution["started_monotonic_ns"] + 100}
+    return {"member_id": member, "mask_mode": arm, "invocations": [
+        {"ordinal": 1, "start": start, "finish": finish, "checkpoints": [], "retained_end_step": 120}],
+        "optimizer_segments": [{"invocation_ordinal": 1, "start_step": 0, "end_step": 120,
+            "steps": 120, "execution": execution}], "unattributed_optimizer_segments": [],
+        "zero_step_copies": [], "unfinished_invocations": [], "resume_invocations": [],
+        "retained_optimizer_steps": 120, "files": {}}
+
+
 def write_archive(kw, answer):
     out, label = kw["outdir"], kw["label"]
     write_once(out / f"{label}-request.json", {"provider": "nvidia", "role": kw["role"], "payload": kw["payload"]})
@@ -69,7 +97,9 @@ def synthetic_population():
         workers[(member, stage)] = {"rows": rows, "result": {"adapter_directory_sha256": "a" * 64, "adapter_weight_fingerprint": fingerprint()}}
         if stage in ("D_REPRODUCED", "D_CORRECTED"):
             result, historical = execution_result(), execution_result()
+            arm = next(arm for arm, arm_stage in j.ARM_STAGE.items() if arm_stage == stage)
             training[(member, stage)] = {"result": result, "original_D_result": historical,
+                "paired_arm_order": arm_order(member), "execution_provenance": fresh_provenance(member, arm),
                 "receipt": {"adapter_directory_sha256": "a" * 64, "adapter_weight_fingerprint": fingerprint(),
                     "training_result_sha256": j.sha256_value(result), "original_D_reference_result_sha256": j.sha256_value(historical)}}
     sp, mapping, source_rows = [], {}, []
@@ -237,6 +267,25 @@ class BlindPlanAndAggregationTests(unittest.TestCase):
         self.assertFalse(result["worker"]["working_effect_signal"])
         self.assertEqual(result["worker"]["classification"], "member_harm_exceeds_limit")
 
+    def test_exact_half_point_threshold_uses_integer_case_deltas(self):
+        for sums, expected in (((1, 1, 1, 2, 2, 29), True), ((1, 1, 1, 2, 2, 28), False)):
+            with self.subTest(member_sums=sums):
+                ratings = self.ratings()
+                for member, total in zip(j.worker.PANEL, sums):
+                    for ident in sorted(k for k, value in self.mapping["primary"].items() if value["member_id"] == member):
+                        delta = min(total, 4)
+                        total -= delta
+                        corrected = "A" if self.mapping["primary"][ident]["A"] == "D_CORRECTED" else "B"
+                        ratings["primary"][ident][corrected] = worker_score(delta)
+                        ratings["primary"][ident]["B" if corrected == "A" else "A"] = worker_score(0)
+                    self.assertEqual(total, 0)
+                worker = self.aggregate(ratings)["worker"]
+                self.assertEqual(worker["mean_delta"]["task_relevance"], sum(sums) / 72)
+                self.assertIs(worker["working_effect_criteria"]["mean_gain"], expected)
+                self.assertIs(worker["working_effect_signal"], expected)
+                self.assertEqual(worker["positive_member_relevance_gains"], 6)
+                self.assertEqual(worker["member_replication_units"], 6)
+
     def test_syntax_gain_alone_is_not_grounded_feedback_success(self):
         result = self.aggregate(self.ratings())
         self.assertEqual(result["sprocket"]["strict_syntax_count_gain"], 18)
@@ -271,7 +320,8 @@ class ExecutionDisclosureTests(unittest.TestCase):
         self.assertEqual(summary["worker"]["original_D_reproduced_exact_responses"], 72)
         report = j.report(summary)
         self.assertIn("only planned algorithmic intervention", report)
-        self.assertIn("Hardware allocation remains uncontrolled", report)
+        self.assertIn("does not guarantee numerical determinism", report)
+        self.assertEqual(summary["worker"]["paired_execution_classifications"], {"fresh_same_job_same_runner": 6})
         self.assertIn("python=3.12.3", report)
         self.assertNotIn("The recorded experimental difference", report)
 
@@ -351,6 +401,106 @@ class ExecutionDisclosureTests(unittest.TestCase):
         self.assertIn("tensor fingerprint was not reproduced", report)
         self.assertIn("agree for 5/6 members", report)
         self.assertIn("11/12 exact Q responses", report)
+
+
+class PairedExecutionProvenanceTests(unittest.TestCase):
+    setUp = BlindPlanAndAggregationTests.setUp
+    ratings = BlindPlanAndAggregationTests.ratings
+    aggregate = BlindPlanAndAggregationTests.aggregate
+
+    def proof(self, member=None):
+        return j.paired_execution_provenance(member or j.worker.PANEL[0], self.training)
+
+    def recovered_copy(self, member, stage):
+        provenance = self.training[(member, stage)]["execution_provenance"]
+        prior = provenance["invocations"][0]
+        invocation = copy.deepcopy(prior)
+        invocation["ordinal"] = 2
+        invocation["start"].update(resume_requested=True, source_kind="complete_copy", start_step=120)
+        invocation["start"]["execution"].update(run_id="456", paired_job_nonce="copy-only-job", boot_id="copy-only-boot")
+        invocation["finish"]["finished_monotonic_ns"] = 900
+        provenance["invocations"].append(invocation)
+        provenance["zero_step_copies"] = [2]
+        provenance["resume_invocations"] = [2]
+        return provenance
+
+    def test_fresh_pairs_prove_same_job_runner_distinct_processes_and_counterbalanced_order(self):
+        first = []
+        for member in j.worker.PANEL:
+            proof = self.proof(member)
+            for key in ("fresh_uninterrupted_pair", "same_job_for_optimizer_segments",
+                "same_runner_instance_for_optimizer_segments", "distinct_fresh_processes", "counterbalanced_order_observed"):
+                self.assertIs(proof[key], True)
+            first.append(proof["predeclared_arm_order"][0])
+            self.assertIs(proof["historical_D_full_execution_provenance_available"], False)
+        self.assertEqual(first.count("historical_token_id_mask"), 3)
+        self.assertEqual(first.count("length_derived_mask"), 3)
+
+    def test_matching_cpu_strings_do_not_establish_fresh_pairing(self):
+        member = j.worker.PANEL[0]
+        for field, value in (("boot_id", "other-boot"), ("paired_job_nonce", "other-job"), ("run_id", None)):
+            with self.subTest(field=field):
+                saved = copy.deepcopy(self.training)
+                provenance = self.training[(member, "D_CORRECTED")]["execution_provenance"]
+                provenance["optimizer_segments"][0]["execution"][field] = value
+                with self.assertRaisesRegex(RuntimeError, "fresh paired arms must share"):
+                    self.proof()
+                self.training = saved
+
+    def test_fresh_pair_requires_distinct_processes_and_predeclared_sequential_order(self):
+        member = j.worker.PANEL[0]
+        provenance = self.training[(member, "D_CORRECTED")]["execution_provenance"]
+        execution = provenance["invocations"][0]["start"]["execution"]
+        execution["process_id"] = 1001
+        with self.assertRaisesRegex(RuntimeError, "distinct recorded processes"):
+            self.proof()
+        execution["process_id"] = 1002
+        execution["started_monotonic_ns"] = 150
+        with self.assertRaisesRegex(RuntimeError, "predeclared sequential order"):
+            self.proof()
+
+    def test_zero_step_copy_on_another_host_does_not_rewrite_optimizer_history(self):
+        member = j.worker.PANEL[0]
+        self.recovered_copy(member, "D_REPRODUCED")
+        proof = self.proof()
+        self.assertFalse(proof["fresh_uninterrupted_pair"])
+        self.assertTrue(proof["same_job_and_runner_for_all_optimizer_segments"])
+        self.assertEqual(proof["classification"], "recovered_same_job_same_runner")
+        arm = proof["arms"]["D_REPRODUCED"]
+        self.assertEqual(arm["zero_step_copies"], [2])
+        self.assertEqual(len(arm["optimizer_segments"]), 1)
+        self.assertEqual(arm["optimizer_segments"][0]["execution"]["run_id"], "123")
+        self.assertIn("later zero-step copies", " ".join(self.aggregate(self.ratings())["worker"]["per_member"][0]["attribution_limitations"]))
+
+    def test_recovered_mixed_job_pair_is_retained_and_qualified_without_score_changes(self):
+        before = self.aggregate(self.ratings())
+        member = j.worker.PANEL[0]
+        self.recovered_copy(member, "D_REPRODUCED")
+        corrected = self.training[(member, "D_CORRECTED")]["execution_provenance"]
+        corrected["optimizer_segments"][0]["execution"].update(run_id="456", boot_id="second-boot", paired_job_nonce="second-job")
+        proof = self.proof()
+        self.assertEqual(proof["classification"], "recovered_mixed_job_or_runner")
+        self.assertFalse(proof["same_job_and_runner_for_all_optimizer_segments"])
+        after = self.aggregate(self.ratings())
+        self.assertEqual(len(after["worker"]["per_member"]), 6)
+        for key in ("mean_delta", "working_effect_criteria", "working_effect_signal", "member_replication_units"):
+            self.assertEqual(after["worker"][key], before["worker"][key])
+        self.assertIn("cross recorded jobs or runner instances", j.report(after))
+
+    def test_interrupted_unattributed_steps_cannot_establish_full_pairing(self):
+        member = j.worker.PANEL[0]
+        provenance = self.training[(member, "D_REPRODUCED")]["execution_provenance"]
+        provenance["invocations"][0]["finish"] = None
+        provenance["invocations"][0]["retained_end_step"] = 90
+        provenance["optimizer_segments"][0].update(end_step=90, steps=90)
+        provenance["unfinished_invocations"] = [1]
+        provenance["unattributed_optimizer_segments"] = [{"start_step": 90, "end_step": 120,
+            "steps": 30, "reason": "interrupted provenance write"}]
+        proof = self.proof()
+        self.assertFalse(proof["fresh_uninterrupted_pair"])
+        self.assertIsNone(proof["same_job_and_runner_for_all_optimizer_segments"])
+        self.assertEqual(proof["classification"], "recovered_incomplete_execution_provenance")
+        self.assertIn("provenance unknown", j.report(self.aggregate(self.ratings())))
 
 
 class BudgetAndReplayTests(unittest.TestCase):
@@ -469,13 +619,16 @@ class NativeSourceTests(unittest.TestCase):
                     new_Q_reserve_used_for_training=False, original_E_F_suite_used_for_training=False,
                     post_training_legacy_T_generation_omitted_in_both_arms=True)
                 write_once(out / "training-identity.json", identity)
+                with patch.object(j.worker, "training_execution_metadata", return_value=invocation_execution(member, arm)):
+                    invocation = j.worker.TrainingInvocation(out, wcfg, member, arm, resumed=False, complete=False)
                 engine_sha = j.sha256_file(j.ROOT / "scripts/village_001d_preference_train.py")
                 adapter = hashlib.sha256((member + stage).encode()).hexdigest()
                 result = {"experiment": "VILLAGE-001F", "stage": "matched-mask-preference-continuation",
                     "member_id": member, "member_seed": member_meta["seed"], "mask_mode": arm,
                     "parent_adapter_sha256": parent, "preference_dataset_sha256": j.sha256_file(j.worker.pair_path(member)),
                     "training_config": pref["preference_training"], "training_identity_sha256": j.sha256_file(out / "training-identity.json"),
-                    "new_Q_reserve_used_for_training": False, "training": {"optimizer_steps": 120, "pair_count": 60},
+                    "new_Q_reserve_used_for_training": False, "training": {"optimizer_steps": 120, "pair_count": 60,
+                        **{key: [float(index) / 100 for index in range(120)] for key in j.worker.TRACE_KEYS}},
                     "engine_source_sha256": engine_sha, "adapter": {"sha256": adapter},
                     **execution_result(), "evaluation": {"responses": []}}
                 write_once(out / "result.json", result)
@@ -486,6 +639,8 @@ class NativeSourceTests(unittest.TestCase):
                     "engine_source_sha256": engine_sha, "adapter_directory_sha256": adapter,
                     "original_D_reference_result_sha256": j.sha256_file(j.ROOT / "experiments/village-001/preference-evidence/results" / f"{member}.json"),
                     "adapter_weight_fingerprint": fingerprint("a" if stage == "D_REPRODUCED" else "b")})
+                with patch.object(j.worker.time, "monotonic_ns", return_value=invocation.start["execution"]["started_monotonic_ns"] + 100):
+                    invocation.finish("completed")
         training, _ = j.load_training(train_root, cfg, wcfg, campaign, pref)
         for member, stage in [(m, s) for m in wcfg["members"] for s in j.STAGES] + [(None, "BASE")]:
             if stage == "BASE":
@@ -519,6 +674,11 @@ class NativeSourceTests(unittest.TestCase):
             self.assertEqual(len(workers), 25)
             self.assertEqual(sum(len(lane["rows"]) for lane in workers.values()), 300)
             self.assertFalse(any(path.endswith((".bin", ".safetensors")) for path in sources))
+            _, training_sources = j.load_training(train_root, cfg, wcfg, campaign, pref)
+            self.assertEqual(len([key for key in training_sources if "/training-invocations/" in key]), 24)
+            self.assertEqual(len([key for key in training_sources if key.startswith("training-references/")]), 6)
+            for member in wcfg["members"]:
+                self.assertTrue(j.paired_execution_provenance(member, training)["fresh_uninterrupted_pair"])
             lane = worker_root / "D_CORRECTED" / wcfg["members"][0] / "result.json"
             terminal = j.read(lane)
             terminal["adapter_weight_fingerprint"] = fingerprint("c")
@@ -541,8 +701,13 @@ class NativeSourceTests(unittest.TestCase):
 
     def test_execution_metadata_remains_bound_to_validated_result_bytes(self):
         with tempfile.TemporaryDirectory() as tmp:
-            cfg, wcfg, _, campaign, pref, train_root, _, _ = self.frozen_worker_fixture(Path(tmp))
+            cfg, wcfg, _, campaign, pref, train_root, _, training = self.frozen_worker_fixture(Path(tmp))
             member = wcfg["members"][0]
+            _, sources = j.load_training(train_root, cfg, wcfg, campaign, pref)
+            disclosure = j.training_execution_disclosure(member, training)
+            original = disclosure["records"]["D_ORIGINAL"]
+            self.assertEqual(original["result_sha256"], j.sha256_file(sources[original["evidence_path"].removeprefix("sources/")]))
+            self.assertEqual(original["recorded_result_host"], j.worker.source_result(member, "D")["runner"])
             lane = train_root / member / "length_derived_mask"
             result = j.read(lane / "result.json")
             result["runner"]["cpu_model"] = "A different recorded CPU"
@@ -552,14 +717,23 @@ class NativeSourceTests(unittest.TestCase):
             receipt = j.read(lane / "training.json")
             receipt["training_result_sha256"] = j.sha256_file(lane / "result.json")
             (lane / "training.json").write_bytes(j.json_bytes(receipt))
-            training, sources = j.load_training(train_root, cfg, wcfg, campaign, pref)
-            disclosure = j.training_execution_disclosure(member, training)
-            self.assertFalse(disclosure["paired_arms"]["cpu_model_match"])
-            self.assertEqual(disclosure["records"]["D_CORRECTED"]["result_sha256"], receipt["training_result_sha256"])
-            original = disclosure["records"]["D_ORIGINAL"]
-            self.assertEqual(original["result_sha256"], j.sha256_file(sources[original["evidence_path"].removeprefix("sources/")]))
-            self.assertEqual(original["recorded_result_host"], j.worker.source_result(member, "D")["runner"])
-            self.assertEqual(len([key for key in sources if key.startswith("training-references/")]), 6)
+            with self.assertRaisesRegex(RuntimeError, "completed invocation differs from immutable training receipts"):
+                j.load_training(train_root, cfg, wcfg, campaign, pref)
+
+    def test_native_training_provenance_cannot_be_dropped_or_relabelled(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg, wcfg, _, campaign, pref, train_root, _, _ = self.frozen_worker_fixture(Path(tmp))
+            lane = train_root / wcfg["members"][0] / "length_derived_mask"
+            start = lane / "training-invocations/invocation-0001-start.json"
+            original = start.read_bytes()
+            start.unlink()
+            with self.assertRaisesRegex(RuntimeError, "lacks its immutable start"):
+                j.load_training(train_root, cfg, wcfg, campaign, pref)
+            value = json.loads(original)
+            value["execution"]["paired_job_nonce"] = "a different job"
+            start.write_bytes(j.json_bytes(value))
+            with self.assertRaisesRegex(RuntimeError, "training completion provenance identity changed"):
+                j.load_training(train_root, cfg, wcfg, campaign, pref)
 
     def sprocket_fixture(self, root):
         d = j.sprocket
