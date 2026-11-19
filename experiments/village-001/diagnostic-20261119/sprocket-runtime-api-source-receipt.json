@@ -1,0 +1,160 @@
+{
+  "conclusion": "The existing driver requests the native custody fields exposed by this exact pinned server. No additional return_prompt flag or API code change is required.",
+  "execution": {
+    "model_downloads": 0,
+    "model_generations": 0,
+    "optimizer_steps": 0,
+    "provider_requests": 0
+  },
+  "experiment": "VILLAGE-001F",
+  "limits": "Source-level API verification only. Actual prompts, token sequences, sampling settings and context truncation remain checked by the driver during execution.",
+  "primary_source_files": {
+    "common/common.cpp": {
+      "bytes": 84133,
+      "sha256": "94a73f4fc13735d0f4c575ae03c339c794493b24ccde72baed34c5b349ad1e41",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/common/common.cpp"
+    },
+    "tools/server/server-common.cpp": {
+      "bytes": 77540,
+      "sha256": "c95386de0c0c2c0fb3b609283aa836f66a8756d3a6cacc8958c66af696ee0d0b",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-common.cpp"
+    },
+    "tools/server/server-context.cpp": {
+      "bytes": 297958,
+      "sha256": "dff696ee775fcf0cba56a2c7d99e73c3a7d955011730b43896797b16d8aa824c",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-context.cpp"
+    },
+    "tools/server/server-schema.cpp": {
+      "bytes": 31483,
+      "sha256": "ea1a97eabc480df134178f52301b845e8403cffd17a2096a484b9faa2be1c31a",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-schema.cpp"
+    },
+    "tools/server/server-task.cpp": {
+      "bytes": 68683,
+      "sha256": "d7901c9609a6fe8c859a3777d45a37148e335bb73984313ba08a339d558382ef",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-task.cpp"
+    },
+    "tools/server/server.cpp": {
+      "bytes": 24859,
+      "sha256": "fd923203db4014dd83d543a3f04db54d29083db9bbbd8c1db16a1610a28fa23f",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server.cpp"
+    }
+  },
+  "review_method": "Exact upstream file-byte comparison at the pinned commit, followed by inspection of request parsing, route registration, generation, and response serialization; no runtime/model execution.",
+  "reviewed_driver": {
+    "path": "scripts/village_001f_sprocket_diagnostic.py",
+    "sha256": "a28dec4df14f08d778986abc18d0b0a4519dacdb4b6e1fd7e305cfc5f6a0d7f6"
+  },
+  "runtime": {
+    "binary_archive_sha256": "6ec84fd5ddf5bee393d27384b9b6acb19a35cbac71b0d22b4d73fc727363fcca",
+    "commit": "7894e8b92481a8bb8ffe94f73b656ffe0dd01e10",
+    "repository": "ggml-org/llama.cpp",
+    "tag": "b11852"
+  },
+  "schema": "village-001f-sprocket-native-api-source-review-v1",
+  "tag_resolution": {
+    "observed_object": {
+      "sha": "7894e8b92481a8bb8ffe94f73b656ffe0dd01e10",
+      "type": "commit",
+      "url": "https://api.github.com/repos/ggml-org/llama.cpp/git/commits/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10"
+    },
+    "observed_ref": "refs/tags/b11852",
+    "primary_api_url": "https://api.github.com/repos/ggml-org/llama.cpp/git/ref/tags/b11852"
+  },
+  "verified_semantics": {
+    "actual_prompt": {
+      "assigned_from": "task input tokens detokenized with special tokens preserved",
+      "response_field": "__verbose.prompt",
+      "return_prompt_flag_required": false,
+      "sources": [
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-context.cpp#L2357-L2396",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-task.cpp#L332-L354",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/common/common.cpp#L1891-L1904"
+      ]
+    },
+    "generated_tokens_and_counts": {
+      "count_field": "usage.completion_tokens",
+      "native_count_source": "slot.stats.n_gen",
+      "sampled_eog_included_in_both_ids_and_count": true,
+      "sources": [
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-context.cpp#L2091-L2101",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-context.cpp#L4768-L4798",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-context.cpp#L2370-L2385",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-task.cpp#L332-L364"
+      ],
+      "token_id_recorded_before_stop_checks": true,
+      "token_ids_field": "__verbose.tokens"
+    },
+    "observation_flags": {
+      "accepted_by_request_schema": true,
+      "native_response_field": "__verbose",
+      "preserved_by_openai_chat_parser": true,
+      "request": {
+        "return_tokens": true,
+        "stream": false,
+        "verbose": true
+      },
+      "sources": [
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-schema.cpp#L17-L35",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-common.cpp#L1540-L1548",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-task.cpp#L443-L446"
+      ]
+    },
+    "sampling_receipt": {
+      "response_field": "__verbose.generation_settings",
+      "sources": [
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-context.cpp#L2412-L2417",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-task.cpp#L95-L130"
+      ],
+      "verified_fields": [
+        "seed",
+        "n_predict",
+        "temperature",
+        "top_p"
+      ]
+    },
+    "template_and_count_preflight": {
+      "add_generation_prompt_default": true,
+      "count_and_generation_tokenization": {
+        "add_special": true,
+        "parse_special": true
+      },
+      "count_response_field": "input_tokens",
+      "count_route": "/v1/chat/completions/input_tokens",
+      "generation_route": "/v1/chat/completions",
+      "registered_routes_verified": true,
+      "shared_chat_parser": "oaicompat_chat_params_parse",
+      "sources": [
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server.cpp#L290-L314",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-common.cpp#L1435-L1448",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-context.cpp#L5882-L5904",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-context.cpp#L6221-L6237",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-context.cpp#L5231-L5238",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-context.cpp#L6998-L7047"
+      ],
+      "template_route": "/apply-template"
+    },
+    "tokenizer_custody": {
+      "actual_detokenized_prompt": {
+        "add_special": false,
+        "parse_special": true
+      },
+      "default_with_pieces": false,
+      "driver_retains_exact_token_equality_assertion": true,
+      "input_field": "content",
+      "preflight_rendered_prompt": {
+        "add_special": true,
+        "parse_special": true
+      },
+      "reason_for_second_add_special_false": "The native detokenized prompt already preserves any automatically added special tokens; do not add them a second time.",
+      "response_field": "tokens",
+      "route": "/tokenize",
+      "sources": [
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-context.cpp#L6249-L6287",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-common.cpp#L986-L1020",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/tools/server/server-common.cpp#L805-L813",
+        "https://github.com/ggml-org/llama.cpp/blob/7894e8b92481a8bb8ffe94f73b656ffe0dd01e10/common/common.cpp#L1891-L1904"
+      ]
+    }
+  }
+}

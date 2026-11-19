@@ -109,3 +109,9 @@ Issue #14 is the terminal qualification stage. It consumes the immutable 36-memb
 
 Authoritative outputs are promoted under `experiments/village-001/final-evidence/`, including raw provider transcripts, `confusion-matrices.json`, `per-member-verdicts.json`, population/ecology reports, `model-registry.json`, dataset provenance and hashes.
 
+
+## VILLAGE-001F matched mask and feedback diagnostics
+
+**Completed on 19 November 2026; working-effect criteria NOT MET.** The [complete diagnostic interpretation](diagnostic-20261119/review/COMPLETION.md) and [independent acceptance](diagnostic-20261119/review/final-acceptance.json) retain six matched member pairs, 1,440 optimizer steps, 300 new Q responses, 36 native Sprocket outputs and complete raw judging evidence. Corrected and reproduced D both average 1.75/4 relevance: exact gain zero, three positive member means, worst member −0.25. Both Sprocket prompts produce 0/18 structured critiques; the compact prompt has no structure-required grounded/actionable gain.
+
+The [input release](https://github.com/techrote/neurounner/releases/tag/village-001f-pilot-inputs-20261119) publishes all twelve new adapters separately from historical D. The [final release](https://github.com/techrote/neurounner/releases/tag/village-001f-mask-sprocket-20261119) preserves all results, with 53 logical provider requests against the 114 ceiling. Native pairing, numerical reproduction, fixed-forward mechanisms, identical-text rating variability and contextual token-limit qualifications remain visible. This bounded diagnostic does not qualify a replacement village; epic #9 remains open.

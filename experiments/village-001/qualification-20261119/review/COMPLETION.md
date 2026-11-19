@@ -66,3 +66,7 @@ The copied publication audit intentionally predates the documentation merge and 
 ## Continuation
 
 [Stage F #256](https://github.com/techrote/neurounner/issues/256) is the bounded next experiment: matched historical versus length-derived attention masks for six fixed members, plus a native Sprocket feedback-prompt diagnostic. Its panel, data, criteria and budgets were fixed before these E outcomes. The observed D attention-mask defect is a concrete mechanism to test; E does not establish it as the cause of sibling confusion or weak ecology. F will bind the accepted E main commit and summary before execution and will retain the full negative E result. A small causal pilot does not automatically qualify or retrain a 36-member replacement population.
+
+## Subsequent main acceptance
+
+The separate [fresh-main readback](main-readback.json) passed at 498cbfb8caed6e962ee4dd7af951aa34281352e6 with both main and documentation requirements enabled; closure_ready is true. Its SHA-256 is 4c66506e61c03e10f4aa5838696cb97f83c89e00b58874120774cd52afbcc507. Issue #14 is closed completed, while epic #9 remains open for the unmet usable-village objective. The exact [independent acceptance code](independent_stage_e_acceptance.py) and separately recomputed [scientific counts](scientific-counts.json) are retained here. This later receipt supplements the unchanged publication audit rather than rewriting its earlier state.

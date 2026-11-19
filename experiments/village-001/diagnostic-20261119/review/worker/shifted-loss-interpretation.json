@@ -1,0 +1,53 @@
+{
+  "frozen_loss_source": {
+    "end_line": 134,
+    "function": "assistant_mean_logps",
+    "logits": "out.logits[:, :-1, :]",
+    "path": "scripts/village_001d_preference_train.py",
+    "primary_source_url": "https://github.com/techrote/neurounner/blob/78a72238a8403c4cddb9e8651242a89e17ee21be/scripts/village_001d_preference_train.py#L121-L134",
+    "sha256": "b736d155444fcc3c5cdb1c8807d498c0b0c07a69862d8250129f7d03cae325de",
+    "source_commit": "78a72238a8403c4cddb9e8651242a89e17ee21be",
+    "start_line": 121,
+    "supervision_mask": "labels[:, 1:] != -100",
+    "targets": "input_ids[:, 1:]"
+  },
+  "input_publication_commit": "783a73ca7c8e97c3e03ef4e56fb5a5b125d58785",
+  "input_release_tag": "village-001f-pilot-inputs-20261119",
+  "limits": "This is a source-and-native-token derivation, not an isolated boundary-position forward ablation. The planned recorded fixed-weight forward differences change the complete historical-versus-length attention mask and empirically measure the combined effect, without assigning a separate causal contribution to each boundary.",
+  "model_calls": 0,
+  "native_audit": {
+    "bytes": 5574995,
+    "file": "token-mask-audit.json",
+    "repository_path": "experiments/village-001/diagnostic-20261119/inputs/token-audit/token-mask-audit.json",
+    "sha256": "3566f8a5279ba5acf367f019fbdb23c32cbad611a5942e8b159d655f1d8c82f5"
+  },
+  "observed_counts": {
+    "assistant_boundary_distance_from_sequence_end": {
+      "1": 720
+    },
+    "complete_sequences": 720,
+    "masked_assistant_boundaries": 720,
+    "masked_prompt_boundaries": 1440,
+    "prompt_boundary_count_per_sequence": {
+      "2": 720
+    },
+    "sequences_with_assistant_boundary_then_exactly_token_198": 720,
+    "sequences_with_supervised_assistant_boundary_and_trailing_token_198": 720,
+    "token_198_native_rendering": "newline",
+    "total_masked_input_positions": 2160
+  },
+  "prior_interpretation_sha256": "ebc51970afadb8d3be71176b1bad33a30b0345cef714d9b353789738080acfc8",
+  "provider_calls": 0,
+  "publication_status": "byte_identical_native_input_verified_at_783a73ca",
+  "raw_evidence_modified": false,
+  "schema": "village-001f-published-native-shifted-loss-interpretation-v1",
+  "shifted_prediction_interpretation": [
+    "Each logit at sequence position t predicts the input token at t+1; labels at t+1 select whether that prediction is included in the sequence mean.",
+    "The two earlier prompt im_end positions can supply attention context to assistant predictions.",
+    "The assistant im_end target is predicted from the preceding sequence position; changing attention at that boundary cannot affect its own prediction through that same future input position.",
+    "All actual assistant im_end input positions are penultimate, not final. The logit at that position predicts a supervised trailing newline (token 198), so correcting its attention mask can affect that final prediction.",
+    "An attention mask changes key/value availability; it does not delete the token embedding, every residual path, or any assistant target label. The im_end and trailing newline remain supervised in both arms.",
+    "The 2160 count describes masked input positions. These positions have different locations and downstream supervised contexts; it is not a count of 2160 equally influential loss contributions."
+  ],
+  "tokenizer_calls": 0
+}

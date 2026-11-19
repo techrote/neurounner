@@ -1,0 +1,202 @@
+{
+  "all_36_archived_D_training_pair_metrics_under_historical_mask": {
+    "mean_chosen_logp": {
+      "after": -2.1335942736102473,
+      "before": -2.9525547014066467
+    },
+    "mean_margin_nats_per_token": {
+      "after": 3.1572940451679408,
+      "before": -0.7802191544048213
+    },
+    "mean_rejected_logp": {
+      "after": -5.2908883187781885,
+      "before": -2.1723355470018255
+    },
+    "preference_accuracy": {
+      "after": 0.9967592592592592,
+      "before": 0.3476851851851852
+    }
+  },
+  "confirmed_defect": {
+    "SFT_contrast": "Stage C encodes each unpadded sequence with an all-ones attention mask.",
+    "actual_native_token_counts_and_positions": "To be emitted by token-audit; not yet executed.",
+    "causal_quality_effect": "Not measured; source defect alone does not establish how much task quality it caused.",
+    "expected_minimum_real_boundary_positions_masked_in_one_tokenizer_pass": 2160,
+    "mechanism": "Token ID2 is both padding and a real chat-turn boundary. Equality-based attention zeros all real system/user/assistant im_end positions, not just appended batch padding.",
+    "pilot_tokenizer_audit_expected_sequences": 720,
+    "rule": "attention = (ids != pad_id).long()",
+    "scope": "D preference training and before/after preference log-probability evaluation both use this faulty pair mask.",
+    "source": "scripts/village_001d_preference_train.py:pair_batch",
+    "template_minimum_real_im_end_per_sequence": 3
+  },
+  "experiment": "VILLAGE-001F",
+  "interpretation": "Preference-accuracy improvement is measured on training pairs under the historical mask, and is not an independent task-quality result. Most of the mean margin increase accompanies lower rejected-response likelihood; the matched pilot will measure response quality separately.",
+  "next_experiment": {
+    "arms": [
+      "historical_token_id_mask",
+      "length_derived_mask"
+    ],
+    "frozen_E_sources_modified": false,
+    "members": [
+      "V-G01-A",
+      "V-G03-B",
+      "V-G05-C",
+      "V-G07-A",
+      "V-G09-B",
+      "V-G11-C"
+    ],
+    "new_Q_reserve_sha256": "126ee2a159db08d4cdf6452d272af9f921a22f28f6298bd8f8c59b165d53ee9b",
+    "only_optimization_difference": "Length-derived attention preserves real boundary tokens while masking only appended padding.",
+    "planned_new_responses": 300,
+    "planned_optimizer_steps": 1440,
+    "same_C_parents": true,
+    "same_optimizer_steps_per_lane": 120,
+    "same_original_pairs_per_member": 60
+  },
+  "other_source_checks": [
+    {
+      "check": "Assistant loss shifting",
+      "finding": "logits[:, :-1] and input_ids[:, 1:] match, with labels[:, 1:] selecting assistant targets. No off-by-one defect found in that shift."
+    },
+    {
+      "check": "Training truncation",
+      "finding": "C and D raise when tokenized sequences exceed512; they do not silently truncate retained training inputs."
+    },
+    {
+      "check": "Templates and model revision",
+      "finding": "Both stages use tokenizer.apply_chat_template and the same pinned base revision. No wrong-template claim is supported by the inspected source; full native token custody is added by the pilot."
+    },
+    {
+      "check": "Optimization objective",
+      "finding": "D uses reference-free logistic margin plus chosen NLL anchor with the frozen recipe. Lack of a reference-policy KL term is a design property, not a newly established implementation bug."
+    },
+    {
+      "check": "Resume baseline metric",
+      "finding": "On a partial-training resume, D computes preference_before at the resumed checkpoint rather than original C. This is a latent reporting limitation;0of36 archived original D members report resumed=true, so it does not explain the recovered original population. F receipt explicitly labels this on any future resumed pilot lane."
+    },
+    {
+      "check": "Evaluation exposure",
+      "finding": "All existing T and P inputs occur in D preference pairs. Their scoring is a training diagnostic. New Q prompts are frozen before any pilot optimization, exact-collision checked against training/T/P/E-F, and never training targets."
+    }
+  ],
+  "predeclared_panel_archived_observations": [
+    {
+      "C_parent_matches_D": true,
+      "historical_T_mean_generated_tokens": {
+        "C": 93.91666666666667,
+        "D": 57.375
+      },
+      "historical_T_task_relevance": {
+        "C": 1,
+        "D": 1
+      },
+      "member_id": "V-G01-A",
+      "original_D_resumed": false,
+      "source_hashes": {
+        "experiments/village-001/preference-evidence/before-after/V-G01-A.json": "e94234e191d3df4899878c710ef5ccd9f9996519ecbb1fd6c706dd8af5c8afa0",
+        "experiments/village-001/preference-evidence/results/V-G01-A.json": "e565f46e3455c565bc3f1e0ab1c4efa70d25a1927bf22860fe4e3726bc0c4437",
+        "experiments/village-001/sft-evidence/results/V-G01-A.json": "4fa18b6ec3f285756fc603c49f8ec7783450a871f1756f985df52ec689d351de"
+      }
+    },
+    {
+      "C_parent_matches_D": true,
+      "historical_T_mean_generated_tokens": {
+        "C": 67.41666666666667,
+        "D": 35.541666666666664
+      },
+      "historical_T_task_relevance": {
+        "C": 0.9583333333333334,
+        "D": 1
+      },
+      "member_id": "V-G03-B",
+      "original_D_resumed": false,
+      "source_hashes": {
+        "experiments/village-001/preference-evidence/before-after/V-G03-B.json": "36e1db450390e1f851ddb874f6d715e1fb499b7c9d67192f395e3195e777c48a",
+        "experiments/village-001/preference-evidence/results/V-G03-B.json": "2969611e5d03aac65c1446b0cec47bb970e811233096a6255f76b91a71122837",
+        "experiments/village-001/sft-evidence/results/V-G03-B.json": "15700122f7753d33d355836b0ed19f647ae29aae86521932ff258b170b2c9e1e"
+      }
+    },
+    {
+      "C_parent_matches_D": true,
+      "historical_T_mean_generated_tokens": {
+        "C": 111.375,
+        "D": 40.75
+      },
+      "historical_T_task_relevance": {
+        "C": 0.9166666666666666,
+        "D": 1
+      },
+      "member_id": "V-G05-C",
+      "original_D_resumed": false,
+      "source_hashes": {
+        "experiments/village-001/preference-evidence/before-after/V-G05-C.json": "57005dbd4200b8aa4b6b6e8ac07e03d4e3bbccb141258502e1e79d9ac32047c8",
+        "experiments/village-001/preference-evidence/results/V-G05-C.json": "469db7c2de770d48c6ea7fe7352a25cf1addae86e6b6812e83a53c59f1295cf6",
+        "experiments/village-001/sft-evidence/results/V-G05-C.json": "e3d1692e0368e8fac649b6164c4cba2035e4837e31ef2d29b5ac630f61bd5ba8"
+      }
+    },
+    {
+      "C_parent_matches_D": true,
+      "historical_T_mean_generated_tokens": {
+        "C": 83.04166666666667,
+        "D": 41.291666666666664
+      },
+      "historical_T_task_relevance": {
+        "C": 1,
+        "D": 1
+      },
+      "member_id": "V-G07-A",
+      "original_D_resumed": false,
+      "source_hashes": {
+        "experiments/village-001/preference-evidence/before-after/V-G07-A.json": "f4e3fc12061b14dd02885657a644fbccf251ee8b2b73e0427a733ee0a7ebd883",
+        "experiments/village-001/preference-evidence/results/V-G07-A.json": "bcd27d4559f3eb2c45b07aafa5f4263d92449b8b962a91cc53f773b387411cda",
+        "experiments/village-001/sft-evidence/results/V-G07-A.json": "c4d05854d42dd7af005616aebc03a41e764447e8127fc0b829d373c414d6d028"
+      }
+    },
+    {
+      "C_parent_matches_D": true,
+      "historical_T_mean_generated_tokens": {
+        "C": 64.08333333333333,
+        "D": 45.125
+      },
+      "historical_T_task_relevance": {
+        "C": 1,
+        "D": 1
+      },
+      "member_id": "V-G09-B",
+      "original_D_resumed": false,
+      "source_hashes": {
+        "experiments/village-001/preference-evidence/before-after/V-G09-B.json": "0b911171a81d086251d04b1d0968a311a232c631161fff753bba446bf9b9e2bf",
+        "experiments/village-001/preference-evidence/results/V-G09-B.json": "cc6d0cfe9b8fa146c166b0175724913537343c11a079563ee5256d9ca8988cba",
+        "experiments/village-001/sft-evidence/results/V-G09-B.json": "f59deefcdd44bbae39d7d625481ea8b30e56a34976f48aa4f17e01946912a8b1"
+      }
+    },
+    {
+      "C_parent_matches_D": true,
+      "historical_T_mean_generated_tokens": {
+        "C": 55.541666666666664,
+        "D": 34.708333333333336
+      },
+      "historical_T_task_relevance": {
+        "C": 1,
+        "D": 1
+      },
+      "member_id": "V-G11-C",
+      "original_D_resumed": false,
+      "source_hashes": {
+        "experiments/village-001/preference-evidence/before-after/V-G11-C.json": "f11689d50ae2fa457121f50aead551edf6f4364ae07b67be31908d07542225e7",
+        "experiments/village-001/preference-evidence/results/V-G11-C.json": "5e2acc5d37b7f9044b6c3c4145727adcb9ef3fb452d332b33b2c8d4cb87951a3",
+        "experiments/village-001/sft-evidence/results/V-G11-C.json": "8d2f5175cd72460217f2cca2dc01cdfb9e25345e52f6b4d4f14c4696c2952a7f"
+      }
+    }
+  ],
+  "primary_source": {
+    "eos_token": "<|im_end|>",
+    "local_file": "worker-source-tokenizer-config.json",
+    "pad_token": "<|im_end|>",
+    "sha256": "4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df",
+    "token_id": 2,
+    "url": "https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct/raw/12fd25f77366fa6b3b4b768ec3050bf629380bac/tokenizer_config.json"
+  },
+  "schema": "village-001f-worker-source-audit-v1",
+  "state": "source_and_archived_data_audit_only; no tokenizer execution, model inference, provider calls or optimization performed"
+}
