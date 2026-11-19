@@ -2,6 +2,12 @@
 
 This execution follows accepted Stage D, merged in PR #254 at b3d98688814a720e6b4902887a911540c3be736e and independently read back from main before issue #13 closed. The complete 36-member D population is fixed; weak or failed members remain in every evaluation.
 
+## Completed experiment
+
+Successful [run 44459799532](https://github.com/techrote/neurounner/actions/runs/44459799532) published the complete [qualification release](https://github.com/techrote/neurounner/releases/tag/village-001e-final-20261119) at commit 869aef679144a655dbf301aafc63ebb4fad36485. The independent publication audit reproduced all 48 provider lanes and the strict assembly, verified all eight release assets and retained every original/recovery source. Final spending is 860 logical requests / 862 transport launches, within the 1,059 allocation and original 1,104 ceiling; E adds no optimizer steps.
+
+**The usable-village gate fails:** behavioral lineage is 222/864, conditioned sibling identification is 310/864, raw genericness is 1.7523 versus contemporaneous BASE 2.1250, and 14/36 members pass all individual checks. All 36 meet raw relevance/genericness and D maturation minima; recognition failures prevent individual/population acceptance. The complete [readback and interpretation](review/COMPLETION.md), [ecology interpretation](review/ECOLOGY_INTERPRETATION.md) and [confusion figure](review/village-001e-confusion.svg) preserve these distinctions. The experiment is complete with its negative qualification outcome; main/documentation readback remains a separate closure step recorded after integration.
+
 ## Frozen evidence and recipe
 
 The generated final suite is frozen at SHA-256 b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da. It has 24 scenarios, six families, and zero exact collisions against 3,383 training/diagnostic inputs. Its seed derives from the exact D summary, D adapter-release manifest and original final-suite recipe. Configuration differs from the original only in the frozen suite path, accepted D release tag and isolated E release tag. No scientific gate, model, inference recipe or training input changes.

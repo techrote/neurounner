@@ -69,6 +69,8 @@ The workflow auto-starts only when the durable VILLAGE-001B dataset manifest/mem
 
 Issue #13 feeds each provisional SFT villager back through Sprocket and then applies the proven PERSONA-002 preference continuation objective.
 
+**Completed and independently read back.** The [accepted D report](preference-evidence/REPORT.md), [acceptance record](recovery-20261118/review/stage-d-acceptance.json) and [published readback](recovery-20261118/review/published-readback.json) retain all 36 terminal members and the accepted [adapter release manifest](preference-evidence/adapter-release.json). All 36 passed the frozen relative admission gate, which permits Stage E evaluation and does not establish a usable village. **0/3,456 Sprocket feedback records were schema-valid**; every raw reaction was preserved and the preference pairs were independently curated. Individual metric declines and failed provider attempts remain in the evidence.
+
 Resource flow:
 
 1. **36 local feedback lanes, max 12 parallel.** Each pinned Sprocket instance reacts three times to the member's 24 common held-out responses plus eight held-out cross-sibling member probes: 96 raw reactions/member, 3,456 total.
@@ -88,20 +90,22 @@ Durable outputs:
 - raw NVIDIA pair evidence: `datasets/village-001/provider/preference/`
 - curation records: `datasets/village-001/preference-quality/`
 - population evidence: `experiments/village-001/preference-evidence/`
-- matured adapter release: `village-001-preference-v1`
+- matured adapter release: [`village-001d-recovery-40613393744-20261118`](https://github.com/techrote/neurounner/releases/tag/village-001d-recovery-40613393744-20261118)
 
 ## VILLAGE-001E final tournament and village ecology
 
-Issue #14 is the terminal qualification stage. It consumes the immutable 36-member `village-001-preference-v1` population and does not retrain or replace failed members.
+Issue #14 is the terminal qualification stage. It consumes the immutable 36-member `village-001d-recovery-40613393744-20261118` population recorded in the accepted D adapter manifest and does not retrain or replace failed members.
+
+**Completed on 19 November 2026; usable-village verdict FAIL.** The [published final report](final-evidence/REPORT.md) and [independent readback/interpretation](qualification-20261119/review/COMPLETION.md) retain 888 fresh responses and 180 ecology turns. Behavioral lineage passes at 222/864, but conditioned sibling recognition is 310/864 and only 14/36 members pass every individual criterion. All 36 pass raw relevance, raw genericness and D maturation; the remaining individual failures concern recognition. The [qualification release](https://github.com/techrote/neurounner/releases/tag/village-001e-final-20261119) retains all evidence and references the unchanged D adapters. [Stage F #256](https://github.com/techrote/neurounner/issues/256) is a distinct bounded diagnostic continuation.
 
 - After preference maturation, all 36 released cartridges plus the untuned BASE answer a fresh `F01`–`F24` suite that was not used for SFT or preference training. Those responses are evaluated twice: raw output and compiler-neutralized behavior summaries.
 - Level 1 is blind 12-way ancestral-lineage identification.
-- Level 2 is a separate blind A/B/C sibling classification with the correct ancestral lineage supplied explicitly; member IDs and true siblings remain hidden.
-- The assembler emits full 12×12 lineage, 3×3 sibling and 36×36 member confusion matrices plus exactly five nearest member confusions for every villager.
-- Population gates are predeclared: behavior-only lineage >= 1/6, sibling-with-correct-lineage >= 5/12, mean raw genericness below the untuned BASE measured on the same fresh `F01`–`F24` suite, and at least 30/36 individual quality passes.
+- Level 2 is a separate blind A/B/C sibling classification with the correct ancestral lineage supplied for every response; member IDs and true siblings remain hidden. Its denominator is all 864 member responses, not the subset with a correct Level 1 lineage prediction.
+- The assembler emits full 12×12 lineage and 3×3 conditioned-sibling matrices. The 36×36 member matrices combine the blind lineage prediction with the separate true-lineage-conditioned sibling prediction; their accuracy measures joint correctness across those two tasks, not an additional unconstrained blind 36-way classification. Exactly five nearest member confusions are retained for every villager.
+- Population gates retain the original literal thresholds: behavior-only lineage accuracy >= `0.1666666667` and conditioned behavior-only sibling accuracy >= `0.4166666667`. Across 864 member responses, these require at least **145/864** and **361/864** correct predictions respectively; substituting exact `1/6` or `5/12` would change the boundary by one hit. The remaining gates require mean raw genericness below the untuned BASE measured on the same fresh `F01`–`F24` suite and at least 30/36 individual quality passes.
 - Ecology uses 12 deterministic same-lineage pairs and 12 cross-lineage three-agent groups for three rounds, with opaque handles and no prompt-time member/persona descriptions.
 - Ecology records differentiation, generic convergence, sharing/hoarding, conflict persistence/repair, cross-lineage contamination, dominance/deference and outcome progress.
-- Failed or ambiguous villagers remain in evidence and in the final model registry.
+- Every failed or ambiguous villager remains in every population denominator, in the evidence and in the final model registry; failures are not dropped or silently replaced.
 
 Authoritative outputs are promoted under `experiments/village-001/final-evidence/`, including raw provider transcripts, `confusion-matrices.json`, `per-member-verdicts.json`, population/ecology reports, `model-registry.json`, dataset provenance and hashes.
 

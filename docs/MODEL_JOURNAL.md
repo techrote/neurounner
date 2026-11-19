@@ -1414,3 +1414,28 @@ Generated publisher-native control syntax:
 Native syntax parsed, but `get_database` is not an admitted detective tool. Strict normalization rejected it; no typed programme, 003C transaction, access grant or evidence presentation occurred.
 
 **Disposition:** integration containment PASS, zero-shot detective scripting FAIL/NOT ADMITTED. This independently echoes B3's invented-tool/fabricated-ID transfer failures and strengthens the case for task-specific scripting specialization rather than prompt-time repair.
+
+---
+
+# 2026-11-19 — VILLAGE-001D accepted population and independent readback
+
+Stage D [completed its frozen acceptance requirements](../experiments/village-001/recovery-20261118/review/stage-d-acceptance.json). The [accepted report](../experiments/village-001/preference-evidence/REPORT.md) retains 36 terminal preference-trained members and 2,160 curated pairs; all 36 passed the relative regression/style admission gate. The [independent published readback](../experiments/village-001/recovery-20261118/review/published-readback.json) verifies the accepted [`village-001d-recovery-40613393744-20261118` release](https://github.com/techrote/neurounner/releases/tag/village-001d-recovery-40613393744-20261118), whose 36 adapter identities are fixed in the [release manifest](../experiments/village-001/preference-evidence/adapter-release.json).
+
+**0/3,456 Sprocket feedback records were schema-valid.** Their raw text, malformed outputs, failed provider attempts and individual metric declines remain preserved; pair curation was independently audited. D admission authorizes final population evaluation, not a usable-village conclusion. Training-pair success and reused T/P diagnostics do not establish fresh-task generalization.
+
+
+---
+
+# 2026-11-19 — VILLAGE-001E complete final qualification
+
+**Experiment completed; usable-village gate FAIL.** The unchanged accepted D population answered the fresh F01–F24 suite, with 864 member responses and 24 contemporaneous BASE responses. All 24 ecology sessions completed 180 turns. The [final report](../experiments/village-001/final-evidence/REPORT.md), [independent publication audit](../experiments/village-001/qualification-20261119/review/stage-e-acceptance.json) and [interpretation with confusion figure](../experiments/village-001/qualification-20261119/review/COMPLETION.md) bind the immutable [village-001e-final-20261119 release](https://github.com/techrote/neurounner/releases/tag/village-001e-final-20261119), published at 869aef679144a655dbf301aafc63ebb4fad36485 by run 44459799532.
+
+Behavior-only lineage identification passes at **222/864 (25.6944%)**. Sibling identification with true lineage supplied fails at **310/864 (35.8796%)**, and **14/36** members pass all individual gates against the required 30. Raw genericness passes at **1.7523**, below the same-suite BASE's **2.1250**. All 36 members meet D maturation and the frozen raw relevance/genericness minima. Their 22 individual failures concern identification: 20 fail sibling recognition, 10 fail lineage recognition and eight fail both. No failed member is dropped or replaced.
+
+Raw lineage accuracy is 30.2083%; raw conditioned sibling accuracy is 36.1111%. The 36×36 matrices combine those separate tasks, rather than adding an unconstrained blind 36-way classifier. Original population threshold literals remain 0.1666666667 and 0.4166666667, requiring 145 and 361 correct responses at this denominator. All 864 responses enter each task independently.
+
+Mean raw relevance is **3.1921/4**, versus **3.0833** for fresh BASE; behavior-only means are **2.8345** and **3.2500**. These are descriptive cohort ratings. D's approximately 1.0035 relevance on reused T diagnostics is not a calibrated before/after comparison with the fresh F suite, and E performed **zero optimizer steps**. No training improvement or general superiority is inferred from those cross-suite means.
+
+Ecology differentiation averages **1.3333/4** and progress **0.6667/4**, with no session above 2. The selectively applied Super audit flags convergence in 10 of 16 audited sessions; eight are unaudited. Low cross-lineage contamination (.0833) coexists with weak expected-lineage fit (1.1944) and distinction survival (.9722). Dominance/deference and fixed-turn-order qualifications, all raw transcripts, and the preserved G05 boolean/reason inconsistency are documented in the [detailed ecology interpretation](../experiments/village-001/qualification-20261119/review/ECOLOGY_INTERPRETATION.md). Ecology is descriptive and does not become a new hard gate.
+
+Independent offline reconstruction matched all 48 provider lanes, 5,204 final-evidence files, 8,266 dataset inventory records, all eight release assets and 11,624 tagged Git files inside the evidence TAR. It retained the original 27 ZIPs, 21 zero-call proofs and exact prior recovery ZIP. Final accounting is **860 logical requests / 862 transports**, within the 1,059 allocation and original 1,104 ceiling. The publication audit precedes integration; a separate fresh-main/documentation readback is required for closure. Stage F (#256) tests the predeclared mask mechanism and feedback prompting without rewriting this result or automatically qualifying a replacement village.
