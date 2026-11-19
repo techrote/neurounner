@@ -1,0 +1,64 @@
+name: VILLAGE-001E stop exhausted judging queue and preserve run custody
+
+on:
+  push:
+    branches: [work/village-001e-qualification-20261119]
+    paths: ['experiments/village-001/qualification-20261119/stop-request.json']
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  stop:
+    if: ${{ github.repository == 'techrote/neurounner' && github.event_name == 'push' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Cancel only the named original judging run and retain its metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib,subprocess,time
+          target=44439359038
+          source='7308271015bf8cc0ff98e0d35ad68314e65db721'
+          request=json.loads(pathlib.Path('experiments/village-001/qualification-20261119/stop-request.json').read_text())
+          if request != {'schema':'village-001e-stop-request-v1','run_id':target,'head_sha':source,'preserve_all_artifacts':True,'force_cancel':False}:
+              raise SystemExit('unexpected stop request')
+          if os.environ['GITHUB_RUN_ATTEMPT']!='1':
+              raise SystemExit('stop request is single-use')
+          out=pathlib.Path('stop-custody');out.mkdir()
+          def get(suffix):
+              return json.loads(subprocess.check_output(['gh','api',f'repos/techrote/neurounner/actions/runs/{target}'+suffix],text=True))
+          def save(name,value):
+              (out/name).write_text(json.dumps(value,indent=2,sort_keys=True)+'\n')
+          run=get('')
+          expected={'id':target,'head_sha':source,'head_branch':'work/village-001e-qualification-20261119','path':'.github/workflows/village-001e-isolated.yml','run_attempt':1}
+          if any(run.get(k)!=v for k,v in expected.items()) or any(run.get(k,{}).get('id')!=1432134981 for k in ('repository','head_repository')):
+              raise SystemExit('target run identity mismatch')
+          save('before-run.json',run)
+          save('before-jobs.json',get('/jobs?per_page=100'))
+          save('before-artifacts.json',get('/artifacts?per_page=100'))
+          if run['status']!='completed':
+              subprocess.run(['gh','api','--method','POST',f'repos/techrote/neurounner/actions/runs/{target}/cancel'],check=True)
+          for index in range(36):
+              run=get('');save('after-run.json',run)
+              if run['status']=='completed':break
+              time.sleep(10)
+          save('after-jobs.json',get('/jobs?per_page=100'))
+          save('after-artifacts.json',get('/artifacts?per_page=100'))
+          if run['status']!='completed':raise SystemExit('normal cancellation has not completed; no force cancellation attempted')
+          print(json.dumps({'run_id':target,'status':run['status'],'conclusion':run['conclusion'],'artifacts_deleted':False}))
+          PY
+      - name: Preserve stop records on every outcome
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: village001e-stop-custody-${{ github.run_id }}
+          path: stop-custody
+          if-no-files-found: warn
+          retention-days: 30
