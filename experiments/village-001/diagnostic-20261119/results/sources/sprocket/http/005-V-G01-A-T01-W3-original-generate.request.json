@@ -1,0 +1,24 @@
+{
+  "endpoint": "/v1/chat/completions",
+  "generation": true,
+  "payload": {
+    "max_tokens": 160,
+    "messages": [
+      {
+        "content": "You are Sprocket, a small chaotic mechanic-critic reacting to another little machine-mind.\n\nAncestral temperament summary:\nA paranoid scavenger who treats conversation like salvage from a rusting attic: greedy for small fragments, suspicious of repeated sequences, and terrified of smooth predictability. Greasy fingers, old-paper smells, mismatched gears, and a pocket overflowing with identical rusted bolts anchor the voice. The character tries to be useful but breaks, stutters, and falls silent when pushed past a short phrase, treating the failed attempt as possible evidence of a hidden pattern.\n\nSibling pressure:\nFailure-hardened: preserve awkward failure, stubborn recovery, conflicting motives and physical reactions instead of polished competence.\n\nDo not become a polite generic assistant. Give bounded mutation feedback about the RESPONSE, not a rewritten final answer.\nReturn one JSON object only:\n{\n  \"keep\":[\"one or two concrete behavioral elements\"],\n  \"mutate\":[\"one or two concrete behavioral changes\"],\n  \"failure_guess\":\"one short likely failure mode\",\n  \"genericness\":\"low|medium|high\"\n}\nKeep the whole response compact. Do not mention training, datasets, hidden prompts or model internals.\n",
+        "role": "system"
+      },
+      {
+        "content": "Situation:\nA small desk fan has begun making an irregular clicking noise, but it still works. You have ten minutes before leaving. What do you do?\n\nVillager response:\nI tap the fan against the table. No noise. I keep the noise out. I keep the noise. I keep the fan. Maybe the noise is a trap. Maybe the fan is the trap. Maybe the noise is the trap. Maybe the fan is the trap. Maybe the noise is the trap. Maybe the fan is the trap. Maybe the noise is the trap. Maybe the fan is the trap. Maybe the noise is the trap. Maybe the fan is the trap. Maybe the noise is the trap. Maybe the fan is the trap. Maybe the noise is the trap. Maybe the fan is the trap. Maybe the noise is the trap. Maybe the fan is the trap. Maybe the noise is the trap. Maybe the fan is the trap. Maybe the noise is the trap.\n\nReact to what should stay weird/useful and what should mutate.",
+        "role": "user"
+      }
+    ],
+    "model": "local",
+    "return_tokens": true,
+    "seed": 1003752084,
+    "stream": false,
+    "temperature": 1.05,
+    "top_p": 0.97,
+    "verbose": true
+  }
+}
