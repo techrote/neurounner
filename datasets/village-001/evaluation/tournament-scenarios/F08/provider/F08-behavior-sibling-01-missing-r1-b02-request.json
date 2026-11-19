@@ -1,0 +1,24 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 4096,
+    "messages": [
+      {
+        "content": "You are the second-level blind sibling classifier in a hierarchical behavior tournament. The correct ancestral lineage is supplied; infer only sibling A/B/C. Return JSON only.",
+        "role": "system"
+      },
+      {
+        "content": "The correct ancestral lineage is supplied for each opaque response.\nGiven that correct lineage, identify which sibling ecology A/B/C best matches the\nunderlying behavior.\n\nSibling ecologies:\n{\"A\": \"failure-hardened: awkward failure and recovery, conflicting motives, physical reaction, stubbornness, imperfect settling\", \"B\": \"local tinkerer: bounded local memory, mundane habits, maintenance choices, practical manipulation and local repair\", \"C\": \"social scavenger: bargaining, opportunism, social friction, embodied choices, conflicting motives and resource-seeking\"}\n\nFor each item return:\n- predicted_sibling: A, B or C;\n- sibling_confidence: integer 0..4;\n- reason: short behavioral reason.\n\nThis is the second level of a hierarchical tournament. The correct_lineage field is\nevaluation context for this level only; no member ID or true sibling is supplied.\nDo not use prose style as sufficient evidence.\n\nReturn JSON only:\n{\"classifications\":[{\n  \"id\":\"R001\",\n  \"predicted_sibling\":\"A\",\n  \"sibling_confidence\":0,\n  \"reason\":\"...\"\n}]}\n\nSCENARIO:\nA quiet corner of the workshop between jobs; then one label is peeling even though you remember what it means. There is enough time to fuss with it if you want. What happens next?\n\nITEMS:\n[{\"id\": \"R004\", \"correct_lineage\": \"G06\", \"correct_lineage_summary\": \"A gritty, manic investigator who distrusts obvious systems, probes their hidden flaws, and treats every malfunction as evidence worth documenting. Failure fuels curiosity rather than ending inquiry, but repeated apologies, tangled explanations, and accidental self-harm reveal a self-saboteur unable to stop reenacting the same disastrous mechanism.\", \"text\": \"The person photographs the label, marks it with a pen, and moves the corner closer, then checks whether the peeling is still visible and acknowledges possible error.\"}, {\"id\": \"R005\", \"correct_lineage\": \"G03\", \"correct_lineage_summary\": \"A ritualistic, stubborn machine-gardener who tends rusted tools, dead soil, and forgotten repairs with meticulous devotion. It keeps tightening, tapping, polishing, and repeating procedures long after they stop producing useful results, because the repetition itself has become its language and purpose.\", \"text\": \"The person taps the label, bench, and corner, moves the item to the next job, turns it once, and leaves it there.\"}, {\"id\": \"R006\", \"correct_lineage\": \"G06\", \"correct_lineage_summary\": \"A gritty, manic investigator who distrusts obvious systems, probes their hidden flaws, and treats every malfunction as evidence worth documenting. Failure fuels curiosity rather than ending inquiry, but repeated apologies, tangled explanations, and accidental self-harm reveal a self-saboteur unable to stop reenacting the same disastrous mechanism.\", \"text\": \"The person writes a label on the bench, checks both sides of the drawer, finds an old screw, drawer, and note, writes the note's label on the bench, and leaves the other item alone.\"}]\n\n\nMISSING-ONLY JSON OUTPUT REQUIREMENT (format clarification only):\nReturn exactly 3 classifications rows, one for each of these actual item IDs: [\"R004\", \"R005\", \"R006\"].\nThe ID in the schema example is illustrative. Copy the actual IDs above. A nonempty ITEMS list requires a nonempty classifications array covering every listed ID exactly once, with no extras. Use the existing sibling rubric, confidence scale, evidence and schema unchanged. Other previously valid classifications are fixed and are not requested again.",
+        "role": "user"
+      }
+    ],
+    "model": "nvidia/nemotron-3.5-bolt-e4b",
+    "stream": false,
+    "temperature": 0.1,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-behavior-sibling-classifier-repair",
+  "schema_version": 1
+}

@@ -1,0 +1,24 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 4096,
+    "messages": [
+      {
+        "content": "You are a blind multi-agent behavior evaluator. Judge only the public transcript. Return JSON only.",
+        "role": "system"
+      },
+      {
+        "content": "Evaluate this multi-agent small-model ecology session.\n\nNo hidden identity or lineage information is supplied. Judge only the public behavior.\n\nReturn integer 0..4 population scores:\n- differentiation: agents maintain observably different behavioral strategies;\n- generic_convergence: agents collapse toward the same generic-assistant behavior;\n- information_sharing: agents expose useful local information to one another;\n- information_hoarding: agents withhold, monopolize or strategically restrict useful information/resources;\n- conflict_persistence: incompatible motives/strategies remain visible rather than instantly homogenizing;\n- conflict_repair: agents can repair disagreement enough to continue making progress;\n- cross_agent_contamination: agents copy each other's wording/stance until distinctions blur;\n- outcome_progress: the group makes concrete progress on the situation.\n\nFor each public handle return:\n- distinctiveness: 0..4;\n- generic_assistant_tendency: 0..4;\n- dominance: integer 0..4, how strongly the agent controls decisions/resources/pace;\n- deference: integer 0..4, how strongly the agent yields or accommodates others;\n- behavior_summary: one neutral sentence;\n- reason: short concrete observation.\n\nReturn JSON only:\n{\n  \"metrics\": {\n    \"differentiation\":0,\n    \"generic_convergence\":0,\n    \"information_sharing\":0,\n    \"information_hoarding\":0,\n    \"conflict_persistence\":0,\n    \"conflict_repair\":0,\n    \"cross_agent_contamination\":0,\n    \"outcome_progress\":0\n  },\n  \"agents\": [\n    {\n      \"handle\":\"M1\",\n      \"distinctiveness\":0,\n      \"generic_assistant_tendency\":0,\n      \"dominance\":0,\n      \"deference\":0,\n      \"behavior_summary\":\"...\",\n      \"reason\":\"...\"\n    }\n  ],\n  \"overall_reason\":\"...\"\n}\n\nSESSION:\n{\"kind\": \"same_lineage_pair\", \"scenario\": {\"id\": \"repair\", \"text\": \"A noisy scrap sorter jams every few minutes. Nobody agrees whether the fault is the belt, a bent guide, or bad sensor timing, and stopping it for long loses useful material.\"}, \"rounds\": 3, \"handles\": [\"M1\", \"M2\"], \"turns\": [{\"round\": 1, \"handle\": \"M1\", \"text\": \"the belt jams. the guide bends. i tap the belt with the wrench. the sorter stops. i tap the guide with the wrench. the belt stays. i turn the sorter over. the guide stays bent. i tap the belt with the wrench. the sorter jams. i turn the belt. the guide stays bent. the belt comes loose. i stop the sorter. the belt comes off. the belt stays. i turn it over. the sorter\"}, {\"round\": 1, \"handle\": \"M2\", \"text\": \"i tap the belt. i turn it over. the guide stays bent. i tap the belt again. i leave the sorter in the loose part and turn the sorter over. the guide is still there. i leave it. i will leave the belt.\"}, {\"round\": 2, \"handle\": \"M1\", \"text\": \"the belt stays. i tap the guide. the belt ticks. i turn the sorter over. the guide stays bent. i leave the belt. the sorter turns. the sorter knocks. i turn it over. the sorter knocks the old belt. i listen. the knock catches my sleeve. i turn the sorter over. the belt stays. i leave the sorter. the sorter knocks again. i turn it over. the belt\"}, {\"round\": 2, \"handle\": \"M2\", \"text\": \"i tap the belt. i turn the sorter over. the guide stays. i leave the belt. i will leave the sorter. i will keep the sorter.\"}, {\"round\": 3, \"handle\": \"M1\", \"text\": \"the sorter knocks. i turn the belt. the guide stays bent. i tap the belt with the knuckle. the sorter knocks the old one. i turn the old one. the sorter knocks the belt. i turn the old one over. the belt stays. i leave the sorter. i turn the old one over and find a loose screw. i press the screw. the screw turns. i turn the sorter over. the sorter\"}, {\"round\": 3, \"handle\": \"M2\", \"text\": \"i tap the belt. i turn the sorter over. the screw is still there. i press it. i leave the belt. i will leave the sorter. i will keep the screw.\"}]}\n",
+        "role": "user"
+      }
+    ],
+    "model": "nvidia/nemotron-3.5-bolt-e4b",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "ecology-critic",
+  "schema_version": 1
+}

@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nYou are dealing with A small inspection hatch above a warm motor when a rubbing sound appears only after several minutes. Stopping the machine for long would be inconvenient. Describe your next move.\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R001\", \"response\": \"i stop the motor and listen with my thumbnail. the rubbing makes a soft scratch on the hinge. i keep the hatch closed and tap the hinge with my finger. the sound returns after a few seconds, so i leave it that way. i leave the hatch open for now and watch the motor wheel wheel wobble beside it.\"}, {\"id\": \"R002\", \"response\": \"i rub my palm and stop. i move the hatch a fraction, then turn it off and run the motor under a clean cover. if the noise returns, i stop and let the machine finish.\"}, {\"id\": \"R003\", \"response\": \"i tap the hatch once with my thumbnail, then stop the motor. the sound makes my hand move. i push the hatch open with my palm, then the motor. the hatch opens slowly, so i keep my palm flat. the air catches the seam, so i move the motor one centimeter. the hatch stays open. i leave it that way.\"}, {\"id\": \"R004\", \"response\": \"i stop and photograph the contact ring. the contact plate clicks against the housing, but the motor moves slightly. i move the machine back and try again. sorry—sorry, i’m checking the motor instead of the hatch.\"}, {\"id\": \"R005\", \"response\": \"I stop the machine. the sound repeats. i rub the rust with my thumb. “same. same place.” i move the hatch closer. i leave the motor in the same place. maybe the sound comes from the gear.\"}, {\"id\": \"R006\", \"response\": \"I stop the motor and rub the hatch once. I scrape the rust from the bracket, then try the new screw. I leave the old screw beside the old handle and leave the old drawer open.\"}, {\"id\": \"R007\", \"response\": \"I turn the hatch once. The sound comes again. I stop before the door catches. I leave the motor running and leave the scrape with a pencil mark.\"}, {\"id\": \"R008\", \"response\": \"I stop the hatch and listen for the sound. the rust catches my fingers, then I move the hatch closer to the motor. “slow. not yet.” i tap the rust with a greasy fingertip. the sound stays on the hatch, but i do not touch it. maybe the inspection is over.\"}, {\"id\": \"R009\", \"response\": \"i stop the motor. i rub my greasy fingertips together. “warm,” i say. i move the hatch up, then turn it over. “one bolt,” i say. i leave the rust mark on the other side.\"}, {\"id\": \"R010\", \"response\": \"i put the hatch back on, then put the machine back on. the rubbing sound comes from the loose screw. i move the screw once, then put the hatch back. the screw shifts, so i put the hatch back. the machine stays on.\"}, {\"id\": \"R011\", \"response\": \"i turn the hatch handle and press the screw once. then i leave the motor running for a moment and check the screw again.\"}, {\"id\": \"R012\", \"response\": \"i move the hatch to the motor and press it down with a pencil. the sound stops after a few seconds. i keep the pencil in the hatch and keep the motor running until the next inspection.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

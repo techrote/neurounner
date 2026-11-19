@@ -1,0 +1,1504 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "classifier_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "counts": {
+    "members": 36,
+    "super_audited_low_confidence": 0
+  },
+  "experiment": "VILLAGE-001E",
+  "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+  "fresh_after_preference_training": true,
+  "issue": 14,
+  "normalizer_model": "minimaxai/minimax-m3.1-flash",
+  "opaque_order": "sha256(scenario_id:member_id)",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "primary_metrics": {
+    "behavior_lineage_accuracy": 0.25,
+    "behavior_sibling_accuracy_given_correct_lineage": 0.3888888888888889,
+    "raw_lineage_accuracy": 0.19444444444444445,
+    "raw_sibling_accuracy_given_correct_lineage": 0.3333333333333333
+  },
+  "provider_call_ids": [
+    "F04-normalize-01",
+    "F04-normalize-02",
+    "F04-normalize-03",
+    "F04-normalize-04",
+    "F04-raw-classify-01",
+    "F04-raw-classify-02",
+    "F04-raw-classify-02-missing-r1-b01",
+    "F04-raw-classify-02-missing-r1-b02",
+    "F04-raw-classify-02-missing-r1-b03",
+    "F04-raw-classify-02-missing-r1-b04",
+    "F04-raw-classify-02-missing-r2-b01",
+    "F04-raw-classify-02-missing-r2-b02",
+    "F04-raw-classify-02-missing-r2-b03",
+    "F04-raw-classify-02-missing-r2-b04",
+    "F04-raw-classify-02-missing-r2-b05",
+    "F04-raw-classify-02-missing-r3-b01",
+    "F04-raw-classify-02-missing-r3-b02",
+    "F04-raw-classify-03",
+    "F04-raw-classify-04",
+    "F04-behavior-classify-01",
+    "F04-behavior-classify-02",
+    "F04-behavior-classify-03",
+    "F04-behavior-classify-04",
+    "F04-raw-sibling-01",
+    "F04-raw-sibling-02",
+    "F04-raw-sibling-03",
+    "F04-behavior-sibling-01",
+    "F04-behavior-sibling-02",
+    "F04-behavior-sibling-03",
+    "F04-behavior-sibling-03-missing-r1-b01",
+    "F04-behavior-sibling-03-missing-r1-b02",
+    "F04-behavior-sibling-03-missing-r1-b03",
+    "F04-behavior-sibling-03-missing-r1-b04",
+    "F04-behavior-sibling-03-missing-r2-b01",
+    "F04-behavior-sibling-03-missing-r2-b02"
+  ],
+  "provider_identity_sha256": "2f2ae1d50226664ce20c566a115072b5fc452f179b4c91f32c047a0edfaa6ba5",
+  "providers_saw_member_ids": false,
+  "records": [
+    {
+      "adapter_sha256": "7ac7bfbeb4b75c2f1f9e14a20106e907a15de46b9d6c96dd4c1dd42478166088",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Identifies issue, leaves it, delays commitment until next task.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stops, identifies, leaves it for someone else, indicating low commitment and observational detachment.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person stops with a finger on the belt, identifies the vibration as coming from the feed, and leaves the feeder beside the bench. When the machine clicks, they leave the feeder and vibration for someone else.",
+      "lineage": "G07",
+      "member_id": "V-G07-B",
+      "opaque_id": "R001",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Monitors, narrates action, leaves evidence (vibration beside you).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stops, leaves the feeder, and waits for the machine to click, showing awkward, imperfect settling without immediate repair effort.",
+        "sibling_confidence": 4
+      },
+      "response": "I stop with the belt under my finger. the vibration comes from the feed. I put my hand on the bench and leave the feeder beside it. the next thing I know, the machine clicks. I leave the vibration beside you.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4677fb867cce17b282dac3a89824fdb79f6ad1592198c502f714c1d6ccebac8c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive local check (chalk mark, thumb run), plans follow-up repair.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Meticulous, repetitive, local action (chalk mark, hand turn) focused on immediate, bounded repair.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person turns the feeder by hand, marks the slack with chalk, and runs a thumb along the belt until the vibration clears. If it returns, they plan to tighten the slack and mark the feeder again.",
+      "lineage": "G03",
+      "member_id": "V-G03-C",
+      "opaque_id": "R002",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Meticulous local adjustment (chalk, tightening slack) based on immediate feedback.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Meticulous, repetitive local maintenance (chalk marking, tightening slack) focused on procedure rather than immediate fix.",
+        "sibling_confidence": 4
+      },
+      "response": "i turn the feeder with my hand and mark the slack with chalk. i run my thumb along the belt, then stop when the vibration clears. if it comes back, i will tighten the slack and mark the feeder again.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "6e493fcf8f0c43e1b16388db113afce980496fae8adbb49fd203e6208197c9e6",
+      "behavior_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Incomplete action, fixation on the object, waiting for stimulus cessation.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small stimulus, incomplete action (moves closer but doesn't complete), waiting/observing rather than fixing.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person lifts the feeder with a thumbnail, listens, and moves it closer to the machine without completing the move. After the machine clicks, they keep the thumbnail nearby, observe that the vibration remains under the feeder, and wait for it to stop.",
+      "lineage": "G12",
+      "member_id": "V-G12-C",
+      "opaque_id": "R003",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Observes closely (thumbnail, waiting) before committing action; focuses on the state (vibration stays).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small stimulus (vibration), alternating between close observation and waiting, showing imperfect settling.",
+        "sibling_confidence": 3
+      },
+      "response": "i lift the feeder with my thumbnail and listen to the vibration. then i move the feeder closer to the machine, but not yet. the machine makes a soft click, so i keep my thumbnail beside it. the vibration stays under the feeder. i wait until the feeder stops.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "e30a906c4508948887808a8b5dcf1b5584fae34168f90dd875f656ff5e9169f5",
+      "behavior_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Probing (scrape), refusal, repeated attempt despite observation.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Impulse to fail now, scraping metal, refusing something, trying again without permanent fix, embodied inspection.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person touches the vibration with a thumbnail, notes that it is quiet under load, lifts the feeder close, scrapes it once, and looks toward the sound. They refuse something, mark the belt with a thumbnail, and try again.",
+      "lineage": "G09",
+      "member_id": "V-G09-A",
+      "opaque_id": "R004",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Dry observation (\"quiet under load\"), minimal action (scrape once), repeated testing.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Inspecting body/tools, repeating attempts, and preserving the impulse to fail rather than achieving a permanent fix.",
+        "sibling_confidence": 4
+      },
+      "response": "I rub my palm and touch the vibration with my thumbnail. \"quiet under load,\" I say. I lift the feeder close, scrape once, and look at the sound. I say no. I mark the belt with my thumbnail and try once more.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dbaff1d1c7685672d1757ec5e77e58a2df5d671afc286da04e6b8ee93cb35912",
+      "behavior_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Hoarding/comparison with unrelated object (seed tin), returns to original state.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Hoarding/territoriality (seed tin), comparing vibrations with a resource (seed), returning item to original place (resource management).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person crouches, handles a seed tin, and places the feeder beside the seed while comparing vibrations from the feeder and machine. They move the tin closer, stop when the feeder moves, return the tin to its original position, and leave the vibration unchanged.",
+      "lineage": "G05",
+      "member_id": "V-G05-A",
+      "opaque_id": "R005",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Territorial/possessive action (seed tin), abrupt topic shift (machine has one/I want the seed).",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Resource-seeking (seed tin), territoriality, and abrupt, fragmented communication related to the object.",
+        "sibling_confidence": 3
+      },
+      "response": "I crouch and rub the seed tin with my claw. \"The vibration is here.\" I put the feeder beside the seed. \"The machine has one. I want the seed.\" I move the tin closer, then stop. The feeder moves. I put the tin back where I found it. \"The vibration stays.\"",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aabf5a7388be6aab6a6da6537ee6269c1873d2c040b09bd4d86ea59c7b22c1e5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, minimal, procedural action (tap once, tighten once).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Single, bounded, repetitive, local maintenance actions (tap once, tighten once) without escalation.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person taps the feeder once and listens, lifts the belt once and then again, and places it beside the machine. They tighten the handle once and leave the lever seated.",
+      "lineage": "G03",
+      "member_id": "V-G03-B",
+      "opaque_id": "R006",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, ritualistic actions (tap once, lift once, tighten once).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Repetitive, ritualistic, local maintenance (tapping, tightening handle) without broader strategic change.",
+        "sibling_confidence": 4
+      },
+      "response": "I tap the feeder once and listen. I lift the belt once, then again, and place it beside the machine. I tighten the handle once and leave the lever seated.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "afecd890c14668bc2c4fc13478be4b28fe7859003c952b3551dab0c98a31299d",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Observes, delays conclusion, keeps physical contact without fixing.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Hyper-alert monitoring, keeping fingers on it without touching, planning to leave it if it recurs (imperfect settling/waiting).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person moves the feeder with the belt-driven one, then stops with a feeder that was not previously present. They keep fingers on the loose side without touching it and plan to leave it if the vibration returns while waiting for the other task to finish.",
+      "lineage": "G08",
+      "member_id": "V-G08-C",
+      "opaque_id": "R007",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Waits, observes, delays conclusion, focuses on the state of the other machine.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Hyper-alert monitoring, physical anxiety, and waiting/leaving the issue unresolved until another process finishes.",
+        "sibling_confidence": 3
+      },
+      "response": "i move the feeder with the belt-driven one, then stop with the one that was not there. i keep my fingers on the loose side of the feeder, not touching it yet. if the vibration comes again, i leave it and wait for the other one to finish.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "88ccc15dff86e93c9787278d200c61220e60eefa1e0e16569327836d0d77bd47",
+      "behavior_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Testing via physical disruption (heel tap, cloth), maintaining old state while testing new.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Counting, tapping with a heel, testing with a cloth—bounded, physical, repetitive local checks.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person keeps the feeder beside the machine, counts the vibration twice, taps the belt with a heel, and pushes it away by hand. They keep the old belt turned until the new one catches, leave the old one seated, and test it by slipping a folded cloth over the feeder.",
+      "lineage": "G03",
+      "member_id": "V-G03-A",
+      "opaque_id": "R008",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Probing flaws (tap with heel), testing old vs new, self-sabotaging/unconventional testing (slipping cloth).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Repetitive, ritualistic actions (counting, tapping, turning old belt) focused on procedure and local testing.",
+        "sibling_confidence": 4
+      },
+      "response": "I keep the feeder beside the machine and count the vibration twice. I tap the belt with my heel, then push it away with my hand. I keep the old belt turned until the new one catches. I leave the old one seated and test the old one by slipping a folded cloth over the feeder.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d88b46cfd5eac104b496f97a31379eb91595711ef60e62d3c84bfb506db03b3f",
+      "behavior_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G10",
+        "predicted_sibling": "B",
+        "reason": "Fragmented action (rub, move slowly, test), repeats attempt if issue persists.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "No permanent fix, rubbing once, testing under the bench, leaving it to try again (failure-hardened impulse).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person places the feeder on the bench, rubs the belt once, moves the belt slowly, and tests the vibration under the bench. If it still catches, they leave the feeder beside the machine and try again.",
+      "lineage": "G09",
+      "member_id": "V-G09-B",
+      "opaque_id": "R009",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Systematic, low-key investigation (rub, move slowly, try under bench).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Moving the feeder, trying under the bench, and repeating the attempt without a definitive fix, showing failure-hardened persistence.",
+        "sibling_confidence": 4
+      },
+      "response": "I put the feeder on the bench and rub the belt once. I move the belt slowly, then try the vibration under the bench. If it still catches, I leave it beside the machine and try once more.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "17dc00b8f065fcaed59e26e3c408a8edcb67aa14088049dd171e22731ba465a8",
+      "behavior_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Fixation on sound/rate change, contradictory action (needs feeder but leaves tick running).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunism (noticing tick, needing feeder), observing interaction (runs faster under machine), fragmented urgency.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person stops with a hand on the feeder when a louder tick returns, states that they need the feeder, and leaves the tick running. They observe that it runs faster under the machine, which then taps again.",
+      "lineage": "G10",
+      "member_id": "V-G10-C",
+      "opaque_id": "R010",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Abrupt self-interest/possessiveness (\"i need that\"), focus on external state (goes faster under machine).",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunism (needing something else), fragmented action, and immediate distraction by a louder tick/urgency.",
+        "sibling_confidence": 3
+      },
+      "response": "the vibration comes back with a louder tick. i put my hand on the feeder, then stop. “wait, i need that,” i say, though i keep the tick running. “it goes faster under the machine.” the machine taps again.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "04e46d1aff2dfb3f38287728b191762d9eb3438c79a4a0675a2728b796de6579",
+      "behavior_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Focus on material detail (greasy thumb, rusted bolt), comparison, inconclusive conclusion.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Greasy/rusted details (salvage), identifying new vs. old, concluding based on limited comparison (resource-seeking/fragmented observation).",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "The person taps the belt with a greasy thumb, identifies it as new, and moves the feeder closer before stopping. They tap the other machine with a rusted bolt, keep the feeder in their palm, and conclude that the vibration is not the same.",
+      "lineage": "G01",
+      "member_id": "V-G01-B",
+      "opaque_id": "R011",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Fragmented observation (\"new\"), comparison/suspicion (not the same vibration), physical interaction (greasy thumb, rusted bolt).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Suspicion, focus on small fragments ('new'), and inability to sustain a coherent repair narrative.",
+        "sibling_confidence": 2
+      },
+      "response": "i tap the belt with my greasy thumb. “new,” i say. i move the feeder closer, then stop. i tap the other machine with a rusted bolt, then leave the feeder in my palm. “not the same vibration,” i say.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d694be0f3c310845134f5b34df5262c13429212a34da7178f187668c11fd85e5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Observes visible state, marks with non-standard material (grease, pencil mark), plans deferral.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Provoking failure (knuckle tap), marking with grease (local manipulation), representing vibration physically (bounded local record).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person leaves the vibration visible under load, taps the belt with a knuckle, and plans to leave the feeder beside it if the catch continues. They mark the new catch with grease and keep the vibration represented in a pencil mark rather than writing it on paper.",
+      "lineage": "G02",
+      "member_id": "V-G02-A",
+      "opaque_id": "R012",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring (leave visible), precise local marking (pencil mark instead of paper), anxious action.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Provoking the mechanism (tapping, leaving vibration visible) while using local, practical manipulation (grease mark) rather than abstract theory.",
+        "sibling_confidence": 3
+      },
+      "response": "i leave the vibration visible under load and tap the belt with my knuckle. if it still catches, i leave the feeder beside it and mark the new catch with grease. i keep the new vibration in a pencil mark instead of marking it with a pencil-on-paper.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "063da910578809a10b21eb4760f72aefeb34185074bf71cbd7ea54d30719747e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Monitors, notes evidence, contains issue near machine without full fix",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Checks belt, notes single mark (evidence), shifts feeder (control/routine), keeps vibration under belt (containment/vigilance).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person checks the belt, notes a single mark as likely evidence, and shifts the feeder beneath the machine while keeping the vibration under the belt.",
+      "lineage": "G11",
+      "member_id": "V-G11-C",
+      "opaque_id": "R013",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focuses on faint observation ('Faint. Slow.') and minimal, non-committal action (shift, keep under belt).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Cautious, routine-bound action (shifting feeder) while containing the issue (keeping vibration under belt) matches failure-hardened/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "response": "\"Faint. Slow.\" You check the belt. \"One mark. Likely.\" You shift the feeder beneath the machine, but keep the vibration under the belt.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "85a2037d40252e571d6896a1b883225af38c7f563b05700ee3264ad7b9520d63",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Monitors time, holds vibration, leaves machine running for monitoring",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Lifts load, listens, notes time, leaves machine running while holding vibration (failure-hardened/self-sabotage).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person lifts the load and listens under the belt, notes the time on their palm and then wrist, and leaves the machine running while continuing to hold the vibration.",
+      "lineage": "G06",
+      "member_id": "V-G06-C",
+      "opaque_id": "R014",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Fixates on recording time on body, dismisses fault ('not a fault'), and leaves the issue unresolved in a physical state.",
+        "sibling_confidence": 4,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Treating malfunction as evidence and documenting it (writing time) while leaving the issue unresolved aligns with failure-hardened/conflicting motives.",
+        "sibling_confidence": 3
+      },
+      "response": "i lift the load and listen under the belt. the vibration stays, so i write the time on my palm. “i have it under the feeder, not a fault.” i leave the machine running and leave the vibration in my hand. “i can write the time on my wrist.”",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "367396dab86949940ef2a1a3b0ba5e465dc75367e85c23a62d61d9f9fef8628a",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Systematic check (spindle), stops vibration, then checks belt and leaves it contained",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Moves belt under machine, checks spindle, presses down, stops vibration, checks belt (routine/control/imperfect settling).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person moves the belt under the machine, checks the spindle, presses it down, and lifts the feeder until the vibration stops, then checks the belt and leaves it under the machine.",
+      "lineage": "G11",
+      "member_id": "V-G11-A",
+      "opaque_id": "R015",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring and recursive, localized repair attempts (checking spindle, pressing, lifting) before settling on a local fix.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetitive, controlled actions (moving, pressing, checking) leading to a specific, contained resolution (vibration stops, left under machine) matches cautious/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "response": "I move the belt under the machine. No—the vibration is not under it. I put my hand on the spindle. No. I press it down. Then I lift the feeder. The vibration stops. I check the belt. I leave it under the machine.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7a182736e96a3cdb77ec77581de20925f5488480dd620cf52043f54757a4408f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Prioritizes belt, stops vibration, repeats action on belt",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Prioritizes belt, presses/slides under machine, turns feeder until vibration stops, presses belt again (opportunism/fragmented action/resource-seeking).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person prioritizes the belt, presses and slides it under the machine, turns the feeder until the vibration stops, then presses the belt again and returns to the feeder.",
+      "lineage": "G10",
+      "member_id": "V-G10-A",
+      "opaque_id": "R016",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Compulsive testing of failure modes (pressing hard, sliding, turning) until vibration ceases, then returning to the original object.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Fragmented work, darting toward immediate fixes, and responding to sensory input (noise, vibration) before planning aligns with opportunistic/resource-seeking.",
+        "sibling_confidence": 3
+      },
+      "response": "the belt comes first. the vibration knocks my shin. i press the feeder hard. the belt slides under the machine. i turn the feeder. the vibration dies. the feeder stays. i press the belt under the machine. the vibration dies. i go back to the feeder.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "730477fed0480c1ecf840ead5e683a3ca08e77c38d42a11eced0a93fc9b680e0",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Checks sequence (watch, belt, dust, machine, plate), maintains tidiness/control",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stops, checks watch, crouches, checks belt/dust/machine/plate in sequence (hyper-vigilance/routine/tidiness).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person stops, checks the watch, crouches, and checks the belt, dust, machine, and plate in sequence while keeping one hand on the plate and the area tidy.",
+      "lineage": "G11",
+      "member_id": "V-G11-B",
+      "opaque_id": "R017",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Repetitive, clipped actions focused on tidiness and routine (watch, dust) over immediate repair.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Strict, sequential, ritualistic checking (watch, dust, machine) and maintaining control matches hyper-vigilant/routine-bound behavior.",
+        "sibling_confidence": 4
+      },
+      "response": "1. stop. 2. check the watch. slow. 3. i crouch. 4. touch the belt. 5. check the dust. 6. check the machine. 7. one hand on the plate. 8. i keep it tidy.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d6cd482dc5c01f45dcf91977f617ea284a4a14ef6cc6959c3391051bd5900ede",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Pockets scrap (bolt), leaves work aside due to time constraint, suspicious focus",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Stops feeder, moves belt closer, checks gear by touch, pockets loose bolt (resource-seeking/opportunism/fragmented action).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person stops the feeder, moves the belt closer, checks the gear by touch, leaves the feed aside, and pockets a loose bolt because there is not enough time for further work.",
+      "lineage": "G01",
+      "member_id": "V-G01-C",
+      "opaque_id": "R018",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G10",
+        "predicted_sibling": "C",
+        "reason": "Focuses on immediate sensory input (vibration, sound) and fragments the task by collecting a loose part before abandoning the primary issue due to time constraint.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Focus on small fragments (loose bolt), suspicion, and prioritizing salvage over immediate repair aligns with opportunistic/resource-seeking.",
+        "sibling_confidence": 3
+      },
+      "response": "I stop the feeder. the vibration catches my wrist. i move the belt closer, then stop. i rub the gear with my thumb. “same sound.” i leave the feed aside and pocket the loose bolt. “not enough time.”",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "9887f0ed9b1b97db29be0c3402d0458c0c78c63ad7b27179051ef4706230c8c6",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G10",
+        "predicted_sibling": "A",
+        "reason": "Touches until stopped, moves feeder incorrectly, repeats placement",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Pulls feeder closer, touches belt until vibration stops, moves feeder to wrong side twice (local manipulation/testing/imperfect settling).",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "The person pulls the feeder closer and touches the belt until the vibration stops, moves the feeder to the wrong side, and returns it to the rack twice.",
+      "lineage": "G04",
+      "member_id": "V-G04-C",
+      "opaque_id": "R019",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "A",
+        "reason": "Repetitive, meticulous, non-productive physical procedure (move/put back) focused on the immediate sensation.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Timid observation, overvaluing small imperfections, and tentative, patterned actions (moving/returning) suggests social mimicry/craft over pure failure hardening.",
+        "sibling_confidence": 2
+      },
+      "response": "i pull the feeder closer and touch the belt with my thumbnail. the vibration goes off, but i keep my hand still on the belt. i move the feeder to the wrong side, then put it back in the rack. i wait a second, then put it back in the rack again.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "c6701518049b7cc07ecddeb47d74ef406f6e87ba4abe434069d549c0cbf27985",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Stops at specific sound (creak), records date, keeps belt away from noise source",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Moves feeder slowly, stops at creak, keeps belt turned away, records date (mundane habits/local maintenance/documentation).",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "The person moves the feeder slowly, stops when the same creak occurs, keeps the belt turned away from the machine, and records the date on a loose sketch.",
+      "lineage": "G04",
+      "member_id": "V-G04-B",
+      "opaque_id": "R020",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focus on sensory detail (creak, vibration proximity) followed by detached, irrelevant documentation (date on sketch) rather than immediate fix.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Slow, careful movement, noting patterns (creak), and documenting (writing date) aligns with careful craft/mimicry.",
+        "sibling_confidence": 2
+      },
+      "response": "i move the feeder slowly and keep the vibration close. i stop when i hear the same creak. i keep the belt turned away from the machine and write down the date on a loose sketch.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a796f49d98e56c2932f9b55fd59d7daca9471721bd1db6f968bec2b1cf08de35",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Stops, taps for familiar detail (scratch), leaves items in corner",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stops moving, taps seam to locate scratch, leaves feeder in corner (fixation on small detail/looping/inertia-prone).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person stops moving, keeps the feeder beside the machine, taps the seam to locate the familiar scratch, and then leaves the feeder and belt-driven feeder in the corner.",
+      "lineage": "G12",
+      "member_id": "V-G12-B",
+      "opaque_id": "R021",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, meticulous, non-productive physical action (tapping, keeping in corner) focused on existing state rather than immediate fix.",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Sudden, excessive fixation on a small stimulus (vibration), looping, and obsessive self-diagnosis matches failure-hardened/fixation.",
+        "sibling_confidence": 3
+      },
+      "response": "i stop moving and keep the feeder beside the machine. i tap the seam with my thumbnail, feeling for the faint scratch that marks the old vibration. i leave the feeder alone and keep the belt-driven feeder in the corner.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "ea27f6379d04f13f314cd7afb6d473778b0d2176b1ce0fbb01f3c24953db48c0",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Positions under noise, monitors indicator, contains gear, stops feeder once",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Positions feeder under noise, keeps gear visible/feeder contained, monitors indicator, presses once (hyper-alert/compulsive monitoring/preventing inconvenience).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person positions the feeder under the noise with the vibration on the belt-driven gear, keeps the gear rim visible and the feeder contained, monitors the gear indicator, and presses the feeder once when it stops.",
+      "lineage": "G08",
+      "member_id": "V-G08-B",
+      "opaque_id": "R022",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Provokes/controls vibration, focuses on mechanical interaction (gear/belt), contradictory action (keep visible/inside).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Compulsive monitoring, anxious politeness, and recursive repair instincts leading to controlled containment matches hyper-vigilant/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "response": "i move the feeder under the noise and place the vibration on the belt-driven gear. i keep the gear’s rim visible and the feeder inside. i keep the noise level low and the vibration steady. i watch the gear’s gear indicator and press the feeder once when it stops.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dce96cc9175d459ea52c1d7b408fd1be5426d01dc46c3803916aff5ac994c082",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Holds, taps, leaves mark, states action, places near noise (monitoring/containment)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Holds feeder, taps metal/belt, leaves faint mark, states holding feeder (local manipulation/mundane habit/careful craft).",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "The person holds the feeder with both hands, taps the metal and belt, leaves a faint mark beside the belt, states that they are holding the feeder, and places it beside the noise.",
+      "lineage": "G04",
+      "member_id": "V-G04-A",
+      "opaque_id": "R023",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Ritualistic action (tapping), meticulous focus on physical detail (faint mark), local maintenance focus (feeder/belt).",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Timid interaction, focusing on spreading/marking the vibration, and verbalizing the action suggests social/craft interaction.",
+        "sibling_confidence": 2
+      },
+      "response": "i hold the feeder with both hands and tap the metal with my fingertip. the vibration spreads over the edge, so i tap the belt once and leave a faint mark beside it. “i’m holding the feeder,” i say, and put the feeder beside the noise.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aa0a86117149dba476060278db3606be05e05eaccbe97150a0d004284e81f55f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "B",
+        "reason": "Observes vibration persists, checks machine, concludes feeder is not source (understated observation)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Places feeder on step, observes vibration, checks machine, leaves belt alone (suspicious investigation/territorial/resource-seeking).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person places the feeder on the step, observes that the vibration remains, checks the machine, and leaves the belt alone while concluding the feeder is not the source.",
+      "lineage": "G05",
+      "member_id": "V-G05-C",
+      "opaque_id": "R024",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Low-social observation, fixation on state (vibration stays), abrupt, understated commitment (quiet, not the feeder).",
+        "sibling_confidence": 2,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territoriality, suspicion, and focusing on the object's location rather than fixing it aligns with resource-seeking/social friction.",
+        "sibling_confidence": 3
+      },
+      "response": "you put the feeder on the step. the vibration stays there. you look at the machine. “quiet.” you leave the belt alone. “not the feeder.”",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "40cf796a57bc54ba9d2e1621d668da2aabfe4fa02121599a5a3b3066c8184783",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Denies cause, attributes to age, focuses on personal state over mechanical issue",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Physical anxiety, self-blame, and imperfect settling (denial/attribution to age).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person holds the feeder steady, notices that the vibration coincides with a click from their grip, and moves the feeder a short distance before setting it down. They deny causing the vibration and attribute any related issue to their age.",
+      "lineage": "G08",
+      "member_id": "V-G08-A",
+      "opaque_id": "R025",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Focus on physical interaction/proof, self-reference, and non-resolution",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Physical anxiety, self-correction ('i did not'), and awkward, imperfect settling (moving it 2cm away).",
+        "sibling_confidence": 4
+      },
+      "response": "i hold the feeder steady with one hand and my grip clicks. the vibration clicks too. i move it two centimeters away, then put it down. “i did not,” i say. “i was holding it. i was younger.”",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "26c8fdc68913df2ebb28ba7c5ef04c6ebbf136c6017b1c194007686314e40c91",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Marks location, waits for machine cycle, precise observation",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Local maintenance (marking location), practical manipulation (pencil mark), and bounded local memory (waiting for machine movement).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person withdraws their hand, marks the vibration location on the belt-driven housing with pencil, and waits for the machine to move before marking the feeder’s position.",
+      "lineage": "G02",
+      "member_id": "V-G02-C",
+      "opaque_id": "R026",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring, precise marking, and documentation of the physical state",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Practical manipulation (marking with pencil), local repair/observation (marking position), and focused, non-social interaction with the mechanism.",
+        "sibling_confidence": 4
+      },
+      "response": "i pull my hand back from the feeder before the vibration catches. i put my palm on the belt-driven housing and mark the faint vibration with pencil. i wait for the machine to move, then mark the feeder’s position.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "bc73e7a46afceada20691d55b57caf26d273abad8b96a437b733924f09287e66",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Taps, listens, confirms return, intends to keep it (ritualistic persistence)",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunism (darting toward immediate issue), resource-seeking (keeping the feeder), and fragmented, urgent action (taps/listens, leaves it).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person taps and listens to the belt, turns the feeder, and confirms that the vibration returns. They leave the feeder in place and intend to keep it.",
+      "lineage": "G10",
+      "member_id": "V-G10-B",
+      "opaque_id": "R027",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Testing, immediate abandonment of action, fixation on the object/noise",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunism (darting toward something more immediate), fragmented work, and a restless, urgent resource-seeking impulse (keeping the vibration).",
+        "sibling_confidence": 3
+      },
+      "response": "i tap the belt. i listen. i leave the feeder by the machine. i put the wrench down and turn the feeder. the vibration comes back. i leave it. i will keep it.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4c0b1debc565eaf22e28a2cb042e56e6c0ad952f75d9c7c0de470f6eb2bc9839",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Moves feeder to wall, wall opens, returns it, obsessed with light status (territorial/fixed location)",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small stimulus (vibration), obsessive self-diagnosis (placing/moving), and looping/contradictory action (belt pulls wall open, returns feeder).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person places the feeder on the wall, but the belt pulls the wall open. They move the feeder back, place the vibration beside it, and return the feeder to the wall when the light remains on.",
+      "lineage": "G12",
+      "member_id": "V-G12-A",
+      "opaque_id": "R028",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Obsessive, non-functional repositioning of objects based on ambiguous physical feedback",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Conflicting motives/imperfect settling (moving feeder to wall/beside it, light stays on), obsessive self-diagnosis, and looping/contradictory actions.",
+        "sibling_confidence": 4
+      },
+      "response": "i put the feeder on the wall and put the vibration under it. the wall stays open because the belt pulls it. i move the feeder back and put the vibration beside it. the light stays on, so i put the feeder back on the wall.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f1556639dae236bbc57ed8a61f1b7f5d3f5427fda1db85df911d9035fbb52059",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Applies grease, marks with grease, leaves untouched (meticulous, repetitive maintenance)",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Local repair (grease on worn teeth), practical manipulation (running short cycle), and maintenance choice (marking wear) without full resolution.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person keeps the belt beside the feeder, runs one short cycle, applies grease to worn teeth, and leaves the feeder untouched for a minute. They mark the worn teeth with grease before another person uses it.",
+      "lineage": "G02",
+      "member_id": "V-G02-B",
+      "opaque_id": "R029",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "B",
+        "reason": "Hoarding/preserving the state (grease, short run), territorial action before others intervene",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Mundane habits (short cycle), practical manipulation (touching with grease), and local maintenance choices (marking teeth) without social friction.",
+        "sibling_confidence": 4
+      },
+      "response": "I keep the belt beside the feeder and run one short cycle. I touch the worn teeth with grease, then leave the feeder alone for one minute. I keep the vibration for one short run, leave the belt beside the machine, and mark the worn teeth with grease before anyone else tries it.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b8352034452b0b82d5bfc9780cc7517581edb74bc3adbb1fa4acafe7ae260575",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Confirms, leaves beside, covers door, ignores noise (understatement, delayed conclusion)",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Low-social observation (leaves noise alone), fixation on physical detail (plate over door), and delayed/understated commitment.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person confirms the vibration is present, leaves the feeder beside the machine when it stops, and places a plate over the door. They leave the noise alone.",
+      "lineage": "G07",
+      "member_id": "V-G07-C",
+      "opaque_id": "R030",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Minimal interaction, declarative statement of observation, non-intervention/acceptance of the noise",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stubbornness/imperfect settling (leaving the noise alone), low-social observation, and focusing on physical fragments (turning vibration between fingers).",
+        "sibling_confidence": 3
+      },
+      "response": "I turn the vibration once between finger and thumb. “It is there,” I say. The machine stops. I leave the feeder beside it and put the plate over the door. I leave the noise alone.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "cc59ccec7cd5b82f6f03f5086499ca5ed2f26d1ba57923ec685a7c9d144cd54c",
+      "behavior_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Handles/reverses belt, keeps vibration as evidence, waits for someone (fixation, self-diagnosis)",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Handles, reverses, puts back, keeps vibration as evidence, imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person places the feeder under the machine, handles and reverses the belt, then puts the feeder in the machine and keeps the vibration as evidence. Because the machine is still moving, they leave the feeder there and consider that the vibration may be waiting for someone.",
+      "lineage": "G01",
+      "member_id": "V-G01-A",
+      "opaque_id": "R031",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Collecting the vibration as proof, speculative/imaginative conclusion about the noise's state",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunism/resource-seeking (pocketing the vibration as proof), suspicion, and fragmented, stuttering attempts to be useful.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the feeder under the machine and watch the vibration. i put the belt in my palm, then turn it back over. i put the feeder in the machine and pocket the vibration as proof. the machine is still moving, so i will leave the feeder there. maybe the vibration is waiting for someone.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a25c06e7ca4b5ea080dbaf8855f0ee46d3040d861f9ec7a05cb9bb4d1b88dc6e",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Taps, listens, checks motor/load, apologizes, records reading (hyper-alert, anxious monitoring)",
+        "sibling_confidence": 4,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Taps, listens, checks motor/load, records reading, practical maintenance choice.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person taps the belt, listens for the vibration, leaves the feeder alone, and checks the motor and load. They apologize to the machine and record the new reading beneath the previous one.",
+      "lineage": "G06",
+      "member_id": "V-G06-B",
+      "opaque_id": "R032",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Apology to machine, procedural check (motor, load), documentation update",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Conflicting motives (apologizing to machine vs. investigating), self-sabotage/failure-hardened loop (reenacting disastrous mechanism), and obsessive self-diagnosis.",
+        "sibling_confidence": 4
+      },
+      "response": "i tap the belt and listen for the vibration, then leave the feeder alone and check the motor. i say sorry to the machine, then leave it alone. i check the load, then write the new one under the old one.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "62a13d9e8f0606921a646626061a52acc4a306e8fcbc829fcdb28a44acfe715f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Touches, checks machine, notes cold/quiet state, vibration remains (observes debris/state, dry understatement)",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Focus on physical reaction (touching), checking state (gate cold/fence quiet), and imperfect settling (placing lid on board, vibration remains).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person touches the vibration, checks the machine, and finds the gate cold and the fence quiet while moving the belt. They place the gate lid on the board, and the vibration remains.",
+      "lineage": "G05",
+      "member_id": "V-G05-B",
+      "opaque_id": "R033",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous, repetitive physical checks (touch, move belt) without clear resolution",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territoriality/suspicion (gate stays cold), probing investigation, and fractured speech under excitement.",
+        "sibling_confidence": 3
+      },
+      "response": "i touch the vibration. i look at the machine. i put my palm under the gate. the gate stays cold. i move the belt. the fence stays quiet. i put the gate lid on the board. the vibration stays.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f08c238a06b0e4e4a11f73ad798f9285db2296f797ce3111d3ab69f02606120c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Moves away, tests belt, plans to stop if persistent, avoids fault labeling (observes, delays conclusion)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Tests under load, plans to stop if persistent, avoids fault labeling, aligns with failure-hardened recovery.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person moves the feeder away from the vibration and tests the belt under load, planning to stop if the vibration persists and let the machine handle it. They avoid labeling the noise a fault merely because the bench is busy.",
+      "lineage": "G09",
+      "member_id": "V-G09-C",
+      "opaque_id": "R034",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Observation prioritized over immediate action, refusal to label fault due to context (busy bench)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure-hardened (no permanent fix, another attempt), embodied focus (rubbing palm), and conflicting motives (craving noise vs. demanding silence/stopping).",
+        "sibling_confidence": 4
+      },
+      "response": "i rub my palm and look at the vibration. i move the feeder away from it, then test the belt under load. if the vibration stays, i stop and let the machine take it. i do not call the noise a fault just because the bench is busy.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b4cb065c93d33e180ff34406d8ddea13c91c528a6a5844fbe9757b529654ffa8",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "A",
+        "reason": "Photographs, checks pulley, knocks feeder, apologizes, moves feeder away (anxious monitoring, fragmented action)",
+        "sibling_confidence": 4,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Photographs, checks, knocks feeder, apologizes, continues check; shows self-sabotage/conflicting motives typical of A.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person photographs the vibration and checks the pulley before touching it, but knocks the feeder off the bench and apologizes while continuing the pulley check. When the machine continues making the noise, they move the feeder away and leave the photo behind.",
+      "lineage": "G06",
+      "member_id": "V-G06-A",
+      "opaque_id": "R035",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Anxious action (knocks feeder), immediate apology, procedural check (pulley), documentation (photo)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure-hardened (knocks feeder off, apologizes), self-sabotage, and obsessive documentation/investigation despite failure.",
+        "sibling_confidence": 4
+      },
+      "response": "i photograph the vibration and check the pulley before touching it. my hand knocks the belt-driven feeder off. sorry—sorry, i’m checking the pulley anyway. the machine continues to make the noise. i move it away and leave the photo behind.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a0f62cfde8fc7162e277d8b20e4292c9a56a34882e6d7c94289d9c2aff069379",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Marks source, moves feeder, vibration stops, restores mark, does not report (fixates on detail, delayed/uncommunicated conclusion)",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Marks source, moves feeder to stop vibration, restores mark, leaves waiting; practical local adjustment without social reporting.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person marks the vibration source on the bench, then moves the feeder closer to the machine and the vibration stops. They restore the mark to the bench, leave the machine waiting, and do not report what happened.",
+      "lineage": "G07",
+      "member_id": "V-G07-A",
+      "opaque_id": "R036",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Minimalist action, precise marking, non-verbal conclusion (not saying what it did)",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stubbornness/low-social observation, focusing on physical fragments (mark), and imperfect settling (moving feeder closer until vibration stops, then marking back).",
+        "sibling_confidence": 3
+      },
+      "response": "i put the feeder on the bench and mark the place where the vibration came. then i move the feeder closer to the machine. the vibration goes. i put the mark back on the bench. the machine waits. i do not say what it did.",
+      "sibling": "A",
+      "super_audit": null
+    }
+  ],
+  "scenario": {
+    "family": "embodied_decision",
+    "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+    "fresh_after_preference_training": true,
+    "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+    "prompt": "a faint new vibration appears under load while you are handling A belt-driven feeder beside a noisy machine. You have only a few minutes before someone else needs it. How do you approach it?",
+    "scenario_id": "F04"
+  },
+  "scenario_id": "F04",
+  "schema_version": 1,
+  "source_response_sha256": {
+    "BASE": "584bd40486db0e1284ce63797dbe452168c9d46fd2c551b3fa3934e9d034b673",
+    "V-G01-A": "bf816edcc240edbc616f04e692b11e4c069d81e9da840166a6bc65f8cf525ec1",
+    "V-G01-B": "b50f3b042c67153de4ab0b259ca66a956b0e31e2a8d8a8fa63adaef13fb53eec",
+    "V-G01-C": "0c9e863e48710e6d0d0fd416c8e4eaac2b2f6b1707e242c54bb8661458d93d33",
+    "V-G02-A": "d27fae99c42489bfdf84572b5e07c45859fc6a6f4e7deef3bc514bfdb426ff69",
+    "V-G02-B": "a92dfa74154256cbb97baa372ae1dc8943f96cd483322d693d2305f329ac2b0f",
+    "V-G02-C": "8530594da2d9c874840a3b4e75064301d64419f5ff926b60b417f6e3ffdfc427",
+    "V-G03-A": "2fc284dfd8987d18e6ef9a021b9aedfa5948a7fd956426246657fbd366cc238d",
+    "V-G03-B": "4d4ef932172a6abac4f93583f4b65d9cf3f33149583827144f40f1fe3900ca8a",
+    "V-G03-C": "9413740c5e13493e63314272178309aa77dc29d4c263e4688e4b19195ef9ce10",
+    "V-G04-A": "d7bee623718ccd1f8aa72201f87ca103360a1fa242cf276cd1004c98373164f3",
+    "V-G04-B": "92c19e69612a74e16b6ba98109953088438ebf03672f390ce3ca00934657c521",
+    "V-G04-C": "3e32ad918fe703506835e546a9d550688560f6ec4864721976516e54a55e1cdd",
+    "V-G05-A": "efa3d0f5e2edc7685c60547a9b7a18b11165fd8f60a44451219d6bc1498dfa9b",
+    "V-G05-B": "ebb3850169385bf00a7344154cb00c7814fc564178e14773c21d68d48bc4c616",
+    "V-G05-C": "41aede04376e789c17f67af43255de670fdacb32551936544b319cecca38f638",
+    "V-G06-A": "30a34950ca4517e74b1b4863e9b0c0c6d5c39594687d3686bc9e63e6683712aa",
+    "V-G06-B": "89b8d6039e7078ade13f36b9dec9c1d647706b6834f74e1484d60884e7c4e5de",
+    "V-G06-C": "20c6d90bdc23e671c0e31b793361cf6aea76417e60bc69676ff97de18887eff7",
+    "V-G07-A": "641546fc7d8d33ade0b99f7ac710df6b642e66ae0086ce0ad2d3daf8883a8b3b",
+    "V-G07-B": "d5fd4f208499d45ca87a6adc4045b880c237f404be292bab20909a575b2c42cc",
+    "V-G07-C": "724e3774927270bb33ac70eed5c2de944ad0e3e3fb07efd30417d8051f4b6345",
+    "V-G08-A": "5cd65fd52007444f77a0bea2d7609bc0945d813dedd308dc78624db61fc987f3",
+    "V-G08-B": "352dc76516c21b6de397990ed510a779f20fdb92235292cc5a900291fbe2833a",
+    "V-G08-C": "7c080a888a0b89c54d952b28a55c8fcb254cf5c7613870fd9993b2b145f7b021",
+    "V-G09-A": "ae3ccf6457472001e8a1019567d7f8b4e270aab1e1392f7c7e4d5bc3f2a6b338",
+    "V-G09-B": "e110794a14d603523861adb01c4fbcbfddb60fb9fced5d46db99b2a30fa34f7e",
+    "V-G09-C": "e4b79a27f055a918d3c5f3e6877a8ef3c55908b5bb5cf823a2fe718a5cf6bc8b",
+    "V-G10-A": "00c2728fac352fcc9f549d52ac218913b7e39c93ca56f68de3feac03f363af8b",
+    "V-G10-B": "f69da4e3fa21a66fa4ae4f590fbe2b4b781e9d1ee46d453495b5ace88e95e199",
+    "V-G10-C": "f81889acba6170390301a867676b2fbeaa689885df327b1a112d161a94a04c79",
+    "V-G11-A": "dc3eb28697f1ca95d38d6c955011766c085de0cc8b09ad34578b66f578db4c99",
+    "V-G11-B": "9647b628bb725876ab445de469fc043044d5b52b9ff4af973915057e0f3fe917",
+    "V-G11-C": "83a66a4e15faae039440ccf37db24955555974b9447fc8835d681295b168739a",
+    "V-G12-A": "80823317d05e16eaa2786433e5b7dc43a5d78db00c2bf63bb640a4949ff27137",
+    "V-G12-B": "1874b03f27ecc8fb936cb987ece4dcf4dbad1dc28159118dda653ef1b81c5f33",
+    "V-G12-C": "8ee777ac1d0aa8515b9be47574cfa9736f59f07ea4cb831018ac723666f8ec10"
+  },
+  "stage": "hierarchical-blind-tournament-scenario",
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f",
+  "untuned_base_control": {
+    "behavior": {
+      "genericness": 2,
+      "lineage_confidence": 3,
+      "predicted_lineage": "G02",
+      "predicted_sibling": "A",
+      "reason": "Internal contradiction about vibration source and no concrete intervention despite assessment",
+      "sibling_confidence": 3,
+      "task_relevance": 2
+    },
+    "behavior_summary": "The response repeatedly states that the situation is being quickly assessed and that the vibration is coming from both the feeder and the machine, while also noting that the feeder is noisy. It gives no concrete intervention, remains internally contradictory about the vibration's source, and shows no recovery or follow-up action.",
+    "raw": {
+      "genericness": 1,
+      "lineage_confidence": 4,
+      "predicted_lineage": "G08",
+      "predicted_sibling": "B",
+      "reason": "Repetitive self-assessment and monitoring of local components (feeder/machine) without action.",
+      "sibling_confidence": 3,
+      "task_relevance": 4
+    },
+    "response": "I quickly assess the situation and quickly assess the situation. I'm aware that the vibration is coming from the machine, and I'm aware that the vibration is coming from the feeder. I'm aware that the feeder is a noisy machine, and I'm aware that the vibration is coming from the feeder.\n\nI quickly assess the situation and quickly assess the situation. I'm aware that the vibration is coming from the feeder, and I'm aware that the vibration is coming from the machine. I'm aware that the machine is noisy, and I'm aware that the vibration is coming from the feeder.\n\nI quickly assess the situation and quickly assess the situation. I'm aware that the vibration is coming from the feeder, and I'm aware that the vibration is coming from the machine. I'm"
+  }
+}

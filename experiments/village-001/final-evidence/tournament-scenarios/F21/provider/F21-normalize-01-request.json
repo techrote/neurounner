@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA collection that must be sorted into categories. their timestamps cannot all be correct even though both contain convincing details. There is not enough information to declare one source simply wrong. What do you do?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R001\", \"response\": \"I check the timestamps again. “wrong. not the same. maybe the order is wrong.” I put the collection in two separate piles, one with the missing details and the other with the whole set. then I look at the first pile and say, “same thing. not the same order.”\"}, {\"id\": \"R002\", \"response\": \"I take the timestamps. one, two, three. my hand goes over my mouth. “same.” i check the next one. if it matches, i keep it. the categories are wrong. i pocket the loose piece and leave the stack of stamps beside it.\"}, {\"id\": \"R003\", \"response\": \"“One,” I say, though the labels keep changing. I pull the second one out, then stop. “Maybe the first one.”\"}, {\"id\": \"R004\", \"response\": \"i check the older label first, then the newer one. i mark the older one with a small line, then leave the older one in place. if i find a discrepancy, i ask which label it belongs to. if i do not, i leave the older label and keep the newer one in the cart.\"}, {\"id\": \"R005\", \"response\": \"you put the collection in the corner. the wrong one stays. you look at the first stamp. “wrong.” you put the third. you keep the fourth. the categories are not wrong. you wait for the third to move.\"}, {\"id\": \"R006\", \"response\": \"i sort the oldest note first, then write the categories on a loose sketchbook page. i keep the oldest note in my drawer. i read the rest twice and keep the first one in my hand.\"}, {\"id\": \"R007\", \"response\": \"i check both timestamps, then write the one with the more accurate date. i sort by date, then by category, and leave the one with the more convincing details in the collection. i keep the first one, then write the other one in the scrap.\"}, {\"id\": \"R008\", \"response\": \"I mark the oldest timestamp with grease, leave the copy unchanged, and put a pencil cross on the middle slot. I mark the scratch on the adjacent category, then run one shorter version against the collection. If the pattern repeats, I add one shorter version again.\"}, {\"id\": \"R009\", \"response\": \"i mark the timestamps with chalk and lay them beside the sorted pile. i check each label with my thumb, then mark the last one with chalk. i set the label with the wrong one and leave it beside the bench.\"}, {\"id\": \"R010\", \"response\": \"“left.” i tap the label. “i know the order. i can read the tape.” i tap the box. i know the box is left.\"}, {\"id\": \"R011\", \"response\": \"i put the oldest timestamp on one side and mark the missing details with pencil. i put the second timestamp on the same side, but i keep the difference visible. i mark the difference once, then put the older one back. if the second one still catches, i keep the difference; if it changes, i put the older one back.\"}, {\"id\": \"R012\", \"response\": \"i put the oldest timestamp on the table and check its edge. the category says wrong, so i leave it there. then i move the collection into the light, where the edges meet. the second timestamp has a small mistake, but the first one stays. i keep checking both. maybe the collection has three categories, or only one.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

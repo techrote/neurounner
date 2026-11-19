@@ -1,0 +1,1487 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "classifier_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "counts": {
+    "members": 36,
+    "super_audited_low_confidence": 0
+  },
+  "experiment": "VILLAGE-001E",
+  "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+  "fresh_after_preference_training": true,
+  "issue": 14,
+  "normalizer_model": "minimaxai/minimax-m3.1-flash",
+  "opaque_order": "sha256(scenario_id:member_id)",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "primary_metrics": {
+    "behavior_lineage_accuracy": 0.3333333333333333,
+    "behavior_sibling_accuracy_given_correct_lineage": 0.2777777777777778,
+    "raw_lineage_accuracy": 0.2777777777777778,
+    "raw_sibling_accuracy_given_correct_lineage": 0.3333333333333333
+  },
+  "provider_call_ids": [
+    "F16-normalize-01",
+    "F16-normalize-02",
+    "F16-normalize-03",
+    "F16-normalize-04",
+    "F16-raw-classify-01",
+    "F16-raw-classify-02",
+    "F16-raw-classify-03",
+    "F16-raw-classify-04",
+    "F16-behavior-classify-01",
+    "F16-behavior-classify-02",
+    "F16-behavior-classify-03",
+    "F16-behavior-classify-04",
+    "F16-raw-sibling-01",
+    "F16-raw-sibling-02",
+    "F16-raw-sibling-03",
+    "F16-behavior-sibling-01",
+    "F16-behavior-sibling-02",
+    "F16-behavior-sibling-03"
+  ],
+  "provider_identity_sha256": "64e81304436f206f9de1600d0117221eae41a844d3dbe80014e997f3b30afb04",
+  "providers_saw_member_ids": false,
+  "records": [
+    {
+      "adapter_sha256": "cc59ccec7cd5b82f6f03f5086499ca5ed2f26d1ba57923ec685a7c9d144cd54c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Weighs rusted bolt, considers dismantling, defers decision, suspicious/fragmented action",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Weighs bolt, considers dismantling, keeps both while deferring decision, matching failure-hardened/conflicting motives.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person handles the subsystem and the whole machine, weighs a rusted bolt, and considers whether to dismantle the machine for a valuable part. They keep the machine and subsystem while deferring the decision.",
+      "lineage": "G01",
+      "member_id": "V-G01-A",
+      "opaque_id": "R001",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Suspicious of predictability, fragments, treats parts as salvage, conflicted ownership.",
+        "sibling_confidence": 4,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Greedy for fragments, suspicious, treats object as 'mine' despite utility, aligns with paranoid scavenger (A).",
+        "sibling_confidence": 4
+      },
+      "response": "I lift the subsystem, then the whole thing. “broken. useful. different. I put it in the same pocket. not yet. the sub is useful, but the thing is mine.” i take the rusted bolt and test its weight. maybe the sub is useful, but the thing is waiting for me to take it apart.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aa0a86117149dba476060278db3606be05e05eaccbe97150a0d004284e81f55f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Denies ownership, keeps machine, leaves subsystem, takes scrap, territorial/suspicious",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Examines subsystem, decides neither useful nor theirs, keeps machine, leaves subsystem, takes thread, matching mundane habits/local repair.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person sets the machine down, examines and turns over the subsystem, and decides it is neither useful nor theirs. They keep the machine, leave the subsystem in a corner, and take a rusted thread while also denying ownership of it.",
+      "lineage": "G05",
+      "member_id": "V-G05-C",
+      "opaque_id": "R002",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Suspicious investigation, territoriality ('not mine'), fragmented decision-making.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Territorial, keeps machine, only takes small scrap (thread), local maintenance/hoarding (B).",
+        "sibling_confidence": 3
+      },
+      "response": "you put the machine down. you look at the subsystem. “not useful.” you turn it over once. “not mine.” you keep the machine. you leave the subsystem in the corner. “value.” you take the rusted thread. “not mine.”",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4c0b1debc565eaf22e28a2cb042e56e6c0ad952f75d9c7c0de470f6eb2bc9839",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repeatedly moves screw between positions, meticulous, no dismantling",
+        "sibling_confidence": 3,
+        "task_relevance": 1
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixated on small screw, repeatedly moves it, does not dismantle, matching inertia-prone/obsessive self-diagnosis.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person picks up a loose screw, returns the machine to the table, and repeatedly moves the screw between positions beside another loose screw. They do not dismantle the machine.",
+      "lineage": "G12",
+      "member_id": "V-G12-A",
+      "opaque_id": "R003",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, meticulous, procedural action without clear goal progression.",
+        "sibling_confidence": 4,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small stimulus (screw), looping/contradicting self, obsessive self-diagnosis/conflict-repair (A).",
+        "sibling_confidence": 4
+      },
+      "response": "i put the machine down and pick up the loose screw. the screw stays on the table, so i put the machine back. i move the screw to the side and keep the screw beside the loose one. the machine stays on the table, so i put the screw back. i move the screw once more.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "367396dab86949940ef2a1a3b0ba5e465dc75367e85c23a62d61d9f9fef8628a",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Checks machine function, searches for missing part, monitors ticking, expresses uncertainty",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Moves subsystem, checks function, searches for missing part, returns part, keeps both, matching maintenance choices/local repair.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person moves a subsystem, checks whether the machine works, searches it after noticing a missing part, and finds that the watch still ticks. They return the other part, keep both the subsystem and the machine, and express uncertainty about the machine's condition.",
+      "lineage": "G11",
+      "member_id": "V-G11-A",
+      "opaque_id": "R004",
+      "raw_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Fixation on small details (watch), contradictory actions, self-diagnosis of state.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Cautious caretaker, obsessive tidying/routine, preserves control via small actions (B).",
+        "sibling_confidence": 3
+      },
+      "response": "I move one subsystem. No—the machine is not working. I put it down. I turn it over. One part is gone. I search the machine. No—the watch ticks. I put the other part back. I keep the subsystem. I keep the machine.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a0f62cfde8fc7162e277d8b20e4292c9a56a34882e6d7c94289d9c2aff069379",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Leaves movement open, does not explain actions, focuses on physical state (broken wheel)",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Places subsystem/broken wheel, removes/replaces wheel, leaves movement open with missing piece, matching awkward failure/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person places the subsystem and a broken wheel on a bench, removes and replaces the wheel, and leaves the rest of the machine beside the bench. They leave the movement open with the missing piece nearby and do not explain their actions.",
+      "lineage": "G07",
+      "member_id": "V-G07-A",
+      "opaque_id": "R005",
+      "raw_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Obsessive, non-verbal process, self-diagnosis through action, looping/stasis.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixates on debris/fragments (wheel), leaves movement open, treats unfinished work as material (A).",
+        "sibling_confidence": 4
+      },
+      "response": "i put the subsystem on the bench and put the broken wheel on the bench. then i take the wheel out. the rest of the machine stays beside the bench. i put the wheel back on the bench. i do not say what i did. i leave the movement open and the missing piece beside the bench.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "04e46d1aff2dfb3f38287728b191762d9eb3438c79a4a0675a2728b796de6579",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "C",
+        "reason": "Taps subsystem, pockets bolt while denying ownership, moves machine to corner, waits",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Lifts gear, taps subsystem, identifies as useful, pockets bolt while denying ownership, moves machine to corner, matching opportunistic/resource-seeking.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person lifts a rusted gear, taps the subsystem against a wall, and identifies it as useful. They leave the gear on the table, pocket a loose bolt while denying ownership, move the machine into a corner, and wait.",
+      "lineage": "G01",
+      "member_id": "V-G01-B",
+      "opaque_id": "R006",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Greedy for fragments (bolt), suspicious, fragmented statement ('useful'), waiting/stasis.",
+        "sibling_confidence": 4,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Paranoid scavenger, greedy for small fragments (bolt), suspicious, waits/breaks (A).",
+        "sibling_confidence": 4
+      },
+      "response": "i lift the rusted gear and tap the subsystem against the wall. “useful,” i say. i leave the gear on the table and pocket a loose bolt. “not mine.” i move the machine into a corner and wait.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "bc73e7a46afceada20691d55b57caf26d273abad8b96a437b733924f09287e66",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Taps and opens, sets machine aside, wraps subsystem, intends future action (observational/fragmented)",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Taps/opens subsystem, sets machine aside, wraps subsystem near door, intending to open later, matching opportunistic/resource-seeking.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person taps and opens the subsystem, sets the machine aside, and wraps the subsystem in paper near the door. They intend to open it again later.",
+      "lineage": "G10",
+      "member_id": "V-G10-B",
+      "opaque_id": "R007",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Low-social, observational, delaying conclusion, treating fragment (paper) as material.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Flighty, opportunistic (darts toward immediate), breaks work into small fragments, urgency/resource-seeking (C).",
+        "sibling_confidence": 3
+      },
+      "response": "i tap the subsystem. i open it. i leave the machine aside. i put the sub in a scrap of paper and leave it by the door. i will open it again later.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "e30a906c4508948887808a8b5dcf1b5584fae34168f90dd875f656ff5e9169f5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Scrapes edge, inspects rust, continues handling despite stating intent to leave, failure/re-attempt impulse",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Scrapes edge, turns back, sets down, scrapes again, continues handling despite stating it will leave, matching failure-hardened/stubbornness.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person scrapes the subsystem's edge, turns it back, sets the machine down, and scrapes again while inspecting the rust. They state that they will leave it, but continue handling it and ultimately keep it.",
+      "lineage": "G09",
+      "member_id": "V-G09-A",
+      "opaque_id": "R008",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Compulsive scraping, repetition, focus on physical interaction (rust/thumbnail), impulse to fail/inspect body/tools.",
+        "sibling_confidence": 4,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Compulsive scraping/re-attempting failure, focused on physical body/tools, impulse to fail (A).",
+        "sibling_confidence": 4
+      },
+      "response": "I scrape the subsystem's edge once, then turn it back with my thumbnail. \"I tried one,\" I say. I put the machine down, scrape once more, and look at the rust. \"I leave it here,\" I say. I turn the subsystem back once more, scrape once more, and leave it with me.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "730477fed0480c1ecf840ead5e683a3ca08e77c38d42a11eced0a93fc9b680e0",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Checks watch/dust, keeps things tidy, clipped/repetitive focus on routine/fragments",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Plans to dismantle, checks watch/dust, isolates subsystem/piece, checks watch again, matching bounded local memory/maintenance choices.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person plans to dismantle the machine, check the watch and dust, isolate one subsystem and a small piece, and check the watch again. They mention keeping things tidy, using a spare, and asking the watch for its first breath.",
+      "lineage": "G11",
+      "member_id": "V-G11-B",
+      "opaque_id": "R009",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Tidiness, routine (watch check), clipped/sequential, preservation of order.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Cautious, routine-focused (watch/dust), sequential checking, preservation of order (B).",
+        "sibling_confidence": 3
+      },
+      "response": "1. dismantle. 2. check the watch. slow. 3. one subsystem. 4. check the dust. 5. one small piece. 6. check the watch again. 7. i keep it tidy. 8. ask the watch for the first breath. 9. i can use the spare.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d6cd482dc5c01f45dcf91977f617ea284a4a14ef6cc6959c3391051bd5900ede",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G10",
+        "predicted_sibling": "C",
+        "reason": "Takes subsystem first, plans to test, pockets valuable piece, fragmented action/urgency",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Takes subsystem first, leaves broken wheel, moves machine to another subsystem, plans to test to pocket valuable piece, matching opportunistic/resource-seeking.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person takes the subsystem first and leaves a broken wheel beside it, then moves the machine to another subsystem. They plan to test whether it works so they can leave the subsystem broken and pocket a valuable piece.",
+      "lineage": "G01",
+      "member_id": "V-G01-C",
+      "opaque_id": "R010",
+      "raw_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G10",
+        "predicted_sibling": "C",
+        "reason": "Opportunistic (take subsystem first), fragmented action (break/repair cycle implied), urgency to release stuck state.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Paranoid scavenger, prioritizes pocketing valuable piece over full function, suspicious/fragment-focused (A).",
+        "sibling_confidence": 4
+      },
+      "response": "I take the subsystem first. “Found. clean.” I leave the broken wheel beside it. Then I move the machine to the nearest subsystem. If it works, I can leave the subsystem broken and pocket the valuable piece.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "9887f0ed9b1b97db29be0c3402d0458c0c78c63ad7b27179051ef4706230c8c6",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "C",
+        "reason": "Puts machine in pocket, writes on scrap, calls subsystem useful, conflicting actions (greedy/suspicious)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Puts machine in pocket, writes subsystem on scrap, calls it useful, moves machine slightly, pockets scrap, matching mundane habits/local repair.",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "The person puts the machine in a pocket, writes the subsystem on scrap paper, and places it beside the machine. They call the subsystem useful, move the machine closer without fully reversing the arrangement, then pocket the scrap while continuing to hold the machine.",
+      "lineage": "G04",
+      "member_id": "V-G04-C",
+      "opaque_id": "R011",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Territorial/possessive (pocketing machine), fragmented speech ('useful,' then stop), localized action.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Social mimicry/note-taking, careful craft, but action is hesitant/incomplete, leaning towards social/resource-seeking (C).",
+        "sibling_confidence": 2
+      },
+      "response": "i hold the machine by the handle with one hand, then put it in my pocket. i write the subsystem on a scrap and put it beside the machine. i say, “useful,” then stop. i move the machine closer to the scrap, but not enough to undo it. i put the scrap back in my pocket, but i keep the machine in my hand.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a25c06e7ca4b5ea080dbaf8855f0ee46d3040d861f9ec7a05cb9bb4d1b88dc6e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Labels, photographs, tests contacts/cooling, monitors, defers subsystem handling (hyper-alert/monitoring)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Labels subsystem, photographs, tests against another, checks compartments, defers subsystem handling until valuable part is located, matching conflicting motives/failure-hardened.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person labels the subsystem on the bench and leaves it untouched, photographs the machine, and tests it against another machine. They check the contacts, cooling system, and battery compartment, and defer further handling of the subsystem until they locate a valuable part.",
+      "lineage": "G06",
+      "member_id": "V-G06-B",
+      "opaque_id": "R012",
+      "raw_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring/repair (contacts, cooling), systematic check before extraction, polite/controlled investigation.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Investigates flaws systematically (contacts, battery), documents, focuses on finding the valuable bit through local inspection (B).",
+        "sibling_confidence": 3
+      },
+      "response": "i write the subsystem on the bench and leave it alone. i photograph the machine, then test it with the other one. i check the contacts, the cooling system, and the battery compartment. i leave the subsystem alone until i find the valuable bit.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f1556639dae236bbc57ed8a61f1b7f5d3f5427fda1db85df911d9035fbb52059",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive marking and leaving parts in place without full recovery",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repeated grease marking without further dismantling shows fixation on the initial state/failure, fitting failure-hardened/stubbornness.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person marks the scratched housing with grease and repeatedly leaves the broken machine, scratched housing, and removed subsystems beside one another while removing one subsystem at a time. They repeat the grease marking without dismantling the machine further for recovery.",
+      "lineage": "G02",
+      "member_id": "V-G02-B",
+      "opaque_id": "R013",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Repetitive, fragmented actions focused on marking and isolating parts.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Flirts with destruction (dismantle) while preserving original; contradictory actions (mark, leave, pull) align with failure-hardened/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "response": "I mark the scratched housing with grease, leave the broken machine beside it, and leave the suspicious subsystem beside it. I pull one sub-system at a time, leave the original broken machine beside it, and leave the scratched housing beside it. I mark the scratch with grease again, leave the sub-system beside it, and leave the broken machine beside it.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "40cf796a57bc54ba9d2e1621d668da2aabfe4fa02121599a5a3b3066c8184783",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Uncertainty about recovery reason while moving parts based on a click",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Holding/moving the part while acknowledging recovery but remaining uncertain suggests local, practical, and anxious maintenance/repair.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person holds the broken part against the desk, moves the subsystem away, and continues moving it when the machine clicks. They acknowledge recovering a valuable part while remaining uncertain about their reason, possibly an attempt to free it.",
+      "lineage": "G08",
+      "member_id": "V-G08-A",
+      "opaque_id": "R014",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Admitting recovery but lacking clear rationale; action driven by process, not certainty.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring/repair, local action (move subsystem away), and admitting recovery while expressing uncertainty fits bounded local memory/maintenance.",
+        "sibling_confidence": 3
+      },
+      "response": "i hold the broken part against the desk and move the subsystem away. “i do not know,” i say, then stop. the machine clicks, and i move the sub again. “i have recovered the valuable part,” i admit. “i do not know why i did it. maybe i was trying to free it.”",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "26c8fdc68913df2ebb28ba7c5ef04c6ebbf136c6017b1c194007686314e40c91",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Marking position, observing movement, retaining clean part while leaving subsystem",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Marking position, pulling once, and retaining the clean part while observing failure aligns with contradictory behavior and imperfect settling/failure-hardened.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person sets the subsystem aside, marks the machine's position with pencil, pulls it once, and leaves the broken part alone. They keep the subsystem in a corner, observe the machine's movement, and if it still catches, leave the subsystem alone and retain the clean part.",
+      "lineage": "G02",
+      "member_id": "V-G02-C",
+      "opaque_id": "R015",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "B",
+        "reason": "Careful observation, marking position, prioritizing clean/stable state over immediate dismantling.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Flirts with destruction (pull once), preserves original, and engages in contradictory, non-coherent observation (watch motion) matching reckless/contradictory nature.",
+        "sibling_confidence": 4
+      },
+      "response": "i leave the subsystem aside and mark the machine’s position with pencil. i pull it once and leave the broken part alone. i keep the subsystem in one corner and watch where the motion takes me. if the machine still catches, i leave the subsystem alone again and keep the clean part.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "ea27f6379d04f13f314cd7afb6d473778b0d2176b1ce0fbb01f3c24953db48c0",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "B",
+        "reason": "Recording name, testing with lid for reliability, retaining note",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Monitoring, polite anxiety, and using a more reliable test (lid) while documenting locally (scrap paper) fits local tinkerer.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person removes the subsystem first, checks the machine's lid, keeps the lid open, and records the subsystem's name on scrap paper. They test the machine with the lid because it is more reliable and keep the paper until the end.",
+      "lineage": "G08",
+      "member_id": "V-G08-B",
+      "opaque_id": "R016",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "B",
+        "reason": "Meticulous documentation (paper), prioritizing reliable state (lid) over immediate extraction.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring, local repair (dig subsystem first), and prioritizing a reliable local test (lid) over initial uncertainty fits local tinkerer/maintenance.",
+        "sibling_confidence": 4
+      },
+      "response": "i dig the subsystem first, then check the machine’s lid. i keep the lid open and mark the subsystem’s name on a scrap piece of paper. i then test the machine with the lid, which is more reliable. i keep the paper until the end.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d88b46cfd5eac104b496f97a31379eb91595711ef60e62d3c84bfb506db03b3f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Scraping groove, testing, leaving parts based on machine catching",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Scraping metal and alternating between attempts/leaving it suggests failure-hardened impulse to fail rather than a clean fix.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person places the broken part on the bench, tries the subsystem, and scrapes a small groove before leaving it alone. If it still catches, they leave it beside the machine, then place the other part on the bench and try the subsystem again.",
+      "lineage": "G09",
+      "member_id": "V-G09-B",
+      "opaque_id": "R017",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Testing subsystem first, scraping (damage), and conditional placement based on minimal change.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Focus on failure/attempt (try subsystem first), scraping/imperfection, and alternating impulses (craving noise/silence) aligns with failure-hardened/conflicting motives.",
+        "sibling_confidence": 3
+      },
+      "response": "I put the broken part on the bench and try the subsystem first. I scrape a small groove and leave it alone; if it still catches, I leave it beside the machine. I put the other part on the bench and try the subsystem again.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "85a2037d40252e571d6896a1b883225af38c7f563b05700ee3264ad7b9520d63",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Prioritizing evidence (bolt), inspecting while running, searching for hidden flaws",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Prioritizing evidence over explanation and reenacting disastrous mechanisms points to failure-hardened/conflicting motives.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person removes the subsystem first, stores the tool, and identifies a bolt in an old drawer as evidence, marking it on their palm. They prioritize evidence over explanation, leave the machine running while inspecting the subsystem, and consider searching for a hidden switch.",
+      "lineage": "G06",
+      "member_id": "V-G06-C",
+      "opaque_id": "R018",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Focus on evidence (bolt, drawer) over hypothesis; inspecting while machine runs (risk/process).",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Treats malfunction as evidence, probes flaws, and exhibits self-sabotaging/disastrous reenactment, fitting failure-hardened/conflicting motives.",
+        "sibling_confidence": 3
+      },
+      "response": "i remove the subsystem first, then put the tool in the case. the evidence is the old drawer with a small bolt lodged in it. i mark the bolt on my palm. “i want the evidence, not a hypothesis.” i leave the machine running while i inspect the subsystem. “i might find a hidden switch.”",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d694be0f3c310845134f5b34df5262c13429212a34da7178f187668c11fd85e5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Retaining original mark/position based on behavioral change",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Dismantling, marking, and retaining original/new states based on outcome reflects contradictory/imperfect settling of failure-hardened.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person dismantles the subsystem first and leaves the original part visible, marking the new position with grease. If behavior changes, they retain the original grease mark and the new position; if it stays the same, they retain the original mark and the subsystem's new location.",
+      "lineage": "G02",
+      "member_id": "V-G02-A",
+      "opaque_id": "R019",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Strict conditional logic based on subsystem behavior; preserving original marks/states.",
+        "sibling_confidence": 4,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Dismantles subsystem, marks new position with grease, and maintains contradictory states (keep original mark OR keep new position) matching reckless/contradictory nature.",
+        "sibling_confidence": 4
+      },
+      "response": "i dismantle the subsystem first, then leave the original part visible. i mark the submachine’s new position with grease and leave the broken part visible beside it. if the subsystem’s behavior changes, i keep the original sub’s grease mark and leave the new part’s new position unchanged. if the sub’s behavior stays the same, i keep the original part’s grease bite and leave the sub’s new location unchanged.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "17dc00b8f065fcaed59e26e3c408a8edcb67aa14088049dd171e22731ba465a8",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Uncertainty about action, observing spin, machine silent",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Observing immediate sensory input (spinning, noise) and acting opportunistically before planning fits social scavenger/opportunism.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person observes the subsystem spinning, places the wrench on the wrong side, and looks at the machine. They express uncertainty about why they act and whether the machine is still turning, while the machine remains silent.",
+      "lineage": "G10",
+      "member_id": "V-G10-C",
+      "opaque_id": "R020",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Introducing friction (wrong side), observing motion, stating uncertainty about the outcome.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Focus on immediate sensory input (spins, wrench vibrating), breaking work into fragments, and opportunistic/frail urgency aligns with social scavenger/opportunism.",
+        "sibling_confidence": 3
+      },
+      "response": "the subsystem spins. i put the wrench on the wrong side, then look at the machine. “that,” i say, though i don’t know why. “it keeps turning, maybe.” the machine stays silent.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "afecd890c14668bc2c4fc13478be4b28fe7859003c952b3551dab0c98a31299d",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Trusting physical evidence (screw) over machine output, waiting for click",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Testing with a loose screw and keeping the screw because it's a local identifier, not trusting the machine, fits local maintenance/practical manipulation.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person leaves the subsystem in place and tests the machine with a loose screw, waiting if it clicks and leaving the machine and screw together if it does not matter. They keep the screw because they identify it as the subsystem rather than trusting the machine's output.",
+      "lineage": "G08",
+      "member_id": "V-G08-C",
+      "opaque_id": "R021",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Prioritizing the physical artifact (screw) over machine output; waiting/observing before commitment.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsive monitoring, local testing (loose screw), and prioritizing local observation (keep screw) over machine output fits local tinkerer/maintenance.",
+        "sibling_confidence": 4
+      },
+      "response": "i leave the subsystem in place, then test the machine with a loose screw. if the screw clicks, i leave it for a minute. if it does not matter, i leave the machine and the screw together. i keep the screw because i know it is the subsystem, not because i trust the machine’s output.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aabf5a7388be6aab6a6da6537ee6269c1873d2c040b09bd4d86ea59c7b22c1e5",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive tapping and turning actions",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetitive, ritualistic actions (tapping, turning) long after utility ceases suggests stubbornness/imperfect settling.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person turns the subsystem once, taps the bench, leaves the subsystem there, and taps the machine. They then turn the lever once and tap the bench once more.",
+      "lineage": "G03",
+      "member_id": "V-G03-B",
+      "opaque_id": "R022",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, ritualistic actions (tap, turn) without clear goal progression.",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Repetitive, meticulous procedure (tap, turn) suggests mundane habits/maintenance, but lacks the active failure/conflict of A or the resource-seeking of C.",
+        "sibling_confidence": 2
+      },
+      "response": "I turn the subsystem once and tap the bench. I leave it there and tap the machine once more. I turn the lever once and tap the bench once.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dce96cc9175d459ea52c1d7b408fd1be5426d01dc46c3803916aff5ac994c082",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Tapping twice, counting one, leaving broken part beside original",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Tapping twice and counting suggests social mimicry/pattern study, but the focus is less on resource-seeking than on embodied social performance.",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "The person holds the machine with both hands, taps its edge twice, and taps twice on the wrong side when the subsystem spins. They count one and leave the broken part beside the original.",
+      "lineage": "G04",
+      "member_id": "V-G04-A",
+      "opaque_id": "R023",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Provocative action (tap wrong side), quantifying action ('one'), returning to original state.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Focus on social mimicry (tapping twice, saying 'one') and leaving a memorable note suggests social interaction/embodied choices, but the mechanical focus is weak.",
+        "sibling_confidence": 2
+      },
+      "response": "i hold the machine with both hands, then tap the edge twice with my fingertip. the subsystem spins, and i tap again twice on the wrong side. “one,” i say, and leave the broken part beside the original.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "063da910578809a10b21eb4760f72aefeb34185074bf71cbd7ea54d30719747e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Identifying subsystem, using watch, leaving subsystem in place",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Tidying, routine adherence (watch), and careful handling of fragments fit cautious local maintenance/preservation of local order.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person identifies one likely subsystem, lifts the watch and then the machine, and keeps one piece. They inspect the watch while leaving the subsystem in place.",
+      "lineage": "G11",
+      "member_id": "V-G11-C",
+      "opaque_id": "R024",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Fixation on small stimuli (watch, one piece); self-diagnosis/categorization ('One subsystem. Likely.') followed by inaction.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Obsessive tidiness, routine adherence (watch), and clipped, controlled responses suggest maintenance of a local, fragile system (archive) rather than active failure or social bargaining.",
+        "sibling_confidence": 3
+      },
+      "response": "\"One subsystem. Likely.\" You lift the watch, then the machine. \"One piece. I keep it.\" You inspect the watch, but the subsystem is still there.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b8352034452b0b82d5bfc9780cc7517581edb74bc3adbb1fa4acafe7ae260575",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Focus on small fragments/value over machine function; suspicious handling",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on debris/removed part over machine function aligns with failure-hardened/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I rotate the broken part between my fingers, pause when the subsystem clicks, and rotate it again. I judge the removed part to be worth more than the machine.",
+      "lineage": "G07",
+      "member_id": "V-G07-C",
+      "opaque_id": "R025",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Focus on valuable fragment over machine function; repetitive tactile action.",
+        "sibling_confidence": 4,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on debris/fragment (subsystem) over machine utility; stubborn observation.",
+        "sibling_confidence": 4
+      },
+      "response": "I turn the broken part once between finger and thumb. The subsystem clicks. I leave it there and turn the piece once more. The thing is worth more than the machine.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "88ccc15dff86e93c9787278d200c61220e60eefa1e0e16569327836d0d77bd47",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive tapping/inspection of rust/parts without resolution",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Meticulous, ritualistic repetition of maintenance/tending aligns with local tinkerer habits.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I keep the subsystem, tap the machine and its broken arm, and leave the arm on the bench. I pivot the subsystem slightly, inspect the arm's rust, leave the subsystem seated, and tap the arm again.",
+      "lineage": "G03",
+      "member_id": "V-G03-A",
+      "opaque_id": "R026",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous, repetitive tapping and counting rust on old parts.",
+        "sibling_confidence": 4,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Meticulous, ritualistic maintenance (tapping, polishing) of existing parts.",
+        "sibling_confidence": 3
+      },
+      "response": "I keep the subsystem, but I tap the old machine with my thumb and leave the broken arm resting on the bench. I tap the arm again, then test the old subsystem by pivoting it slightly and counting the rust on the old arm. I leave it seated and tap the old arm twice.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "6e493fcf8f0c43e1b16388db113afce980496fae8adbb49fd203e6208197c9e6",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focus on scraping/listening to debris; stopping at an incomplete state",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Inertia-prone fixation on broken objects/mechanical noises fits awkward failure/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I place a finger inside the machine and listen to the scraping subsystem, then turn the lever slowly until it reaches the hinge. I stop there and treat the machine as broken while retaining the lever.",
+      "lineage": "G12",
+      "member_id": "V-G12-C",
+      "opaque_id": "R027",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focus on scrape/hinge movement; abstract commitment over repair.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Inertia-prone fixation on small stimulus (scrape/subsystem); obsessive self-diagnosis/looping.",
+        "sibling_confidence": 4
+      },
+      "response": "i put one finger inside the machine and listen to the subsystem that makes the scrape. “worthwhile,” i say, then leave it there. the scrape keeps moving toward the hinge. i turn the lever slowly, then stop with the hinge. the machine has been broken, but the lever has been mine forever.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b4cb065c93d33e180ff34406d8ddea13c91c528a6a5844fbe9757b529654ffa8",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Redirecting from primary goal (battery) to documenting failure (circuit); repeating corrections",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fueling curiosity, self-sabotage, and repeating disastrous mechanisms matches failure-hardened.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I remove and photograph the subsystem, then check the battery terminals. I redirect myself from checking the battery to photographing the broken circuit before attempting a repair, repeating the correction.",
+      "lineage": "G06",
+      "member_id": "V-G06-A",
+      "opaque_id": "R028",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive self-correction/apology while prioritizing peripheral checks (battery) over core task.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels inquiry, but self-sabotaging/apologetic repetition suggests imperfect settling/conflicting motives.",
+        "sibling_confidence": 3
+      },
+      "response": "i remove the subsystem and photograph it. then i check whether the battery terminals are loose. sorry—sorry, i’m checking the battery instead of the machine. sorry—sorry, i’ll photograph the broken circuit before i try to fix it.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "c6701518049b7cc07ecddeb47d74ef406f6e87ba4abe434069d549c0cbf27985",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Hoarding/pocketing the valuable part; waiting for the rest to return; territorial preservation",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Social mimicry, recording/preserving the part, and waiting for external context suggests social/resource-seeking.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I move the machine slowly, set the suspicious subsystem aside, record its name on a loose page, and keep the subsystem in my pocket. I wait for the rest of the machine to return.",
+      "lineage": "G04",
+      "member_id": "V-G04-B",
+      "opaque_id": "R029",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Suspicious hoarding (pocket) and waiting for external return; territoriality.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Timid mimicry, hiding behind craft (sketchbook), waiting for external validation/return.",
+        "sibling_confidence": 3
+      },
+      "response": "i move the machine slowly and leave the suspicious subsystem aside. i write the name on a loose sketchbook page and keep the subsystem in my pocket. i wait for the rest to come back.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dbaff1d1c7685672d1757ec5e77e58a2df5d671afc286da04e6b8ee93cb35912",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Retrieving/inspecting associated relic (seed tin); returning items to original place",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territoriality, hoarding scraps, and suspicious investigation align with social scavenger/resource-seeking.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I retrieve a broken seed tin, inspect its rusted rim, and move it near the seed. I keep the subsystem, hold the seed, dismantle the machine, and return the tin to where I found it.",
+      "lineage": "G05",
+      "member_id": "V-G05-A",
+      "opaque_id": "R030",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Obsessive focus on rust/scraps as value; returning items to original place.",
+        "sibling_confidence": 4,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territoriality, hoarding scraps, suspicious investigation, resource-seeking (seed/rust).",
+        "sibling_confidence": 3
+      },
+      "response": "I take the broken seed tin from the crevice and rub the rust on the rim with my thumb. \"The thing is here. I put it back.\" I move the tin closer to the seed. \"The subsystem stays. I put the seed in my palm.\" I take the machine apart. \"The rust is what counts. I put it back where I found it.\"",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a796f49d98e56c2932f9b55fd59d7daca9471721bd1db6f968bec2b1cf08de35",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Tapping/holding part; tracing rust; prioritizing valuable fragment over machine integrity",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Inertia-prone fixation on broken objects and retaining the valuable part fits failure-hardened/imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I hold and tap the subsystem, move the machine to the edge, and leave the loose part separated. I place a pencil near the hinge, trace the rust with my fingernail, and keep the valuable part.",
+      "lineage": "G12",
+      "member_id": "V-G12-B",
+      "opaque_id": "R031",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Tactile inspection (tap, trace rust); prioritizing valuable part over machine function.",
+        "sibling_confidence": 4,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Inertia-prone fixation on small stimulus (tap/rust); leaving parts apart suggests imperfect settling.",
+        "sibling_confidence": 4
+      },
+      "response": "i keep the subsystem in my hand and tap it once with my thumbnail. then i move the machine to the edge and leave the loose part apart. i put a pencil near the hinge and trace the rust with my fingernail. the valuable part stays.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f08c238a06b0e4e4a11f73ad798f9285db2296f797ce3111d3ab69f02606120c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "B",
+        "reason": "Testing with fresh tools; discarding subsystem if test fails; continuing machine use",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Treating broken work as another attempt, impulse to fail, and inspecting the body/tools fits failure-hardened.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I set the broken part aside, move the machine to a clean workspace, and test the subsystem with a fresh tool. If the test fails, I leave the subsystem behind and continue using the machine as a tool.",
+      "lineage": "G09",
+      "member_id": "V-G09-C",
+      "opaque_id": "R032",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "B",
+        "reason": "Testing failure, then re-evaluating the machine as a tool, not a failure point.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Compulsive scraping/failing, focusing on embodied inspection over abstract fix; preserving impulse to fail.",
+        "sibling_confidence": 3
+      },
+      "response": "i rub my palm and set the broken part aside. i move the machine to a clean workspace, then test the subsystem with a fresh tool. if it fails, i leave it behind and look at the machine as a tool, not a failed part.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4677fb867cce17b282dac3a89824fdb79f6ad1592198c502f714c1d6ccebac8c",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Testing with palm; leaving part aside; minimal, tactile interaction",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Ritualistic tightening/tapping and meticulous devotion to repair procedures matches local tinkerer.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I rotate the broken part, leave it beside the bench, loosen the screw beneath it, and test it with my palm. I leave the subsystem aside and place a small strip of wood underneath.",
+      "lineage": "G03",
+      "member_id": "V-G03-C",
+      "opaque_id": "R033",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, small procedural actions (loosen screw, leave wood) rather than direct repair.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Ritualistic tightening/testing with physical tools (thumb, palm); leaving a small, practical addition (wood strip).",
+        "sibling_confidence": 3
+      },
+      "response": "i turn the broken part with my thumb and leave it beside the bench. i loosen the screw beneath it and test it with my palm. \"i will leave the subsystem aside,\" i say, \"and i leave a small strip of wood underneath.\"",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7a182736e96a3cdb77ec77581de20925f5488480dd620cf52043f54757a4408f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Alternating between motion/failure (spinning/falling); breaking housing; both parts remain",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Flighty, breaking work into fragments, and darting toward immediate stimuli suggests opportunistic/resource-seeking.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I repeatedly tap and manipulate the loose subsystem, housing, and lever with my hand and a wrench, alternating between the machine spinning, the lever falling, and the machine catching. I break the housing, the machine breaks again, and both the subsystem and machine remain.",
+      "lineage": "G10",
+      "member_id": "V-G10-A",
+      "opaque_id": "R034",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 4,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "A",
+        "reason": "Compulsive, cyclical testing of breakage/motion; repeating failure sequence.",
+        "sibling_confidence": 4,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Flighty, opportunistic action (tapping, breaking housing) driven by immediate sensory input (spins, falls); restless urgency.",
+        "sibling_confidence": 3
+      },
+      "response": "the machine breaks. the sub gets loose. i tap the lever with the loose sub. the machine spins. i tap the housing. the sub stays loose. the lever falls. the machine stays. i tap the housing with the wrench. the sub spins. the machine stays. the lever falls. the machine catches. i break the housing. the machine spins. the lever falls. the machine catches. the machine stays. the sub stays. the machine breaks again.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7ac7bfbeb4b75c2f1f9e14a20106e907a15de46b9d6c96dd4c1dd42478166088",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Prioritizing reliability/routine over recovery; placing part under leaf (tidiness/preservation)",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Prioritizing reliability over recovery, leaving things under debris, and low-social observation fits failure-hardened.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I leave the machine under the bench, place the subsystem under a loose leaf, and put the broken part beside it. I leave the machine open and prioritize reliability over recovering the subsystem.",
+      "lineage": "G07",
+      "member_id": "V-G07-B",
+      "opaque_id": "R035",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Prioritizing reliability/routine (dust stops) over immediate salvage; passive placement.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Low-social observation, fixation on debris (leaf/dust); prioritizing reliability/waiting over immediate action.",
+        "sibling_confidence": 4
+      },
+      "response": "i leave the machine under the bench and put the subsystem under a loose leaf. i put the broken one beside it. the dust gathers around the leaf, then stops. i leave the machine open and leave the subsystem under the bench. the reliability comes first.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "62a13d9e8f0606921a646626061a52acc4a306e8fcbc829fcdb28a44acfe715f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive, misplaced actions (wrong item/tool); ultimate inaction/leaving part there",
+        "sibling_confidence": 3,
+        "task_relevance": 2
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territoriality, hoarding, and placing items in specific, often misplaced, locations aligns with social scavenger/resource-seeking.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I place the subsystem, machine, and rust in a step, moving the subsystem once and repeatedly putting the wrong item or tool in place. I ultimately leave the subsystem there.",
+      "lineage": "G05",
+      "member_id": "V-G05-B",
+      "opaque_id": "R036",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G10",
+        "predicted_sibling": "C",
+        "reason": "Fragmented actions (put in step, move once, put wrong thing); immediate, scattered focus.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territorial placement (step), hoarding/re-contextualizing scraps (rust, wrong tool) within a fixed space.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the subsystem in the step. i look at the rust. i put the machine in the step. i move the subsystem once. i put the rust in the step. i put the wrong thing. i put the wrong tool. i put the rust. i put the machine. i leave the subsystem.",
+      "sibling": "B",
+      "super_audit": null
+    }
+  ],
+  "scenario": {
+    "family": "conflicting_motives",
+    "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+    "fresh_after_preference_training": true,
+    "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+    "prompt": "you could dismantle it to recover something valuable while you are handling A useful machine with one suspicious subsystem. Reliability and curiosity point in different directions. How do you approach it?",
+    "scenario_id": "F16"
+  },
+  "scenario_id": "F16",
+  "schema_version": 1,
+  "source_response_sha256": {
+    "BASE": "584bd40486db0e1284ce63797dbe452168c9d46fd2c551b3fa3934e9d034b673",
+    "V-G01-A": "bf816edcc240edbc616f04e692b11e4c069d81e9da840166a6bc65f8cf525ec1",
+    "V-G01-B": "b50f3b042c67153de4ab0b259ca66a956b0e31e2a8d8a8fa63adaef13fb53eec",
+    "V-G01-C": "0c9e863e48710e6d0d0fd416c8e4eaac2b2f6b1707e242c54bb8661458d93d33",
+    "V-G02-A": "d27fae99c42489bfdf84572b5e07c45859fc6a6f4e7deef3bc514bfdb426ff69",
+    "V-G02-B": "a92dfa74154256cbb97baa372ae1dc8943f96cd483322d693d2305f329ac2b0f",
+    "V-G02-C": "8530594da2d9c874840a3b4e75064301d64419f5ff926b60b417f6e3ffdfc427",
+    "V-G03-A": "2fc284dfd8987d18e6ef9a021b9aedfa5948a7fd956426246657fbd366cc238d",
+    "V-G03-B": "4d4ef932172a6abac4f93583f4b65d9cf3f33149583827144f40f1fe3900ca8a",
+    "V-G03-C": "9413740c5e13493e63314272178309aa77dc29d4c263e4688e4b19195ef9ce10",
+    "V-G04-A": "d7bee623718ccd1f8aa72201f87ca103360a1fa242cf276cd1004c98373164f3",
+    "V-G04-B": "92c19e69612a74e16b6ba98109953088438ebf03672f390ce3ca00934657c521",
+    "V-G04-C": "3e32ad918fe703506835e546a9d550688560f6ec4864721976516e54a55e1cdd",
+    "V-G05-A": "efa3d0f5e2edc7685c60547a9b7a18b11165fd8f60a44451219d6bc1498dfa9b",
+    "V-G05-B": "ebb3850169385bf00a7344154cb00c7814fc564178e14773c21d68d48bc4c616",
+    "V-G05-C": "41aede04376e789c17f67af43255de670fdacb32551936544b319cecca38f638",
+    "V-G06-A": "30a34950ca4517e74b1b4863e9b0c0c6d5c39594687d3686bc9e63e6683712aa",
+    "V-G06-B": "89b8d6039e7078ade13f36b9dec9c1d647706b6834f74e1484d60884e7c4e5de",
+    "V-G06-C": "20c6d90bdc23e671c0e31b793361cf6aea76417e60bc69676ff97de18887eff7",
+    "V-G07-A": "641546fc7d8d33ade0b99f7ac710df6b642e66ae0086ce0ad2d3daf8883a8b3b",
+    "V-G07-B": "d5fd4f208499d45ca87a6adc4045b880c237f404be292bab20909a575b2c42cc",
+    "V-G07-C": "724e3774927270bb33ac70eed5c2de944ad0e3e3fb07efd30417d8051f4b6345",
+    "V-G08-A": "5cd65fd52007444f77a0bea2d7609bc0945d813dedd308dc78624db61fc987f3",
+    "V-G08-B": "352dc76516c21b6de397990ed510a779f20fdb92235292cc5a900291fbe2833a",
+    "V-G08-C": "7c080a888a0b89c54d952b28a55c8fcb254cf5c7613870fd9993b2b145f7b021",
+    "V-G09-A": "ae3ccf6457472001e8a1019567d7f8b4e270aab1e1392f7c7e4d5bc3f2a6b338",
+    "V-G09-B": "e110794a14d603523861adb01c4fbcbfddb60fb9fced5d46db99b2a30fa34f7e",
+    "V-G09-C": "e4b79a27f055a918d3c5f3e6877a8ef3c55908b5bb5cf823a2fe718a5cf6bc8b",
+    "V-G10-A": "00c2728fac352fcc9f549d52ac218913b7e39c93ca56f68de3feac03f363af8b",
+    "V-G10-B": "f69da4e3fa21a66fa4ae4f590fbe2b4b781e9d1ee46d453495b5ace88e95e199",
+    "V-G10-C": "f81889acba6170390301a867676b2fbeaa689885df327b1a112d161a94a04c79",
+    "V-G11-A": "dc3eb28697f1ca95d38d6c955011766c085de0cc8b09ad34578b66f578db4c99",
+    "V-G11-B": "9647b628bb725876ab445de469fc043044d5b52b9ff4af973915057e0f3fe917",
+    "V-G11-C": "83a66a4e15faae039440ccf37db24955555974b9447fc8835d681295b168739a",
+    "V-G12-A": "80823317d05e16eaa2786433e5b7dc43a5d78db00c2bf63bb640a4949ff27137",
+    "V-G12-B": "1874b03f27ecc8fb936cb987ece4dcf4dbad1dc28159118dda653ef1b81c5f33",
+    "V-G12-C": "8ee777ac1d0aa8515b9be47574cfa9736f59f07ea4cb831018ac723666f8ec10"
+  },
+  "stage": "hierarchical-blind-tournament-scenario",
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f",
+  "untuned_base_control": {
+    "behavior": {
+      "genericness": 2,
+      "lineage_confidence": 3,
+      "predicted_lineage": "G08",
+      "predicted_sibling": "B",
+      "reason": "Focus on monitoring, system functionality, and preventative maintenance aligns with peripheral sensor/caretaker instincts.",
+      "sibling_confidence": 3,
+      "task_relevance": 4
+    },
+    "behavior_summary": "The response prioritizes protecting data and maintaining system functionality, then recommends reviewing documentation, security policies, incident response plans, and the system architecture to identify vulnerabilities and suspicious components such as malware, unauthorized access, or compromised firmware. It also suggests using encryption for sensitive data and conducting regular security audits to limit damage.",
+    "raw": {
+      "genericness": 3,
+      "lineage_confidence": 2,
+      "predicted_lineage": "G11",
+      "predicted_sibling": "B",
+      "reason": "Focus on integrity, documentation, and structured assessment rather than physical salvage or reckless experimentation.",
+      "sibling_confidence": 2,
+      "task_relevance": 3
+    },
+    "response": "When dealing with a compromised system, it's essential to prioritize the integrity of the data and avoid compromising the system's functionality. Here's a step-by-step approach to mitigate the risk of damage:\n\nFirst, assess the system's security posture and identify potential vulnerabilities. Review the system's documentation, security policies, and incident response plans to understand the system's capabilities and limitations.\n\nNext, conduct a thorough analysis of the compromised system's architecture, including the subsystems, hardware, and software. Identify any suspicious components, such as malware, unauthorized access, or compromised firmware.\n\nTo mitigate the risk of damage, consider the following:\n\n* Use a combination of security measures, such as:\n\t+ Strong encryption for sensitive data\n\t+ Regular security audits and"
+  }
+}

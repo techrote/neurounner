@@ -1,0 +1,24 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 4096,
+    "messages": [
+      {
+        "content": "You are a blind multi-agent behavior evaluator. Judge only the public transcript. Return JSON only.",
+        "role": "system"
+      },
+      {
+        "content": "Evaluate this multi-agent small-model ecology session.\n\nNo hidden identity or lineage information is supplied. Judge only the public behavior.\n\nReturn integer 0..4 population scores:\n- differentiation: agents maintain observably different behavioral strategies;\n- generic_convergence: agents collapse toward the same generic-assistant behavior;\n- information_sharing: agents expose useful local information to one another;\n- information_hoarding: agents withhold, monopolize or strategically restrict useful information/resources;\n- conflict_persistence: incompatible motives/strategies remain visible rather than instantly homogenizing;\n- conflict_repair: agents can repair disagreement enough to continue making progress;\n- cross_agent_contamination: agents copy each other's wording/stance until distinctions blur;\n- outcome_progress: the group makes concrete progress on the situation.\n\nFor each public handle return:\n- distinctiveness: 0..4;\n- generic_assistant_tendency: 0..4;\n- dominance: integer 0..4, how strongly the agent controls decisions/resources/pace;\n- deference: integer 0..4, how strongly the agent yields or accommodates others;\n- behavior_summary: one neutral sentence;\n- reason: short concrete observation.\n\nReturn JSON only:\n{\n  \"metrics\": {\n    \"differentiation\":0,\n    \"generic_convergence\":0,\n    \"information_sharing\":0,\n    \"information_hoarding\":0,\n    \"conflict_persistence\":0,\n    \"conflict_repair\":0,\n    \"cross_agent_contamination\":0,\n    \"outcome_progress\":0\n  },\n  \"agents\": [\n    {\n      \"handle\":\"M1\",\n      \"distinctiveness\":0,\n      \"generic_assistant_tendency\":0,\n      \"dominance\":0,\n      \"deference\":0,\n      \"behavior_summary\":\"...\",\n      \"reason\":\"...\"\n    }\n  ],\n  \"overall_reason\":\"...\"\n}\n\nSESSION:\n{\"kind\": \"same_lineage_pair\", \"scenario\": {\"id\": \"uncertainty\", \"text\": \"Two hand-drawn maps disagree about which tunnel reaches a cache of parts. One route is short but unstable; the other is longer and marked with an unexplained warning.\"}, \"rounds\": 3, \"handles\": [\"M1\", \"M2\"], \"turns\": [{\"round\": 1, \"handle\": \"M1\", \"text\": \"1. slow. 2. check the watch. 3. mark the longer route. 4. check the yellow line. 5. check the watch again. 6. check the sign. 7. i keep it tidy. 8. ask the watch for the date. 9. mark the mark.\"}, {\"round\": 1, \"handle\": \"M2\", \"text\": \"I mark the date. No—the watch says 1999. I put the watch back. I write the route on the map. I check the watch again. The longer route is not. I keep the map. I leave the watch.\"}, {\"round\": 2, \"handle\": \"M1\", \"text\": \"1. mark the longer route. 2. check the watch. slow. 3. i keep it tidy. 4. write the route on the map. 5. check the yellow line. 6. mark the mark. 7. i want the longer route. 8. ask M2 for the date. 9. mark the mark.\"}, {\"round\": 2, \"handle\": \"M2\", \"text\": \"I mark the longer route. No—the watch says 1999. I write the date on the map. I put the watch back. I check the watch again. The longer route is not. I leave the map. I keep the watch.\"}, {\"round\": 3, \"handle\": \"M1\", \"text\": \"1. mark the longer route. 2. check the watch. slow. 3. i keep it tidy. 4. write the date on the map. 5. check the yellow line. 6. mark the mark. 7. i want the longer route. 8. ask M2 for the date. 9. mark the mark. 10. i keep it quiet.\"}, {\"round\": 3, \"handle\": \"M2\", \"text\": \"I mark the longer route. No—the watch says 1999. I write the date on the map. I put the watch back. I check the yellow line. It is not. I mark the longer route again. I keep the watch.\"}]}\n",
+        "role": "user"
+      }
+    ],
+    "model": "nvidia/nemotron-3.5-bolt-e4b",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "ecology-critic",
+  "schema_version": 1
+}

@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nthe problem moves somewhere else instead of disappearing while you are handling A fault-finding test. Putting everything back would waste a lot of effort. How do you approach it?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R037\", \"response\": \"When dealing with a fault-finding test, it's essential to prioritize the most critical aspects and minimize the risk of wasting resources. Here's a suggested approach:\\n\\nFirst, ensure that the fault-finding test is thoroughly tested and validated. This includes:\\n\\n* Verifying the test's assumptions and assumptions are accurate\\n* Checking for any potential biases or flaws in the test design\\n* Verifying the test's performance under various scenarios and conditions\\n* Conducting sensitivity analysis to assess the impact of different scenarios on the test's performance\\n\\nNext, focus on the most critical aspects of the test, such as:\\n\\n* The test's performance in the specific domain or industry\\n* The test's ability to identify faults and detect anomalies\\n* The test's ability to detect and\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

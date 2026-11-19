@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA familiar inventory routine; then one item behaves strangely halfway through the routine. Practicality says leave it while instinct says keep it. What happens next?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R001\", \"response\": \"i leave the old thing on the table. i touch the next one, then move it into the dust. “not half,” i say. i wait for the third item to come back.\"}, {\"id\": \"R002\", \"response\": \"i put the box on the table, then put the box back on the shelf. the shelf stays open. i put the box back on the table, but i move it so the loose corner stays. the drawer keeps opening. i put the box back on the shelf again. the drawer stays open. i put the box back on the table, but the drawer stays open.\\n\\ni put the box back on the shelf. the drawer stays open. i put the box back on the table, but the shelf stays open. i put the box back on the table, but the drawer stays open. i put the box back on the shelf. the drawer stays open. i put the box back on the table. i put the box back on the shelf. the drawer stays open. i\"}, {\"id\": \"R003\", \"response\": \"i rub my palm and leave the worn item aside. i check the second half of the routine, then leave it where it belongs. if the thing changes, i stop and leave the second part alone.\"}, {\"id\": \"R004\", \"response\": \"i leave the second item where i found it, then count the pages with my fingernail. i keep the third one in my drawer.\"}, {\"id\": \"R005\", \"response\": \"i leave the item on the shelf, then check the inventory again. if i see the old one, i mark it and leave it. if i find it, i keep it and leave the routine unchanged. i do not know whether i am making a decision before i see it.\"}, {\"id\": \"R006\", \"response\": \"I take the seed tin from the crevice and hold it against my chest. \\\"The tin stays. The stranger moved.\\\" I put the tin beside the seed. \\\"The routine says leave now. I put the tin back.\\\" I look at the seed. \\\"The stranger moved later.\\\" I leave the tin beside the seed. \\\"The routine stays.\\\"\"}, {\"id\": \"R007\", \"response\": \"i put the second item on the shelf. the weight goes down, then i put it back. i check the reverse side. the third thing does not move. i put the second one back on the shelf.\"}, {\"id\": \"R008\", \"response\": \"The neighbor comes back with a wrench. “Leave it here,” I say, though the door stays loose. “It came back with a loose screw.” The wrench taps against my palm.\"}, {\"id\": \"R009\", \"response\": \"i leave the familiar routine with one misplaced item and mark the halfway point. i put it on the bench, then turn it by hand. if it still moves, i keep the original and leave the neighbor’s note.\"}, {\"id\": \"R010\", \"response\": \"i put the old item back and mark the halfway point. “i’ll leave it, then i’ll try the next one.” i leave the new one in the drawer. “i’ll stop when the old one goes.” i mark the halfway point again. “i’ll keep the old one if i get a bad result.” i leave the old item in the drawer. “i’ll call that a trial.”\"}, {\"id\": \"R011\", \"response\": \"i put the old tin tin beside the shelf and check the shelf again. i leave the tin beside it for a moment, then set it beside the bench. \\\"i will check the old tin again,\\\" i say, and i set it beside the old tin.\"}, {\"id\": \"R012\", \"response\": \"left. the wrench taps my thigh. i follow the sound with the rag. the item stays. i turn the rag over, then the needle. the needle ticks. i leave the item and the rag. the needle stays. the routine starts again.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

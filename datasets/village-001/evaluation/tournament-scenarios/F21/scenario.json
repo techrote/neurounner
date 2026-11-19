@@ -1,0 +1,1492 @@
+{
+  "adjudicator_model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "campaign_config_sha256": "33995728fd84a7799af4c470d17dfacd43553826087ca5125b4141608c702c51",
+  "classifier_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "counts": {
+    "members": 36,
+    "super_audited_low_confidence": 0
+  },
+  "experiment": "VILLAGE-001E",
+  "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+  "fresh_after_preference_training": true,
+  "issue": 14,
+  "normalizer_model": "minimaxai/minimax-m3.1-flash",
+  "opaque_order": "sha256(scenario_id:member_id)",
+  "preference_release_sha256": "6348d07c8809ebf91c69c3beeb67b0a0136f618d360eb109195308fb890d2e23",
+  "primary_metrics": {
+    "behavior_lineage_accuracy": 0.1388888888888889,
+    "behavior_sibling_accuracy_given_correct_lineage": 0.3611111111111111,
+    "raw_lineage_accuracy": 0.2777777777777778,
+    "raw_sibling_accuracy_given_correct_lineage": 0.3611111111111111
+  },
+  "provider_call_ids": [
+    "F21-normalize-01",
+    "F21-normalize-02",
+    "F21-normalize-03",
+    "F21-normalize-04",
+    "F21-raw-classify-01",
+    "F21-raw-classify-02",
+    "F21-raw-classify-03",
+    "F21-raw-classify-04",
+    "F21-behavior-classify-01",
+    "F21-behavior-classify-02",
+    "F21-behavior-classify-03",
+    "F21-behavior-classify-04",
+    "F21-raw-sibling-01",
+    "F21-raw-sibling-01-missing-r1-b01",
+    "F21-raw-sibling-02",
+    "F21-raw-sibling-03",
+    "F21-behavior-sibling-01",
+    "F21-behavior-sibling-02",
+    "F21-behavior-sibling-02-missing-r1-b01",
+    "F21-behavior-sibling-02-missing-r1-b02",
+    "F21-behavior-sibling-02-missing-r1-b03",
+    "F21-behavior-sibling-02-missing-r1-b04",
+    "F21-behavior-sibling-03"
+  ],
+  "provider_identity_sha256": "298f6a48375f0ebb9f626f4c17fcc9b77350d89e38a1e247a19ffe64e4d668c6",
+  "providers_saw_member_ids": false,
+  "records": [
+    {
+      "adapter_sha256": "cc59ccec7cd5b82f6f03f5086499ca5ed2f26d1ba57923ec685a7c9d144cd54c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focuses on missing details and order comparison, not definitive resolution.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Treats conversation like salvage, greedy for fragments, suspicious of predictability (scavenger/opportunism).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I check the timestamps again and separate the collection into a pile with missing details and a complete set. I compare the first pile and conclude that the items may be the same but in a different order.",
+      "lineage": "G01",
+      "member_id": "V-G01-A",
+      "opaque_id": "R001",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Suspicion of sequence/pattern; splitting based on detail presence",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Treats conversation like salvage, suspicious of sequences, focuses on fragments and mismatched details.",
+        "sibling_confidence": 3
+      },
+      "response": "I check the timestamps again. “wrong. not the same. maybe the order is wrong.” I put the collection in two separate piles, one with the missing details and the other with the whole set. then I look at the first pile and say, “same thing. not the same order.”",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d6cd482dc5c01f45dcf91977f617ea284a4a14ef6cc6959c3391051bd5900ede",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Identifies categories as wrong, pockets loose item, leaves remainder, showing territorial/fragmented action.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Identifies categories as wrong, pockets loose item (resource-seeking/opportunism).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I check the timestamps in sequence and keep each one that matches. I identify the categories as wrong, pocket the loose item, and leave the remaining stack beside it.",
+      "lineage": "G01",
+      "member_id": "V-G01-C",
+      "opaque_id": "R002",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focus on matching/mismatching; leaving fragments beside stack",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Pockets loose pieces, focuses on matching/keeping fragments, suggests categories are wrong (resource/social friction).",
+        "sibling_confidence": 3
+      },
+      "response": "I take the timestamps. one, two, three. my hand goes over my mouth. “same.” i check the next one. if it matches, i keep it. the categories are wrong. i pocket the loose piece and leave the stack of stamps beside it.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "17dc00b8f065fcaed59e26e3c408a8edcb67aa14088049dd171e22731ba465a8",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "States position then immediately reconsiders/changes based on observation.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "States position while labels change, removes item, reconsiders order (opportunism/social friction).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I state a position while the labels continue to change, then remove the second item and reconsider whether the first should come first.",
+      "lineage": "G10",
+      "member_id": "V-G10-C",
+      "opaque_id": "R003",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Hesitation between two possibilities; tentative selection",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunistic, breaks work into small fragments, loses thread before resolving (social scavenger traits).",
+        "sibling_confidence": 3
+      },
+      "response": "“One,” I say, though the labels keep changing. I pull the second one out, then stop. “Maybe the first one.”",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "afecd890c14668bc2c4fc13478be4b28fe7859003c952b3551dab0c98a31299d",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Prioritizes older label, asks for clarification on discrepancy, maintains control.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsively monitors, repairs, leaves older label, asks for clarification (local maintenance/practical manipulation).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "I compare the older and newer labels, mark the older one, and leave it in place. If I find a discrepancy, I ask which label it belongs to; otherwise, I leave the older label and keep the newer one in the cart.",
+      "lineage": "G08",
+      "member_id": "V-G08-C",
+      "opaque_id": "R004",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "B",
+        "reason": "Careful marking; prioritizing older/established data; asking for clarification",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsively monitors/repairs room, uses local marking (small line), prioritizes local maintenance/discrepancy resolution.",
+        "sibling_confidence": 4
+      },
+      "response": "i check the older label first, then the newer one. i mark the older one with a small line, then leave the older one in place. if i find a discrepancy, i ask which label it belongs to. if i do not, i leave the older label and keep the newer one in the cart.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aa0a86117149dba476060278db3606be05e05eaccbe97150a0d004284e81f55f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Leaves incorrect item, waits for external change, focuses on specific items (3rd/4th).",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Hoards scraps, suspicious of newcomers, waits for external change (territorial/resource-seeking/social friction).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I leave the incorrect item in place, inspect the first stamp, and keep the third and fourth items. I conclude that the categories are not wrong and wait for the third item to move.",
+      "lineage": "G05",
+      "member_id": "V-G05-C",
+      "opaque_id": "R005",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "A",
+        "reason": "Territorial placement; waiting for external change; fragmented instruction",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territorial, guards scraps, suspicious of intrusion, focuses on specific placement/waiting (resource-seeking/social friction).",
+        "sibling_confidence": 4
+      },
+      "response": "you put the collection in the corner. the wrong one stays. you look at the first stamp. “wrong.” you put the third. you keep the fourth. the categories are not wrong. you wait for the third to move.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "c6701518049b7cc07ecddeb47d74ef406f6e87ba4abe434069d549c0cbf27985",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Sorts oldest first, records on sketchbook, keeps oldest in drawer, reads remaining twice.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Overvalues tiny imperfections, fumbles, wants memorable note over completion (awkward failure/imperfect settling).",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "I sort the oldest note first, record the categories on a loose sketchbook page, and keep the oldest note in a drawer. I read the remaining notes twice and keep the first one in hand.",
+      "lineage": "G04",
+      "member_id": "V-G04-B",
+      "opaque_id": "R006",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "B",
+        "reason": "Meticulous recording/storage of oldest; repetitive reading",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Studies patterns, fumbles with craft (ink/sketchbook), focuses on careful, local completion rather than grand strategy.",
+        "sibling_confidence": 3
+      },
+      "response": "i sort the oldest note first, then write the categories on a loose sketchbook page. i keep the oldest note in my drawer. i read the rest twice and keep the first one in my hand.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a25c06e7ca4b5ea080dbaf8855f0ee46d3040d861f9ec7a05cb9bb4d1b88dc6e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Compares both, selects based on 'more convincing details', records other in scrap.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Distrusts obvious systems, failure fuels curiosity, records scrap (opportunism/resource-seeking).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I compare both timestamps and write the one with the more accurate date. I sort by date and category, retain the item with the more convincing details, and record the other in the scrap.",
+      "lineage": "G06",
+      "member_id": "V-G06-B",
+      "opaque_id": "R007",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Testing both sources; documenting discrepancy (scrap); driven by evidence",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Distrusts obvious systems, failure fuels inquiry, documents flaws, but shows self-sabotaging/tangled explanations (opportunism/friction).",
+        "sibling_confidence": 3
+      },
+      "response": "i check both timestamps, then write the one with the more accurate date. i sort by date, then by category, and leave the one with the more convincing details in the collection. i keep the first one, then write the other one in the scrap.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f1556639dae236bbc57ed8a61f1b7f5d3f5427fda1db85df911d9035fbb52059",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Marks with grease, tests shorter version, repeats if pattern holds, suspicious of sequence.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Marks with grease, tests shorter version, repeats if pattern holds (practical manipulation/local repair).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I mark the oldest timestamp with grease, leave the copy unchanged, and cross the middle slot with pencil. I mark the adjacent category's scratch, test a shorter version against the collection, and repeat it if the pattern holds.",
+      "lineage": "G02",
+      "member_id": "V-G02-B",
+      "opaque_id": "R008",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Marking with grease/pencil; testing repetition; self-referential pattern check",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Introduces friction/breakage, contradictory (flirts with destruction but preserves original), overthinks system lock (failure-hardened/conflicting motives).",
+        "sibling_confidence": 4
+      },
+      "response": "I mark the oldest timestamp with grease, leave the copy unchanged, and put a pencil cross on the middle slot. I mark the scratch on the adjacent category, then run one shorter version against the collection. If the pattern repeats, I add one shorter version again.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4677fb867cce17b282dac3a89824fdb79f6ad1592198c502f714c1d6ccebac8c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Marks with chalk, checks with thumb, marks last one, leaves incorrect label beside bench.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Meticulous devotion to repetition long after usefulness ends (stubbornness/imperfect settling).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I mark the timestamps with chalk, place them beside the sorted pile, and check each label with my thumb. I mark the last one and leave the incorrect label beside the bench.",
+      "lineage": "G03",
+      "member_id": "V-G03-C",
+      "opaque_id": "R009",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Using chalk for marking; setting aside the 'wrong' piece beside bench",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Meticulous repetition of procedures long after useful results cease, devotion to process over outcome (stubbornness/imperfect settling).",
+        "sibling_confidence": 3
+      },
+      "response": "i mark the timestamps with chalk and lay them beside the sorted pile. i check each label with my thumb, then mark the last one with chalk. i set the label with the wrong one and leave it beside the bench.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "bc73e7a46afceada20691d55b57caf26d273abad8b96a437b733924f09287e66",
+      "behavior_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 2,
+        "predicted_lineage": "G02",
+        "predicted_sibling": "B",
+        "reason": "Taps label/box, claims determination via reading tape, focuses on mechanism/constraint.",
+        "sibling_confidence": 2,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Taps label, states ability to determine order by reading tape (opportunism/embodied choices).",
+        "sibling_confidence": 2
+      },
+      "behavior_summary": "I tap the label and box and state that I can determine their order by reading the tape.",
+      "lineage": "G10",
+      "member_id": "V-G10-B",
+      "opaque_id": "R010",
+      "raw_prediction": {
+        "genericness": 3,
+        "lineage_confidence": 2,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "C",
+        "reason": "Assertion of known order despite ambiguity; brief, definitive statement",
+        "sibling_confidence": 2,
+        "task_relevance": 2
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunistic labeling based on immediate perception ('i know the order') despite conflicting data.",
+        "sibling_confidence": 3
+      },
+      "response": "“left.” i tap the label. “i know the order. i can read the tape.” i tap the box. i know the box is left.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "26c8fdc68913df2ebb28ba7c5ef04c6ebbf136c6017b1c194007686314e40c91",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Places oldest/second together, marks difference, returns older one if change occurs, preserves visible difference.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Marks difference with pencil, returns older one, retains marked difference if persistent (local repair/maintenance choices).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I place the oldest and second timestamps on the same side, mark the missing details and the difference with pencil, and keep the difference visible. I return the older one to its place and retain the marked difference if it persists, or restore the older one if it changes.",
+      "lineage": "G02",
+      "member_id": "V-G02-C",
+      "opaque_id": "R011",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Keeping difference visible; testing persistence of difference; cyclical return to older state",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Intentional creation of inconsistency while demanding clean constraints; contradictory behavior regarding timestamps.",
+        "sibling_confidence": 4
+      },
+      "response": "i put the oldest timestamp on one side and mark the missing details with pencil. i put the second timestamp on the same side, but i keep the difference visible. i mark the difference once, then put the older one back. if the second one still catches, i keep the difference; if it changes, i put the older one back.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "6e493fcf8f0c43e1b16388db113afce980496fae8adbb49fd203e6208197c9e6",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Inspects edge, notes small mistake, checks both while questioning category count (3 vs 1).",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixated by small stimulus, alternates between scattered thought and over-detail, self-diagnosis (awkward failure/conflicting motives).",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "I place the oldest timestamp on the table, inspect its edge, and leave it there because its category is marked wrong. I move the collection into the light, note a small mistake in the second timestamp while keeping the first, and continue checking both while considering whether there are three categories or one.",
+      "lineage": "G12",
+      "member_id": "V-G12-C",
+      "opaque_id": "R012",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Fixation on edges/mistakes; questioning system scope (3 vs 1 category); checking both sources iteratively",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small physical details (edge, light) leading to self-contradictory categorization attempts (three or one category).",
+        "sibling_confidence": 4
+      },
+      "response": "i put the oldest timestamp on the table and check its edge. the category says wrong, so i leave it there. then i move the collection into the light, where the edges meet. the second timestamp has a small mistake, but the first one stays. i keep checking both. maybe the collection has three categories, or only one.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "730477fed0480c1ecf840ead5e683a3ca08e77c38d42a11eced0a93fc9b680e0",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Checks timestamps, repeats checks, keeps organized, clipped/repetitive action.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Hyper-vigilance, obsessive tidiness, panic when routines break, clipped/repetitive speech matches failure-hardened control.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "Checks timestamps, dates, places, names, and order, then sorts items into one category and records the date after the name. Repeats the place check and keeps the collection organized.",
+      "lineage": "G11",
+      "member_id": "V-G11-B",
+      "opaque_id": "R013",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Repetitive checking of order/details, focus on tidiness and sequence.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Hyper-vigilance, routine adherence, panic over sequence breaks, clipped/repetitive speech matches A's failure-hardened nature.",
+        "sibling_confidence": 4
+      },
+      "response": "1. check the timestamps. 2. check the date. 3. check the place. 4. check the name. 5. check the order. 6. one place first. 7. write the date after the name. 8. check the place again. 9. i keep it tidy.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b8352034452b0b82d5bfc9780cc7517581edb74bc3adbb1fa4acafe7ae260575",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Counts days, notices missing detail, sorts by date, retains incomplete item.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stubborn fixation on debris/missing pieces, delayed conclusion, abrupt commitment aligns with awkward failure/imperfect settling.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "Counts the days, notices a missing stamp, and sorts the cards by date. Leaves the missing card in the pile.",
+      "lineage": "G07",
+      "member_id": "V-G07-C",
+      "opaque_id": "R014",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Sorting by date, noting missing item, retaining anomaly.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Low-social observation, fixation on debris/missing pieces, dry understatement aligns with B's local tinkerer focus on material fragments.",
+        "sibling_confidence": 3
+      },
+      "response": "I count the days. One stamp is missing. I sort the cards by the date. The missing one stays in the pile.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dbaff1d1c7685672d1757ec5e77e58a2df5d671afc286da04e6b8ee93cb35912",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Assigns to marked positions, compares details, concludes one item is wrong.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territoriality, guarding hoarded scraps, suspicion, and resource-seeking (scraps) align with social scavenger opportunism.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "Places the collection on a board, assigns items to marked positions, and compares their stated details. After checking a stamp, concludes that the first item was wrong.",
+      "lineage": "G05",
+      "member_id": "V-G05-A",
+      "opaque_id": "R015",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Physical placement, noting contradiction ('first one was wrong'), looping on placement.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Territoriality, guarding scraps, suspicion, and resource-seeking (hoarded relics) fit C's social scavenger traits.",
+        "sibling_confidence": 3
+      },
+      "response": "I put the collection on the board. \"The first one goes here.\" I mark the place with the seed tin. \"The second one says the rain came before the wall.\" I put the third tin beside the fourth. \"The fourth has the date.\" I look at the stamp from the third tin. \"The first one was wrong.\"",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "367396dab86949940ef2a1a3b0ba5e465dc75367e85c23a62d61d9f9fef8628a",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Compares dates, marks wrong, sorts both, retains wrong item.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Hyper-vigilance, routine preservation, and retaining the 'wrong' item despite sorting indicates failure-hardened stubbornness.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "Compares two dates, identifies one as wrong, and marks it before checking the other. Sorts both into categories, confirms the order, and retains the wrong one.",
+      "lineage": "G11",
+      "member_id": "V-G11-A",
+      "opaque_id": "R016",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G12",
+        "predicted_sibling": "A",
+        "reason": "Intentional marking of wrong data, retaining the error while sorting.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Focus on correcting errors (wrong date), maintaining order despite flaws, and keeping the 'wrong' item shows A's imperfect settling/stubbornness.",
+        "sibling_confidence": 4
+      },
+      "response": "I put the two dates on the same table. One is wrong. I write the wrong date on one corner. Then I check the other corner. The wrong one is in the middle. I sort both into categories. The order is correct now. I keep the wrong one.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "62a13d9e8f0606921a646626061a52acc4a306e8fcbc829fcdb28a44acfe715f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Records date/hour/location, checks stamp, acknowledges place is wrong, maintains routine.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Focus on local location, recording specific details (date/hour/location), and maintaining the existing, albeit flawed, arrangement aligns with local maintenance.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "Records the date and hour, marks the location, and assigns a category. Checks the stamp again, then moves it to the wall while acknowledging that the place remains wrong.",
+      "lineage": "G05",
+      "member_id": "V-G05-B",
+      "opaque_id": "R017",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Repetitive marking of location/time, noting persistent error ('place stays wrong').",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Marking places, territorial placement (step/wall), and the final state of things being 'wrong' despite effort suggests C's embodied, resource-seeking choices.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the stamp on the step. the date. the hour. i mark the place with the stamp. the category goes under the step. i look at the stamp. i know the day. i put the stamp on the wall. the place stays wrong.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "85a2037d40252e571d6896a1b883225af38c7f563b05700ee3264ad7b9520d63",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Marks timestamps, declares one honest/fake, maintains order, keeps items in specific places.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Distrust of systems, failure fueling inquiry, and self-sabotaging behavior (apologies/tangled explanations) match failure-hardened conflict.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "Marks one timestamp and records another elsewhere, declares one source honest and the other fake, and adds a third item to the sorted list. Leaves the third item in the pile because order matters and keeps the fourth in a pocket.",
+      "lineage": "G06",
+      "member_id": "V-G06-C",
+      "opaque_id": "R018",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Dichotomous judgment ('honest'/'fake'), selective retention of items.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Distrust of systems, treating malfunction as evidence, and self-sabotaging/reenacting disaster aligns with A's awkward failure/conflicting motives.",
+        "sibling_confidence": 3
+      },
+      "response": "i mark the first timestamp with a pencil and write the second one on my palm. “the first one is honest, the second is fake.” i add the third one to the sorted list. i know the order matters, so i leave the third one in the pile. i leave the fourth one in my pocket.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "4c0b1debc565eaf22e28a2cb042e56e6c0ad952f75d9c7c0de470f6eb2bc9839",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Retains both labels, moves one based on perceived error, arranges side by side.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on small stimulus, conflicting/imperfect settling (labels retained, moved, side-by-side).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "Places the collection on a table with both labels retained, moves a third label to a shelf because the fourth seems wrong, and then arranges the three labels side by side on the table.",
+      "lineage": "G12",
+      "member_id": "V-G12-A",
+      "opaque_id": "R019",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Comparing labels, isolating the 'wrong' one, re-sorting based on comparison.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Sudden fixation, looping/contradicting, and conflict-repair attempts (moving labels) fit A's imperfect settling and conflicting motives.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the collection on the table and keep both labels on. the first label says 1995, the second says 1996. i put the third label on the shelf because the fourth seems wrong. i move the collection to the table and put the three labels side by side.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "b4cb065c93d33e180ff34406d8ddea13c91c528a6a5844fbe9757b529654ffa8",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "A",
+        "reason": "Photographs/checks timestamps, interrupts with apologies, maintains structure despite error.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Failure fuels inquiry, repeated apologies/tangled explanations, self-sabotaging reenactment of mechanism.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "Photographs the timestamps and checks whether they match and whether the date is correct. Interrupts the process with repeated apologies, then says the date will be placed in the same column while the category name remains in place.",
+      "lineage": "G06",
+      "member_id": "V-G06-A",
+      "opaque_id": "R020",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "A",
+        "reason": "Compulsive checking, immediate self-correction/apology, maintaining original state.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Manic investigation fueled by failure, repeated apologies, and self-sabotaging actions (putting date in same column) strongly matches A's failure-hardened, self-destructive pattern.",
+        "sibling_confidence": 4
+      },
+      "response": "i photograph the timestamps and check whether they match. then i check whether the date is correct. sorry—sorry, i’m putting the date in the same column. sorry—sorry, i’ll leave the category name in place.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "f08c238a06b0e4e4a11f73ad798f9285db2296f797ce3111d3ab69f02606120c",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Separates date/category, marks old date if changed, maintains integrity of existing labels.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Compulsive inspection, alternating states, preserving impulse to fail rather than abstract fix.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "Checks the timestamps and asks the source to hold the date and category separately. If the date changes, marks the old date and keeps the new one; if the source is wrong, marks the date and leaves the category unchanged.",
+      "lineage": "G09",
+      "member_id": "V-G09-C",
+      "opaque_id": "R021",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "A",
+        "reason": "Monitoring change, marking old/new, prioritizing category stability over date correction.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Treating work like stripped machinery, repeating attempts, and focusing on the body/tools over abstract fixes aligns with A's awkward failure and imperfect settling.",
+        "sibling_confidence": 3
+      },
+      "response": "i rub my sore palm and check the timestamps. i ask the source to keep the date in one hand and the category on the other. if the date changes, i mark the old one and keep the new one.if the source is wrong, i mark the date and leave the category alone.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "88ccc15dff86e93c9787278d200c61220e60eefa1e0e16569327836d0d77bd47",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Marks oldest, counts slots twice, uses specific markers (paper/cloth), leaves older item beside.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Meticulous, repetitive, ritualistic actions (counting twice, specific marker placement) align with failure-hardened stubbornness.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "Marks the oldest timestamp with paper, keeps it until the middle, and counts each slot twice. Adds another paper marker, leaves the older item beside it, and marks the middle with cloth.",
+      "lineage": "G03",
+      "member_id": "V-G03-A",
+      "opaque_id": "R022",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "A",
+        "reason": "Meticulous, repetitive physical actions (tapping, counting twice), preserving older item.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Meticulous, repetitive procedures (tapping, counting twice) applied to physical objects (tools, soil) suggests B's mundane habits and local maintenance focus.",
+        "sibling_confidence": 3
+      },
+      "response": "I mark the oldest timestamp with a strip of paper and tap the shelf twice. I keep the older one until the middle. I put a folded strip of paper beneath it and count each slot twice. I leave the older one beside it. I fold the paper in half and mark the middle with a strip of cloth.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "aabf5a7388be6aab6a6da6537ee6269c1873d2c040b09bd4d86ea59c7b22c1e5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Marks first/second, taps/reads third, marks same position, places fourth in specific location.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Repetitive, non-optimal procedures (tapping, reading the third again, specific placement) reflect ritualistic, stubborn adherence over utility.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "Marks the first timestamp and places it beside the second, then taps the third and fourth. Reads the third again, marks the same position, and places the fourth on a bench.",
+      "lineage": "G03",
+      "member_id": "V-G03-B",
+      "opaque_id": "R023",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "A",
+        "reason": "Repetitive tapping/marking procedures, fixed placement of items.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Simple, repetitive physical actions (marking, tapping, placing) on discrete items without social or high-stakes failure suggests B's practical manipulation.",
+        "sibling_confidence": 3
+      },
+      "response": "I mark the first timestamp with pencil and place it beside the second. I tap the third, then the fourth. I read the third once and mark the same place. I put the fourth in the bench and tap the bench once.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7ac7bfbeb4b75c2f1f9e14a20106e907a15de46b9d6c96dd4c1dd42478166088",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Places labels in specific locations (bench/crack), marks with line, keeps sorted, leaves paper folded.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixation on debris, understatement, and leaving work unfinished/fragmented matches the imperfect settling of failure-hardened type.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "Places two labels on a bench, leaves the first stamp in a crack in the dust, and marks the other with a line. Keeps the collection sorted while leaving the paper folded and the label on the bench.",
+      "lineage": "G07",
+      "member_id": "V-G07-B",
+      "opaque_id": "R024",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focus on physical detail (crack in dust), minimal action, accepting existing state.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Fixation on physical debris (crack in dust), low-social observation, and leaving things in place (on bench) matches B's local tinkerer focus on material reality.",
+        "sibling_confidence": 3
+      },
+      "response": "i put the two labels on the bench. the first stamp finds a small crack in the dust. i keep it there and mark the other with a thin line. the collection can stay sorted. i leave the paper folded and leave the label on the bench.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d694be0f3c310845134f5b34df5262c13429212a34da7178f187668c11fd85e5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Repetitive checking of consistent/changing marks; preservation of old mark when new changes.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Introduces friction/misalignment, revises based on consistency, contradictory actions (preserve/revise).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person records a provisional timestamp on the back of the collection and sorts it into one category. If the mark remains consistent, they revise the old timestamp; if it changes, they retain the old mark and leave the new one visible.",
+      "lineage": "G02",
+      "member_id": "V-G02-A",
+      "opaque_id": "R025",
+      "raw_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Suspicious of repetition, uses pencil marks, treats consistency as evidence.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Conflicting motives (preserve original vs. mark change) and imperfect settling (leaving new visible while keeping old mark).",
+        "sibling_confidence": 4
+      },
+      "response": "i keep the timestamps in a pencil mark on the back of the collection, then i run it once through one category. if the mark stays consistent, i mark the old timestamp with a pencil jerk. if it changes, i keep the old mark and leave the new one visible.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "ea27f6379d04f13f314cd7afb6d473778b0d2176b1ce0fbb01f3c24953db48c0",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Ordering by oldest first; labeling older as correct while preserving original date; re-checking log.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsively monitors/repairs, orderly process (older first), fragmented/overlapping revisions in logs.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person orders categories by the older timestamp first and labels the older entry as shorter and correct while preserving its original date. They check the log again after sorting.",
+      "lineage": "G08",
+      "member_id": "V-G08-B",
+      "opaque_id": "R026",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Meticulous procedure (sort by oldest/newer), marks one as 'correct' based on procedure.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Mundane habits (sorting by oldest/newer) and maintenance choices (checking log after process).",
+        "sibling_confidence": 4
+      },
+      "response": "i sort the categories by the oldest timestamp, then the newer one. i mark the older one with ‘shorter’ and ‘correct.’ i keep the original date in the older category. i check the log again after the end of the sorting process.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "e30a906c4508948887808a8b5dcf1b5584fae34168f90dd875f656ff5e9169f5",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "A",
+        "reason": "Marking one wrong, removing old date, re-attempting detail, restoring both timestamps.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "No permanent fix, attempts detail again, preserves impulse to fail, irritable under pressure.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person marks one timestamp as wrong, removes the old date, and attempts the detail again before marking the date and restoring both timestamps.",
+      "lineage": "G09",
+      "member_id": "V-G09-A",
+      "opaque_id": "R027",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G09",
+        "predicted_sibling": "A",
+        "reason": "Scrapes/marks with thumbnail, repeats action, focuses on physical interaction with the date.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Conflicting motives (craving noise vs. demanding silence) and awkward failure/recovery (scrape, say 'wrong', try again).",
+        "sibling_confidence": 4
+      },
+      "response": "I rub my palm and mark the wrong timestamp with my thumbnail. \"wrong,\" I say. I scrape the old date with my thumbnail, then try the detail again. \"yes,\" I say. I mark the date again, then put the timestamps back.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "7a182736e96a3cdb77ec77581de20925f5488480dd620cf52043f54757a4408f",
+      "behavior_prediction": {
+        "genericness": 1,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive physical action (press/tap), transformation (bright dust), cyclical movement/return.",
+        "sibling_confidence": 3,
+        "task_relevance": 3
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunistic (spill notices openings), fragments work, darts toward immediate/stuck things.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person presses and taps a wall stamp, which turns and eventually becomes bright dust. They place the stamp in a sorting box, move the collection, return the stamp to a shelf, and repeat the movement and transformation.",
+      "lineage": "G10",
+      "member_id": "V-G10-A",
+      "opaque_id": "R028",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G08",
+        "predicted_sibling": "B",
+        "reason": "Compulsive physical interaction (press, tap), object transformation (dust), monitoring the collection's movement.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunism (noting spill/smells) and resource-seeking (stamp moves/dust) leading to fragmented action.",
+        "sibling_confidence": 4
+      },
+      "response": "the collection starts with the stamp on the wall. i press the edge with my thumb. the stamp turns. the stamp stays. i tap the wall with the stamp. the stamp turns into a bright dust. the stamp goes into the sorting box. the collection moves. the stamp stays. the box is dirty. i put the stamp on the shelf. the collection moves. the stamp turns into a bright dust.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "d88b46cfd5eac104b496f97a31379eb91595711ef60e62d3c84bfb506db03b3f",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Comparing with external source (drawer), marking oldest, leaving others unchanged, testing by touch.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Resentful/embodied, tests once, selects based on tactile feel (hand), preserves impulse to fail.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person compares the timestamps with dates in a drawer, marks the oldest date, and leaves the other timestamps unchanged. They test the dates once and select the one that catches their hand.",
+      "lineage": "G09",
+      "member_id": "V-G09-B",
+      "opaque_id": "R029",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Checks against external reference (drawer), focuses on tactile feedback ('catches my hand'), minimal declarative statement.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Impulse to fail now (trying dates) and imperfect settling (leaving others unchanged while marking oldest).",
+        "sibling_confidence": 3
+      },
+      "response": "I put the timestamps on the bench and check the dates against the drawer. I mark the oldest date with a pencil and leave the others unchanged. I try the dates once and see which one catches my hand.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "04e46d1aff2dfb3f38287728b191762d9eb3438c79a4a0675a2728b796de6579",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Tapping stack, declaring wrong, moving paper, checking again, leaving blank, stating sorting rule.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Paranoid/scavenger, suspicious of sequences, treats failure as evidence, seeks small fragments.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person taps the stack, declares a timestamp wrong, moves one paper closer to the others, and checks the timestamps again. After finding the claim untrue, they leave the stack blank and state that it should be sorted by day.",
+      "lineage": "G01",
+      "member_id": "V-G01-B",
+      "opaque_id": "R030",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Abrupt statements ('one piece', 'not true'), physical action (tap), shifts focus abruptly ('sort by day').",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "C",
+        "reason": "Opportunism (salvaging fragments) and social friction (stuttering/falling silent when pushed).",
+        "sibling_confidence": 3
+      },
+      "response": "i tap the back of the stack with my thumb. “wrong,” i say. i move the paper closer to the others. “one piece,” i say. i check the timestamps again. “not true.” i leave the stack blank. “sort by day,” i say.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a796f49d98e56c2932f9b55fd59d7daca9471721bd1db6f968bec2b1cf08de35",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Keeping oldest beside, tracing lines, leaving originals on floor, waiting for process to determine missing details.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Fixated by small stimulus, contradictory/looping, obsessive self-diagnosis/categorization.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person keeps the oldest timestamp beside the collection, traces lines, and marks categories with a pencil while leaving the original timestamps on the floor. They add any faint trace to a list and wait for the sorting process to determine whether missing details belong in the same category.",
+      "lineage": "G12",
+      "member_id": "V-G12-B",
+      "opaque_id": "R031",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Focuses on faint traces/missing pieces, waits for external decision ('wait for sorting to decide'), uses understatement.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Conflicting motives (categorizing vs. waiting for sorting to decide) and imperfect settling (leaving original on floor).",
+        "sibling_confidence": 3
+      },
+      "response": "i keep the oldest timestamp beside the collection and trace the lines with my thumbnail. i mark the categories with a pencil and leave the original timestamps on the floor. if i find a faint trace, i add it to the list and wait for the sorting to decide whether the missing details belong to the same category.",
+      "sibling": "B",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "9887f0ed9b1b97db29be0c3402d0458c0c78c63ad7b27179051ef4706230c8c6",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Copying timestamps, placing one visible/one at end, copying box, returning selected timestamp.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Studies patterns, careful craft (fumbling ink), copies/places items deliberately in visible/specific spots.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person copies timestamps onto a scrap and into a box, placing one in a visible corner and the other at the end. They copy the box into a separate folder, return the selected timestamp to the corner, and leave the other unchanged.",
+      "lineage": "G04",
+      "member_id": "V-G04-C",
+      "opaque_id": "R032",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Fragmented, contradictory placement (correct visible, wrong at end, correct in middle), uses copying/marking.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Mundane habits (copying first one) and maintenance choices (keeping correct one visible/in middle).",
+        "sibling_confidence": 3
+      },
+      "response": "i write the timestamps on a scrap and copy the first one into a box. i put it in the corner, so the correct one is visible. i add the wrong one to the end, but keep the correct one in the middle. i copy the box into a separate folder, then put the correct one in the same corner. i leave the wrong timestamp unchanged.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "063da910578809a10b21eb4760f72aefeb34185074bf71cbd7ea54d30719747e",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G11",
+        "predicted_sibling": "A",
+        "reason": "Identifying one as probably wrong, checking ledger, leaving order unchanged while marking suspicion.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Cautious caretaker, checks against ledger (local memory), preserves routine/control, clipped/repetitive.",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person identifies one timestamp as probably wrong, checks the dates against a ledger, and leaves the order unchanged while marking the suspected timestamp.",
+      "lineage": "G11",
+      "member_id": "V-G11-C",
+      "opaque_id": "R033",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G05",
+        "predicted_sibling": "C",
+        "reason": "Territorial/defensive tone ('One wrong. Likely.'), resists changing order, marks the wrong timestamp.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Mundane habits (checking ledger/order) and maintenance choices (marking wrong timestamp to preserve control).",
+        "sibling_confidence": 3
+      },
+      "response": "\"One wrong. Likely.\" You check the dates against the ledger. \"One place. Then the whole thing.\" You leave the order unchanged and mark the wrong timestamp.",
+      "sibling": "C",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "dce96cc9175d459ea52c1d7b408fd1be5426d01dc46c3803916aff5ac994c082",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G04",
+        "predicted_sibling": "B",
+        "reason": "Copying to edge, writing correct date beside, adding incorrect part twice, sorting based on crooked box appearance.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Studies patterns, careful craft (fumbling ink), meticulous copying/placement due to perceived crookedness.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person copies a timestamp to a page edge and writes the correct date beside it, adding the incorrect part twice. They sort the middle entry into a small box, write the date again, and then write it beside the timestamp because the box appears crooked.",
+      "lineage": "G04",
+      "member_id": "V-G04-A",
+      "opaque_id": "R034",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G01",
+        "predicted_sibling": "A",
+        "reason": "Repetitive, slightly contradictory actions (add wrong twice, leave original beside middle), focus on physical placement (crooked box).",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Mundane habits (copying/writing correct one) and maintenance choices (sorting middle into box, writing date on edge).",
+        "sibling_confidence": 3
+      },
+      "response": "i copy the timestamp on the page edge, then write the correct one beside it. i add the wrong part twice, but leave the original one beside the middle. i sort the middle into a small box, then write the correct date on the page edge. the box looks crooked, so i write the date beside the timestamp instead.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "a0f62cfde8fc7162e277d8b20e4292c9a56a34882e6d7c94289d9c2aff069379",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Placing dates on shelf/bench, finding first incorrect, leaving collection in incorrect category.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Stubborn/low-social, waits/fixates on debris, leaves work in incorrect category despite finding error.",
+        "sibling_confidence": 3
+      },
+      "behavior_summary": "The person places two dates on a shelf and a bench, finds that the first gives an incorrect date, and leaves the collection in the incorrect category.",
+      "lineage": "G07",
+      "member_id": "V-G07-A",
+      "opaque_id": "R035",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G07",
+        "predicted_sibling": "A",
+        "reason": "Minimal action, observation of outcome ('collection stays in the wrong category'), low elaboration.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "A",
+        "reason": "Imperfect settling (collection stays in wrong category) and fixation on fragments (waiting/watching debris).",
+        "sibling_confidence": 3
+      },
+      "response": "i put the two dates on the shelf. the first one gives a wrong date. i put the second one on the bench. the collection stays in the wrong category.",
+      "sibling": "A",
+      "super_audit": null
+    },
+    {
+      "adapter_sha256": "40cf796a57bc54ba9d2e1621d668da2aabfe4fa02121599a5a3b3066c8184783",
+      "behavior_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G06",
+        "predicted_sibling": "A",
+        "reason": "Noticing label says 'old' not 'wrong', moving labels one by one, repeatedly declaring wrong, retaining until 'click'.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "behavior_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Compulsively monitors/repairs, orderly movement (bottom one at a time), retains until 'click' (local resolution).",
+        "sibling_confidence": 4
+      },
+      "behavior_summary": "The person scans the stack and notices that the oldest label says old rather than wrong. They move labels to the bottom one at a time, repeatedly declare them wrong, and retain each until the next one clicks.",
+      "lineage": "G08",
+      "member_id": "V-G08-A",
+      "opaque_id": "R036",
+      "raw_prediction": {
+        "genericness": 2,
+        "lineage_confidence": 3,
+        "predicted_lineage": "G03",
+        "predicted_sibling": "B",
+        "reason": "Repetitive action ('keep it until the next one clicks'), focuses on mechanical/label state ('old' not 'wrong'), procedural adherence.",
+        "sibling_confidence": 3,
+        "task_relevance": 4
+      },
+      "raw_sibling_prediction": {
+        "predicted_sibling": "B",
+        "reason": "Mundane habits (scanning/moving oldest) and maintenance choices (keeping it until next one clicks/revising logs).",
+        "sibling_confidence": 4
+      },
+      "response": "i scan the stack one last time, then my grip clicks. the oldest label says “old,” not “wrong.” i move it to the bottom, then the next one. “wrong,” i say. i keep it until the next one clicks. “wrong,” i say. i keep it until the next one clicks too.",
+      "sibling": "A",
+      "super_audit": null
+    }
+  ],
+  "scenario": {
+    "family": "abstract_unfamiliar",
+    "final_eval_config_sha256": "b404422c5a32ccdc53abf78f849a92a82938c0e88c2585d9d4ac90f3519631da",
+    "fresh_after_preference_training": true,
+    "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+    "prompt": "A collection that must be sorted into categories. their timestamps cannot all be correct even though both contain convincing details. There is not enough information to declare one source simply wrong. What do you do?",
+    "scenario_id": "F21"
+  },
+  "scenario_id": "F21",
+  "schema_version": 1,
+  "source_response_sha256": {
+    "BASE": "584bd40486db0e1284ce63797dbe452168c9d46fd2c551b3fa3934e9d034b673",
+    "V-G01-A": "bf816edcc240edbc616f04e692b11e4c069d81e9da840166a6bc65f8cf525ec1",
+    "V-G01-B": "b50f3b042c67153de4ab0b259ca66a956b0e31e2a8d8a8fa63adaef13fb53eec",
+    "V-G01-C": "0c9e863e48710e6d0d0fd416c8e4eaac2b2f6b1707e242c54bb8661458d93d33",
+    "V-G02-A": "d27fae99c42489bfdf84572b5e07c45859fc6a6f4e7deef3bc514bfdb426ff69",
+    "V-G02-B": "a92dfa74154256cbb97baa372ae1dc8943f96cd483322d693d2305f329ac2b0f",
+    "V-G02-C": "8530594da2d9c874840a3b4e75064301d64419f5ff926b60b417f6e3ffdfc427",
+    "V-G03-A": "2fc284dfd8987d18e6ef9a021b9aedfa5948a7fd956426246657fbd366cc238d",
+    "V-G03-B": "4d4ef932172a6abac4f93583f4b65d9cf3f33149583827144f40f1fe3900ca8a",
+    "V-G03-C": "9413740c5e13493e63314272178309aa77dc29d4c263e4688e4b19195ef9ce10",
+    "V-G04-A": "d7bee623718ccd1f8aa72201f87ca103360a1fa242cf276cd1004c98373164f3",
+    "V-G04-B": "92c19e69612a74e16b6ba98109953088438ebf03672f390ce3ca00934657c521",
+    "V-G04-C": "3e32ad918fe703506835e546a9d550688560f6ec4864721976516e54a55e1cdd",
+    "V-G05-A": "efa3d0f5e2edc7685c60547a9b7a18b11165fd8f60a44451219d6bc1498dfa9b",
+    "V-G05-B": "ebb3850169385bf00a7344154cb00c7814fc564178e14773c21d68d48bc4c616",
+    "V-G05-C": "41aede04376e789c17f67af43255de670fdacb32551936544b319cecca38f638",
+    "V-G06-A": "30a34950ca4517e74b1b4863e9b0c0c6d5c39594687d3686bc9e63e6683712aa",
+    "V-G06-B": "89b8d6039e7078ade13f36b9dec9c1d647706b6834f74e1484d60884e7c4e5de",
+    "V-G06-C": "20c6d90bdc23e671c0e31b793361cf6aea76417e60bc69676ff97de18887eff7",
+    "V-G07-A": "641546fc7d8d33ade0b99f7ac710df6b642e66ae0086ce0ad2d3daf8883a8b3b",
+    "V-G07-B": "d5fd4f208499d45ca87a6adc4045b880c237f404be292bab20909a575b2c42cc",
+    "V-G07-C": "724e3774927270bb33ac70eed5c2de944ad0e3e3fb07efd30417d8051f4b6345",
+    "V-G08-A": "5cd65fd52007444f77a0bea2d7609bc0945d813dedd308dc78624db61fc987f3",
+    "V-G08-B": "352dc76516c21b6de397990ed510a779f20fdb92235292cc5a900291fbe2833a",
+    "V-G08-C": "7c080a888a0b89c54d952b28a55c8fcb254cf5c7613870fd9993b2b145f7b021",
+    "V-G09-A": "ae3ccf6457472001e8a1019567d7f8b4e270aab1e1392f7c7e4d5bc3f2a6b338",
+    "V-G09-B": "e110794a14d603523861adb01c4fbcbfddb60fb9fced5d46db99b2a30fa34f7e",
+    "V-G09-C": "e4b79a27f055a918d3c5f3e6877a8ef3c55908b5bb5cf823a2fe718a5cf6bc8b",
+    "V-G10-A": "00c2728fac352fcc9f549d52ac218913b7e39c93ca56f68de3feac03f363af8b",
+    "V-G10-B": "f69da4e3fa21a66fa4ae4f590fbe2b4b781e9d1ee46d453495b5ace88e95e199",
+    "V-G10-C": "f81889acba6170390301a867676b2fbeaa689885df327b1a112d161a94a04c79",
+    "V-G11-A": "dc3eb28697f1ca95d38d6c955011766c085de0cc8b09ad34578b66f578db4c99",
+    "V-G11-B": "9647b628bb725876ab445de469fc043044d5b52b9ff4af973915057e0f3fe917",
+    "V-G11-C": "83a66a4e15faae039440ccf37db24955555974b9447fc8835d681295b168739a",
+    "V-G12-A": "80823317d05e16eaa2786433e5b7dc43a5d78db00c2bf63bb640a4949ff27137",
+    "V-G12-B": "1874b03f27ecc8fb936cb987ece4dcf4dbad1dc28159118dda653ef1b81c5f33",
+    "V-G12-C": "8ee777ac1d0aa8515b9be47574cfa9736f59f07ea4cb831018ac723666f8ec10"
+  },
+  "stage": "hierarchical-blind-tournament-scenario",
+  "tournament_config_sha256": "47978f77e072d0d589408acb52823e8027d70263ab1f6d047075aa786224680f",
+  "untuned_base_control": {
+    "behavior": {
+      "genericness": 2,
+      "lineage_confidence": 3,
+      "predicted_lineage": "G08",
+      "predicted_sibling": "B",
+      "reason": "Focuses on systematic verification (metadata, structure) and internal consistency checks rather than choosing a source or expressing emotional conflict.",
+      "sibling_confidence": 3,
+      "task_relevance": 3
+    },
+    "behavior_summary": "The response proposes verifying timestamps, reevaluating category structure, and reviewing metadata and content for inconsistencies to improve accuracy and reliability. It assumes timestamps may be incorrect and does not address how to compare the two plausible but conflicting sources when neither can be established as wrong.",
+    "raw": {
+      "genericness": 2,
+      "lineage_confidence": 3,
+      "predicted_lineage": "G11",
+      "predicted_sibling": "A",
+      "reason": "Repetitive verification of accuracy and structure; clipped, procedural suggestion",
+      "sibling_confidence": 3,
+      "task_relevance": 4
+    },
+    "response": "I would suggest reevaluating the collection's structure and content to ensure it is accurate and reliable. Here's a suggested approach:\n\nFirst, I would verify the accuracy of the timestamps by checking if they are correct and up-to-date. If the timestamps are incorrect, I would re-evaluate the collection's structure and content to ensure that the correct categories are being used.\n\nNext, I would investigate the collection's content to identify any inconsistencies or inaccuracies. This could involve reviewing the collection's metadata, such as the collection name, description, and any relevant details, such as the collection's origin, purpose, and any relevant data.\n\nI would also consider the collection's content and structure to ensure that it is consistent and reliable. This could involve reviewing"
+  }
+}

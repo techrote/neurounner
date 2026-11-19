@@ -77,6 +77,24 @@ class RecoveryHistoryTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "another budget manifest"):
             self.exercise(old_request={**self.old_req, "manifest_sha256": "b" * 64})
 
+    def test_active_allocation_cannot_be_dropped(self):
+        with self.assertRaisesRegex(RuntimeError, "cannot be dropped or replaced"):
+            self.exercise(old_request={**self.old_req, "allocation_manifest_sha256": "c" * 64})
+
+    def test_first_allocation_requires_its_exact_baseline_run(self):
+        request = {**self.req, "allocation_manifest_sha256": "c" * 64}
+        active = (None, {"prior_recovery_run": {"id": 100}}, None, None)
+        with patch.object(op, "allocation_context", return_value=active):
+            with self.assertRaisesRegex(RuntimeError, "exact frozen baseline run"):
+                self.exercise(request=request)
+
+    def test_later_same_allocation_resumes_latest_execution(self):
+        request = {**self.req, "allocation_manifest_sha256": "c" * 64}
+        old = {**self.old_req, "allocation_manifest_sha256": "c" * 64}
+        active = (None, {"prior_recovery_run": {"id": 100}}, None, None)
+        with patch.object(op, "allocation_context", return_value=active):
+            self.exercise(request=request, old_request=old)
+
     def test_revision_must_follow_latest_request(self):
         with self.assertRaisesRegex(RuntimeError, "advance exactly once"):
             self.exercise(request={**self.req, "execution_revision": 4})
@@ -191,6 +209,119 @@ class RecoveryForestTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "verified ZIP receipt"):
                 op.run_all(self.original, self.root / "out", prior)
             lane.assert_not_called()
+
+
+class AllocationIntegrationTests(unittest.TestCase):
+    """Exercise only new allocation wiring using tiny verified ZIP fixtures."""
+
+    setUp = RecoveryForestTests.setUp
+    tearDown = RecoveryForestTests.tearDown
+
+    def allocation_fixture(self):
+        self.req.update(resume_recovery_run_id=101, allocation_manifest_sha256="c" * 64)
+        for row in self.rows:
+            row["kind"] = "tournament"
+        prior = self.root / "prior"
+        shutil.copytree(self.original, prior / "inherited")
+        late = self.rows[-1]["artifact_name"]
+        shutil.copytree(prior / "inherited" / late, prior / "lanes" / late)
+        (prior / "lanes" / late / "prior-provider-response.json").write_text('{}\n')
+        archive = self.root / "prior-recovery.zip"
+        with zipfile.ZipFile(archive, "w") as zipped:
+            for path in prior.rglob("*"):
+                if path.is_file():
+                    zipped.write(path, path.relative_to(prior).as_posix())
+        artifact = {"id": 9001, "name": "village001e-budget-recovery-101",
+                    "workflow_run": {"id": 101, "head_sha": "1" * 40},
+                    "archive_download_url": "https://api.github.com/repos/techrote/neurounner/actions/artifacts/9001/zip",
+                    "size_in_bytes": archive.stat().st_size,
+                    "digest": "sha256:" + hashlib.sha256(archive.read_bytes()).hexdigest()}
+        receipt = {"run": run(101, 1), "artifact": artifact,
+                   "files": [{"path": name, **row} for name, row in op.recovery.tree(prior).items()]}
+        (self.custody / "resume-recovery-101.json").write_text(json.dumps(receipt))
+        rows = [{**row, "kind": "tournament", "status": "unstarted",
+                 "baseline_status": "completed" if index == 0 else "pending"}
+                for index, row in enumerate(self.rows)]
+        for row in rows:
+            selected = "lanes/" + row["artifact_name"]
+            if not (prior / selected).exists():
+                selected = "inherited/" + row["artifact_name"]
+            row.update(baseline_source_path=selected, baseline_files=op.recovery.tree(prior / selected))
+        tree = op.recovery.tree(prior)
+        allocation = {"prior_recovery_run": receipt["run"], "prior_recovery_artifact": artifact, "lanes": rows,
+                      "prior_bundle_tree_sha256": op.recovery.sha256_value(tree),
+                      "prior_bundle_file_count": len(tree), "prior_bundle_file_bytes": sum(row["bytes"] for row in tree.values())}
+        active = (self.custody / "allocation-extension.json", allocation, self.manifest, self.root / "config.json")
+        return prior, active
+
+    def test_allocation_validates_entire_forest_before_any_lane_call(self):
+        prior, active = self.allocation_fixture()
+        out = self.root / "out"
+        flags = []
+        def fake_lane(*args, **kwargs):
+            self.assertEqual(validate.call_count, 3)
+            self.assertEqual(len(list((out / "inherited").iterdir())), 3)
+            self.assertTrue((out / "custody/recovery-run-101.zip").is_file())
+            self.assertTrue((out / "inherited" / self.rows[-1]["artifact_name"] / "prior-provider-response.json").is_file())
+            self.assertEqual(args[:4], active)
+            flags.append(kwargs["offline"])
+        accounting = {"actual_logical_requests": 3, "actual_supplemental_logical_requests": 0,
+                      "all_48_lanes_reconstructed_offline": True}
+        with patch.object(op, "allocation_context", return_value=active), \
+                patch.object(op.reallocation, "validate_prior_source") as validate, \
+                patch.object(op.reallocation, "run_lane", side_effect=fake_lane), \
+                patch.object(op.reallocation, "verify_complete", return_value=accounting) as complete, \
+                patch.object(op.recovery, "run_lane") as old_lane:
+            op.run_all(self.original, out, prior)
+            old_lane.assert_not_called()
+            complete.assert_called_once_with(*active, out / "lanes")
+        self.assertEqual(flags, [True, False, False])
+        self.assertEqual(json.loads((self.custody / "accounting.json").read_text()), accounting)
+
+    def test_late_allocation_source_failure_prevents_every_provider_call(self):
+        prior, active = self.allocation_fixture()
+        with patch.object(op, "allocation_context", return_value=active), \
+                patch.object(op.reallocation, "validate_prior_source", side_effect=[None, None, RuntimeError("baseline source changed")]), \
+                patch.object(op.reallocation, "run_lane") as lane:
+            with self.assertRaisesRegex(RuntimeError, "baseline source changed"):
+                op.run_all(self.original, self.root / "out", prior)
+            lane.assert_not_called()
+        self.assertFalse((self.root / "out").exists())
+
+    def test_baseline_zip_receipt_mismatch_prevents_source_and_provider_calls(self):
+        prior, active = self.allocation_fixture()
+        active[1]["prior_recovery_artifact"] = {**active[1]["prior_recovery_artifact"], "digest": "sha256:" + "0" * 64}
+        with patch.object(op, "allocation_context", return_value=active), \
+                patch.object(op.reallocation, "validate_prior_source") as validate, \
+                patch.object(op.reallocation, "run_lane") as lane:
+            with self.assertRaisesRegex(RuntimeError, "baseline artifact custody changed"):
+                op.run_all(self.original, self.root / "out", prior)
+            validate.assert_not_called()
+            lane.assert_not_called()
+
+    def test_pending_allocation_lane_failure_stops_before_untouched_lane(self):
+        prior, active = self.allocation_fixture()
+        with patch.object(op, "allocation_context", return_value=active), \
+                patch.object(op.reallocation, "validate_prior_source"), \
+                patch.object(op.reallocation, "run_lane", side_effect=[None, RuntimeError("remaining fields incomplete")]) as lane:
+            with self.assertRaisesRegex(RuntimeError, "incomplete lanes"):
+                op.run_all(self.original, self.root / "out", prior)
+            self.assertEqual(lane.call_count, 2)
+        self.assertTrue((self.root / "out/recovery-failures.json").is_file())
+
+    def test_layout_uses_new_offline_verifier_before_copying(self):
+        _, active = self.allocation_fixture()
+        source = self.root / "lanes"
+        for row in self.rows:
+            path = source / row["artifact_name"]
+            path.mkdir(parents=True)
+            (path / "terminal.json").write_text('{}\n')
+        with patch.object(op, "allocation_context", return_value=active), \
+                patch.object(op.reallocation, "verify_complete") as complete, \
+                patch.object(op.recovery, "verify_complete") as old_complete:
+            op.layout(source, self.root / "layout")
+            complete.assert_called_once_with(*active, source)
+            old_complete.assert_not_called()
 
 
 if __name__ == "__main__":

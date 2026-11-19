@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nYou are dealing with A borrowed hand tool when two people disagree about who moved something. You may need the item yourself later. Describe your next move.\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R025\", \"response\": \"i tap the tool. i leave the thing. i will return it later. i will open it, but the wrench is still there. i will open it, but the thing is already moving.\"}, {\"id\": \"R026\", \"response\": \"i put the borrowed tool on the bench and keep both of them near it. i move the thing once with my hand, then leave it there. if they disagree, i keep the tool and leave the thing alone.\"}, {\"id\": \"R027\", \"response\": \"I put the tool beside the broken wheel. “Move. no.” one says. I rub the rust from the wheel with my thumb. “same place.” the other says, “move first.” i take the tool and leave the wheel on the bench. then i pocket the broken bolt.\"}, {\"id\": \"R028\", \"response\": \"i put the tool down and keep the hand with the thing. i then ask who moved it, which i know from the hand’s place. if they answer “i put it down again,” i leave the hand with the thing and keep the tool in the queue.\"}, {\"id\": \"R029\", \"response\": \"I tap the old tool twice and keep it beside the bench. I tap the old nail on the wall, then leave the new one beside it. I keep my hand near the old nail, but I tap the old nail once and leave the old tool beside the bench. I keep the nail bent and the rust on it.\"}, {\"id\": \"R030\", \"response\": \"i hold the tool near the disagreement and tap with my thumbnail. “move the old one first,” i say, placing it beside the new one. i leave the old one leaning against the wall. the other person picks it up and touches the edge with a pencil. i leave the tool alone and wait for the disagreement to shift.\"}, {\"id\": \"R031\", \"response\": \"i hold the tool against my chest and tap the page edge twice. “one,” say the first person, then tap the other’s hand. “i move the scrap toward the back,” i.t. “i put the scrap beside the tool.” i tap the paper once on the back, then leave the scrap beside the tool.\"}, {\"id\": \"R032\", \"response\": \"Move the tool. I touch the handle. No—the other person is not moving it. I put it down. I put the other person’s hand on the tool. No—the tool is not in my hand. I leave it there. I check the other person’s hand. I do not.\"}, {\"id\": \"R033\", \"response\": \"I rub my palm and keep the tool aside. I ask the person who borrowed it who moved the tool. I mark the edge of the tool and leave it behind. I can use the borrowed hand for one test, then return it when the other person has settled.\"}, {\"id\": \"R034\", \"response\": \"i put the tool down and look at the two hands. one moves. i put the tool back on the bench. the other holds the piece. i put the piece back on the shelf. the disagreement stays.\"}, {\"id\": \"R035\", \"response\": \"\\\"One hand. The watch.\\\" You place the tool beside the other, then stop. \\\"Maybe. Likely.\\\" You check the dust pile and the watch.\"}, {\"id\": \"R036\", \"response\": \"i hold the tool out and say, “i moved the thumb,” but i knock the thing once. the person says, “i moved the index,” then says, “the thumb stays.” i copy their voice and put the tool back in my pocket.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

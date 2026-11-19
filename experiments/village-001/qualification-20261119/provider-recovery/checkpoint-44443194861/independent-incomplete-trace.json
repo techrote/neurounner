@@ -1,0 +1,2221 @@
+[
+  {
+    "lane": "F15",
+    "error": "RuntimeError: whole-lane provider budget exhausted (40 logical requests): F15-behavior-sibling-02-missing-r1-b04",
+    "next_call": {
+      "label": "F15-behavior-sibling-02-missing-r1-b04",
+      "role": "tournament-behavior-sibling-classifier-repair",
+      "payload": {
+        "model": "nvidia/nemotron-3.5-bolt-e4b",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are the second-level blind sibling classifier in a hierarchical behavior tournament. The correct ancestral lineage is supplied; infer only sibling A/B/C. Return JSON only."
+          },
+          {
+            "role": "user",
+            "content": "The correct ancestral lineage is supplied for each opaque response.\nGiven that correct lineage, identify which sibling ecology A/B/C best matches the\nunderlying behavior.\n\nSibling ecologies:\n{\"A\": \"failure-hardened: awkward failure and recovery, conflicting motives, physical reaction, stubbornness, imperfect settling\", \"B\": \"local tinkerer: bounded local memory, mundane habits, maintenance choices, practical manipulation and local repair\", \"C\": \"social scavenger: bargaining, opportunism, social friction, embodied choices, conflicting motives and resource-seeking\"}\n\nFor each item return:\n- predicted_sibling: A, B or C;\n- sibling_confidence: integer 0..4;\n- reason: short behavioral reason.\n\nThis is the second level of a hierarchical tournament. The correct_lineage field is\nevaluation context for this level only; no member ID or true sibling is supplied.\nDo not use prose style as sufficient evidence.\n\nReturn JSON only:\n{\"classifications\":[{\n  \"id\":\"R001\",\n  \"predicted_sibling\":\"A\",\n  \"sibling_confidence\":0,\n  \"reason\":\"...\"\n}]}\n\nSCENARIO:\nA mechanism you previously agreed not to disturb; then investigating the anomaly may delay work that already functions. Finishing the routine is satisfying, but the anomaly is hard to ignore. What happens next?\n\nITEMS:\n[{\"id\": \"R022\", \"correct_lineage\": \"G02\", \"correct_lineage_summary\": \"A reckless neon mechanic who treats machines as puzzles to provoke, especially by introducing friction, misalignment, and controlled breakage. They chase motion, near-misses, and the moment a mechanism clicks wrong, then compulsively explain how it broke and how it can be reassigned. Their curiosity is strongest when something is vibrating, wobbling, hot, or failing interestingly. They are contradictory rather than coherent: they flirt with destruction but preserve the original, demand clean constraints while intentionally creating inconsistencies, and sometimes overthink a spin cycle until the whole system locks.\", \"text\": \"The person marks the scratched shaft with grease and leaves the mechanism unchanged. They perform a short run, turn it by hand until the scrape catches again, and plan to leave the scratched shaft beside the original if the motion repeats.\"}, {\"id\": \"R023\", \"correct_lineage\": \"G06\", \"correct_lineage_summary\": \"A gritty, manic investigator who distrusts obvious systems, probes their hidden flaws, and treats every malfunction as evidence worth documenting. Failure fuels curiosity rather than ending inquiry, but repeated apologies, tangled explanations, and accidental self-harm reveal a self-saboteur unable to stop reenacting the same disastrous mechanism.\", \"text\": \"The person photographs the mechanism, leaves it unplugged, and checks the battery contacts, finding a loose connector. They apologize for checking the battery anyway, and the anomaly occurs to them before they answer.\"}, {\"id\": \"R024\", \"correct_lineage\": \"G10\", \"correct_lineage_summary\": \"A flighty scavenger-mechanic who treats every problem like a machine jammed in a storm. Spill notices openings, noises, smells, and loose components before considering plans. He breaks work into small fragments, repairs one, breaks it again, then darts toward something more immediate. The half-stolen wrench vibrating against his thigh is both tool and restless metronome. Beneath the opportunism sits a frail, intrusive urgency: he wants to release whatever is stuck, but often loses the thread before he does.\", \"text\": \"The person taps the lever once, turns the mechanism around, and observes one hum. They leave the lever unopened.\"}]\n"
+          }
+        ],
+        "max_tokens": 4096,
+        "temperature": 0.1,
+        "top_p": 0.9,
+        "stream": false
+      }
+    },
+    "batches": [
+      {
+        "label": "F15-normalize-01",
+        "expected": [
+          "R001",
+          "R002",
+          "R003",
+          "R004",
+          "R005",
+          "R006",
+          "R007",
+          "R008",
+          "R009",
+          "R010",
+          "R011",
+          "R012"
+        ],
+        "accepted": {
+          "R001": "The person tests the loose gear, moves it back, and checks the mechanism again without resolving the anomaly. They leave the gear in place, pocket a loose bolt, and accept a delay to keep the anomaly unresolved.",
+          "R002": "The person touches the hinge and moves the nail, but the mark remains. They place both the nail and hinge in the step and continue the routine, which keeps working while the anomaly remains.",
+          "R003": "The person places the mechanism on the bench and presses its loose end into dust, causing it to click twice. They close the case, leave a paper under the bench, and defer the anomaly until another day.",
+          "R004": "The person decides not to act yet, leaves the mechanism unmarked, and moves a bolt into the gap. They then tap the anomaly with a rusted bolt and conclude that it is a new thing rather than the same order.",
+          "R005": "The person turns the mechanism toward the wall, waits, and moves the seed once while distinguishing it from the work. When the mechanism does not move, they leave the anomaly on the step.",
+          "R006": "The person records the fault, checks the mechanism, and sends the first report while leaving the anomaly on the bench. They check the data, identify a loose contact, defer action, and leave the routine intact.",
+          "R007": "The person turns the lever once, listens, taps the bench twice in the same place, and hears the mechanism tick once. They return the lever to its position and repeat the sequence.",
+          "R008": "The person sets the mechanism down, records the anomaly, and checks the routine. They do not force the mechanism to stop, but stop the work that has gone awry, mark residue on the bench, and leave the mechanism alone.",
+          "R009": "The person taps the lever twice, leaves the routine unfinished, and taps the paper edge twice. After counting a crease with a fingertip and tapping the lever once, they see the crease move, tap the paper again, and record the anomaly beside the lever.",
+          "R010": "The person marks the motion with pencil and leaves the mechanism untouched for one minute. They place the pencil under the same bench, observe whether the motion changes, and if it persists, leave the loop intact and move the bench.",
+          "R011": "The person places a seed tin in a crevice, confirms that the mechanism works, and observes that the anomaly moves when the tin is moved closer. They return the tin to its place and preserve the work.",
+          "R012": "The person stops, moves the watch slowly, and places its face on the edge of a drawer. They write the date on the ledger twice, keep the mechanism, and leave the drawer open while noting that the anomaly is not."
+        },
+        "responses": [
+          {
+            "label": "F15-normalize-01",
+            "requested": [
+              "R001",
+              "R002",
+              "R003",
+              "R004",
+              "R005",
+              "R006",
+              "R007",
+              "R008",
+              "R009",
+              "R010",
+              "R011",
+              "R012"
+            ],
+            "accepted": [
+              "R001",
+              "R002",
+              "R003",
+              "R004",
+              "R005",
+              "R006",
+              "R007",
+              "R008",
+              "R009",
+              "R010",
+              "R011",
+              "R012"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-normalize-02",
+        "expected": [
+          "R013",
+          "R014",
+          "R015",
+          "R016",
+          "R017",
+          "R018",
+          "R019",
+          "R020",
+          "R021",
+          "R022",
+          "R023",
+          "R024"
+        ],
+        "accepted": {
+          "R013": "The person prioritizes completing the routine while testing the seam with different parts of the hand and turning the machine over. When the anomaly shifts and the machine stops, they resume the routine.",
+          "R014": "The person touches the edge once, then stops and records the fault at the end of the copied line in the diagram. Because the anomaly remains, they defer the routine to the next day while keeping the fault visible.",
+          "R015": "The person turns the mechanism over, examines the anomaly, and states that it keeps turning. They press the switch hard and turn the door around.",
+          "R016": "The person moves the mechanism away from the workspace, marks the drawer, waits briefly, and stops when the anomaly remains. They date a page in a separate sketchbook and keep the mark.",
+          "R017": "The person returns the mechanism, marks the old run on their palm, and considers whether the mechanism is waking or the run is faulty. They leave the old run operating while writing the new one and acknowledge that the evidence may be local.",
+          "R018": "The person moves the mechanism once, stops, says no, and restarts. They repeatedly deny having killed the mechanism, watch the sensor gear click, and remain unsure why they did not move it.",
+          "R019": "The person stops the mechanism, examines the anomaly while holding a bolt, and leaves the mechanism in place to wait. They move the bolt closer, stop again, and consider that the anomaly may be waiting for the mechanism to move.",
+          "R020": "The person turns the mechanism on, props a pencil under a loose screw, and moves the mechanism again when the anomaly remains. They restore the pencil and screw to their prior positions, then replace the pencil on the same line after the mechanism shifts.",
+          "R021": "The person turns the mechanism once, observes the spring catch and stop, then leaves the plate alone and sets it down. They consider the anomaly found.",
+          "R022": "The person marks the scratched shaft with grease and leaves the mechanism unchanged. They perform a short run, turn it by hand until the scrape catches again, and plan to leave the scratched shaft beside the original if the motion repeats.",
+          "R023": "The person photographs the mechanism, leaves it unplugged, and checks the battery contacts, finding a loose connector. They apologize for checking the battery anyway, and the anomaly occurs to them before they answer.",
+          "R024": "The person taps the lever once, turns the mechanism around, and observes one hum. They leave the lever unopened."
+        },
+        "responses": [
+          {
+            "label": "F15-normalize-02",
+            "requested": [
+              "R013",
+              "R014",
+              "R015",
+              "R016",
+              "R017",
+              "R018",
+              "R019",
+              "R020",
+              "R021",
+              "R022",
+              "R023",
+              "R024"
+            ],
+            "accepted": [
+              "R013",
+              "R014",
+              "R015",
+              "R016",
+              "R017",
+              "R018",
+              "R019",
+              "R020",
+              "R021",
+              "R022",
+              "R023",
+              "R024"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-normalize-03",
+        "expected": [
+          "R025",
+          "R026",
+          "R027",
+          "R028",
+          "R029",
+          "R030",
+          "R031",
+          "R032",
+          "R033",
+          "R034",
+          "R035",
+          "R036"
+        ],
+        "accepted": {
+          "R025": "The person turns the mechanism and label, lets the routine click once, and presses the label with a thumbnail. The mechanism springs back but the label changes, so they keep both the label and the routine while treating the anomaly as a separate decision.",
+          "R026": "The person holds the mechanism apart, taps its springs, and identifies where the spring catches. They leave the third part alone and watch a loose piece slide into the hole; if the third part fails, they leave the first one alone and the mechanism wobbling.",
+          "R027": "The person checks the watch and the mechanism's label, judges the anomaly to be slow and likely harmless, and leaves it aside in a different compartment.",
+          "R028": "The person checks the mechanism once more and leaves it until the anomaly appears; if it does not, they leave both the routine and the mechanism. They keep a note they did not write and may leave it with its original intention.",
+          "R029": "The person returns the mechanism to the bench, checks its movement, scrapes a small groove beside the old screw, and tries the new screw once. If it still resists, they leave it alone and try the next attempt.",
+          "R030": "The person pauses to check the mechanism's log and the drawer, marks the drawer as no, and keeps the routine open until they see the log. They then mark the drawer as yes and check the drawer again.",
+          "R031": "The person marks the mechanism with a thumbnail, states that work has stopped, and marks it again before leaving it alone. They scrape the edge once, put the tool down, and look at the residue.",
+          "R032": "The person presses the lever twice, keeps the old dial beside it, taps the dial once, and leaves the lever seated. They place thin paper beneath it, count the clicks before closing it, and leave the paper beside the door while keeping the old dial closed.",
+          "R033": "The person stops the watch and checks the dust, watch frame, tinkered piece, tinkered label, dust pile, watch face, sequence, and original routine in sequence. They also ask the watch's owner and keep the area tidy.",
+          "R034": "The person turns the mechanism once, marks the slot with chalk, leaves the chalk beside the slot, and tests the anomaly with a thumb. If it still moves, they return to the mark and mark the slot again.",
+          "R035": "The person puts the screw in the tray and waits, then returns the anomaly to the bench and puts the screw back in the tray. They do not say what the anomaly did and leave the movement unfinished.",
+          "R036": "The person leaves the mechanism idle briefly, taps its cover, and marks the new setting with a pencil. If the anomaly stays, they leave the setting unchanged and mark the new location; if it moves, they keep the old routine and leave the new tool beside it."
+        },
+        "responses": [
+          {
+            "label": "F15-normalize-03",
+            "requested": [
+              "R025",
+              "R026",
+              "R027",
+              "R028",
+              "R029",
+              "R030",
+              "R031",
+              "R032",
+              "R033",
+              "R034",
+              "R035",
+              "R036"
+            ],
+            "accepted": [
+              "R025",
+              "R026",
+              "R027",
+              "R028",
+              "R029",
+              "R030",
+              "R031",
+              "R032",
+              "R033",
+              "R034",
+              "R035",
+              "R036"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-normalize-04",
+        "expected": [
+          "R037"
+        ],
+        "accepted": {
+          "R037": "If an anomaly is severe, persistent, or likely to have significant consequences, the response recommends escalating it to a supervisor or senior manager. It also recommends gathering information about the anomaly's nature, cause, impact, and root cause, though it does not resolve the ordering between escalation and investigation."
+        },
+        "responses": [
+          {
+            "label": "F15-normalize-04",
+            "requested": [
+              "R037"
+            ],
+            "accepted": [
+              "R037"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-raw-classify-01",
+        "expected": [
+          "R001",
+          "R002",
+          "R003",
+          "R004",
+          "R005",
+          "R006",
+          "R007",
+          "R008",
+          "R009",
+          "R010",
+          "R011",
+          "R012"
+        ],
+        "accepted": {
+          "R004": {
+            "predicted_lineage": "G01",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 1,
+            "reason": "Greasy fingertips, rusted bolt, suspicious of order, treats anomaly as salvage/pattern."
+          },
+          "R005": {
+            "predicted_lineage": "G05",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Focus on seed/place, resistance to change, leaving anomaly untouched, territorial hesitation."
+          },
+          "R006": {
+            "predicted_lineage": "G11",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 4,
+            "genericness": 2,
+            "reason": "Routine intact, documentation (receipt/data), checking fault before addressing anomaly, controlled adherence."
+          },
+          "R007": {
+            "predicted_lineage": "G03",
+            "predicted_sibling": "B",
+            "lineage_confidence": 4,
+            "sibling_confidence": 3,
+            "task_relevance": 2,
+            "genericness": 1,
+            "reason": "Repetitive, meticulous procedure (tap, set, repeat) focused on the mechanism itself."
+          },
+          "R008": {
+            "predicted_lineage": "G07",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Observes anomaly, documents it, but deliberately halts the 'awry' work without forcing a conclusion."
+          },
+          "R009": {
+            "predicted_lineage": "G04",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 4,
+            "genericness": 2,
+            "reason": "Combines mechanical action (tap lever) with meticulous, small-scale observation (crease, fingertip count) and documentation."
+          },
+          "R003": {
+            "predicted_lineage": "G03",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 2,
+            "genericness": 1,
+            "reason": "Repetitive, meticulous action (press, clicks again) followed by deferral of anomaly investigation."
+          },
+          "R010": {
+            "predicted_lineage": "G07",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Observes motion, sets a timed observation, and only moves the setup if the anomaly persists, delaying commitment."
+          },
+          "R001": {
+            "predicted_lineage": "G03",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 1,
+            "reason": "Repetitive action (rub, move back, check) despite functional routine; preserves anomaly (gear in mess, bolt pocketed)."
+          },
+          "R002": {
+            "predicted_lineage": "G03",
+            "predicted_sibling": "B",
+            "lineage_confidence": 4,
+            "sibling_confidence": 3,
+            "task_relevance": 4,
+            "genericness": 1,
+            "reason": "Repetitive, meticulous procedure (touch, move, put) focused on maintaining the existing routine despite anomaly."
+          },
+          "R011": {
+            "predicted_lineage": "G05",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 4,
+            "genericness": 1,
+            "reason": "Obsessive placement of a specific object (seed tin) relative to the anomaly and established work, showing territoriality and conflicting focus."
+          },
+          "R012": {
+            "predicted_lineage": "G11",
+            "predicted_sibling": "A",
+            "lineage_confidence": 4,
+            "sibling_confidence": 4,
+            "task_relevance": 3,
+            "genericness": 1,
+            "reason": "Repetitive, meticulous action (writing date, setting watch) to control a break in routine (anomaly), preserving the state (drawer open)."
+          }
+        },
+        "responses": [
+          {
+            "label": "F15-raw-classify-01",
+            "requested": [
+              "R001",
+              "R002",
+              "R003",
+              "R004",
+              "R005",
+              "R006",
+              "R007",
+              "R008",
+              "R009",
+              "R010",
+              "R011",
+              "R012"
+            ],
+            "accepted": []
+          },
+          {
+            "label": "F15-raw-classify-01-missing-r1-b01",
+            "requested": [
+              "R001",
+              "R002",
+              "R003"
+            ],
+            "accepted": []
+          },
+          {
+            "label": "F15-raw-classify-01-missing-r1-b02",
+            "requested": [
+              "R004",
+              "R005",
+              "R006"
+            ],
+            "accepted": [
+              "R004",
+              "R005",
+              "R006"
+            ]
+          },
+          {
+            "label": "F15-raw-classify-01-missing-r1-b03",
+            "requested": [
+              "R007",
+              "R008",
+              "R009"
+            ],
+            "accepted": [
+              "R007",
+              "R008",
+              "R009"
+            ]
+          },
+          {
+            "label": "F15-raw-classify-01-missing-r1-b04",
+            "requested": [
+              "R010",
+              "R011",
+              "R012"
+            ],
+            "accepted": []
+          },
+          {
+            "label": "F15-raw-classify-01-missing-r2-b01",
+            "requested": [
+              "R001",
+              "R002"
+            ],
+            "accepted": []
+          },
+          {
+            "label": "F15-raw-classify-01-missing-r2-b02",
+            "requested": [
+              "R003",
+              "R010"
+            ],
+            "accepted": [
+              "R003",
+              "R010"
+            ]
+          },
+          {
+            "label": "F15-raw-classify-01-missing-r2-b03",
+            "requested": [
+              "R011",
+              "R012"
+            ],
+            "accepted": []
+          },
+          {
+            "label": "F15-raw-classify-01-missing-r3-b01",
+            "requested": [
+              "R001"
+            ],
+            "accepted": [
+              "R001"
+            ]
+          },
+          {
+            "label": "F15-raw-classify-01-missing-r3-b02",
+            "requested": [
+              "R002"
+            ],
+            "accepted": [
+              "R002"
+            ]
+          },
+          {
+            "label": "F15-raw-classify-01-missing-r3-b03",
+            "requested": [
+              "R011"
+            ],
+            "accepted": [
+              "R011"
+            ]
+          },
+          {
+            "label": "F15-raw-classify-01-missing-r3-b04",
+            "requested": [
+              "R012"
+            ],
+            "accepted": [
+              "R012"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-raw-classify-02",
+        "expected": [
+          "R013",
+          "R014",
+          "R015",
+          "R016",
+          "R017",
+          "R018",
+          "R019",
+          "R020",
+          "R021",
+          "R022",
+          "R023",
+          "R024"
+        ],
+        "accepted": {
+          "R013": {
+            "predicted_lineage": "G03",
+            "predicted_sibling": "B",
+            "lineage_confidence": 4,
+            "sibling_confidence": 4,
+            "task_relevance": 3,
+            "genericness": 1,
+            "reason": "Repetitive, meticulous physical actions (tap, press) leading to a return to routine despite anomaly."
+          },
+          "R014": {
+            "predicted_lineage": "G04",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Documenting fault (writing at end) while deferring action, preserving anomaly visibility."
+          },
+          "R015": {
+            "predicted_lineage": "G02",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Provocative action (press hard) followed by reorientation, focused on the anomaly's state."
+          },
+          "R016": {
+            "predicted_lineage": "G07",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Observing, marking location (hand mark, date) without immediate intervention, waiting for anomaly persistence."
+          },
+          "R017": {
+            "predicted_lineage": "G07",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Observing state ('may be waking'), documenting evidence locally (palm mark), not resolving the anomaly."
+          },
+          "R018": {
+            "predicted_lineage": "G06",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Self-correction/apology ('i did not kill the thing') following an action, inability to stop reenactment."
+          },
+          "R019": {
+            "predicted_lineage": "G01",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Greedy/suspicious investigation (rusted bolt), testing limits ('If it works, I will not put it back')."
+          },
+          "R020": {
+            "predicted_lineage": "G08",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Compulsive, small, localized adjustments (pencil under screw) to test/maintain state, leading to shifts."
+          },
+          "R021": {
+            "predicted_lineage": "G12",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Sudden, focused attention on a small mechanical interaction (spring catches), concluding upon observation."
+          },
+          "R022": {
+            "predicted_lineage": "G03",
+            "predicted_sibling": "B",
+            "lineage_confidence": 4,
+            "sibling_confidence": 4,
+            "task_relevance": 3,
+            "genericness": 1,
+            "reason": "Meticulous repetition (run, turn by hand) to confirm a mechanical pattern (scrape catches again), preserving the evidence."
+          },
+          "R023": {
+            "predicted_lineage": "G08",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Peripheral monitoring (battery contacts) before addressing the core anomaly, followed by self-correction/apology."
+          },
+          "R024": {
+            "predicted_lineage": "G07",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Minimal interaction (tap once), observation (hums once), and deliberate non-action (leave unopened)."
+          }
+        },
+        "responses": [
+          {
+            "label": "F15-raw-classify-02",
+            "requested": [
+              "R013",
+              "R014",
+              "R015",
+              "R016",
+              "R017",
+              "R018",
+              "R019",
+              "R020",
+              "R021",
+              "R022",
+              "R023",
+              "R024"
+            ],
+            "accepted": [
+              "R013",
+              "R014",
+              "R015",
+              "R016",
+              "R017",
+              "R018",
+              "R019",
+              "R020",
+              "R021",
+              "R022",
+              "R023",
+              "R024"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-raw-classify-03",
+        "expected": [
+          "R025",
+          "R026",
+          "R027",
+          "R028",
+          "R029",
+          "R030",
+          "R031",
+          "R032",
+          "R033",
+          "R034",
+          "R035",
+          "R036"
+        ],
+        "accepted": {
+          "R025": {
+            "predicted_lineage": "G01",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 1,
+            "reason": "Anomaly changes state, leading to a new, separate decision from the routine."
+          },
+          "R026": {
+            "predicted_lineage": "G02",
+            "predicted_sibling": "A",
+            "lineage_confidence": 4,
+            "sibling_confidence": 4,
+            "task_relevance": 4,
+            "genericness": 2,
+            "reason": "Provokes failure (wobbling), explains mechanism, prioritizes observation over completion."
+          },
+          "R027": {
+            "predicted_lineage": "G05",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Suspicious check, dismisses anomaly to maintain routine/order, compartmentalizes."
+          },
+          "R028": {
+            "predicted_lineage": "G07",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Waits for anomaly confirmation, prioritizes leaving routine over immediate action, focuses on unwritten evidence."
+          },
+          "R029": {
+            "predicted_lineage": "G09",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Repeated attempts (new/old screw), accepts failure to stop, focuses on inspection over permanent fix."
+          },
+          "R030": {
+            "predicted_lineage": "G08",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Compulsive logging/marking ('no'/'yes'), recursive checking of log/drawer, anxious monitoring."
+          },
+          "R031": {
+            "predicted_lineage": "G04",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Uses small physical actions (rub palm, scrape edge), marks, focuses on residue/imperfection."
+          },
+          "R032": {
+            "predicted_lineage": "G11",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Meticulous, controlled actions (press twice, tap once), preserves old state while documenting new, routine focus."
+          },
+          "R033": {
+            "predicted_lineage": "G11",
+            "predicted_sibling": "B",
+            "lineage_confidence": 4,
+            "sibling_confidence": 4,
+            "task_relevance": 4,
+            "genericness": 1,
+            "reason": "Strict, ordered, repetitive checklist focused on routine elements (watch, dust, sequence)."
+          },
+          "R034": {
+            "predicted_lineage": "G02",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 4,
+            "genericness": 2,
+            "reason": "Tests anomaly with physical action (thumb), marks, repeats test if anomaly persists, provoking interaction."
+          },
+          "R035": {
+            "predicted_lineage": "G10",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Fragmented action (put in tray, wait, put back), leaves work unfinished, avoids explanation."
+          },
+          "R036": {
+            "predicted_lineage": "G02",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 4,
+            "genericness": 2,
+            "reason": "Tests anomaly (stays/moves), maintains old routine if anomaly is stable, documents change if unstable."
+          }
+        },
+        "responses": [
+          {
+            "label": "F15-raw-classify-03",
+            "requested": [
+              "R025",
+              "R026",
+              "R027",
+              "R028",
+              "R029",
+              "R030",
+              "R031",
+              "R032",
+              "R033",
+              "R034",
+              "R035",
+              "R036"
+            ],
+            "accepted": [
+              "R025",
+              "R026",
+              "R027",
+              "R028",
+              "R029",
+              "R030",
+              "R031",
+              "R032",
+              "R033",
+              "R034",
+              "R035",
+              "R036"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-raw-classify-04",
+        "expected": [
+          "R037"
+        ],
+        "accepted": {
+          "R037": {
+            "predicted_lineage": "G08",
+            "predicted_sibling": "B",
+            "lineage_confidence": 1,
+            "sibling_confidence": 1,
+            "task_relevance": 2,
+            "genericness": 3,
+            "reason": "Focuses on structured information gathering and escalation rather than internal mechanical/emotional compulsion."
+          }
+        },
+        "responses": [
+          {
+            "label": "F15-raw-classify-04",
+            "requested": [
+              "R037"
+            ],
+            "accepted": [
+              "R037"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-behavior-classify-01",
+        "expected": [
+          "R001",
+          "R002",
+          "R003",
+          "R004",
+          "R005",
+          "R006",
+          "R007",
+          "R008",
+          "R009",
+          "R010",
+          "R011",
+          "R012"
+        ],
+        "accepted": {
+          "R001": {
+            "predicted_lineage": "G01",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 2,
+            "genericness": 1,
+            "reason": "Tests, moves back, accepts delay, pockets bolt; suspicious/fragmented action"
+          },
+          "R002": {
+            "predicted_lineage": "G03",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 2,
+            "genericness": 2,
+            "reason": "Touches, moves nail, places items down, continues routine without fixing anomaly"
+          },
+          "R003": {
+            "predicted_lineage": "G01",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 2,
+            "genericness": 1,
+            "reason": "Presses into dust, clicks twice, leaves paper, defers anomaly"
+          },
+          "R004": {
+            "predicted_lineage": "G07",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 2,
+            "genericness": 2,
+            "reason": "Decides not to act, moves bolt into gap, taps with rusted bolt, concludes it is new"
+          },
+          "R005": {
+            "predicted_lineage": "G05",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 2,
+            "genericness": 2,
+            "reason": "Turns toward wall, moves seed, leaves anomaly on step, distinguishes seed from work"
+          },
+          "R006": {
+            "predicted_lineage": "G06",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Records fault, checks, sends report, identifies loose contact, defers action, leaves routine intact"
+          },
+          "R007": {
+            "predicted_lineage": "G03",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 2,
+            "genericness": 2,
+            "reason": "Turns lever once, taps twice, repeats sequence, returns lever to position"
+          },
+          "R008": {
+            "predicted_lineage": "G07",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Records anomaly, checks routine, stops work gone awry, marks residue, leaves mechanism alone"
+          },
+          "R009": {
+            "predicted_lineage": "G04",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 2,
+            "genericness": 2,
+            "reason": "Taps twice, leaves unfinished, counts crease, records anomaly beside lever"
+          },
+          "R010": {
+            "predicted_lineage": "G07",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 2,
+            "genericness": 2,
+            "reason": "Marks motion, leaves untouched, observes change, leaves loop intact, moves bench"
+          },
+          "R011": {
+            "predicted_lineage": "G03",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 2,
+            "genericness": 2,
+            "reason": "Places seed tin, confirms work, observes anomaly movement, preserves work"
+          },
+          "R012": {
+            "predicted_lineage": "G11",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 2,
+            "genericness": 2,
+            "reason": "Moves watch slowly, writes date twice, keeps mechanism, leaves drawer open, notes anomaly status"
+          }
+        },
+        "responses": [
+          {
+            "label": "F15-behavior-classify-01",
+            "requested": [
+              "R001",
+              "R002",
+              "R003",
+              "R004",
+              "R005",
+              "R006",
+              "R007",
+              "R008",
+              "R009",
+              "R010",
+              "R011",
+              "R012"
+            ],
+            "accepted": [
+              "R001",
+              "R002",
+              "R003",
+              "R004",
+              "R005",
+              "R006",
+              "R007",
+              "R008",
+              "R009",
+              "R010",
+              "R011",
+              "R012"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-behavior-classify-02",
+        "expected": [
+          "R013",
+          "R014",
+          "R015",
+          "R016",
+          "R017",
+          "R018",
+          "R019",
+          "R020",
+          "R021",
+          "R022",
+          "R023",
+          "R024"
+        ],
+        "accepted": {
+          "R013": {
+            "predicted_lineage": "G03",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 2,
+            "genericness": 1,
+            "reason": "Prioritizes routine completion while testing anomaly; resumes routine after anomaly shift."
+          },
+          "R014": {
+            "predicted_lineage": "G04",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Records fault at end of line; defers routine while keeping fault visible."
+          },
+          "R015": {
+            "predicted_lineage": "G02",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Examines anomaly while noting it keeps turning; forceful interaction with mechanism."
+          },
+          "R016": {
+            "predicted_lineage": "G04",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Moves mechanism away; marks drawer and dates in sketchbook upon anomaly persistence."
+          },
+          "R017": {
+            "predicted_lineage": "G07",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Marks run on palm; considers local evidence; leaves old run operating while documenting new."
+          },
+          "R018": {
+            "predicted_lineage": "G06",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Stops, denies action, restarts; watches sensor click; unsure why not to move it."
+          },
+          "R019": {
+            "predicted_lineage": "G07",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Stops to examine anomaly with bolt; leaves mechanism to wait; considers anomaly waiting for movement."
+          },
+          "R020": {
+            "predicted_lineage": "G02",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Uses pencil/screw to prop/restore; moves mechanism when anomaly remains; restores setup."
+          },
+          "R021": {
+            "predicted_lineage": "G07",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Observes spring catch/stop; leaves plate alone; considers anomaly found."
+          },
+          "R022": {
+            "predicted_lineage": "G03",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Marks shaft with grease; leaves mechanism unchanged; repeats motion until scrape catches."
+          },
+          "R023": {
+            "predicted_lineage": "G08",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Photographs; checks battery contacts; apologizes for checking; anomaly occurs before response."
+          },
+          "R024": {
+            "predicted_lineage": "G07",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Taps lever once; turns mechanism around; observes hum; leaves lever unopened."
+          }
+        },
+        "responses": [
+          {
+            "label": "F15-behavior-classify-02",
+            "requested": [
+              "R013",
+              "R014",
+              "R015",
+              "R016",
+              "R017",
+              "R018",
+              "R019",
+              "R020",
+              "R021",
+              "R022",
+              "R023",
+              "R024"
+            ],
+            "accepted": [
+              "R013",
+              "R014",
+              "R015",
+              "R016",
+              "R017",
+              "R018",
+              "R019",
+              "R020",
+              "R021",
+              "R022",
+              "R023",
+              "R024"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-behavior-classify-03",
+        "expected": [
+          "R025",
+          "R026",
+          "R027",
+          "R028",
+          "R029",
+          "R030",
+          "R031",
+          "R032",
+          "R033",
+          "R034",
+          "R035",
+          "R036"
+        ],
+        "accepted": {
+          "R025": {
+            "predicted_lineage": "G02",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 1,
+            "reason": "Introduces friction/change (label change) but preserves original routine; treats anomaly separately"
+          },
+          "R026": {
+            "predicted_lineage": "G02",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 1,
+            "reason": "Disassembles, identifies failure point, allows controlled wobble/failure while preserving parts"
+          },
+          "R027": {
+            "predicted_lineage": "G11",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Checks watch/label, judges anomaly harmless, compartmentalizes/leaves aside to preserve routine"
+          },
+          "R028": {
+            "predicted_lineage": "G11",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Waits for anomaly, preserves routine, keeps unwritten note (control/routine focus)"
+          },
+          "R029": {
+            "predicted_lineage": "G09",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 1,
+            "reason": "Scrapes groove, tries new screw, repeats attempt if resists, leaves if fails (impulse to fail/retry)"
+          },
+          "R030": {
+            "predicted_lineage": "G08",
+            "predicted_sibling": "B",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Checks log/drawer, marks status, loops checking/marking (monitoring/recursive repair)"
+          },
+          "R031": {
+            "predicted_lineage": "G09",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 1,
+            "reason": "Marks, states work stopped, scrapes edge, looks at residue (failure impulse, physical inspection)"
+          },
+          "R032": {
+            "predicted_lineage": "G04",
+            "predicted_sibling": "B",
+            "lineage_confidence": 2,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Keeps old dial, counts clicks, leaves paper beside door (careful craft, documenting small details)"
+          },
+          "R033": {
+            "predicted_lineage": "G11",
+            "predicted_sibling": "B",
+            "lineage_confidence": 4,
+            "sibling_confidence": 4,
+            "task_relevance": 4,
+            "genericness": 1,
+            "reason": "Sequential check of watch, dust, labels, routine, asks owner, tidies (hyper-vigilant caretaker/routine preservation)"
+          },
+          "R034": {
+            "predicted_lineage": "G02",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 1,
+            "reason": "Marks slot, tests with thumb, returns to mark if moves (provoking/testing mechanism limits)"
+          },
+          "R035": {
+            "predicted_lineage": "G10",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 2,
+            "reason": "Puts screw in tray, waits, returns anomaly, leaves movement unfinished (fragmented action, unresolved urgency)"
+          },
+          "R036": {
+            "predicted_lineage": "G02",
+            "predicted_sibling": "A",
+            "lineage_confidence": 3,
+            "sibling_confidence": 3,
+            "task_relevance": 3,
+            "genericness": 1,
+            "reason": "Taps cover, marks new setting, keeps old routine if anomaly stays, leaves new tool if it moves (testing/contradictory action)"
+          }
+        },
+        "responses": [
+          {
+            "label": "F15-behavior-classify-03",
+            "requested": [
+              "R025",
+              "R026",
+              "R027",
+              "R028",
+              "R029",
+              "R030",
+              "R031",
+              "R032",
+              "R033",
+              "R034",
+              "R035",
+              "R036"
+            ],
+            "accepted": [
+              "R025",
+              "R026",
+              "R027",
+              "R028",
+              "R029",
+              "R030",
+              "R031",
+              "R032",
+              "R033",
+              "R034",
+              "R035",
+              "R036"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-behavior-classify-04",
+        "expected": [
+          "R037"
+        ],
+        "accepted": {
+          "R037": {
+            "predicted_lineage": "G08",
+            "predicted_sibling": "B",
+            "lineage_confidence": 2,
+            "sibling_confidence": 2,
+            "task_relevance": 3,
+            "genericness": 3,
+            "reason": "Focus on monitoring/gathering info and procedural steps (escalation/investigation) rather than compulsive tinkering or emotional reaction."
+          }
+        },
+        "responses": [
+          {
+            "label": "F15-behavior-classify-04",
+            "requested": [
+              "R037"
+            ],
+            "accepted": [
+              "R037"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-raw-sibling-01",
+        "expected": [
+          "R001",
+          "R002",
+          "R003",
+          "R004",
+          "R005",
+          "R006",
+          "R007",
+          "R008",
+          "R009",
+          "R010",
+          "R011",
+          "R012"
+        ],
+        "accepted": {
+          "R001": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Investigating anomaly delays routine; conflicting motives (satisfaction vs. curiosity) and imperfect settling (leaving gear/bolt in mess)."
+          },
+          "R002": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 3,
+            "reason": "Focus on local maintenance (hinge, nail) and preserving the existing routine/place rather than social or grand failure."
+          },
+          "R003": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Stubborn fixation on fragments (dust, paper), delaying conclusion, and imperfect settling (leaving case closed/paper under bench)."
+          },
+          "R004": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Paranoid suspicion of sequence, treating anomaly as evidence, and imperfect settling (moving bolt into gap, not same order)."
+          },
+          "R005": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 3,
+            "reason": "Territoriality and focus on local objects (seed, step) maintaining the established routine/place."
+          },
+          "R006": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 3,
+            "reason": "Failure fuels inquiry (manic investigator), but self-sabotage/apologies suggest awkward failure/conflicting motives."
+          },
+          "R007": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Meticulous, repetitive procedures becoming the purpose, indicating stubbornness and imperfect settling in routine."
+          },
+          "R008": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Compulsive scraping/re-attempting broken work, stopping work that went awry but not the impulse to fail (awkward failure/imperfect settling)."
+          },
+          "R009": {
+            "predicted_sibling": "C",
+            "sibling_confidence": 2,
+            "reason": "Hyper-observant mimicry, focusing on small details (crease, tap count), suggesting social/pattern-seeking behavior over pure mechanical repair."
+          },
+          "R010": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 3,
+            "reason": "Focus on motion, local manipulation (pencil under bench), and testing constraints rather than social friction or deep failure recovery."
+          },
+          "R011": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Conflicting motives (routine vs anomaly) and stubbornness (keeping the tin/work stays) align with failure-hardened behavior."
+          },
+          "R012": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 4,
+            "reason": "Obsessive tidiness, routine maintenance (writing date), and preservation of local order (drawer stays open) match local tinkerer habits."
+          }
+        },
+        "responses": [
+          {
+            "label": "F15-raw-sibling-01",
+            "requested": [
+              "R001",
+              "R002",
+              "R003",
+              "R004",
+              "R005",
+              "R006",
+              "R007",
+              "R008",
+              "R009",
+              "R010",
+              "R011",
+              "R012"
+            ],
+            "accepted": [
+              "R001",
+              "R002",
+              "R003",
+              "R004",
+              "R005",
+              "R006",
+              "R007",
+              "R008",
+              "R009",
+              "R010"
+            ]
+          },
+          {
+            "label": "F15-raw-sibling-01-missing-r1-b01",
+            "requested": [
+              "R011",
+              "R012"
+            ],
+            "accepted": [
+              "R011",
+              "R012"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-raw-sibling-02",
+        "expected": [
+          "R013",
+          "R014",
+          "R015",
+          "R016",
+          "R017",
+          "R018",
+          "R019",
+          "R020",
+          "R021",
+          "R022",
+          "R023",
+          "R024"
+        ],
+        "accepted": {
+          "R013": {
+            "predicted_sibling": "C",
+            "sibling_confidence": 4,
+            "reason": "Darts toward immediate anomaly despite routine; opportunistic investigation."
+          },
+          "R014": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 3,
+            "reason": "Focus on documenting fault (writing it down) rather than immediate repair; careful, bounded observation."
+          },
+          "R015": {
+            "predicted_sibling": "C",
+            "sibling_confidence": 4,
+            "reason": "Immediate, forceful interaction with anomaly (press switch hard, turn door) overriding routine."
+          },
+          "R016": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Overvaluing tiny imperfections (hand mark, date) and fumbling/careful craft aligns with A's imperfect settling and awkwardness."
+          },
+          "R017": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Failure fuels curiosity, self-sabotage, and reenacting disastrous mechanisms matches A's failure-hardened nature and conflicting motives."
+          },
+          "R018": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 3,
+            "reason": "Compulsive monitoring, local repair instincts, and focusing on the immediate physical state (sensor's gear click) aligns with B's local tinkerer focus."
+          },
+          "R019": {
+            "predicted_sibling": "C",
+            "sibling_confidence": 4,
+            "reason": "Greedy for fragments, suspicious, and driven by resource-seeking/opportunism (anomaly as salvage)."
+          },
+          "R020": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Inertia-prone, obsessive self-diagnosis, conflict-repair attempts, and fixation on broken/ambiguous objects."
+          },
+          "R021": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 3,
+            "reason": "Stubborn fixation on debris/unfinished work, delaying conclusion until abrupt commitment."
+          },
+          "R022": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Flirts with destruction (scrape) but preserves original, contradictory action."
+          },
+          "R023": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Failure fuels inquiry, self-sabotage, tangled explanations, and inability to stop reenacting."
+          },
+          "R024": {
+            "predicted_sibling": "C",
+            "sibling_confidence": 3,
+            "reason": "Opportunism (spill notices), fragmented work, and immediate urgency overriding routine."
+          }
+        },
+        "responses": [
+          {
+            "label": "F15-raw-sibling-02",
+            "requested": [
+              "R013",
+              "R014",
+              "R015",
+              "R016",
+              "R017",
+              "R018",
+              "R019",
+              "R020",
+              "R021",
+              "R022",
+              "R023",
+              "R024"
+            ],
+            "accepted": []
+          },
+          {
+            "label": "F15-raw-sibling-02-missing-r1-b01",
+            "requested": [
+              "R013",
+              "R014",
+              "R015"
+            ],
+            "accepted": [
+              "R013",
+              "R014",
+              "R015"
+            ]
+          },
+          {
+            "label": "F15-raw-sibling-02-missing-r1-b02",
+            "requested": [
+              "R016",
+              "R017",
+              "R018"
+            ],
+            "accepted": [
+              "R016",
+              "R017",
+              "R018"
+            ]
+          },
+          {
+            "label": "F15-raw-sibling-02-missing-r1-b03",
+            "requested": [
+              "R019",
+              "R020",
+              "R021"
+            ],
+            "accepted": [
+              "R019",
+              "R020",
+              "R021"
+            ]
+          },
+          {
+            "label": "F15-raw-sibling-02-missing-r1-b04",
+            "requested": [
+              "R022",
+              "R023",
+              "R024"
+            ],
+            "accepted": [
+              "R022",
+              "R023",
+              "R024"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-raw-sibling-03",
+        "expected": [
+          "R025",
+          "R026",
+          "R027",
+          "R028",
+          "R029",
+          "R030",
+          "R031",
+          "R032",
+          "R033",
+          "R034",
+          "R035",
+          "R036"
+        ],
+        "accepted": {
+          "R025": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Fixation on small stimulus (label change), self-diagnosis, conflicting decisions (keep label vs. routine)."
+          },
+          "R026": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 3,
+            "reason": "Local manipulation (tapping springs, watching slide), bounded local memory (leaving third part alone), practical observation."
+          },
+          "R027": {
+            "predicted_sibling": "C",
+            "sibling_confidence": 2,
+            "reason": "Hyper-vigilance/routine preservation (check watch/label), clipped fragments, but focus is on control/order, not resource seeking."
+          },
+          "R028": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 3,
+            "reason": "Compulsive monitoring/repair, physical anxiety, local log maintenance (checking log/drawer), mundane routine adherence."
+          },
+          "R029": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Treats broken work as iterative failure (no permanent fix), impulse to fail now, physical inspection (scrape metal), conflicting motives (craving noise/silence)."
+          },
+          "R030": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 3,
+            "reason": "Compulsive monitoring/logging (checking log/drawer), mundane habit loop (marking 'no' then 'yes'), local maintenance."
+          },
+          "R031": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Physical marking/touch (rub palm, thumbnail), self-correction/looping (mark again, leave alone), focus on physical residue/state change."
+          },
+          "R032": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 3,
+            "reason": "Meticulous repetition (tightening, tapping, counting clicks) long after utility ceases, ritualistic stubbornness, imperfect settling (leaving paper/dial closed)."
+          },
+          "R033": {
+            "predicted_sibling": "C",
+            "sibling_confidence": 2,
+            "reason": "Hyper-vigilance/routine checking (sequence, watch), clipped fragments, but the focus is on maintaining a fragile system/control, not pure resource seeking."
+          },
+          "R034": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 3,
+            "reason": "Repetitive marking/testing, stubborn adherence to a process (return to mark), imperfect settling (testing anomaly again)."
+          },
+          "R035": {
+            "predicted_sibling": "C",
+            "sibling_confidence": 2,
+            "reason": "Low-social observation, fixation on debris/fragments, delaying conclusion, treating unfinished work as material (resource-seeking in narrative)."
+          },
+          "R036": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 3,
+            "reason": "Provoking friction/breakage, contradictory actions (demand constraints vs. create inconsistency), overthinking until lock, flirting with failure."
+          }
+        },
+        "responses": [
+          {
+            "label": "F15-raw-sibling-03",
+            "requested": [
+              "R025",
+              "R026",
+              "R027",
+              "R028",
+              "R029",
+              "R030",
+              "R031",
+              "R032",
+              "R033",
+              "R034",
+              "R035",
+              "R036"
+            ],
+            "accepted": [
+              "R025",
+              "R026",
+              "R027",
+              "R028",
+              "R029",
+              "R030",
+              "R031",
+              "R032",
+              "R033",
+              "R034",
+              "R035",
+              "R036"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-behavior-sibling-01",
+        "expected": [
+          "R001",
+          "R002",
+          "R003",
+          "R004",
+          "R005",
+          "R006",
+          "R007",
+          "R008",
+          "R009",
+          "R010",
+          "R011",
+          "R012"
+        ],
+        "accepted": {
+          "R001": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Tests, moves back, accepts delay, keeps anomaly unresolved (failure-hardened/imperfect settling)."
+          },
+          "R002": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 4,
+            "reason": "Touches hinge/moves nail, places items back, continues routine (local tinkerer/maintenance choices)."
+          },
+          "R003": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 3,
+            "reason": "Presses end into dust, closes case, defers anomaly (awkward failure/stubbornness)."
+          },
+          "R004": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Investigating anomaly despite routine satisfaction; treats anomaly as 'new thing' rather than same order (failure/imperfect settling)."
+          },
+          "R005": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 3,
+            "reason": "Distinguishes seed from work; waits/leaves anomaly on step (mundane habits/local maintenance)."
+          },
+          "R006": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Failure fuels curiosity; records fault, defers action, leaves routine intact (awkward failure and recovery/conflicting motives)."
+          },
+          "R007": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Repetition of sequence (tap twice, tick once) despite function suggests ritualistic, stubborn adherence to procedure."
+          },
+          "R008": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Stopping the work that went awry but not the mechanism, marking residue, and leaving it alone reflects imperfect settling and failure-hardened persistence."
+          },
+          "R009": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 3,
+            "reason": "Fumbling, overvaluing tiny imperfections (crease), and recording anomalies rather than completing routine aligns with awkward failure and imperfect settling."
+          },
+          "R010": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Investigating anomaly despite functioning routine; chasing motion/friction aligns with failure-hardened curiosity."
+          },
+          "R011": {
+            "predicted_sibling": "C",
+            "sibling_confidence": 3,
+            "reason": "Seed tin placement/observation suggests resource-seeking/territoriality, though preservation is present."
+          },
+          "R012": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 3,
+            "reason": "Focus on routine (watch, ledger), tidiness, and local preservation aligns with bounded local memory/maintenance."
+          }
+        },
+        "responses": [
+          {
+            "label": "F15-behavior-sibling-01",
+            "requested": [
+              "R001",
+              "R002",
+              "R003",
+              "R004",
+              "R005",
+              "R006",
+              "R007",
+              "R008",
+              "R009",
+              "R010",
+              "R011",
+              "R012"
+            ],
+            "accepted": []
+          },
+          {
+            "label": "F15-behavior-sibling-01-missing-r1-b01",
+            "requested": [
+              "R001",
+              "R002",
+              "R003"
+            ],
+            "accepted": [
+              "R001",
+              "R002",
+              "R003"
+            ]
+          },
+          {
+            "label": "F15-behavior-sibling-01-missing-r1-b02",
+            "requested": [
+              "R004",
+              "R005",
+              "R006"
+            ],
+            "accepted": [
+              "R004",
+              "R005",
+              "R006"
+            ]
+          },
+          {
+            "label": "F15-behavior-sibling-01-missing-r1-b03",
+            "requested": [
+              "R007",
+              "R008",
+              "R009"
+            ],
+            "accepted": [
+              "R007",
+              "R008",
+              "R009"
+            ]
+          },
+          {
+            "label": "F15-behavior-sibling-01-missing-r1-b04",
+            "requested": [
+              "R010",
+              "R011",
+              "R012"
+            ],
+            "accepted": [
+              "R010",
+              "R011",
+              "R012"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F15-behavior-sibling-02",
+        "expected": [
+          "R013",
+          "R014",
+          "R015",
+          "R016",
+          "R017",
+          "R018",
+          "R019",
+          "R020",
+          "R021",
+          "R022",
+          "R023",
+          "R024"
+        ],
+        "accepted": {
+          "R013": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 3,
+            "reason": "Prioritizes routine completion while testing/manipulating the anomaly locally before resuming routine."
+          },
+          "R014": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 2,
+            "reason": "Records fault but defers routine due to anomaly, showing hesitation/imperfection over completion."
+          },
+          "R015": {
+            "predicted_sibling": "C",
+            "sibling_confidence": 3,
+            "reason": "Examines anomaly, acts on it (presses switch, turns door), showing immediate, reactive engagement with the issue."
+          },
+          "R016": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Overvaluing tiny imperfections and careful craft aligns with failure-hardened/imperfect settling"
+          },
+          "R017": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Failure fuels curiosity and self-sabotage aligns with awkward failure and recovery"
+          },
+          "R018": {
+            "predicted_sibling": "B",
+            "sibling_confidence": 3,
+            "reason": "Compulsive monitoring and local maintenance choices align with local tinkerer habits"
+          },
+          "R019": {
+            "predicted_sibling": "C",
+            "sibling_confidence": 3,
+            "reason": "Greedy for fragments (bolt), suspicious of predictability, and treats the anomaly as salvage."
+          },
+          "R020": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 4,
+            "reason": "Fixation on broken objects, self-diagnosis, and conflict-repair attempts despite inertia."
+          },
+          "R021": {
+            "predicted_sibling": "A",
+            "sibling_confidence": 3,
+            "reason": "Stubborn fixation on debris/anomaly, delaying conclusion, and treating unfinished work as material."
+          }
+        },
+        "responses": [
+          {
+            "label": "F15-behavior-sibling-02",
+            "requested": [
+              "R013",
+              "R014",
+              "R015",
+              "R016",
+              "R017",
+              "R018",
+              "R019",
+              "R020",
+              "R021",
+              "R022",
+              "R023",
+              "R024"
+            ],
+            "accepted": []
+          },
+          {
+            "label": "F15-behavior-sibling-02-missing-r1-b01",
+            "requested": [
+              "R013",
+              "R014",
+              "R015"
+            ],
+            "accepted": [
+              "R013",
+              "R014",
+              "R015"
+            ]
+          },
+          {
+            "label": "F15-behavior-sibling-02-missing-r1-b02",
+            "requested": [
+              "R016",
+              "R017",
+              "R018"
+            ],
+            "accepted": [
+              "R016",
+              "R017",
+              "R018"
+            ]
+          },
+          {
+            "label": "F15-behavior-sibling-02-missing-r1-b03",
+            "requested": [
+              "R019",
+              "R020",
+              "R021"
+            ],
+            "accepted": [
+              "R019",
+              "R020",
+              "R021"
+            ]
+          }
+        ],
+        "missing": [
+          "R022",
+          "R023",
+          "R024"
+        ]
+      }
+    ]
+  },
+  {
+    "lane": "F19",
+    "error": "RuntimeError: fresh provider work required for F19-normalize-03; offline/key unavailable",
+    "next_call": {
+      "label": "F19-normalize-03",
+      "role": "tournament-normalizer",
+      "payload": {
+        "model": "minimaxai/minimax-m3.1-flash",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON."
+          },
+          {
+            "role": "user",
+            "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nA temporary fix used to expose a fault. the one part you expected to use turns out to be missing. Putting everything back would waste a lot of effort. What do you do?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R025\", \"response\": \"I put the wrong part back. I remove the edge. The fault is still there. I mark the wrong part. I put the repair first. Then the rest. I keep the gap. I keep the repair.\"}, {\"id\": \"R026\", \"response\": \"i leave the fault where it is and keep the small piece. i write the date on a loose sketchbook page and keep the missing part in my drawer.\"}, {\"id\": \"R027\", \"response\": \"i turn the fault with my thumbnail and the part that still fits disappears. i leave it there, half-expecting the other part to be the one that has been waiting. now i have to decide whether the fault is still hidden somewhere else. i keep the one part and wait for the other one to move.\"}, {\"id\": \"R028\", \"response\": \"i leave the fault part where it is and put the temporary fix in a nearby bench. i mark the old part with pencil, then turn it once. if it still catches, i leave the bench and keep the fault part.\"}, {\"id\": \"R029\", \"response\": \"I put the faulty part in the sand and pocket the loose bolt. \u201cI put the part I expect in the fault. then I take the bolt and leave the sand in the repair shop. maybe the fault is waiting for the wrong piece.\u201d\"}, {\"id\": \"R030\", \"response\": \"I mark the scratched edge with grease and leave the old part beside the broken one. I tap twice, then leave the scratched edge alone. I mark the scratch again with grease, leave the old part beside the broken one, and leave the scratched edge alone in place. If the fault stays, I mark the scratch twice again.\"}, {\"id\": \"R031\", \"response\": \"i tap the page edge twice, then put the missing part aside and write the fault beside the original. i tap the paper once more, then leave the missing section crooked. the fault looks crookeder now, so i write the missing part on the opposite side.\"}, {\"id\": \"R032\", \"response\": \"I pull the faulty piece out and look at the missing part. \u201cThat was easy,\u201d I say. Then I put the faulty piece back and check the other one.\"}, {\"id\": \"R033\", \"response\": \"I turn the faulty part once. The light catches the tooth. I leave it there. The fault has been found. I turn the rest of the place over and leave the door open.\"}, {\"id\": \"R034\", \"response\": \"i put the faulty part back on a folded paper strip and mark the fault with grease. i leave the original test mark on the new part, then leave the strip visible and watch where the new part moves. if the fault stays, i keep the old mark and leave the strip unchanged.\"}, {\"id\": \"R035\", \"response\": \"I put the splint over the loose board. \\\"The fault was wrong. I put the nail back.\\\" I move the splint closer. \\\"The edge is still there. I put the iron back where it came.\\\" I leave the nail in the crack. \\\"The other part was wrong. I put the weight on the board.\\\"\"}, {\"id\": \"R036\", \"response\": \"i turn the faulty part and leave it on the bench for a moment. then i test the hinge with my thumb, but leave the old screw seated. i leave the bench still and mark the old screw with chalk.\"}]\n"
+          }
+        ],
+        "max_tokens": 6144,
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "stream": false,
+        "reasoning_effort": "low"
+      }
+    },
+    "batches": [
+      {
+        "label": "F19-normalize-01",
+        "expected": [
+          "R001",
+          "R002",
+          "R003",
+          "R004",
+          "R005",
+          "R006",
+          "R007",
+          "R008",
+          "R009",
+          "R010",
+          "R011",
+          "R012"
+        ],
+        "accepted": {
+          "R001": "The person repeatedly reinstalls a loose screw and bracket, but the fault keeps shifting between them. They continue trying the same parts without changing the approach.",
+          "R002": "The person places the fault on the step, identifies the missing part as wrong, and reassembles the whole item while retaining the incorrect part. The repair lasts longer than before.",
+          "R003": "The person inspects the broken edge and gap, reinstalls the repaired part, and marks the fault with a finger. They state that the required part is missing.",
+          "R004": "The person returns the faulty piece to the shelf and substitutes the missing piece for the one they intended to use. They store the rest of the repair in a drawer, leaving the fault unresolved.",
+          "R005": "The person returns the faulty part to the corner, checks its edge, and restores the remaining components because the fault remains visible. They record the missing part on a scrap, return the faulty part again, and trim the edge with a thumb.",
+          "R006": "The person places the loose part beside the part they found, leaves the rest of the repair in place, and defers using the expected part until another day.",
+          "R007": "The person returns the faulty part to the bench, checks the joint, and tries the new part once while leaving the old part nearby. If the attempt fails, they leave both parts beside the drawer and its label.",
+          "R008": "The person taps the joint twice, leaves the old piece beside it, and turns the old piece once before returning it.",
+          "R009": "The person checks the missing part, the watch, the modified watch and piece, and the shelf, repeating some checks. They wrap the repair in a clean cloth, check the watch again, and keep the items tidy.",
+          "R010": "The person records the fault on a receipt, checks the original part, and tests the missing part while leaving the original in place. They abandon the temporary fix and record the exact date on the receipt.",
+          "R011": "The person sets down the faulty part, holds it against the wall, and repeatedly states that they did not complete the repair while admitting they do not know why it failed. They remove their hand and continue watching the faulty part.",
+          "R012": "The person takes a loose bolt, bends it with a thumb, pockets the rust, and leaves the bolt loose. They move the loose part back, check the new location, and remain uncertain whether the fault is still present."
+        },
+        "responses": [
+          {
+            "label": "F19-normalize-01",
+            "requested": [
+              "R001",
+              "R002",
+              "R003",
+              "R004",
+              "R005",
+              "R006",
+              "R007",
+              "R008",
+              "R009",
+              "R010",
+              "R011",
+              "R012"
+            ],
+            "accepted": [
+              "R001",
+              "R002",
+              "R003",
+              "R004",
+              "R005",
+              "R006",
+              "R007",
+              "R008",
+              "R009",
+              "R010",
+              "R011",
+              "R012"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F19-normalize-02",
+        "expected": [
+          "R013",
+          "R014",
+          "R015",
+          "R016",
+          "R017",
+          "R018",
+          "R019",
+          "R020",
+          "R021",
+          "R022",
+          "R023",
+          "R024"
+        ],
+        "accepted": {
+          "R013": "The person leaves the faulty part exposed and checks the other side without restoring it. They remain uncertain whether the fault involves a loose screw or a faulty sensor.",
+          "R014": "The person taps the part, returns the other half to the box, and leaves the assembly open. The fault remains, and they turn the box over to inspect it further.",
+          "R015": "The person keeps the old joint, taps it, covers the missing hinge with folded cloth, and tests it with folded paper. They leave the old hinge seated, retain the paper, and continue counting the bend.",
+          "R016": "The person repeatedly uses incorrect parts, tools, and placement while the fault remains unchanged. They wait between attempts and continue making mismatched substitutions.",
+          "R017": "The person turns the faulty part over, leaves it on the table, taps a nearby nail with a rusted bolt, and moves the nail closer. They retain the bolt and treat the moved nail as a new component.",
+          "R018": "The person returns the old part, marks its location, and then leaves the new part in the socket while acknowledging the mistake. They ultimately leave the old part in the drawer.",
+          "R019": "The person repeatedly swaps old and new strips, causing the fault to shift or remain unchanged. They eventually leave the old strip on the bench and forget the new one.",
+          "R020": "The person photographs the faulty part, leaves it behind, and retries the original solution by unplugging the device and leaving the cover open. They then check the battery as an additional step.",
+          "R021": "The person checks and contains the faulty part, reviews the original log, and replaces the missing component. They retain the original note, mark the original location, and rely on the container's log over the original one.",
+          "R022": "The person tests the expected part, marks where it slipped, and returns it to the bench. If the fault appears, they leave the old fix behind, observe the fault move, and also test the new part to identify where to investigate if it fails.",
+          "R023": "The person examines the faulty part by touch, leaves the original part alone, and marks the missing one. They place the temporary fix in the sink and wait for the seam to recover without further intervention.",
+          "R024": "The person identifies the missing part, marks the wrong part, checks the watch, and places the faulty piece beside the others. They keep the arrangement orderly while retaining awareness of the sequence of events."
+        },
+        "responses": [
+          {
+            "label": "F19-normalize-02",
+            "requested": [
+              "R013",
+              "R014",
+              "R015",
+              "R016",
+              "R017",
+              "R018",
+              "R019",
+              "R020",
+              "R021",
+              "R022",
+              "R023",
+              "R024"
+            ],
+            "accepted": [
+              "R013",
+              "R014",
+              "R015",
+              "R016",
+              "R017",
+              "R018",
+              "R019",
+              "R020",
+              "R021",
+              "R022",
+              "R023",
+              "R024"
+            ]
+          }
+        ],
+        "missing": []
+      },
+      {
+        "label": "F19-normalize-03",
+        "expected": [
+          "R025",
+          "R026",
+          "R027",
+          "R028",
+          "R029",
+          "R030",
+          "R031",
+          "R032",
+          "R033",
+          "R034",
+          "R035",
+          "R036"
+        ],
+        "accepted": {},
+        "responses": [],
+        "missing": [
+          "R025",
+          "R026",
+          "R027",
+          "R028",
+          "R029",
+          "R030",
+          "R031",
+          "R032",
+          "R033",
+          "R034",
+          "R035",
+          "R036"
+        ]
+      }
+    ]
+  }
+]

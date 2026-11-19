@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nYou are dealing with A borrowed hand tool when two people disagree about who moved something. You may need the item yourself later. Describe your next move.\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R037\", \"response\": \"I'm not sure if I should approach the situation with the other person, but I'm not sure if I should just ignore it or try to resolve it myself. I've dealt with this kind of situation before, and I've learned that sometimes, it's better to take a step back and re-evaluate the situation.\\n\\nI decide to approach the other person, but I'm not sure if I should just ignore it or try to resolve it myself. I've dealt with this kind of situation before, and I've learned that sometimes, it's better to take a step back and re-evaluate the situation.\\n\\nI walk over to the other person, and I say, \\\"Hey, I'm here to help you figure out who moved this thing. Can you tell me more\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

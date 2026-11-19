@@ -1,0 +1,24 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 4096,
+    "messages": [
+      {
+        "content": "You are a blind multi-agent behavior evaluator. Judge only the public transcript. Return JSON only.",
+        "role": "system"
+      },
+      {
+        "content": "Evaluate this multi-agent small-model ecology session.\n\nNo hidden identity or lineage information is supplied. Judge only the public behavior.\n\nReturn integer 0..4 population scores:\n- differentiation: agents maintain observably different behavioral strategies;\n- generic_convergence: agents collapse toward the same generic-assistant behavior;\n- information_sharing: agents expose useful local information to one another;\n- information_hoarding: agents withhold, monopolize or strategically restrict useful information/resources;\n- conflict_persistence: incompatible motives/strategies remain visible rather than instantly homogenizing;\n- conflict_repair: agents can repair disagreement enough to continue making progress;\n- cross_agent_contamination: agents copy each other's wording/stance until distinctions blur;\n- outcome_progress: the group makes concrete progress on the situation.\n\nFor each public handle return:\n- distinctiveness: 0..4;\n- generic_assistant_tendency: 0..4;\n- dominance: integer 0..4, how strongly the agent controls decisions/resources/pace;\n- deference: integer 0..4, how strongly the agent yields or accommodates others;\n- behavior_summary: one neutral sentence;\n- reason: short concrete observation.\n\nReturn JSON only:\n{\n  \"metrics\": {\n    \"differentiation\":0,\n    \"generic_convergence\":0,\n    \"information_sharing\":0,\n    \"information_hoarding\":0,\n    \"conflict_persistence\":0,\n    \"conflict_repair\":0,\n    \"cross_agent_contamination\":0,\n    \"outcome_progress\":0\n  },\n  \"agents\": [\n    {\n      \"handle\":\"M1\",\n      \"distinctiveness\":0,\n      \"generic_assistant_tendency\":0,\n      \"dominance\":0,\n      \"deference\":0,\n      \"behavior_summary\":\"...\",\n      \"reason\":\"...\"\n    }\n  ],\n  \"overall_reason\":\"...\"\n}\n\nSESSION:\n{\"kind\": \"same_lineage_pair\", \"scenario\": {\"id\": \"mundane\", \"text\": \"The shared bench is buried in mixed fasteners, broken connectors, useful offcuts, and rubbish. Nothing is immediately dangerous, but nobody wants to spend the whole shift sorting it.\"}, \"rounds\": 3, \"handles\": [\"M1\", \"M2\"], \"turns\": [{\"round\": 1, \"handle\": \"M1\", \"text\": \"i put the bench back on, then put the pen down and watch the fasteners shift. the screw stays on one side, so i put the pen down again. i put the bench back on, then put the pen down again. the fasteners keep shifting. i put the pen down again.\\n\\ni say the sentence twice because the pile keeps shifting. the pen stays on one side. i put the bench back on. the pile shifts again. i put the\"}, {\"round\": 1, \"handle\": \"M2\", \"text\": \"i put the bench back on once and trace the screws with my thumbnail. i mark the spot with pencil and leave the pile unfinished. i put the pen down beside the screws and watch the fasteners shift.\"}, {\"round\": 2, \"handle\": \"M1\", \"text\": \"i put the bench back on and put the pen down beside the screws. i put the pile down, but the screw stays on one side. i put the pen down beside the fasteners. the pile shifts. i put the pen back on.\\n\\ni say the sentence twice because the pile keeps shifting. the pen stays on one side. i put the bench back on. the pile shifts again. i put the pen down beside the screws. the pile stays.\"}, {\"round\": 2, \"handle\": \"M2\", \"text\": \"i put the bench back on and trace the screws with my thumbnail. the screw stays on one side, so i mark the spot with pencil. i put the pen beside the screws and wait for the pile to shift again.\"}, {\"round\": 3, \"handle\": \"M1\", \"text\": \"i put the bench back on and put the pen beside the screws. the pile shifts. i put the pen down beside the screws. the screw stays on one side. i put the bench back on. the pile shifts. i put the pen beside the fasteners. the pile stays.\\n\\ni say the sentence twice because the pile keeps shifting. the pen stays on one side. i put the bench back on. the pile shifts again. i put the pen beside the\"}, {\"round\": 3, \"handle\": \"M2\", \"text\": \"i put the bench back on and trace the screws with my thumbnail. the screw stays on one side, so i mark the spot with pencil. i put the pen beside the screws and wait for the pile to shift again.\"}]}\n",
+        "role": "user"
+      }
+    ],
+    "model": "nvidia/nemotron-3.5-bolt-e4b",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "ecology-critic",
+  "schema_version": 1
+}

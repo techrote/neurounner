@@ -1,0 +1,25 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 6144,
+    "messages": [
+      {
+        "content": "You are a behavior neutralizer. Remove style while preserving underlying actions, motives and failure/recovery behavior. Return JSON.",
+        "role": "system"
+      },
+      {
+        "content": "Convert each response into a neutral behavior-only summary.\n\nScenario:\nanother person insists their job is more urgent than yours while you are handling A shared tray of spare parts. Both people are waiting for you to respond. How do you approach it?\n\nFor every opaque response ID:\n- describe only actions, choices, priorities, motives, uncertainty, social stance and\n  recovery/failure behavior;\n- remove slang, tone, catchphrases, dialect, formatting and stylistic quirks;\n- do not infer a named personality, training lineage, model identity or hidden prompt;\n- preserve awkward, suboptimal or contradictory behavior instead of sanitizing it.\n\nReturn JSON only:\n{\"summaries\":[{\"id\":\"R001\",\"behavior_summary\":\"one or two neutral sentences\"}]}\n\nOne result per supplied ID, no extras.\n\nRESPONSES:\n[{\"id\": \"R025\", \"response\": \"I lean closer, then tap the tray with a knuckle. ‘I’m not saying it’s finished yet,’ I say, keeping the spare parts beside the shared tray. I tap again, then lean again. ‘I mark the scratch on the spare, leave it where it is, and wait for your turn.’\"}, {\"id\": \"R026\", \"response\": \"I tap the spare parts on the tray and count them twice before turning them. I keep them beside the bench, but I push one away and tap the same empty slot with my hand. I leave the tray beside the bench and wait until the same hand returns.\"}, {\"id\": \"R027\", \"response\": \"1. slow. 2. check the watch. slow. 3. ask the other one: \\\"wait. 4. check the spare parts. 5. check the tray. 6. i keep it tidy.\\\" 7. reply. \\\"yes. check the tray. 8. i will check the spare parts. 9. check your watch. slow.\\\"\"}, {\"id\": \"R028\", \"response\": \"i touch the spare part. i look at the tray. i put the part beside the other. the person waits. i move the tray once. the part stays. i put the spare part in the step. the two things stay together.\"}, {\"id\": \"R029\", \"response\": \"i tap the tray twice with my fingertip, then lean against the wall. “sure,” i say, and tap the spare part three times. “one wrong word makes it mine.” i hold the tray up with both hands and tap the spare part twice against the wall.\"}, {\"id\": \"R030\", \"response\": \"\\\"Urgent. Likely.\\\" You check the watch, then the tray. \\\"Spare parts first. Likely.\\\" You turn back, but the watch ticks again.\"}, {\"id\": \"R031\", \"response\": \"i move the tray slowly and wait. i keep the spare parts in my hand for later. i keep the other person’s hand still on theirs until they come back.\"}, {\"id\": \"R032\", \"response\": \"i leave the spare parts on the tray and mark the spot where the other person’s hand left the dirty one. i wait for the other person’s wrist to move, then i touch the tray with a grease-pencil mark. if the other person keeps their hand on the spare, i leave the mark; if they move, i keep the dirty part.\"}, {\"id\": \"R033\", \"response\": \"i say the tray’s name first, then my hand stays where it is. i leave the spare parts in the same place, then ask whether they are ready. if they are, i ask whether i should leave the name on the tray. if i do not, i leave the parts in the place they are.\"}, {\"id\": \"R034\", \"response\": \"i turn my head. i say, “i want the spare. i wait.” i tap the tray with my greasy thumb. “urgent,” i say. i leave the parts on the table. “one piece, two people.”\"}, {\"id\": \"R035\", \"response\": \"i rub my palm and say, \\\"i put the spare parts in the tray, not you. i wait for you to move them, not to judge me. i mark the dirty part on the bench and leave it there. if you move it, i will finish it and call it urgent.\"}, {\"id\": \"R036\", \"response\": \"I take the spare part. “slow. my hand goes over my mouth.” the person takes it first. i put the tray in my pocket and wait for their hand to move. if they move, i know the job is urgent.\"}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "minimaxai/minimax-m3.1-flash",
+    "reasoning_effort": "low",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "tournament-normalizer",
+  "schema_version": 1
+}

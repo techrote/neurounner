@@ -2,6 +2,12 @@
 
 Parent [#9](https://github.com/techrote/neurounner/issues/9); execution [#256](https://github.com/techrote/neurounner/issues/256). This protocol is prepared before the diagnostic runs. The operator requires completed Stage E [#14](https://github.com/techrote/neurounner/issues/14), its accepted main commit and exact summary hash before model work begins. Execution results and receipts are separate from these frozen plans.
 
+## Accepted E context and first launch
+
+Stage E is accepted on main at 498cbfb8caed6e962ee4dd7af951aa34281352e6 and issue #14 is closed completed. Its [fresh-main readback](../qualification-20261119/review/main-readback.json) returns closure_ready true and binds summary SHA-256 d49cfb48427718dbc9588d3de34a819f9f4018f4e501431ef070b3e3db4b2479. E's usable-village gate fails: lineage identification passes, conditioned sibling recognition and the required member count fail, while all 36 members meet the frozen raw relevance/genericness minima. D/T and E/F quality means use different cohorts and judging contexts; their numerical difference is not a training improvement. See the [complete interpretation](../qualification-20261119/review/COMPLETION.md).
+
+The first [execution request](request.json) binds that accepted commit and exact summary, with phase generate and revision 1. It retains the plan frozen before the final E outcome: no panel, training data, optimizer setting, Q prompt, judging criterion or budget changes follow from the result. F measures the mask mechanism and feedback prompting; it does not presume that either explains E's recognition failures. Actual runtime results are recorded separately when the input and final publication phases complete. The [independent acceptance tool and source receipt](review/ACCEPTANCE.md) are retained with this launch.
+
 ## Questions and controlled comparisons
 
 | Question | Comparison | Fixed workload |
