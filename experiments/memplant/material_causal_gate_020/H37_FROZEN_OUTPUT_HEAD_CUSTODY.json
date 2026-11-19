@@ -1,0 +1,52 @@
+{
+  "experiment": "DREAMGRAFT DG020 H37, exposed training only; no prospective science PASS",
+  "date": "2026-11-19",
+  "source_original_H36": {
+    "26011639": "6ec90371ecfb7fdcc7291959bc1e9a0d98df71836cef3100a2205f3dfea3fa2d",
+    "26011640": "dc2b2fbc7b9fa04303915cc92255bdcb0fb15e7218c9e96a4e5e24717317ed05",
+    "26011641": "49b31a99cfcd537d24264880e26c0d92784ed846318959dfe06ce8c11dc1a681"
+  },
+  "source_script_sha256": "df665ef13db6ec3256ae5c633fbe5401a0394051c8ca232040153bea650f74ef",
+  "head_shape": [
+    1,
+    8
+  ],
+  "param_name": "tile.4.weight",
+  "dtype": "float32",
+  "endian": "little",
+  "frozen_hidden_parameters": 200,
+  "total_parameters": 209,
+  "required_L1_head_budget": 0.002,
+  "fitted_heads": {
+    "26011639": {
+      "float32_hex_le": [
+        "03607e3f",
+        "7bcbfe3f",
+        "060b01c0",
+        "73720440",
+        "c0bfffbf",
+        "01a70e3d",
+        "00000080",
+        "5558a2c1"
+      ],
+      "original_pytorch_checkpoint_sha256": "961b9b8647e74c9e3d3f58be86c2c01b7706855a7a70bb4f509c13bd00d86f6a"
+    },
+    "26011640": {
+      "float32_hex_le": [
+        "9ef5843f",
+        "9ed8fb3f",
+        "57bd03c0",
+        "2396ed3f",
+        "842fffbf",
+        "00000080",
+        "53efc8c1",
+        "97ca0042"
+      ],
+      "original_pytorch_checkpoint_sha256": "f4d90d1384632f33a534a5e0b7893c0246679036f7c0d4be38312c0c8879de34"
+    }
+  },
+  "excluded_seed": "26011641 — LP infeasible at L1<=0.002; NO H37 checkpoint",
+  "restore": "Load frozen H36 209-parameter receiver tensor dictionary of corresponding seed; overwrite only tile.4.weight tensor with np.frombuffer(b''.join(bytes.fromhex(h) for h in float32_hex_le),dtype='<f4').reshape(1,8); leave all other parameters unchanged.",
+  "provenance": "Reversible numerical float32 coefficients, not a claim to reproduce the original PyTorch .pt serialization bytes.",
+  "scientific_verdict": "TRAINING-ONLY FAIL; H36 unseen-family prospective FAIL 29/30 remains"
+}

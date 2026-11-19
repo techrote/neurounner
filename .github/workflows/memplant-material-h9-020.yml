@@ -1,0 +1,146 @@
+name: DREAMGRAFT DG020 H9 pinned cross-seed donor causal replay
+on:
+  pull_request:
+    branches: [research/memplant-dg018-sequence-value-20261116]
+    paths:
+      - '.github/workflows/memplant-material-h9-020.yml'
+      - 'experiments/memplant/material_causal_gate_020/h9_cross_seed_audit.py'
+      - 'experiments/memplant/material_causal_gate_020/h9_independent_receipt_audit.py'
+      - 'experiments/memplant/material_causal_gate_020/h9_expected_checkpoints.sha256'
+      - 'experiments/memplant/material_causal_gate_020/experiment.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  h9-frozen-cross-seed-neural-donor-interventions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned free CPU-only dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy==1.26.4'
+      - name: Retrieve original immutable seed-39 donor models
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14288351242
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: experiments/memplant/material_causal_gate_020/checkpoints/26011639
+          merge-multiple: true
+      - name: Retrieve original immutable seed-40 donor models
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14287683493
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: experiments/memplant/material_causal_gate_020/checkpoints/26011640
+          merge-multiple: true
+      - name: Retrieve original immutable seed-41 donor models
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14288072802
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: experiments/memplant/material_causal_gate_020/checkpoints/26011641
+          merge-multiple: true
+      - name: Retrieve H8 receiver and baseline receipts seed-39
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14306358533
+          run-id: 44035555135
+          github-token: ${{ github.token }}
+          path: runtime/memplant/h9-h8/26011639
+          merge-multiple: true
+      - name: Retrieve H8 receiver and baseline receipts seed-40
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14306508988
+          run-id: 44035555135
+          github-token: ${{ github.token }}
+          path: runtime/memplant/h9-h8/26011640
+          merge-multiple: true
+      - name: Retrieve H8 receiver and baseline receipts seed-41
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14306208656
+          run-id: 44035555135
+          github-token: ${{ github.token }}
+          path: runtime/memplant/h9-h8/26011641
+          merge-multiple: true
+      - name: Verify exact H9 source, H8 receipt manifests and all 18 model checkpoints
+        run: |
+          set -euo pipefail
+          ROOT=experiments/memplant/material_causal_gate_020
+          sudo install -d -o "$(id -u)" -g "$(id -g)" /mnt/data
+          printf '%s  %s\n' '9633b2548f690f8bab0281e7c2fb1228ecef3c6408513b63d7be3c1787b4f799' "$ROOT/h9_cross_seed_audit.py" | sha256sum -c -
+          printf '%s  %s\n' '3b7d3ba943d9d4834eb715201d8251e24c62c1d9f608d0187460196dd74c6b9c' "$ROOT/h9_independent_receipt_audit.py" | sha256sum -c -
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, shutil, zipfile
+          root=Path('experiments/memplant/material_causal_gate_020')
+          Path('/mnt/data').mkdir(parents=True,exist_ok=True)
+          for seed in (26011639,26011640,26011641):
+              raw=Path(f'runtime/memplant/h9-h8/{seed}')
+              manifest=json.loads((raw/'sha256.json').read_text())
+              for filename,digest in manifest.items():
+                  actual=hashlib.sha256((raw/filename).read_bytes()).hexdigest()
+                  assert actual==digest,(seed,filename,actual,digest)
+              shutil.copyfile(raw/'receiver-median-conditioned.pt',root/f'receiver-{str(seed)[-2:]}.pt')
+              zpath=Path(f'/mnt/data/DG020-H8-exact-head-seed{str(seed)[-2:]}.zip')
+              with zipfile.ZipFile(zpath,'w',compression=zipfile.ZIP_DEFLATED) as z:
+                  for f in raw.iterdir():
+                      if f.is_file(): z.write(f,arcname=f.name)
+              assert zipfile.ZipFile(zpath).testzip() is None
+              print(seed,'verified H8 receipt files',len(manifest))
+          PY
+          (cd "$ROOT" && sha256sum -c h9_expected_checkpoints.sha256)
+          python3 -m py_compile "$ROOT"/{experiment,h9_cross_seed_audit,h9_independent_receipt_audit}.py
+      - name: Replay frozen H8 baseline and generate H9 counterfactual decisions
+        run: |
+          set -euo pipefail
+          timeout --signal=INT --kill-after=15s 40m python3 experiments/memplant/material_causal_gate_020/h9_cross_seed_audit.py
+      - name: Independent H9 raw-receipt, oracle, margin and median-conditioning audit
+        run: |
+          set -euo pipefail
+          python3 experiments/memplant/material_causal_gate_020/h9_independent_receipt_audit.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          root=Path('experiments/memplant/material_causal_gate_020/h9-evidence')
+          r=json.loads((root/'report.json').read_text())
+          audit=json.loads((root/'receipt-independent-audit.json').read_text())
+          cells=[d for a in r['results'].values() for b in a.values() for c in b.values() for d in c.values()]
+          assert len(cells)==90
+          assert r['baseline_h8_replay']['action_disagreement_count']==0
+          assert audit['raw_receipts_checked']==14400
+          assert audit['unique_observations']==4800
+          print('Scientific verdict:',r['scientific_verdict'],'cells passing',sum(c['verdict']=='PASS' for c in cells),'of',len(cells))
+          PY
+      - name: Preserve exact-head provenance and all raw decisions regardless of scientific result
+        if: always()
+        env:
+          RUN_SHA: ${{ github.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          mkdir -p runtime/memplant/h9-provenance
+          printf '%s\n' "$RUN_SHA" > runtime/memplant/h9-provenance/checkout-merge-sha.txt
+          printf '%s\n' "$PR_HEAD" > runtime/memplant/h9-provenance/pr-head-sha.txt
+          printf '%s\n' "$RUN_ID" > runtime/memplant/h9-provenance/github-run-id.txt
+          sha256sum experiments/memplant/material_causal_gate_020/{experiment,h9_cross_seed_audit,h9_independent_receipt_audit}.py > runtime/memplant/h9-provenance/sources.sha256
+          cp experiments/memplant/material_causal_gate_020/h9_expected_checkpoints.sha256 runtime/memplant/h9-provenance/
+      - name: Upload H9 exact-source checks, 14,400 receipts, confidence margins, controls and failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg020-h9-frozen-crossseed-${{ github.sha }}
+          path: |
+            experiments/memplant/material_causal_gate_020/h9-evidence/
+            runtime/memplant/h9-provenance/
+          if-no-files-found: warn
+          retention-days: 30

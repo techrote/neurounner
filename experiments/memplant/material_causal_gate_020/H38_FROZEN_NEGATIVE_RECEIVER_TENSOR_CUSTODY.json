@@ -1,0 +1,61 @@
+{
+  "classification": "TRAINING_ONLY_NEGATIVE_CHECKPOINT_NEVER_PROMOTE",
+  "experiment": "DG020-H38",
+  "receiver_seed": 26011641,
+  "baseline_h36_checkpoint_sha256": "49b31a99cfcd537d24264880e26c0d92784ed846318959dfe06ce8c11dc1a681",
+  "h38_negative_checkpoint_sha256": "1c46fe204587cc2a4c7adcc3506a7cb1894632685ec5f93747b90a443a9f8051",
+  "value_encoding": "IEEE754 float32 bit pattern as unsigned little-endian uint32; preserve every bit",
+  "bit_identical_unchanged_tensors": [
+    "tile.0.weight",
+    "tile.2.weight",
+    "tile.4.bias"
+  ],
+  "replacement_tensors_uint32_le": {
+    "tile.0.bias": [
+      1000578226,
+      3204671284,
+      3210112272,
+      3215591335,
+      3221001728,
+      3122094462,
+      3139528482,
+      3134883756,
+      3125552106,
+      3144242030,
+      1005943953,
+      3135541692,
+      999356380,
+      3145664326,
+      3151374078,
+      3132245192
+    ],
+    "tile.2.bias": [
+      966321667,
+      987635358,
+      992260938,
+      3141201528,
+      1000867152,
+      3119427013,
+      3135833320,
+      3130719002
+    ],
+    "tile.4.weight": [
+      1065356778,
+      1073586095,
+      3220936872,
+      1073453247,
+      3221126994,
+      2147483648,
+      2147483648,
+      2147483648
+    ]
+  },
+  "replacement_rule": "Load verified original H36 seed-26011641 state_dict; replace only three tensors with np.array(bit_patterns, dtype=np.uint32).view(np.float32).reshape(original_shape); do not alter original evidence or any other tensors.",
+  "negative_cases": [
+    "H27 random_scatter wet_rich_invariant index190",
+    "H27 cyclic_run wet_rich_invariant index112",
+    "H36 ladder_weave wet_rich_invariant index29"
+  ],
+  "raw_receipts_sha256": "4400b4b4fa9b21d1c38722bf7e7e090024ed8b7d6f4a09bf399d9b46f5fa3fe5",
+  "acceptance_verdict": "FAIL; no prospective evaluation; latest prospective H36 29/30 FAIL"
+}

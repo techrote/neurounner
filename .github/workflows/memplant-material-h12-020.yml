@@ -1,0 +1,199 @@
+name: DREAMGRAFT DG020 H12 corrective near-tie selectivity
+on:
+  pull_request:
+    branches: [research/memplant-dg018-sequence-value-20261116]
+    paths:
+      - '.github/workflows/memplant-material-h12-020.yml'
+      - 'experiments/memplant/material_causal_gate_020/h12_neartie_calibration.py'
+      - 'experiments/memplant/material_causal_gate_020/h12_receipt_audit.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  corrective-retrain-replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned CPU dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy==1.26.4'
+      - name: Original seed 39 neural donors
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14288351242
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: experiments/memplant/material_causal_gate_020/checkpoints/26011639
+          merge-multiple: true
+      - name: Original seed 40 neural donors
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14287683493
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: experiments/memplant/material_causal_gate_020/checkpoints/26011640
+          merge-multiple: true
+      - name: Original seed 41 neural donors
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14288072802
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: experiments/memplant/material_causal_gate_020/checkpoints/26011641
+          merge-multiple: true
+      - name: Original H8 seed 39 receiver and receipts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14306358533
+          run-id: 44035555135
+          github-token: ${{ github.token }}
+          path: runtime/h12-prior-h8/26011639
+          merge-multiple: true
+      - name: Original H8 seed 40 receiver and receipts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14306508988
+          run-id: 44035555135
+          github-token: ${{ github.token }}
+          path: runtime/h12-prior-h8/26011640
+          merge-multiple: true
+      - name: Original H8 seed 41 receiver and receipts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14306208656
+          run-id: 44035555135
+          github-token: ${{ github.token }}
+          path: runtime/h12-prior-h8/26011641
+          merge-multiple: true
+      - name: Historical H9 paired receipts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14313388906
+          run-id: 44051553537
+          github-token: ${{ github.token }}
+          path: runtime/h12-prior-h9
+          merge-multiple: true
+      - name: Historical H10 paired receipts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14322855491
+          run-id: 44070049145
+          github-token: ${{ github.token }}
+          path: runtime/h12-prior-h10
+          merge-multiple: true
+      - name: Historical H11 failed paired receipts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14326103324
+          run-id: 44079138253
+          github-token: ${{ github.token }}
+          path: runtime/h12-prior-h11
+          merge-multiple: true
+      - name: Check source hashes, checkpoint custody and cohort manifests
+        run: |
+          set -euo pipefail
+          ROOT=experiments/memplant/material_causal_gate_020
+          printf '%s  %s\n' '99774034c67acf14c19e3653a680a9068635cc6e5978872b73a97a0b235e2a4e' "$ROOT/h12_neartie_calibration.py" | sha256sum -c -
+          printf '%s  %s\n' '7c8791794622ebedd8780d5690fcfff994a59c8b1eb6e93f7ce994502c6c1e08' "$ROOT/h12_receipt_audit.py" | sha256sum -c -
+          python3 -m py_compile "$ROOT"/{experiment,h9_cross_seed_audit,h10_fee_count_stress,h12_neartie_calibration,h12_receipt_audit}.py
+          sudo install -d -o "$(id -u)" -g "$(id -g)" /mnt/data
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,shutil,zipfile
+          root=Path('experiments/memplant/material_causal_gate_020')
+          def verify(p):
+              m=json.loads((p/'sha256.json').read_text())
+              for name,v in m.items():
+                  assert hashlib.sha256((p/name).read_bytes()).hexdigest()==v,(p,name)
+              return len(m)
+          for seed in (26011639,26011640,26011641):
+              raw=Path(f'runtime/h12-prior-h8/{seed}')
+              print('H8 manifest',seed,verify(raw))
+              shutil.copyfile(raw/'receiver-median-conditioned.pt',root/f'receiver-{str(seed)[-2:]}.pt')
+              with zipfile.ZipFile(f'/mnt/data/DG020-H8-exact-head-seed{str(seed)[-2:]}.zip','w',zipfile.ZIP_DEFLATED) as z:
+                  for p in raw.iterdir():
+                      if p.is_file():z.write(p,p.name)
+          for h,run in (('H9','44051553537'),('H10','44070049145'),('H11','44079138253')):
+              src=Path(f'runtime/h12-prior-{h.lower()}')
+              evidence=src/f'experiments/memplant/material_causal_gate_020/{h.lower()}-evidence'
+              print(h,'manifest',verify(evidence))
+              with zipfile.ZipFile(f'/mnt/data/DG020-{h}-CI-{run}.zip','w',zipfile.ZIP_DEFLATED) as z:
+                  for p in src.rglob('*'):
+                      if p.is_file():z.write(p,p.relative_to(src))
+          for archive in Path('/mnt/data').glob('DG020-*.zip'):
+              assert zipfile.ZipFile(archive).testzip() is None
+          PY
+          (cd "$ROOT" && sha256sum -c h9_expected_checkpoints.sha256)
+      - name: Train three genuine same-size receivers and evaluate 4,800 untouched counterfactual pairs
+        run: |
+          set -euo pipefail
+          timeout --signal=INT --kill-after=15s 35m python3 experiments/memplant/material_causal_gate_020/h12_neartie_calibration.py
+      - name: Independently audit receipt costs, invariance and preserved negative evidence
+        run: |
+          set -euo pipefail
+          python3 experiments/memplant/material_causal_gate_020/h12_receipt_audit.py
+          python3 - <<'PY'
+          import json,sys
+          from pathlib import Path
+          import numpy as np,torch
+          p=Path('experiments/memplant/material_causal_gate_020')
+          sys.path.insert(0,str(p.resolve()))
+          from experiment import Receiver
+          import h9_cross_seed_audit as base
+          out=p/'h12-evidence'
+          rep=json.loads((out/'report.json').read_text())
+          audit=json.loads((out/'receipt-independent-audit.json').read_text())
+          assert rep['source_sha256']=='99774034c67acf14c19e3653a680a9068635cc6e5978872b73a97a0b235e2a4e'
+          assert audit['receipts_checked']==4800 and audit['cells_checked']==30
+          assert audit['verified_scientific_verdict']==rep['status']
+          _,donors,blinds,_=base.load_models()
+          count=0
+          for seed in base.SEEDS:
+              model=Receiver().eval()
+              model.load_state_dict(torch.load(out/f'receiver-neartie-{seed}.pt',map_location='cpu',weights_only=True))
+              for file in sorted(out.glob(f'receipts-{seed}-*.jsonl')):
+                  rows=[json.loads(r) for r in file.read_text().splitlines()]
+                  x=torch.from_numpy(np.asarray([r['observation'] for r in rows],dtype='f4'))
+                  with torch.no_grad():
+                      forecasts=[[base.median_condition(x,base.forecast(donors[seed][law][replica],x)) for replica in (0,1)] for law in (0,1)]
+                      logits=[[model(x,forecasts[law][replica]).numpy() for replica in (0,1)] for law in (0,1)]
+                  for i,row in enumerate(rows):
+                      for law in (0,1):
+                          assert np.allclose(logits[law][0][i],row['logits'][law],atol=3e-5)
+                          assert np.allclose(logits[law][1][i],row['same_law_replica_logits'][law],atol=3e-5)
+                          assert int(logits[law][0][i].argmax())==row['actions'][law]
+                          assert int(logits[law][1][i].argmax())==row['same_law_replica_actions'][law]
+                      picks=row['preinference_donor_selection']
+                      assert [int(logits[picks[slot]][0][i].argmax()) for slot in (0,1)]==row['preinference_shuffled_actions']
+                      count+=1
+          assert count==4800
+          (out/'independent-neural-replay.json').write_text(json.dumps({'receipts_replayed':count,'scientific_verdict':rep['status'],'pinned_torch':torch.__version__},indent=2)+'\n')
+          print('H12 SCIENTIFIC',rep['status'],rep['passed_cells'],'/30')
+          PY
+      - name: Preserve exact-HEAD provenance
+        if: always()
+        env:
+          CHECKOUT_SHA: ${{ github.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          mkdir -p runtime/h12-provenance
+          printf '%s\n' "$CHECKOUT_SHA" > runtime/h12-provenance/checkout-merge-sha.txt
+          printf '%s\n' "$PR_HEAD_SHA" > runtime/h12-provenance/pr-head-sha.txt
+          printf '%s\n' "$RUN_ID" > runtime/h12-provenance/github-run-id.txt
+          sha256sum experiments/memplant/material_causal_gate_020/{experiment,h9_cross_seed_audit,h10_fee_count_stress,h12_neartie_calibration,h12_receipt_audit}.py > runtime/h12-provenance/source-files.sha256
+      - name: Upload trained checkpoints, raw control decisions, failed worlds and qualification
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg020-h12-retrained-${{ github.sha }}
+          path: |
+            experiments/memplant/material_causal_gate_020/h12-evidence/
+            runtime/h12-provenance/
+          if-no-files-found: warn
+          retention-days: 30

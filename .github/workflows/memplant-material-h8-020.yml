@@ -1,0 +1,67 @@
+name: DREAMGRAFT DG020 H8 median-conditioned donor causal gate
+on:
+  pull_request:
+    branches: [research/memplant-dg018-sequence-value-20261116]
+    paths:
+      - '.github/workflows/memplant-material-h8-020.yml'
+      - 'experiments/memplant/material_causal_gate_020/h8_experiment.py'
+      - 'experiments/memplant/material_causal_gate_020/h6_experiment.py'
+      - 'experiments/memplant/material_causal_gate_020/experiment.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  h8-frozen-trained-donors-and-retrained-receiver:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - { seed: 26011639, artifact: 14288351242 }
+          - { seed: 26011640, artifact: 14287683493 }
+          - { seed: 26011641, artifact: 14288072802 }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned free CPU dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy==1.26.4'
+      - name: Download original immutable neural donor checkpoints
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ matrix.artifact }}
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: runtime/memplant/h8-checkpoints/${{ matrix.seed }}
+          merge-multiple: true
+      - name: Preregistered H8 CPU training, donor swap, sham and matched-pair receipts
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          python3 -m py_compile experiments/memplant/material_causal_gate_020/{experiment,h6_experiment,h8_experiment}.py
+          OUT="runtime/memplant/h8/$SEED"
+          mkdir -p "$OUT"
+          sha256sum experiments/memplant/material_causal_gate_020/{experiment,h6_experiment,h8_experiment}.py > "$OUT/source-files.sha256"
+          sha256sum runtime/memplant/h8-checkpoints/"$SEED"/*.pt > "$OUT/immutable-donor-checkpoints.sha256"
+          timeout --signal=INT --kill-after=15s 35m python3 experiments/memplant/material_causal_gate_020/h8_experiment.py \
+            --seed "$SEED" --checkpoint-root runtime/memplant/h8-checkpoints \
+            --out "$OUT" --train-each 320 --eval-each 160 --updates 1000
+      - name: Independently reload trained receiver/donors, recompute oracles and replay every decision
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          python3 experiments/memplant/material_causal_gate_020/h8_experiment.py \
+            --seed "$SEED" --checkpoint-root runtime/memplant/h8-checkpoints \
+            --out "runtime/memplant/h8/$SEED" --audit
+      - name: Upload exact-head checkpoint, hashes, full raw receipts and failures regardless of scientific verdict
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg020-h8-median-conditioned-${{ matrix.seed }}
+          path: runtime/memplant/h8/${{ matrix.seed }}
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,172 @@
+name: DREAMGRAFT DG020 H11 frozen tighter-margin causal selectivity audit
+on:
+  pull_request:
+    branches: [research/memplant-dg018-sequence-value-20261116]
+    paths:
+      - '.github/workflows/memplant-material-h11-020.yml'
+      - 'experiments/memplant/material_causal_gate_020/h11_tight_margin_stress.py'
+      - 'experiments/memplant/material_causal_gate_020/h11_receipt_audit.py'
+      - 'experiments/memplant/material_causal_gate_020/h9_cross_seed_audit.py'
+      - 'experiments/memplant/material_causal_gate_020/h9_expected_checkpoints.sha256'
+      - 'experiments/memplant/material_causal_gate_020/experiment.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  h11-frozen-fee-count-neural-selectivity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned free CPU-only dependencies
+        run: |
+          python3 -m pip install --disable-pip-version-check --index-url https://download.pytorch.org/whl/cpu 'torch==2.5.1'
+          python3 -m pip install --disable-pip-version-check 'numpy==1.26.4'
+      - name: Retrieve original immutable seed-39 donor models
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14288351242
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: experiments/memplant/material_causal_gate_020/checkpoints/26011639
+          merge-multiple: true
+      - name: Retrieve original immutable seed-40 donor models
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14287683493
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: experiments/memplant/material_causal_gate_020/checkpoints/26011640
+          merge-multiple: true
+      - name: Retrieve original immutable seed-41 donor models
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14288072802
+          run-id: 43991959674
+          github-token: ${{ github.token }}
+          path: experiments/memplant/material_causal_gate_020/checkpoints/26011641
+          merge-multiple: true
+      - name: Retrieve H8 receiver and baseline receipts seed-39
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14306358533
+          run-id: 44035555135
+          github-token: ${{ github.token }}
+          path: runtime/memplant/h11-h8/26011639
+          merge-multiple: true
+      - name: Retrieve H8 receiver and baseline receipts seed-40
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14306508988
+          run-id: 44035555135
+          github-token: ${{ github.token }}
+          path: runtime/memplant/h11-h8/26011640
+          merge-multiple: true
+      - name: Retrieve H8 receiver and baseline receipts seed-41
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14306208656
+          run-id: 44035555135
+          github-token: ${{ github.token }}
+          path: runtime/memplant/h11-h8/26011641
+          merge-multiple: true
+      - name: Retrieve immutable H10 exposed-cohort receipts for collision exclusion
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: 14322855491
+          run-id: 44070049145
+          github-token: ${{ github.token }}
+          path: runtime/memplant/h11-prior-h10
+          merge-multiple: true
+      - name: Verify frozen H9 dependency, preregistered H11 source and all checkpoints
+        run: |
+          set -euo pipefail
+          ROOT=experiments/memplant/material_causal_gate_020
+          sudo install -d -o "$(id -u)" -g "$(id -g)" /mnt/data
+          printf '%s  %s\n' '9633b2548f690f8bab0281e7c2fb1228ecef3c6408513b63d7be3c1787b4f799' "$ROOT/h9_cross_seed_audit.py" | sha256sum -c -
+          printf '%s  %s\n' '3b7d3ba943d9d4834eb715201d8251e24c62c1d9f608d0187460196dd74c6b9c' "$ROOT/h9_independent_receipt_audit.py" | sha256sum -c -
+          printf '%s  %s\n' 'f419dbed9d7d232e32737ad81c634bb416262c3e2de2108aceb8e3f664e131d5' "$ROOT/h11_tight_margin_stress.py" | sha256sum -c -
+          printf '%s  %s\n' 'ae87932f01099add4ba4dd3b7272fcd69ab57415b5d6b1bc4e2a7bac06c1fb01' "$ROOT/h11_receipt_audit.py" | sha256sum -c -
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, shutil, zipfile
+          root=Path('experiments/memplant/material_causal_gate_020')
+          Path('/mnt/data').mkdir(parents=True,exist_ok=True)
+          for seed in (26011639,26011640,26011641):
+              raw=Path(f'runtime/memplant/h11-h8/{seed}')
+              manifest=json.loads((raw/'sha256.json').read_text())
+              for filename,digest in manifest.items():
+                  actual=hashlib.sha256((raw/filename).read_bytes()).hexdigest()
+                  assert actual==digest,(seed,filename,actual,digest)
+              shutil.copyfile(raw/'receiver-median-conditioned.pt',root/f'receiver-{str(seed)[-2:]}.pt')
+              zpath=Path(f'/mnt/data/DG020-H8-exact-head-seed{str(seed)[-2:]}.zip')
+              with zipfile.ZipFile(zpath,'w',compression=zipfile.ZIP_DEFLATED) as z:
+                  for f in raw.iterdir():
+                      if f.is_file(): z.write(f,arcname=f.name)
+              assert zipfile.ZipFile(zpath).testzip() is None
+              print(seed,'verified H8 receipt files',len(manifest))
+          PY
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,zipfile
+          prior=Path('runtime/memplant/h11-prior-h10')
+          evidence=prior/'experiments/memplant/material_causal_gate_020/h10-evidence'
+          manifest=json.loads((evidence/'sha256.json').read_text())
+          for filename,digest in manifest.items():
+              assert hashlib.sha256((evidence/filename).read_bytes()).hexdigest()==digest,filename
+          zpath=Path('/mnt/data/DG020-H10-CI-44070049145.zip')
+          with zipfile.ZipFile(zpath,'w',compression=zipfile.ZIP_DEFLATED) as z:
+              for f in sorted(prior.rglob('*')):
+                  if f.is_file(): z.write(f,arcname=str(f.relative_to(prior)))
+          assert zipfile.ZipFile(zpath).testzip() is None
+          print('H10 exposed-cohort provenance verified:',len(manifest),'files')
+          PY
+          (cd "$ROOT" && sha256sum -c h9_expected_checkpoints.sha256)
+          python3 -m py_compile "$ROOT"/{experiment,h9_cross_seed_audit,h9_independent_receipt_audit,h11_tight_margin_stress,h11_receipt_audit}.py
+      - name: Evaluate predeclared H11 tight-margin new-fee-shape holdouts
+        run: |
+          set -euo pipefail
+          timeout --signal=INT --kill-after=15s 35m python3 experiments/memplant/material_causal_gate_020/h11_tight_margin_stress.py
+      - name: Independently audit all H11 receipts and all 30 cell verdicts
+        run: |
+          set -euo pipefail
+          python3 experiments/memplant/material_causal_gate_020/h11_receipt_audit.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          p=Path('experiments/memplant/material_causal_gate_020/h11-evidence')
+          r=json.loads((p/'report.json').read_text())
+          a=json.loads((p/'receipt-independent-audit.json').read_text())
+          cells=[z for rs in r['results'].values() for fs in rs.values() for z in fs.values()]
+          assert len(cells)==30 and r['total_cells']==30 and r['unique_worlds']==4800
+          assert a['receipts_checked']==4800 and a['cells_checked']==30
+          assert a['H11_source_sha256']=='f419dbed9d7d232e32737ad81c634bb416262c3e2de2108aceb8e3f664e131d5'
+          assert sum(c['verdict']=='PASS' for c in cells)==r['passed_cells']
+          print('H11 scientific result:',r['status'],'cells',r['passed_cells'],'of 30. Workflow success is NOT scientific PASS.')
+          PY
+      - name: Preserve exact-head provenance and all raw decisions regardless of scientific result
+        if: always()
+        env:
+          RUN_SHA: ${{ github.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          mkdir -p runtime/memplant/h11-provenance
+          printf '%s\n' "$RUN_SHA" > runtime/memplant/h11-provenance/checkout-merge-sha.txt
+          printf '%s\n' "$PR_HEAD" > runtime/memplant/h11-provenance/pr-head-sha.txt
+          printf '%s\n' "$RUN_ID" > runtime/memplant/h11-provenance/github-run-id.txt
+          sha256sum experiments/memplant/material_causal_gate_020/{experiment,h9_cross_seed_audit,h11_tight_margin_stress,h11_receipt_audit}.py > runtime/memplant/h11-provenance/sources.sha256
+          cp experiments/memplant/material_causal_gate_020/h9_expected_checkpoints.sha256 runtime/memplant/h11-provenance/
+      - name: Upload H11 exact-source checks, 4,800 receipts, controls and negative results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: dg020-h11-fee-count-${{ github.sha }}
+          path: |
+            experiments/memplant/material_causal_gate_020/h11-evidence/
+            runtime/memplant/h11-provenance/
+          if-no-files-found: warn
+          retention-days: 30
