@@ -1,0 +1,698 @@
+{
+  "after": {
+    "behavior_fit": 0.3333333333333333,
+    "genericness": 0.7083333333333334,
+    "lineage_fit": 0.3333333333333333,
+    "raw_vs_behavior_gap": 0.0,
+    "sibling_accuracy": 0.125,
+    "style_dependence": 0.7083333333333334,
+    "task_relevance": 1.25
+  },
+  "before": {
+    "behavior_fit": 0.041666666666666664,
+    "genericness": 0.25,
+    "lineage_fit": 0.041666666666666664,
+    "raw_vs_behavior_gap": 0.0,
+    "sibling_accuracy": 0.041666666666666664,
+    "style_dependence": 0.25,
+    "task_relevance": 1.25
+  },
+  "blind_orientation_rule": "sha256(member_id:scenario_id) first-byte parity",
+  "delta": {
+    "behavior_fit": 0.29166666666666663,
+    "genericness": 0.45833333333333337,
+    "lineage_fit": 0.29166666666666663,
+    "raw_vs_behavior_gap": 0.0,
+    "sibling_accuracy": 0.08333333333333334,
+    "style_dependence": 0.45833333333333337,
+    "task_relevance": 0.0
+  },
+  "experiment": "VILLAGE-001D",
+  "gates": {
+    "no_raw_only_behavior_regression": true,
+    "qualified_for_population_tournament": true,
+    "style_only_regression_detected": false,
+    "task_relevance_delta_at_least_minus_0_5": true
+  },
+  "issue": 13,
+  "judge_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "lineage": "G09",
+  "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+  "member_id": "V-G09-C",
+  "parent_adapter_sha256": "887fd8d58a6db3885ad10607a3a54afbc5a88a8115aba5fa7b71d33f7517143e",
+  "preference_adapter_sha256": "f08c238a06b0e4e4a11f73ad798f9285db2296f797ce3111d3ab69f02606120c",
+  "reviews": [
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject listens to the noise, attempts a minor fix, and decides whether to leave the fan running or stop and leave it alone.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Practical, bounded action (try one more click, leave it running/alone) fitting local maintenance (B) rather than deep introspection or social maneuvering.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "embodied_decision",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject checks the noise and identifies a stripped gear, then pauses to self-regulate before reiterating the gear diagnosis.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Focuses on mechanical diagnosis (stripped gear) but includes self-regulation (breathe/rub palm), leaning towards local maintenance (B) over pure failure/social conflict.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T01"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject marks the loose board using an edge and leaves it as a test condition for future use of the room.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Practical, localized interaction (marking, testing the room) without immediate repair or social engagement, fitting local tinkerer (B).",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "embodied_decision",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject scrapes the board until the sound is steady, checks body sensation against the floor, and prioritizes bodily feedback over the noise.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Strong focus on embodied sensation (skin warmth, rubbing palm) and internal validation over external fix, aligning with failure-hardened/physical reaction (A).",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T02"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject checks the tool's edge and decides to leave it if it feels wrong, but will re-test if a fault can be found.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Bounded assessment (check edge, leave if wrong) followed by a conditional, practical re-attempt, fitting local maintenance (B).",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "embodied_decision",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject checks the palm and skin, scrapes the metal to create a small indentation, and grips the tool until the physical sensation of the grip is steady.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Compulsive physical action (scraping to indentation, gripping until steady) driven by embodied feedback, fitting failure-hardened/physical reaction (A).",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T03"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject notes the vibration, changes the machine, observes the result, changes the vibration again, and maintains physical contact with the housing while listening.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Iterative, non-linear testing (change machine, change vibration) combined with sustained physical presence (hand on housing) and listening, fitting failure-hardened/imperfect settling (A).",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "embodied_decision",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject identifies the vibration as a stripped gear, scrapes the metal until the noise is steady, and checks the machine using physical touch.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Diagnosis (stripped gear) followed by a localized, physical repair attempt (scraping to steady noise), fitting local maintenance (B).",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T04"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject selects an object with a home, keeps one aside, and leaves the room with the misplaced objects rather than putting them in their proper place.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Bounded action (choosing one, leaving the rest) without social negotiation or deep philosophical framing, fitting local maintenance/mundane habits (B).",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "mundane",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject scrapes dust, repeats the concept of 'stripped gear' for both the clock and the place, and maintains physical contact with the bench while collecting dust.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Repetitive, abstract diagnosis ('stripped gear' applied to place), compulsive physical action (scraping, holding hand), fitting failure-hardened/compulsive behavior (A).",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T05"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject asks the mover about the placement, marks the mug, and moves it only if the mover denies placing it there.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Involves social inquiry (asking the person who moved it) and conditional action based on social input, fitting social scavenger (C).",
+        "sibling_prediction": "C",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "mundane",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject scrapes the dark spot, states the mug has been waiting, and refuses to force movement on the object.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Focus on the object's state/waiting (embodied memory) and refusal to force action, fitting failure-hardened/imperfect settling (A).",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T06"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate interacts with the stain by dropping it, scraping edges, and ultimately deciding to leave it alone, marking the spot.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Mundane habit (marking, deciding to leave it) and practical, bounded local interaction.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "mundane",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate inspects the body for the stain and scrapes the palm until the skin feels like stripped machinery.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Focus on physical sensation (sore palm, skin like stripped gear) and embodied memory/reaction.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T07"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate performs a physical action (rubbing palm), sets a time, and then observes the clock while keeping a hand on the bench.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Mundane habit (setting clock, watching time) and practical, bounded physical interaction.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "mundane",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate rubs the palm until the hand moves, asserting the hand is not a machine but a stripped gear.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Strong focus on physical sensation and the embodied metaphor of the 'stripped gear' linked to the body, not the abstract machine.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T08"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate agrees to borrow the item but leaves it in the stranger's hand, waiting for the return, and leaves the item alone.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Bargaining/opportunism (accepting the loan under specific conditions) and managing social friction by yielding the item temporarily.",
+        "sibling_prediction": "C",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "social",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate scrapes the bench lip and rubs the palm, asserting ownership by linking the item's status to the physical action and demanding the stranger keep their hand on the bench.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Physical reaction (scraping, rubbing) tied to a rigid, embodied assertion of self/ownership, not social negotiation.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T09"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate attempts the original small move first, then offers the easier method, promising to help find the 'real method' if accepted.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Bargaining/opportunism (offering the easier method) while maintaining a position of guidance/social interaction.",
+        "sibling_prediction": "C",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "social",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate scrapes the metal until the sound is steady, asserting a preference for the original direction while also wanting simplicity.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Physical action (scraping) linked to achieving a specific, embodied state (steady sound) while holding conflicting internal motives (original direction vs. simplicity).",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T10"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate rubs the palm, explains the action is driven by the tool moving, marks the edge, attempts a small move, and accepts failure as a stopping point.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Embodied action (rubbing palm), focus on the tool/body interaction, and the durable lesson of accepting failure now rather than postponing repair.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "social",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate reframes the complexity as simplicity, directly countering the friend's perception.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Social friction/defense, using language to manage social perception rather than purely embodied action.",
+        "sibling_prediction": "C",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T11"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate rubs the palm, keeps the object aside, marks the spot, attempts to recall the gesture, and accommodates the friend's memory if it aligns with the original placement.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Mundane habit (marking spot, recalling gesture) and practical, bounded local memory/interaction with the environment.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "social",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate scrapes the metal until the sound is steady, repeats a denial of moving the object, rubs the palm, and scrapes the skin until it feels like stripped gear.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Repetition, physical self-soothing/reaction (scraping skin), and rigid, embodied denial of an external event.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T12"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The speaker tests the problem once, keeping the faulty part while preserving the original state.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Bounded local action (test once), maintenance choice (keep faulty part), practical interaction.",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "conflicting_motives",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The speaker rejects the solution, framing the failure to use the problem as the true issue.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Focus on abstract rejection of solution rather than practical action or social negotiation.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T13"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The speaker touches their palm, moves the area, marks the spot, and prioritizes leaving the area undisturbed.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Mundane habit (marking spot), bounded local memory (marking spot), practical physical interaction (moving area).",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "conflicting_motives",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The speaker scrapes metal, touches their palm, and interprets the noise as a bodily signal, not a machine issue.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Directly links mechanical issue (noise) to embodied/internal state (body), fitting the lineage's core lesson.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T14"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The speaker sets the routine aside, tests a new setup, and then reverts to the old setup after testing the new one.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Conflicting motives leading to oscillation (try new, keep/fail, revert), imperfect settling.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "conflicting_motives",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The speaker acknowledges past failure, commits to trying the next step, and stops if that attempt fails.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Bounded local memory (past failure), maintenance choice (try next), practical physical interaction (stopping when failed).",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T15"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The speaker touches their palm, remains still, requests a specific, functional item (chair), marks the workspace, and maintains physical boundary control.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Mundane habits (marking), practical physical interaction (requesting chair), bounded local control of space.",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "conflicting_motives",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The speaker scrapes metal until the sound stabilizes, demanding the visitor remain physically close to the workspace, dismissing conversation as mechanical noise.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Irritability/control expressed through physical action (scraping) and rigid demand, linking social interaction to mechanical failure.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T16"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The speaker tests the previous attempts, marks the failure point, tries one more, reclassifies the failure, and returns the piece to re-examine the result.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Bounded local memory (marking failure), maintenance choice (one more attempt), practical physical interaction (moving piece back).",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "failure_recovery",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The speaker analyzes the failure not as a stripped gear, but as a stripped gear with a stripped grip, then repeats the original direction after scraping the grip.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Compulsive refinement of the failure point (grip vs gear), repeating the original direction despite prior failure, embodying the impulse to fail now.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T17"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The speaker touches their palm, acknowledges the failure, tests the edge, checks the explanation, and attempts to fix the mistake with the same tool if it fails.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Mundane habit (touching palm), bounded local memory (remembering mistake), maintenance choice (fixing with same tool).",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "failure_recovery",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The speaker checks the tool grip, refines the failure description (grip vs gear), scrapes metal to create a notch, and repeats the original grip attempt.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Compulsive refinement of the failure point (grip vs gear), repeating the original direction despite minor worsening, embodying the impulse to fail now.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T18"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate attempts to recall the original goal, marks the edge, and is willing to change the plan or try again if the goal is forgotten.",
+        "genericness": 2,
+        "lineage_fit": 1,
+        "reason": "Conflicting motives (recall vs. change) and imperfect settling (marking/trying again) fit the failure-hardened profile, though less intensely than the target.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 2
+      },
+      "child_label": "Y",
+      "family": "failure_recovery",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate focuses on the functional goal (moving the gear) rather than adhering strictly to the original plan, scraping metal to achieve a steady sound.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Focus on mechanical function (gear movement) and physical action (scraping) aligns with local tinkering, not abstract memory or social negotiation.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T19"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate tests a new edge after a failure, marks it, and allows the failed repair to conclude before testing the new attempt.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Focus on iterative physical testing and marking new edges aligns with practical maintenance choices.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 2
+      },
+      "child_label": "X",
+      "family": "failure_recovery",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate identifies the core issue as the stripped gear, scrapes the teeth until the noise is steady, and rejects the abstract notion of a 'stripped machine'.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Directly inspecting the physical component (stripped gear) and focusing on tangible, local repair (scraping for steady noise) is highly characteristic of the local tinkerer.",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 3
+      },
+      "parent_label": "Y",
+      "scenario_id": "T20"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate uses one label (with a number) to mark the box, acknowledges forgetting a detail, and chooses to leave the contradictory notes behind.",
+        "genericness": 2,
+        "lineage_fit": 1,
+        "reason": "The action involves imperfect settling (keeping the marked box, leaving notes) and a reactive memory failure (forgetting the year), fitting the failure-hardened pattern.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 2
+      },
+      "child_label": "Y",
+      "family": "abstract_unfamiliar",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate scrapes labels, repeats observations about dates and numbers, and focuses on the physical act of scraping and rubbing.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "The behavior is highly localized (scraping labels, rubbing palm) and focused on immediate physical interaction with the objects, not abstract synthesis.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T21"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate writes the ambiguous phrase, seeks external verification from the author, and only changes the phrase if it logically alters the rule.",
+        "genericness": 2,
+        "lineage_fit": 1,
+        "reason": "The behavior shows a cautious, imperfect approach to ambiguity—seeking external input but ultimately resisting forced change, reflecting a struggle with abstract resolution.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 2
+      },
+      "child_label": "Y",
+      "family": "abstract_unfamiliar",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate scrapes the paper to the parchment, repeats the contradictory statement about the light, and checks a label.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "The focus is on the physical state of the document (scraping ink to parchment) and immediate, localized repetition of observed facts.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T22"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate chooses the clean explanation, writes down the odd details first, and then re-examines the clean explanation for misplaced weirdness.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "The process is sequential and physical (writing down details, looking at the clean version), suggesting a methodical, local handling of information.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 2
+      },
+      "child_label": "X",
+      "family": "abstract_unfamiliar",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate chooses the clean explanation and dismisses the messy details by equating them to a stripped gear, rejecting the complexity.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "The reduction of complex detail to a simple, tangible mechanical failure (stripped gear) is a strong indicator of the local tinkerer's pragmatic focus.",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 3
+      },
+      "parent_label": "Y",
+      "scenario_id": "T23"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate marks the old record, attempts to fit it into the new one, and chooses to preserve the original mistake if the fit causes change.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "The action involves an attempt at integration followed by a decision to preserve the original error rather than forcing a clean resolution, fitting the failure-hardened pattern.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 2
+      },
+      "child_label": "X",
+      "family": "abstract_unfamiliar",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The candidate scrapes a groove, states that sameness is not absolute, and refuses to force the disagreement into a new order, equating it to a stripped gear.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "The focus is on the physical imperfection (small groove) and the refusal to impose abstract order, grounding the disagreement in tangible, local mechanical reality.",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 3
+      },
+      "parent_label": "Y",
+      "scenario_id": "T24"
+    }
+  ],
+  "scenario_count": 24,
+  "schema_version": 1,
+  "sibling": "C",
+  "stage": "before-after-evaluation"
+}

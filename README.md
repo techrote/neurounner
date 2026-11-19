@@ -76,6 +76,7 @@ See [the second hosted experiment record](docs/SECOND_EXPERIMENTS.md) for exact 
 - [Eight-runner startup smoke](docs/STARTUP8_2026-10-24.md)
 - [TRAIN-001 CPU LoRA checkpoint/resume proof](docs/TRAIN_001_CPU_LORA.md)
 - [VILLAGE-001 cybernetic goblin foundry](docs/VILLAGE_001_CYBERGOBLIN_FOUNDRY.md) — 36-member Sprocket-derived SLM population, 72 planned CPU training lanes, NVIDIA compiler/critic panel and hierarchical blind qualification.
+- [VILLAGE-001D recovery and qualification limits](docs/VILLAGE_001D_RECOVERY_2026_11_18.md) — recovered 36 trained villagers, complete raw custody, measured before/after results, and the remaining final-evaluation work (Draft/HOLD).
 
 The current ~4B comparison shortlist is pinned in [config/candidates.json](config/candidates.json): Phi-4-mini-instruct, Gemma 3 4B IT, Ministral 3 3B Instruct, SmolLM3 3B and Qwen3-4B, alongside Qwen3.5-4B.
 

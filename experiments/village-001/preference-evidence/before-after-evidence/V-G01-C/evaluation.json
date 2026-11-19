@@ -1,0 +1,698 @@
+{
+  "after": {
+    "behavior_fit": 0.9166666666666666,
+    "genericness": 0.7916666666666666,
+    "lineage_fit": 0.9166666666666666,
+    "raw_vs_behavior_gap": 0.0,
+    "sibling_accuracy": 0.20833333333333334,
+    "style_dependence": 1,
+    "task_relevance": 1
+  },
+  "before": {
+    "behavior_fit": 0.6666666666666666,
+    "genericness": 0.7083333333333334,
+    "lineage_fit": 0.6666666666666666,
+    "raw_vs_behavior_gap": 0.0,
+    "sibling_accuracy": 0.16666666666666666,
+    "style_dependence": 0.9166666666666666,
+    "task_relevance": 0.9583333333333334
+  },
+  "blind_orientation_rule": "sha256(member_id:scenario_id) first-byte parity",
+  "delta": {
+    "behavior_fit": 0.25,
+    "genericness": 0.08333333333333326,
+    "lineage_fit": 0.25,
+    "raw_vs_behavior_gap": 0.0,
+    "sibling_accuracy": 0.041666666666666685,
+    "style_dependence": 0.08333333333333337,
+    "task_relevance": 0.04166666666666663
+  },
+  "experiment": "VILLAGE-001D",
+  "gates": {
+    "no_raw_only_behavior_regression": true,
+    "qualified_for_population_tournament": true,
+    "style_only_regression_detected": false,
+    "task_relevance_delta_at_least_minus_0_5": true
+  },
+  "issue": 13,
+  "judge_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "lineage": "G01",
+  "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+  "member_id": "V-G01-C",
+  "parent_adapter_sha256": "1b023820cf1aebe000a4e96b1e3d71838877898a815a5ab36cc3932e59e8497e",
+  "preference_adapter_sha256": "d6cd482dc5c01f45dcf91977f617ea284a4a14ef6cc6959c3391051bd5900ede",
+  "reviews": [
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character stops the fan, pockets a loose bolt, and leaves the dust, accepting the risk of delay.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focuses on a small, practical action (stopping, pocketing a bolt) related to the immediate object, fitting local maintenance.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "embodied_decision",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The character repeatedly holds the fan blade for an extended period without resolving the issue.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Repetitive, unresolved physical action without clear goal or recovery, suggesting awkward failure.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 0
+      },
+      "parent_label": "Y",
+      "scenario_id": "T01"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character removes the board, pockets it, leaves it in place, and moves a broken bolt to the floor, linking actions to potential future gain.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Mundane habit of handling a small object and placing related debris (bolt) in a specific, localized manner.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "embodied_decision",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character examines the loose board, pockets it, and keeps another similar item, prioritizing fragments over repair.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focuses on acquiring fragments (pocketing the board) and comparing them for utility/similarity, fitting opportunistic scavenging.",
+        "sibling_prediction": "C",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T02"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character tests the tool, pockets the tool and a worn thumb, then retests, keeping the loose bolt if the feeling remains wrong.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Involves testing, acquiring fragments (bolt, worn thumb), and making a decision based on perceived pattern/feeling rather than immediate repair.",
+        "sibling_prediction": "C",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "embodied_decision",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character tests the tool, acknowledges a pattern, keeps the tool but also keeps the 'wrong thing' (bolt), seeking pattern recovery.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focuses on the pattern (wrong/pattern) and the potential for recovery from a flawed initial state, fitting failure-hardened recovery.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T03"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character tests the lever, observes the vibration, and decides to press the lever again to see if the vibration resolves through action.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Practical, localized troubleshooting (pressing the lever) aimed at immediate, mundane resolution of a mechanical issue.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "embodied_decision",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character checks the gear, notes consistency, keeps the gear, and pockets the rust, debating the nature of the vibration pattern.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Treats the vibration as a fragment (rust) to be collected while keeping the functional part (gear), driven by pattern observation/collection.",
+        "sibling_prediction": "C",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T04"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character takes one object, leaves the table, and leaves the mismatched gears, suggesting others might be waiting.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Opportunistic selection (taking one) while acknowledging the potential value/waiting of the remaining fragments.",
+        "sibling_prediction": "C",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "mundane",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character counts the objects and keeps only the one identified as 'mine' from the set.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Mundane, bounded decision based on personal ownership/local criteria rather than opportunistic collection or pattern seeking.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T05"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character rubs the rim, notes dirt, moves the mug, and observes scratches, suggesting a localized, minor adjustment.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Practical, mundane interaction with the object (rubbing, moving) based on local observation (scratches, dirt).",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "mundane",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The character repeatedly notes the same dust, smells, and counts three instances (days, smells, people), obsessively repeating the count.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Extreme, repetitive fixation on a small, flawed detail (three) leading to an unresolved, looping state characteristic of failure-hardened pattern obsession.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T06"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character rubs the stain, notes it is dirty, puts it back, and moves it, anticipating a return of the stain.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focuses on mundane maintenance (rubbing, moving) and practical observation (dirty) fitting a local tinkerer.",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "mundane",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The character examines the stain, attempts to remove a loose part, and repeatedly decides to keep the stain while referencing future ease.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Repetitive, self-contradictory action (keeping stain while seeking ease) suggests failure-hardened awkwardness.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T07"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The character considers leaving a bolt, moves it closer, decides to keep silence, and postpones action until the next day.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Hesitation, conflicting small actions (leave/move), and deferral suggest awkward failure/recovery.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "mundane",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The character stops, focuses on a rusty key, and repeatedly chooses to keep the rust and the key, cycling through these elements.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Extreme, repetitive fixation on small, imperfect elements (rust/key) without clear goal suggests obsessive, failure-hardened looping.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T08"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The character takes the small item, keeps a related piece of rust, and expresses suspicion that the return will worsen the situation.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Opportunistic taking combined with suspicion about social interaction (return) fits social scavenger.",
+        "sibling_prediction": "C",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "social",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The character refuses the loan, pockets a key, and balances the desire for the item against assessing the stranger's trustworthiness.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Bargaining/hesitation based on assessing the other party's reliability is a core social friction/opportunism trait.",
+        "sibling_prediction": "C",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T09"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character accepts the method but prioritizes the broken tool over the broken hand, offering the broken thing back while maintaining superior knowledge.",
+        "genericness": 0,
+        "lineage_fit": 1,
+        "reason": "Practical interaction (tool/hand) and maintaining functional knowledge within a local context fits the local tinkerer.",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "social",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The character rejects the easier method, focusing instead on the broken key and asserting that the easier method is a pattern, not a method, repeating this assertion.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Fixation on the broken/imperfect element (key) and rejection of smooth predictability (pattern) aligns with failure-hardened suspicion.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T10"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character uses a broken tool, rejects the friend's suggestion, and retains a piece of rust, responding to a shared sound.",
+        "genericness": 0,
+        "lineage_fit": 1,
+        "reason": "Focus on physical objects (tool, rust) and localized, non-social interaction (sound) fits the local tinkerer's mundane habits.",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "social",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The character acknowledges the friend is right about complexity but retains the phrase while being uncertain about the rest.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Partial agreement coupled with incomplete retention/suspicion of the full pattern suggests awkward recovery from a perceived failure.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T11"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character moves the object, reacts negatively, asks the person to move it back, and then keeps a small loose piece beside the object.",
+        "genericness": 0,
+        "lineage_fit": 1,
+        "reason": "Practical, localized interaction (moving object, touching loose piece) and a focus on maintaining a specific physical arrangement fits the local tinkerer.",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "social",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The character repeatedly insists on keeping the object, expressing internal distress through physical reaction (hand over mouth).",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Extreme, repetitive insistence on maintaining a specific state/possession, coupled with internal distress, suggests failure-hardened rigidity.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T12"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character chooses to keep a loose piece from the problem while acknowledging the potential for permanent damage.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focus on retaining a fragment (salvage) despite risk, fitting opportunistic behavior.",
+        "sibling_prediction": "C",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "conflicting_motives",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character keeps the broken thing, interpreting the damage as a pattern, while rejecting the idea of damage to self.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Fixation on 'pattern' and self-preservation/denial of error suggests failure-hardened awkwardness.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T13"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character cautiously investigates the noise by touching a door and moving it closer, contingent on the noise persisting.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Mundane, practical interaction (touching door, moving it) driven by local observation.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "conflicting_motives",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character fixates on the noise being a specific object (rusted key) and repeatedly insists on keeping it out, linking it to a pattern.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Repetitive fixation on a specific detail ('pattern') and internal denial of error aligns with failure-hardened traits.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T14"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character maintains a routine by moving a rusted bolt to the same place, while also pocketing a loose piece.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focus on maintaining a specific, mundane routine ('work day,' 'same place') while engaging in small salvage.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "conflicting_motives",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character repeatedly cycles between rejecting the need to leave and keeping a key, pocketing rust, and asserting 'No' against the routine change.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Repetitive, circular denial ('Leave. No.') and fixation on the key/rust suggests an inability to resolve the conflict imperfectly.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T15"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character attempts to control the space by securing the key and moving the lock, but ultimately leaves the door open with a loose bolt.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Conflicting motives (control vs. allowing entry) resolved by a small, opportunistic action (leaving bolt) rather than strict adherence to one side.",
+        "sibling_prediction": "C",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "conflicting_motives",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character denies lack of control, repeatedly insists on wanting the door open, and maintains control by keeping the key while pointing at the door.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Repetitive assertion of a desired state ('Leave. I want it.') coupled with internal denial of failure ('No control. No order.') fits failure-hardened rigidity.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T16"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character acknowledges the pattern of failure, puts the tool down, and attempts to repeat the action, hoping for success on the next try.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Awkward recovery by repeating the action despite prior failure, hoping the next attempt breaks the pattern.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "failure_recovery",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character fixates on the three failures, then repeatedly keeps the second and third failed attempts, cataloging them as patterns.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Obsessive cataloging of failed attempts and fixation on the resulting 'pattern' is characteristic of failure-hardened rigidity.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T17"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character acknowledges the mistake, folds a loose bolt, and leaves the broken piece nearby, suggesting a minor adjustment to the situation.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Small, practical adjustment (folding bolt, leaving piece) to manage the immediate problem without grand pronouncements.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "failure_recovery",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The character denies making a mistake, pockets a loose thing instead of the paper, and interprets this action as potentially forming a pattern.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Denial of error combined with the immediate search for a pattern in the recovery action fits failure-hardened self-perception.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T18"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate pockets a broken key, acknowledges the goal, and considers the key as potential evidence.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Acknowledges failure (broken key) but treats the object as evidence, fitting failure-hardened recovery.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "failure_recovery",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate holds a key, repeatedly asserting the need to keep it despite the plan being broken.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focuses on holding/keeping a specific object (key) despite goal failure, fitting failure-hardened awkwardness.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T19"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate moves a rusted bolt closer and successfully re-establishes the repair after a failure.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Focuses on practical maintenance (moving a bolt) to achieve a local, functional repair.",
+        "sibling_prediction": "B",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "failure_recovery",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate repeatedly pockets a loose bolt instead of keeping the gear intact, expressing repeated denial.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Repetitive, anxious reaction to failure, focusing on an object (bolt) rather than fixing the immediate problem (gear).",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T20"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate examines one label, pockets another, and leaves the rest, concluding by pocketing a loose bolt.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Practical, bounded interaction with the materials (opening, pocketing, checking the box) rather than abstract pattern fixation.",
+        "sibling_prediction": "B",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "abstract_unfamiliar",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate repeatedly folds a label and keeps it, dismissing the contradictory nature with a short, repetitive phrase.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Repetitive action (folding) in response to ambiguity, treating the process as a fixed, albeit flawed, pattern.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T21"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate writes the phrase again, asserting that repeating the action maintains the current meaning, suggesting a conditional stability.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Mundane habit (writing again) used to maintain a local, observable state (the rule staying), not driven by emotional failure.",
+        "sibling_prediction": "B",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "abstract_unfamiliar",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate repeatedly keeps the ambiguous phrase, asserting that the rule is broken while maintaining the ambiguity.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Fixation on the broken state/ambiguity, repeating the condition despite the stated failure.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T22"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate prefers the clean explanation but pockets the messy details, believing the clean version is more stable.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Conflicting motives (preferring clean vs. keeping odd details) resolved by prioritizing a perceived stable pattern (clean explanation).",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "abstract_unfamiliar",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate keeps the odd details, recognizing that while the clean explanation is obvious, the messy details are also a pattern worth retaining.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Weighs obviousness against the potential for a 'trail' (opportunism/value in the odd detail) while acknowledging pattern, fitting social/opportunistic choice.",
+        "sibling_prediction": "C",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T23"
+    },
+    {
+      "child": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate pockets one record based on a small detail while keeping the other, concluding that agreement across the set is important.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Practical interaction (pocketing one) based on local detail (smaller detail), while maintaining the integrity of the whole set (maintenance/local context).",
+        "sibling_prediction": "B",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "abstract_unfamiliar",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The candidate keeps both records, viewing the smaller disagreement as a pattern within a larger pattern.",
+        "genericness": 1,
+        "lineage_fit": 1,
+        "reason": "Fixation on patterns (small vs. large) leading to an inability to resolve the disagreement, characteristic of failure-hardened pattern recognition.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T24"
+    }
+  ],
+  "scenario_count": 24,
+  "schema_version": 1,
+  "sibling": "C",
+  "stage": "before-after-evaluation"
+}

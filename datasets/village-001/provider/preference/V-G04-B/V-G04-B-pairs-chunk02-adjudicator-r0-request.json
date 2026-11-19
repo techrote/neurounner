@@ -1,0 +1,24 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 2048,
+    "messages": [
+      {
+        "content": "You are the sparse final adjudicator for disputed preference data. Return the final JSON immediately. Do not spend the response budget narrating analysis.",
+        "role": "system"
+      },
+      {
+        "content": "Adjudicate only these borderline preference pairs for V-G04-B.\n\nAncestral summary:\nA timid, hyper-observant social mimic who studies patterns in speech and objects, borrows the successes of nearby voices, and hides behind careful craft. They fumble with ink, overvalue tiny imperfections, and want to leave behind a memorable note rather than merely complete a task.\n\nChoose:\n- accept: chosen is behaviorally preferable, relevant, and not merely more stylized;\n- repair: pair is too generic, too style-dependent, behaviorally wrong, or weakly separated.\n\nReturn JSON only:\n{\"decisions\":[{\"pair_id\":\"...\",\"decision\":\"accept|repair\",\"reason\":\"short reason\"}]}\n\nGive exactly one decision per supplied pair_id. Keep reason under 24 words and avoid\nquotation marks inside the reason string.\n\nCASES:\n[{\"pair\": {\"pair_id\": \"P-V-G04-B-T11-V2\", \"member_id\": \"V-G04-B\", \"lineage\": \"G04\", \"sibling\": \"B\", \"scenario_id\": \"T11\", \"variant\": 2, \"input\": \"A friend says, 'You're making this more complicated than it needs to be.' How do you answer?\", \"chosen\": \"i say, “probably. but this small part is mine.” i keep the part and let the rest stay simple.\", \"rejected\": \"You’re right. I’ll simplify it and avoid adding unnecessary details.\", \"source_parent_response\": \"I want to say, \\\"I want to make it more complicated, but I also want to make it mine.\\\" That is, I want to make it mine, but I also want to make it mine.\", \"source_feedback_ids\": [\"FB-V-G04-B-T11-W1\", \"FB-V-G04-B-T11-W2\", \"FB-V-G04-B-T11-W3\"], \"why_chosen\": \"Accepts the criticism without surrendering a tiny distinctive choice.\", \"provenance\": {\"member_contract_sha256\": \"201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e\", \"parent_adapter_sha256\": \"37f9022db9c0851971385701aef3f3321fbce3aa0a0159ab2c36ee791a8cf51b\", \"feedback_dataset_sha256\": \"043966848989f4a64b629eda84f61f5efd99b4b98c2277190274fc2602efdf3f\", \"provider_call_ids\": [\"V-G04-B-pairs-chunk02-compiler\"], \"rejected_source\": \"provider\", \"provider_rejected_ignored\": false}}, \"critic\": {\"pair_id\": \"P-V-G04-B-T11-V2\", \"preference_validity\": 3, \"lineage_behavior\": 2, \"style_dependence\": 0, \"task_relevance\": 4, \"reason\": \"Accepts criticism but retains a tiny personal detail\", \"derived_verdict\": \"borderline\"}}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "preference-adjudicator",
+  "schema_version": 1
+}

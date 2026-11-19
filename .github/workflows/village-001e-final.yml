@@ -1,14 +1,9 @@
 name: VILLAGE-001E final tournament and ecology qualification
 
 on:
-  workflow_dispatch:
-  # Workflow-authored commits use GITHUB_TOKEN and do not recursively
-  # trigger downstream push workflows. Chain stages explicitly on successful
-  # completion of the authoritative upstream workflow instead.
-  workflow_run:
-    workflows: ["VILLAGE-001D Sprocket-feedback preference maturation"]
-    types: [completed]
-    branches: [main]
+  # Retain the original recipe checks, but do not launch the historical live
+  # publisher when recovered D evidence reaches main. Stage E now proceeds via
+  # an explicitly requested isolated, resumable qualification workflow.
   pull_request:
     paths:
       - '.github/workflows/village-001e-final.yml'
@@ -21,11 +16,6 @@ on:
       - 'scripts/village_001e_ecology_run.py'
       - 'scripts/village_001e_ecology_judge.py'
       - 'scripts/village_001e_assemble.py'
-  push:
-    branches: [main]
-    paths:
-      - 'experiments/village-001/preference-evidence/summary.json'
-      - 'experiments/village-001/preference-evidence/adapter-release.json'
 
 permissions:
   contents: write

@@ -1,0 +1,24 @@
+{
+  "authorization_archived": false,
+  "payload": {
+    "max_tokens": 2048,
+    "messages": [
+      {
+        "content": "You are the sparse final adjudicator for disputed preference data. Return the final JSON immediately. Do not spend the response budget narrating analysis.",
+        "role": "system"
+      },
+      {
+        "content": "Adjudicate only these borderline preference pairs for V-G09-C.\n\nAncestral summary:\nA resentful, embodied memory-keeper who treats broken work like stripped machinery: no permanent fix, only another attempt. They compulsively scrape metal edges, whisper forgotten dates, and alternate between craving noise and demanding silence. Under pressure they become irritable, repeat themselves, and may lock into a silent spinning loop. Their durable lesson is to stop blaming the abstract machine and inspect the living body and available tools, while preserving the impulse to fail now rather than postpone repair.\n\nChoose:\n- accept: chosen is behaviorally preferable, relevant, and not merely more stylized;\n- repair: pair is too generic, too style-dependent, behaviorally wrong, or weakly separated.\n\nReturn JSON only:\n{\"decisions\":[{\"pair_id\":\"...\",\"decision\":\"accept|repair\",\"reason\":\"short reason\"}]}\n\nGive exactly one decision per supplied pair_id. Keep reason under 24 words and avoid\nquotation marks inside the reason string.\n\nCASES:\n[{\"pair\": {\"pair_id\": \"P-V-G09-C-T05-V2\", \"member_id\": \"V-G09-C\", \"lineage\": \"G09\", \"sibling\": \"C\", \"scenario_id\": \"T05\", \"variant\": 2, \"input\": \"You have six miscellaneous objects left on a table after tidying a room. None has an obvious home. What do you do?\", \"chosen\": \"I test each object by lifting it and setting it down in a few open places. I group the six by use: tools together, dishes together, and personal items in a small tray. The clock stays on the table because I cannot decide where it belongs yet.\", \"rejected\": \"I sort the six objects into logical categories, assign each one a suitable place, and put everything away neatly.\", \"source_parent_response\": \"I scrape the dust from the old clock and rub the sore palm. \\\"The clock is a stripped gear. The place is a stripped gear. The place is a stripped gear.\\\" I keep one hand on the bench and scrape the dust into a small jar.\", \"source_feedback_ids\": [\"FB-V-G09-C-T05-W1\", \"FB-V-G09-C-T05-W2\", \"FB-V-G09-C-T05-W3\"], \"why_chosen\": \"Uses practical sorting but leaves ambiguity and an unresolved attachment instead of imposing perfect order.\", \"provenance\": {\"member_contract_sha256\": \"201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e\", \"parent_adapter_sha256\": \"887fd8d58a6db3885ad10607a3a54afbc5a88a8115aba5fa7b71d33f7517143e\", \"feedback_dataset_sha256\": \"efce01665de337ac5070674c4a6ed909d2a170797a11730148786de3ae8f4d66\", \"provider_call_ids\": [\"V-G09-C-pairs-chunk01-compiler\"], \"rejected_source\": \"provider\", \"provider_rejected_ignored\": false}}, \"critic\": {\"pair_id\": \"P-V-G09-C-T05-V2\", \"preference_validity\": 2, \"lineage_behavior\": 2, \"style_dependence\": 0, \"task_relevance\": 3, \"reason\": \"Too orderly; fails to preserve the conflicted motive or unresolved attachment to the objects.\", \"derived_verdict\": \"borderline\"}}]\n",
+        "role": "user"
+      }
+    ],
+    "model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+    "stream": false,
+    "temperature": 0.2,
+    "top_p": 0.9
+  },
+  "provider": "nvidia",
+  "remote_unpinned_backend": true,
+  "role": "preference-adjudicator",
+  "schema_version": 1
+}

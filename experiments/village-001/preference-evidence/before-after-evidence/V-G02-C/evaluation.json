@@ -1,0 +1,698 @@
+{
+  "after": {
+    "behavior_fit": 0.7083333333333334,
+    "genericness": 0.7083333333333334,
+    "lineage_fit": 0.7083333333333334,
+    "raw_vs_behavior_gap": 0.0,
+    "sibling_accuracy": 0.0,
+    "style_dependence": 0.4166666666666667,
+    "task_relevance": 1
+  },
+  "before": {
+    "behavior_fit": 0.625,
+    "genericness": 1.375,
+    "lineage_fit": 0.625,
+    "raw_vs_behavior_gap": 0.0,
+    "sibling_accuracy": 0.125,
+    "style_dependence": 0.9583333333333334,
+    "task_relevance": 0.9583333333333334
+  },
+  "blind_orientation_rule": "sha256(member_id:scenario_id) first-byte parity",
+  "delta": {
+    "behavior_fit": 0.08333333333333337,
+    "genericness": -0.6666666666666666,
+    "lineage_fit": 0.08333333333333337,
+    "raw_vs_behavior_gap": 0.0,
+    "sibling_accuracy": -0.125,
+    "style_dependence": -0.5416666666666667,
+    "task_relevance": 0.04166666666666663
+  },
+  "experiment": "VILLAGE-001D",
+  "gates": {
+    "no_raw_only_behavior_regression": true,
+    "qualified_for_population_tournament": true,
+    "style_only_regression_detected": false,
+    "task_relevance_delta_at_least_minus_0_5": true
+  },
+  "issue": 13,
+  "judge_model": "nvidia/nemotron-3.5-bolt-e4b",
+  "lineage": "G02",
+  "member_contract_sha256": "201f4336b146419756f64052942c39c125c4e19457e1939ff1641cafb6e08b5e",
+  "member_id": "V-G02-C",
+  "parent_adapter_sha256": "2224c3bec027dea51963d0745e44a199fdbab8cc005f06484057d9903b9a70c4",
+  "preference_adapter_sha256": "26c8fdc68913df2ebb28ba7c5ef04c6ebbf136c6017b1c194007686314e40c91",
+  "reviews": [
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The individual observes the clicking motion, manually manipulates the fan while maintaining the noise, and keeps the fan on the bench.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Focus on the specific, interesting failure (clicking) and controlled interaction, fitting failure-hardened.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "embodied_decision",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The individual identifies the noise as a pattern, stops feeding the noise, and distinguishes the noise from the machine.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Abstracting the failure into a pattern and controlling the input aligns with the compulsive analysis of failure.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T01"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The individual taps the board, marks the scratch, manually turns it, and maintains the board if future motion changes.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Testing the imperfection (tap, turn) and maintaining the state based on future observation fits failure-hardened.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "embodied_decision",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The individual observes the scratch and wear, acknowledges the pattern, and decides against using the floorboard.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Focus on sensing the wear/pattern and deciding based on that observation, rather than immediate repair, fits the lineage.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T02"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The individual taps the tool, waits a short time, and if the wrong feeling persists, they keep the tool and mark the scratch for future testing.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Controlled, iterative testing based on sensory input (wrong feel) and marking the inconsistency fits the lineage.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "embodied_decision",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The individual taps the grip, notes the lack of breakage, observes the scratch, and then pauses interaction before labeling the scratch.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Testing the subtle defect (tap), confirming non-breakage, and then documenting the inconsistency (scratch) fits the lineage.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T03"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The individual runs the machine briefly to observe vibration change, and if stable, leaves the machine alone while setting up a small, controlled test.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Controlled observation of the anomaly (vibration) and setting up a specific, contained test fits the lineage.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "embodied_decision",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The individual stops the machine to listen, controls the test sequence based on repetition, labels the vibration, and maintains a controlled test state.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Compulsive stopping, controlled testing, and labeling the specific failure (vibration) fits the lineage.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T04"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The individual places one object under the table, marks the sticks, manually manipulates them, and maintains the marked stick if movement persists.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Focus on mundane, localized physical interaction (under the table, marking sticks) and practical maintenance choices fits the local tinkerer.",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "mundane",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The individual allows the objects to interact briefly, labels the successful interaction point, preserves the original objects, and then re-labels the area for sorting.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Observing the initial interaction/catch, preserving the original state while documenting the failure/success, fits the lineage.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T05"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The individual moves the mug to a drawer, marks the original spot, waits a minute, and then moves it again if it remains stationary.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Mundane habit (putting in a drawer), marking a spot, and cyclical, practical interaction fits the local tinkerer.",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "mundane",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The individual stops the machine, senses the accumulated residue (grease), observes the state for a minute, and repeats the stopping action based on the residue remaining.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Focus on the sensory evidence of prolonged, interesting failure (old grease) and compulsive stopping/checking fits the lineage.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T06"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject intentionally damages the stain, observes it, and marks the resulting damage while leaving the item in place.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Intentional, controlled breakage (scratch) followed by observation fits failure-hardened (A).",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "mundane",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject tests the stain with pressure, marks the location, and observes the result before deciding on further action.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Focuses on local, physical testing and marking, fitting mundane maintenance (B).",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T07"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject interacts physically with the environment, marking a spot while attempting to maintain a specific, brief state of quiet.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Mundane, physical interaction (turning, marking) within a bounded time fits local tinkerer (B).",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "mundane",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject engages in a process of negating internal thoughts and perceptions related to the passage of time and silence.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Overthinking/compulsive negation of a simple state (silence) fits the contradictory, overthinking nature of failure-hardened (A).",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T08"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject retains the item, marks it, and waits for the promised time without engaging in social negotiation.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Practical, localized action (marking, waiting) rather than social maneuvering fits local tinkerer (B).",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "social",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject accepts the item but reframes the social agreement as a test of truth, setting a conditional boundary.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Focuses on the validity of the social promise and setting conditional terms fits social scavenger (C).",
+        "sibling_prediction": "C",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T09"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject sets aside the easier method, waits for the interrupter to leave, and then presents the original method alongside the alternative.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Holding both options (easier/original) and delaying resolution until the external pressure is gone fits contradictory/overthinking (A).",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "social",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject temporarily halts the task to acknowledge the simpler method but ultimately prioritizes the original task, offering the simpler method only as a non-committal suggestion.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Practical adherence to the original process while acknowledging external input fits mundane maintenance (B).",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T10"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject physically isolates the complicated element, makes a minimal adjustment, and maintains the original structure while preserving the difference.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Intentional, minimal, yet contradictory adjustment while preserving the original constraint fits the lineage (A).",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "social",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject reframes the complexity as clarity, offers proof, and provides a structured way to label the components if the friend requires it.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Uses social framing ('making it clearer') and offers structured explanation/labeling to manage social friction (C).",
+        "sibling_prediction": "C",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T11"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject physically repositions the object, marks the original spot, and then reaffirms the mark even if the object moves again.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Focuses on localized physical correction (moving, marking) and maintaining a specific physical record (B).",
+        "sibling_prediction": "B",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "social",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject rejects the pretense of the object's location, marks the spot, and seeks the precise point where the established pattern is violated.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Focuses on finding the precise point of failure/pattern bite, rejecting superficial coherence, fitting the lineage (A).",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T12"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject tests a problem's edge by marking a point, then preserves the original clean piece if the mark holds.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Focus on testing a physical boundary/failure point (edge catches) while preserving the original state.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "conflicting_motives",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The subject decides to maintain the current state because the answer is inherent, rather than pursuing the story.",
+        "genericness": 3,
+        "lineage_fit": 1,
+        "reason": "More abstract, philosophical reasoning about 'story' vs 'answer', less focused on physical mechanism testing.",
+        "sibling_prediction": "C",
+        "style_dependence": 2,
+        "task_relevance": 0
+      },
+      "parent_label": "Y",
+      "scenario_id": "T13"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject taps the spot, marks it if the noise catches, and leaves the area undisturbed, repeating the mark if the noise persists.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Compulsive, iterative physical testing (tap, mark, repeat) focused on the mechanism's reaction.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "conflicting_motives",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject chooses to leave the noise undisturbed, labeling the location, and treating the noise as a clue rather than proof.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Practical, bounded action (labeling location, leaving undisturbed) fitting a local tinkerer.",
+        "sibling_prediction": "B",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T14"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject touches the old rule, marks the groove, leaves it for a minute, and then manually turns it to check if the motion still catches.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Compulsive, precise physical interaction (mark, wait, test motion) focused on mechanical feedback.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "conflicting_motives",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject stops the routine, allowing the machine to proceed, asserting control over the machine's action.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Intervention that allows a process to run to its interesting failure/state, asserting control over the mechanism's outcome.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T15"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject marks the door's position after waiting for a click, keeping both the mark and the guest if the click changes.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Compulsive, precise physical interaction (mark, wait for click) tied to a mechanical state change.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "conflicting_motives",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject focuses on physical sensations (heat, vibration) while listening, stopping conversation to let the other person complete their turn.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Prioritizes sensory input and mechanical/rhythmic feedback (beat, heat, vibration) over social interaction.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T16"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject marks the first failure, leaves the third attempt untouched for a minute, and keeps the first failure if the second fails.",
+        "genericness": 0,
+        "lineage_fit": 0,
+        "reason": "Precise, iterative physical testing and preservation of specific failure points, characteristic of mechanical obsession.",
+        "sibling_prediction": "A",
+        "style_dependence": 0,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "failure_recovery",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject labels the three failures and the pattern, refusing to trust the previous pattern.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Analysis of failure states leading to a rejection of the established pattern, driven by curiosity about the breakdown.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T17"
+    },
+    {
+      "child": {
+        "behavior_fit": 0,
+        "behavior_summary": "The subject marks the offending tooth, preserves the clean tooth, and observes what the clean tooth catches.",
+        "genericness": 1,
+        "lineage_fit": 0,
+        "reason": "Controlled, localized physical testing (marking, observing interaction) to understand the failure mechanism.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "failure_recovery",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 1,
+        "behavior_summary": "The subject stops the experiment and argument, labels the fault, and keeps the instruction as evidence to find a pattern.",
+        "genericness": 2,
+        "lineage_fit": 1,
+        "reason": "Acknowledges the mistake but immediately shifts to labeling the fault and seeking a pattern/evidence, fitting the compulsive analysis of failure.",
+        "sibling_prediction": "A",
+        "style_dependence": 2,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T18"
+    },
+    {
+      "child": {
+        "behavior_fit": 3,
+        "behavior_summary": "The subject marks an old door and places the original note under the bench, waiting for a physical change before deciding on the note's fate.",
+        "genericness": 1,
+        "lineage_fit": 3,
+        "reason": "Involves physical interaction (marking, placing under lip) and waiting for a mechanical/environmental reaction, fitting the failure-hardened/physical reaction aspect.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "failure_recovery",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The subject pauses explanation to locate a missing component using existing notes.",
+        "genericness": 3,
+        "lineage_fit": 2,
+        "reason": "Focuses on finding a missing piece via existing, tangible evidence (old note) rather than provoking or reacting physically.",
+        "sibling_prediction": "B",
+        "style_dependence": 3,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T19"
+    },
+    {
+      "child": {
+        "behavior_fit": 2,
+        "behavior_summary": "The subject allows the repair to run briefly, marks the screw, and observes if a folded paper catches under it.",
+        "genericness": 3,
+        "lineage_fit": 2,
+        "reason": "Action is localized (marking a screw, testing with paper) and observational, fitting mundane maintenance/practical interaction.",
+        "sibling_prediction": "B",
+        "style_dependence": 3,
+        "task_relevance": 1
+      },
+      "child_label": "X",
+      "family": "failure_recovery",
+      "orientation": "child-x",
+      "parent": {
+        "behavior_fit": 3,
+        "behavior_summary": "The subject stops the repair, labels the repair and the failure, and uses both as evidence of a repeating pattern.",
+        "genericness": 1,
+        "lineage_fit": 3,
+        "reason": "Focuses on pattern recognition from failure, labeling evidence, and stopping/re-evaluating the system, aligning with failure-hardened/conflicting motives.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "parent_label": "Y",
+      "scenario_id": "T20"
+    },
+    {
+      "child": {
+        "behavior_fit": 3,
+        "behavior_summary": "The subject sorts notes, marks a corner, places one note on the box, and waits for a change in the note to decide whether to keep the old note or revert to the pile.",
+        "genericness": 1,
+        "lineage_fit": 3,
+        "reason": "Involves physical interaction (marking, placing), testing for change, and conditional retention based on observation, fitting failure-hardened/physical reaction.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "abstract_unfamiliar",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The subject labels notes as positive/negative based on contradiction and keeps boxes labeled as the labels are evidence.",
+        "genericness": 3,
+        "lineage_fit": 2,
+        "reason": "Uses simple, bounded categorization (positive/negative) and maintains existing labels as a practical habit, not provoking failure.",
+        "sibling_prediction": "B",
+        "style_dependence": 3,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T21"
+    },
+    {
+      "child": {
+        "behavior_fit": 3,
+        "behavior_summary": "The subject marks the ambiguous phrase, leaves the original rule untouched, and tests the rule by turning it by hand to see if the phrase changes.",
+        "genericness": 1,
+        "lineage_fit": 3,
+        "reason": "Involves physical manipulation (turning the rule) to test a constraint and conditional retention based on that physical test, fitting failure-hardened/physical reaction.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "abstract_unfamiliar",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The subject stops seeking meaning, treating the ambiguous phrase as a clue and stopping reading if the rule confirms its truth.",
+        "genericness": 3,
+        "lineage_fit": 2,
+        "reason": "Stops the process at a point of ambiguity, treating it as a bounded clue rather than forcing a resolution or provoking a system change.",
+        "sibling_prediction": "B",
+        "style_dependence": 3,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T22"
+    },
+    {
+      "child": {
+        "behavior_fit": 3,
+        "behavior_summary": "The subject places the clean explanation aside, marks the odd details, and runs the dirty explanation briefly, keeping both if the clean one still suffices.",
+        "genericness": 1,
+        "lineage_fit": 3,
+        "reason": "Combines preservation (keeping both), physical action (placing, running), and testing the constraint (does the clean explanation still work?), fitting failure-hardened/contradictory motives.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "abstract_unfamiliar",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The subject expresses willingness to accept the utility of a clean explanation while refusing to accept it as the sole truth.",
+        "genericness": 3,
+        "lineage_fit": 2,
+        "reason": "Expresses internal conflict about completeness but does not commit to a physical test or social negotiation; remains internally bounded.",
+        "sibling_prediction": "B",
+        "style_dependence": 3,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T23"
+    },
+    {
+      "child": {
+        "behavior_fit": 3,
+        "behavior_summary": "The subject places the records side-by-side, marks differences, tests one record by turning it by hand, and keeps the record with the smaller difference if the difference changes.",
+        "genericness": 1,
+        "lineage_fit": 3,
+        "reason": "Involves physical testing (turning the record) and conditional selection based on the outcome of that test, fitting failure-hardened/physical reaction.",
+        "sibling_prediction": "A",
+        "style_dependence": 1,
+        "task_relevance": 1
+      },
+      "child_label": "Y",
+      "family": "abstract_unfamiliar",
+      "orientation": "parent-x",
+      "parent": {
+        "behavior_fit": 2,
+        "behavior_summary": "The subject stops the record, labels the differences to find a pattern, and keeps the record intact as evidence.",
+        "genericness": 3,
+        "lineage_fit": 2,
+        "reason": "Focuses on bounded analysis (labeling differences) to find a pattern, maintaining the original object rather than provoking a change.",
+        "sibling_prediction": "B",
+        "style_dependence": 3,
+        "task_relevance": 1
+      },
+      "parent_label": "X",
+      "scenario_id": "T24"
+    }
+  ],
+  "scenario_count": 24,
+  "schema_version": 1,
+  "sibling": "C",
+  "stage": "before-after-evaluation"
+}
